@@ -1,8 +1,19 @@
 name: Make image
 
+# Release flow:
+# 1. Push a tag `vX.Y.Z` and create a *draft* release for it (in any order).
+# 2. This workflow builds all artifacts on the tag.
+# 3. The `publish-release` job attaches them to the draft release and only then publishes it.
+# 4. Maven Central and Docker Hub publications are started after the release is published.
+#
+# Draft releases do not trigger `release` events, and a release published with GITHUB_TOKEN
+# does not trigger other workflows, so downstream publications are invoked explicitly.
+
 on:
-    release:
-        types: [published, edited]
+    push:
+        tags:
+            - 'v*'
+    workflow_dispatch:
 
 jobs:
     build:
@@ -53,19 +64,71 @@ jobs:
                 name: bsl-language-server_${{ matrix.prefix }}.zip
                 path: ./${{ matrix.app-image }}
 
-            - name: Upload assets to release
-              uses: AButler/upload-release-assets@v4.0
+            - name: Upload release asset (image archive)
+              uses: actions/upload-artifact@v7
               with:
-                  files: './bsl-language-server_${{ matrix.prefix }}.zip'
-                  repo-token: ${{ secrets.GITHUB_TOKEN }}
+                name: release-assets-${{ matrix.prefix }}
+                path: ./bsl-language-server_${{ matrix.prefix }}.zip
+                if-no-files-found: error
 
             - name: Build with Gradle
               if: matrix.prefix == 'nix'
               run: ./gradlew build -x test
 
-            - name: Upload jar to release
+            - name: Upload release assets (jars)
               if: matrix.prefix == 'nix'
-              uses: AButler/upload-release-assets@v4.0
+              uses: actions/upload-artifact@v7
               with:
-                  files: './build/libs/*.jar'
-                  repo-token: ${{ secrets.GITHUB_TOKEN }}
+                name: release-assets-jars
+                path: ./build/libs/*.jar
+                if-no-files-found: error
+
+    publish-release:
+        needs: build
+        if: startsWith(github.ref, 'refs/tags/v')
+        runs-on: ubuntu-latest
+        name: Attach assets and publish release
+        permissions:
+            contents: write
+        env:
+            GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+            GH_REPO: ${{ github.repository }}
+            TAG: ${{ github.ref_name }}
+        steps:
+            - name: Download release assets
+              uses: actions/download-artifact@v8
+              with:
+                pattern: release-assets-*
+                merge-multiple: true
+                path: dist
+
+            - name: Find release for tag
+              id: release
+              run: |
+                if ! IS_DRAFT=$(gh release view "$TAG" --json isDraft --jq '.isDraft'); then
+                  echo "::error::Release for tag $TAG not found. Create a draft release for this tag and re-run failed jobs."
+                  exit 1
+                fi
+                echo "is-draft=${IS_DRAFT}" >> "$GITHUB_OUTPUT"
+                echo "Release for $TAG found, draft: ${IS_DRAFT}"
+
+            - name: Upload assets to release
+              run: |
+                ls -l dist
+                gh release upload "$TAG" dist/* --clobber
+
+            - name: Publish release
+              if: steps.release.outputs.is-draft == 'true'
+              run: gh release edit "$TAG" --draft=false
+
+    publish-to-maven-central:
+        needs: publish-release
+        uses: ./.github/workflows/publish-to-maven-central.yml
+        secrets: inherit
+
+    publish-to-docker-hub:
+        needs: publish-release
+        uses: ./.github/workflows/publish-to-docker-hub.yml
+        permissions:
+            contents: read
+        secrets: inherit

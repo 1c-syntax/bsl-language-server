@@ -1,8 +1,8 @@
 name: Publish to Docker Hub
 
 on:
-  release:
-    types: [published]
+  # Releases are published by release.yml, which calls this workflow afterwards
+  workflow_call:
   push:
     branches:
       - develop
@@ -37,7 +37,7 @@ jobs:
           username: ${{ secrets.DOCKER_HUB_USERNAME }}
           password: ${{ secrets.DOCKER_HUB_PASSWORD }}
       - name: Tag and push Docker image (release)
-        if: github.event_name == 'release'
+        if: startsWith(github.ref, 'refs/tags/v')
         run: |
           VERSION="${{ steps.version.outputs.VERSION }}"
           echo "Pushing image with version tag: ${VERSION}"
