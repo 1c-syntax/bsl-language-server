@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793521093678,
+  "lastUpdate": 1793523902813,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -46252,6 +46252,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.381842059998544",
             "extra": "mean: 90.38479820887248 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c27e4988b9c5a3ef0494d18da3c2a0cc6b403885",
+          "message": "Merge pull request #4617 from 1c-syntax/perf/lsp-initialize-prepares-workspace-in-background\n\nОтвет на initialize не ждёт чтения метаданных и регистрации типов конфигурации",
+          "timestamp": "2026-11-01T09:42:34+01:00",
+          "tree_id": "c9f2e24ad8ab4ed6dd8e4a2755ac24311ee67c1e",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/c27e4988b9c5a3ef0494d18da3c2a0cc6b403885"
+        },
+        "date": 1793523873089,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 92.24192365010579,
+            "unit": "sec",
+            "range": "stddev: 2.6448852074739557",
+            "extra": "mean: 92.24192365010579 sec\nrounds: 3"
           }
         ]
       }
