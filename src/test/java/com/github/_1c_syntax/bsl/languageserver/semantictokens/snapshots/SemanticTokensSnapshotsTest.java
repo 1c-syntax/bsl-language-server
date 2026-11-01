@@ -71,7 +71,7 @@ class SemanticTokensSnapshotsTest {
 
   @ParameterizedTest
   @MethodSource("fixtures")
-  void rendersFixture(Path fixture) throws IOException {
+  void rendersFixture(Path fixture) {
     // given
     var outputDir = Path.of(System.getProperty(OUTPUT_DIR_PROPERTY, "build/snapshots/semantic-tokens"));
     var documentContext = TestUtils.getDocumentContextFromFile(fixture.toString());
