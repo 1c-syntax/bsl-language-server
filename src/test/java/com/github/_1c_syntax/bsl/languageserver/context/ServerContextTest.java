@@ -36,6 +36,9 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -154,6 +157,58 @@ class ServerContextTest extends AbstractServerContextAwareTest {
 
     // then
     assertThat(context.getDocuments()).hasSizeGreaterThan(0);
+  }
+
+  @Test
+  void populateAfterBackgroundWorkIsStoppedAddsNoDocuments() {
+    // given
+    initServerContext(PATH_TO_METADATA, false);
+    context.stopBackgroundWork();
+
+    // when
+    context.populateContext();
+
+    // then
+    assertThat(context.getDocuments()).isEmpty();
+  }
+
+  @Test
+  void stoppingBackgroundWorkWaitsForWorkInProgress() throws Exception {
+    // given — фоновая работа идёт
+    initServerContext();
+    var entered = new CountDownLatch(1);
+    var release = new CountDownLatch(1);
+    var work = CompletableFuture.runAsync(() -> context.runBackgroundWork(() -> {
+      entered.countDown();
+      awaitUninterruptibly(release);
+    }));
+    assertThat(entered.await(10, TimeUnit.SECONDS)).isTrue();
+
+    // when
+    var stop = CompletableFuture.runAsync(context::stopBackgroundWork);
+
+    // then — остановка объявлена сразу, но ждёт конца идущей работы
+    assertThat(stop).failsWithin(300, TimeUnit.MILLISECONDS)
+      .withThrowableOfType(java.util.concurrent.TimeoutException.class);
+    assertThat(context.isBackgroundWorkStopped()).isTrue();
+
+    release.countDown();
+    stop.get(10, TimeUnit.SECONDS);
+    work.get(10, TimeUnit.SECONDS);
+
+    // и новая работа уже не начинается
+    var started = new boolean[1];
+    assertThat(context.runBackgroundWork(() -> started[0] = true)).isFalse();
+    assertThat(started[0]).isFalse();
+  }
+
+  private static void awaitUninterruptibly(CountDownLatch latch) {
+    try {
+      assertThat(latch.await(10, TimeUnit.SECONDS)).isTrue();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new IllegalStateException(e);
+    }
   }
 
   /** Каталоги, перечисленные в {@code excludePaths} конфигурации, не попадают в начальный контекст. */

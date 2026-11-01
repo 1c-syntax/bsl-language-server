@@ -56,10 +56,8 @@ import org.jspecify.annotations.Nullable;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationEvent;
 
-import java.io.File;
 import java.net.URI;
 import java.nio.file.Path;
-import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -143,8 +141,8 @@ public class EventPublisherAspect {
       documentContext, documentContext.isContentChangedOnLastRebuild()));
   }
 
-  @AfterReturning("Pointcuts.isServerContext() && Pointcuts.isPopulateContextCall() && args(files)")
-  public void serverContextPopulated(JoinPoint joinPoint, Collection<File> files) {
+  @AfterReturning("Pointcuts.isServerContext() && Pointcuts.isPopulateDocumentsCall()")
+  public void serverContextPopulated(JoinPoint joinPoint) {
     publishEvent(new ServerContextPopulatedEvent((ServerContext) joinPoint.getThis()));
   }
 

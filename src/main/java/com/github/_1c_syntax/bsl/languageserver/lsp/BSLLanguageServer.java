@@ -372,12 +372,23 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     return didChangeWatchedFilesRelativePatternSupport;
   }
 
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Останавливает фоновую работу над рабочими областями, дожидается её конца и очищает их.
+   * Ответ приходит, когда очистка закончена; поток чтения сообщений клиента на это время не
+   * занимается: фоновая работа может сама ждать ответа клиента.
+   */
   @Override
   public CompletableFuture<Object> shutdown() {
     shutdownWasCalled = true;
-    textDocumentService.reset();
-    serverContextProvider.clear();
-    return CompletableFuture.completedFuture(Boolean.TRUE);
+    return CompletableFuture.supplyAsync(
+      () -> {
+        serverContextProvider.clear();
+        return Boolean.TRUE;
+      },
+      task -> Thread.ofPlatform().name("shutdown").start(task)
+    );
   }
 
   @Override
