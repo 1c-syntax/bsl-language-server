@@ -70,6 +70,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   private final Map<Range, SourceDefinedSymbol> methods;
   private final SelfMemberClassifier selfMemberClassifier;
   private final Set<VariableSymbol> variables = new HashSet<>();
+  private final Set<VariableSymbol> loopVariables = new HashSet<>();
   private final Map<String, String> currentMethodVariables = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
   private final Map<String, String> moduleVariables = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
@@ -90,9 +91,19 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   public List<VariableSymbol> compute() {
     bareSelfProperties = null;
     variables.clear();
+    loopVariables.clear();
     moduleVariables.clear();
     visitFile(documentContext.getAst());
     return new ArrayList<>(variables);
+  }
+
+  /**
+   * Символы, первое объявление которых находится в заголовке цикла.
+   *
+   * @return неизменяемый снимок объявлений циклов из последнего вычисления.
+   */
+  public Set<VariableSymbol> getLoopVariables() {
+    return Set.copyOf(loopVariables);
   }
 
   @Override
@@ -207,7 +218,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
       return super.visitForStatement(ctx);
     }
 
-    updateVariablesCache(ctx.IDENTIFIER(), createDescription(ctx));
+    loopVariables.add(updateVariablesCache(ctx.IDENTIFIER(), createDescription(ctx)));
     return super.visitForStatement(ctx);
   }
 
@@ -224,7 +235,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
       return super.visitForEachStatement(ctx);
     }
 
-    updateVariablesCache(ctx.IDENTIFIER(), createDescription(ctx));
+    loopVariables.add(updateVariablesCache(ctx.IDENTIFIER(), createDescription(ctx)));
     return super.visitForEachStatement(ctx);
   }
 
@@ -343,7 +354,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
 
   }
 
-  private void updateVariablesCache(TerminalNode node, Optional<VariableDescription> description) {
+  private VariableSymbol updateVariablesCache(TerminalNode node, Optional<VariableDescription> description) {
     var variable = VariableSymbol.builder()
       .name(node.getText().intern())
       .range(Ranges.create(node))
@@ -362,6 +373,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
     } else {
       currentMethodVariables.put(node.getText(), node.getText());
     }
+    return variable;
   }
 
   /** Классификатор документа берётся один раз, при первом голом присваивании. */
