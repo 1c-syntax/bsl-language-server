@@ -25,6 +25,13 @@ the union `String | Number`. These branches are not treated as unconditionally u
 The option does not apply to OneScript. Changing it recalculates context-dependent types and refreshes
 diagnostics and hints. Recalculation can take time in large projects.
 
+## Filtering completion suggestions
+
+The `completion.hideUnavailableByContext` setting defaults to `true`: suggestions known to be unavailable
+in every current compilation context are hidden. Set it to `false` to keep them at the end of the list.
+Partially available suggestions, unknown availability and permitted server calls remain available.
+See [code completion](../capabilities/completion.md) for details.
+
 ## Global and Local Configuration
 
 BSL Language Server uses a two-level configuration system:

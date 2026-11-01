@@ -130,6 +130,13 @@ public class CompletionData {
   private ModuleType moduleType;
 
   /**
+   * Пояснение контекстов в позиции запроса. При отложенном resolve добавляется после
+   * описания метода; отсутствие поля означает, что достоверного пояснения нет.
+   */
+  @Nullable
+  private String contextDescription;
+
+  /**
    * Создаёт ключ восстановления документации члена типа (dot-completion).
    *
    * @param uri               URI документа, в контексте которого построен item.
@@ -143,7 +150,7 @@ public class CompletionData {
   public static CompletionData forMember(URI uri, TypeKind typeKind, String typeQualifiedName, String memberName,
                                          FileType fileType, Language scriptVariant) {
     return new CompletionData(uri, typeKind, typeQualifiedName, memberName, fileType, scriptVariant,
-      null, null, null);
+      null, null, null, null);
   }
 
   /**
@@ -156,7 +163,7 @@ public class CompletionData {
    * @return ключ восстановления глобальной функции.
    */
   public static CompletionData forFunction(URI uri, String functionName, FileType fileType, Language scriptVariant) {
-    return new CompletionData(uri, null, null, null, fileType, scriptVariant, functionName, null, null);
+    return new CompletionData(uri, null, null, null, fileType, scriptVariant, functionName, null, null, null);
   }
 
   /**
@@ -177,6 +184,6 @@ public class CompletionData {
     var ownerKind = ownerTypeRef == null ? null : ownerTypeRef.kind();
     var ownerName = ownerTypeRef == null ? null : ownerTypeRef.qualifiedName();
     return new CompletionData(uri, ownerKind, ownerName, null, fileType, scriptVariant, null,
-      eventContractName, moduleType);
+      eventContractName, moduleType, null);
   }
 }
