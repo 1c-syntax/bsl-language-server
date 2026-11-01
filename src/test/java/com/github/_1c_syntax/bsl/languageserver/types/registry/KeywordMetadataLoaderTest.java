@@ -23,8 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import org.junit.jupiter.api.Test;
 
-import java.util.function.Predicate;
-
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
@@ -33,12 +31,10 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 class KeywordMetadataLoaderTest {
 
-  private static final Predicate<String> ALLOW_ALL = c -> true;
-
   @Test
   void missingResourceReturnsEmpty() {
     var result = KeywordMetadataLoader.load(
-      "no/such/resource.json", ALLOW_ALL);
+      "no/such/resource.json");
 
     assertThat(result).isSameAs(KeywordMetadata.EMPTY);
   }
@@ -48,9 +44,9 @@ class KeywordMetadataLoaderTest {
 
     // given — поле "keywords" в JSON — строка, а не массив.
     var result = KeywordMetadataLoader.load(
-      "keyword-fallback/keywords-not-a-list.json", ALLOW_ALL);
+      "keyword-fallback/keywords-not-a-list.json");
 
-    assertThat(result.keywords()).isEmpty();
+    assertThat(result.descriptions()).isEmpty();
     assertThat(result.snippets()).isEmpty();
   }
 
@@ -60,9 +56,8 @@ class KeywordMetadataLoaderTest {
     // given — массив "keywords" содержит строку, число, null и одну валидную
     // запись-Map: должна остаться только последняя.
     var result = KeywordMetadataLoader.load(
-      "keyword-fallback/keywords-mixed-entries.json", ALLOW_ALL);
+      "keyword-fallback/keywords-mixed-entries.json");
 
-    assertThat(result.keywords()).containsExactly("Если", "If");
     assertThat(result.snippets()).containsOnlyKeys("если", "if");
   }
 }
