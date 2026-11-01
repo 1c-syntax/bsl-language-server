@@ -22,15 +22,18 @@
 package com.github._1c_syntax.bsl.languageserver.semantictokens.snapshots;
 
 import com.github._1c_syntax.bsl.languageserver.providers.SemanticTokensProvider;
-import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 import org.eclipse.lsp4j.SemanticTokensParams;
 import org.junit.jupiter.api.Tag;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import java.awt.Font;
 import java.awt.GraphicsEnvironment;
@@ -50,9 +53,8 @@ import static org.assertj.core.api.Assertions.assertThat;
  * Каталог выгрузки задаётся системным свойством {@value #OUTPUT_DIR_PROPERTY}.
  */
 @Tag("snapshots")
-@SpringBootTest
-@CleanupContextBeforeClassAndAfterEachTestMethod
-class SemanticTokensSnapshotsTest {
+@CleanupContextBeforeClassAndAfterClass
+class SemanticTokensSnapshotsTest extends AbstractServerContextAwareTest {
 
   private static final String OUTPUT_DIR_PROPERTY = "snapshots.outputDir";
   private static final Path FIXTURES = Path.of("src", "test", "resources", "semantictokens", "snapshots");
@@ -66,6 +68,9 @@ class SemanticTokensSnapshotsTest {
   @Autowired
   private SemanticTokensLegend legend;
 
+  @Autowired
+  private OScriptLibraryIndex libraryIndex;
+
   private final SemanticTokensSnapshotRenderer renderer = new SemanticTokensSnapshotRenderer(font(), true);
   private final SnapshotWriter writer = new SnapshotWriter();
 
@@ -74,16 +79,14 @@ class SemanticTokensSnapshotsTest {
   void rendersFixture(Path fixture) {
     // given
     var outputDir = Path.of(System.getProperty(OUTPUT_DIR_PROPERTY, "build/snapshots/semantic-tokens"));
-    var documentContext = TestUtils.getDocumentContextFromFile(fixture.toString());
-    var params = new SemanticTokensParams(TestUtils.getTextDocumentIdentifier(documentContext.getUri()));
     var fileName = fixture.getFileName().toString();
     var language = fileName.substring(fileName.lastIndexOf('.') + 1);
 
     // when
-    var semanticTokens = provider.getSemanticTokensFull(documentContext, params);
-    var tokens = StyledTokensDecoder.decode(semanticTokens.getData(), legend);
+    var highlighted = highlight(fixture);
+    var tokens = highlighted.tokens();
     for (var theme : THEMES) {
-      var image = renderer.render(documentContext.getContent(), tokens, theme);
+      var image = renderer.render(highlighted.content(), tokens, theme);
       var metadata = new SnapshotMetadata(
         "%s (%s)".formatted(fileName, theme.name()),
         "semantic-tokens",
@@ -99,6 +102,27 @@ class SemanticTokensSnapshotsTest {
     for (var theme : THEMES) {
       assertThat(outputDir.resolve(fileName).resolve(theme.name() + ".png")).isRegularFile();
     }
+  }
+
+  @Test
+  void resolvesLibraryConnectedInFixture() {
+    // when
+    var highlighted = highlight(FIXTURES.resolve("library.os"));
+
+    // then
+    assertThat(highlighted.typesOf("СтроковыеУтилиты")).contains(SemanticTokenTypes.Namespace);
+    assertThat(highlighted.typesOf("ПостроительСтроки")).contains(SemanticTokenTypes.Type);
+  }
+
+  private Highlighted highlight(Path fixture) {
+    // Каталог фикстур — workspace: библиотеки OneScript из его oscript_modules
+    // индексируются до разбора фикстуры, как при открытии проекта в редакторе.
+    initServerContext(FIXTURES.toAbsolutePath(), false);
+    libraryIndex.reindex(context);
+    var documentContext = TestUtils.getDocumentContextFromFile(fixture.toString(), context);
+    var params = new SemanticTokensParams(TestUtils.getTextDocumentIdentifier(documentContext.getUri()));
+    var semanticTokens = provider.getSemanticTokensFull(documentContext, params);
+    return new Highlighted(documentContext.getContent(), StyledTokensDecoder.decode(semanticTokens.getData(), legend));
   }
 
   static Stream<Path> fixtures() throws IOException {
@@ -117,5 +141,23 @@ class SemanticTokensSnapshotsTest {
     );
     var family = available.contains(PREFERRED_FONT) ? PREFERRED_FONT : Font.MONOSPACED;
     return new Font(family, Font.PLAIN, FONT_SIZE);
+  }
+
+  private record Highlighted(String content, List<StyledToken> tokens) {
+
+    /**
+     * Типы токенов, покрывающих ровно указанный текст.
+     */
+    List<String> typesOf(String text) {
+      var lines = content.split("\r?\n", -1);
+      return tokens.stream()
+        .filter(token -> token.line() < lines.length)
+        .filter(token -> token.start() + token.length() <= lines[token.line()].length())
+        .filter(token -> lines[token.line()]
+          .substring(token.start(), token.start() + token.length())
+          .equals(text))
+        .map(StyledToken::type)
+        .toList();
+    }
   }
 }
