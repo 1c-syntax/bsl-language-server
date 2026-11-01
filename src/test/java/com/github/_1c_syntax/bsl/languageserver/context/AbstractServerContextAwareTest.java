@@ -93,6 +93,7 @@ public abstract class AbstractServerContextAwareTest {
     cleanupAfterClass = false;
     serverContextProvider.clear();
     context = serverContextProvider.addWorkspace(EMPTY_WORKSPACE_URI);
+    context.awaitPreparation();
     WorkspaceContextHolder.set(context.getWorkspaceUri());
   }
 
@@ -140,6 +141,8 @@ public abstract class AbstractServerContextAwareTest {
     serverContextProvider.clear();
     var uri = Absolute.uri(configurationRoot.toUri());
     context = serverContextProvider.addWorkspace(uri);
+    // Тесты читают типы конфигурации сразу после добавления рабочей области.
+    context.awaitPreparation();
     context.setConfigurationRoot(configurationRoot);
     WorkspaceContextHolder.set(context.getWorkspaceUri());
     if (populate) {

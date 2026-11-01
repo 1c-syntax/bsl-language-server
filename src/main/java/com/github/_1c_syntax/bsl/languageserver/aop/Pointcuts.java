@@ -134,6 +134,14 @@ public class Pointcuts {
   }
 
   /**
+   * Это вызов метода rebindDocument.
+   */
+  @Pointcut("isBSLLanguageServerScope() && execution(* rebindDocument(..))")
+  public void isRebindDocumentCall() {
+    // no-op
+  }
+
+  /**
    * Это вызов метода tryClearDocument.
    */
   @Pointcut("isBSLLanguageServerScope() && execution(* tryClearDocument(..))")

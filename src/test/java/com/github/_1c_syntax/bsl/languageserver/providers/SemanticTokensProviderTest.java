@@ -1794,6 +1794,7 @@ class SemanticTokensProviderTest {
     // Create workspace for this path
     serverContextProvider.clear();
     var serverContext = serverContextProvider.addWorkspace(path.toUri());
+    serverContext.awaitPreparation();
     serverContext.setConfigurationRoot(path);
 
     // Load the common module
