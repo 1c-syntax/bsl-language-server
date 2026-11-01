@@ -60,6 +60,8 @@ class TableDataMembers {
 
   /** Метод, отдающий строку данных по её идентификатору. */
   private static final BilingualString ROW_DATA_METHOD = BilingualString.of("ДанныеСтроки", "RowData");
+  private static final BilingualString ROW_ID_DESCRIPTION =
+    BilingualString.of("Идентификатор строки.", "Row identifier.");
 
   private static final String ARRAY_RU = "Массив";
   private static final String ARRAY_EN = "Array";
@@ -77,12 +79,11 @@ class TableDataMembers {
   List<MemberDescriptor> currentData(TypeRef rowRef) {
     return List.of(
       FormPlatformTypes.platformProperty(
-        BilingualString.of(FormPlatformTypes.CURRENT_DATA_RU, FormPlatformTypes.CURRENT_DATA_EN),
-        rowRef, BilingualString.EMPTY),
+        FormPlatformTypes.CURRENT_DATA, rowRef, BilingualString.EMPTY),
       MemberDescriptor.method(ROW_DATA_METHOD.ru(), "",
           List.of(new SignatureDescriptor(
             List.of(new ParameterDescriptor(CURRENT_ROW, TypeSet.EMPTY, false,
-              BilingualString.of("Идентификатор строки.", "Row identifier."), "")),
+              ROW_ID_DESCRIPTION, "")),
             TypeSet.of(rowRef), BilingualString.EMPTY)))
         .withBilingualName(ROW_DATA_METHOD));
   }
