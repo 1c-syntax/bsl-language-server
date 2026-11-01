@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793523902813,
+  "lastUpdate": 1793526428637,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -46283,6 +46283,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.6448852074739557",
             "extra": "mean: 92.24192365010579 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c8206da4fbbddf93dd57352a82352bc9db131222",
+          "message": "Merge pull request #4685 from 1c-syntax/perf/context-variable-symbol-lean\n\nОписание переменной хранит отдельный подкласс, а не поле каждой переменной",
+          "timestamp": "2026-11-01T09:53:48+01:00",
+          "tree_id": "b66523568ac1b87949ce7de01b0d67f04d5ac8d9",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/c8206da4fbbddf93dd57352a82352bc9db131222"
+        },
+        "date": 1793526401049,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 88.12397726376851,
+            "unit": "sec",
+            "range": "stddev: 1.1071244129138542",
+            "extra": "mean: 88.12397726376851 sec\nrounds: 3"
           }
         ]
       }
