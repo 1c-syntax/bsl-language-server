@@ -240,7 +240,10 @@ tasks.build {
 }
 
 tasks.test {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        // Генераторы снапшотов запускаются отдельной задачей semanticTokensSnapshots.
+        excludeTags("snapshots")
+    }
 
     testLogging {
         events("passed", "skipped", "failed", "standard_error")
@@ -305,6 +308,31 @@ tasks.test {
             // Don't fail the build if cleanup fails
             logger.warn("Failed to cleanup test cache directories: ${e.message}")
         }
+    }
+}
+
+// PNG-снапшоты семантической подсветки фикстур для Sentry Snapshots
+// (выгружаются в CI через `sentry-cli snapshots upload`).
+val semanticTokensSnapshots by tasks.registering(Test::class) {
+    description = "Renders semantic tokens snapshots of test fixtures to PNG for Sentry Snapshots."
+    group = "verification"
+
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    useJUnitPlatform {
+        includeTags("snapshots")
+    }
+
+    maxHeapSize = "3g"
+
+    val outputDir = layout.buildDirectory.dir("snapshots/semantic-tokens")
+    outputs.dir(outputDir)
+    outputs.upToDateWhen { false }
+    systemProperty("snapshots.outputDir", outputDir.get().asFile.absolutePath)
+    systemProperty("java.awt.headless", "true")
+
+    doFirst {
+        delete(outputDir)
     }
 }
 
