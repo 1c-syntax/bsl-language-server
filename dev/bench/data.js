@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1793521093678,
+  "lastUpdate": 1793522690827,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -46252,6 +46252,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.381842059998544",
             "extra": "mean: 90.38479820887248 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Kirill Chernenko",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "266bd23c469eb4ddb61bbd46ea9fae8bc78a6cb9",
+          "message": "Merge pull request #4868 from 1c-syntax/codex/20261028-01-syntax\n\nfix(diagnostics): не падать на недописанных директивах препроцессора",
+          "timestamp": "2026-11-01T07:40:28Z",
+          "tree_id": "2a9b8f41891b58c086aa1a7da3e09401b9810b5b",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/266bd23c469eb4ddb61bbd46ea9fae8bc78a6cb9"
+        },
+        "date": 1793522659971,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 92.12257766723633,
+            "unit": "sec",
+            "range": "stddev: 2.371435891204282",
+            "extra": "mean: 92.12257766723633 sec\nrounds: 3"
           }
         ]
       }
