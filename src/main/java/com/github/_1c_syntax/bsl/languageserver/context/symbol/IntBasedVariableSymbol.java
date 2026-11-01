@@ -29,6 +29,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.Value;
 import lombok.experimental.NonFinal;
+import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 
 import java.util.Optional;
@@ -99,4 +100,8 @@ public class IntBasedVariableSymbol extends AbstractVariableSymbol {
     );
   }
 
+  @Override
+  public boolean containsPosition(Position position) {
+    return Ranges.containsPosition(startLine, startCharacter, endLine, endCharacter, position);
+  }
 }
