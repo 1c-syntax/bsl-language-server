@@ -1,5 +1,8 @@
 name: Snapshots
 
+# Рендер снапшотов выполняет код из PR, поэтому идёт без секретов.
+# Выгрузку в Sentry делает snapshots-upload.yml по workflow_run из артефакта этого workflow.
+
 on:
   push:
     branches:
@@ -17,9 +20,6 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-    env:
-      # Секреты Sentry отдаются только шагу выгрузки; сборке виден лишь признак их наличия.
-      HAS_SENTRY_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN != '' }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -40,20 +40,4 @@ jobs:
         with:
           name: semantic-tokens-snapshots
           path: build/snapshots/semantic-tokens
-      - name: Upload snapshots to Sentry
-        # У PR из форков нет доступа к секретам.
-        if: env.HAS_SENTRY_TOKEN == 'true'
-        # Закреплённый бинарник из релиза вместо npm-пакета: без install-скриптов и плавающей версии.
-        env:
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
-          SENTRY_CLI_VERSION: 3.8.2
-          SENTRY_CLI_SHA256: c958865f9d4000183509ea21b1f04925d5390de6d8d87386b9e69f2b305070c3
-        run: |
-          curl -sSfL --proto '=https' --tlsv1.2 -o "$RUNNER_TEMP/sentry-cli" \
-            "https://github.com/getsentry/sentry-cli/releases/download/${SENTRY_CLI_VERSION}/sentry-cli-Linux-x86_64"
-          echo "${SENTRY_CLI_SHA256}  $RUNNER_TEMP/sentry-cli" | sha256sum --check --strict
-          chmod +x "$RUNNER_TEMP/sentry-cli"
-          "$RUNNER_TEMP/sentry-cli" snapshots upload build/snapshots/semantic-tokens \
-            --app-id bsl-language-server-semantic-tokens
+          if-no-files-found: error
