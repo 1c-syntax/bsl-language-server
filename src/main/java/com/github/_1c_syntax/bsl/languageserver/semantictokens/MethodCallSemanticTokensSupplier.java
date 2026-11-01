@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.context.Modules;
@@ -63,6 +64,11 @@ public class MethodCallSemanticTokensSupplier implements SemanticTokensSupplier 
       }
 
       reference.getSourceDefinedSymbol().ifPresent(symbol -> {
+        // Ссылка на конструктор стоит на имени типа в `Новый Тип(...)`, которое уже
+        // размечено NewExpressionSemanticTokensSupplier как Type.
+        if (symbol instanceof ConstructorSymbol) {
+          return;
+        }
         if (!(symbol instanceof MethodSymbol method)) {
           helper.addRange(entries, reference.selectionRange(), SemanticTokenTypes.Method);
           return;
