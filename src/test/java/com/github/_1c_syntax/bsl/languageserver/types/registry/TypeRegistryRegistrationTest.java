@@ -216,19 +216,16 @@ class TypeRegistryRegistrationTest {
   }
 
   @Test
-  void resolveGenericByPrefixFollowsRegistrationAndRemoval() {
-    // given — семейство ещё не зарегистрировано
-    assertThat(typeRegistry.resolveGenericByPrefix("МоёСемейство")).isEmpty();
-
-    // when
-    var ref = typeRegistry.registerUserType("МоёСемейство.<Имя>", declaration, FileType.BSL);
+  void resolveGenericByPrefixFindsGenericsDeclaredByPlatformProvider() {
+    // given — дженериком тип объявляет провайдер платформенных типов (параметры типа)
+    var generic = typeRegistry.resolve("СправочникСсылка.<Имя справочника>").orElseThrow();
 
     // then — находится по семейству в любом регистре, а не по началу имени
-    assertThat(typeRegistry.resolveGenericByPrefix("моёсемейство")).contains(ref);
-    assertThat(typeRegistry.resolveGenericByPrefix("МоёСемей")).isEmpty();
+    assertThat(typeRegistry.resolveGenericByPrefix("справочникссылка")).contains(generic);
+    assertThat(typeRegistry.resolveGenericByPrefix("СправочникСсыл")).isEmpty();
 
-    // when
-    typeRegistry.unregisterUserType("МоёСемейство.<Имя>");
+    // when — плейсхолдер в имени пользовательского типа дженериком его не делает
+    typeRegistry.registerUserType("МоёСемейство.<Имя>", declaration, FileType.BSL);
 
     // then
     assertThat(typeRegistry.resolveGenericByPrefix("МоёСемейство")).isEmpty();
