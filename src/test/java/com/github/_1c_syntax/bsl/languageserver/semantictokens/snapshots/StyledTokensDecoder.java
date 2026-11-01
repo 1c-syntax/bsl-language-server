@@ -24,7 +24,10 @@ package com.github._1c_syntax.bsl.languageserver.semantictokens.snapshots;
 import lombok.experimental.UtilityClass;
 import org.eclipse.lsp4j.SemanticTokensLegend;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Декодирует массив {@code data} семантических токенов LSP в токены с абсолютными позициями
@@ -39,6 +42,32 @@ public class StyledTokensDecoder {
    * @return токены в порядке следования в {@code data}
    */
   public static List<StyledToken> decode(List<Integer> data, SemanticTokensLegend legend) {
-    return List.of();
+    var tokens = new ArrayList<StyledToken>(data.size() / 5);
+    int line = 0;
+    int start = 0;
+    for (int i = 0; i + 4 < data.size(); i += 5) {
+      int deltaLine = data.get(i);
+      int deltaStart = data.get(i + 1);
+      line += deltaLine;
+      start = deltaLine == 0 ? start + deltaStart : deltaStart;
+      tokens.add(new StyledToken(
+        line,
+        start,
+        data.get(i + 2),
+        legend.getTokenTypes().get(data.get(i + 3)),
+        modifiers(data.get(i + 4), legend.getTokenModifiers())
+      ));
+    }
+    return tokens;
+  }
+
+  private static Set<String> modifiers(int bitmask, List<String> legendModifiers) {
+    var modifiers = new HashSet<String>();
+    for (int bit = 0; bit < legendModifiers.size(); bit++) {
+      if ((bitmask & (1 << bit)) != 0) {
+        modifiers.add(legendModifiers.get(bit));
+      }
+    }
+    return Set.copyOf(modifiers);
   }
 }

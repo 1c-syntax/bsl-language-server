@@ -39,7 +39,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class SemanticTokensSnapshotRendererTest {
 
   private static final Color BACKGROUND = new Color(0xFFFFFF);
-  private static final Color FOREGROUND = new Color(0x000000);
+  private static final Color FOREGROUND = new Color(0x333333);
   private static final Color LINE_NUMBER = new Color(0x00FF00);
   private static final Color KEYWORD = new Color(0x0000FF);
   private static final Color STRING = new Color(0xFF0000);
@@ -129,7 +129,7 @@ class SemanticTokensSnapshotRendererTest {
   @Test
   void placesTokenAtItsColumn() {
     // given
-    var tokens = List.of(new StyledToken(0, 4, 1, SemanticTokenTypes.Keyword, Set.of()));
+    var tokens = List.of(new StyledToken(0, 5, 1, SemanticTokenTypes.Keyword, Set.of()));
 
     // when
     var image = renderer.render("АААА Б", tokens, THEME);

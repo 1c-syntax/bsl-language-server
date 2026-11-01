@@ -21,7 +21,13 @@
  */
 package com.github._1c_syntax.bsl.languageserver.semantictokens.snapshots;
 
+import lombok.SneakyThrows;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.databind.json.JsonMapper;
+
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 /**
@@ -30,15 +36,23 @@ import java.nio.file.Path;
  */
 public class SnapshotWriter {
 
+  private final JsonMapper mapper = JsonMapper.builder()
+    .enable(SerializationFeature.INDENT_OUTPUT)
+    .build();
+
   /**
-   * Записывает изображение и его метаданные.
+   * Записывает изображение и его метаданные, создавая недостающие каталоги.
    *
    * @param outputDir корневой каталог снапшотов
    * @param name      имя снапшота без расширения; может содержать подкаталоги через {@code /}
    * @param image     изображение
    * @param metadata  метаданные
    */
+  @SneakyThrows
   public void write(Path outputDir, String name, BufferedImage image, SnapshotMetadata metadata) {
-    // реализация следует
+    var png = outputDir.resolve(name + ".png");
+    Files.createDirectories(png.getParent());
+    ImageIO.write(image, "png", png.toFile());
+    mapper.writeValue(outputDir.resolve(name + ".json").toFile(), metadata);
   }
 }
