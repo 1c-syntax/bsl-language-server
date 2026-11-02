@@ -66,11 +66,7 @@ public class MethodCallSemanticTokensSupplier implements SemanticTokensSupplier 
       reference.getSourceDefinedSymbol().ifPresent(symbol -> {
         // Ссылка на конструктор стоит на имени типа в `Новый Тип(...)`, которое уже
         // размечено NewExpressionSemanticTokensSupplier как Type.
-        if (symbol instanceof ConstructorSymbol) {
-          return;
-        }
-        if (!(symbol instanceof MethodSymbol method)) {
-          helper.addRange(entries, reference.selectionRange(), SemanticTokenTypes.Method);
+        if (!(symbol instanceof MethodSymbol method) || method instanceof ConstructorSymbol) {
           return;
         }
         // Метод объявлен в «статическом» модуле (CommonModule/ManagerModule/OScript-модуль)?
