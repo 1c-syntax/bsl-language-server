@@ -23,9 +23,13 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
+import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.eclipse.lsp4j.SemanticTokensLegend;
+import org.eclipse.lsp4j.SymbolKind;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -57,6 +61,9 @@ class SemanticTokensOverlapGuardTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private SemanticTokensProvider provider;
+
+  @Autowired
+  private ReferenceIndex referenceIndex;
 
   @Autowired
   private SemanticTokensLegend legend;
@@ -164,7 +171,21 @@ class SemanticTokensOverlapGuardTest extends AbstractServerContextAwareTest {
     var overlaps = TokenOverlaps.findOverlaps(allTokens,
       line -> line >= 0 && line < lines.length ? lines[line].length() : 0);
 
-    // then — имя типа после `Новый` размечается одним токеном.
+    // then — библиотека подключилась: на `PublicEntity` есть ссылка на конструктор,
+    // иначе проверка пересечений прошла бы впустую.
+    assertThat(referenceIndex.getReferencesFrom(documentContext.getUri(), SymbolKind.Method))
+      .as("ссылка на конструктор библиотечного класса")
+      .anyMatch(reference -> reference.symbol() instanceof ConstructorSymbol);
+    // имя типа после `Новый` размечается ровно одним токеном Type.
+    var typeIndex = legend.getTokenTypes().indexOf(SemanticTokenTypes.Type);
+    assertThat(allTokens)
+      .filteredOn(token -> token.line() == 1 && token.start() == 17)
+      .as("токены на имени типа PublicEntity")
+      .singleElement()
+      .satisfies(token -> {
+        assertThat(token.length()).isEqualTo("PublicEntity".length());
+        assertThat(token.type()).isEqualTo(typeIndex);
+      });
     assertThat(overlaps)
       .as("Конфликты подсветки: %s", describe(overlaps, documentContext))
       .isEmpty();
