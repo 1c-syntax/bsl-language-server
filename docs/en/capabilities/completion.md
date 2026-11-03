@@ -30,6 +30,8 @@ Two local variables `КоличествоСтрок` and `СуммаПродаж
 
 ![comp-04-local-variable](https://github.com/user-attachments/assets/5253a459-d914-4057-a19c-ed1b8bd111f9)
 
+The type label preserves the tabular section name (`Товары`), while a row is shown as `Товары (row)` for the English script variant or `Товары (строка)` for the Russian script variant.
+
 ## Module procedures and functions
 
 After typing `Вычисл` in the procedure body, completion of the current module's methods is triggered. The list offers the `ВычислитьИтог` function with its signature and description.
