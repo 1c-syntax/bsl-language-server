@@ -13,11 +13,11 @@ plugins {
     // git-versioning 7 подтягивает JGit 7 без GpgObjectSigner и ломает JReleaser 1.26.0.
     // Остаёмся на 6.4.4 до поддержки JGit 7 в JReleaser 2.x.
     id("me.qoomon.git-versioning") version "6.4.4"
-    id("io.freefair.lombok") version "9.8.2"
-    id("io.freefair.javadoc-links") version "9.8.2"
-    id("io.freefair.javadoc-utf-8") version "9.8.2"
-    id("io.freefair.aspectj.post-compile-weaving") version "9.8.2"
-    id("io.freefair.maven-central.validate-poms") version "9.8.2"
+    id("io.freefair.lombok") version "9.8.3"
+    id("io.freefair.javadoc-links") version "9.8.3"
+    id("io.freefair.javadoc-utf-8") version "9.8.3"
+    id("io.freefair.aspectj.post-compile-weaving") version "9.8.3"
+    id("io.freefair.maven-central.validate-poms") version "9.8.3"
     id("com.github.ben-manes.versions") version "0.66.0"
     id("org.springframework.boot") version "4.1.0"
     id("io.spring.dependency-management") version "1.1.7"
