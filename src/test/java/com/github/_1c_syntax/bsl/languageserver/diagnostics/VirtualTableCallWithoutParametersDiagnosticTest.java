@@ -56,4 +56,34 @@ class VirtualTableCallWithoutParametersDiagnosticTest extends AbstractDiagnostic
     assertThat(diagnostics).isEmpty();
   }
 
+  @Test
+  void testTabularSectionNamedAsVirtualTable() {
+    var diagnostics = getDiagnostics("VirtualTableCallWithoutParametersTabularSection");
+
+    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics, true)
+      .hasRange(62, 9, 50)
+      .hasRange(69, 9, 45)
+    ;
+  }
+
+  @Test
+  void testVirtualTableKinds() {
+    var diagnostics = getDiagnostics("VirtualTableCallWithoutParametersKinds");
+
+    assertThat(diagnostics).hasSize(10);
+    assertThat(diagnostics, true)
+      .hasRange(7, 9, 41)
+      .hasRange(21, 9, 48)
+      .hasRange(35, 9, 48)
+      .hasRange(49, 9, 56)
+      .hasRange(63, 9, 58)
+      .hasRange(77, 9, 52)
+      .hasRange(91, 9, 60)
+      .hasRange(105, 9, 48)
+      .hasRange(119, 9, 49)
+      .hasRange(133, 9, 45)
+    ;
+  }
+
 }
