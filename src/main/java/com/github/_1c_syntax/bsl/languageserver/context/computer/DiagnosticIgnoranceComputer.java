@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
@@ -46,6 +45,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -112,14 +112,7 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
    * Предшествующие объявлению строки аннотаций и код внутри блоков Вставка остаются проверяемыми.
    */
   private void computeExtensionIgnorance() {
-    if (documentContext.getFileType() != FileType.BSL) {
-      return;
-    }
-
-    var insertTokens = documentContext.getTokens().stream()
-      .filter(token -> token.getChannel() == HIDDEN_CHANNEL)
-      .filter(token -> token.getType() == BSLLexer.PREPROC_INSERT || token.getType() == BSLLexer.PREPROC_ENDINSERT)
-      .toList();
+    var lines = new TreeMap<Integer, Boolean>();
 
     documentContext.getSymbolTree()
       .getMethods().stream()
@@ -127,34 +120,43 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
         method -> method.getAnnotations().stream()
           .map(Annotation::getKind)
           .anyMatch(kind -> kind == AnnotationKind.CHANGEANDVALIDATE)
-      ).forEach(method -> computeExtensionMethodIgnorance(method, insertTokens));
-  }
+      ).forEach((MethodSymbol methodSymbol) -> {
+        // Аннотации принадлежат расширению; подавляем исходный метод, используя строки ANTLR (1..n).
+        int startLine = getDeclarationStartLine(methodSymbol);
+        int endLine = methodSymbol.getRange().getEnd().getLine() + 1;
+        if (startLine == endLine) {
+          // Совпадающие границы нельзя хранить под одним ключом в карте событий.
+          addIgnoredRange(ALL_DIAGNOSTICS_KEY, startLine, endLine);
+        } else {
+          lines.put(startLine, true);
+          lines.put(endLine, false);
+        }
+      });
 
-  /**
-   * Добавляет диапазоны исходного кода одного метода, не перенося состояние вставок между методами.
-   * Строки границ Вставка/КонецВставки включаются в подавление, содержимое вставок — нет.
-   */
-  private void computeExtensionMethodIgnorance(MethodSymbol method, List<Token> insertTokens) {
-    int startLine = getDeclarationStartLine(method);
-    int endLine = method.getRange().getEnd().getLine() + 1;
-    int ignoreStart = startLine;
-
-    for (Token token : insertTokens) {
-      int line = token.getLine();
-      if (line < startLine || line > endLine) {
-        continue;
-      }
-      if (token.getType() == BSLLexer.PREPROC_INSERT && ignoreStart >= 0) {
-        addIgnoredRange(ALL_DIAGNOSTICS_KEY, ignoreStart, line);
-        ignoreStart = -1;
-      } else if (token.getType() == BSLLexer.PREPROC_ENDINSERT && ignoreStart < 0) {
-        ignoreStart = line;
-      }
+    // not extended method
+    if (lines.isEmpty()) {
+      return;
     }
 
-    if (ignoreStart >= 0) {
-      addIgnoredRange(ALL_DIAGNOSTICS_KEY, ignoreStart, endLine);
+    documentContext.getTokens().stream()
+      .filter(token -> token.getChannel() == HIDDEN_CHANNEL)
+      .filter(token -> token.getType() == BSLLexer.PREPROC_INSERT || token.getType() == BSLLexer.PREPROC_ENDINSERT)
+      .forEach(token -> lines.put(token.getLine(), token.getType() == BSLLexer.PREPROC_ENDINSERT));
+
+    var lastTokenLine = -1;
+    var tokenLine = -1;
+
+    for (Map.Entry<Integer, Boolean> entry : lines.entrySet()) {
+
+      if (Boolean.TRUE.equals(entry.getValue())) {
+        tokenLine = entry.getKey();
+      } else {
+        lastTokenLine = entry.getKey();
+        addIgnoredRange(ALL_DIAGNOSTICS_KEY, tokenLine, lastTokenLine);
+      }
+
     }
+
   }
 
   /**

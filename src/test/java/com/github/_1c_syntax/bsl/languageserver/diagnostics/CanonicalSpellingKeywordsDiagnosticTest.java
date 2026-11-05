@@ -378,22 +378,22 @@ class CanonicalSpellingKeywordsDiagnosticTest extends AbstractDiagnosticTest<Can
     configuration = context.getLanguageServerConfiguration();
     configuration.getDiagnosticsOptions().setMode(Mode.ONLY);
     configuration.getDiagnosticsOptions().setParameters(Map.of("CanonicalSpellingKeywords", Either.forLeft(true)));
-    var content = EXTENSION_METHOD.formatted(annotation);
+    var content = EXTENSION_METHOD.formatted(annotation) + "Процедура ОбычныйМетод() КонецПроцедуры\n";
     var documentContext = TestUtils.getDocumentContext(URI.create("file:///custom-annotations.os"), content, context);
     var diagnostics = documentContext.getDiagnostics();
 
     assertThat(diagnostics).isEmpty();
     assertThat(diagnosticInstance.getQuickFixes(diagnostics, new CodeActionParams(), documentContext)).isEmpty();
 
-    context.rebuildDocument(documentContext, content.replace("Функция", "функция"), documentContext.getVersion() + 1);
+    context.rebuildDocument(documentContext, content.replace("Процедура", "процедура"), documentContext.getVersion() + 1);
     diagnostics = documentContext.getDiagnostics();
     assertThat(diagnostics).hasSize(1);
     var diagnostic = diagnostics.getFirst();
-    assertThat(diagnostic).hasRange(1, 0, 1, 7);
+    assertThat(diagnostic).hasRange(3, 0, 3, 9);
     var quickFixes = getQuickFixes(diagnostic, documentContext);
     assertThat(quickFixes).hasSize(1);
     var edits = quickFixes.getFirst().getEdit().getChanges().get(documentContext.getUri().toString());
-    assertThat(edits).containsExactly(new TextEdit(diagnostic.getRange(), "Функция"));
+    assertThat(edits).containsExactly(new TextEdit(diagnostic.getRange(), "Процедура"));
   }
 
   @ParameterizedTest
