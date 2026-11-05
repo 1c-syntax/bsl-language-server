@@ -22,13 +22,17 @@
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
+import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.AllArgsConstructor;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.Range;
 import org.eclipse.lsp4j.Diagnostic;
@@ -42,7 +46,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -109,7 +112,14 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
    * Предшествующие объявлению строки аннотаций и код внутри блоков Вставка остаются проверяемыми.
    */
   private void computeExtensionIgnorance() {
-    var lines = new TreeMap<Integer, Boolean>();
+    if (documentContext.getFileType() != FileType.BSL) {
+      return;
+    }
+
+    var insertTokens = documentContext.getTokens().stream()
+      .filter(token -> token.getChannel() == HIDDEN_CHANNEL)
+      .filter(token -> token.getType() == BSLLexer.PREPROC_INSERT || token.getType() == BSLLexer.PREPROC_ENDINSERT)
+      .toList();
 
     documentContext.getSymbolTree()
       .getMethods().stream()
@@ -117,43 +127,51 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
         method -> method.getAnnotations().stream()
           .map(Annotation::getKind)
           .anyMatch(kind -> kind == AnnotationKind.CHANGEANDVALIDATE)
-      ).forEach((MethodSymbol methodSymbol) -> {
-        // Аннотации принадлежат расширению; подавляем исходный метод, используя строки ANTLR (1..n).
-        int startLine = methodSymbol.getSubNameRange().getStart().getLine() + 1;
-        int endLine = methodSymbol.getRange().getEnd().getLine() + 1;
-        if (startLine == endLine) {
-          // Совпадающие границы нельзя хранить под одним ключом в карте событий.
-          addIgnoredRange(ALL_DIAGNOSTICS_KEY, startLine, endLine);
-        } else {
-          lines.put(startLine, true);
-          lines.put(endLine, false);
-        }
-      });
+      ).forEach(method -> computeExtensionMethodIgnorance(method, insertTokens));
+  }
 
-    // not extended method
-    if (lines.isEmpty()) {
-      return;
-    }
+  /**
+   * Добавляет диапазоны исходного кода одного метода, не перенося состояние вставок между методами.
+   * Строки границ Вставка/КонецВставки включаются в подавление, содержимое вставок — нет.
+   */
+  private void computeExtensionMethodIgnorance(MethodSymbol method, List<Token> insertTokens) {
+    int startLine = getDeclarationStartLine(method);
+    int endLine = method.getRange().getEnd().getLine() + 1;
+    int ignoreStart = startLine;
 
-    documentContext.getTokens().stream()
-      .filter(token -> token.getChannel() == HIDDEN_CHANNEL)
-      .filter(token -> token.getType() == BSLLexer.PREPROC_INSERT || token.getType() == BSLLexer.PREPROC_ENDINSERT)
-      .forEach(token -> lines.put(token.getLine(), token.getType() == BSLLexer.PREPROC_ENDINSERT));
-
-    var lastTokenLine = -1;
-    var tokenLine = -1;
-
-    for (Map.Entry<Integer, Boolean> entry : lines.entrySet()) {
-
-      if (Boolean.TRUE.equals(entry.getValue())) {
-        tokenLine = entry.getKey();
-      } else {
-        lastTokenLine = entry.getKey();
-        addIgnoredRange(ALL_DIAGNOSTICS_KEY, tokenLine, lastTokenLine);
+    for (Token token : insertTokens) {
+      int line = token.getLine();
+      if (line < startLine || line > endLine) {
+        continue;
       }
-
+      if (token.getType() == BSLLexer.PREPROC_INSERT && ignoreStart >= 0) {
+        addIgnoredRange(ALL_DIAGNOSTICS_KEY, ignoreStart, line);
+        ignoreStart = -1;
+      } else if (token.getType() == BSLLexer.PREPROC_ENDINSERT && ignoreStart < 0) {
+        ignoreStart = line;
+      }
     }
 
+    if (ignoreStart >= 0) {
+      addIgnoredRange(ALL_DIAGNOSTICS_KEY, ignoreStart, endLine);
+    }
+  }
+
+  /**
+   * Возвращает строку Асинх либо Процедура/Функция в нумерации ANTLR (1..n), без аннотаций.
+   * Если объявление неполное, использует строку имени метода, не расширяя подавление на предыдущий код.
+   */
+  private int getDeclarationStartLine(MethodSymbol method) {
+    int declarationRule = method.isFunction() ? BSLParser.RULE_funcDeclaration : BSLParser.RULE_procDeclaration;
+    int keywordType = method.isAsync() ? BSLParser.ASYNC_KEYWORD
+      : method.isFunction() ? BSLParser.FUNCTION_KEYWORD : BSLParser.PROCEDURE_KEYWORD;
+
+    return Trees.findTerminalNodeContainsPosition(documentContext.getAst(), method.getSubNameRange().getStart())
+      .map(node -> (ParserRuleContext) node.getParent())
+      .map(node -> Trees.<ParserRuleContext>getAncestorByRuleIndex(node, declarationRule))
+      .map(declaration -> declaration.getToken(keywordType, 0))
+      .map(keyword -> keyword.getSymbol().getLine())
+      .orElse(method.getSubNameRange().getStart().getLine() + 1);
   }
 
   private void computeCommentsIgnorance(List<Token> codeTokens, List<Token> comments) {

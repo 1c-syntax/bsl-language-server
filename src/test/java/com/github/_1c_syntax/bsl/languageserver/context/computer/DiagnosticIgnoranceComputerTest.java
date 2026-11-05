@@ -30,6 +30,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.IntStream;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.getDocumentContext;
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.getDocumentContextFromFile;
@@ -164,6 +165,123 @@ class DiagnosticIgnoranceComputerTest {
     assertThat(List.of(2, 3, 6, 8, 9, 11, 12, 13))
       .allMatch(line -> data.diagnosticShouldBeIgnored(createDiagnostic("RandomDiagnostic", line)));
     assertThat(List.of(1, 4, 5, 7, 10, 14))
+      .noneMatch(line -> data.diagnosticShouldBeIgnored(createDiagnostic("RandomDiagnostic", line)));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "ПРОЦЕДУРА\nРасш_Метод()\nКОНЕЦПРОЦЕДУРЫ",
+    "ФУНКЦИЯ\nРасш_Метод()\nКОНЕЦФУНКЦИИ",
+    "АСИНХ\nПРОЦЕДУРА\nРасш_Метод()\nКОНЕЦПРОЦЕДУРЫ",
+    "АСИНХ\nФУНКЦИЯ\nРасш_Метод()\nКОНЕЦФУНКЦИИ",
+    "PROCEDURE\nExt_Method()\nENDPROCEDURE",
+    "FUNCTION\nExt_Method()\nENDFUNCTION",
+    "ASYNC\nPROCEDURE\nExt_Method()\nENDPROCEDURE",
+    "ASYNC\nFUNCTION\nExt_Method()\nENDFUNCTION",
+    "АСИНХ\n\n// Описание\nПРОЦЕДУРА\n\nРасш_Метод()\nКОНЕЦПРОЦЕДУРЫ"
+  })
+  void testDiagnosticIgnoranceWrappedExtensionDeclaration(String method) {
+    var documentContext = getDocumentContext("""
+      &НаКлиенте
+      &ИзменениеИКонтроль("Метод")
+      %s
+      // После метода
+      """.formatted(method));
+    var data = new DiagnosticIgnoranceComputer(documentContext).compute();
+    int lastMethodLine = (int) method.lines().count() + 2;
+
+    assertThat(documentContext.getSymbolTree().getMethods()).hasSize(1);
+    assertThat(IntStream.rangeClosed(3, lastMethodLine).boxed().toList())
+      .allMatch(line -> data.diagnosticShouldBeIgnored(createDiagnostic("RandomDiagnostic", line)));
+    assertThat(List.of(1, 2, lastMethodLine + 1))
+      .noneMatch(line -> data.diagnosticShouldBeIgnored(createDiagnostic("RandomDiagnostic", line)));
+  }
+
+  @Test
+  void testInsertDirectivesOutsideExtensionDoNotSuppressDiagnostics() {
+    var documentContext = getDocumentContext("""
+      Процедура ОбычныйМетод()
+      #Вставка
+        Сообщить("Обычный код");
+      #КонецВставки
+      КонецПроцедуры
+      &ИзменениеИКонтроль("Первый")
+      Процедура Расш_Первый()
+      КонецПроцедуры
+      Процедура ДругойМетод()
+      #Вставка
+        Сообщить("Другой код");
+      #КонецВставки
+      КонецПроцедуры
+      &ИзменениеИКонтроль("Второй")
+      Процедура Расш_Второй()
+      КонецПроцедуры
+      Процедура ПоследнийМетод()
+      #Вставка
+        Сообщить("Последний код");
+      #КонецВставки
+      КонецПроцедуры
+      """);
+    var data = new DiagnosticIgnoranceComputer(documentContext).compute();
+
+    assertThat(List.of(7, 8, 15, 16))
+      .allMatch(line -> data.diagnosticShouldBeIgnored(createDiagnostic("RandomDiagnostic", line)));
+    assertThat(List.of(1, 2, 3, 4, 5, 6, 9, 10, 11, 12, 13, 14, 17, 18, 19, 20, 21))
+      .noneMatch(line -> data.diagnosticShouldBeIgnored(createDiagnostic("RandomDiagnostic", line)));
+  }
+
+  @Test
+  void testUnbalancedInsertDirectivesStayWithinExtensionMethod() {
+    var documentContext = getDocumentContext("""
+      &ИзменениеИКонтроль("Первый")
+      Процедура Расш_Первый()
+      #Вставка
+        Сообщить("Добавленный код");
+      #Вставка
+        Сообщить("Добавленный код");
+      #КонецВставки
+        Сообщить("Исходный код");
+      #КонецВставки
+        Сообщить("Исходный код");
+      КонецПроцедуры
+      &ИзменениеИКонтроль("Второй")
+      Процедура Расш_Второй()
+      #Вставка
+        Сообщить("Незавершённая вставка");
+      КонецПроцедуры
+      &ИзменениеИКонтроль("Третий")
+      Процедура Расш_Третий()
+      КонецПроцедуры
+      """);
+    var data = new DiagnosticIgnoranceComputer(documentContext).compute();
+
+    assertThat(List.of(2, 3, 7, 8, 9, 10, 11, 13, 14, 18, 19))
+      .allMatch(line -> data.diagnosticShouldBeIgnored(createDiagnostic("RandomDiagnostic", line)));
+    assertThat(List.of(1, 4, 5, 6, 12, 15, 16, 17))
+      .noneMatch(line -> data.diagnosticShouldBeIgnored(createDiagnostic("RandomDiagnostic", line)));
+  }
+
+  @Test
+  void testMultipleInsertBlocksLeaveOnlyInsertedCodeChecked() {
+    var documentContext = getDocumentContext("""
+      &ИзменениеИКонтроль("Метод")
+      Процедура Расш_Метод()
+        Сообщить("Исходный код");
+      #Вставка
+        Сообщить("Первая вставка");
+      #КонецВставки
+        Сообщить("Исходный код");
+      #Вставка
+        Сообщить("Вторая вставка");
+      #КонецВставки
+        Сообщить("Исходный код");
+      КонецПроцедуры
+      """);
+    var data = new DiagnosticIgnoranceComputer(documentContext).compute();
+
+    assertThat(List.of(2, 3, 4, 6, 7, 8, 10, 11, 12))
+      .allMatch(line -> data.diagnosticShouldBeIgnored(createDiagnostic("RandomDiagnostic", line)));
+    assertThat(List.of(1, 5, 9))
       .noneMatch(line -> data.diagnosticShouldBeIgnored(createDiagnostic("RandomDiagnostic", line)));
   }
 

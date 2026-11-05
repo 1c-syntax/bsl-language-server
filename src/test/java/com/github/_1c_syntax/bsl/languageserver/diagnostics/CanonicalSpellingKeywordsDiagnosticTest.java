@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Mode;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
@@ -318,6 +319,9 @@ class CanonicalSpellingKeywordsDiagnosticTest extends AbstractDiagnosticTest<Can
     ;
   }
 
+  /**
+   * Проверяет диапазоны и исправление регистра аннотаций BSL без изменения параметров и метода.
+   */
   @ParameterizedTest
   @CsvSource({
     "Перед, пЕрЕд",
@@ -355,6 +359,43 @@ class CanonicalSpellingKeywordsDiagnosticTest extends AbstractDiagnosticTest<Can
     }
   }
 
+  /**
+   * Имена аннотаций OneScript не проверяются и не изменяются при исправлении ключевых слов.
+   */
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "перед", "пЕрЕд", "ПЕРЕД",
+    "после", "пОсЛе", "ПОСЛЕ",
+    "вместо", "вМеСтО", "ВМЕСТО",
+    "изменениеиконтроль", "ИЗМЕНЕНИЕиконтроль", "ИЗМЕНЕНИЕИКОНТРОЛЬ",
+    "before", "bEfOrE", "BEFORE",
+    "after", "aFtEr", "AFTER",
+    "around", "aRoUnD", "AROUND",
+    "changeandvalidate", "CHANGEandvalidate", "CHANGEANDVALIDATE"
+  })
+  void testOneScriptAnnotationsPreserveSpelling(String annotation) {
+    initServerContext();
+    configuration = context.getLanguageServerConfiguration();
+    configuration.getDiagnosticsOptions().setMode(Mode.ONLY);
+    configuration.getDiagnosticsOptions().setParameters(Map.of("CanonicalSpellingKeywords", Either.forLeft(true)));
+    var content = EXTENSION_METHOD.formatted(annotation);
+    var documentContext = TestUtils.getDocumentContext(URI.create("file:///custom-annotations.os"), content, context);
+    var diagnostics = documentContext.getDiagnostics();
+
+    assertThat(diagnostics).isEmpty();
+    assertThat(diagnosticInstance.getQuickFixes(diagnostics, new CodeActionParams(), documentContext)).isEmpty();
+
+    context.rebuildDocument(documentContext, content.replace("Функция", "функция"), documentContext.getVersion() + 1);
+    diagnostics = documentContext.getDiagnostics();
+    assertThat(diagnostics).hasSize(1);
+    var diagnostic = diagnostics.getFirst();
+    assertThat(diagnostic).hasRange(1, 0, 1, 7);
+    var quickFixes = getQuickFixes(diagnostic, documentContext);
+    assertThat(quickFixes).hasSize(1);
+    var edits = quickFixes.getFirst().getEdit().getChanges().get(documentContext.getUri().toString());
+    assertThat(edits).containsExactly(new TextEdit(diagnostic.getRange(), "Функция"));
+  }
+
   @ParameterizedTest
   @ValueSource(strings = {"bsl", "os"})
   void testCustomAnnotationsAndNonKeywordText(String extension) {
@@ -379,6 +420,9 @@ class CanonicalSpellingKeywordsDiagnosticTest extends AbstractDiagnosticTest<Can
     assertThat(getDiagnostics(documentContext)).isEmpty();
   }
 
+  /**
+   * Проверка аннотаций подчиняется включению диагностики и её подавлению комментарием.
+   */
   @ParameterizedTest
   @CsvSource({"true, false", "false, false", "true, true"})
   void testExtensionAnnotationsRespectConfigurationAndSuppression(boolean enabled, boolean suppressed) {
@@ -416,6 +460,25 @@ class CanonicalSpellingKeywordsDiagnosticTest extends AbstractDiagnosticTest<Can
       .hasRange(0, 1, 0, 6)
       .hasRange(2, 1, 2, 19)
       .hasRange(4, 1, 4, 6);
+  }
+
+  @Test
+  void testWrappedExtensionDeclarationKeepsOnlyAnnotationDiagnostic() {
+    initServerContext();
+    configuration = context.getLanguageServerConfiguration();
+    configuration.getDiagnosticsOptions().setMode(Mode.ONLY);
+    configuration.getDiagnosticsOptions().setParameters(Map.of("CanonicalSpellingKeywords", Either.forLeft(true)));
+    var documentContext = TestUtils.getDocumentContext("""
+      &ИЗМЕНЕНИЕиконтроль("Метод")
+      АСИНХ
+      ПРОЦЕДУРА
+      Расш_Метод()
+      КОНЕЦПРОЦЕДУРЫ
+      """, context);
+    var diagnostics = documentContext.getDiagnostics();
+
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics.getFirst()).hasRange(0, 1, 0, 19);
   }
 
   @Test

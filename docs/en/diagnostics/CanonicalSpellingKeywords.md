@@ -90,12 +90,13 @@ A built-in language constructs, keywords must be written canonically.
 | Вместо             | Around            |
 | ИзменениеИКонтроль  | ChangeAndValidate |
 
-Only annotations recognized by the parser are checked for canonical spelling. Custom OneScript
-annotations and method names in annotation parameters are not checked. This diagnostic does not
-check whether an annotation is available in the selected platform version.
+The extension annotations listed above are checked only in BSL (`.bsl`) files. In OneScript (`.os`),
+these are custom annotations: their spelling is neither checked nor changed by a quick fix.
+Method names in annotation parameters are not checked either. This diagnostic does not check
+whether an annotation is available in the selected platform version.
 
-Annotations are checked by the existing `CanonicalSpellingKeywords` diagnostic, which is enabled
-by default for BSL and OneScript. Disabling the diagnostic also disables annotation checks.
+The `CanonicalSpellingKeywords` diagnostic is enabled by default for BSL and OneScript; extension
+annotation checks apply only to BSL. Disabling the diagnostic also disables annotation checks.
 
 ## Sources
 

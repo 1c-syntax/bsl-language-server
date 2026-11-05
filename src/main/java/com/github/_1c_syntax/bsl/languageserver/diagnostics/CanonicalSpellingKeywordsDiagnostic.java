@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
@@ -40,6 +41,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -53,6 +55,12 @@ public class CanonicalSpellingKeywordsDiagnostic extends AbstractDiagnostic impl
 
   private static final Map<Integer, List<String>> canonicalKeywords = getPreset();
   private static final Map<String, String> canonicalStrings = getCanonical();
+  private static final Set<Integer> EXTENSION_ANNOTATIONS = Set.of(
+    BSLParser.ANNOTATION_BEFORE_SYMBOL,
+    BSLParser.ANNOTATION_AFTER_SYMBOL,
+    BSLParser.ANNOTATION_AROUND_SYMBOL,
+    BSLParser.ANNOTATION_CHANGEANDVALIDATE_SYMBOL
+  );
 
   private static Map<Integer, List<String>> getPreset() {
     // Здесь возможно будет получить набор канонических слов из параметров.
@@ -286,9 +294,13 @@ public class CanonicalSpellingKeywordsDiagnostic extends AbstractDiagnostic impl
     return result;
   }
 
+  /**
+   * Проверяет каноническое написание, исключая пользовательские аннотации расширений в OneScript.
+   */
   protected void check() {
     documentContext.getTokensFromDefaultChannel()
       .parallelStream()
+      .filter(token -> documentContext.getFileType() == FileType.BSL || !EXTENSION_ANNOTATIONS.contains(token.getType()))
       .filter((Token t) ->
         canonicalKeywords.get(t.getType()) != null &&
           !canonicalKeywords.get(t.getType()).contains(t.getText()))
