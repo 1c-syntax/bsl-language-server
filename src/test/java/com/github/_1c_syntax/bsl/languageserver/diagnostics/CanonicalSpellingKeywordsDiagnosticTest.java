@@ -449,7 +449,7 @@ class CanonicalSpellingKeywordsDiagnosticTest extends AbstractDiagnosticTest<Can
       &пЕрЕд("Метод")
       Процедура ОбычныйМетод() КонецПроцедуры
       &ИЗМЕНЕНИЕиконтроль("Метод")
-      ПРОЦЕДУРА Расш_Метод() КОНЕЦПРОЦЕДУРЫ
+      Процедура Расш_Метод() КонецПроцедуры
       &AFTER("Метод")
       Процедура СледующийМетод() КонецПроцедуры
       """, context);
@@ -462,23 +462,54 @@ class CanonicalSpellingKeywordsDiagnosticTest extends AbstractDiagnosticTest<Can
       .hasRange(4, 1, 4, 6);
   }
 
-  @Test
-  void testWrappedExtensionDeclarationKeepsOnlyAnnotationDiagnostic() {
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "&ИЗМЕНЕНИЕиконтроль(\"Метод\") Процедура Расш_Метод()\nКонецПроцедуры",
+    "&ИЗМЕНЕНИЕиконтроль(\"Метод\") Процедура Расш_Метод() КонецПроцедуры",
+    "&CHANGEandvalidate(\"Method\") Function Ext_Method()\nReturn 1;\nEndFunction",
+    "&CHANGEandvalidate(\"Method\") Function Ext_Method() Return 1; EndFunction",
+    "&ИЗМЕНЕНИЕиконтроль(\"Метод\")\nАсинх\nПроцедура\nРасш_Метод()\nКонецПроцедуры",
+    "&CHANGEandvalidate(\"Method\") Async\nFunction\nExt_Method()\nReturn 1;\nEndFunction"
+  })
+  void testAnnotationDiagnosticsAndQuickFixAcrossDeclarationLayouts(String content) {
     initServerContext();
     configuration = context.getLanguageServerConfiguration();
     configuration.getDiagnosticsOptions().setMode(Mode.ONLY);
     configuration.getDiagnosticsOptions().setParameters(Map.of("CanonicalSpellingKeywords", Either.forLeft(true)));
-    var documentContext = TestUtils.getDocumentContext("""
-      &ИЗМЕНЕНИЕиконтроль("Метод")
-      АСИНХ
-      ПРОЦЕДУРА
-      Расш_Метод()
-      КОНЕЦПРОЦЕДУРЫ
-      """, context);
+    var documentContext = TestUtils.getDocumentContext(content, context);
     var diagnostics = documentContext.getDiagnostics();
 
     assertThat(diagnostics).hasSize(1);
-    assertThat(diagnostics.getFirst()).hasRange(0, 1, 0, 19);
+    var diagnostic = diagnostics.getFirst();
+    int annotationEnd = content.indexOf('(');
+    assertThat(diagnostic).hasRange(0, 1, 0, annotationEnd);
+    var quickFixes = getQuickFixes(diagnostic, documentContext);
+    assertThat(quickFixes).hasSize(1);
+    var edits = quickFixes.getFirst().getEdit().getChanges().get(documentContext.getUri().toString());
+    String canonical = content.startsWith("&ИЗМЕНЕНИЕ") ? "ИзменениеИКонтроль" : "ChangeAndValidate";
+    assertThat(edits).containsExactly(new TextEdit(diagnostic.getRange(), canonical));
+    var corrected = "&" + canonical + content.substring(annotationEnd);
+    context.rebuildDocument(documentContext, corrected, documentContext.getVersion() + 1);
+    assertThat(documentContext.getDiagnostics()).isEmpty();
+  }
+
+  @Test
+  void testOneScriptExtensionSuppressionIsUnchanged() {
+    initServerContext();
+    configuration = context.getLanguageServerConfiguration();
+    configuration.getDiagnosticsOptions().setMode(Mode.ONLY);
+    configuration.getDiagnosticsOptions().setParameters(Map.of("CanonicalSpellingKeywords", Either.forLeft(true)));
+    var documentContext = TestUtils.getDocumentContext(URI.create("file:///custom-annotations.os"), """
+      &CHANGEandvalidate("Method")
+      FUNCTION Ext_Method()
+        RETURN 1;
+      ENDFUNCTION
+      """, context);
+    var diagnostics = documentContext.getDiagnostics();
+
+    // Существующие границы подавления тела не относятся к проверке регистра аннотаций.
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics.getFirst()).hasRange(3, 0, 3, 11);
   }
 
   @Test

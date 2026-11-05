@@ -22,16 +22,15 @@
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
-import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.AllArgsConstructor;
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.Range;
 import org.eclipse.lsp4j.Diagnostic;
@@ -62,6 +61,7 @@ import static org.antlr.v4.runtime.Token.HIDDEN_CHANNEL;
 public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnoranceComputer.Data> {
 
   private static final DiagnosticCode ALL_DIAGNOSTICS_KEY = new DiagnosticCode("all");
+  private static final DiagnosticCode CANONICAL_SPELLING_KEYWORDS = new DiagnosticCode("CanonicalSpellingKeywords");
 
   private static final Pattern IGNORE_ALL_ON = CaseInsensitivePattern.compile(
     "BSLLS-(?:вкл|on)"
@@ -83,6 +83,7 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
 
   private final Map<DiagnosticCode, List<Range<Integer>>> diagnosticIgnorance = new HashMap<>();
   private final Map<DiagnosticCode, Deque<Integer>> ignoranceStack = new HashMap<>();
+  private final List<Range<Integer>> extensionIgnorance = new ArrayList<>();
 
   public DiagnosticIgnoranceComputer(DocumentContext documentContext) {
     this.documentContext = documentContext;
@@ -93,6 +94,7 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
 
     diagnosticIgnorance.clear();
     ignoranceStack.clear();
+    extensionIgnorance.clear();
 
     List<Token> codeTokens = documentContext.getTokensFromDefaultChannel();
     List<Token> comments = documentContext.getComments();
@@ -104,13 +106,24 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
     computeCommentsIgnorance(codeTokens, comments);
     computeExtensionIgnorance();
 
-    return new Data(diagnosticIgnorance);
+    return new Data(diagnosticIgnorance, extensionIgnorance, getExtensionAnnotationRanges(codeTokens));
   }
 
   /**
-   * Добавляет диапазоны подавления всех диагностик для исходного кода методов с ИзменениеИКонтроль.
-   * Предшествующие объявлению строки аннотаций и код внутри блоков Вставка остаются проверяемыми.
+   * Возвращает точные диапазоны имён аннотаций расширения BSL, включая аннотации на строке объявления.
+   * В OneScript такие аннотации являются пользовательскими и не входят в результат.
    */
+  private Set<org.eclipse.lsp4j.Range> getExtensionAnnotationRanges(List<Token> codeTokens) {
+    if (extensionIgnorance.isEmpty() || documentContext.getFileType() != FileType.BSL) {
+      return Set.of();
+    }
+
+    return codeTokens.stream()
+      .filter(token -> AnnotationKind.of(token.getType()) != AnnotationKind.CUSTOM)
+      .map(Ranges::create)
+      .collect(Collectors.toSet());
+  }
+
   private void computeExtensionIgnorance() {
     var lines = new TreeMap<Integer, Boolean>();
 
@@ -121,16 +134,8 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
           .map(Annotation::getKind)
           .anyMatch(kind -> kind == AnnotationKind.CHANGEANDVALIDATE)
       ).forEach((MethodSymbol methodSymbol) -> {
-        // Аннотации принадлежат расширению; подавляем исходный метод, используя строки ANTLR (1..n).
-        int startLine = getDeclarationStartLine(methodSymbol);
-        int endLine = methodSymbol.getRange().getEnd().getLine() + 1;
-        if (startLine == endLine) {
-          // Совпадающие границы нельзя хранить под одним ключом в карте событий.
-          addIgnoredRange(ALL_DIAGNOSTICS_KEY, startLine, endLine);
-        } else {
-          lines.put(startLine, true);
-          lines.put(endLine, false);
-        }
+        lines.put(methodSymbol.getRange().getStart().getLine(), true);
+        lines.put(methodSymbol.getRange().getEnd().getLine(), false);
       });
 
     // not extended method
@@ -152,28 +157,11 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
         tokenLine = entry.getKey();
       } else {
         lastTokenLine = entry.getKey();
-        addIgnoredRange(ALL_DIAGNOSTICS_KEY, tokenLine, lastTokenLine);
+        extensionIgnorance.add(Range.of(tokenLine - 1, lastTokenLine - 1));
       }
 
     }
 
-  }
-
-  /**
-   * Возвращает строку Асинх либо Процедура/Функция в нумерации ANTLR (1..n), без аннотаций.
-   * Если объявление неполное, использует строку имени метода, не расширяя подавление на предыдущий код.
-   */
-  private int getDeclarationStartLine(MethodSymbol method) {
-    int declarationRule = method.isFunction() ? BSLParser.RULE_funcDeclaration : BSLParser.RULE_procDeclaration;
-    int keywordType = method.isAsync() ? BSLParser.ASYNC_KEYWORD
-      : method.isFunction() ? BSLParser.FUNCTION_KEYWORD : BSLParser.PROCEDURE_KEYWORD;
-
-    return Trees.findTerminalNodeContainsPosition(documentContext.getAst(), method.getSubNameRange().getStart())
-      .map(node -> (ParserRuleContext) node.getParent())
-      .map(node -> Trees.<ParserRuleContext>getAncestorByRuleIndex(node, declarationRule))
-      .map(declaration -> declaration.getToken(keywordType, 0))
-      .map(keyword -> keyword.getSymbol().getLine())
-      .orElse(method.getSubNameRange().getStart().getLine() + 1);
   }
 
   private void computeCommentsIgnorance(List<Token> codeTokens, List<Token> comments) {
@@ -292,12 +280,21 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
   @AllArgsConstructor
   public static class Data {
     private final Map<DiagnosticCode, List<Range<Integer>>> diagnosticIgnorance;
+    private final List<Range<Integer>> extensionIgnorance;
+    private final Set<org.eclipse.lsp4j.Range> extensionAnnotationRanges;
 
+    /**
+     * Создаёт данные подавления только по комментариям, без диапазонов расширения.
+     */
+    public Data(Map<DiagnosticCode, List<Range<Integer>>> diagnosticIgnorance) {
+      this(diagnosticIgnorance, List.of(), Set.of());
+    }
+
+    /**
+     * Проверяет подавление диагностики комментариями или диапазонами заимствованного кода.
+     * Проверка регистра имени аннотации BSL исключается только из подавления заимствованного кода.
+     */
     public boolean diagnosticShouldBeIgnored(Diagnostic diagnostic) {
-      if (diagnosticIgnorance.isEmpty()) {
-        return false;
-      }
-
       int line = diagnostic.getRange().getStart().getLine();
 
       Predicate<Map.Entry<DiagnosticCode, List<Range<Integer>>>> ignoreAll =
@@ -305,11 +302,17 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
       Predicate<Map.Entry<DiagnosticCode, List<Range<Integer>>>> ignoreConcreteDiagnostic =
         entry -> entry.getKey().equals(diagnostic.getCode());
 
-      return diagnosticIgnorance.entrySet().stream()
+      boolean ignoredByComment = diagnosticIgnorance.entrySet().stream()
         .filter(ignoreAll.or(ignoreConcreteDiagnostic))
         .map(Map.Entry::getValue)
         .flatMap(Collection::stream)
         .anyMatch(range -> range.contains(line));
+
+      boolean extensionAnnotation = CANONICAL_SPELLING_KEYWORDS.equals(diagnostic.getCode())
+        && extensionAnnotationRanges.contains(diagnostic.getRange());
+
+      return ignoredByComment || (!extensionAnnotation
+        && extensionIgnorance.stream().anyMatch(range -> range.contains(line)));
     }
   }
 

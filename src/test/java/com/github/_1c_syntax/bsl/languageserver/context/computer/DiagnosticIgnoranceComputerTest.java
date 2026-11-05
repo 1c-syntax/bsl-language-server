@@ -25,12 +25,13 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.IntStream;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.getDocumentContext;
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.getDocumentContextFromFile;
@@ -79,14 +80,9 @@ class DiagnosticIgnoranceComputerTest {
     final var documentContext = getDocumentContextFromFile(filePath);
 
     List<Diagnostic> ignoredDiagnostics = new ArrayList<>();
-    ignoredDiagnostics.add(createDiagnostic("CanonicalSpellingKeywords", 3));
     ignoredDiagnostics.add(createDiagnostic("MissingSpace", 6));
-    ignoredDiagnostics.add(createDiagnostic("CanonicalSpellingKeywords", 13));
-    ignoredDiagnostics.add(createDiagnostic("CanonicalSpellingKeywords", 14));
 
     List<Diagnostic> notIgnoredDiagnostics = new ArrayList<>();
-    notIgnoredDiagnostics.add(createDiagnostic("RandomDiagnostic", 1));
-    notIgnoredDiagnostics.add(createDiagnostic("CanonicalSpellingKeywords", 2));
     notIgnoredDiagnostics.add(createDiagnostic("MissingSpace", 16));
     notIgnoredDiagnostics.add(createDiagnostic("UnusedLocalVariable", 16));
     notIgnoredDiagnostics.add(createDiagnostic("SemicolonPresence", 10));
@@ -102,99 +98,58 @@ class DiagnosticIgnoranceComputerTest {
 
   }
 
-  @Test
-  void testDiagnosticIgnoranceExtensionAnnotations() {
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "Перед", "После", "Вместо", "ИзменениеИКонтроль", "Before", "After", "Around", "ChangeAndValidate"
+  })
+  void testOnlyCanonicalAnnotationRangesAreExemptFromExtensionSuppression(String annotation) {
     var documentContext = getDocumentContext("""
-      // Аннотации расширения не относятся к исходному методу.
-      &НаКлиенте
       &ИзменениеИКонтроль("Метод")
-      &После("Метод")
-      Процедура Расш_Метод()
+      &%s("Метод") Процедура Расш_Метод()
         Сообщить("Исходный код");
       КонецПроцедуры
-      """);
+      """.formatted(annotation));
     var data = new DiagnosticIgnoranceComputer(documentContext).compute();
+    var diagnostic = createDiagnostic("CanonicalSpellingKeywords", 2);
+    diagnostic.setRange(Ranges.create(1, 1, 1, annotation.length() + 1));
 
-    assertThat(List.of(1, 2, 3, 4))
-      .noneMatch(line -> data.diagnosticShouldBeIgnored(createDiagnostic("CanonicalSpellingKeywords", line)));
-    assertThat(List.of(5, 6, 7))
-      .allMatch(line -> data.diagnosticShouldBeIgnored(createDiagnostic("CanonicalSpellingKeywords", line)));
+    assertThat(data.diagnosticShouldBeIgnored(diagnostic)).isFalse();
+    diagnostic.setCode("RandomDiagnostic");
+    assertThat(data.diagnosticShouldBeIgnored(diagnostic)).isTrue();
+    assertThat(data.diagnosticShouldBeIgnored(createDiagnostic("CanonicalSpellingKeywords", 3))).isTrue();
   }
 
   @ParameterizedTest
   @ValueSource(strings = {
-    "&ИзменениеИКонтроль(\"Метод\")\nПроцедура Расш_Метод() КонецПроцедуры",
-    "&ChangeAndValidate(\"Method\")\nFunction Ext_Method() Return 1; EndFunction"
+    "// BSLLS-off\n&ИЗМЕНЕНИЕиконтроль(\"Метод\")",
+    "// BSLLS:CanonicalSpellingKeywords-off\n&ИЗМЕНЕНИЕиконтроль(\"Метод\")",
+    "&ИЗМЕНЕНИЕиконтроль(\"Метод\") // BSLLS:CanonicalSpellingKeywords-off"
   })
-  void testDiagnosticIgnoranceSingleLineExtension(String method) {
-    var documentContext = getDocumentContext("""
-      Процедура ОбычныйМетод()
-      КонецПроцедуры
-      &НаКлиенте
-      %s
-      // После расширения
-      Процедура СледующийМетод() КонецПроцедуры
-      """.formatted(method));
+  void testCommentSuppressionStillAppliesToExtensionAnnotations(String annotations) {
+    var documentContext = getDocumentContext(annotations + "\nПроцедура Метод()\nКонецПроцедуры");
+    var token = documentContext.getTokensFromDefaultChannel().stream()
+      .filter(candidate -> candidate.getText().equals("ИЗМЕНЕНИЕиконтроль"))
+      .findFirst().orElseThrow();
+    var diagnostic = createDiagnostic("CanonicalSpellingKeywords", token.getLine());
+    diagnostic.setRange(Ranges.create(token));
     var data = new DiagnosticIgnoranceComputer(documentContext).compute();
 
-    assertThat(data.diagnosticShouldBeIgnored(createDiagnostic("RandomDiagnostic", 5))).isTrue();
-    assertThat(List.of(1, 2, 3, 4, 6, 7))
-      .noneMatch(line -> data.diagnosticShouldBeIgnored(createDiagnostic("RandomDiagnostic", line)));
-  }
-
-  @Test
-  void testDiagnosticIgnoranceMixedExtensionMethods() {
-    var documentContext = getDocumentContext("""
-      &ИзменениеИКонтроль("Первый")
-      Процедура Расш_Первый()
-      КонецПроцедуры
-      // Между методами
-      &ИзменениеИКонтроль("Второй")
-      Процедура Расш_Второй() КонецПроцедуры
-      &ИзменениеИКонтроль("Третий")
-      Процедура Расш_Третий()
-      #Вставка
-        Сообщить("Добавленный код");
-      #КонецВставки
-        Сообщить("Исходный код");
-      КонецПроцедуры
-      Процедура ОбычныйМетод() КонецПроцедуры
-      """);
-    var data = new DiagnosticIgnoranceComputer(documentContext).compute();
-
-    assertThat(List.of(2, 3, 6, 8, 9, 11, 12, 13))
-      .allMatch(line -> data.diagnosticShouldBeIgnored(createDiagnostic("RandomDiagnostic", line)));
-    assertThat(List.of(1, 4, 5, 7, 10, 14))
-      .noneMatch(line -> data.diagnosticShouldBeIgnored(createDiagnostic("RandomDiagnostic", line)));
+    assertThat(data.diagnosticShouldBeIgnored(diagnostic)).isTrue();
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {
-    "ПРОЦЕДУРА\nРасш_Метод()\nКОНЕЦПРОЦЕДУРЫ",
-    "ФУНКЦИЯ\nРасш_Метод()\nКОНЕЦФУНКЦИИ",
-    "АСИНХ\nПРОЦЕДУРА\nРасш_Метод()\nКОНЕЦПРОЦЕДУРЫ",
-    "АСИНХ\nФУНКЦИЯ\nРасш_Метод()\nКОНЕЦФУНКЦИИ",
-    "PROCEDURE\nExt_Method()\nENDPROCEDURE",
-    "FUNCTION\nExt_Method()\nENDFUNCTION",
-    "ASYNC\nPROCEDURE\nExt_Method()\nENDPROCEDURE",
-    "ASYNC\nFUNCTION\nExt_Method()\nENDFUNCTION",
-    "АСИНХ\n\n// Описание\nПРОЦЕДУРА\n\nРасш_Метод()\nКОНЕЦПРОЦЕДУРЫ"
-  })
-  void testDiagnosticIgnoranceWrappedExtensionDeclaration(String method) {
-    var documentContext = getDocumentContext("""
-      &НаКлиенте
-      &ИзменениеИКонтроль("Метод")
-      %s
-      // После метода
-      """.formatted(method));
+  @CsvSource({"bsl, false", "os, true"})
+  void testAnnotationExemptionIsLimitedToBsl(String extension, boolean ignored) {
+    var documentContext = getDocumentContext(URI.create("file:///extension." + extension), """
+      &CHANGEandvalidate("Method") Function Ext_Method()
+        Return 1;
+      EndFunction
+      """);
+    var diagnostic = createDiagnostic("CanonicalSpellingKeywords", 1);
+    diagnostic.setRange(Ranges.create(0, 1, 0, 18));
     var data = new DiagnosticIgnoranceComputer(documentContext).compute();
-    int lastMethodLine = (int) method.lines().count() + 2;
 
-    assertThat(documentContext.getSymbolTree().getMethods()).hasSize(1);
-    assertThat(IntStream.rangeClosed(3, lastMethodLine).boxed().toList())
-      .allMatch(line -> data.diagnosticShouldBeIgnored(createDiagnostic("RandomDiagnostic", line)));
-    assertThat(List.of(1, 2, lastMethodLine + 1))
-      .noneMatch(line -> data.diagnosticShouldBeIgnored(createDiagnostic("RandomDiagnostic", line)));
+    assertThat(data.diagnosticShouldBeIgnored(diagnostic)).isEqualTo(ignored);
   }
 
   @Test
