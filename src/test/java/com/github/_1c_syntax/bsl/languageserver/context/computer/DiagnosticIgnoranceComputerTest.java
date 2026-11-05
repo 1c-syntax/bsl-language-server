@@ -24,6 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.ArrayList;
@@ -116,6 +118,53 @@ class DiagnosticIgnoranceComputerTest {
       .noneMatch(line -> data.diagnosticShouldBeIgnored(createDiagnostic("CanonicalSpellingKeywords", line)));
     assertThat(List.of(5, 6, 7))
       .allMatch(line -> data.diagnosticShouldBeIgnored(createDiagnostic("CanonicalSpellingKeywords", line)));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "&ИзменениеИКонтроль(\"Метод\")\nПроцедура Расш_Метод() КонецПроцедуры",
+    "&ChangeAndValidate(\"Method\")\nFunction Ext_Method() Return 1; EndFunction"
+  })
+  void testDiagnosticIgnoranceSingleLineExtension(String method) {
+    var documentContext = getDocumentContext("""
+      Процедура ОбычныйМетод()
+      КонецПроцедуры
+      &НаКлиенте
+      %s
+      // После расширения
+      Процедура СледующийМетод() КонецПроцедуры
+      """.formatted(method));
+    var data = new DiagnosticIgnoranceComputer(documentContext).compute();
+
+    assertThat(data.diagnosticShouldBeIgnored(createDiagnostic("RandomDiagnostic", 5))).isTrue();
+    assertThat(List.of(1, 2, 3, 4, 6, 7))
+      .noneMatch(line -> data.diagnosticShouldBeIgnored(createDiagnostic("RandomDiagnostic", line)));
+  }
+
+  @Test
+  void testDiagnosticIgnoranceMixedExtensionMethods() {
+    var documentContext = getDocumentContext("""
+      &ИзменениеИКонтроль("Первый")
+      Процедура Расш_Первый()
+      КонецПроцедуры
+      // Между методами
+      &ИзменениеИКонтроль("Второй")
+      Процедура Расш_Второй() КонецПроцедуры
+      &ИзменениеИКонтроль("Третий")
+      Процедура Расш_Третий()
+      #Вставка
+        Сообщить("Добавленный код");
+      #КонецВставки
+        Сообщить("Исходный код");
+      КонецПроцедуры
+      Процедура ОбычныйМетод() КонецПроцедуры
+      """);
+    var data = new DiagnosticIgnoranceComputer(documentContext).compute();
+
+    assertThat(List.of(2, 3, 6, 8, 9, 11, 12, 13))
+      .allMatch(line -> data.diagnosticShouldBeIgnored(createDiagnostic("RandomDiagnostic", line)));
+    assertThat(List.of(1, 4, 5, 7, 10, 14))
+      .noneMatch(line -> data.diagnosticShouldBeIgnored(createDiagnostic("RandomDiagnostic", line)));
   }
 
   @Test

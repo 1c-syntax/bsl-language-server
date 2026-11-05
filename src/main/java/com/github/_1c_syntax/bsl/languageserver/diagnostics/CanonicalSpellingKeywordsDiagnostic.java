@@ -60,6 +60,11 @@ public class CanonicalSpellingKeywordsDiagnostic extends AbstractDiagnostic impl
     return getDefaultPreset();
   }
 
+  /**
+   * Возвращает допустимые канонические написания ключевых слов на русском и английском языках.
+   *
+   * @return соответствие типов токенов спискам допустимых написаний
+   */
   private static Map<Integer, List<String>> getDefaultPreset() {
 
     Map<Integer, List<String>> result = new HashMap<>();
@@ -154,6 +159,11 @@ public class CanonicalSpellingKeywordsDiagnostic extends AbstractDiagnostic impl
     return result;
   }
 
+  /**
+   * Возвращает канонические замены для ключевых слов, приведённых к верхнему регистру.
+   *
+   * @return соответствие написаний в верхнем регистре каноническим написаниям
+   */
   private static Map<String, String> getCanonical() {
     Map<String, String> result = new HashMap<>();
 

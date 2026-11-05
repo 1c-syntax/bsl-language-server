@@ -396,6 +396,29 @@ class CanonicalSpellingKeywordsDiagnosticTest extends AbstractDiagnosticTest<Can
   }
 
   @Test
+  void testSingleLineExtensionKeepsAnnotationDiagnostics() {
+    initServerContext();
+    configuration = context.getLanguageServerConfiguration();
+    configuration.getDiagnosticsOptions().setMode(Mode.ONLY);
+    configuration.getDiagnosticsOptions().setParameters(Map.of("CanonicalSpellingKeywords", Either.forLeft(true)));
+    var documentContext = TestUtils.getDocumentContext("""
+      &пЕрЕд("Метод")
+      Процедура ОбычныйМетод() КонецПроцедуры
+      &ИЗМЕНЕНИЕиконтроль("Метод")
+      ПРОЦЕДУРА Расш_Метод() КОНЕЦПРОЦЕДУРЫ
+      &AFTER("Метод")
+      Процедура СледующийМетод() КонецПроцедуры
+      """, context);
+    var diagnostics = documentContext.getDiagnostics();
+
+    assertThat(diagnostics).hasSize(3);
+    assertThat(diagnostics, true)
+      .hasRange(0, 1, 0, 6)
+      .hasRange(2, 1, 2, 19)
+      .hasRange(4, 1, 4, 6);
+  }
+
+  @Test
   void testQuickFix() {
 
     final var documentContext = getDocumentContext();

@@ -104,6 +104,10 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
     return new Data(diagnosticIgnorance);
   }
 
+  /**
+   * Добавляет диапазоны подавления всех диагностик для исходного кода методов с ИзменениеИКонтроль.
+   * Предшествующие объявлению строки аннотаций и код внутри блоков Вставка остаются проверяемыми.
+   */
   private void computeExtensionIgnorance() {
     var lines = new TreeMap<Integer, Boolean>();
 
@@ -115,8 +119,15 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
           .anyMatch(kind -> kind == AnnotationKind.CHANGEANDVALIDATE)
       ).forEach((MethodSymbol methodSymbol) -> {
         // Аннотации принадлежат расширению; подавляем исходный метод, используя строки ANTLR (1..n).
-        lines.put(methodSymbol.getSubNameRange().getStart().getLine() + 1, true);
-        lines.put(methodSymbol.getRange().getEnd().getLine() + 1, false);
+        int startLine = methodSymbol.getSubNameRange().getStart().getLine() + 1;
+        int endLine = methodSymbol.getRange().getEnd().getLine() + 1;
+        if (startLine == endLine) {
+          // Совпадающие границы нельзя хранить под одним ключом в карте событий.
+          addIgnoredRange(ALL_DIAGNOSTICS_KEY, startLine, endLine);
+        } else {
+          lines.put(startLine, true);
+          lines.put(endLine, false);
+        }
       });
 
     // not extended method
