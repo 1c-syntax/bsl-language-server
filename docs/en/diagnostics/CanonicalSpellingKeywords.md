@@ -81,6 +81,22 @@ A built-in language constructs, keywords must be written canonically.
 | НаКлиентеНаСервереБезКонтекста | AtClientAtServerNoContext |
 | НаКлиентеНаСервере             | AtClientAtServer          |
 
+### Extension annotations
+
+| RU                 | EN                |
+|--------------------|-------------------|
+| Перед              | Before            |
+| После              | After             |
+| Вместо             | Around            |
+| ИзменениеИКонтроль  | ChangeAndValidate |
+
+Only annotations recognized by the parser are checked for canonical spelling. Custom OneScript
+annotations and method names in annotation parameters are not checked. This diagnostic does not
+check whether an annotation is available in the selected platform version.
+
+Annotations are checked by the existing `CanonicalSpellingKeywords` diagnostic, which is enabled
+by default for BSL and OneScript. Disabling the diagnostic also disables annotation checks.
+
 ## Sources
 
 + [Standard: General requirements (RU)](https://its.1c.ru/db/v8std#content:441:hdoc)

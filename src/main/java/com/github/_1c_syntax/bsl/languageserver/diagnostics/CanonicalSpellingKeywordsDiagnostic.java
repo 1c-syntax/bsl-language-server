@@ -145,6 +145,11 @@ public class CanonicalSpellingKeywordsDiagnostic extends AbstractDiagnostic impl
       Keywords.AT_CLIENT_AT_SERVER_NO_CONTEXT.getRu(), Keywords.AT_CLIENT_AT_SERVER_NO_CONTEXT.getEn()));
     result.put(BSLParser.ANNOTATION_ATCLIENTATSERVER_SYMBOL, List.of(
       Keywords.AT_CLIENT_AT_SERVER.getRu(), Keywords.AT_CLIENT_AT_SERVER.getEn()));
+    result.put(BSLParser.ANNOTATION_BEFORE_SYMBOL, List.of(Keywords.BEFORE.getRu(), Keywords.BEFORE.getEn()));
+    result.put(BSLParser.ANNOTATION_AFTER_SYMBOL, List.of(Keywords.AFTER.getRu(), Keywords.AFTER.getEn()));
+    result.put(BSLParser.ANNOTATION_AROUND_SYMBOL, List.of(Keywords.AROUND.getRu(), Keywords.AROUND.getEn()));
+    result.put(BSLParser.ANNOTATION_CHANGEANDVALIDATE_SYMBOL, List.of(
+      Keywords.CHANGE_AND_VALIDATE.getRu(), Keywords.CHANGE_AND_VALIDATE.getEn()));
 
     return result;
   }
@@ -260,6 +265,14 @@ public class CanonicalSpellingKeywordsDiagnostic extends AbstractDiagnostic impl
     result.put(Keywords.AT_CLIENT_AT_SERVER_NO_CONTEXT_UP.getEn(), Keywords.AT_CLIENT_AT_SERVER_NO_CONTEXT.getEn());
     result.put(Keywords.AT_CLIENT_AT_SERVER_UP.getRu(), Keywords.AT_CLIENT_AT_SERVER.getRu());
     result.put(Keywords.AT_CLIENT_AT_SERVER_UP.getEn(), Keywords.AT_CLIENT_AT_SERVER.getEn());
+    result.put(Keywords.BEFORE_UP.getRu(), Keywords.BEFORE.getRu());
+    result.put(Keywords.BEFORE_UP.getEn(), Keywords.BEFORE.getEn());
+    result.put(Keywords.AFTER_UP.getRu(), Keywords.AFTER.getRu());
+    result.put(Keywords.AFTER_UP.getEn(), Keywords.AFTER.getEn());
+    result.put(Keywords.AROUND_UP.getRu(), Keywords.AROUND.getRu());
+    result.put(Keywords.AROUND_UP.getEn(), Keywords.AROUND.getEn());
+    result.put(Keywords.CHANGE_AND_VALIDATE_UP.getRu(), Keywords.CHANGE_AND_VALIDATE.getRu());
+    result.put(Keywords.CHANGE_AND_VALIDATE_UP.getEn(), Keywords.CHANGE_AND_VALIDATE.getEn());
     return result;
   }
 

@@ -29,6 +29,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.getDocumentContext;
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.getDocumentContextFromFile;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -75,9 +76,14 @@ class DiagnosticIgnoranceComputerTest {
     final var documentContext = getDocumentContextFromFile(filePath);
 
     List<Diagnostic> ignoredDiagnostics = new ArrayList<>();
+    ignoredDiagnostics.add(createDiagnostic("CanonicalSpellingKeywords", 3));
     ignoredDiagnostics.add(createDiagnostic("MissingSpace", 6));
+    ignoredDiagnostics.add(createDiagnostic("CanonicalSpellingKeywords", 13));
+    ignoredDiagnostics.add(createDiagnostic("CanonicalSpellingKeywords", 14));
 
     List<Diagnostic> notIgnoredDiagnostics = new ArrayList<>();
+    notIgnoredDiagnostics.add(createDiagnostic("RandomDiagnostic", 1));
+    notIgnoredDiagnostics.add(createDiagnostic("CanonicalSpellingKeywords", 2));
     notIgnoredDiagnostics.add(createDiagnostic("MissingSpace", 16));
     notIgnoredDiagnostics.add(createDiagnostic("UnusedLocalVariable", 16));
     notIgnoredDiagnostics.add(createDiagnostic("SemicolonPresence", 10));
@@ -91,6 +97,25 @@ class DiagnosticIgnoranceComputerTest {
     assertThat(ignoredDiagnostics).allMatch(data::diagnosticShouldBeIgnored);
     assertThat(notIgnoredDiagnostics).noneMatch(data::diagnosticShouldBeIgnored);
 
+  }
+
+  @Test
+  void testDiagnosticIgnoranceExtensionAnnotations() {
+    var documentContext = getDocumentContext("""
+      // Аннотации расширения не относятся к исходному методу.
+      &НаКлиенте
+      &ИзменениеИКонтроль("Метод")
+      &После("Метод")
+      Процедура Расш_Метод()
+        Сообщить("Исходный код");
+      КонецПроцедуры
+      """);
+    var data = new DiagnosticIgnoranceComputer(documentContext).compute();
+
+    assertThat(List.of(1, 2, 3, 4))
+      .noneMatch(line -> data.diagnosticShouldBeIgnored(createDiagnostic("CanonicalSpellingKeywords", line)));
+    assertThat(List.of(5, 6, 7))
+      .allMatch(line -> data.diagnosticShouldBeIgnored(createDiagnostic("CanonicalSpellingKeywords", line)));
   }
 
   @Test

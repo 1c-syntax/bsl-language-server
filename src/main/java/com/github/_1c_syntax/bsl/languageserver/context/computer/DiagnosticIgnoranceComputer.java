@@ -114,8 +114,9 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
           .map(Annotation::getKind)
           .anyMatch(kind -> kind == AnnotationKind.CHANGEANDVALIDATE)
       ).forEach((MethodSymbol methodSymbol) -> {
-        lines.put(methodSymbol.getRange().getStart().getLine(), true);
-        lines.put(methodSymbol.getRange().getEnd().getLine(), false);
+        // Аннотации принадлежат расширению; подавляем исходный метод, используя строки ANTLR (1..n).
+        lines.put(methodSymbol.getSubNameRange().getStart().getLine() + 1, true);
+        lines.put(methodSymbol.getRange().getEnd().getLine() + 1, false);
       });
 
     // not extended method

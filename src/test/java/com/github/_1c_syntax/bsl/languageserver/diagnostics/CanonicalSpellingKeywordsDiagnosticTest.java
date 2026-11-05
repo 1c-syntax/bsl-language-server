@@ -21,15 +21,31 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Mode;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.TextEdit;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
+import java.net.URI;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
 class CanonicalSpellingKeywordsDiagnosticTest extends AbstractDiagnosticTest<CanonicalSpellingKeywordsDiagnostic> {
+
+  private static final String EXTENSION_METHOD = """
+    &%s("Расчёт")
+    Функция Доп_Расчёт()
+    КонецФункции
+    """;
 
   CanonicalSpellingKeywordsDiagnosticTest() {
     super(CanonicalSpellingKeywordsDiagnostic.class);
@@ -300,6 +316,83 @@ class CanonicalSpellingKeywordsDiagnosticTest extends AbstractDiagnosticTest<Can
       .hasRange(465, 1, 465, 10)
 
     ;
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "Перед, пЕрЕд",
+    "После, пОсЛе",
+    "Вместо, вМеСтО",
+    "ИзменениеИКонтроль, ИЗМЕНЕНИЕиконтроль",
+    "Before, bEfOrE",
+    "After, aFtEr",
+    "Around, aRoUnD",
+    "ChangeAndValidate, CHANGEandvalidate"
+  })
+  void testExtensionAnnotations(String canonical, String mixedCase) {
+    initServerContext();
+    var canonicalDocument = TestUtils.getDocumentContext(EXTENSION_METHOD.formatted(canonical), context);
+    assertThat(getDiagnostics(canonicalDocument)).isEmpty();
+
+    for (var spelling : List.of(mixedCase, canonical.toUpperCase(Locale.ROOT), canonical.toLowerCase(Locale.ROOT))) {
+      var content = EXTENSION_METHOD.formatted(spelling);
+      var documentContext = TestUtils.getDocumentContext(content, context);
+      var diagnostics = getDiagnostics(documentContext);
+      assertThat(diagnostics).hasSize(1);
+      var diagnostic = diagnostics.getFirst();
+      assertThat(diagnostic).hasRange(0, 1, 0, spelling.length() + 1);
+
+      var quickFixes = getQuickFixes(diagnostic, documentContext);
+      assertThat(quickFixes).hasSize(1);
+      var edits = quickFixes.getFirst().getEdit().getChanges().get(documentContext.getUri().toString());
+      assertThat(edits).containsExactly(new TextEdit(diagnostic.getRange(), canonical));
+      var edit = edits.getFirst();
+      var correctedContent = content.substring(0, edit.getRange().getStart().getCharacter())
+        + edit.getNewText() + content.substring(edit.getRange().getEnd().getCharacter());
+      assertThat(correctedContent).isEqualTo(EXTENSION_METHOD.formatted(canonical));
+      context.rebuildDocument(documentContext, correctedContent, documentContext.getVersion() + 1);
+      assertThat(getDiagnostics(documentContext)).isEmpty();
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"bsl", "os"})
+  void testCustomAnnotationsAndNonKeywordText(String extension) {
+    initServerContext();
+    var documentContext = TestUtils.getDocumentContext(
+      URI.create("file:///custom-annotations." + extension),
+      """
+        &мОяАннотация
+        &CuStOmAnnotation
+        &ПеРедВызовом
+        &bEfOrECall
+        &Перед("ИЗМЕНЕНИЕиконтроль")
+        &After("CHANGEandvalidate")
+        Функция ПЕРЕД()
+          // &ВМЕСТО("Расчёт") &AROUND("Calculate")
+          Возврат "&ПОСЛЕ &BEFORE";
+        КонецФункции
+        """,
+      context
+    );
+
+    assertThat(getDiagnostics(documentContext)).isEmpty();
+  }
+
+  @ParameterizedTest
+  @CsvSource({"true, false", "false, false", "true, true"})
+  void testExtensionAnnotationsRespectConfigurationAndSuppression(boolean enabled, boolean suppressed) {
+    initServerContext();
+    configuration = context.getLanguageServerConfiguration();
+    configuration.getDiagnosticsOptions().setMode(Mode.ONLY);
+    configuration.getDiagnosticsOptions().setParameters(Map.of("CanonicalSpellingKeywords", Either.forLeft(enabled)));
+    var content = EXTENSION_METHOD.formatted("ИЗМЕНЕНИЕиконтроль");
+    if (suppressed) {
+      content = "// BSLLS:CanonicalSpellingKeywords-off\n" + content;
+    }
+    var documentContext = TestUtils.getDocumentContext(content, context);
+
+    assertThat(documentContext.getDiagnostics()).hasSize(enabled && !suppressed ? 1 : 0);
   }
 
   @Test
