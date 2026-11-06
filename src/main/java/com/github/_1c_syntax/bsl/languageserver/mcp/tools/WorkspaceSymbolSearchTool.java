@@ -21,11 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.mcp.tools;
 
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspaceResolver;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.WorkspaceSymbolDto;
 import com.github._1c_syntax.bsl.languageserver.providers.SymbolProvider;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.lsp4j.WorkspaceSymbol;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 import org.jspecify.annotations.Nullable;
 import org.springframework.ai.mcp.annotation.McpTool;
@@ -33,6 +36,7 @@ import org.springframework.ai.mcp.annotation.McpToolParam;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
+import java.net.URI;
 import java.util.List;
 
 /**
@@ -40,7 +44,9 @@ import java.util.List;
  * та же ранжированная выдача, что у LSP-запроса {@code workspace/symbol}.
  * <p>
  * Клиенту MCP нечем принять потоковые чанки {@code $/progress}, поэтому ответ собирается целиком:
- * быстрая выдача индекса и, по умолчанию, fuzzy-хвост.
+ * быстрая выдача индекса и, по умолчанию, fuzzy-хвост. Индекс символов общий на все рабочие папки,
+ * как и сам {@code workspace/symbol}, поэтому выдача дополнительно сужается до символов запрошенной
+ * папки: без этого символы другой папки и попадали бы в ответ, и съедали бы {@code limit}.
  */
 @Component
 @Profile("mcp")
@@ -52,6 +58,7 @@ public class WorkspaceSymbolSearchTool {
   };
 
   private final McpWorkspaceResolver workspaceResolver;
+  private final ServerContextProvider serverContextProvider;
   private final SymbolProvider symbolProvider;
 
   /**
@@ -65,10 +72,27 @@ public class WorkspaceSymbolSearchTool {
   public record Result(String query, int symbolsCount, boolean truncated, List<WorkspaceSymbolDto> symbols) {
   }
 
+  /**
+   * Поиск символов запрошенной рабочей папки по имени.
+   * <p>
+   * Сначала идут точные совпадения, префикс имени, camel-hump и начало слова внутри имени; при
+   * {@code fuzzy} (по умолчанию) за ними следуют подстрока внутри слова и подпоследовательность.
+   * Ранжирование то же, что у {@code workspace/symbol}; ответ ограничен {@code limit} символами
+   * (по умолчанию 200), признак {@code truncated} сообщает, что найдено больше.
+   * Символы других зарегистрированных папок в ответ не попадают.
+   *
+   * @param query Строка поиска.
+   * @param workspaceFolder Рабочая папка (URI или путь из {@code list_workspace_folders}).
+   * @param fuzzy Дописывать ли fuzzy-хвост; {@code null} равносильно {@code true}.
+   * @param limit Максимум символов в ответе; {@code null} равносильно значению по умолчанию.
+   * @return Найденные символы по убыванию релевантности.
+   * @throws IllegalArgumentException Если {@code limit} не положительный или папка не зарегистрирована.
+   */
   @McpTool(
     name = "workspace_symbol_search",
-    description = "Search methods, variables and regions of a registered workspace folder by name: prefix and "
-      + "substring matches first, then fuzzy ones (subsequence), ranked like the editor's workspace/symbol request.",
+    description = "Search methods, variables and regions of a registered workspace folder by name: exact, prefix, "
+      + "camel-hump and word-start matches first, then (with `fuzzy`) substring-inside-word and subsequence "
+      + "ones, ranked like the editor's workspace/symbol request. Only symbols of the requested folder are returned.",
     // Output schema disabled: Spring AI generates a non-nullable schema that rejects null DTO
     // fields (here — nullable containerName). Known upstream bug, open as of 2.0.0-M6:
     // https://github.com/spring-projects/spring-ai/issues/4825
@@ -98,13 +122,27 @@ public class WorkspaceSymbolSearchTool {
     }
 
     var workspaceUri = workspaceResolver.resolveWorkspaceFolderUri(workspaceFolder);
+    var serverContext = serverContextProvider.getAllContexts().get(workspaceUri);
+    if (serverContext == null) {
+      throw new IllegalArgumentException("Workspace folder is not registered: " + workspaceFolder);
+    }
     try (var ignored = WorkspaceContextHolder.forUri(workspaceUri)) {
-      var found = symbolProvider.searchSymbols(query.trim(), includeFuzzyTail, NEVER_CANCELLED);
+      var found = symbolProvider.searchSymbols(query.trim(), includeFuzzyTail, NEVER_CANCELLED).stream()
+        .filter(symbol -> belongsTo(serverContext, symbol))
+        .toList();
       var symbols = found.stream()
         .limit(maxResults)
         .map(WorkspaceSymbolDto::from)
         .toList();
       return new Result(query, symbols.size(), found.size() > symbols.size(), symbols);
     }
+  }
+
+  // Членство проверяется по карте документов самой папки: у вложенных папок один документ входит
+  // в оба контекста, а сопоставление по префиксу пути выбрало бы из них произвольный.
+  private static boolean belongsTo(ServerContext serverContext, WorkspaceSymbol symbol) {
+    var location = symbol.getLocation();
+    var documentUri = location.isLeft() ? location.getLeft().getUri() : location.getRight().getUri();
+    return serverContext.getDocumentNoLock(URI.create(documentUri)) != null;
   }
 }

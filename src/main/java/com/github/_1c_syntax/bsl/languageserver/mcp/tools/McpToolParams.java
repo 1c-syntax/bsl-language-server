@@ -66,13 +66,14 @@ final class McpToolParams {
 
   static final String SYMBOL_NAME = "Name of a method, variable or region of the file, case-insensitive. "
     + "Pass either `name` or `line`.";
-  static final String SYMBOL_LINE = "Zero-based line number inside the method whose text is needed. "
-    + "Pass either `name` or `line`.";
-  static final String WORKSPACE_SYMBOL_QUERY = "Search query matched against symbol names: prefix and substring "
-    + "matches first, then fuzzy ones (subsequence), case-insensitive, e.g. `ПолучитьДату` or `Дату`.";
+  static final String SYMBOL_LINE = "Zero-based line number; the most deeply nested region, method or "
+    + "`Перем`-declared variable containing it is returned. Pass either `name` or `line`.";
+  static final String WORKSPACE_SYMBOL_QUERY = "Search query matched against symbol names, case-insensitive: "
+    + "exact name, prefix, camel-hump (`ПолДат` for `ПолучитьДату`) and the start of a word inside the name "
+    + "(`Дату`) are found first; with `fuzzy`, a substring inside a word and a scattered subsequence follow.";
   static final String WORKSPACE_SYMBOL_FUZZY = "Whether to append fuzzy matches (substring inside a word, scattered "
-    + "subsequence) after the prefix/substring ones. Default `true`; pass `false` for a faster exact-only answer "
-    + "on a large workspace.";
+    + "subsequence) after the exact, prefix, camel-hump and word-start ones. Default `true`; pass `false` for a "
+    + "faster answer on a large workspace.";
   static final String LIMIT = "Maximum number of symbols to return. Default 200.";
 
   private McpToolParams() {

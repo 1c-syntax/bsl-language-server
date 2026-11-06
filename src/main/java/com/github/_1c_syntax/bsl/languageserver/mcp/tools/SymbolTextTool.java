@@ -23,18 +23,24 @@ package com.github._1c_syntax.bsl.languageserver.mcp.tools;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.mcp.McpDocumentReader;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.RangeDto;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.lsp4j.Range;
 import org.jspecify.annotations.Nullable;
 import org.springframework.ai.mcp.annotation.McpTool;
 import org.springframework.ai.mcp.annotation.McpToolParam;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * MCP-инструмент {@code symbol_text}: текст символа файла по имени или по строке.
@@ -72,11 +78,26 @@ public class SymbolTextTool {
   public record Result(String file, int matchesCount, List<Match> matches) {
   }
 
+  /**
+   * Текст символа файла по имени или по строке.
+   * <p>
+   * По {@code name} возвращаются все методы, переменные и области с таким именем без учёта регистра;
+   * по {@code line} — самый вложенный из содержащих строку символов (область, метод или объявленная
+   * через {@code Перем} переменная), и ничего, если строка вне всех символов. У метода дополнительно
+   * возвращается текст комментария-описания над объявлением. Файл перечитывается с диска.
+   *
+   * @param file Путь к файлу.
+   * @param name Имя символа; {@code null}, если поиск по строке.
+   * @param line Строка, zero-based; {@code null}, если поиск по имени.
+   * @return Найденные символы с текстом.
+   * @throws IllegalArgumentException Если не передан ни {@code name}, ни {@code line}.
+   */
   @McpTool(
     name = "symbol_text",
     description = "Return the source text of a symbol of a 1C/OneScript file: by `name` — every method, "
-      + "variable or region with that name (case-insensitive); by zero-based `line` — the method that "
-      + "contains the line. For methods the description comment above the declaration is returned too.",
+      + "variable or region with that name (case-insensitive); by zero-based `line` — the most deeply nested "
+      + "region, method or `Перем`-declared variable containing the line (nothing when the line is outside any "
+      + "symbol). For methods the description comment above the declaration is returned too.",
     // Output schema disabled: Spring AI generates a non-nullable schema that rejects null DTO
     // fields (here — nullable description). Known upstream bug, open as of 2.0.0-M6:
     // https://github.com/spring-projects/spring-ai/issues/4825
@@ -99,14 +120,14 @@ public class SymbolTextTool {
   ) {
     var symbolName = name == null ? "" : name.trim();
     if (symbolName.isEmpty() && line == null) {
-      throw new IllegalArgumentException("Pass `name` of the symbol or the zero-based `line` inside the method.");
+      throw new IllegalArgumentException("Pass `name` of the symbol or the zero-based `line` inside it.");
     }
     var lineNumber = line == null ? -1 : line;
 
     // Текст нужен свежий — файл перечитывается с диска, как в analyze_file.
     return documentReader.analyze(file, documentContext -> {
       var symbols = symbolName.isEmpty()
-        ? methodsContainingLine(documentContext, lineNumber)
+        ? symbolContainingLine(documentContext, lineNumber)
         : symbolsNamed(documentContext, symbolName);
       var matches = symbols.stream()
         .map(symbol -> toMatch(documentContext, symbol))
@@ -121,12 +142,35 @@ public class SymbolTextTool {
       .toList();
   }
 
-  private static List<SourceDefinedSymbol> methodsContainingLine(DocumentContext documentContext, int line) {
-    return documentContext.getSymbolTree().getChildrenFlat(MethodSymbol.class).stream()
-      .filter(method -> method.getRange().getStart().getLine() <= line
-        && line <= method.getRange().getEnd().getLine())
-      .<SourceDefinedSymbol>map(method -> method)
-      .toList();
+  // Самый вложенный символ, содержащий строку: спуск по дереву символов от верхнего уровня.
+  private static List<SourceDefinedSymbol> symbolContainingLine(DocumentContext documentContext, int line) {
+    return deepestContaining(documentContext.getSymbolTree().getChildren(), line)
+      .map(List::of)
+      .orElse(List.of());
+  }
+
+  private static Optional<SourceDefinedSymbol> deepestContaining(List<SourceDefinedSymbol> candidates, int line) {
+    return candidates.stream()
+      .filter(SymbolTextTool::isCodeSymbol)
+      .filter(symbol -> containsLine(symbol.getRange(), line))
+      // Несколько символов одного уровня на одной строке (Перем Б, В;) — берём объявленный первым.
+      .min(Comparator.comparing((SourceDefinedSymbol symbol) -> symbol.getRange().getStart().getLine())
+        .thenComparing(symbol -> symbol.getRange().getStart().getCharacter()))
+      .map(symbol -> deepestContaining(symbol.getChildren(), line).orElse(symbol));
+  }
+
+  // Переменные учитываются только объявленные через Перем: появившиеся присваиванием, параметры
+  // и аннотации принадлежат телу метода, иначе строка «Б = 1;» отдавала бы переменную Б.
+  private static boolean isCodeSymbol(SourceDefinedSymbol symbol) {
+    if (symbol instanceof VariableSymbol variable) {
+      var kind = variable.getKind();
+      return kind == VariableKind.MODULE || kind == VariableKind.LOCAL || kind == VariableKind.GLOBAL;
+    }
+    return symbol instanceof RegionSymbol || symbol instanceof MethodSymbol;
+  }
+
+  private static boolean containsLine(Range range, int line) {
+    return range.getStart().getLine() <= line && line <= range.getEnd().getLine();
   }
 
   private static Match toMatch(DocumentContext documentContext, SourceDefinedSymbol symbol) {
