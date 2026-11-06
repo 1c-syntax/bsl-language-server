@@ -34,9 +34,11 @@ import com.github._1c_syntax.bsl.languageserver.mcp.tools.GlobalMemberSearchTool
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.HoverTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.ListWorkspaceFoldersTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.RegisterWorkspaceFolderTool;
+import com.github._1c_syntax.bsl.languageserver.mcp.tools.SymbolTextTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.TypeAtPositionTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.TypeInfoTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.UnregisterWorkspaceFolderTool;
+import com.github._1c_syntax.bsl.languageserver.mcp.tools.WorkspaceSymbolSearchTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.TypeMemberDto;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.WorkspaceFolderDto;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
@@ -116,6 +118,10 @@ class McpToolsTest {
   private RegisterWorkspaceFolderTool registerWorkspaceFolderTool;
   @Autowired
   private UnregisterWorkspaceFolderTool unregisterWorkspaceFolderTool;
+  @Autowired
+  private SymbolTextTool symbolTextTool;
+  @Autowired
+  private WorkspaceSymbolSearchTool workspaceSymbolSearchTool;
   @Autowired
   private McpRootsChangeConsumer rootsChangeConsumer;
   @Autowired
@@ -204,6 +210,76 @@ class McpToolsTest {
     assertThat(result.target().name()).isEqualTo("ПерваяФункция");
     assertThat(result.incoming()).isNotEmpty();
     assertThat(result.outgoing()).isNotEmpty();
+  }
+
+  @Test
+  void symbolTextReturnsMethodByName() {
+    var result = symbolTextTool.symbolText(FILE, "перваяфункция", null);
+
+    assertThat(result.matchesCount()).isEqualTo(1);
+    var match = result.matches().get(0);
+    assertThat(match.name()).isEqualTo("ПерваяФункция");
+    assertThat(match.kind()).isIn("Function", "Method");
+    assertThat(match.range().startLine()).isEqualTo(DECLARATION_LINE);
+    assertThat(match.text()).startsWith("Функция ПерваяФункция()").endsWith("КонецФункции");
+    assertThat(match.description()).isNull();
+  }
+
+  @Test
+  void symbolTextReturnsMethodContainingLine() {
+    // Строка 8 (zero-based) — «Б = 1;» внутри ПерваяФункция.
+    var result = symbolTextTool.symbolText(FILE, null, 8);
+
+    assertThat(result.matches()).extracting(SymbolTextTool.Match::name).containsExactly("ПерваяФункция");
+  }
+
+  @Test
+  void symbolTextReturnsDescriptionCommentOfMethod() {
+    var result = symbolTextTool.symbolText(FILE, "ВтораяФункция", null);
+
+    assertThat(result.matches()).hasSize(1);
+    assertThat(result.matches().get(0).description()).contains("Устарела");
+  }
+
+  @Test
+  void symbolTextReturnsNoMatchesForUnknownName() {
+    var result = symbolTextTool.symbolText(FILE, "НетТакогоМетода", null);
+
+    assertThat(result.matchesCount()).isZero();
+    assertThat(result.matches()).isEmpty();
+  }
+
+  @Test
+  void symbolTextRequiresNameOrLine() {
+    assertThatThrownBy(() -> symbolTextTool.symbolText(FILE, null, null))
+      .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void workspaceSymbolSearchFindsMethodsByPrefix() {
+    var result = workspaceSymbolSearchTool.search("ПерваяФ", WORKSPACE_FOLDER, null, null);
+
+    assertThat(result.symbols())
+      .filteredOn(symbol -> symbol.name().equals("ПерваяФункция"))
+      .anySatisfy(symbol -> {
+        assertThat(symbol.kind()).isIn("Function", "Method");
+        assertThat(symbol.location().uri()).endsWith("callHierarchy.bsl");
+      });
+  }
+
+  @Test
+  void workspaceSymbolSearchHonoursLimit() {
+    var result = workspaceSymbolSearchTool.search("Перв", WORKSPACE_FOLDER, false, 1);
+
+    assertThat(result.symbols()).hasSize(1);
+    assertThat(result.symbolsCount()).isEqualTo(1);
+    assertThat(result.truncated()).isTrue();
+  }
+
+  @Test
+  void workspaceSymbolSearchRejectsNonPositiveLimit() {
+    assertThatThrownBy(() -> workspaceSymbolSearchTool.search("Перв", WORKSPACE_FOLDER, null, 0))
+      .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test

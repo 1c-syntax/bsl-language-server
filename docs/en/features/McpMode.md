@@ -82,6 +82,7 @@ Additional sources of workspace folders:
 | `unregister_workspace_folder` | Remove a workspace folder and release its index |
 | `analyze_file` | Diagnostics for a file |
 | `document_symbols` | Symbol tree of a file (methods, regions, variables) |
+| `symbol_text` | Source text of a symbol of a file by name (method, variable or region, case-insensitive) or by line (the method containing it); for methods the description comment above the declaration is included |
 | `find_references` | All references to the symbol at a position |
 | `call_hierarchy` | Incoming and outgoing calls of the method/procedure at a position |
 | `hover` | Hover info for a symbol (signature, type, documentation) |
@@ -90,6 +91,7 @@ Additional sources of workspace folders:
 | `global_member_info` | A global member looked up by name (e.g. `Сообщить`/`Message`) — function, property or system enum with signatures and metadata |
 | `global_member_search` | Search global context members — functions (`СтартовыйСценарий`/`StartupScript`), properties (`Метаданные`/`Metadata`) and system enums; fuzzy matching and relevance ranking like autocomplete, grouped by category, can be narrowed by categories |
 | `type_at_position` | Inferred type of the expression under the cursor and its available methods and properties |
+| `workspace_symbol_search` | Search methods, variables and regions of a workspace folder: prefix and substring matches first, then fuzzy ones, ranked like `workspace/symbol`; `fuzzy` and `limit` bound the answer |
 
 Positions (`line`, `character`) are zero-based, as in LSP.
 

@@ -64,6 +64,17 @@ final class McpToolParams {
     folder: how the folder is referred to in a user interface. Defaults to the name of the \
     registered directory.""";
 
+  static final String SYMBOL_NAME = "Name of a method, variable or region of the file, case-insensitive. "
+    + "Pass either `name` or `line`.";
+  static final String SYMBOL_LINE = "Zero-based line number inside the method whose text is needed. "
+    + "Pass either `name` or `line`.";
+  static final String WORKSPACE_SYMBOL_QUERY = "Search query matched against symbol names: prefix and substring "
+    + "matches first, then fuzzy ones (subsequence), case-insensitive, e.g. `ПолучитьДату` or `Дату`.";
+  static final String WORKSPACE_SYMBOL_FUZZY = "Whether to append fuzzy matches (substring inside a word, scattered "
+    + "subsequence) after the prefix/substring ones. Default `true`; pass `false` for a faster exact-only answer "
+    + "on a large workspace.";
+  static final String LIMIT = "Maximum number of symbols to return. Default 200.";
+
   private McpToolParams() {
   }
 }
