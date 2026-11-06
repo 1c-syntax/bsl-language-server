@@ -11,6 +11,8 @@ Such a query will return the correct (in terms of functionality) result, but it 
 
 The `AccountingRegister.<RegisterName>.ExtDimensions` table (`РегистрБухгалтерии.<ИмяРегистра>.Субконто`) is not checked because the platform syntax does not provide parameters for it.
 
+A tabular section named like a register virtual table (for example, `Catalog.Batches.Balance`) is not checked: only registers, sequences, tasks and filter criteria have virtual tables, so for a catalog, a document or any other object such a name denotes a tabular section.
+
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 For example, a query uses the `WHERE` section to filter virtual table data:
