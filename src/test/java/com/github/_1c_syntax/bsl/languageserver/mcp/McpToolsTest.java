@@ -22,7 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.mcp;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.AnalyzeFileTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.CallHierarchyTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.DefinitionTool;
@@ -54,6 +56,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.io.File;
 import java.net.URI;
 import java.time.Duration;
 import java.util.List;
@@ -120,6 +123,8 @@ class McpToolsTest {
   private McpRootsChangeConsumer rootsChangeConsumer;
   @Autowired
   private McpDocumentReader documentReader;
+  @Autowired
+  private ServerContextProvider serverContextProvider;
   @Autowired
   private TypeService typeService;
   @Autowired
@@ -194,6 +199,24 @@ class McpToolsTest {
 
     assertThat(result.referencesCount()).isPositive();
     assertThat(result.references()).hasSize(result.referencesCount());
+  }
+
+  @Test
+  void findReferencesRebuildsClearedDocumentWhenPositionIsOutsideReferenceIndex() {
+    // После индексации текст и AST документа очищены. Позиция (0, 0) — ключевое слово «Процедура»:
+    // индекс ссылок и дерево символов её не покрывают, и резолвер доходит до finder'ов, которым нужен AST.
+    var uri = Absolute.uri(new File(FILE));
+    var serverContext = serverContextProvider.getServerContext(uri).orElseThrow();
+    var documentContext = serverContext.getDocument(uri);
+    serverContext.tryClearDocument(documentContext);
+    assertThat(serverContext.getDocumentState(documentContext)).isEqualTo(DocumentState.WITHOUT_CONTENT);
+
+    var result = findReferencesTool.findReferences(FILE, 0, 0);
+
+    assertThat(result.referencesCount()).isZero();
+    assertThat(result.references()).isEmpty();
+    // Пересобранный для чтения документ снова освобождён, как после analyze_file.
+    assertThat(serverContext.getDocumentState(documentContext)).isEqualTo(DocumentState.WITHOUT_CONTENT);
   }
 
   @Test

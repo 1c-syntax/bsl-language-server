@@ -21,12 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.mcp;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContentUnavailableException;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -54,6 +56,7 @@ import java.util.function.Function;
  *       и никогда не очищается.</li>
  * </ul>
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class McpDocumentReader {
@@ -62,6 +65,10 @@ public class McpDocumentReader {
 
   /**
    * Прочитать вычисленные данные документа (дерево символов, ссылки) без повторного разбора AST.
+   * <p>
+   * У не открытого документа после индексации текст и AST очищены. Если действию они всё же
+   * понадобились (позиция не покрыта индексом ссылок: ключевое слово, член платформенного типа,
+   * конструктор), документ пересобирается из файла, как в {@link #analyze(String, Function)}.
    *
    * @param path Путь к файлу (абсолютный или относительный).
    * @param action Действие над контекстом документа.
@@ -105,12 +112,21 @@ public class McpDocumentReader {
       lock.readLock().lock();
       try (var ignored = WorkspaceContextHolder.forUri(serverContext.getWorkspaceUri())) {
         return action.apply(existing);
+      } catch (DocumentContentUnavailableException e) {
+        // Документ проиндексирован, но его текст и AST очищены (populateContext → tryClearDocument),
+        // а действию они понадобились: индекс ссылок и дерево символов позицию не покрыли. У открытого
+        // документа текст есть всегда, поэтому для него это настоящая ошибка, а не повод перечитать файл.
+        if (serverContext.isDocumentOpened(existing)) {
+          throw e;
+        }
+        LOGGER.debug("Content of {} is cleared, rebuilding the document for a cached read", uri);
       } finally {
         lock.readLock().unlock();
       }
     }
 
-    // Нужна сборка: новый документ либо инструмент, которому требуется свежий AST.
+    // Нужна сборка: новый документ, инструмент, которому требуется свежий AST, либо очищенный
+    // документ, которому AST понадобился по ходу чтения.
     return buildAndAnalyze(serverContext, lock, uri, action);
   }
 
