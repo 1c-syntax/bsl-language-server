@@ -8,6 +8,8 @@ When writing queries, you should not use virtual tables joins. Only metadata obj
 
 If the query uses a join to a virtual table (for example, AccumulationRegister.Products.Balance) and the query is slow, then it is recommended to move the data reading from the virtual table into a separate query with the results saved in a temporary table.
 
+A join with a tabular section named like a register virtual table (for example, `Catalog.Batches.Balance`) is not reported: only registers, sequences, tasks and filter criteria have virtual tables.
+
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 

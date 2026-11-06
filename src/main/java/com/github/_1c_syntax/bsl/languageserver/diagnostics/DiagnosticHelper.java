@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.info.DiagnosticParameterInfo;
+import com.github._1c_syntax.bsl.parser.SDBLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.experimental.UtilityClass;
 import lombok.extern.slf4j.Slf4j;
@@ -44,6 +45,20 @@ import java.util.regex.Pattern;
 @Slf4j
 @UtilityClass
 public final class DiagnosticHelper {
+
+  /**
+   * Виды объектов метаданных, у которых в языке запросов есть виртуальные таблицы:
+   * регистры, последовательности ({@code Границы}) и задачи ({@code ЗадачиПоИсполнителю}).
+   * Критерий отбора разбирается отдельной ветвью правила {@code virtualTable} и сюда не входит.
+   */
+  private static final Set<Integer> MDO_TYPES_WITH_VIRTUAL_TABLES = Set.of(
+    SDBLParser.INFORMATION_REGISTER_TYPE,
+    SDBLParser.ACCUMULATION_REGISTER_TYPE,
+    SDBLParser.ACCOUNTING_REGISTER_TYPE,
+    SDBLParser.CALCULATION_REGISTER_TYPE,
+    SDBLParser.SEQUENCE_TYPE,
+    SDBLParser.TASK_TYPE
+  );
 
   /**
    * Проверить, является ли узел типом "Структура".
@@ -104,6 +119,27 @@ public final class DiagnosticHelper {
   public static boolean isInternetMailProfileType(ParseTree tnc) {
     return "ИнтернетПочтовыйПрофиль".equalsIgnoreCase(tnc.getText())
       || "InternetMailProfile".equalsIgnoreCase(tnc.getText());
+  }
+
+  /**
+   * Проверить, что источник запроса, разобранный как виртуальная таблица, действительно является ею.
+   * <p>
+   * Грамматика языка запросов принимает за виртуальную таблицу любую конструкцию
+   * {@code <ВидОбъекта>.<Имя>.<ИмяВиртуальнойТаблицы>}, поэтому табличная часть справочника,
+   * документа и т. п. с именем {@code Остатки}, {@code Обороты}, {@code СрезПоследних} и подобным
+   * попадает в то же правило. Виртуальные таблицы есть только у регистров, последовательностей,
+   * задач и критериев отбора.
+   *
+   * @param ctx Узел виртуальной таблицы
+   * @return true, если за узлом стоит виртуальная таблица, а не табличная часть объекта
+   */
+  public static boolean isVirtualTable(SDBLParser.VirtualTableContext ctx) {
+    var mdo = ctx.mdo();
+    if (mdo == null) {
+      // критерий отбора: КритерийОтбора.<Имя>(<Значение>)
+      return true;
+    }
+    return mdo.type != null && MDO_TYPES_WITH_VIRTUAL_TABLES.contains(mdo.type.getType());
   }
 
   /**
