@@ -51,6 +51,7 @@ import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOperationNode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -1040,7 +1041,7 @@ public class TypeService implements SelfMemberClassifier {
     var version = documentContext.getVersion();
     var receiver = Trees.findTerminalNodeContainsPosition(ast, cursor)
       .filter(terminal -> terminal.getSymbol().getType() == BSLParser.IDENTIFIER)
-      .map(DereferenceLocator::locate).map(dereference -> dereference.getLeft());
+      .map(DereferenceLocator::locate).map(BinaryOperationNode::getLeft);
     return (@Nullable ExecutionContext context) -> {
       if (documentContext.getVersion() != version || documentContext.getAst() != ast) {
         return receiverTypesAt(documentContext, cursor, context);
