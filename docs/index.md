@@ -212,6 +212,12 @@ java -jar bsl-language-server.jar --websocket --server.port=8080
 java -Xmx4g -jar bsl-language-server.jar ...остальные параметры
 ```
 
+> На Java 25 и новее память дополнительно экономит параметр `-XX:+UseCompactObjectHeaders`: заголовок каждого объекта сжимается до 8 байт. Насколько уменьшится куча, зависит от проекта: на конфигурации ERP при замере — на 8–9 %. В исполняемом файле из релиза параметр уже включён. Java 21 этот параметр не знает и с ним не запустится.
+
+```sh
+java -Xmx4g -XX:+UseCompactObjectHeaders -jar bsl-language-server.jar ...остальные параметры
+```
+
 <a id="analyze"></a>
 
 ## Запуск в режиме анализатора
@@ -286,14 +292,6 @@ java -jar bsl-language-server.jar --format --src ./src/cf
 Вы потрясающие!  
 
 Спасибо компаниям, поддерживающим проекты с открытым исходным кодом, а особенно тем, кто поддержали нас: 
-
----
-
-[![JetBrains](assets/images/jetbrains-variant-4.png)](https://www.jetbrains.com?from=bsl-language-server)  
-
-Создатель профессиональных инструментов разработки программного обеспечения, инновационных и мощных, [JetBrains](https://www.jetbrains.com?from=bsl-language-server) поддержал наш проект, предоставив лицензии на свои продукты, в том числе на `IntelliJ IDEA Ultimate`.
-
-`IntelliJ IDEA Ultimate` один из лучших инструментов в своем классе.
 
 ---
 

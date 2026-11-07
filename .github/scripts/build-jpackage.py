@@ -24,6 +24,10 @@ def build_image(base_dir, image_prefix, executable_file):
     cmd_args.append('app-image')
     cmd_args.append('--java-options')
     cmd_args.append('-Xmx4g')
+    # The image is built with JDK 25 (release.yml), where compact object headers are
+    # a product feature; JDK 21 does not know this flag.
+    cmd_args.append('--java-options')
+    cmd_args.append('-XX:+UseCompactObjectHeaders')
 
     cmd = ' '.join(cmd_args)
     os.system(cmd)
