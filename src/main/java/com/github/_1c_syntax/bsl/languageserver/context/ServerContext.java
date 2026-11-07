@@ -64,6 +64,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -263,6 +264,11 @@ public class ServerContext {
     );
     workDoneProgressReporter.beginProgress(getMessage("populatePopulatingContext"));
 
+    var activeFiles = new ConcurrentHashMap<URI, Long>();
+    var activityPattern = getMessage("populateActiveFile");
+    var root = configurationRoot;
+    var showActivity = workDoneProgressReporter.reportActivity(() -> describeActiveFile(activeFiles, root, activityPattern));
+
     LOGGER.debug("Populating context...");
     var startedAt = System.nanoTime();
 
@@ -271,39 +277,61 @@ public class ServerContext {
     // нельзя: чтение идёт в другом ForkJoinPool, и ждущий его воркер пула заполнения
     // подхватывает чужие задачи заполнения. Те встают на блокировках документов, держатели
     // которых ждут эту же конфигурацию, — и ожидание замыкается.
-    getConfiguration();
-
+    var complete = false;
     try {
+      getConfiguration();
       populateContextExecutor.submit(() ->
         files.parallelStream().forEach((File file) -> {
-          workDoneProgressReporter.tick();
-
           var uri = Absolute.uri(file.toURI());
-          var lock = getDocumentLock(uri);
-          lock.writeLock().lock();
+          if (showActivity) {
+            activeFiles.put(uri, System.nanoTime());
+          }
           try {
-            var documentContext = documents.get(uri);
-            if (documentContext == null) {
-              documentContext = createDocumentContext(uri);
-              rebuildDocument(documentContext);
-              documentContext.freezeComputedData();
-              tryClearDocument(documentContext);
+            var lock = getDocumentLock(uri);
+            lock.writeLock().lock();
+            try {
+              var documentContext = documents.get(uri);
+              if (documentContext == null) {
+                documentContext = createDocumentContext(uri);
+                rebuildDocument(documentContext);
+                documentContext.freezeComputedData();
+                tryClearDocument(documentContext);
+              }
+            } finally {
+              lock.writeLock().unlock();
             }
+            workDoneProgressReporter.tick();
           } finally {
-            lock.writeLock().unlock();
+            if (showActivity) {
+              activeFiles.remove(uri);
+            }
           }
         })
       ).get();
+      complete = true;
     } catch (ExecutionException e) {
       throw new IllegalStateException("Error populating context", e);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       throw new IllegalStateException("Interrupted while populating context", e);
+    } finally {
+      workDoneProgressReporter.endProgress(complete ? getMessage("populateContextPopulated") : "");
     }
 
-    workDoneProgressReporter.endProgress(getMessage("populateContextPopulated"));
     LOGGER.info("Context of {} populated with {} files in {} ms",
       configurationRoot, files.size(), millisSince(startedAt));
+  }
+
+  private static String describeActiveFile(Map<URI, Long> activeFiles, @Nullable Path root, String pattern) {
+    var oldest = activeFiles.entrySet().stream().min(Map.Entry.comparingByValue());
+    if (oldest.isEmpty()) {
+      return "";
+    }
+    var active = oldest.orElseThrow();
+    var path = Path.of(active.getKey());
+    var display = root != null && path.startsWith(root) ? root.relativize(path) : path;
+    var seconds = TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - active.getValue());
+    return pattern.formatted(display, seconds, activeFiles.size());
   }
 
   public Map<URI, DocumentContext> getDocuments() {
