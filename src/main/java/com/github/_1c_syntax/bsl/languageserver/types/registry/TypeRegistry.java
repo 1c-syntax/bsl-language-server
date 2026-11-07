@@ -137,11 +137,16 @@ public class TypeRegistry {
    *
    * @param name имя в исходном написании.
    */
-  private record NameKey(String name) {
+  private record NameKey(String name) implements Comparable<NameKey> {
+
+    @Override
+    public int compareTo(NameKey other) {
+      return name.compareToIgnoreCase(other.name);
+    }
 
     @Override
     public boolean equals(Object other) {
-      return other instanceof NameKey key && name.equalsIgnoreCase(key.name);
+      return other instanceof NameKey(var otherName) && name.equalsIgnoreCase(otherName);
     }
 
     @Override
