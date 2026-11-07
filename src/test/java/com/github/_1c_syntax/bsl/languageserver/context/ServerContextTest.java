@@ -214,7 +214,7 @@ class ServerContextTest extends AbstractServerContextAwareTest {
     var release = new CountDownLatch(1);
     var work = CompletableFuture.runAsync(() -> context.runBackgroundWork(() -> {
       entered.countDown();
-      awaitUninterruptibly(release);
+      awaitWithinTestTimeout(release);
     }));
     assertThat(entered.await(10, TimeUnit.SECONDS)).isTrue();
 
@@ -236,7 +236,7 @@ class ServerContextTest extends AbstractServerContextAwareTest {
     assertThat(started[0]).isFalse();
   }
 
-  private static void awaitUninterruptibly(CountDownLatch latch) {
+  private static void awaitWithinTestTimeout(CountDownLatch latch) {
     try {
       assertThat(latch.await(10, TimeUnit.SECONDS)).isTrue();
     } catch (InterruptedException e) {
