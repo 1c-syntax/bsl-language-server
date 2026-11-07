@@ -213,6 +213,12 @@ public class ServerContextProvider {
    */
   public void removeWorkspace(WorkspaceFolder workspaceFolder) {
     var uri = Absolute.uri(workspaceFolder.getUri());
+    var preparing = contexts.get(uri);
+    if (preparing != null) {
+      // Обработчик подготовки ищет контекст в этой карте, чтобы завершить её.
+      // Сохраняем контекст и его бины до конца подготовки, даже если обработчик ещё не запущен.
+      preparing.awaitPreparation();
+    }
     // Переставляем главный контекст на другой ДО удаления из карты, чтобы primary никогда не
     // указывал на уже удалённый контекст (иначе getPrimaryContext упал бы в гонке с маршрутизацией).
     repointPrimaryBeforeRemoval(uri);
@@ -226,9 +232,6 @@ public class ServerContextProvider {
     // Two-arg forUri используем, чтобы не требовать наличие URI в WORKSPACE_NAMES
     // (для async-propagated workspace'ов запись там может отсутствовать).
     if (serverContext != null) {
-      // Подготовка, идущая в фоне, обращается к бинам рабочей области — их нельзя уничтожать
-      // посреди неё.
-      serverContext.awaitPreparation();
       var name = extractWorkspaceName(uri);
       try (var ctx = WorkspaceContextHolder.forUri(uri, name)) {
         serverContext.clear();
