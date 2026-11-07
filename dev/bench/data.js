@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794084003367,
+  "lastUpdate": 1794090064602,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -46562,6 +46562,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.7438369753517615",
             "extra": "mean: 83.24755795796712 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8c26cc9641ec305a3a883301cd983a4341a30b3c",
+          "message": "Merge pull request #4684 from 1c-syntax/perf/types-typeset-small-collections\n\nМалые коллекции наборов типов хранятся массивами, а не LinkedHashMap",
+          "timestamp": "2026-11-07T20:49:44+01:00",
+          "tree_id": "ca10fa4a24a901951488abcfd0883020804bb3fd",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/8c26cc9641ec305a3a883301cd983a4341a30b3c"
+        },
+        "date": 1794090034527,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 84.09898392359416,
+            "unit": "sec",
+            "range": "stddev: 0.6789147063372931",
+            "extra": "mean: 84.09898392359416 sec\nrounds: 3"
           }
         ]
       }
