@@ -23,13 +23,16 @@ package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -39,6 +42,7 @@ import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.io.File;
 import java.io.IOException;
@@ -60,6 +64,28 @@ class ReferenceIndexFillerTest extends AbstractServerContextAwareTest {
   private ReferenceIndexFiller referenceIndexFiller;
   @Autowired
   private ReferenceIndex referenceIndex;
+  @Autowired
+  private ApplicationEventPublisher eventPublisher;
+  @Autowired
+  private GlobalScopeProvider globalScopeProvider;
+
+  @Test
+  void configurationTypesRegisteredAfterDocumentIsReleasedDoesNotReadIt() {
+    // given: документ общего модуля наполнен и освобождён — так бывает, когда регистрация
+    // типов в фоне заканчивается после того, как документ уже прочитан и отпущен.
+    initServerContext(PATH_TO_METADATA);
+    var file = new File(PATH_TO_METADATA, "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
+    var documentContext = context.addDocument(Absolute.uri(file));
+    context.rebuildDocument(documentContext);
+    assertThat(globalScopeProvider.moduleTypeRefByUri(documentContext.getUri())).isPresent();
+    context.tryClearDocument(documentContext);
+
+    // when: событие не падает на документе без текста
+    eventPublisher.publishEvent(new ConfigurationTypesRegisteredEvent(context));
+
+    // then: и не перечитывает его ради ссылок
+    assertThat(context.getDocumentState(documentContext)).isEqualTo(DocumentState.WITHOUT_CONTENT);
+  }
 
   @Test
   void testFindCalledMethod() {

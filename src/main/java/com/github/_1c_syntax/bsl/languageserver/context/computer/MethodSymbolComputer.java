@@ -55,6 +55,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -73,6 +74,7 @@ public final class MethodSymbolComputer
 
   private final DocumentContext documentContext;
   private final EventHandlerClassifier eventHandlerClassifier;
+  private @Nullable Predicate<String> eventHandlers;
   private final Set<MethodSymbol> methods = new HashSet<>();
 
   public MethodSymbolComputer(DocumentContext documentContext, EventHandlerClassifier eventHandlerClassifier) {
@@ -82,6 +84,7 @@ public final class MethodSymbolComputer
 
   @Override
   public List<MethodSymbol> compute() {
+    eventHandlers = null;
     methods.clear();
     visitFile(documentContext.getAst());
     return new ArrayList<>(methods);
@@ -271,7 +274,7 @@ public final class MethodSymbolComputer
     // символов, hover'е и ReferenceIndex, реклассификации не подлежит. Классификация по имени
     // не смотрит на function/procedure (как и lookupContract) — платформа вызывает обработчик
     // по имени независимо от того, что метод по ошибке объявлен функцией.
-    if (eventHandlerClassifier.isEventHandler(documentContext, name)) {
+    if (isEventHandler(name)) {
       return EventMethodSymbol.builder()
         .name(name)
         .owner(documentContext)
@@ -446,4 +449,11 @@ public final class MethodSymbolComputer
 
   }
 
+  /** Классификатор документа берётся один раз, при первом методе. */
+  private boolean isEventHandler(String name) {
+    if (eventHandlers == null) {
+      eventHandlers = eventHandlerClassifier.eventHandlersOf(documentContext);
+    }
+    return eventHandlers.test(name);
+  }
 }

@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.net.URI;
+import java.util.Comparator;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -61,6 +62,32 @@ class LocationRepositoryTest extends AbstractServerContextAwareTest {
         .as("парити со сканом в позиции %s", position)
         .isEqualTo(linearScan(uri, position));
     }
+  }
+
+  @Test
+  void occurrencesAreOrderedByRangeStart() {
+    // given — вызовы методов собирает один обход дерева, переменные — другой, позже:
+    // вызов на четвёртой строке попадает в набор раньше переменной на третьей.
+    var documentContext = getDocumentContext("""
+      Процедура Тест()
+          А = 1;
+          Б = А;
+          Тест2();
+      КонецПроцедуры
+      Процедура Тест2()
+      КонецПроцедуры
+      """);
+
+    // when
+    var occurrences = locationRepository.getSymbolOccurrencesByLocationUri(documentContext.getUri()).toList();
+
+    // then
+    assertThat(occurrences)
+      .extracting(occurrence -> occurrence.symbol().symbolName())
+      .contains("а", "тест2");
+    assertThat(occurrences).isSortedAccordingTo(Comparator
+      .comparingInt(SymbolOccurrence::startLine)
+      .thenComparingInt(SymbolOccurrence::startCharacter));
   }
 
   @Test
