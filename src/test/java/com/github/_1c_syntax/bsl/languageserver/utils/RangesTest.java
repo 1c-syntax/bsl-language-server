@@ -24,9 +24,31 @@ package com.github._1c_syntax.bsl.languageserver.utils;
 import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 class RangesTest {
+
+  @Test
+  void mergeOverlappingKeepsDisjointRangesAndDoesNotChangeInput() {
+    var separate = Ranges.create(5, 0, 6, 0);
+    var outer = Ranges.create(0, 0, 2, 0);
+    var nested = Ranges.create(0, 0, 1, 0);
+    var overlapping = Ranges.create(1, 1, 3, 0);
+    var adjacent = Ranges.create(3, 0, 4, 0);
+    var ranges = List.of(separate, nested, adjacent, outer, overlapping);
+
+    assertThat(Ranges.mergeOverlapping(ranges)).containsExactly(Ranges.create(0, 0, 4, 0), separate);
+    assertThat(ranges).containsExactly(separate, nested, adjacent, outer, overlapping);
+    assertThat(outer).isEqualTo(Ranges.create(0, 0, 2, 0));
+    assertThat(overlapping).isEqualTo(Ranges.create(1, 1, 3, 0));
+  }
+
+  @Test
+  void mergeOverlappingAcceptsEmptyInput() {
+    assertThat(Ranges.mergeOverlapping(List.of())).isEmpty();
+  }
 
   @Test
   void testIsEmpty() {

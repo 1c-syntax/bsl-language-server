@@ -32,6 +32,8 @@ import org.eclipse.lsp4j.jsonrpc.util.Preconditions;
 import org.eclipse.lsp4j.util.Positions;
 import org.jspecify.annotations.Nullable;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -200,6 +202,32 @@ public final class Ranges {
 
   public boolean containsRange(Range bigger, Range smaller) {
     return org.eclipse.lsp4j.util.Ranges.containsRange(bigger, smaller);
+  }
+
+  /**
+   * Объединить пересекающиеся и соприкасающиеся диапазоны, включая вложенные.
+   * Исходный список и его диапазоны не изменяются.
+   *
+   * @param ranges диапазоны в произвольном порядке
+   * @return объединённые диапазоны по возрастанию начальной позиции
+   */
+  public List<Range> mergeOverlapping(List<Range> ranges) {
+    var positionOrder = Comparator.comparingInt(Position::getLine).thenComparingInt(Position::getCharacter);
+    var sorted = new ArrayList<>(ranges);
+    sorted.sort(Comparator.comparing(Range::getStart, positionOrder)
+      .thenComparing(Range::getEnd, positionOrder.reversed()));
+    var merged = new ArrayList<Range>();
+    for (var range : sorted) {
+      if (merged.isEmpty() || positionOrder.compare(merged.getLast().getEnd(), range.getStart()) < 0) {
+        merged.add(range);
+        continue;
+      }
+      if (positionOrder.compare(merged.getLast().getEnd(), range.getEnd()) < 0) {
+        var previous = merged.removeLast();
+        merged.add(new Range(previous.getStart(), range.getEnd()));
+      }
+    }
+    return List.copyOf(merged);
   }
 
   public boolean containsPosition(Range range, Position position) {
