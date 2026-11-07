@@ -239,7 +239,7 @@ public class ExpressionAtPosition {
     var exprCtx = ExpressionAtPosition.<BSLParser.ExpressionContext>enclosingRule(
       terminal, BSLParser.RULE_expression);
     if (exprCtx.isPresent()) {
-      return exprCtx.map(ExpressionTreeBuildingVisitor::buildExpressionTree);
+      return exprCtx.map(DiagnosticDeclarationSession::expressionTree);
     }
     var complexIdent = ExpressionAtPosition.<BSLParser.ComplexIdentifierContext>enclosingRule(
       terminal, BSLParser.RULE_complexIdentifier);

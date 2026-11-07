@@ -21,15 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.parser.description.VariableDescription;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.ToString;
 import lombok.Value;
 import lombok.experimental.NonFinal;
+import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 
 import java.util.Optional;
@@ -62,11 +61,9 @@ public class IntBasedVariableSymbol extends AbstractVariableSymbol {
   public IntBasedVariableSymbol(
     String name,
     SourceDefinedSymbol scope,
-    DocumentContext owner,
     Optional<SourceDefinedSymbol> parent,
     byte kind,
     boolean export,
-    Optional<VariableDescription> description,
     int startLine,
     int startCharacter,
     int endLine,
@@ -75,7 +72,7 @@ public class IntBasedVariableSymbol extends AbstractVariableSymbol {
     int variableNameStartCharacter,
     int variableNameEndCharacter
   ) {
-    super(name, scope, owner, parent, kind, export, description);
+    super(name, scope, parent, kind, export);
 
     this.startLine = startLine;
     this.startCharacter = startCharacter;
@@ -101,4 +98,8 @@ public class IntBasedVariableSymbol extends AbstractVariableSymbol {
     );
   }
 
+  @Override
+  public boolean containsPosition(Position position) {
+    return Ranges.containsPosition(startLine, startCharacter, endLine, endCharacter, position);
+  }
 }

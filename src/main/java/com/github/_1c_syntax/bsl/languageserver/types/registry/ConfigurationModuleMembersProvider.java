@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 import com.github._1c_syntax.bsl.context.api.ContextNames;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextConfigurationBindingChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
@@ -109,6 +110,14 @@ public class ConfigurationModuleMembersProvider {
   public void handleEvent(DocumentContextContentChangedEvent event) {
     var documentContext = event.getSource();
     register(documentContext);
+  }
+
+  // Привязка к метаданным определяет, членами какого типа становятся методы модуля, и
+  // порядок тот же, что у правки: индексатор ссылок и индекс типов идут следом.
+  @Order(100)
+  @EventListener
+  public void handleEvent(DocumentContextConfigurationBindingChangedEvent event) {
+    register(event.getSource());
   }
 
   /**

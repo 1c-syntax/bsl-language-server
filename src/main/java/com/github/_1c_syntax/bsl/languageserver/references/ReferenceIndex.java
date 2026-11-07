@@ -124,6 +124,37 @@ public class ReferenceIndex {
   }
 
   /**
+   * Цель ссылки без данных места обращения.
+   *
+   * @param uri URI документа.
+   * @param position позиция обращения.
+   * @return доступный символ по тем же правилам, что и {@link #getReference}.
+   */
+  public Optional<com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol> getTargetSymbol(
+    URI uri, Position position) {
+    return locationRepository.findByPosition(uri, position).flatMap(this::targetSymbolOf);
+  }
+
+  private Optional<com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol> targetSymbolOf(
+    SymbolOccurrence occurrence) {
+    var server = serverContextProvider.getServerContext(occurrence.uri()).orElse(null);
+    if (server == null) {
+      return Optional.empty();
+    }
+    var fromOwner = server.getDocumentNoLock(occurrence.uri());
+    if (fromOwner == null) {
+      return Optional.empty();
+    }
+    if (SELF_MEMBER_SCOPE.equals(occurrence.symbol().scopeName())) {
+      return selfMemberResolver.resolveSelfMember(fromOwner, occurrence.symbol().symbolKind(),
+        occurrence.symbol().symbolName());
+    }
+    return getSourceDefinedSymbol(server, occurrence.symbol())
+      .filter(target -> ReferenceAccessibility.isAccessible(fromOwner, target))
+      .map(target -> target);
+  }
+
+  /**
    * Поиск ссылок на символы в документе.
    *
    * @param uri URI документа, в котором нужно найти ссылки на другие символы.
@@ -450,8 +481,11 @@ public class ReferenceIndex {
       return maybeDocument
         .map(DocumentContext::getSymbolTree)
         .flatMap(symbolTree -> symbolTree.getMethodSymbol(symbolEntity.scopeName())
-          .flatMap(method -> symbolTree.getVariableSymbol(symbolName, method))
-          .or(() -> symbolTree.getVariableSymbol(symbolName, symbolTree.getModule())));
+          // Из метода видны не все переменные модуля: созданная присваиванием в теле модуля
+          // живёт в нём одном.
+          .map(method -> symbolTree.getVariableSymbol(symbolName, method)
+            .or(() -> symbolTree.getModuleVariableVisibleFromMethods(symbolName)))
+          .orElseGet(() -> symbolTree.getVariableSymbol(symbolName, symbolTree.getModule())));
     }
 
     if (symbolEntity.symbolKind() == SymbolKind.Module) {

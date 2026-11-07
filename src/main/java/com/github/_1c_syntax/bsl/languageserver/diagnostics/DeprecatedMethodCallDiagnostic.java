@@ -70,7 +70,7 @@ public class DeprecatedMethodCallDiagnostic extends AbstractDiagnostic {
     // Сбор мест обращения к платформенному API — один раз на модуль; все три
     // проверки ниже работают по одному и тому же результату (раньше каждая
     // независимо пересобирала его, удваивая обход AST и резолв членов).
-    var callSites = PlatformMemberCalls.collect(documentContext, typeService);
+    var callSites = PlatformMemberCalls.collectDeprecated(documentContext, typeService, target);
     checkPlatformMembers(callSites.members(), target);
     checkDeletedPrefixMembers(callSites.members());
     checkConstructedTypes(callSites.constructedTypes(), target);
