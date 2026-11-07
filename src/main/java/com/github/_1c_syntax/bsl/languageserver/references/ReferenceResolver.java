@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
@@ -50,10 +51,13 @@ public class ReferenceResolver {
    * @return данные ссылки.
    */
   public Optional<Reference> findReference(URI uri, Position position) {
-    return finders.stream()
-      .map(referenceFinder -> referenceFinder.findReference(uri, position))
-      .flatMap(Optional::stream)
-      .findFirst();
+    for (var finder : finders) {
+      var reference = finder.findReference(uri, position);
+      if (reference.isPresent()) {
+        return reference;
+      }
+    }
+    return Optional.empty();
   }
 
   /**
@@ -68,9 +72,29 @@ public class ReferenceResolver {
    * @return данные ссылки.
    */
   public Optional<Reference> findReference(URI uri, TerminalNode terminal) {
-    return finders.stream()
-      .map(referenceFinder -> referenceFinder.findReference(uri, terminal))
-      .flatMap(Optional::stream)
-      .findFirst();
+    for (var finder : finders) {
+      var reference = finder.findReference(uri, terminal);
+      if (reference.isPresent()) {
+        return reference;
+      }
+    }
+    return Optional.empty();
+  }
+
+  /**
+   * Найти только цель с тем же порядком поисковиков, что у терминальной ссылки.
+   *
+   * @param uri URI документа.
+   * @param terminal терминал обращения.
+   * @return первый найденный символ.
+   */
+  public Optional<Symbol> findTargetSymbol(URI uri, TerminalNode terminal) {
+    for (var finder : finders) {
+      var symbol = finder.findTargetSymbol(uri, terminal);
+      if (symbol.isPresent()) {
+        return symbol;
+      }
+    }
+    return Optional.empty();
   }
 }

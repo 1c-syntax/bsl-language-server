@@ -23,8 +23,10 @@ package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.client.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentAddedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
+import com.github._1c_syntax.bsl.languageserver.events.WorkspaceAddedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceBeanScope;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.utils.Absolute;
@@ -33,6 +35,8 @@ import org.eclipse.lsp4j.WorkspaceFolder;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -120,6 +124,9 @@ public class ServerContextProvider {
    * {@link Absolute#uri(URI)} — иначе {@link #clear()} /
    * {@link #removeWorkspace(WorkspaceFolder)} не смогут найти запись по
    * ключу (они ищут через {@code Absolute.uri(...)} ещё раз).
+   * <p>
+   * Контекст доступен сразу, а метаданные конфигурации читаются и её типы регистрируются в
+   * фоне; дождаться этого — {@link ServerContext#awaitPreparation()}.
    *
    * @param workspaceUri  нормализованный URI корня workspace
    * @param workspaceName имя workspace (если null — извлекается из URI)
@@ -219,6 +226,9 @@ public class ServerContextProvider {
     // Two-arg forUri используем, чтобы не требовать наличие URI в WORKSPACE_NAMES
     // (для async-propagated workspace'ов запись там может отсутствовать).
     if (serverContext != null) {
+      // Подготовка, идущая в фоне, обращается к бинам рабочей области — их нельзя уничтожать
+      // посреди неё.
+      serverContext.awaitPreparation();
       var name = extractWorkspaceName(uri);
       try (var ctx = WorkspaceContextHolder.forUri(uri, name)) {
         serverContext.clear();
@@ -421,6 +431,37 @@ public class ServerContextProvider {
   @EventListener
   public void onDocumentRemoved(ServerContextDocumentRemovedEvent event) {
     documentIndex.remove(event.getUri());
+  }
+
+  /**
+   * Обработчик события добавления рабочей области: отмечает в её контексте начало подготовки
+   * в фоне ({@link ServerContext#beginPreparation()}) — регистрации типов конфигурации
+   * асинхронным обработчиком этого же события, который её и заканчивает.
+   * <p>
+   * Идёт первым, раньше запуска регистрации: иначе она могла бы закончиться прежде, чем
+   * подготовка отмечена начатой, и подготовка не закончилась бы никогда.
+   *
+   * @param event событие добавления рабочей области.
+   */
+  @EventListener
+  @Order(Ordered.HIGHEST_PRECEDENCE)
+  public void onWorkspaceAdded(WorkspaceAddedEvent event) {
+    // Контекст ищется по точному URI рабочей области — так же, как его находит обработчик,
+    // который подготовку заканчивает: начатую одним, а не найденную другим, ждали бы вечно.
+    Optional.ofNullable(contexts.get(event.getWorkspaceUri())).ifPresent(ServerContext::beginPreparation);
+  }
+
+  /**
+   * Обработчик события регистрации типов конфигурации: пересчитывает привязку к конфигурации
+   * у документов, заведённых, пока рабочая область готовилась в фоне.
+   * <p>
+   * Идёт первым: остальные слушатели обновляют посчитанное по открытым документам, и
+   * документы к этому моменту должны быть привязаны к конфигурации.
+   */
+  @EventListener
+  @Order(Ordered.HIGHEST_PRECEDENCE)
+  public void onConfigurationTypesRegistered(ConfigurationTypesRegisteredEvent event) {
+    event.getSource().refreshDocumentsCreatedWhilePreparing();
   }
 
   /**

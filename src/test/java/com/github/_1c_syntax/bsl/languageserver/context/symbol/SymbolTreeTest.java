@@ -30,6 +30,8 @@ import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.util.ArrayList;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
@@ -128,6 +130,45 @@ class SymbolTreeTest {
     assertThat(symbolTree.getVariableSymbol(subVarDeclaration))
       .map(VariableSymbol::getName)
       .contains("ЛокальнаяПеременная");
+  }
+
+  @Test
+  void containsPositionAnswersLikeRangeOfEverySymbol() {
+    // given — переменная в колонке за пределами short (её символ хранит диапазон в int),
+    // область, переменные модуля, метод с параметром и локальной переменной.
+    var text = " ".repeat(Short.MAX_VALUE + 1) + "Перем Дальняя;\n" + """
+      #Область МояОбласть
+      Перем ПеременнаяА, ПеременнаяБ;
+      Процедура Тест(Параметр)
+          Перем Локальная;
+          Локальная = Параметр;
+      КонецПроцедуры
+      #КонецОбласти
+      """;
+    var documentContext = TestUtils.getDocumentContext(text);
+    var lines = text.split("\n", -1);
+    var symbols = documentContext.getSymbolTree().getChildrenFlat();
+    assertThat(symbols)
+      .hasAtLeastOneElementOfType(RegionSymbol.class)
+      .hasAtLeastOneElementOfType(MethodSymbol.class)
+      .hasAtLeastOneElementOfType(ShortBasedVariableSymbol.class)
+      .hasAtLeastOneElementOfType(IntBasedVariableSymbol.class);
+
+    // when — каждый символ во всех позициях документа, включая колонку за концом строки.
+    var mismatches = new ArrayList<String>();
+    for (var symbol : symbols) {
+      for (var line = 0; line < lines.length; line++) {
+        for (var character = 0; character <= lines[line].length() + 1; character++) {
+          var position = new Position(line, character);
+          if (symbol.containsPosition(position) != Ranges.containsPosition(symbol.getRange(), position)) {
+            mismatches.add(symbol.getName() + " " + line + ":" + character);
+          }
+        }
+      }
+    }
+
+    // then — ответ тот же, что у проверки по диапазону.
+    assertThat(mismatches).isEmpty();
   }
 
   private static ParseTree firstRuleNode(ParseTree ast, int ruleIndex) {

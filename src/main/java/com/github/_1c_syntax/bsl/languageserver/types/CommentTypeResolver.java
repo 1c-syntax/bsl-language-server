@@ -136,6 +136,27 @@ public class CommentTypeResolver implements VariableTypeSource {
   }
 
   /**
+   * Проверить готовность и получить типы из одного разбора комментария присваивания.
+   * Уведомление о неполноте выполняется до резолва типов, как при отдельных вызовах.
+   *
+   * @param owner документ с присваиванием.
+   * @param assignment оператор присваивания.
+   * @param onIncomplete уведомление о ссылке на ещё не разобранный модуль.
+   * @return объявленные типы либо пустой набор, если комментария нет.
+   */
+  public TypeSet ofAssignment(DocumentContext owner, BSLParser.AssignmentContext assignment,
+                              Runnable onIncomplete) {
+    var trailing = trailingOf(owner, assignment);
+    if (trailing == null) {
+      return TypeSet.EMPTY;
+    }
+    if (anyLinkAwaitsUnparsedModule(trailing.getLinks(), owner)) {
+      onIncomplete.run();
+    }
+    return typesOfComment(trailing.getTypes(), trailing.getLinks(), owner, owner.getFileType());
+  }
+
+  /**
    * Может ли тип из висячего комментария в строке присваивания ещё пополниться: ссылка
    * {@code см.} в нём ведёт в модуль, до разбора которого очередь ещё не дошла. Тогда ответ
    * {@link #ofAssignment} неполон, хотя по нему этого не видно.

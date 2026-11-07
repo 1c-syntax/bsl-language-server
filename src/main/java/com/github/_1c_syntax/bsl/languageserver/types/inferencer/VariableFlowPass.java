@@ -31,6 +31,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
+import java.util.BitSet;
 import com.google.common.base.Equivalence;
 import java.util.List;
 import java.util.Map;
@@ -76,6 +77,9 @@ final class VariableFlowPass {
    * такими, какими они были в точке вызова.
    */
   private FlowEnvironment leaving = FlowEnvironment.EMPTY;
+  private FlowEnvironment lastLeavingInput = FlowEnvironment.EMPTY;
+  /** Изменившиеся после предыдущего вызова переменные; на входе в вершину учитываются все. */
+  private final @Nullable BitSet changedForLeaving;
 
   /** Посчитанное окружение на выходе вершины и вход, для которого он посчитан. */
   private final Map<CfgVertex, FlowEnvironment> outputsByVertex = new IdentityHashMap<>();
@@ -103,6 +107,7 @@ final class VariableFlowPass {
         shared.add(i);
       }
     }
+    changedForLeaving = shared.isEmpty() ? null : new BitSet(bodyVariables.variables().size());
   }
 
   /**
@@ -189,11 +194,12 @@ final class VariableFlowPass {
    */
   private FlowEnvironment entryEnvironment() {
     if (entry == null) {
-      var current = FlowEnvironment.blank(bodyVariables.variables().size());
-      for (var i = 0; i < bodyVariables.variables().size(); i++) {
-        current = current.with(i, entryFactOf(bodyVariables.variables().get(i)), bodyVariables.variables().size());
+      var types = new TypeSet[bodyVariables.variables().size()];
+      for (var i = 0; i < types.length; i++) {
+        var type = entryFactOf(bodyVariables.variables().get(i));
+        types[i] = type.equals(TypeSet.EMPTY) ? TypeSet.EMPTY : type;
       }
-      entry = current;
+      entry = new FlowEnvironment(types);
     }
     return entry;
   }
@@ -260,6 +266,9 @@ final class VariableFlowPass {
    * перед каждым из них: пока идут проходы, отсюда отвечают вложенные запросы.
    */
   private FlowEnvironment applyStatements(CfgVertex vertex, FlowEnvironment incoming) {
+    if (changedForLeaving != null) {
+      changedForLeaving.set(0, bodyVariables.variables().size());
+    }
     var current = incoming;
     for (var statement : layout.statementsOf(vertex)) {
       beforeStatement.put(statement, current);
@@ -282,7 +291,11 @@ final class VariableFlowPass {
         var updated = change.definition()
           ? assignments.at(change, statement, beforeStatement, inputs.assigned())
           : inputs.mutations().apply(variable, change.position(), current.get(change.index()));
-        current = current.with(change.index(), updated, bodyVariables.variables().size());
+        var changed = current.with(change.index(), updated, bodyVariables.variables().size());
+        if (changedForLeaving != null && changed != current) {
+          changedForLeaving.set(change.index());
+        }
+        current = changed;
       }
     }
     return forgetSharedAfterCall(statement, changes, current);
@@ -308,18 +321,25 @@ final class VariableFlowPass {
     @Nullable List<Change> changes,
     FlowEnvironment current
   ) {
-    if (shared.isEmpty() || !layout.hasCall(statement)) {
+    var changed = changedForLeaving;
+    if (changed == null || !layout.hasCall(statement)) {
       return current;
     }
     // То, что переменная содержит перед вызовом, вызванный метод видит — значит это
     // часть её значения на входе в другие тела, наравне со значением на выходе.
-    leaving = leaving.union(current);
+    leaving = leaving.union(current, lastLeavingInput, changed);
+    lastLeavingInput = current;
+    changed.clear();
     var result = current;
     for (var index : shared) {
       if (assignedBy(changes, index)) {
         continue;
       }
-      result = result.with(index, entryEnvironment().get(index), bodyVariables.variables().size());
+      var afterCall = result.with(index, entryEnvironment().get(index), bodyVariables.variables().size());
+      if (afterCall != result) {
+        changed.set(index);
+      }
+      result = afterCall;
     }
     return result;
   }

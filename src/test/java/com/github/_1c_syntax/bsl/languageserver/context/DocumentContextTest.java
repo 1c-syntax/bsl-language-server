@@ -25,8 +25,13 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.EventHandlerClassifier;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.EventMethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SelfMemberClassifier;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import lombok.SneakyThrows;
@@ -80,6 +85,117 @@ class DocumentContextTest {
 
     // then
     assertThat(documentContext.isContentChangedOnLastRebuild()).isFalse();
+  }
+
+  @Test
+  void rereadingSameContentKeepsSymbolTree() {
+    // given: документ освобождён — так бывает, когда он больше не нужен
+    var documentContext = getDocumentContext();
+    var content = documentContext.getContent();
+    var symbolTree = documentContext.getSymbolTree();
+    documentContext.clearSecondaryData();
+
+    // when: тот же текст понадобился снова
+    documentContext.rebuild(content, documentContext.getVersion() + 1);
+
+    // then: дерево то же самое, а текст снова разобран
+    assertThat(documentContext.getSymbolTree()).isSameAs(symbolTree);
+    assertThat(documentContext.getAst()).isNotNull();
+  }
+
+  @Test
+  void rebuildWithOtherContentBuildsNewSymbolTree() {
+    // given
+    var documentContext = getDocumentContext();
+    var symbolTree = documentContext.getSymbolTree();
+
+    // when
+    documentContext.rebuild(documentContext.getContent() + "\nПроцедура Ещё() КонецПроцедуры",
+      documentContext.getVersion() + 1);
+
+    // then
+    assertThat(documentContext.getSymbolTree()).isNotSameAs(symbolTree);
+    assertThat(documentContext.getSymbolTree().getMethodSymbol("Ещё")).isPresent();
+  }
+
+  @Test
+  void rereadingSameContentWhenMethodIsClassifiedOtherwiseRebuildsSymbolTree() throws IllegalAccessException {
+    // given: после построения дерева методы модуля стали обработчиками событий — например,
+    // у типа модуля зарегистрировали события
+    var documentContext = getDocumentContext();
+    var symbolTree = documentContext.getSymbolTree();
+    EventHandlerClassifier everyMethodIsHandler = (document, name) -> true;
+    FieldUtils.writeField(documentContext, "eventHandlerClassifier", everyMethodIsHandler, true);
+
+    // when
+    documentContext.rebuild(documentContext.getContent(), documentContext.getVersion() + 1);
+
+    // then
+    assertThat(documentContext.getSymbolTree()).isNotSameAs(symbolTree);
+    assertThat(documentContext.getSymbolTree().getMethods())
+      .isNotEmpty()
+      .allMatch(EventMethodSymbol.class::isInstance);
+  }
+
+  @Test
+  void rereadingSameContentWhenAssignmentBecomesSelfPropertyRebuildsSymbolTree() throws IllegalAccessException {
+    // given: голое присваивание «А = 0» завело переменную, а потом у своего типа модуля
+    // появился реквизит А
+    var documentContext = getDocumentContext();
+    var symbolTree = documentContext.getSymbolTree();
+    assertThat(symbolTree.getVariables()).extracting(VariableSymbol::getName).contains("А");
+    SelfMemberClassifier nameIsSelfProperty = (document, name) -> "А".equals(name);
+    FieldUtils.writeField(documentContext, "selfMemberClassifier", nameIsSelfProperty, true);
+
+    // when
+    documentContext.rebuild(documentContext.getContent(), documentContext.getVersion() + 1);
+
+    // then: присваивание обращается к реквизиту, переменной нет
+    assertThat(documentContext.getSymbolTree()).isNotSameAs(symbolTree);
+    assertThat(documentContext.getSymbolTree().getVariables())
+      .extracting(VariableSymbol::getName)
+      .doesNotContain("А");
+  }
+
+  @Test
+  void rereadingSameContentWhenNameIsNoLongerSelfPropertyRebuildsSymbolTree() throws IllegalAccessException {
+    // given: дерево построено, когда А было реквизитом своего типа, — переменной у него нет,
+    // и в самом дереве об этом имени ничего не сказано
+    var documentContext = getDocumentContext();
+    var content = documentContext.getContent() + "\n";
+    var selfMemberClassifier = FieldUtils.readField(documentContext, "selfMemberClassifier", true);
+    SelfMemberClassifier nameIsSelfProperty = (document, name) -> "А".equals(name);
+    FieldUtils.writeField(documentContext, "selfMemberClassifier", nameIsSelfProperty, true);
+    documentContext.rebuild(content, documentContext.getVersion() + 1);
+    var symbolTree = documentContext.getSymbolTree();
+    assertThat(symbolTree.getVariables()).extracting(VariableSymbol::getName).doesNotContain("А");
+    FieldUtils.writeField(documentContext, "selfMemberClassifier", selfMemberClassifier, true);
+
+    // when: реквизита больше нет
+    documentContext.rebuild(content, documentContext.getVersion() + 1);
+
+    // then
+    assertThat(documentContext.getSymbolTree()).isNotSameAs(symbolTree);
+    assertThat(documentContext.getSymbolTree().getVariables())
+      .extracting(VariableSymbol::getName)
+      .contains("А");
+  }
+
+  @Test
+  void rereadingSameContentUnderOtherBindingRebuildsSymbolTree() throws IllegalAccessException {
+    // given: дерево построено при другой привязке к метаданным — например, тип модуля стал
+    // известен уже после разбора файла
+    var documentContext = getDocumentContext();
+    var symbolTree = documentContext.getSymbolTree();
+    var basis = symbolTree.getBasis();
+    FieldUtils.writeField(symbolTree, "basis",
+      new SymbolTree.Basis(basis.moduleType(), "Другой.Объект", basis.bareSelfProperties()), true);
+
+    // when
+    documentContext.rebuild(documentContext.getContent(), documentContext.getVersion() + 1);
+
+    // then
+    assertThat(documentContext.getSymbolTree()).isNotSameAs(symbolTree);
   }
 
   @Test

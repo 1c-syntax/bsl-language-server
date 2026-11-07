@@ -323,8 +323,9 @@ class ArchitectureTest {
     // Домены-фундамент. References↔Types — известный цикл (см. комментарий выше).
     .whereLayer("Configuration").mayOnlyAccessLayers(
       "DiagnosticsMetadata", "Events", "Infrastructure", "Utils")
+    // Events — ради добавления рабочей области: контекст узнаёт по нему, что она готовится в фоне.
     .whereLayer("Context").mayOnlyAccessLayers(
-      "Client", "Configuration", "DiagnosticsMetadata", "Infrastructure", "Utils")
+      "Client", "Configuration", "DiagnosticsMetadata", "Events", "Infrastructure", "Utils")
     .whereLayer("References").mayOnlyAccessLayers(
       "Configuration", "Context", "Infrastructure", "Types", "Utils")
     // Client — ради индикатора хода работы: доразрешение типов возврата после наполнения
