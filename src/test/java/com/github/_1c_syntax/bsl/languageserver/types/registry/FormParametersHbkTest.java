@@ -72,6 +72,20 @@ class FormParametersHbkTest extends AbstractServerContextAwareTest {
   @Autowired
   private PlatformMemberHoverBuilder platformMemberHoverBuilder;
 
+  @Test
+  void managedDataReferenceIsAvailableInThinClient() {
+    var form = typeRegistry.resolve(DOCUMENT_FORM).orElseThrow();
+    var object = typeRegistry.getMembers(form, FileType.BSL).stream()
+      .filter(member -> member.matches("Объект")).findFirst().orElseThrow();
+    var data = object.returnTypes().refs().iterator().next();
+    var reference = typeRegistry.getMembers(data, FileType.BSL).stream()
+      .filter(member -> member.matches("Ссылка")).findFirst().orElseThrow();
+    assertThat(typeRegistry.getTypeMetadata(data, FileType.BSL).availabilities())
+      .contains(com.github._1c_syntax.bsl.languageserver.types.model.Availability.THIN_CLIENT);
+    assertThat(reference.metadata().availabilities())
+      .contains(com.github._1c_syntax.bsl.languageserver.types.model.Availability.THIN_CLIENT);
+  }
+
   @BeforeEach
   void setUp() {
     initServerContextOnce(Absolute.path(PATH_TO_METADATA));
