@@ -22,8 +22,21 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics.platform;
 
 import org.junit.jupiter.api.Test;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.types.TypeService;
+import com.github._1c_syntax.bsl.parser.BSLTokenizer;
+import org.antlr.v4.runtime.tree.TerminalNode;
+import java.util.List;
+import java.util.ArrayList;
+import com.github._1c_syntax.bsl.support.CompatibilityMode;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.same;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 /**
  * Чисто-функциональные ветви {@link PlatformMemberCalls}: префикс-фильтр
@@ -32,6 +45,44 @@ import static org.assertj.core.api.Assertions.assertThat;
  * применимость члена — в {@code PlatformMemberVersionsTest}.
  */
 class PlatformMemberCallsTest {
+
+  @Test
+  void eachVersionCheckResolvesOnlyApplicableNamesAndDeletedProperties() {
+    var document = mock(DocumentContext.class);
+    when(document.getAst()).thenReturn(new BSLTokenizer("""
+      Получатель.Будущий();
+      Получатель.Устаревший();
+      Значение = Получатель.УдалитьПоле;
+      Получатель.УдалитьСтарое();
+      """).getAst());
+    var service = mock(TypeService.class);
+    var target = new CompatibilityMode("8.2.16");
+    when(service.mayBeDeprecatedMemberName("Устаревший", target)).thenReturn(true);
+    when(service.mayBeUnavailableMemberName("Будущий", target)).thenReturn(true);
+    var resolved = new ArrayList<String>();
+    when(service.accessTargetsAt(same(document), any(TerminalNode.class), isNull())).thenAnswer(call -> {
+      resolved.add(((TerminalNode) call.getArgument(1)).getText());
+      return List.of();
+    });
+    PlatformMemberCalls.collectDeprecated(document, service, target);
+    assertThat(resolved).containsExactly("Устаревший", "УдалитьПоле");
+    resolved.clear();
+    PlatformMemberCalls.collectUnavailable(document, service, target);
+    assertThat(resolved).containsExactly("Будущий");
+  }
+
+  @Test
+  void versionChecksDoNotRequestArgumentTypes() {
+    var document = mock(DocumentContext.class);
+    when(document.getAst()).thenReturn(new BSLTokenizer("Получатель.Версионный(Аргумент);\n").getAst());
+    var service = mock(TypeService.class);
+    var target = mock(TypeService.TypedMember.class);
+    when(service.isVersionedMemberName(anyString())).thenReturn(true);
+    when(service.membersAt(same(document), any(TerminalNode.class)))
+      .thenThrow(new AssertionError("Version checks need target metadata, not argument inference"));
+    when(service.accessTargetsAt(same(document), any(TerminalNode.class), isNull())).thenReturn(List.of(target));
+    assertThat(PlatformMemberCalls.collect(document, service).members()).containsExactly(target);
+  }
 
   @Test
   void hasDeletedPrefixCoversRuAndEnPrefixes() {

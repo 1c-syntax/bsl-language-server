@@ -237,7 +237,20 @@ public class CompilationContextResolver {
     var method = symbol instanceof MethodSymbol enclosing ? Optional.of(enclosing)
       : symbol.getRootParent(MethodSymbol.class).map(MethodSymbol.class::cast);
     var profile = methodContext(document, method.flatMap(MethodSymbol::getCompilerDirectiveKind));
-    if (profile.isEmpty()) {
+    return contextAt(document, position, profile);
+  }
+
+  /**
+   * Ограничить известный профиль текущей веткой препроцессора.
+   *
+   * @param document документ с AST.
+   * @param position позиция внутри метода или тела модуля, которому принадлежит профиль.
+   * @param profile профиль охватывающего метода или тела модуля при текущих настройках.
+   * @return профиль текущей ветки; пусто при неизвестном профиле или условии и для OneScript.
+   */
+  public Optional<MethodContext> contextAt(DocumentContext document, Position position,
+                                           Optional<MethodContext> profile) {
+    if (document.getFileType() != FileType.BSL || profile.isEmpty()) {
       return Optional.empty();
     }
     var branch = index.preprocessorContextsAt(document, position);
