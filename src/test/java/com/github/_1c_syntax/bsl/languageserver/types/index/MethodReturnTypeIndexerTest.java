@@ -786,6 +786,44 @@ class MethodReturnTypeIndexerTest {
   }
 
   @Test
+  void stoppingLargeCycleReleasesPreloadsAndSkipsRemainingMethods() {
+    var ring = ring("stoppedPass", 9);
+    var serverContext = serverContextOf(ring.documents());
+    var loading = trackLoading(serverContext, ring.documents());
+    var stopped = new AtomicBoolean();
+    when(serverContext.isBackgroundWorkStopped()).thenAnswer(invocation -> stopped.get());
+    doAnswer(invocation -> {
+      assertThat(stopped).isFalse();
+      return loading.load(invocation.getArgument(0));
+    }).when(serverContext).rebuildDocument(any(DocumentContext.class));
+    when(inferencer.computeReturnTypes(any())).thenAnswer(invocation -> {
+      stopped.set(true);
+      return new ComputedReturnTypes(STRING, Set.of(), false);
+    });
+    clearInvocations(inferencer);
+
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+    verify(inferencer, times(1)).computeReturnTypes(any());
+    assertThat(loading.loaded()).isEmpty();
+    assertThat(loading.peak().get()).isLessThanOrEqualTo(DOCUMENTS_IN_MEMORY);
+  }
+
+  @Test
+  void stoppedWorkspaceDoesNotLoadPendingCycle() {
+    var ring = ring("alreadyStopped", 9);
+    var serverContext = serverContextOf(ring.documents());
+    trackLoading(serverContext, ring.documents());
+    when(serverContext.isBackgroundWorkStopped()).thenReturn(true);
+    clearInvocations(inferencer);
+
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+    verify(serverContext, never()).rebuildDocument(any(DocumentContext.class));
+    verify(inferencer, never()).computeReturnTypes(any());
+  }
+
+  @Test
   void parseAheadIsReleasedWhenPassFails() {
     // given: большой цикл, и расчёт первого же документа падает.
     var ring = ring("failedPass", 9);

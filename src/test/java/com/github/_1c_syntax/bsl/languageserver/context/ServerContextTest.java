@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.client.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer;
@@ -53,14 +54,23 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
 
 @CleanupContextBeforeClassAndAfterEachTestMethod
 class ServerContextTest extends AbstractServerContextAwareTest {
@@ -72,6 +82,9 @@ class ServerContextTest extends AbstractServerContextAwareTest {
 
   @MockitoSpyBean(name = "computeConfigurationExecutor")
   private ExecutorService computeConfigurationExecutor;
+
+  @MockitoSpyBean
+  private WorkDoneProgressHelper workDoneProgressHelper;
 
   @Autowired
   private GlobalScopeProvider globalScopeProvider;
@@ -123,6 +136,34 @@ class ServerContextTest extends AbstractServerContextAwareTest {
     File file = new File(PATH_TO_METADATA, PATH_TO_MODULE_FILE);
     ModuleType type = configurationMetadata.getModuleTypeByURI(Absolute.uri(file.toURI()));
     assertThat(type).isEqualTo(ModuleType.CommonModule);
+  }
+
+  @Test
+  void populationCountsCompletedFilesAndDescribesTheActiveFile() throws Exception {
+    initServerContext(PATH_TO_METADATA);
+    var reporter = mock(WorkDoneProgressHelper.WorkDoneProgressReporter.class);
+    var activity = new AtomicReference<Supplier<String>>();
+    doReturn(reporter).when(workDoneProgressHelper).createProgress(ArgumentMatchers.anyInt(), ArgumentMatchers.anyString());
+    doAnswer(invocation -> {
+      activity.set(invocation.getArgument(0));
+      return true;
+    }).when(reporter).reportActivity(ArgumentMatchers.any());
+    var file = new File(PATH_TO_METADATA, PATH_TO_MODULE_FILE);
+    var lock = (ReentrantReadWriteLock) context.getDocumentLock(Absolute.uri(file.toURI()));
+    var workspace = context.getWorkspaceUri();
+    lock.writeLock().lock();
+    var populating = CompletableFuture.runAsync(() ->
+      WorkspaceContextHolder.run(workspace, () -> context.populateContext(List.of(file))));
+    try {
+      await().atMost(Duration.ofSeconds(10)).until(lock::hasQueuedThreads);
+      verify(reporter, never()).tick();
+      assertThat(activity.get()).isNotNull();
+      assertThat(activity.get().get()).contains("ПервыйОбщийМодуль", "Module.bsl");
+    } finally {
+      lock.writeLock().unlock();
+      populating.get(30, TimeUnit.SECONDS);
+    }
+    verify(reporter).tick();
   }
 
   @Test
@@ -189,6 +230,58 @@ class ServerContextTest extends AbstractServerContextAwareTest {
 
     // then
     assertThat(context.getDocuments()).hasSizeGreaterThan(0);
+  }
+
+  @Test
+  void populateAfterBackgroundWorkIsStoppedAddsNoDocuments() {
+    // given
+    initServerContext(PATH_TO_METADATA, false);
+    context.stopBackgroundWork();
+
+    // when
+    context.populateContext();
+
+    // then
+    assertThat(context.getDocuments()).isEmpty();
+  }
+
+  @Test
+  void stoppingBackgroundWorkWaitsForWorkInProgress() throws Exception {
+    // given — фоновая работа идёт
+    initServerContext();
+    var entered = new CountDownLatch(1);
+    var release = new CountDownLatch(1);
+    var work = CompletableFuture.runAsync(() -> context.runBackgroundWork(() -> {
+      entered.countDown();
+      awaitWithinTestTimeout(release);
+    }));
+    assertThat(entered.await(10, TimeUnit.SECONDS)).isTrue();
+
+    // when
+    var stop = CompletableFuture.runAsync(context::stopBackgroundWork);
+
+    // then — остановка объявлена сразу, но ждёт конца идущей работы
+    assertThat(stop).failsWithin(300, TimeUnit.MILLISECONDS)
+      .withThrowableOfType(java.util.concurrent.TimeoutException.class);
+    assertThat(context.isBackgroundWorkStopped()).isTrue();
+
+    release.countDown();
+    stop.get(10, TimeUnit.SECONDS);
+    work.get(10, TimeUnit.SECONDS);
+
+    // и новая работа уже не начинается
+    var started = new boolean[1];
+    assertThat(context.runBackgroundWork(() -> started[0] = true)).isFalse();
+    assertThat(started[0]).isFalse();
+  }
+
+  private static void awaitWithinTestTimeout(CountDownLatch latch) {
+    try {
+      assertThat(latch.await(10, TimeUnit.SECONDS)).isTrue();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new IllegalStateException(e);
+    }
   }
 
   /** Каталоги, перечисленные в {@code excludePaths} конфигурации, не попадают в начальный контекст. */

@@ -60,10 +60,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -128,6 +130,13 @@ public class ServerContext {
   private final Map<DocumentContext, DocumentState> states = new ConcurrentHashMap<>();
   private final Set<DocumentContext> openedDocuments = ConcurrentHashMap.newKeySet();
   private volatile boolean clearing;
+  /**
+   * Фоновая работа над рабочей областью: наполнение и обработка его окончания — слушатели
+   * {@code ServerContextPopulatedEvent}. Идёт под этой блокировкой на чтение, остановка берёт её
+   * на запись и тем дожидается конца работы.
+   */
+  private final ReadWriteLock backgroundWork = new ReentrantReadWriteLock();
+  private volatile boolean backgroundWorkStopped;
 
   /**
    * Подготовка рабочей области, идущая в фоне (см. {@link #beginPreparation()}); завершена,
@@ -245,11 +254,40 @@ public class ServerContext {
       files.size(), configurationRoot, millisSince(startedAt));
     populateContext(files);
     // Слушатели события наполнения (дорасчёт типов и прочее) отработали в этом же вызове.
-    LOGGER.info("Workspace {} is ready in {} ms: context populated, post-population work done",
-      configurationRoot, millisSince(startedAt));
+    if (!isBackgroundWorkStopped()) {
+      LOGGER.info("Workspace {} is ready in {} ms: context populated, post-population work done",
+        configurationRoot, millisSince(startedAt));
+    }
   }
 
+  /**
+   * Наполнить контекст документами из перечисленных файлов.
+   * <p>
+   * Наполнение — фоновая работа ({@link #runBackgroundWork(Runnable)}): после остановки
+   * ({@link #stopBackgroundWork()}) оставшиеся файлы не разбираются, а об остановленном
+   * наполнении не сообщается. Обработка окончания наполнения — слушатели
+   * {@code ServerContextPopulatedEvent} — идёт как его часть.
+   *
+   * @param files файлы модулей.
+   */
   public void populateContext(Collection<File> files) {
+    runBackgroundWork(() -> {
+      try {
+        populateDocuments(files);
+      } catch (CancellationException e) {
+        LOGGER.debug("Populating context stopped.", e);
+      }
+    });
+  }
+
+  /**
+   * Завести и разобрать документы перечисленных файлов. По окончании публикуется
+   * {@code ServerContextPopulatedEvent}.
+   *
+   * @param files файлы модулей.
+   * @throws CancellationException если фоновая работа остановлена и наполнение не закончено.
+   */
+  private void populateDocuments(Collection<File> files) {
     // Деревья символов опираются на типы конфигурации и запоминают посчитанное, поэтому
     // документы разбираются только после того, как типы зарегистрированы.
     awaitPreparationShowingProgress();
@@ -263,6 +301,11 @@ public class ServerContext {
     );
     workDoneProgressReporter.beginProgress(getMessage("populatePopulatingContext"));
 
+    var activeFiles = new ConcurrentHashMap<URI, Long>();
+    var activityPattern = getMessage("populateActiveFile");
+    var root = configurationRoot;
+    var showActivity = workDoneProgressReporter.reportActivity(() -> describeActiveFile(activeFiles, root, activityPattern));
+
     LOGGER.debug("Populating context...");
     var startedAt = System.nanoTime();
 
@@ -271,39 +314,69 @@ public class ServerContext {
     // нельзя: чтение идёт в другом ForkJoinPool, и ждущий его воркер пула заполнения
     // подхватывает чужие задачи заполнения. Те встают на блокировках документов, держатели
     // которых ждут эту же конфигурацию, — и ожидание замыкается.
-    getConfiguration();
-
+    var complete = false;
     try {
+      getConfiguration();
       populateContextExecutor.submit(() ->
         files.parallelStream().forEach((File file) -> {
-          workDoneProgressReporter.tick();
-
+          if (backgroundWorkStopped) {
+            return;
+          }
           var uri = Absolute.uri(file.toURI());
-          var lock = getDocumentLock(uri);
-          lock.writeLock().lock();
+          if (showActivity) {
+            activeFiles.put(uri, System.nanoTime());
+          }
           try {
-            var documentContext = documents.get(uri);
-            if (documentContext == null) {
-              documentContext = createDocumentContext(uri);
-              rebuildDocument(documentContext);
-              documentContext.freezeComputedData();
-              tryClearDocument(documentContext);
+            var lock = getDocumentLock(uri);
+            lock.writeLock().lock();
+            try {
+              var documentContext = documents.get(uri);
+              if (documentContext == null) {
+                documentContext = createDocumentContext(uri);
+                rebuildDocument(documentContext);
+                documentContext.freezeComputedData();
+                tryClearDocument(documentContext);
+              }
+            } finally {
+              lock.writeLock().unlock();
             }
+            workDoneProgressReporter.tick();
           } finally {
-            lock.writeLock().unlock();
+            if (showActivity) {
+              activeFiles.remove(uri);
+            }
           }
         })
       ).get();
+      complete = !backgroundWorkStopped;
     } catch (ExecutionException e) {
       throw new IllegalStateException("Error populating context", e);
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       throw new IllegalStateException("Interrupted while populating context", e);
+    } finally {
+      workDoneProgressReporter.endProgress(complete ? getMessage("populateContextPopulated") : "");
     }
 
-    workDoneProgressReporter.endProgress(getMessage("populateContextPopulated"));
+    if (backgroundWorkStopped) {
+      // Часть файлов пропущена, и обрабатывать окончание наполнения незачем: рабочую
+      // область закрывают.
+      throw new CancellationException("Populating context stopped");
+    }
     LOGGER.info("Context of {} populated with {} files in {} ms",
       configurationRoot, files.size(), millisSince(startedAt));
+  }
+
+  private static String describeActiveFile(Map<URI, Long> activeFiles, @Nullable Path root, String pattern) {
+    var oldest = activeFiles.entrySet().stream().min(Map.Entry.comparingByValue());
+    if (oldest.isEmpty()) {
+      return "";
+    }
+    var active = oldest.orElseThrow();
+    var path = Path.of(active.getKey());
+    var display = root != null && path.startsWith(root) ? root.relativize(path) : path;
+    var seconds = TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - active.getValue());
+    return pattern.formatted(display, seconds, activeFiles.size());
   }
 
   public Map<URI, DocumentContext> getDocuments() {
@@ -481,6 +554,50 @@ public class ServerContext {
    */
   public boolean isClearing() {
     return clearing;
+  }
+
+  /**
+   * Выполнить фоновую работу над рабочей областью, если она ещё не остановлена.
+   * <p>
+   * {@link #stopBackgroundWork()} дожидается конца такой работы, поэтому долгая работа должна
+   * сверяться с {@link #isBackgroundWorkStopped()} и после остановки заканчиваться.
+   *
+   * @param work работа.
+   * @return {@code true}, если работа выполнена; {@code false}, если фоновая работа уже остановлена.
+   */
+  public boolean runBackgroundWork(Runnable work) {
+    backgroundWork.readLock().lock();
+    try {
+      if (backgroundWorkStopped) {
+        return false;
+      }
+      work.run();
+      return true;
+    } finally {
+      backgroundWork.readLock().unlock();
+    }
+  }
+
+  /**
+   * Остановить фоновую работу над рабочей областью и дождаться конца той, что уже идёт. После
+   * этого с документами области никто не работает, и её можно очищать. Новая фоновая работа не
+   * начинается.
+   * <p>
+   * Вызывающий поток не должен держать блокировок, которых может ждать фоновая работа.
+   */
+  public void stopBackgroundWork() {
+    backgroundWorkStopped = true;
+    backgroundWork.writeLock().lock();
+    backgroundWork.writeLock().unlock();
+  }
+
+  /**
+   * Остановлена ли фоновая работа над рабочей областью ({@link #stopBackgroundWork()}).
+   *
+   * @return {@code true}, если остановлена: долгой работе пора заканчиваться.
+   */
+  public boolean isBackgroundWorkStopped() {
+    return backgroundWorkStopped;
   }
 
   /**
