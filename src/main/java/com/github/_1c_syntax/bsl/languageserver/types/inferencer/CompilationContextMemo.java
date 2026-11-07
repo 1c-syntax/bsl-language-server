@@ -59,26 +59,29 @@ final class CompilationContextMemo {
                                          CompilationContextResolver resolver) {
     synchronized (this) {
       var known = profiles.get(document);
-      if (known != null && known.containsKey(directive)) return known.get(directive);
+      if (known != null && known.containsKey(directive)) {
+        return known.get(directive);
+      }
     }
     var computed = resolver.methodContext(document, directive);
     synchronized (this) {
       var known = profiles.computeIfAbsent(document, ignored -> new HashMap<>());
-      var previous = known.putIfAbsent(directive, computed);
-      return previous == null ? computed : previous;
+      known.putIfAbsent(directive, computed);
+      return known.get(directive);
     }
   }
 
   Optional<Set<ExecutionContext>> possibleContexts(DocumentContext document, BSLParser.CodeBlockContext body,
                                                    CompilationContextResolver resolver) {
     synchronized (this) {
-      var known = bodies.get(body);
-      if (known != null) return known;
+      if (bodies.containsKey(body)) {
+        return bodies.get(body);
+      }
     }
     var computed = resolver.possibleContexts(document, body);
     synchronized (this) {
-      var previous = bodies.putIfAbsent(body, computed);
-      return previous == null ? computed : previous;
+      bodies.putIfAbsent(body, computed);
+      return bodies.get(body);
     }
   }
 }
