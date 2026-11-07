@@ -363,7 +363,7 @@ public class SymbolTree {
   private SourceDefinedSymbol findSymbolAtPosition(SourceDefinedSymbol parent, Position position) {
     // Ищем среди детей символ, содержащий позицию
     for (var child : parent.getChildren()) {
-      if (Ranges.containsPosition(child.getRange(), position)) {
+      if (child.containsPosition(position)) {
         // Рекурсивно ищем более вложенный символ
         var found = findSymbolAtPosition(child, position);
         // Пропускаем Namespace (Region) - ищем дальше или возвращаем parent
