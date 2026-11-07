@@ -80,7 +80,7 @@ public class InferredExpressionTypeIndex extends AbstractDocumentLifecycleCleara
 
   private final Map<URI, Map<ParseTree, TypeSet>> typesByUri = new ConcurrentHashMap<>();
   private final Map<URI, Map<ContextualKey, TypeSet>> contextualTypesByUri = new ConcurrentHashMap<>();
-  private volatile long contextualRevision;
+  private volatile long contextualRevision = 0;
 
   /** Документ → те, чьи записи на нём построены. Правка документа сбрасывает их вместе с ним. */
   private final Map<URI, Set<URI>> dependentsByDependency = new ConcurrentHashMap<>();
@@ -150,15 +150,24 @@ public class InferredExpressionTypeIndex extends AbstractDocumentLifecycleCleara
     }
     for (var i = 0; i < parts.size(); i++) {
       var query = parts.get(i);
-      if (query.key.context == null || query.revision != root.revision || query.bucket != root.bucket
-        || !query.uri.equals(root.uri) || query.key.node != root.key.node
-        || query.cached() == null || query.cached() != values.get(i)) {
+      if (!sameRoot(root, query) || !publishedValue(query, values.get(i))) {
         return false;
       }
     }
     root.bucket.put(root.key, union);
     typesByUri.computeIfAbsent(root.uri, ignored -> new ConcurrentHashMap<>()).put(root.key.node, union);
     return true;
+  }
+
+  private static boolean sameRoot(ContextualQuery root, ContextualQuery query) {
+    if (query.key.context == null || query.revision != root.revision || query.bucket != root.bucket) {
+      return false;
+    }
+    return query.uri.equals(root.uri) && query.key.node == root.key.node;
+  }
+
+  private static boolean publishedValue(ContextualQuery query, TypeSet value) {
+    return query.cached() != null && query.cached() == value;
   }
 
   /**
