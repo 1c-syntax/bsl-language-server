@@ -89,13 +89,15 @@ class ConfigurationModuleMembersProviderTest extends AbstractServerContextAwareT
     var moduleDoc = TestUtils.getDocumentContextFromFile(
       "src/test/resources/metadata/designer/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl", context);
     var globalMembers = typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, FileType.BSL);
+    var moduleBefore = moduleDoc.getSymbolTree().getModule();
     assertThat(globalScopeProvider.globalMember("ПервыйОбщийМодуль", FileType.BSL)
-      .flatMap(MemberDescriptor::getSourceSymbol)).containsSame(moduleDoc.getSymbolTree().getModule());
+      .flatMap(MemberDescriptor::getSourceSymbol)).containsSame(moduleBefore);
 
     // when — тот же текст перечитан: дерево новое
-    context.rebuildDocument(moduleDoc, moduleDoc.getContent(), 2);
+    context.rebuildDocument(moduleDoc, moduleDoc.getContent(), moduleDoc.getVersion() + 1);
 
     // then — члены глобального контекста не пересобраны, а член модуля — с символом нового дерева
+    assertThat(moduleDoc.getSymbolTree().getModule()).isNotSameAs(moduleBefore);
     assertThat(typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, FileType.BSL)).isSameAs(globalMembers);
     assertThat(globalScopeProvider.globalMember("ПервыйОбщийМодуль", FileType.BSL)
       .flatMap(MemberDescriptor::getSourceSymbol)).containsSame(moduleDoc.getSymbolTree().getModule());

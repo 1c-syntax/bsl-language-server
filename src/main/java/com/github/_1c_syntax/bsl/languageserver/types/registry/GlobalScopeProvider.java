@@ -302,15 +302,21 @@ public class GlobalScopeProvider {
       @org.jspecify.annotations.Nullable GlobalIndex previous, FileType fileType) {
     if (previous != null) {
       var oldMembers = fileType == FileType.OS ? previous.osMembers() : previous.bslMembers();
-      if (sameGlobalNames(members, oldMembers)) return previous.byName().get(fileType);
+      if (sameGlobalNames(members, oldMembers)) {
+        return previous.byName().get(fileType);
+      }
     }
     return globalNameIndex(members);
   }
 
   private static boolean sameGlobalNames(List<MemberDescriptor> members, List<MemberDescriptor> previous) {
-    if (members.size() != previous.size()) return false;
+    if (members.size() != previous.size()) {
+      return false;
+    }
     for (var index = 0; index < members.size(); index++) {
-      if (!members.get(index).bilingualName().equals(previous.get(index).bilingualName())) return false;
+      if (!members.get(index).bilingualName().equals(previous.get(index).bilingualName())) {
+        return false;
+      }
     }
     return true;
   }
