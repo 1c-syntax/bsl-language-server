@@ -25,10 +25,12 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
+import com.github._1c_syntax.bsl.languageserver.types.model.Availability;
 import com.github._1c_syntax.bsl.languageserver.types.model.LocalField;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
+import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormAdditionalColumnsAttribute;
@@ -43,6 +45,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -363,7 +366,7 @@ class FormDataTypesRegistrar {
     if (baseRef != null) {
       typeRegistry.inheritCollectionTraits(dataRef, baseRef, FileType.BSL);
     }
-    typeRegistry.registerMemberSource(dataRef, () -> dataProperties(declaredRef, ownSections), FileType.BSL);
+    typeRegistry.registerMemberSource(dataRef, () -> dataProperties(declaredRef, ownSections, baseRef), FileType.BSL);
     return dataRef;
   }
 
@@ -511,7 +514,7 @@ class FormDataTypesRegistrar {
       FormPlatformTypes.FORM_DATA_COLLECTION_ITEM_RU, FormPlatformTypes.FORM_DATA_COLLECTION_ITEM_EN,
       typeRegistry.displayName(recordSetRef, Language.RU),
       typeRegistry.displayName(recordSetRef, Language.EN), itemBase);
-    MemberSource columns = () -> recordColumns(recordSetRef);
+    MemberSource columns = () -> recordColumns(recordSetRef, itemBase);
     typeRegistry.registerMemberSource(itemRef, columns, FileType.BSL);
     typeRegistry.registerDefaultElementTypes(dataRef, List.of(itemRef));
     specializeCollectionReturns(dataRef, baseRef, itemBase, itemRef, columns);
@@ -519,12 +522,12 @@ class FormDataTypesRegistrar {
   }
 
   /** Свойства записи регистра — элемента прикладного набора записей. */
-  private List<MemberDescriptor> recordColumns(TypeRef recordSetRef) {
+  private List<MemberDescriptor> recordColumns(TypeRef recordSetRef, TypeRef itemBase) {
     var columns = new ArrayList<MemberDescriptor>();
     for (var recordRef : typeRegistry.getDefaultElementTypes(recordSetRef).refs()) {
       for (var member : typeRegistry.getMembers(recordRef, FileType.BSL)) {
         if (member.kind() == MemberKind.PROPERTY && !member.generic()) {
-          columns.add(member);
+          columns.add(withFormDataAvailability(member, itemBase));
         }
       }
     }
@@ -572,7 +575,9 @@ class FormDataTypesRegistrar {
     // `Объект.Товары.Цена` на форме не работает. (Тип табличной части объекта
     // показывает колонки и на коллекции — там это осознанное послабление, здесь оно
     // ввело бы в заблуждение: у платформенного типа таких свойств действительно нет.)
-    typeRegistry.registerMemberSource(itemRef, columns, FileType.BSL);
+    MemberSource formColumns = () -> columns.getMembers().stream()
+      .map(member -> withFormDataAvailability(member, itemBase)).toList();
+    typeRegistry.registerMemberSource(itemRef, formColumns, FileType.BSL);
     // Типы возврата уточняются тем же помощником, что и у табличной части объекта:
     // задача одна — заменить обобщённую строку на строку этой коллекции и доопределить
     // «массив чего» у `НайтиСтроки` и «таблицу с какими колонками» у `Выгрузить`.
@@ -622,6 +627,7 @@ class FormDataTypesRegistrar {
     typeRegistry.registerDisplayName(ref, BilingualString.of(baseRu, baseEn));
     if (baseRef != null && !baseRef.equals(ref)) {
       typeRegistry.registerExtension(ref, baseRef, FileType.BSL);
+      typeRegistry.registerTypeMetadata(ref, typeRegistry.getTypeMetadata(baseRef, FileType.BSL), FileType.BSL);
     }
     return ref;
   }
@@ -639,7 +645,8 @@ class FormDataTypesRegistrar {
    *                    (у неё к ним добавлены свои колонки); для них зеркало берётся
    *                    не общее, а её собственное.
    */
-  private List<MemberDescriptor> dataProperties(TypeRef declaredRef, Map<TypeRef, TypeRef> ownSections) {
+  private List<MemberDescriptor> dataProperties(TypeRef declaredRef, Map<TypeRef, TypeRef> ownSections,
+                                                @Nullable TypeRef baseRef) {
     var members = typeRegistry.getMembers(declaredRef, FileType.BSL);
     var properties = new ArrayList<MemberDescriptor>(members.size());
     for (var member : members) {
@@ -647,9 +654,25 @@ class FormDataTypesRegistrar {
         || !FormPlatformTypes.isTransferredToFormData(member)) {
         continue;
       }
-      properties.add(withTabularSectionData(member, ownSections));
+      properties.add(withFormDataAvailability(withTabularSectionData(member, ownSections), baseRef));
     }
     return List.copyOf(properties);
+  }
+
+  /** Контексты перенесённого свойства задаются данными формы; прочая документация сохраняется. */
+  private MemberDescriptor withFormDataAvailability(MemberDescriptor property, @Nullable TypeRef baseRef) {
+    var metadata = property.metadata();
+    if (metadata.availabilities().isEmpty()) {
+      return property;
+    }
+    Set<Availability> available = baseRef == null ? Set.of()
+      : typeRegistry.getTypeMetadata(baseRef, FileType.BSL).availabilities();
+    if (metadata.availabilities().equals(available)) {
+      return property;
+    }
+    return property.withMetadata(new PlatformMetadata(metadata.sinceVersion(), metadata.deprecatedSinceVersion(),
+      metadata.recommendedReplacements(), available, metadata.accessMode(), metadata.returnValueDescription(),
+      metadata.notes(), metadata.examples(), metadata.seeAlso()));
   }
 
   /** Свойство с типами табличных частей, заменёнными на их зеркала в данных формы. */
