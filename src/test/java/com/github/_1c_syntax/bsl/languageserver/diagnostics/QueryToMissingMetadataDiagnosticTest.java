@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.utils.Absolute;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -62,6 +63,20 @@ class QueryToMissingMetadataDiagnosticTest extends AbstractDiagnosticTest<QueryT
 
       .hasSize(7);
 
+  }
+
+  @Test
+  void indexedLookupAcceptsEnglishTypeNamesAndMixedCaseNames() {
+    initServerContext(Absolute.path(PATH_TO_METADATA));
+    var document = TestUtils.getDocumentContext("""
+      Запрос = Новый Запрос;
+      Запрос.Текст = "SELECT * FROM InformationRegister.рЕГИСТРСВЕДЕНИЙ1";
+      Запрос.Текст = "SELECT * FROM Catalog.сПРАВОЧНИК1";
+      Запрос.Текст = "SELECT * FROM InformationRegister.НетТакогоРегистра";
+      """, context);
+    assertThat(getDiagnostics(document)).hasSize(1)
+      .allSatisfy(diagnostic -> org.assertj.core.api.Assertions.assertThat(diagnostic.getMessage().toString())
+        .contains("InformationRegister.НетТакогоРегистра"));
   }
 
   @Test

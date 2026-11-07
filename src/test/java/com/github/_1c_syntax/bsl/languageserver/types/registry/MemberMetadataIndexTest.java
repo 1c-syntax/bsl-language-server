@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import org.junit.jupiter.api.Test;
+import com.github._1c_syntax.bsl.support.CompatibilityMode;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -131,6 +132,46 @@ class MemberMetadataIndexTest {
       java.util.Set.of(), null,
       BilingualString.EMPTY, BilingualString.EMPTY,
       java.util.List.of(), java.util.List.of());
+  }
+
+  @Test
+  void versionCandidatesRespectTargetAndBothLocales() {
+    var index = new MemberMetadataIndex();
+    index.index(OWNER, MemberDescriptor.method("Русское")
+      .withBilingualName(BilingualString.of("Русское", "English"))
+      .withMetadata(versions("8.3.6", "8.3.20")));
+    assertThat(index.mayBeDeprecated("РУССКОЕ", new CompatibilityMode("8.3.19"))).isFalse();
+    assertThat(index.mayBeDeprecated("english", new CompatibilityMode("8.3.20"))).isTrue();
+    assertThat(index.mayBeUnavailable("English", new CompatibilityMode("8.3.5"))).isTrue();
+    assertThat(index.mayBeUnavailable("Русское", new CompatibilityMode("8.3.6"))).isFalse();
+  }
+
+  @Test
+  void anyOwnerCanMakeANameApplicableAfterAnEarlierMiss() {
+    var index = new MemberMetadataIndex();
+    var target = new CompatibilityMode("8.3.10");
+    index.index(OWNER, MemberDescriptor.method("Общее").withMetadata(versions("8.3.6", "8.3.20")));
+    assertThat(index.mayBeDeprecated("Общее", target)).isFalse();
+    assertThat(index.mayBeUnavailable("Общее", target)).isFalse();
+    index.index(OTHER, MemberDescriptor.method("Общее").withMetadata(versions("8.3.22", "8.3.1")));
+    assertThat(index.mayBeDeprecated("Общее", target)).isTrue();
+    assertThat(index.mayBeUnavailable("Общее", target)).isTrue();
+  }
+
+  @Test
+  void unknownVersionsAndAlwaysDeprecatedKeepTheExistingRules() {
+    var index = new MemberMetadataIndex();
+    var target = new CompatibilityMode("8.2.16");
+    index.index(OWNER, MemberDescriptor.method("Неизвестно").withMetadata(versions("bad", "later")));
+    assertThat(index.mayBeDeprecated("Неизвестно", target)).isFalse();
+    assertThat(index.mayBeUnavailable("Неизвестно", target)).isFalse();
+    index.index(OWNER, MemberDescriptor.method("Всегда").withMetadata(deprecatedAlwaysMetadata()));
+    assertThat(index.mayBeDeprecated("Всегда", target)).isTrue();
+  }
+
+  private static PlatformMetadata versions(String introduced, String deprecated) {
+    return new PlatformMetadata(introduced, deprecated, java.util.List.of(), java.util.Set.of(), null,
+      BilingualString.EMPTY, BilingualString.EMPTY, java.util.List.of(), java.util.List.of());
   }
 
   private static PlatformMetadata readOnlyMetadata() {

@@ -34,6 +34,8 @@ import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
+import com.github._1c_syntax.bsl.support.CompatibilityMode;
 
 /**
  * Резолв обращений к платформенному API в модуле — общая база для диагностик
@@ -100,13 +102,28 @@ public final class PlatformMemberCalls {
    * отдельный полный обход дерева). Нерезолвленные имена пропускаются.
    */
   public static CallSites collect(DocumentContext documentContext, TypeService typeService) {
+    return collect(documentContext, typeService, typeService::isVersionedMemberName, true);
+  }
+
+  public static CallSites collectDeprecated(DocumentContext documentContext, TypeService typeService,
+                                             CompatibilityMode target) {
+    return collect(documentContext, typeService, name -> typeService.mayBeDeprecatedMemberName(name, target), true);
+  }
+
+  public static CallSites collectUnavailable(DocumentContext documentContext, TypeService typeService,
+                                              CompatibilityMode target) {
+    return collect(documentContext, typeService, name -> typeService.mayBeUnavailableMemberName(name, target), false);
+  }
+
+  private static CallSites collect(DocumentContext documentContext, TypeService typeService,
+                                    Predicate<String> names, boolean deletedProperties) {
     var ast = documentContext.getAst();
     var members = new ArrayList<TypedMember>();
     var constructedTypes = new ArrayList<ConstructedType>();
     for (var node : Trees.findAllRuleNodes(ast,
       BSLParser.RULE_globalMethodCall, BSLParser.RULE_methodCall, BSLParser.RULE_accessProperty,
       BSLParser.RULE_newExpression)) {
-      collectSite(node, documentContext, typeService, members, constructedTypes);
+      collectSite(node, documentContext, typeService, members, constructedTypes, names, deletedProperties);
     }
     return new CallSites(members, constructedTypes);
   }
@@ -114,14 +131,15 @@ public final class PlatformMemberCalls {
   /** Резолв одного места вызова/обращения в зависимости от вида продукции. */
   private static void collectSite(ParserRuleContext node, DocumentContext documentContext,
                                   TypeService typeService, List<TypedMember> memberSink,
-                                  List<ConstructedType> constructedSink) {
+                                  List<ConstructedType> constructedSink, Predicate<String> names,
+                                  boolean deletedProperties) {
     switch (node) {
       case BSLParser.GlobalMethodCallContext globalCall ->
         resolveGlobalCall(globalCall, documentContext, typeService, memberSink);
       case BSLParser.MethodCallContext methodCall ->
-        resolveMethodCall(methodCall, documentContext, typeService, memberSink);
+        resolveMethodCall(methodCall, documentContext, typeService, memberSink, names);
       case BSLParser.AccessPropertyContext accessProperty ->
-        resolveCandidate(accessProperty.IDENTIFIER(), documentContext, typeService, memberSink);
+        resolveCandidate(accessProperty.IDENTIFIER(), documentContext, typeService, memberSink, names, deletedProperties);
       case BSLParser.NewExpressionContext newExpression ->
         resolveConstructedType(newExpression, documentContext, typeService, constructedSink);
       default -> {
@@ -143,10 +161,10 @@ public final class PlatformMemberCalls {
   /** Вызов метода на ресивере: имя проходит pre-filter, затем точный резолв на типе-владельце. */
   private static void resolveMethodCall(BSLParser.MethodCallContext methodCall,
                                         DocumentContext documentContext, TypeService typeService,
-                                        List<TypedMember> sink) {
+                                        List<TypedMember> sink, Predicate<String> names) {
     var methodName = methodCall.methodName();
     if (methodName != null) {
-      resolveCandidate(methodName.IDENTIFIER(), documentContext, typeService, sink);
+      resolveCandidate(methodName.IDENTIFIER(), documentContext, typeService, sink, names, false);
     }
   }
 
@@ -196,12 +214,12 @@ public final class PlatformMemberCalls {
    */
   private static void resolveCandidate(@Nullable TerminalNode terminal, DocumentContext documentContext,
                                        TypeService typeService,
-                                       List<TypedMember> sink) {
+                                       List<TypedMember> sink, Predicate<String> names, boolean deletedProperty) {
     if (terminal == null) {
       return;
     }
     var text = terminal.getText();
-    if (typeService.isVersionedMemberName(text) || hasDeletedPrefix(text)) {
+    if (names.test(text) || (deletedProperty && hasDeletedPrefix(text))) {
       resolveInto(sink, documentContext, typeService, terminal);
     }
   }
@@ -213,6 +231,6 @@ public final class PlatformMemberCalls {
     }
     // Терминал уже на руках из обхода — передаём его напрямую, минуя повторный
     // спуск по AST для поиска терминала по позиции (доминирует на больших модулях).
-    sink.addAll(typeService.membersAt(documentContext, terminal));
+    sink.addAll(typeService.accessTargetsAt(documentContext, terminal, null));
   }
 }

@@ -16,6 +16,13 @@ The cursor hovers over a method call in the module code. The popup shows the met
 
 The cursor hovers over a variable in the module code. The popup shows the variable name and the inferred type of its value.
 
+When the called function's body is available, its return type is refined using the calling method's context and preprocessor branch.
+If an `&AtClientAtServerNoContext` function returns a number under `#If Server` and a string under `#Else`,
+by default the receiving variable has type `String` in a client procedure and `Number` in a server procedure.
+With the shared [`supportThickClientFileMode`](../features/ConfigurationFile.md) setting enabled, the client result
+also includes `Number`: in a file-mode thick client, `Server` is true even inside a client form procedure.
+The same setting applies to method context descriptions and inlay hints.
+
 ![hover-02-variable](https://github.com/user-attachments/assets/6582bfce-5c67-4e00-9550-c158763d8a44)
 
 ## Hover on a platform method
