@@ -23,6 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.types.registry.MemberLookupSession;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.DiagnosticDeclarationSession;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.GitBlameComputer;
@@ -34,6 +36,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -70,10 +74,25 @@ public abstract class DefaultDiagnosticComputer implements DiagnosticComputer {
       ? GitBlameComputer.Data.empty()
       : new GitBlameComputer(documentContext.getUri(), ignoredAuthors).compute();
 
-    var futures = diagnostics(documentContext).stream()
-      .map((BSLDiagnostic diagnostic) ->
-        executor.submit(() -> safeGetDiagnostics(diagnostic, documentContext)))
-      .toList();
+    var memberLookups = new MemberLookupSession();
+    var declarations = new DiagnosticDeclarationSession();
+    var enabled = diagnostics(documentContext);
+    List<Future<List<Diagnostic>>> futures = new ArrayList<>(Collections.nCopies(enabled.size(), null));
+    // Проверка доступности использует вывод типов и часто завершает весь пакет.
+    // Запускаем её раньше, а результаты собираем в исходном порядке диагностик.
+    for (var pass = 0; pass < 2; pass++) {
+      for (var index = 0; index < enabled.size(); index++) {
+        var diagnostic = enabled.get(index);
+        if ((diagnostic instanceof MemberAccessUnavailableDiagnostic) != (pass == 0)) {
+          continue;
+        }
+        futures.set(index, executor.submit(() -> {
+          try (var scope = memberLookups.open(); var declarationScope = declarations.open()) {
+            return safeGetDiagnostics(diagnostic, documentContext);
+          }
+        }));
+      }
+    }
 
     return futures.stream()
       .map(DefaultDiagnosticComputer::getUninterruptibly)

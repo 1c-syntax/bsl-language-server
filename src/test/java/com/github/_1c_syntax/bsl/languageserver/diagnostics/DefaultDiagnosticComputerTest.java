@@ -115,6 +115,35 @@ class DefaultDiagnosticComputerTest {
       .isInstanceOf(IllegalStateException.class);
   }
 
+
+  @Test
+  void availabilityRunsFirstWhileResultsKeepTheOriginalOrder() {
+    executor.shutdownNow();
+    executor = Executors.newSingleThreadExecutor();
+    var order = new java.util.ArrayList<String>();
+    var first = mock(BSLDiagnostic.class);
+    var availability = mock(MemberAccessUnavailableDiagnostic.class);
+    var last = mock(BSLDiagnostic.class);
+    var firstResult = diagnostic("first");
+    var availabilityResult = diagnostic("availability");
+    var lastResult = diagnostic("last");
+    when(first.getDiagnostics(documentContext)).thenAnswer(ignored -> {
+      order.add("first");
+      return List.of(firstResult);
+    });
+    when(availability.getDiagnostics(documentContext)).thenAnswer(ignored -> {
+      order.add("availability");
+      return List.of(availabilityResult);
+    });
+    when(last.getDiagnostics(documentContext)).thenAnswer(ignored -> {
+      order.add("last");
+      return List.of(lastResult);
+    });
+    var computer = computerWith(List.of(first, availability, last));
+    assertThat(computer.compute(documentContext)).containsExactly(firstResult, availabilityResult, lastResult);
+    assertThat(order).containsExactly("availability", "first", "last");
+  }
+
   private DefaultDiagnosticComputer computerWith(List<BSLDiagnostic> diagnostics) {
     return new DefaultDiagnosticComputer(configuration, executor) {
       @Override
