@@ -35,6 +35,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /** Поиск имён по неизменяемым снимкам членов только на время одной задачи анализа. */
 public final class MemberLookupSession {
+  private static final int DIRECT_LOOKUP_LIMIT = 8;
   private static final ThreadLocal<MemberLookupSession> CURRENT = new ThreadLocal<>();
   private final Map<Collection<MemberDescriptor>, Map<Key, List<MemberDescriptor>>> snapshots = new IdentityHashMap<>();
 
@@ -62,8 +63,11 @@ public final class MemberLookupSession {
 
     @Override
     public void close() {
-      if (previous == null) CURRENT.remove();
-      else CURRENT.set(previous);
+      if (previous == null) {
+        CURRENT.remove();
+      } else {
+        CURRENT.set(previous);
+      }
     }
   }
 
@@ -77,7 +81,7 @@ public final class MemberLookupSession {
    */
   public static List<MemberDescriptor> lookup(Collection<MemberDescriptor> members, MemberKind kind, String name) {
     var session = CURRENT.get();
-    if (session == null || members.size() <= 8) {
+    if (session == null || members.size() <= DIRECT_LOOKUP_LIMIT) {
       return select(members, kind, name);
     }
     Map<Key, List<MemberDescriptor>> names;
@@ -106,17 +110,19 @@ public final class MemberLookupSession {
    * @return исходный снимок либо уже отобранные кандидаты.
    */
   public static Collection<MemberDescriptor> candidates(Collection<MemberDescriptor> members, MemberKind kind, String name) {
-    return members.size() <= 8 || CURRENT.get() == null ? members : lookup(members, kind, name);
+    return members.size() <= DIRECT_LOOKUP_LIMIT || CURRENT.get() == null ? members : lookup(members, kind, name);
   }
 
   /** Первый член с прежней семантикой регистра и двуязычных имён. */
   public static Optional<MemberDescriptor> first(Collection<MemberDescriptor> members, MemberKind kind, String name) {
-    if (members.size() > 8 && CURRENT.get() != null) {
+    if (members.size() > DIRECT_LOOKUP_LIMIT && CURRENT.get() != null) {
       var found = lookup(members, kind, name);
       return found.isEmpty() ? Optional.empty() : Optional.of(found.getFirst());
     }
     for (var member : members) {
-      if (member.kind() == kind && member.matches(name)) return Optional.of(member);
+      if (member.kind() == kind && member.matches(name)) {
+        return Optional.of(member);
+      }
     }
     return Optional.empty();
   }
@@ -124,7 +130,9 @@ public final class MemberLookupSession {
   private static List<MemberDescriptor> select(Collection<MemberDescriptor> members, MemberKind kind, String name) {
     var result = new ArrayList<MemberDescriptor>();
     for (var member : members) {
-      if (member.kind() == kind && member.matches(name)) result.add(member);
+      if (member.kind() == kind && member.matches(name)) {
+        result.add(member);
+      }
     }
     return List.copyOf(result);
   }

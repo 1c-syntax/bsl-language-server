@@ -24,9 +24,10 @@ package com.github._1c_syntax.bsl.languageserver.context;
 import org.jspecify.annotations.Nullable;
 
 /** Консервативный фильтр имён по неизменяемому снимку словаря общих модулей. */
-final class CommonModuleNameFilter {
-  static final CommonModuleNameFilter ALLOW_ALL = new CommonModuleNameFilter(true);
-  private static final CommonModuleNameFilter SIMPLE_NAMES = new CommonModuleNameFilter(false);
+enum CommonModuleNameFilter {
+  ALLOW_ALL(true),
+  SIMPLE_NAMES(false);
+
   private final boolean dottedNames;
 
   private CommonModuleNameFilter(boolean dottedNames) {

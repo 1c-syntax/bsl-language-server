@@ -1041,13 +1041,15 @@ public class TypeService implements SelfMemberClassifier {
     var receiver = Trees.findTerminalNodeContainsPosition(ast, cursor)
       .filter(terminal -> terminal.getSymbol().getType() == BSLParser.IDENTIFIER)
       .map(DereferenceLocator::locate).map(dereference -> dereference.getLeft());
-    return context -> {
+    return (@Nullable ExecutionContext context) -> {
       if (documentContext.getVersion() != version || documentContext.getAst() != ast) {
         return receiverTypesAt(documentContext, cursor, context);
       }
       var viaMember = receiver.map(expression -> inferencer.infer(expression, documentContext, context))
         .orElse(TypeSet.EMPTY);
-      if (!viaMember.isEmpty()) return viaMember;
+      if (!viaMember.isEmpty()) {
+        return viaMember;
+      }
       return receiverEndBeforeDot(documentContext, cursor)
         .map(receiverEnd -> receiverSegmentTypes(documentContext, receiverEnd, context)).orElse(TypeSet.EMPTY);
     };

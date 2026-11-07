@@ -79,10 +79,8 @@ final class CodeBlockLookup {
   }
 
   private static boolean endsBefore(ParseTree node, Position position) {
-    var stop = node instanceof ParserRuleContext rule ? rule.getStop() : ((TerminalNode) node).getSymbol();
-    if (stop == null) {
-      stop = startOf(node);
-    }
+    var stop = node instanceof ParserRuleContext rule
+      ? lastToken(rule.getStop(), rule.getStart()) : ((TerminalNode) node).getSymbol();
     var line = stop.getLine() - 1;
     if (line != position.getLine()) {
       return line < position.getLine();
@@ -96,13 +94,18 @@ final class CodeBlockLookup {
 
   private static boolean contains(ParserRuleContext node, Position position) {
     var start = node.getStart();
-    var stop = node.getStop() == null ? start : node.getStop();
+    var stop = lastToken(node.getStop(), start);
     var end = stop.getCharPositionInLine();
     if (stop.getType() != Token.EOF) {
       end += stop.getText().length();
     }
     return Ranges.containsPosition(start.getLine() - 1, start.getCharPositionInLine(),
       stop.getLine() - 1, end, position);
+  }
+
+  /** У незавершённого узла парсера последний токен может ещё отсутствовать. */
+  private static Token lastToken(@Nullable Token stop, Token start) {
+    return stop == null ? start : stop;
   }
 
   private static BSLParser.@Nullable CodeBlockContext covering(
