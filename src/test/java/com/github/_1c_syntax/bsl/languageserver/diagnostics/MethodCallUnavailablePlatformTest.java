@@ -29,10 +29,13 @@ import com.github._1c_syntax.bsl.languageserver.types.model.Availability;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -57,6 +60,10 @@ class MethodCallUnavailablePlatformTest extends AbstractDiagnosticTest<MethodCal
   private static final PlatformMetadata SERVER_METADATA = new PlatformMetadata("8.0", "", List.of(), Set.of(
     Availability.SERVER, Availability.THICK_CLIENT, Availability.EXTERNAL_CONNECTION,
     Availability.MOBILE_APPLICATION_SERVER, Availability.MOBILE_STANDALONE_SERVER), null,
+    BilingualString.EMPTY, BilingualString.EMPTY, List.of(), List.of());
+
+  private static final PlatformMetadata THICK_CLIENT_METADATA = new PlatformMetadata("8.0", "", List.of(),
+    Set.of(Availability.THICK_CLIENT), null,
     BilingualString.EMPTY, BilingualString.EMPTY, List.of(), List.of());
 
   MethodCallUnavailablePlatformTest() {
@@ -190,6 +197,102 @@ class MethodCallUnavailablePlatformTest extends AbstractDiagnosticTest<MethodCal
     var document = form("&AtClient\nProcedure Caller()\n  Справочники.Справочник1.Выбрать();\nEndProcedure\n");
     enableOnly("checkServer");
     assertThat(getDiagnostics(document)).isEmpty();
+  }
+
+  @Test
+  void platformReturnKeepsAnAvailableMethodOnAFeasibleReceiverAlternative() {
+    assertThat(platformReturn(THICK_CLIENT_METADATA, SERVER_METADATA, true)).isEmpty();
+  }
+
+  @Test
+  void platformReturnStillChecksAnExplicitlyUnavailableMethod() {
+    assertThat(platformReturn(SERVER_METADATA, THICK_CLIENT_METADATA, true)).singleElement()
+      .satisfies(problem -> assertThat(problem.getMessage().getLeft()).startsWith("Метод \"FullName\""));
+  }
+
+  @Test
+  void platformReturnStillChecksASingleUnavailableReceiverType() {
+    assertThat(platformReturn(THICK_CLIENT_METADATA, SERVER_METADATA, false)).singleElement()
+      .satisfies(problem -> assertThat(problem.getMessage().getLeft()).startsWith("Метод \"FullName\""));
+  }
+
+  @Test
+  void platformReturnDoesNotAssumeMemberAvailabilityWhenItIsUnknown() {
+    assertThat(platformReturn(THICK_CLIENT_METADATA, PlatformMetadata.EMPTY, true)).singleElement()
+      .satisfies(problem -> assertThat(problem.getMessage().getLeft()).startsWith("Метод \"FullName\""));
+  }
+
+  @Test
+  void platformReturnDoesNotUseAnUnknownAlternativeOwnerAsProofOfAvailability() {
+    assertThat(platformReturn(PlatformMetadata.EMPTY, SERVER_METADATA, THICK_CLIENT_METADATA,
+      SERVER_METADATA, true, MemberKind.METHOD))
+      .singleElement();
+  }
+
+  @Test
+  void platformReturnDoesNotUseAnUnknownAlternativeMemberAsProofOfAvailability() {
+    assertThat(platformReturn(SERVER_METADATA, PlatformMetadata.EMPTY, THICK_CLIENT_METADATA,
+      SERVER_METADATA, true, MemberKind.METHOD))
+      .singleElement();
+  }
+
+  @Test
+  void platformReturnKeepsAnAvailablePropertyOnAFeasibleReceiverAlternative() {
+    assertThat(platformReturn(SERVER_METADATA, SERVER_METADATA, THICK_CLIENT_METADATA,
+      SERVER_METADATA, true, MemberKind.PROPERTY))
+      .isEmpty();
+  }
+
+  @Test
+  void platformReturnStillChecksAnExplicitlyUnavailableProperty() {
+    assertThat(platformReturn(SERVER_METADATA, SERVER_METADATA, SERVER_METADATA,
+      THICK_CLIENT_METADATA, true, MemberKind.PROPERTY))
+      .singleElement().satisfies(problem ->
+        assertThat(problem.getMessage().getLeft()).startsWith("Свойство \"FullName\""));
+  }
+
+  @Test
+  void platformReturnStillChecksAPropertyOfASingleUnavailableReceiver() {
+    assertThat(platformReturn(SERVER_METADATA, SERVER_METADATA, THICK_CLIENT_METADATA,
+      SERVER_METADATA, false, MemberKind.PROPERTY))
+      .singleElement().satisfies(problem ->
+        assertThat(problem.getMessage().getLeft()).startsWith("Свойство \"FullName\""));
+  }
+
+  private List<Diagnostic> platformReturn(PlatformMetadata otherType, PlatformMetadata otherMethod,
+                                        boolean includeServerAlternative) {
+    return platformReturn(SERVER_METADATA, SERVER_METADATA, otherType, otherMethod,
+      includeServerAlternative, MemberKind.METHOD);
+  }
+
+  private List<Diagnostic> platformReturn(PlatformMetadata serverType, PlatformMetadata serverMethod,
+                                        PlatformMetadata otherType, PlatformMetadata otherMethod,
+                                        boolean includeServerAlternative, MemberKind kind) {
+    var server = registry.intern(TypeKind.PLATFORM, "ServerMetadata");
+    var other = registry.intern(TypeKind.PLATFORM, "OtherMetadata");
+    registry.registerTypeMetadata(server, serverType, FileType.BSL);
+    registry.registerTypeMetadata(other, otherType, FileType.BSL);
+    registry.registerMemberOverride(server,
+      () -> List.of(platformResult(kind).withMetadata(serverMethod)), FileType.BSL);
+    registry.registerMemberOverride(other,
+      () -> List.of(platformResult(kind).withMetadata(otherMethod)), FileType.BSL);
+    var returned = includeServerAlternative ? TypeSet.of(server, other) : TypeSet.of(other);
+    registry.registerMemberOverride(registry.resolve("Массив").orElseThrow(),
+      () -> List.of(MemberDescriptor.method("Metadata").withReturnTypes(returned).withMetadata(SERVER_METADATA)),
+      FileType.BSL);
+    enableOnly("checkServer");
+    return getDiagnostics(form("""
+      &AtServer
+      Procedure Caller()
+        Factory = New Array;
+        Name = Factory.Metadata().FullName%s;
+      EndProcedure
+      """.formatted(kind == MemberKind.METHOD ? "()" : "")));
+  }
+
+  private MemberDescriptor platformResult(MemberKind kind) {
+    return kind == MemberKind.METHOD ? MemberDescriptor.method("FullName")
+      : MemberDescriptor.property("FullName", registry.resolve("Строка").orElseThrow());
   }
 
   private DocumentContext form(String source) {

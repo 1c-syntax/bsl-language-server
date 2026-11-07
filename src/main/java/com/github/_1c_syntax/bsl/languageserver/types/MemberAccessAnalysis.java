@@ -180,12 +180,16 @@ final class MemberAccessAnalysis {
   private static Map<@Nullable TypeRef, List<TypedMember>> platformTargets(List<TypedMember> members, MemberKind expected) {
     Map<@Nullable TypeRef, List<TypedMember>> byOwner = new LinkedHashMap<>();
     for (var member : members) {
-      if (member.descriptor().kind() == expected && !TypeRef.ANY.equals(member.owner())
-        && !(member.descriptor().getSourceSymbol().orElse(null) instanceof MethodSymbol)) {
+      if (isPlatformTarget(member, expected)) {
         byOwner.computeIfAbsent(member.owner(), ignored -> new ArrayList<>()).add(member);
       }
     }
     return byOwner;
+  }
+
+  private static boolean isPlatformTarget(TypedMember member, MemberKind expected) {
+    return member.descriptor().kind() == expected && !TypeRef.ANY.equals(member.owner())
+      && !(member.descriptor().getSourceSymbol().orElse(null) instanceof MethodSymbol);
   }
 
   private void checkPlatformOwner(MemberAccessSite access, @Nullable TypeRef owner, List<TypedMember> candidates,
@@ -205,9 +209,29 @@ final class MemberAccessAnalysis {
     if (candidates.stream().anyMatch(member -> !contextData.platformUnavailable(member, context))) {
       return false;
     }
-    var actual = contextData.targetsInContext(access, context).stream()
+    var targets = contextData.targetsInContext(access, context);
+    var actual = targets.stream()
       .filter(member -> Objects.equals(member.owner(), owner) && member.descriptor().kind() == expected).toList();
-    return !actual.isEmpty() && actual.stream().allMatch(member -> contextData.platformUnavailable(member, context));
+    return !actual.isEmpty() && actual.stream().allMatch(member -> contextData.platformUnavailable(member, context))
+      && !hasAvailablePlatformAlternative(owner, actual, targets, expected, context);
+  }
+
+  /**
+   * Общий возвращаемый тип СП может включать владельца, отсутствующего в данном режиме.
+   * Явно разрешённый член и известный доступный альтернативный получатель не доказывают ошибку.
+   * Запрет самого члена или отсутствие других получателей сохраняют обычную проверку.
+   */
+  private boolean hasAvailablePlatformAlternative(@Nullable TypeRef owner, List<TypedMember> actual,
+                                                   List<TypedMember> targets, MemberKind expected,
+                                                   ExecutionContext context) {
+    if (actual.stream().noneMatch(member -> contextData.platformMemberAvailable(member, context))) {
+      return false;
+    }
+    return targets.stream()
+      .filter(member -> !Objects.equals(member.owner(), owner))
+      .filter(member -> member.owner() != null && !TypeRef.UNKNOWN.equals(member.owner()))
+      .filter(member -> isPlatformTarget(member, expected))
+      .anyMatch(member -> contextData.platformAvailable(member, context));
   }
 
   /**

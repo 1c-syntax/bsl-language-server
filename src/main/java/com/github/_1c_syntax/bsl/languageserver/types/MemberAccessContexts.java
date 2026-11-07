@@ -88,6 +88,21 @@ final class MemberAccessContexts {
       && member.descriptor().returnTypes().refs().stream().anyMatch(type -> typeUnavailable(type, context));
   }
 
+  /** Доступность явно разрешена данными самого члена, а не предположением об отсутствии запрета. */
+  boolean platformMemberAvailable(TypedMember member, ExecutionContext context) {
+    var available = member.descriptor().metadata().availabilities();
+    return !available.isEmpty()
+      && platformContexts.computeIfAbsent(available, contextResolver::platformContexts).contains(context);
+  }
+
+  /** И член, и его владелец явно доступны; неизвестных данных для этого недостаточно. */
+  boolean platformAvailable(TypedMember member, ExecutionContext context) {
+    var owner = member.owner();
+    return owner != null && platformMemberAvailable(member, context)
+      && typeContexts.computeIfAbsent(owner, value -> contextResolver.typeContexts(documentContext, value))
+        .map(contexts -> contexts.contains(context)).orElse(false);
+  }
+
   private boolean typeUnavailable(TypeRef type, ExecutionContext context) {
     return typeContexts.computeIfAbsent(type, value -> contextResolver.typeContexts(documentContext, value))
       .map(contexts -> !contexts.contains(context)).orElse(false);
