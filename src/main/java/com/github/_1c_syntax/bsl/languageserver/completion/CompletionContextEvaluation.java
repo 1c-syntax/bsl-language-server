@@ -48,7 +48,7 @@ final class CompletionContextEvaluation {
   private @Nullable TypeRef sharedReceiver;
   private @Nullable Set<TypeRef> sharedReceiverUnion;
   private boolean propertyReceiverChecked;
-  private @Nullable CompletionTypeContext.PropertyScope propertyScope;
+  private CompletionTypeContext.@Nullable PropertyScope propertyScope;
 
   /**
    * Подготовить контекст один раз для всех предлагаемых имён.

@@ -206,11 +206,7 @@ final class CompletionTypeContext {
   }
 
   private EnumSet<ExecutionContext> typeMask(TypeRef type) {
-    var available = typeContexts.get(type);
-    if (available == null) {
-      available = resolver.typeContexts(document, type);
-      typeContexts.put(type, available);
-    }
+    var available = typeContexts(type);
     return available.isEmpty() ? EnumSet.allOf(ExecutionContext.class) : contextMask(available.orElseThrow());
   }
 
@@ -228,12 +224,15 @@ final class CompletionTypeContext {
 
   /** Видимость общего модуля учитывает серверный вызов; прочие типы используют сведения СП. */
   int typeRank(TypeRef type, ExecutionContext context) {
-    var available = typeContexts.get(type);
-    if (available == null) {
-      available = resolver.typeContexts(document, type);
-      typeContexts.put(type, available);
-    }
+    var available = typeContexts(type);
     return available.isEmpty() || available.orElseThrow().contains(context) ? AVAILABLE : UNAVAILABLE;
+  }
+
+  private Optional<Set<ExecutionContext>> typeContexts(TypeRef type) {
+    if (!typeContexts.containsKey(type)) {
+      typeContexts.put(type, resolver.typeContexts(document, type));
+    }
+    return typeContexts.get(type);
   }
 
   int platformRank(PlatformMetadata metadata, ExecutionContext context) {

@@ -22,13 +22,14 @@
 package com.github._1c_syntax.bsl.languageserver.completion;
 
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 /** Ключи имён с различением вида члена и регистром по {@link Locale#ROOT}. */
 public final class CompletionMemberKeys {
-  private record Entry(MemberKind kind, String name, String value) { }
+  private record Entry(@Nullable MemberKind kind, String name, String value) { }
 
   private static final AtomicReferenceArray<Entry> KEYS = new AtomicReferenceArray<>(8192);
 
@@ -45,7 +46,7 @@ public final class CompletionMemberKeys {
    * @param name исходное имя.
    * @return вид члена, двоеточие и имя в нижнем регистре по {@link Locale#ROOT}.
    */
-  public static String of(MemberKind kind, String name) {
+  public static String of(@Nullable MemberKind kind, String name) {
     if (name.length() > 256) {
       return normalize(kind, name);
     }
@@ -60,7 +61,7 @@ public final class CompletionMemberKeys {
     return normalized;
   }
 
-  private static String normalize(MemberKind kind, String name) {
+  private static String normalize(@Nullable MemberKind kind, String name) {
     return kind + ":" + name.toLowerCase(Locale.ROOT);
   }
 }
