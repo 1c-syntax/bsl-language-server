@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794091288873,
+  "lastUpdate": 1794093702842,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -46624,6 +46624,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.114937870194508",
             "extra": "mean: 83.93672927220662 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "cee18c8237b49a64487c6be269a4dca11276bccf",
+          "message": "Merge pull request #4680 from 1c-syntax/perf/context-symbol-names-shared\n\nИмена переменных из «Перем» и ключи поиска символов не копируют одинаковые строки",
+          "timestamp": "2026-11-07T20:52:53+01:00",
+          "tree_id": "bfb226eb46458aa23d620319152dd0d184eb1a19",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/cee18c8237b49a64487c6be269a4dca11276bccf"
+        },
+        "date": 1794093676036,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 80.70192058881123,
+            "unit": "sec",
+            "range": "stddev: 1.3444626800531283",
+            "extra": "mean: 80.70192058881123 sec\nrounds: 3"
           }
         ]
       }
