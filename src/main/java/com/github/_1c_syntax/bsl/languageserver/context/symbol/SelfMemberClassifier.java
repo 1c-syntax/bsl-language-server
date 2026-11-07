@@ -23,6 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 
+import java.util.function.Predicate;
+
 /**
  * Классифицирует голое (без {@code Перем}) присваивание имени как обращение к
  * self-реквизиту текущего модуля, а не к отдельной локальной переменной.
@@ -71,4 +73,15 @@ public interface SelfMemberClassifier {
    * @return {@code true}, если имя — self-реквизит текущего модуля.
    */
   boolean isBareSelfProperty(DocumentContext documentContext, String name);
+
+  /**
+   * Классификатор голых имён одного документа: то же, что {@link #isBareSelfProperty}, но всё,
+   * что зависит только от документа, находится один раз, а не на каждое имя.
+   *
+   * @param documentContext документ, в котором встречаются имена.
+   * @return проверка имени.
+   */
+  default Predicate<String> bareSelfPropertiesOf(DocumentContext documentContext) {
+    return name -> isBareSelfProperty(documentContext, name);
+  }
 }

@@ -55,7 +55,7 @@ public class UnusedParametersDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitSubCodeBlock(BSLParser.SubCodeBlockContext ctx) {
 
-    if (ctx.codeBlock().getChildCount() == 0
+    if (ctx.codeBlock() == null || ctx.codeBlock().getChildCount() == 0
       || itsHandler(ctx)) {
       return ctx;
     }

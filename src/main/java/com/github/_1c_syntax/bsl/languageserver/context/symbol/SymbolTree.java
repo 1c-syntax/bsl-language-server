@@ -378,14 +378,16 @@ public class SymbolTree {
   }
 
   private List<SourceDefinedSymbol> createChildrenFlat() {
-    List<SourceDefinedSymbol> symbols = new ArrayList<>();
+    var symbols = new ArrayList<SourceDefinedSymbol>();
     getChildren().forEach(child -> flatten(child, symbols));
+    // Список живёт столько же, сколько дерево, — без запаса, оставшегося от роста.
+    symbols.trimToSize();
 
     return symbols;
   }
 
   private List<MethodSymbol> createMethods() {
-    return getChildrenFlat(MethodSymbol.class);
+    return flatOfExactSize(MethodSymbol.class);
   }
 
   private Optional<ConstructorSymbol> createConstructor() {
@@ -393,7 +395,15 @@ public class SymbolTree {
   }
 
   private List<VariableSymbol> createVariables() {
-    return getChildrenFlat(VariableSymbol.class);
+    return flatOfExactSize(VariableSymbol.class);
+  }
+
+  /** Символы указанного типа из плоского списка — неизменяемым списком точного размера. */
+  private <T> List<T> flatOfExactSize(Class<T> clazz) {
+    return getChildrenFlat().stream()
+      .filter(clazz::isInstance)
+      .map(clazz::cast)
+      .toList();
   }
 
   private Map<SourceDefinedSymbol, VariableSymbol[]> createVariablesByScope() {

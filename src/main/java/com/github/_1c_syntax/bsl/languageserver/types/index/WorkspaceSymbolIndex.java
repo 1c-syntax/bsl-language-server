@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types.index;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextConfigurationBindingChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
@@ -240,6 +241,18 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
       return;
     }
     index(documentContext);
+  }
+
+  /**
+   * Переиндексировать документ, у которого изменилась привязка к метаданным конфигурации: от неё
+   * зависят имя контейнера и вид символов.
+   *
+   * @param event событие изменения привязки документа
+   */
+  @EventListener
+  @Override
+  public void handleConfigurationBindingChanged(DocumentContextConfigurationBindingChangedEvent event) {
+    index(event.getSource());
   }
 
   /**
