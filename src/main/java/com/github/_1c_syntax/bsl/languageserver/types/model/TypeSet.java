@@ -205,7 +205,7 @@ public record TypeSet(
   }
 
   private static LazyTypeSet mapLazy(LazyTypeSet lazy, UnaryOperator<TypeRef> mapper) {
-    return new LazyTypeSet(lazy.key(), () -> lazy.get().mapRefs(mapper));
+    return lazy.map(types -> types.mapRefs(mapper));
   }
 
   /** Есть ли у набора декорации (element/field/описываемые типы, в т.ч. ленивые). */

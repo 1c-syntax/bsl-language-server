@@ -120,7 +120,7 @@ public class CodeAfterAsyncCallDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitSubCodeBlock(BSLParser.SubCodeBlockContext ctx) {
-    subCodeBlockContext = Optional.of(ctx.codeBlock());
+    subCodeBlockContext = Optional.ofNullable(ctx.codeBlock());
     return super.visitSubCodeBlock(ctx);
   }
 

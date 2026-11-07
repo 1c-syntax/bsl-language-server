@@ -29,6 +29,8 @@ import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
@@ -71,8 +73,10 @@ class BslDocSemanticTokensSupplierTest {
     ));
   }
 
-  @Test
-  void testParametersKeyword() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testParametersKeyword(boolean multilineTokenSupport) {
+    supplier.setMultilineTokenSupport(multilineTokenSupport);
     // given
     String bsl = """
       // Описание метода
@@ -85,15 +89,31 @@ class BslDocSemanticTokensSupplierTest {
     // when
     var decoded = helper.getDecodedTokens(bsl, supplier);
 
-    // then - "Параметры:" should be Macro with Documentation modifier
-    helper.assertContainsTokens(decoded, List.of(
+    // then - comment tokens must not overlap the keyword, parameter or type.
+    helper.assertTokensMatch(decoded, List.of(
+      new ExpectedToken(0, 0, 18, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, "// Описание метода"),
+      new ExpectedToken(1, 0, 3, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, "// "),
       new ExpectedToken(1, 3, 10, SemanticTokenTypes.Macro,
-        Set.of(SemanticTokenModifiers.Documentation), "Параметры:")
+        SemanticTokenModifiers.Documentation, "Параметры:"),
+      new ExpectedToken(2, 0, 4, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, "//  "),
+      new ExpectedToken(2, 4, 9, SemanticTokenTypes.Parameter,
+        SemanticTokenModifiers.Documentation, "Параметр1"),
+      new ExpectedToken(2, 13, 3, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, " - "),
+      new ExpectedToken(2, 16, 6, SemanticTokenTypes.Type,
+        SemanticTokenModifiers.Documentation, "Строка"),
+      new ExpectedToken(2, 22, 21, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, " - описание параметра")
     ));
   }
 
-  @Test
-  void testParameterNames() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testParameterNames(boolean multilineTokenSupport) {
+    supplier.setMultilineTokenSupport(multilineTokenSupport);
     // given
     String bsl = """
       // Описание метода
@@ -113,8 +133,10 @@ class BslDocSemanticTokensSupplierTest {
     ));
   }
 
-  @Test
-  void testReturnsKeyword() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testReturnsKeyword(boolean multilineTokenSupport) {
+    supplier.setMultilineTokenSupport(multilineTokenSupport);
     // given
     String bsl = """
       // Описание функции
@@ -136,7 +158,56 @@ class BslDocSemanticTokensSupplierTest {
   }
 
   @Test
-  void testTypeNames() {
+  void testMultilineCommentBetweenDescriptionElements() {
+    supplier.setMultilineTokenSupport(true);
+    String bsl = """
+      // Параметры:
+      //  Параметр - Строка - описание
+      //    Первая строка продолжения.
+      //    Вторая строка продолжения.
+      // Возвращаемое значение:
+      //  Число - результат
+      Функция Тест(Параметр)
+        Возврат 0;
+      КонецФункции
+      """;
+
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    helper.assertTokensMatch(decoded, List.of(
+      new ExpectedToken(0, 0, 3, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, "// "),
+      new ExpectedToken(0, 3, 10, SemanticTokenTypes.Macro,
+        SemanticTokenModifiers.Documentation, "Параметры:"),
+      new ExpectedToken(1, 0, 4, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, "//  "),
+      new ExpectedToken(1, 4, 8, SemanticTokenTypes.Parameter,
+        SemanticTokenModifiers.Documentation, "Параметр"),
+      new ExpectedToken(1, 12, 3, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, " - "),
+      new ExpectedToken(1, 15, 6, SemanticTokenTypes.Type,
+        SemanticTokenModifiers.Documentation, "Строка"),
+      new ExpectedToken(1, 21, 11, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, " - описание"),
+      new ExpectedToken(2, 0, 65, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, "//    Первая строка продолжения.\n//    Вторая строка продолжения."),
+      new ExpectedToken(4, 0, 3, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, "// "),
+      new ExpectedToken(4, 3, 22, SemanticTokenTypes.Macro,
+        SemanticTokenModifiers.Documentation, "Возвращаемое значение:"),
+      new ExpectedToken(5, 0, 4, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, "//  "),
+      new ExpectedToken(5, 4, 5, SemanticTokenTypes.Type,
+        SemanticTokenModifiers.Documentation, "Число"),
+      new ExpectedToken(5, 9, 12, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, " - результат")
+    ));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testTypeNames(boolean multilineTokenSupport) {
+    supplier.setMultilineTokenSupport(multilineTokenSupport);
     // given
     String bsl = """
       // Описание метода
@@ -175,8 +246,10 @@ class BslDocSemanticTokensSupplierTest {
     ));
   }
 
-  @Test
-  void testMultipleTypesOnSeparateLines() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testMultipleTypesOnSeparateLines(boolean multilineTokenSupport) {
+    supplier.setMultilineTokenSupport(multilineTokenSupport);
     // given - parameter with multiple types on separate lines
     String bsl = """
       // Описание метода
@@ -202,8 +275,10 @@ class BslDocSemanticTokensSupplierTest {
     ));
   }
 
-  @Test
-  void testMultipleReturnTypesOnSeparateLines() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testMultipleReturnTypesOnSeparateLines(boolean multilineTokenSupport) {
+    supplier.setMultilineTokenSupport(multilineTokenSupport);
     // given - return value with multiple types on separate lines
     String bsl = """
       // Описание функции
@@ -271,8 +346,10 @@ class BslDocSemanticTokensSupplierTest {
     ));
   }
 
-  @Test
-  void testTrailingVariableDescriptionTypeHighlighting() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testTrailingVariableDescriptionTypeHighlighting(boolean multilineTokenSupport) {
+    supplier.setMultilineTokenSupport(multilineTokenSupport);
     // given - висячий (trailing) комментарий переменной с типом в начале (нотация «тип в начале»).
     // Описание начинается не со столбца 0, поэтому проверяем сквозную работу:
     // bsl-parser отдаёт TYPE_NAME-элемент в абсолютных координатах, а сапплаер подсвечивает его
@@ -335,8 +412,10 @@ class BslDocSemanticTokensSupplierTest {
     ));
   }
 
-  @Test
-  void testTrailingVariableCollectionTypeHighlighting() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testTrailingVariableCollectionTypeHighlighting(boolean multilineTokenSupport) {
+    supplier.setMultilineTokenSupport(multilineTokenSupport);
     // given - висячий комментарий с типом-коллекцией «Массив из Число»: подсвечиваться должны
     // и тип-голова (Массив), и тип-значение коллекции (Число), а не только голова.
     String bsl = """
@@ -382,6 +461,36 @@ class BslDocSemanticTokensSupplierTest {
     ));
   }
 
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testPlainVariableDescription(boolean multilineTokenSupport) {
+    supplier.setMultilineTokenSupport(multilineTokenSupport);
+
+    String bsl = """
+
+      // Описание переменной.
+      // Число - описание
+      Перем МояПеременная;
+      """;
+
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // Тип переменной распознаётся только в начале описания: вторая строка остаётся текстом.
+    if (multilineTokenSupport) {
+      helper.assertTokensMatch(decoded, List.of(
+        new ExpectedToken(1, 0, 43, SemanticTokenTypes.Comment,
+          SemanticTokenModifiers.Documentation, "// Описание переменной.\n// Число - описание")
+      ));
+    } else {
+      helper.assertTokensMatch(decoded, List.of(
+        new ExpectedToken(1, 0, 23, SemanticTokenTypes.Comment,
+          SemanticTokenModifiers.Documentation, "// Описание переменной."),
+        new ExpectedToken(2, 0, 19, SemanticTokenTypes.Comment,
+          SemanticTokenModifiers.Documentation, "// Число - описание")
+      ));
+    }
+  }
+
   @Test
   void testMultilineSupport() {
     // given
@@ -420,4 +529,3 @@ class BslDocSemanticTokensSupplierTest {
     ));
   }
 }
-
