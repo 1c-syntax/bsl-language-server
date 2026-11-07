@@ -40,7 +40,9 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 
 /**
  * Типы возвращаемого значения функции, рассчитанные по её телу.
@@ -105,6 +107,12 @@ public class ReturnTypeFromBodyInference {
    *     если для анализа функции требуется уже выгруженный AST.
    */
   public TypeSet of(MethodSymbol method, ExpressionTypes expressionTypes, @Nullable ExecutionContext context) {
+    return of(method, expressionTypes, context,
+      body -> compilationContextResolver.possibleContexts(method.getOwner(), body));
+  }
+
+  TypeSet of(MethodSymbol method, ExpressionTypes expressionTypes, @Nullable ExecutionContext context,
+             Function<BSLParser.CodeBlockContext, Optional<Set<ExecutionContext>>> compilationContexts) {
     if (!method.isFunction()) {
       return TypeSet.EMPTY;
     }
@@ -114,7 +122,7 @@ public class ReturnTypeFromBodyInference {
       return TypeSet.EMPTY;
     }
     var graph = controlFlowGraphIndex.graphOf(owner, body, CfgBuildOptions.defaults());
-    var compiled = compilationContextResolver.possibleContexts(owner, body)
+    var compiled = compilationContexts.apply(body)
       .map((Set<ExecutionContext> contexts) -> {
         if (context == null) {
           return contexts;
