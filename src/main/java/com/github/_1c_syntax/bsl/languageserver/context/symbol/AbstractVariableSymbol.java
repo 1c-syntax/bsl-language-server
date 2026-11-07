@@ -25,9 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.parser.description.VariableDescription;
-import lombok.Builder;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 import lombok.Value;
@@ -35,6 +33,7 @@ import lombok.experimental.Accessors;
 import lombok.experimental.NonFinal;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Collections;
 import java.util.List;
@@ -45,7 +44,7 @@ import java.util.Optional;
  */
 @Value
 @NonFinal
-@Builder(builderClassName = "Builder")
+@lombok.Builder(builderClassName = "Builder")
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @ToString(exclude = {"parent"})
 public abstract class AbstractVariableSymbol implements VariableSymbol {
@@ -57,23 +56,18 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
   String name;
 
   /**
-   * Область доступности символа. Метод или модуль.
+   * Область доступности символа. Метод или модуль; файл переменной — её файл
+   * (см. {@link #getOwner()}).
    */
   SourceDefinedSymbol scope;
 
   /**
-   * Файл в котором располагается переменная.
+   * Символ, внутри которого располагается данный символ. Без обёртки в {@link Optional}:
+   * переменных на большой конфигурации миллионы, и обёртка на каждую стоила бы десятки мегабайт.
    */
-  @EqualsAndHashCode.Include
-  DocumentContext owner;
-
-  /**
-   * Символ, внутри которого располагается данный символ.
-   */
-  @Getter
-  @Setter
   @NonFinal
-  Optional<SourceDefinedSymbol> parent;
+  @Nullable
+  SourceDefinedSymbol parent;
 
   /**
    * Тип переменной.
@@ -85,10 +79,48 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
    */
   boolean export;
 
+  protected AbstractVariableSymbol(
+    String name,
+    SourceDefinedSymbol scope,
+    Optional<SourceDefinedSymbol> parent,
+    byte kind,
+    boolean export
+  ) {
+    this.name = name;
+    this.scope = scope;
+    this.parent = parent.orElse(null);
+    this.kind = kind;
+    this.export = export;
+  }
+
   /**
-   * Описание переменной.
+   * Файл, в котором располагается переменная, — файл её области. Не хранится: переменных на
+   * большой конфигурации миллионы, и поле на каждую стоило бы десятки мегабайт.
    */
-  Optional<VariableDescription> description;
+  @Override
+  @EqualsAndHashCode.Include
+  public DocumentContext getOwner() {
+    return scope.getOwner();
+  }
+
+  /**
+   * Описание переменной. Описана малая доля переменных, и описание хранит отдельный подкласс
+   * ({@link DescribedVariableSymbol}), а не поле каждой переменной.
+   */
+  @Override
+  public Optional<VariableDescription> getDescription() {
+    return Optional.empty();
+  }
+
+  @Override
+  public Optional<SourceDefinedSymbol> getParent() {
+    return Optional.ofNullable(parent);
+  }
+
+  @Override
+  public void setParent(Optional<SourceDefinedSymbol> parent) {
+    this.parent = parent.orElse(null);
+  }
 
   @Override
   public List<SourceDefinedSymbol> getChildren() {
@@ -129,6 +161,10 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
     @Accessors(fluent = true, chain = true)
     private List<Annotation> annotations = Collections.emptyList();
 
+    @Setter
+    @Accessors(fluent = true, chain = true)
+    private Optional<VariableDescription> description = Optional.empty();
+
     private int startLine;
     private int startCharacter;
     private int endLine;
@@ -166,7 +202,6 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
         return new AnnotatedVariableSymbol(
           name,
           scope,
-          owner,
           parent,
           (byte) kind.ordinal(),
           export,
@@ -179,6 +214,25 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
           variableNameStartCharacter,
           variableNameEndCharacter,
           annotations
+        );
+      }
+
+      // Описанных переменных — малая доля, описание хранит только их подкласс.
+      if (description.isPresent()) {
+        return new DescribedVariableSymbol(
+          name,
+          scope,
+          parent,
+          (byte) kind.ordinal(),
+          export,
+          description,
+          startLine,
+          startCharacter,
+          endLine,
+          endCharacter,
+          variableNameLine,
+          variableNameStartCharacter,
+          variableNameEndCharacter
         );
       }
 
@@ -195,11 +249,9 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
         return new ShortBasedVariableSymbol(
           name,
           scope,
-          owner,
           parent,
           (byte) kind.ordinal(),
           export,
-          description,
           (short) startLine,
           (short) startCharacter,
           (short) endLine,
@@ -212,11 +264,9 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
         return new IntBasedVariableSymbol(
           name,
           scope,
-          owner,
           parent,
           (byte) kind.ordinal(),
           export,
-          description,
           startLine,
           startCharacter,
           endLine,

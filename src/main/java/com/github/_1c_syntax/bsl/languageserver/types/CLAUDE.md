@@ -53,9 +53,10 @@ hover, completion, signature help и ряд диагностик. См. корн
 - **`index/`** — индексы «символ → тип»: **`SymbolTypeIndex`** (возвращаемые типы методов,
   типы параметров), `InferredVariableTypeIndex` (кэш типа по символу переменной),
   `InferredExpressionTypeIndex` (кэш типа по AST-узлу выражения — не-переменные ресиверы:
-  цепочки, менеджеры конфигурации, общие модули), `CallStatementByReceiverIndex`,
-  `PropertyMethodCallIndex` (вызовы `Свойство` по имени переменной-приёмника — индексируется
-  `methodCall`, а не `callStatement`: вызов почти всегда стоит внутри условия),
+  цепочки, менеджеры конфигурации, общие модули), `ReceiverSitesIndex` (места, где переменная —
+  приёмник, по её имени: вызовы через неё, присваивания ей или её члену, вызовы `Свойство` со
+  вторым аргументом-переменной — для `Свойство` индексируется `methodCall`, а не `callStatement`:
+  вызов почти всегда стоит внутри условия; все три вида — за один обход дерева),
   `EventContractsIndex`, `WorkspaceSymbolIndex`. Оба `Inferred*`-индекса наполняет
   `ExpressionTypeInferencer` лениво; инвалидация — per-URI по жизненному циклу документа
   (общая база `index/AbstractDocumentLifecycleClearableIndex` в корне `languageserver`)
@@ -310,8 +311,7 @@ hover, completion, signature help и ряд диагностик. См. корн
 (`Элемент.Вид = ВидГруппыФормы.ОбычнаяГруппа`), и от него зависит почти вся специфика
 элемента. Позиции таких присваиваний уходят в расчёт по потоку через `mutationPositions`,
 поэтому уточнение действует **с места присваивания**, а не по всей области видимости.
-Источник позиций — `index/AssignmentByReceiverIndex`, близнец `CallStatementByReceiverIndex`
-для присваиваний.
+Источник позиций — присваивания из `index/ReceiverSitesIndex`.
 
 ## Правки в этом каталоге
 

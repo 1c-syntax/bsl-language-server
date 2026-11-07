@@ -37,26 +37,47 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.utils.Absolute;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.mockito.ArgumentCaptor;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.List;
 import java.util.Set;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -68,6 +89,9 @@ class MethodReturnTypeIndexerTest {
 
   private static final TypeSet STRING = TypeSet.of(new TypeRef(TypeKind.PRIMITIVE, "Строка"));
   private static final TypeSet NUMBER = TypeSet.of(new TypeRef(TypeKind.PRIMITIVE, "Число"));
+
+  /** Предел разом разобранных документов: окно впереди и документ, который считается. */
+  private static final int DOCUMENTS_IN_MEMORY = 8;
 
   private ExpressionTypeInferencer inferencer;
   private SymbolTypeIndex symbolTypeIndex;
@@ -106,7 +130,7 @@ class MethodReturnTypeIndexerTest {
     when(consumer.getSymbolTree().getMethods()).thenReturn(List.of(consumerMethod));
 
     // Значения запоминаются по-настоящему: по ним индекс решает, изменился ли метод.
-    var stored = new HashMap<MethodSymbol, TypeSet>();
+    var stored = new ConcurrentHashMap<MethodSymbol, TypeSet>();
     when(symbolTypeIndex.getReturnTypes(any()))
       .thenAnswer(invocation -> stored.getOrDefault(invocation.getArgument(0), TypeSet.EMPTY));
     doAnswer(invocation -> stored.put(invocation.getArgument(0), invocation.getArgument(1)))
@@ -258,6 +282,51 @@ class MethodReturnTypeIndexerTest {
   }
 
   @Test
+  void passStopsOnceWaveChangesNothing() {
+    // given: расчёт метода неполон каждый раз, а значение у него одно и то же — неполнота
+    // не временная, и пересчёт её не снимет.
+    when(inferencer.computeReturnTypes(consumerMethod))
+      .thenReturn(new ComputedReturnTypes(STRING, Set.of(sourceMethod), true));
+    indexer.computeIfAbsent(consumerMethod,
+      () -> new ComputedReturnTypes(STRING, Set.of(sourceMethod), true));
+    clearInvocations(inferencer);
+
+    // when: рабочая область наполнена.
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContextOf(consumer)));
+
+    // then: волна не изменила ни одного значения, и следующих нет — они посчитали бы то же.
+    verify(inferencer, times(1)).computeReturnTypes(consumerMethod);
+  }
+
+  @Test
+  void consumerOutdatedWhilePopulatingIsRecomputedAfterWaveThatChangesNothing() {
+    // given: потребитель посчитан на источнике, и документ его отпущен.
+    var other = document("file:///other.bsl");
+    var otherMethod = method(other, false);
+    when(other.getSymbolTree().getMethods()).thenReturn(List.of(otherMethod));
+    var serverContext = serverContextOf(source, consumer, other);
+    indexer.computeIfAbsent(consumerMethod,
+      () -> new ComputedReturnTypes(STRING, Set.of(sourceMethod), false));
+    trackLoading(serverContext, consumer);
+    when(inferencer.computeReturnTypes(consumerMethod)).thenAnswer(invocation ->
+      new ComputedReturnTypes(symbolTypeIndex.getReturnTypes(sourceMethod), Set.of(sourceMethod), false));
+
+    // given: значение источника поменялось после — разнос до отпущенного потребителя не дошёл.
+    indexer.computeIfAbsent(sourceMethod, () -> new ComputedReturnTypes(NUMBER, Set.of(), false));
+
+    // given: отложен посторонний метод, и его пересчёт ничего не меняет.
+    when(inferencer.computeReturnTypes(otherMethod)).thenReturn(new ComputedReturnTypes(STRING, Set.of(), true));
+    indexer.computeIfAbsent(otherMethod, () -> new ComputedReturnTypes(STRING, Set.of(), true));
+
+    // when: рабочая область наполнена.
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+    // then: первая волна не изменила ни одного значения, но потребитель устарел ещё до неё и
+    // пересчитан по новому значению источника.
+    assertThat(symbolTypeIndex.getReturnTypes(consumerMethod)).isEqualTo(NUMBER);
+  }
+
+  @Test
   void emptyValuedFunctionIsRecomputedAfterWorkspaceIsPopulated() {
     // given: при разборе значение функции вышло пустым, и неполным расчёт себя не считает:
     // вызов вёл в модуль, ещё не зарегистрированный в рабочей области, поэтому не разрешился
@@ -324,7 +393,7 @@ class MethodReturnTypeIndexerTest {
     indexer.computeIfAbsent(consumerMethod,
       () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.of(sourceMethod), true));
     var serverContext = serverContextOf(consumer);
-    when(serverContext.getDocumentState(consumer)).thenReturn(DocumentState.WITHOUT_CONTENT);
+    trackLoading(serverContext, consumer);
 
     // when
     indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
@@ -333,6 +402,25 @@ class MethodReturnTypeIndexerTest {
     // области в памяти осело бы всё, что проход трогал.
     verify(serverContext).rebuildDocument(consumer);
     verify(serverContext).tryClearDocument(consumer);
+  }
+
+  @Test
+  void documentWhoseFileFailedToReadKeepsItsValues() {
+    // given: у отложенного метода посчитанное значение, документ освобождён, а файл его при
+    // догрузке не читается — документ так и остаётся без тел.
+    indexer.computeIfAbsent(consumerMethod,
+      () -> new ComputedReturnTypes(STRING, Set.of(sourceMethod), true));
+    var serverContext = serverContextOf(consumer);
+    when(serverContext.getDocumentState(consumer)).thenReturn(DocumentState.WITHOUT_CONTENT);
+    clearInvocations(inferencer);
+
+    // when
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+    // then: расчёта без тел не было, и посчитанное не затёрто пустым.
+    verify(serverContext).rebuildDocument(consumer);
+    verify(inferencer, never()).computeReturnTypes(consumerMethod);
+    assertThat(symbolTypeIndex.getReturnTypes(consumerMethod)).isEqualTo(STRING);
   }
 
   @Test
@@ -364,9 +452,417 @@ class MethodReturnTypeIndexerTest {
     verify(serverContext).tryClearDocument(consumer);
   }
 
+  @Test
+  void cycleTooLargeToHoldReparsesOnlyDocumentsThatMayChange() {
+    // given: девять документов по кругу — больше, чем проход держит разобранными разом, —
+    // и все отложены. Документ i построен на документе i + 1. Значение меняется только у
+    // первого, а последний, построенный на первом, переписывает его значение себе.
+    var ring = ring("cycle", 9);
+    var documents = ring.documents();
+    var methods = ring.methods();
+    var first = methods[0];
+    var last = methods[methods.length - 1];
+    returns(first, STRING, methods[1]);
+    when(inferencer.computeReturnTypes(last)).thenAnswer(invocation ->
+      new ComputedReturnTypes(symbolTypeIndex.getReturnTypes(first), Set.of(first), false));
+    var serverContext = serverContextOf(documents);
+    trackLoading(serverContext, documents);
+
+    // when
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+    // then: значение первого дошло до последнего.
+    assertThat(symbolTypeIndex.getReturnTypes(last)).isEqualTo(STRING);
+    // Изменившийся документ разобран на втором обороте ещё раз: циклы внутри него разрывает
+    // прежнее значение, и новый заход может посчитать его иначе.
+    verify(serverContext, times(2)).rebuildDocument(documents[0]);
+    // А тот, у кого на входе ничего не поменялось, — только на первом: повторный разбор дал
+    // бы ровно то же самое, а на большой конфигурации такой цикл держит сотни документов.
+    verify(serverContext, times(1)).rebuildDocument(documents[4]);
+  }
+
+  @Test
+  void progressOfCycleTooLargeToHoldIsCountedByDocumentWhileItIsComputed() {
+    // given: индикатор, по которому видно, когда отсчитаны документы, и большой цикл, второй
+    // оборот которого пересчитывает часть документов заново.
+    var progressHelper = mock(WorkDoneProgressHelper.class);
+    var reporter = mock(WorkDoneProgressHelper.WorkDoneProgressReporter.class);
+    when(progressHelper.createProgress(anyInt(), anyString())).thenReturn(reporter);
+    var configuration = mock(GlobalLanguageServerConfiguration.class);
+    when(configuration.getLanguage()).thenReturn(Language.RU);
+    indexer = new MethodReturnTypeIndexer(inferencer, symbolTypeIndex, progressHelper, configuration, resolveExecutor);
+    var ring = ring("cycle", 9);
+    var documents = ring.documents();
+    var methods = ring.methods();
+    var first = methods[0];
+    var last = methods[methods.length - 1];
+    var firstComputations = new AtomicInteger();
+    var ticksBySecondPass = new AtomicInteger(-1);
+    when(inferencer.computeReturnTypes(first)).thenAnswer(invocation -> {
+      if (firstComputations.incrementAndGet() == 2) {
+        ticksBySecondPass.set(ticksOf(reporter));
+      }
+      return new ComputedReturnTypes(STRING, Set.of(methods[1]), false);
+    });
+    when(inferencer.computeReturnTypes(last)).thenAnswer(invocation ->
+      new ComputedReturnTypes(symbolTypeIndex.getReturnTypes(first), Set.of(first), false));
+    var serverContext = serverContextOf(documents);
+    trackLoading(serverContext, documents);
+
+    // when
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+    // then: к пересчёту первого документа на втором обороте отсчитаны все документы первого —
+    // ход виден по ходу расчёта цикла, а не разом после него. Больше их может быть, если
+    // по порядку компоненты на втором обороте до него пересчитаны другие.
+    assertThat(ticksBySecondPass.get()).isGreaterThanOrEqualTo(documents.length);
+    // Пересчитанное на следующих оборотах добавлено в план и отсчитано: отсчёт сходится с планом.
+    var sizes = ArgumentCaptor.forClass(Integer.class);
+    verify(reporter, atLeastOnce()).setSize(sizes.capture());
+    var planned = sizes.getValue();
+    assertThat(planned).isGreaterThan(documents.length);
+    assertThat(ticksOf(reporter)).isEqualTo(planned);
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {2, 4})
+  void cycleTooLargeToHoldIsParsedAheadWithinLimitAndReleased(int workers) {
+    // Ожидание предзагрузки внутри расчёта оставляет второй поток свободным для разбора.
+    resolveExecutor.shutdownNow();
+    resolveExecutor = Executors.newFixedThreadPool(workers);
+    indexer = indexerOn(resolveExecutor);
+    // given: двадцать документов по кругу, все отложены и все освобождены.
+    var ring = ring("ahead", 20);
+    var documents = ring.documents();
+    var methods = ring.methods();
+    var serverContext = serverContextOf(documents);
+    var loading = trackLoading(serverContext, documents);
+    // Расчёт первого документа ждёт, пока разбор впереди заполнит всё окно: иначе мгновенный
+    // расчёт на заглушках успевал бы за разбором, и разом разобранным всегда был бы один.
+    var firstComputation = new AtomicBoolean(true);
+    for (var index = 0; index < methods.length; index++) {
+      var next = methods[(index + 1) % methods.length];
+      when(inferencer.computeReturnTypes(methods[index])).thenAnswer(invocation -> {
+        if (firstComputation.getAndSet(false)) {
+          await().atMost(10, SECONDS).until(() -> loading.peak().get() >= DOCUMENTS_IN_MEMORY);
+        }
+        return new ComputedReturnTypes(TypeSet.EMPTY, Set.of(next), false);
+      });
+    }
+
+    // when
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+    // then: каждый документ разобран ровно раз — разбор впереди расчёта не дублирует разбор
+    // на месте — и отпущен; разом разобрано не больше предела: семь впереди и документ,
+    // который считается, — восьмое место впереди не занимается.
+    for (var documentContext : documents) {
+      verify(serverContext, times(1)).rebuildDocument(documentContext);
+    }
+    assertThat(loading.loaded()).isEmpty();
+    assertThat(loading.peak()).hasValue(DOCUMENTS_IN_MEMORY);
+  }
+
+  @Test
+  void componentStartsAsSoonAsItsDependenciesAreComputed() throws InterruptedException {
+    // given: потребитель построен на источнике, а третий документ ни от кого не зависит и
+    // считается, пока не начнётся потребитель. Пул на несколько потоков: работа идёт разом.
+    var executor = Executors.newFixedThreadPool(4);
+    try {
+      indexer = indexerOn(executor);
+      var slow = document("file:///slow.bsl");
+      var slowMethod = method(slow, true);
+      when(slow.getSymbolTree().getMethods()).thenReturn(List.of(slowMethod));
+      var consumerStarted = new CountDownLatch(1);
+      when(inferencer.computeReturnTypes(consumerMethod)).thenAnswer(invocation -> {
+        consumerStarted.countDown();
+        return new ComputedReturnTypes(TypeSet.EMPTY, Set.of(sourceMethod), false);
+      });
+      when(inferencer.computeReturnTypes(slowMethod)).thenAnswer(invocation ->
+        new ComputedReturnTypes(consumerStarted.await(10, SECONDS) ? STRING : NUMBER, Set.of(), false));
+      indexer.computeIfAbsent(sourceMethod, () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.of(), true));
+      indexer.computeIfAbsent(consumerMethod,
+        () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.of(sourceMethod), true));
+      indexer.computeIfAbsent(slowMethod, () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.of(), true));
+      var serverContext = serverContextOf(source, consumer, slow);
+
+      // when
+      indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+      // then: потребитель начался, пока независимый документ ещё считался, — ждать его
+      // потребителю незачем, хотя по ярусам он стоит вместе с источником.
+      assertThat(symbolTypeIndex.getReturnTypes(slowMethod)).isEqualTo(STRING);
+    } finally {
+      executor.shutdownNow();
+    }
+  }
+
+  @Test
+  void documentsOfLargeCycleUnrelatedToEachOtherAreComputedTogether() {
+    // given: большой цикл звездой — центр построен на каждом луче, а каждый луч на центре;
+    // друг с другом лучи не связаны. Документов больше, чем держится разобранными разом.
+    var executor = Executors.newFixedThreadPool(4);
+    try {
+      indexer = indexerOn(executor);
+      var hub = document("file:///hub.bsl");
+      var hubMethod = method(hub, true);
+      var documents = new ArrayList<DocumentContext>(List.of(hub));
+      var spokes = new ArrayList<MethodSymbol>();
+      for (var index = 0; index < 9; index++) {
+        var spoke = document("file:///spoke" + index + ".bsl");
+        documents.add(spoke);
+        spokes.add(method(spoke, true));
+      }
+      var inside = new AtomicInteger();
+      var together = new CountDownLatch(2);
+      var spokesMetEachOther = new AtomicBoolean(true);
+      var hubAlone = new AtomicBoolean(true);
+      for (var spoke : spokes) {
+        when(inferencer.computeReturnTypes(spoke)).thenAnswer(invocation -> {
+          inside.incrementAndGet();
+          try {
+            together.countDown();
+            if (!together.await(10, SECONDS)) {
+              spokesMetEachOther.set(false);
+            }
+            return new ComputedReturnTypes(TypeSet.EMPTY, Set.of(hubMethod), false);
+          } finally {
+            inside.decrementAndGet();
+          }
+        });
+        indexer.computeIfAbsent(spoke, () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.of(hubMethod), true));
+      }
+      when(inferencer.computeReturnTypes(hubMethod)).thenAnswer(invocation -> {
+        if (inside.get() > 0) {
+          hubAlone.set(false);
+        }
+        return new ComputedReturnTypes(TypeSet.EMPTY, Set.copyOf(spokes), false);
+      });
+      indexer.computeIfAbsent(hubMethod, () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.copyOf(spokes), true));
+      var serverContext = serverContextOf(documents.toArray(DocumentContext[]::new));
+
+      // when
+      indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+      // then: лучи считались разом — порядок обхода их друг от друга не отделяет, — а центр
+      // ни с одним лучом не пересёкся: каждому из них нужен его итог либо прежнее значение.
+      assertThat(spokesMetEachOther).isTrue();
+      assertThat(hubAlone).isTrue();
+    } finally {
+      executor.shutdownNow();
+    }
+  }
+
+  @Test
+  void documentWhoseParseAheadFailedIsParsedInPlace() {
+    // given: большой цикл, и разбор одного из документов впереди расчёта падает.
+    var ring = ring("failedAhead", 9);
+    var serverContext = serverContextOf(ring.documents());
+    var loading = trackLoading(serverContext, ring.documents());
+    var broken = ring.documents()[3];
+    doThrow(new IllegalStateException("файл занят"))
+      .doAnswer(invocation -> loading.load(broken))
+      .when(serverContext).rebuildDocument(broken);
+
+    // when
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+    // then: документ разобран на месте, как без разбора впереди, посчитан и отпущен.
+    verify(serverContext, times(2)).rebuildDocument(broken);
+    verify(inferencer).computeReturnTypes(ring.methods()[3]);
+    assertThat(loading.loaded()).isEmpty();
+  }
+
+  @Test
+  void documentWhoseFileFailedToReadAheadKeepsItsValues() {
+    // given: большой цикл, и файл одного из документов не читается вовсе.
+    var ring = ring("unreadableAhead", 9);
+    var serverContext = serverContextOf(ring.documents());
+    var loading = trackLoading(serverContext, ring.documents());
+    var unreadable = ring.documents()[3];
+    doNothing().when(serverContext).rebuildDocument(unreadable);
+    clearInvocations(inferencer);
+
+    // when
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+    // then: впереди документ не разобрался, на месте — тоже, и без тел его не считали.
+    verify(serverContext, times(2)).rebuildDocument(unreadable);
+    verify(inferencer, never()).computeReturnTypes(ring.methods()[3]);
+    verify(serverContext, never()).tryClearDocument(unreadable);
+    assertThat(loading.loaded()).isEmpty();
+  }
+
+  @Test
+  void documentOpenInEditorIsNotReleasedByParseAhead() {
+    // given: большой цикл, один из документов открыт в редакторе — его вторичные данные на месте.
+    var ring = ring("openAhead", 9);
+    var serverContext = serverContextOf(ring.documents());
+    var open = ring.documents()[3];
+    var released = Arrays.stream(ring.documents()).filter(document -> document != open)
+      .toArray(DocumentContext[]::new);
+    trackLoading(serverContext, released);
+
+    // when
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+    // then: открытый документ не разбирали и не отпускали — он нужен редактору.
+    verify(serverContext, never()).rebuildDocument(open);
+    verify(serverContext, never()).tryClearDocument(open);
+    verify(inferencer).computeReturnTypes(ring.methods()[3]);
+  }
+
+  @Test
+  void preloadedDocumentThatBecameCurrentIsReleasedBeforePassCompletes() {
+    // Все документы связаны друг с другом: порядок обхода произволен, но расчёт последовательный.
+    var executor = Executors.newFixedThreadPool(4);
+    try {
+      indexer = indexerOn(executor);
+      var ring = ring("skippedAhead", 9);
+      var documents = ring.documents();
+      var methods = ring.methods();
+      var consulted = Set.of(methods);
+      var order = new CopyOnWriteArrayList<MethodSymbol>();
+      var refreshed = new CountDownLatch(1);
+      var released = new CountDownLatch(1);
+      var releasedDuringPass = new AtomicBoolean();
+      for (var method : methods) {
+        var document = method.getOwner();
+        when(document.getSymbolTree().getMethods()).thenReturn(List.of(method));
+        indexer.clear(document.getUri());
+        indexer.computeIfAbsent(method, () -> new ComputedReturnTypes(TypeSet.EMPTY, consulted, true));
+        var computations = new AtomicInteger();
+        when(inferencer.computeReturnTypes(method)).thenAnswer(invocation -> {
+          var computation = computations.incrementAndGet();
+          if (computation == 1) {
+            order.add(method);
+          }
+          var position = order.indexOf(method);
+          if (computation == 2 && position == 0) {
+            assertThat(refreshed.await(10, SECONDS)).isTrue();
+          }
+          if (computation == 2 && position == 7) {
+            releasedDuringPass.set(released.await(5, SECONDS));
+          }
+          // Изменение последнего документа делает середину устаревшей ко второму обороту.
+          var types = position == 0 || position == 8 ? STRING : TypeSet.EMPTY;
+          return new ComputedReturnTypes(types, consulted, false);
+        });
+      }
+      var serverContext = serverContextOf(documents);
+      var loading = trackLoading(serverContext, documents);
+      Map<DocumentContext, AtomicInteger> parses = new ConcurrentHashMap<>();
+      doAnswer(invocation -> {
+        DocumentContext document = invocation.getArgument(0);
+        loading.load(document);
+        var parse = parses.computeIfAbsent(document, ignored -> new AtomicInteger()).incrementAndGet();
+        if (parse == 2 && document == order.get(4).getOwner()) {
+          // Перечитывание изменённого текста уже пересчитало методы; очередная работа не нужна.
+          indexer.handleContentChanged(new DocumentContextContentChangedEvent(document));
+          refreshed.countDown();
+        }
+        return null;
+      }).when(serverContext).rebuildDocument(any(DocumentContext.class));
+      doAnswer(invocation -> {
+        DocumentContext document = invocation.getArgument(0);
+        if (loading.loaded().remove(document)) {
+          loading.unloaded().add(document);
+        }
+        if (refreshed.getCount() == 0 && document == order.get(4).getOwner()) {
+          released.countDown();
+        }
+        return true;
+      }).when(serverContext).tryClearDocument(any());
+
+      indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+      assertThat(releasedDuringPass).isTrue();
+      assertThat(parses.get(order.get(4).getOwner())).hasValue(2);
+      assertThat(loading.loaded()).isEmpty();
+      assertThat(loading.peak().get()).isLessThanOrEqualTo(DOCUMENTS_IN_MEMORY);
+    } finally {
+      executor.shutdownNow();
+    }
+  }
+
+  @Test
+  void parseAheadIsReleasedWhenPassFails() {
+    // given: большой цикл, и расчёт первого же документа падает.
+    var ring = ring("failedPass", 9);
+    var serverContext = serverContextOf(ring.documents());
+    var loading = trackLoading(serverContext, ring.documents());
+    when(inferencer.computeReturnTypes(ring.methods()[0])).thenThrow(new IllegalStateException("сбой расчёта"));
+    var event = new ServerContextPopulatedEvent(serverContext);
+
+    // when
+    assertThatThrownBy(() -> indexer.handleServerContextPopulated(event))
+      .isInstanceOf(IllegalStateException.class);
+
+    // then: разобранное впереди отпущено — память не держит то, что расчёт уже не возьмёт.
+    assertThat(loading.loaded()).isEmpty();
+  }
+
   /**
-   * Рабочая область, в которой живут документы: блокировки настоящие, состояние документа
-   * спрашивается у неё же.
+   * Документы, отложенные методы которых построены друг на друге по кругу: метод i — на методе
+   * i + 1.
+   *
+   * @param documents документы.
+   * @param methods   их отложенные методы, по одному на документ.
+   */
+  private record Ring(DocumentContext[] documents, MethodSymbol[] methods) {
+  }
+
+  /**
+   * Круг из отложенных документов: значения пустые и от расчёта не меняются.
+   *
+   * @param name имя для URI документов.
+   * @param size сколько документов.
+   * @return круг.
+   */
+  private Ring ring(String name, int size) {
+    var documents = new DocumentContext[size];
+    var methods = new MethodSymbol[size];
+    for (var index = 0; index < size; index++) {
+      documents[index] = document("file:///" + name + index + ".bsl");
+      methods[index] = method(documents[index], true);
+    }
+    for (var index = 0; index < size; index++) {
+      var next = methods[(index + 1) % size];
+      returns(methods[index], TypeSet.EMPTY, next);
+      indexer.computeIfAbsent(methods[index],
+        () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.of(next), true));
+    }
+    return new Ring(documents, methods);
+  }
+
+  /**
+   * Состояние документов: какие освобождены, какие разобраны проходом и сколько было
+   * разобрано разом в худший момент.
+   *
+   * @param unloaded освобождённые документы.
+   * @param loaded   разобранные проходом документы.
+   * @param peak     наибольшее их число.
+   */
+  private record Loading(Set<DocumentContext> unloaded, Set<DocumentContext> loaded, AtomicInteger peak) {
+
+    /**
+     * Разбор: освобождённый документ становится читаемым.
+     *
+     * @param documentContext документ.
+     * @return ничего — для заглушки метода без результата.
+     */
+    @Nullable Void load(DocumentContext documentContext) {
+      if (unloaded.remove(documentContext)) {
+        loaded.add(documentContext);
+        peak.accumulateAndGet(loaded.size(), Math::max);
+      }
+      return null;
+    }
+  }
+
+  /**
+   * Рабочая область, в которой живут документы: блокировки настоящие, у каждого документа
+   * своя, состояние документа спрашивается у неё же.
    *
    * @param documentContexts документы рабочей области.
    * @return рабочая область.
@@ -379,9 +875,64 @@ class MethodReturnTypeIndexerTest {
       when(documentContext.getServerContext()).thenReturn(serverContext);
       when(serverContext.getDocumentState(documentContext)).thenReturn(DocumentState.WITH_CONTENT);
     }
-    when(serverContext.getDocumentLock(any())).thenReturn(new ReentrantReadWriteLock());
+    // Общая на всех блокировка сцепила бы потоки, которые в рабочей области друг друга не ждут:
+    // расчёт, держащий свой документ, и разбор впереди, берущий чужой.
+    Map<URI, ReentrantReadWriteLock> locks = new ConcurrentHashMap<>();
+    when(serverContext.getDocumentLock(any())).thenAnswer(invocation ->
+      locks.computeIfAbsent(invocation.getArgument(0), uri -> new ReentrantReadWriteLock()));
     when(serverContext.getDocuments()).thenReturn(Map.copyOf(documents));
     return serverContext;
+  }
+
+  /**
+   * Состояние документов как в рабочей области: перечисленные освобождены, разбор делает
+   * документ читаемым, освобождение — снова нет.
+   *
+   * @param serverContext рабочая область.
+   * @param released      документы, вторичные данные которых освобождены.
+   * @return учёт документов, разобранных проходом.
+   */
+  private static Loading trackLoading(ServerContext serverContext, DocumentContext... released) {
+    var loading = new Loading(ConcurrentHashMap.newKeySet(), ConcurrentHashMap.newKeySet(), new AtomicInteger());
+    loading.unloaded().addAll(List.of(released));
+    when(serverContext.getDocumentState(any())).thenAnswer(invocation ->
+      loading.unloaded().contains(invocation.<DocumentContext>getArgument(0))
+        ? DocumentState.WITHOUT_CONTENT
+        : DocumentState.WITH_CONTENT);
+    doAnswer(invocation -> loading.load(invocation.getArgument(0)))
+      .when(serverContext).rebuildDocument(any(DocumentContext.class));
+    doAnswer(invocation -> {
+      DocumentContext documentContext = invocation.getArgument(0);
+      if (loading.loaded().remove(documentContext)) {
+        loading.unloaded().add(documentContext);
+      }
+      return true;
+    }).when(serverContext).tryClearDocument(any());
+    return loading;
+  }
+
+  private static int ticksOf(WorkDoneProgressHelper.WorkDoneProgressReporter reporter) {
+    return (int) mockingDetails(reporter).getInvocations().stream()
+      .filter(invocation -> invocation.getMethod().getName().equals("tick"))
+      .count();
+  }
+
+  /**
+   * Индекс, проход которого считает на переданном пуле.
+   *
+   * @param executor пул прохода.
+   * @return индекс.
+   */
+  private MethodReturnTypeIndexer indexerOn(ExecutorService executor) {
+    var configuration = mock(GlobalLanguageServerConfiguration.class);
+    when(configuration.getLanguage()).thenReturn(Language.RU);
+    return new MethodReturnTypeIndexer(
+      inferencer,
+      symbolTypeIndex,
+      mock(WorkDoneProgressHelper.class, RETURNS_DEEP_STUBS),
+      configuration,
+      executor
+    );
   }
 
   private void returns(MethodSymbol method, TypeSet types, MethodSymbol... consulted) {

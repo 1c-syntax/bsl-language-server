@@ -38,6 +38,7 @@ import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormAttribute;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormCommand;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormParameter;
+import com.github._1c_syntax.utils.StringInterner;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
@@ -82,6 +83,9 @@ class FormParametersRegistrar {
   private final FormDataTypesRegistrar formDataTypes;
   private final FormTypeFactory typeFactory;
   private final RecorderIndex recorderIndex;
+
+  /** Одни и те же команды есть в тысячах форм, а описание обработчика собирается заново на каждую. */
+  private final StringInterner handlerDescriptions = new StringInterner();
 
   /**
    * Что подставлять в плейсхолдеры параметров обычной формы.
@@ -339,8 +343,8 @@ class FormParametersRegistrar {
         MemberDescriptor.event(action, "", signatures)
           .withBilingualName(FormPlatformTypes.neutral(action))
           .withBilingualDescription(BilingualString.of(
-            "Обработчик команды формы «" + command.getName() + "».",
-            "Handler of the form command \"" + command.getName() + "\".")));
+            handlerDescriptions.intern("Обработчик команды формы «" + command.getName() + "»."),
+            handlerDescriptions.intern("Handler of the form command \"" + command.getName() + "\"."))));
     }
     return List.copyOf(byName.values());
   }

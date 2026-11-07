@@ -10,16 +10,18 @@ plugins {
     `maven-publish`
     jacoco
     id("com.diffplug.spotless") version "7.0.4"
+    // git-versioning 7 подтягивает JGit 7 без GpgObjectSigner и ломает JReleaser 1.26.0.
+    // Остаёмся на 6.4.4 до поддержки JGit 7 в JReleaser 2.x.
     id("me.qoomon.git-versioning") version "6.4.4"
-    id("io.freefair.lombok") version "9.5.0"
-    id("io.freefair.javadoc-links") version "9.5.0"
-    id("io.freefair.javadoc-utf-8") version "9.5.0"
-    id("io.freefair.aspectj.post-compile-weaving") version "9.5.0"
-    id("io.freefair.maven-central.validate-poms") version "9.5.0"
-    id("com.github.ben-manes.versions") version "0.64.0"
+    id("io.freefair.lombok") version "9.8.3"
+    id("io.freefair.javadoc-links") version "9.8.3"
+    id("io.freefair.javadoc-utf-8") version "9.8.3"
+    id("io.freefair.aspectj.post-compile-weaving") version "9.8.3"
+    id("io.freefair.maven-central.validate-poms") version "9.8.3"
+    id("com.github.ben-manes.versions") version "0.66.0"
     id("org.springframework.boot") version "4.1.0"
     id("io.spring.dependency-management") version "1.1.7"
-    id("io.sentry.jvm.gradle") version "6.23.0"
+    id("io.sentry.jvm.gradle") version "6.24.0"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.2"
     id("ru.vyarus.pom") version "3.0.0"
     id("org.jreleaser") version "1.26.0"
@@ -80,7 +82,7 @@ dependencies {
     api("info.picocli:picocli-spring-boot-starter:4.7.7")
 
     // кэширование
-    api("com.github.ben-manes.caffeine:caffeine:3.3.0")
+    api("com.github.ben-manes.caffeine:caffeine:3.3.1")
     api("org.ehcache:ehcache:3.12.0")
 
     // lsp4j core
@@ -91,17 +93,17 @@ dependencies {
     // Spring AI 2.0 is the first line compatible with Spring Boot 4 (milestone at the time of writing).
     // - core starter: STDIO transport (`mcp` subcommand);
     // - webmvc starter: Streamable HTTP transport, served on the same servlet container as LSP-over-WS.
-    api(platform("org.springframework.ai:spring-ai-bom:2.0.1"))
+    api(platform("org.springframework.ai:spring-ai-bom:2.0.2"))
     api("org.springframework.ai:spring-ai-starter-mcp-server")
     api("org.springframework.ai:spring-ai-starter-mcp-server-webmvc")
 
     // 1c-syntax
-    api("io.github.1c-syntax:bsl-parser:0.39.0")
+    api("io.github.1c-syntax:bsl-parser:0.41.0")
     api("io.github.1c-syntax:utils:0.10.1")
-    api("io.github.1c-syntax:mdclasses:0.19.0.117-SNAPSHOT")
+    api("io.github.1c-syntax:mdclasses:0.21.0")
     api("io.github.1c-syntax:bsl-common-library:0.12.5")
     api("io.github.1c-syntax:supportconf:0.17.1")
-    api("io.github.1c-syntax:bsl-context:0.10.0")
+    api("io.github.1c-syntax:bsl-context:0.10.2")
 
     // nullability annotations
     api("org.jspecify:jspecify:1.0.1")
@@ -124,14 +126,14 @@ dependencies {
     }
 
     // AOP
-    implementation("org.aspectj:aspectjrt:1.9.25.1")
+    implementation("org.aspectj:aspectjrt:1.9.26")
 
     // commons utils
     implementation("commons-io:commons-io:2.22.0")
     implementation("commons-beanutils:commons-beanutils:1.11.0") {
         exclude("commons-logging", "commons-logging")
     }
-    implementation("commons-codec:commons-codec:1.22.1")
+    implementation("commons-codec:commons-codec:1.23.0")
     implementation("org.apache.commons:commons-lang3:3.21.0")
     implementation("org.apache.commons:commons-collections4:4.6.0")
     implementation("org.apache.commons:commons-exec:1.6.0")
@@ -238,7 +240,10 @@ tasks.build {
 }
 
 tasks.test {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        // Генераторы снапшотов запускаются отдельной задачей semanticTokensSnapshots.
+        excludeTags("snapshots")
+    }
 
     testLogging {
         events("passed", "skipped", "failed", "standard_error")
@@ -303,6 +308,31 @@ tasks.test {
             // Don't fail the build if cleanup fails
             logger.warn("Failed to cleanup test cache directories: ${e.message}")
         }
+    }
+}
+
+// PNG-снапшоты семантической подсветки фикстур для Sentry Snapshots
+// (выгружаются в CI через `sentry-cli snapshots upload`).
+val semanticTokensSnapshots by tasks.registering(Test::class) {
+    description = "Renders semantic tokens snapshots of test fixtures to PNG for Sentry Snapshots."
+    group = "verification"
+
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    useJUnitPlatform {
+        includeTags("snapshots")
+    }
+
+    maxHeapSize = "3g"
+
+    val outputDir = layout.buildDirectory.dir("snapshots/semantic-tokens")
+    outputs.dir(outputDir)
+    outputs.upToDateWhen { false }
+    systemProperty("snapshots.outputDir", outputDir.get().asFile.absolutePath)
+    systemProperty("java.awt.headless", "true")
+
+    doFirst {
+        delete(outputDir)
     }
 }
 

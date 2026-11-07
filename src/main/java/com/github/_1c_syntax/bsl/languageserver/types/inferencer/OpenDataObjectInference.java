@@ -21,15 +21,17 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContentUnavailableException;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
-import com.github._1c_syntax.bsl.languageserver.types.index.CallStatementByReceiverIndex;
+import com.github._1c_syntax.bsl.languageserver.types.index.ReceiverSitesIndex;
 import com.github._1c_syntax.bsl.languageserver.types.model.LocalField;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.languageserver.utils.Positions;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ConstructorCallNode;
@@ -82,7 +84,7 @@ public class OpenDataObjectInference {
   private static final TypeSet UNDEFINED = TypeSet.of(new TypeRef(TypeKind.PRIMITIVE, "Неопределено"));
 
   private final TypeRegistry typeRegistry;
-  private final CallStatementByReceiverIndex callStatementByReceiverIndex;
+  private final ReceiverSitesIndex receiverSitesIndex;
 
   /**
    * Типы выражения — то, чего этот компонент сам не умеет.
@@ -327,7 +329,8 @@ public class OpenDataObjectInference {
   }
 
   /**
-   * Операторы, меняющие состав полей переменной на месте, по позиции их начала.
+   * Операторы, меняющие состав полей переменной на месте, по позиции их начала. Берутся
+   * только операторы из области видимости переменной.
    *
    * @param variable переменная-получатель.
    * @return операторы по позициям, в порядке следования в документе.
@@ -338,14 +341,18 @@ public class OpenDataObjectInference {
     if (ast == null) {
       return Map.of();
     }
+    // Индекс ищет по имени, а одноимённые локальные переменные бывают в тысячах методов
+    // модуля: без отбора по области видимости каждая получала бы вызовы всех остальных.
+    var scopeRange = variable.getScope().getRange();
     Map<Position, BSLParser.CallStatementContext> calls = new LinkedHashMap<>();
     // Индекс отдаёт все вызовы у получателя с этим именем, а состав меняют только два вида.
     // Остальные изменением не считаются: иначе тело с `Лог.Отладка(…)` выглядело бы
     // меняющим переменную модуля `Лог`, и расчёт её ячейки проходил бы по нему наравне
     // с телами, где она правда меняется.
-    for (var call : callStatementByReceiverIndex.byReceiver(owner.getUri(), ast, variable.getName())) {
-      if (isMutatorCall(call)) {
-        calls.put(Ranges.create(call).getStart(), call);
+    for (var call : receiverSitesIndex.callStatements(owner.getUri(), ast, variable.getName())) {
+      var start = Positions.create(call);
+      if (Ranges.containsPosition(scopeRange, start) && isMutatorCall(call)) {
+        calls.put(start, call);
       }
     }
     return calls;
@@ -394,8 +401,7 @@ public class OpenDataObjectInference {
     if (call == null || incoming.isEmpty()) {
       return incoming;
     }
-    var scope = variable.getScope();
-    var scopeRange = scope == null ? null : scope.getRange();
+    var scopeRange = variable.getScope().getRange();
     var variableName = variable.getName();
 
     var structureRef = headRefOf(incoming, OpenDataObjectInference::isStructureOrMapLike);
@@ -412,8 +418,11 @@ public class OpenDataObjectInference {
     if (tableRef != null) {
       var column = addedColumn(call, variableName, scopeRange, types);
       if (column != null) {
-        var rowRef = valueTableRowRef(variable.getOwner());
-        return incoming.withElement(tableRef, TypeSet.of(rowRef).withField(rowRef, column.name(), column.types()));
+        // Колонки моделируются полями строки — собственного элемента таблицы.
+        var rowRef = typeRegistry.getOwnElementTypes(tableRef).refs().stream().findFirst().orElse(null);
+        if (rowRef != null) {
+          return incoming.withElement(tableRef, TypeSet.of(rowRef).withField(rowRef, column.name(), column.types()));
+        }
       }
     }
     return incoming;
@@ -471,18 +480,12 @@ public class OpenDataObjectInference {
     return null;
   }
 
-  /** Тип строки таблицы значений — на нём моделируются колонки. */
-  private TypeRef valueTableRowRef(DocumentContext owner) {
-    return typeRegistry.resolve(TableCollectionInference.VALUE_TABLE_ROW, owner.getFileType())
-      .orElseGet(() -> typeRegistry.intern(TypeKind.PLATFORM, TableCollectionInference.VALUE_TABLE_ROW));
-  }
-
   /** Поле, добавляемое вызовом {@code Х.Вставить("Ключ", Значение)}. */
   @Nullable
   private KeyedTypes insertedField(
     BSLParser.CallStatementContext call,
     String variableName,
-    @Nullable Range scopeRange,
+    Range scopeRange,
     ExpressionTypes types
   ) {
     var params = mutatorParams(
@@ -509,7 +512,7 @@ public class OpenDataObjectInference {
   private KeyedTypes addedColumn(
     BSLParser.CallStatementContext call,
     String variableName,
-    @Nullable Range scopeRange,
+    Range scopeRange,
     ExpressionTypes types
   ) {
     var params = mutatorParams(
@@ -565,14 +568,14 @@ public class OpenDataObjectInference {
   private static List<? extends BSLParser.CallParamContext> mutatorParams(
     BSLParser.CallStatementContext call,
     String receiverName,
-    @Nullable Range scopeRange,
+    Range scopeRange,
     @Nullable String actualReceiver,
     Predicate<BSLParser.MethodCallContext> methodMatches
   ) {
     if (actualReceiver == null || !actualReceiver.equalsIgnoreCase(receiverName)) {
       return null;
     }
-    if (scopeRange != null && !Ranges.containsRange(scopeRange, Ranges.create(call))) {
+    if (!Ranges.containsRange(scopeRange, Ranges.create(call))) {
       return null;
     }
     var methodCall = call.accessCall() == null ? null : call.accessCall().methodCall();
@@ -643,7 +646,7 @@ public class OpenDataObjectInference {
   private static BSLParser.@Nullable FileContext safeGetAst(DocumentContext owner) {
     try {
       return owner.getAst();
-    } catch (NullPointerException e) {
+    } catch (DocumentContentUnavailableException e) {
       return null;
     }
   }

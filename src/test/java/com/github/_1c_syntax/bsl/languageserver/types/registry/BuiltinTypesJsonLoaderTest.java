@@ -223,6 +223,20 @@ class BuiltinTypesJsonLoaderTest {
     assertThat(valueType.description().primary()).isNotEmpty();
   }
 
+  @Test
+  void valueTableRowIsElementInOscriptPack() {
+    // given — колонки таблицы значений моделируются полями её строки,
+    // а строка берётся как собственный элемент таблицы
+
+    // when
+    var valueTable = oscriptType("ТаблицаЗначений");
+
+    // then
+    assertThat(valueTable.defaultElementTypes())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("СтрокаТаблицыЗначений");
+  }
+
   private static TypeDecl oscriptType(String name) {
     return type(OSCRIPT_RESOURCE, name);
   }

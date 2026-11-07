@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types.index;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextConfigurationBindingChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
@@ -35,6 +36,7 @@ import com.github._1c_syntax.bsl.languageserver.index.AbstractDocumentLifecycleC
 import com.github._1c_syntax.bsl.languageserver.utils.FuzzyMatcher;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.types.ScriptVariant;
+import com.github._1c_syntax.utils.StringInterner;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.trie.PatriciaTrie;
 import org.apache.commons.lang3.StringUtils;
@@ -213,6 +215,11 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
   /**
+   * Имена в нижнем регистре: одно и то же имя повторяется в тысячах модулей.
+   */
+  private final StringInterner lowerCaseNames = new StringInterner();
+
+  /**
    * Пересобрать записи документа на изменении его содержимого.
    * <p>
    * В отличие от базового обработчика, который только сбрасывает записи документа, здесь после
@@ -234,6 +241,18 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
       return;
     }
     index(documentContext);
+  }
+
+  /**
+   * Переиндексировать документ, у которого изменилась привязка к метаданным конфигурации: от неё
+   * зависят имя контейнера и вид символов.
+   *
+   * @param event событие изменения привязки документа
+   */
+  @EventListener
+  @Override
+  public void handleConfigurationBindingChanged(DocumentContextConfigurationBindingChangedEvent event) {
+    index(event.getSource());
   }
 
   /**
@@ -310,6 +329,26 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
       for (var key : keys) {
         removeEntryFromKey(key, uri);
       }
+    } finally {
+      lock.writeLock().unlock();
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Запись документа удаляется фильтром всей корзины каждого своего ключа, а у ключей вроде
+   * общих префиксов имён в корзине записи тысяч документов — удаление всех по одному квадратично.
+   */
+  @Override
+  protected boolean clearWholeIndex() {
+    lock.writeLock().lock();
+    try {
+      if (!indexedByUri.isEmpty()) {
+        indexedByUri.clear();
+        trie.clear();
+      }
+      return true;
     } finally {
       lock.writeLock().unlock();
     }
@@ -792,13 +831,13 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
     }
   }
 
-  private static Entry toEntry(URI uri, SourceDefinedSymbol symbol, ScriptVariant scriptVariant) {
+  private Entry toEntry(URI uri, SourceDefinedSymbol symbol, ScriptVariant scriptVariant) {
     var name = symbol.getName();
     var containerName = getContainerName(symbol, scriptVariant).orElse("");
     return new Entry(
       uri,
       name,
-      name.toLowerCase(Locale.ENGLISH),
+      lowerCaseNames.intern(name.toLowerCase(Locale.ENGLISH)),
       symbol.getSymbolKind(),
       symbol.getRange(),
       List.copyOf(symbol.getTags()),
@@ -881,13 +920,11 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
       if (byLength != 0) {
         return byLength;
       }
-      var start = entry.range().getStart();
-      var otherStart = other.entry.range().getStart();
-      var byLine = Integer.compare(start.getLine(), otherStart.getLine());
+      var byLine = Integer.compare(entry.startLine(), other.entry.startLine());
       if (byLine != 0) {
         return byLine;
       }
-      return Integer.compare(start.getCharacter(), otherStart.getCharacter());
+      return Integer.compare(entry.startCharacter(), other.entry.startCharacter());
     }
   }
 }

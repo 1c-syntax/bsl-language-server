@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.index;
 
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.SymbolTag;
@@ -31,23 +32,58 @@ import java.util.List;
 /**
  * Неизменяемая запись индекса символов рабочей области: всё необходимое для построения
  * {@link org.eclipse.lsp4j.WorkspaceSymbol} без повторного обхода дерева символов.
+ * <p>
+ * Диапазон хранится числами, а {@link Range} собирается по запросу: записей на большой
+ * конфигурации сотни тысяч, и {@link Range} с двумя позициями на каждую стоил бы десятки мегабайт.
  *
- * @param uri           URI документа-источника
- * @param name          исходное имя символа
- * @param lowerName     lowercase-форма имени для сопоставления
- * @param kind          вид символа
- * @param range         диапазон символа в документе
- * @param tags          теги символа (например, {@link SymbolTag#Deprecated})
- * @param containerName готовое имя контейнера (представление ссылки на объект метаданных) либо
- *                      пустая строка, если документ не связан с объектом метаданных
+ * @param uri            URI документа-источника
+ * @param name           исходное имя символа
+ * @param lowerName      lowercase-форма имени для сопоставления
+ * @param kind           вид символа
+ * @param startLine      строка начала диапазона символа
+ * @param startCharacter колонка начала диапазона символа
+ * @param endLine        строка конца диапазона символа
+ * @param endCharacter   колонка конца диапазона символа
+ * @param tags           теги символа (например, {@link SymbolTag#Deprecated})
+ * @param containerName  готовое имя контейнера (представление ссылки на объект метаданных) либо
+ *                       пустая строка, если документ не связан с объектом метаданных
  */
 public record Entry(
   URI uri,
   String name,
   String lowerName,
   SymbolKind kind,
-  Range range,
+  int startLine,
+  int startCharacter,
+  int endLine,
+  int endCharacter,
   List<SymbolTag> tags,
   String containerName
 ) {
+
+  /**
+   * Запись с диапазоном символа.
+   *
+   * @param uri           URI документа-источника
+   * @param name          исходное имя символа
+   * @param lowerName     lowercase-форма имени для сопоставления
+   * @param kind          вид символа
+   * @param range         диапазон символа в документе
+   * @param tags          теги символа
+   * @param containerName имя контейнера либо пустая строка
+   */
+  public Entry(URI uri, String name, String lowerName, SymbolKind kind, Range range, List<SymbolTag> tags,
+               String containerName) {
+    this(uri, name, lowerName, kind,
+      range.getStart().getLine(), range.getStart().getCharacter(),
+      range.getEnd().getLine(), range.getEnd().getCharacter(),
+      tags, containerName);
+  }
+
+  /**
+   * @return диапазон символа в документе; новый объект на каждый вызов.
+   */
+  public Range range() {
+    return Ranges.create(startLine, startCharacter, endLine, endCharacter);
+  }
 }

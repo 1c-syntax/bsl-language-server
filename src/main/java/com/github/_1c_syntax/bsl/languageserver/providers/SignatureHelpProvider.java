@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContentUnavailableException;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
@@ -302,7 +303,7 @@ public final class SignatureHelpProvider {
     BSLParser.FileContext ast;
     try {
       ast = documentContext.getAst();
-    } catch (NullPointerException e) {
+    } catch (DocumentContentUnavailableException e) {
       return Optional.empty();
     }
 
@@ -491,9 +492,8 @@ public final class SignatureHelpProvider {
     var description = method.getDescription()
       .map(d -> d.getDescription() == null ? "" : d.getDescription().trim())
       .orElse("");
-    var returnTypes = typeService.getReturnTypes(method);
-    var returnRef = returnTypes.refs().stream().findFirst().orElse(TypeRef.UNKNOWN);
-    var sig = new SignatureDescriptor(params, returnRef, description);
+    var returnTypes = typeService.inferReturnTypes(method);
+    var sig = new SignatureDescriptor(params, returnTypes, description);
     return MemberDescriptor.method(method.getName(), description, List.of(sig));
   }
 
@@ -510,8 +510,9 @@ public final class SignatureHelpProvider {
       paramInfos.add(appendParameter(label, units.get(i), lang));
     }
     label.append(')');
-    if (sig.returnType() != null && sig.returnType() != TypeRef.UNKNOWN) {
-      label.append(": ").append(typeService.displayName(sig.returnType(), lang));
+    var returnTypesLabel = renderTypes(sig.returnTypes().without(TypeRef.UNKNOWN), lang);
+    if (!returnTypesLabel.isEmpty()) {
+      label.append(": ").append(returnTypesLabel);
     }
     var info = new SignatureInformation();
     info.setLabel(label.toString());

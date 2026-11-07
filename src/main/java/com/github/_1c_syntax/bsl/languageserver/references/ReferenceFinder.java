@@ -31,6 +31,10 @@ import java.util.Optional;
 
 /**
  * Интерфейс поискового движка.
+ * <p>
+ * URI документа — тот, под которым документ зарегистрирован в контексте
+ * ({@link com.github._1c_syntax.bsl.languageserver.context.DocumentContext#getUri()}): поиск его
+ * не нормализует.
  */
 public interface ReferenceFinder {
   /**

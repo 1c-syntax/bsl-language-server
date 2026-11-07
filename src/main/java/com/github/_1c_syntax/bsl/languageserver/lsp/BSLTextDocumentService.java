@@ -24,7 +24,9 @@ package com.github._1c_syntax.bsl.languageserver.lsp;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.ComputeTrigger;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentChangeExecutor;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContentUnavailableException;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
@@ -131,8 +133,11 @@ import org.eclipse.lsp4j.TypeHierarchySubtypesParams;
 import org.eclipse.lsp4j.TypeHierarchySupertypesParams;
 import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.CompletableFutures;
+import org.eclipse.lsp4j.jsonrpc.ResponseErrorException;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.messages.Either3;
+import org.eclipse.lsp4j.jsonrpc.messages.ResponseError;
+import org.eclipse.lsp4j.jsonrpc.messages.ResponseErrorCode;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -141,6 +146,8 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -824,11 +831,45 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     // didClose приходит с потока диспетчеризации LSP4J, на котором workspace-контекст
     // не установлен, — выставляем его явно (как в didOpen), чтобы workspace-scoped
     // @EventListener-подписчики ServerContextDocumentClosedEvent корректно резолвились.
-    WorkspaceContextHolder.run(serverContext.getWorkspaceUri(),
-      () -> serverContext.closeDocument(documentContext));
+    // Текст освобождается под блокировкой записи: запросы, которые уже читают документ,
+    // дорабатывают, а не теряют текст посреди вычисления.
+    var lock = serverContext.getDocumentLock(uri);
+    lock.writeLock().lock();
+    try {
+      WorkspaceContextHolder.run(serverContext.getWorkspaceUri(), () -> {
+        serverContext.closeDocument(documentContext);
+        // Пока документ был открыт, удаление его файла не выгружало документ: им владел
+        // клиент. Теперь владельца нет, и документ без файла остался бы в индексах.
+        if (isFileDeleted(uri)) {
+          serverContext.removeDocument(uri);
+        }
+      });
+    } finally {
+      lock.writeLock().unlock();
+    }
 
     if (!clientSupportsPullDiagnostics) {
       diagnosticProvider.publishEmptyDiagnosticList(documentContext);
+    }
+  }
+
+  /**
+   * Удалён ли файл документа с диска.
+   *
+   * @param uri URI документа.
+   * @return {@code true}, если файла по URI точно нет; для URI не из файловой системы
+   *     и для пути, который не удалось проверить, — {@code false}.
+   */
+  private static boolean isFileDeleted(URI uri) {
+    if (!"file".equals(uri.getScheme())) {
+      return false;
+    }
+    try {
+      return Files.notExists(Path.of(uri));
+    } catch (IllegalArgumentException e) {
+      // Так бывает с file-URI с authority (UNC) вне Windows: путь по нему не строится.
+      LOGGER.debug("Can't check whether file of document exists: {}", uri, e);
+      return false;
     }
   }
 
@@ -1116,12 +1157,44 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
           lock.readLock().lock();
           try (var workspaceContext = WorkspaceContextHolder.forUri(serverContext.getWorkspaceUri())) {
             return supplier.get();
+          } catch (DocumentContentUnavailableException e) {
+            // Посреди вычисления текст не пропадёт: didClose освобождает его под блокировкой
+            // записи. Но запрос мог начаться уже после закрытия документа, а ему нужен текст.
+            // Запросам, которым текст не нужен (иерархии по закрытым файлам), это не мешает.
+            throw toResponseError(serverContext, documentContext, e);
           } finally {
             lock.readLock().unlock();
           }
         }
       )
     );
+  }
+
+  /**
+   * Ответ клиенту на запрос, которому понадобился текст документа, а текста нет.
+   *
+   * @param serverContext   контекст сервера документа.
+   * @param documentContext документ запроса.
+   * @param e               обращение к тексту документа без текста.
+   * @return {@link ResponseErrorException} с кодом {@link ResponseErrorCode#ContentModified}, если
+   *     текста нет у документа запроса и тот закрыт или не открывался; иначе исходная ошибка —
+   *     текста нет у другого документа либо документ числится с текстом.
+   */
+  private static RuntimeException toResponseError(
+    ServerContext serverContext,
+    DocumentContext documentContext,
+    DocumentContentUnavailableException e
+  ) {
+    if (!e.getUri().equals(documentContext.getUri())
+      || serverContext.getDocumentState(documentContext) == DocumentState.WITH_CONTENT) {
+      return e;
+    }
+    LOGGER.debug("Request to document without content: {}", e.getUri());
+    return new ResponseErrorException(new ResponseError(
+      ResponseErrorCode.ContentModified,
+      e.getMessage(),
+      null
+    ));
   }
 
   /**

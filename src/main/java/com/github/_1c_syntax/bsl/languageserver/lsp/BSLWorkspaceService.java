@@ -54,6 +54,7 @@ import org.springframework.stereotype.Component;
 import java.io.File;
 import java.net.URI;
 import java.nio.file.FileSystemNotFoundException;
+import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -244,8 +245,8 @@ public class BSLWorkspaceService implements WorkspaceService {
   /**
    * Обрабатывает событие удаления файла из файловой системы.
    * <p>
-   * Если файл был открыт в редакторе, сначала закрывает его и очищает вторичные данные.
-   * Затем полностью удаляет документ из контекста сервера, включая все связанные метаданные.
+   * Полностью удаляет документ из контекста сервера, включая все связанные метаданные.
+   * Открытый в редакторе документ не трогает (см. {@link #removeDocument}).
    * <p>
    * Если документ с таким URI в контексте отсутствует, URI трактуется как удаленный каталог:
    * клиенты (в т.ч. VS Code) при удалении каталога присылают одно событие Deleted с URI каталога
@@ -291,16 +292,20 @@ public class BSLWorkspaceService implements WorkspaceService {
   }
 
   /**
-   * Удаляет документ из контекста сервера, предварительно закрыв его, если он открыт в редакторе.
+   * Удаляет документ из контекста сервера, если он не открыт в редакторе.
+   * <p>
+   * Содержимым открытого документа владеет клиент, а не файл на диске: редактор продолжает
+   * его показывать и слать по нему запросы, и файл ещё может появиться снова (переключение
+   * ветки, атомарная запись). Поэтому открытый документ остаётся в контексте, как и при
+   * событиях создания и изменения файла.
    *
    * @param context         контекст сервера
    * @param uri             URI документа
    * @param documentContext контекст документа
    */
   private static void removeDocument(ServerContext context, URI uri, DocumentContext documentContext) {
-    var isDocumentOpened = context.isDocumentOpened(documentContext);
-    if (isDocumentOpened) {
-      context.closeDocument(documentContext);
+    if (context.isDocumentOpened(documentContext)) {
+      return;
     }
     context.removeDocument(uri);
   }
@@ -326,6 +331,32 @@ public class BSLWorkspaceService implements WorkspaceService {
   }
 
   /**
+   * Перечитывает документ с диска, а если файла к этому времени уже нет — убирает документ из
+   * контекста, как при удалении файла. Удаление идёт вне лока документа: оно снимает и сам лок.
+   *
+   * @param context         контекст сервера
+   * @param uri             URI документа
+   * @param documentContext контекст документа
+   */
+  private static void rebuildOrRemove(ServerContext context, URI uri, DocumentContext documentContext) {
+    rebuildAndClearUnderLock(context, documentContext);
+    if (isGone(toFile(uri))) {
+      removeDocument(context, uri, documentContext);
+    }
+  }
+
+  /**
+   * Пропал ли с диска файл или каталог, о котором сообщил клиент.
+   *
+   * @param file файл; {@code null}, если URI не указывает на путь в файловой системе
+   * @return {@code true}, если путь в файловой системе есть и подтверждено, что файла по нему нет;
+   * {@code false}, если файл есть или проверить это не удалось
+   */
+  private static boolean isGone(@Nullable File file) {
+    return file != null && Files.notExists(file.toPath());
+  }
+
+  /**
    * Обрабатывает событие создания нового файла в файловой системе.
    * <p>
    * Добавляет файл в контекст сервера. Если файл не открыт в редакторе,
@@ -333,6 +364,7 @@ public class BSLWorkspaceService implements WorkspaceService {
    * для экономии памяти. Для открытых файлов обработка пропускается,
    * т.к. их содержимое управляется через события textDocument/didOpen.
    * Пути, попадающие под {@code excludePaths} из конфигурации, пропускаются.
+   * Если файла к моменту обработки уже нет, событие обрабатывается как его удаление.
    *
    * @param uri URI созданного файла
    */
@@ -344,6 +376,11 @@ public class BSLWorkspaceService implements WorkspaceService {
       handleCreatedFolderEvent(context, file);
       return;
     }
+    if (isGone(file)) {
+      // Файл успели удалить, пока событие ждало очереди: для контекста это удаление.
+      handleDeletedFileEvent(uri);
+      return;
+    }
 
     if (isExcludedPath(context, uri)) {
       return;
@@ -352,7 +389,7 @@ public class BSLWorkspaceService implements WorkspaceService {
 
     var isDocumentOpened = context.isDocumentOpened(documentContext);
     if (!isDocumentOpened) {
-      rebuildAndClearUnderLock(context, documentContext);
+      rebuildOrRemove(context, uri, documentContext);
     }
   }
 
@@ -378,7 +415,7 @@ public class BSLWorkspaceService implements WorkspaceService {
 
       var isDocumentOpened = context.isDocumentOpened(documentContext);
       if (!isDocumentOpened) {
-        rebuildAndClearUnderLock(context, documentContext);
+        rebuildOrRemove(context, fileUri, documentContext);
       }
     }
   }
@@ -418,11 +455,18 @@ public class BSLWorkspaceService implements WorkspaceService {
    * т.к. их актуальное содержимое управляется через события textDocument/didChange.
    * <p>
    * Если файл отсутствует в контексте, добавляет его и обрабатывает аналогично созданному;
-   * при этом пути из {@code excludePaths} пропускаются.
+   * при этом пути из {@code excludePaths} пропускаются. Если файла к моменту обработки уже
+   * нет, событие обрабатывается как его удаление.
    *
    * @param uri URI измененного файла
    */
   private void handleChangedFileEvent(URI uri) {
+    if (isGone(toFile(uri))) {
+      // Файл успели удалить, пока событие ждало очереди: для контекста это удаление.
+      handleDeletedFileEvent(uri);
+      return;
+    }
+
     var context = getContextForDocument(uri);
     var documentContext = context.getDocument(uri);
     if (documentContext == null) {
@@ -434,7 +478,7 @@ public class BSLWorkspaceService implements WorkspaceService {
 
     var isDocumentOpened = context.isDocumentOpened(documentContext);
     if (!isDocumentOpened) {
-      rebuildAndClearUnderLock(context, documentContext);
+      rebuildOrRemove(context, uri, documentContext);
     }
   }
 

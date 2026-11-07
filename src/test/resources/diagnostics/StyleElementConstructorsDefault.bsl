@@ -1,0 +1,14 @@
+Шрифт1 = Новый Шрифт();
+Шрифт2 = Новый Шрифт;
+Цвет1 = Новый Цвет();
+Цвет2 = Новый Цвет;
+Font1 = New Font();
+Font2 = New Font;
+Color1 = New Color();
+Color2 = New Color;
+Шрифт3 = Новый("Шрифт");
+Цвет3 = Новый("Цвет");
+Font3 = New("Font");
+Color3 = New("Color");
+Хранилище = Новый ХранилищеЗначения(Новый Шрифт());
+Storage = New ValueStorage(New("Color"));

@@ -128,7 +128,10 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
   public ParseTree visitSubCodeBlock(BSLParser.SubCodeBlockContext ctx) {
     errorRanges.clear();
     super.visitSubCodeBlock(ctx);
-    appendUnreachableCode(ctx.codeBlock());
+    var block = ctx.codeBlock();
+    if (block != null) {
+      appendUnreachableCode(block);
+    }
     return ctx;
   }
 

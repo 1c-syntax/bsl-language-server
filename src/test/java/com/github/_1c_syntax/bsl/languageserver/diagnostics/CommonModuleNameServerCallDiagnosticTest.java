@@ -25,11 +25,14 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.mdo.CommonModule;
+import com.github._1c_syntax.bsl.mdo.support.ObjectBelonging;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -141,6 +144,32 @@ class CommonModuleNameServerCallDiagnosticTest extends AbstractDiagnosticTest<Co
     //then
     assertThat(diagnostics).isEmpty();
 
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "ЗаимствованныйМодуль, ADOPTED, 0",
+    "СобственныйМодуль, OWN, 1",
+    "СобственныйМодульВызовСервера, OWN, 0"
+  })
+  @SneakyThrows
+  void testExtension(String moduleName, ObjectBelonging belonging, int diagnosticCount) {
+    var path = Absolute.path("src/test/resources/metadata/commonModuleNameServerCallExtension");
+    initServerContext(path);
+    var testFile = path.resolve("CommonModules").resolve(moduleName).resolve("Ext/Module.bsl");
+    var extensionDocument = TestUtils.getDocumentContext(
+      testFile.toUri(),
+      FileUtils.readFileToString(testFile.toFile(), StandardCharsets.UTF_8),
+      context
+    );
+    var extensionModule = (CommonModule) extensionDocument.getMdObject().orElseThrow();
+    assertThat(extensionModule.getObjectBelonging()).isEqualTo(belonging);
+    assertThat(extensionModule.isServer()).isTrue();
+    assertThat(extensionModule.isServerCall()).isTrue();
+
+    var diagnostics = diagnosticInstance.getDiagnostics(extensionDocument);
+
+    assertThat(diagnostics).hasSize(diagnosticCount);
   }
 
   @SneakyThrows

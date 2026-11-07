@@ -122,6 +122,13 @@ public class SymbolOccurrenceRepository {
       occurrencesToSymbols.computeIfPresent(symbol, (key, current) -> removeAll(current, toRemove)));
   }
 
+  /**
+   * Удалить обращения ко всем символам.
+   */
+  public void clear() {
+    occurrencesToSymbols.clear();
+  }
+
   private static Object insert(@Nullable Object current, SymbolOccurrence occurrence) {
     if (current == null) {
       return occurrence;

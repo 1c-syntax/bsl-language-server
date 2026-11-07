@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContentUnavailableException;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
@@ -65,7 +66,7 @@ public class NewExpressionReferenceFinder implements ReferenceFinder {
     // путей (visitAssignment у диагностик, hover, completion). Захват
     // per-document RWLock конкурирует с populateContext'ом, что
     // выливается в парк worker-потоков под fair-RWLock.
-    return serverContextProvider.getDocumentUnsafeNoLock(uri)
+    return serverContextProvider.getDocumentNoLock(uri)
       .flatMap(document -> findReference(document, uri, position));
   }
 
@@ -81,7 +82,7 @@ public class NewExpressionReferenceFinder implements ReferenceFinder {
     if (nex == null) {
       return Optional.empty();
     }
-    return serverContextProvider.getDocumentUnsafeNoLock(uri)
+    return serverContextProvider.getDocumentNoLock(uri)
       .flatMap(document -> buildReference(document, uri, nex));
   }
 
@@ -89,7 +90,7 @@ public class NewExpressionReferenceFinder implements ReferenceFinder {
     BSLParser.FileContext ast;
     try {
       ast = document.getAst();
-    } catch (NullPointerException e) {
+    } catch (DocumentContentUnavailableException e) {
       return Optional.empty();
     }
     var nex = findInnermostNewExpression(ast, position);

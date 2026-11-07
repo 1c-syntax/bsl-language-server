@@ -74,4 +74,29 @@ class UnparsedModuleCallTest extends AbstractServerContextAwareTest {
       .as("расчёт сообщает о неполноте, чтобы проход пересчитал его после наполнения")
       .isTrue();
   }
+
+  @Test
+  void typeWithoutMembersFromCodeAfterPopulationIsNotIncompleteness() {
+    // given: рабочая область наполнена. У документа нет модуля менеджера, поэтому у его
+    // менеджера только платформенные члены — и других уже не появится.
+    initServerContext(Path.of(PATH_TO_METADATA));
+    var documentContext = TestUtils.getDocumentContext(
+      Absolute.uri(Path.of(PATH_TO_METADATA, "Ext", "Вызывающий.bsl").toUri()),
+      """
+        Функция Значение() Экспорт
+        	Возврат Документы.Документ1.НекийМетод();
+        КонецФункции
+        """,
+      context);
+    var method = documentContext.getSymbolTree().getMethods().get(0);
+
+    // when
+    var computed = inferencer.computeReturnTypes(method);
+
+    // then: пустота окончательна, пересчитывать нечего.
+    assertThat(computed.types().isEmpty()).isTrue();
+    assertThat(computed.incomplete())
+      .as("после наполнения тип без членов из кода — не неразобранный модуль")
+      .isFalse();
+  }
 }
