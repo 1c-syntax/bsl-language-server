@@ -45,8 +45,24 @@ class LazyTypeSetTest {
   }
 
   @Test
-  void keyIsExposed() {
-    assertThat(new LazyTypeSet("ключ", () -> TypeSet.EMPTY).key()).isEqualTo("ключ");
+  void keysAreExposed() {
+    var combined = LazyTypeSet.combine(
+      new LazyTypeSet("ключ", () -> TypeSet.EMPTY),
+      new LazyTypeSet("другой", () -> TypeSet.EMPTY));
+
+    assertThat(combined.keys()).containsExactly("ключ", "другой");
+  }
+
+  @Test
+  void mapAppliesToEachSourceKeepingKeys() {
+    var combined = LazyTypeSet.combine(
+      new LazyTypeSet("a", () -> TypeSet.of(NUMBER)),
+      new LazyTypeSet("b", () -> null));
+
+    var mapped = combined.map(types -> types.add(STRING));
+
+    assertThat(mapped).isEqualTo(combined);
+    assertThat(mapped.get().refs()).containsExactly(NUMBER, STRING);
   }
 
   @Test
@@ -94,6 +110,56 @@ class LazyTypeSetTest {
 
     assertThat(combined.get().refs()).containsExactlyInAnyOrder(NUMBER, STRING);
     assertThat(combined).isNotEqualTo(a);
+  }
+
+  @Test
+  void combineWithAlreadyIncludedSourceReturnsSame() {
+    var a = new LazyTypeSet("a", () -> TypeSet.of(NUMBER));
+    var b = new LazyTypeSet("b", () -> TypeSet.of(STRING));
+    var combined = LazyTypeSet.combine(a, b);
+
+    // источник, уже вошедший в объединение, его не меняет — с какой стороны ни добавляй.
+    assertThat(LazyTypeSet.combine(combined, a)).isSameAs(combined);
+    assertThat(LazyTypeSet.combine(b, combined)).isSameAs(combined);
+  }
+
+  @Test
+  void combineIsEqualRegardlessOfOrderAndNesting() {
+    var a = new LazyTypeSet("a", () -> TypeSet.of(NUMBER));
+    var b = new LazyTypeSet("b", () -> TypeSet.of(STRING));
+    var c = new LazyTypeSet("c", () -> TypeSet.EMPTY);
+
+    var left = LazyTypeSet.combine(LazyTypeSet.combine(a, b), c);
+    var right = LazyTypeSet.combine(c, LazyTypeSet.combine(b, a));
+
+    assertThat(left)
+      .isEqualTo(right)
+      .hasSameHashCodeAs(right);
+  }
+
+  @Test
+  void repeatedlyCombinedSourceIsResolvedOncePerGet() {
+    // given: так копится значение на кругах расчёта по потоку — на каждом слиянии веток
+    // обе стороны несут прежнее значение, дополненное одним и тем же источником.
+    var counter = new int[]{0};
+    var a = new LazyTypeSet("a", () -> {
+      counter[0]++;
+      return TypeSet.of(NUMBER);
+    });
+    var b = new LazyTypeSet("b", () -> TypeSet.of(STRING));
+    var accumulated = a;
+    for (var i = 0; i < 10; i++) {
+      accumulated = LazyTypeSet.combine(
+        LazyTypeSet.combine(accumulated, a),
+        LazyTypeSet.combine(accumulated, b));
+    }
+
+    // when
+    var resolved = accumulated.get();
+
+    // then
+    assertThat(resolved.refs()).containsExactlyInAnyOrder(NUMBER, STRING);
+    assertThat(counter[0]).isEqualTo(1);
   }
 
   @Test
