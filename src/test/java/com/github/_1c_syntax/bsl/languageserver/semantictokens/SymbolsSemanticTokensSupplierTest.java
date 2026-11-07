@@ -25,12 +25,14 @@ import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwa
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.registry.EventHandlerResolver;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.bsl.languageserver.util.EventHandlerResolverStubs;
 import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper;
 import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper.ExpectedToken;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.SemanticTokenTypes;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentMatchers;
 import static org.mockito.Mockito.when;
@@ -57,6 +59,11 @@ class SymbolsSemanticTokensSupplierTest extends AbstractServerContextAwareTest {
 
   @MockitoBean
   private EventHandlerResolver eventHandlerResolver;
+
+  @BeforeEach
+  void stubEventHandlers() {
+    EventHandlerResolverStubs.delegateEventHandlersOfToIsEventHandler(eventHandlerResolver);
+  }
 
   @Test
   void testEventHandlerMethodGetsEventTokenType() {

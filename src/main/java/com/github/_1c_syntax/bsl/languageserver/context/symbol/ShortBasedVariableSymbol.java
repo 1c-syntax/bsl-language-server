@@ -21,9 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.parser.description.VariableDescription;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -65,11 +63,9 @@ public class ShortBasedVariableSymbol extends AbstractVariableSymbol {
   public ShortBasedVariableSymbol(
     String name,
     SourceDefinedSymbol scope,
-    DocumentContext owner,
     Optional<SourceDefinedSymbol> parent,
     byte kind,
     boolean export,
-    Optional<VariableDescription> description,
     short startLine,
     short startCharacter,
     short endLine,
@@ -78,7 +74,7 @@ public class ShortBasedVariableSymbol extends AbstractVariableSymbol {
     short variableNameStartCharacter,
     short variableNameEndCharacter
   ) {
-    super(name, scope, owner, parent, kind, export, description);
+    super(name, scope, parent, kind, export);
 
     this.startLine = startLine;
     this.startCharacter = startCharacter;

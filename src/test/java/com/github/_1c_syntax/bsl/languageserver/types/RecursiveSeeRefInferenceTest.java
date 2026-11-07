@@ -80,6 +80,31 @@ class RecursiveSeeRefInferenceTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void hoverExpandsFieldWhoseSourcesRepeatOnlyPartly() {
+    // given: `Ссылка` у звена ведёт на `ЗвеноИлиУзел`, а у его значения — сразу на два
+    // источника, `ЗвеноИлиУзел` и `Узел`. Первый на пути уже развёрнут, второй — ещё нет.
+    var dc = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/PartlyRepeatedSeeRefSources.bsl");
+    var content = dc.getContent();
+    int offset = content.indexOf("Значение = Звено()");
+    int lineStart = content.lastIndexOf('\n', offset) + 1;
+    int line = content.substring(0, offset).split("\n", -1).length - 1;
+    var params = new HoverParams(new TextDocumentIdentifier(dc.getUri().toString()),
+      new Position(line, offset - lineStart + 1));
+
+    // when
+    var hover = hoverProvider.getHover(dc, params)
+      .map(h -> h.getContents().getRight().getValue())
+      .orElse("");
+
+    // then: поле разворачивается ещё раз ради не показанного источника, и поля узла видны
+    // на втором уровне вложенности. Обрывается оно, только когда повторились все источники.
+    assertThat(hover)
+      .contains("    * **Код**")
+      .containsPattern("См\\. \\[ЗвеноИлиУзел]\\(\\S+\\) \\| \\[Узел]\\(\\S+\\)");
+  }
+
+  @Test
   void deepNavigationThroughRecursiveSeeRefResolves() {
     // Корень.Потомки[0].Потомки[0].Значение — два уровня рекурсии и финальное поле.
     var t = at("Глубоко = Корень.Потомки[0].Потомки[0].Значение", "Глубоко = ".length() + 1);
