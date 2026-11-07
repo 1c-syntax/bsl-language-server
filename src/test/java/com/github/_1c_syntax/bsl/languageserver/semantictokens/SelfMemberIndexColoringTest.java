@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper;
@@ -149,6 +150,14 @@ class SelfMemberIndexColoringTest extends AbstractServerContextAwareTest {
       assertThat(typeService.isBareSelfProperty(documentContext, "Реквизит1")).isTrue();
       // Заведомо не-член остаётся обычной переменной.
       assertThat(typeService.isBareSelfProperty(documentContext, "ПеременнаяКоторойНет")).isFalse();
+
+      // Классификатор документа отвечает так же — без учёта регистра и только по свойствам:
+      // метод self-типа голым присваиванием реквизита не считается.
+      var bareSelfProperties = typeService.bareSelfPropertiesOf(documentContext);
+      assertThat(bareSelfProperties.test("реквизит1")).isTrue();
+      assertThat(bareSelfProperties.test("ПеременнаяКоторойНет")).isFalse();
+      assertThat(typeService.findSelfMember(documentContext, "Записать", MemberKind.METHOD)).isPresent();
+      assertThat(bareSelfProperties.test("Записать")).isFalse();
     } finally {
       context.removeDocument(documentContext.getUri());
     }
