@@ -23,6 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
+import com.github._1c_syntax.bsl.languageserver.completion.CompletionContextRanker;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.types.model.Availability;
@@ -32,6 +34,8 @@ import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.languageserver.types.compilation.CallAvailability;
+import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.google.gson.JsonParser;
 import lombok.SneakyThrows;
@@ -49,12 +53,15 @@ import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestReporter;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.util.AopTestUtils;
+import org.springframework.test.util.ReflectionTestUtils;
 import tools.jackson.databind.json.JsonMapper;
 
 import java.net.URI;
@@ -63,8 +70,15 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.mockingDetails;
+import static org.mockito.Mockito.spy;
 
 class CompletionContextHintsTest extends AbstractServerContextAwareTest {
   private static final Path ROOT = Path.of("src/test/resources/metadata/commonModuleCalls");
@@ -89,6 +103,56 @@ class CompletionContextHintsTest extends AbstractServerContextAwareTest {
   void resetCapabilities() {
     capabilities.setCapabilities(null);
     provider.handleInitializeEvent();
+  }
+
+  @Test
+  void equivalentMethodContextsAreEvaluatedOncePerRequest(TestReporter reporter) {
+    var methods = new StringBuilder();
+    for (var index = 0; index < 200; index++) {
+      methods.append("Procedure Target").append(index).append("() Export\nEndProcedure\n");
+    }
+    module("СерверныйМодульВызовСервера", methods.toString());
+    var source = """
+      &AtClient
+      Procedure Caller()
+      #If ThinClient Then
+        СерверныйМодульВызовСервера.|
+      #EndIf
+      EndProcedure
+      """;
+    CompletionProvider target = AopTestUtils.getUltimateTargetObject(provider);
+    var original = (CompilationContextResolver) ReflectionTestUtils.getField(target, "compilationContexts");
+    CompilationContextResolver unwrapped = AopTestUtils.getUltimateTargetObject(original);
+    var countedResolver = spy(unwrapped);
+    var translations = new AtomicInteger();
+    ReflectionTestUtils.setField(target, "compilationContexts", countedResolver);
+    try (var resources = mockStatic(Resources.class, CALLS_REAL_METHODS)) {
+      resources.when(() -> Resources.getResourceString(Language.RU, CompletionContextRanker.class, "contexts"))
+        .thenAnswer(call -> {
+          translations.incrementAndGet();
+          return call.callRealMethod();
+        });
+      var first = form(source, Language.RU).stream().filter(item -> item.getLabel().startsWith("Target")).toList();
+      assertThat(first).hasSize(200).allSatisfy(item ->
+        assertThat(item.getLabelDetails().getDescription()).isEqualTo("→С"));
+      var checks = mockingDetails(countedResolver).getInvocations().stream()
+        .filter(call -> call.getMethod().getName().equals("availability")).count();
+      reporter.publishEntry("availabilityChecks", Long.toString(checks));
+      reporter.publishEntry("hintTranslations", Integer.toString(translations.get()));
+      assertThat(checks).as("equivalent declarations in one receiver share their call evaluation").isEqualTo(1);
+      assertThat(translations.get()).as("identical explanations are rendered once").isEqualTo(1);
+
+      doReturn(CallAvailability.UNKNOWN).when(countedResolver).availability(any(), any(), any(), any(), any(), any());
+      var second = form(source, Language.RU).stream().filter(item -> item.getLabel().startsWith("Target")).toList();
+      assertThat(second).hasSize(200).allSatisfy(item ->
+        assertThat(item.getLabelDetails().getDescription()).isNull());
+      assertThat(mockingDetails(countedResolver).getInvocations().stream()
+        .filter(call -> call.getMethod().getName().equals("availability")).count())
+        .as("the next completion request evaluates current inputs again").isEqualTo(2);
+      assertThat(translations.get()).isEqualTo(2);
+    } finally {
+      ReflectionTestUtils.setField(target, "compilationContexts", original);
+    }
   }
 
   @ParameterizedTest

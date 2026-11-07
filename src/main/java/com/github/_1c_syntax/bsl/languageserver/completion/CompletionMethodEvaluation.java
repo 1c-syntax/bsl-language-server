@@ -26,11 +26,16 @@ import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionCon
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
 import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver;
+import com.github._1c_syntax.bsl.languageserver.types.compilation.CallAvailability;
 import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver.Declaration;
 import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver.MethodContext;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import org.jspecify.annotations.Nullable;
+import java.util.ArrayList;
 import java.net.URI;
 import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,6 +53,11 @@ final class CompletionMethodEvaluation {
   private final CompletionTypeContext typeContext;
   private final Map<MethodSymbol, List<MethodTarget>> methodTargets = new IdentityHashMap<>();
   private final Map<ProfileKey, Optional<MethodContext>> profiles = new HashMap<>();
+  private final Map<DocumentContext, Map<String, List<Declaration>>> declarationsByOwner = new IdentityHashMap<>();
+  private final Map<DocumentContext, Map<Declaration, MethodTarget>> targetsByOwner = new IdentityHashMap<>();
+  private final Map<MethodTarget, Map<ExecutionContext, CallEvaluation>> calls = new IdentityHashMap<>();
+  private final Map<TypeRef, Map<MethodTarget, SharedRank>> sharedRanks = new HashMap<>();
+  private record SharedRank(int rank, CompletionMethodHint hint) { }
 
   /** Порядок ключа согласован с URI и необязательной директивой. */
   private record ProfileKey(URI uri, Optional<CompilerDirectiveKind> directive) implements Comparable<ProfileKey> {
@@ -65,6 +75,8 @@ final class CompletionMethodEvaluation {
   /** Объявление и вычисленные один раз профиль и контексты его компиляции. */
   private record MethodTarget(DocumentContext owner, Declaration declaration, Optional<MethodContext> profile,
                               Optional<Set<ExecutionContext>> contexts) { }
+
+  private record CallEvaluation(CallAvailability availability, boolean serverTransition) { }
 
   CompletionMethodEvaluation(DocumentContext document, CompilationContextResolver resolver,
                              MethodContext scope, CompletionTypeContext typeContext) {
@@ -84,11 +96,8 @@ final class CompletionMethodEvaluation {
 
   /** Платформенная доступность сама по себе не доказывает наличие или отсутствие серверного перехода. */
   int methodRank(MemberDescriptor member, ExecutionContext context, CompletionMethodHint hint) {
-    if (member.getSourceSymbol().orElse(null) instanceof MethodSymbol method) {
-      var targets = methodTargets.computeIfAbsent(method, symbol -> resolver.declarations(symbol.getOwner())
-        .getOrDefault(symbol.getName(), List.of()).stream()
-        .map(declaration -> target(symbol.getOwner(), declaration)).toList());
-      return methodRank(targets, context, hint);
+    if (member.sourceSymbol() instanceof MethodSymbol method) {
+      return methodRank(targetsFor(method), context, hint);
     }
     var available = member.metadata().availabilities();
     if (available.isEmpty()) {
@@ -105,8 +114,74 @@ final class CompletionMethodEvaluation {
     return rank;
   }
 
+  private List<MethodTarget> targetsFor(MethodSymbol method) {
+    var targets = methodTargets.get(method);
+    if (targets != null) return targets;
+    var owner = method.getOwner();
+    var declarations = declarationsByOwner.get(owner);
+    if (declarations == null) {
+      declarations = resolver.declarations(owner);
+      declarationsByOwner.put(owner, declarations);
+    }
+    var named = declarations.getOrDefault(method.getName(), List.of());
+    if (named.isEmpty()) {
+      targets = List.of();
+    } else if (named.size() == 1) {
+      targets = List.of(target(owner, named.getFirst()));
+    } else {
+      var values = new ArrayList<MethodTarget>(named.size());
+      for (var declaration : named) values.add(target(owner, declaration));
+      targets = List.copyOf(values);
+    }
+    methodTargets.put(method, targets);
+    return targets;
+  }
+
+  @Nullable Integer sharedReceiverRank(MemberDescriptor member, TypeRef owner, CompletionMethodHint hint) {
+    if (!(member.sourceSymbol() instanceof MethodSymbol method)) return null;
+    var targets = targetsFor(method);
+    if (targets.size() != 1) return null;
+    var byTarget = sharedRanks.get(owner);
+    if (byTarget == null) {
+      byTarget = new IdentityHashMap<>();
+      sharedRanks.put(owner, byTarget);
+    }
+    var target = targets.getFirst();
+    var ready = byTarget.get(target);
+    if (ready == null) {
+      var contribution = new CompletionMethodHint();
+      var available = false;
+      var unavailable = false;
+      for (var context : scope.contexts()) {
+        var methodRank = methodRank(targets, context, contribution);
+        var rank = Math.max(typeContext.typeRank(owner, context), methodRank);
+        available |= rank != UNAVAILABLE;
+        unavailable |= rank != AVAILABLE;
+      }
+      var rank = unavailable ? (available ? PARTIAL : UNAVAILABLE) : AVAILABLE;
+      ready = new SharedRank(rank, contribution);
+      byTarget.put(target, ready);
+    }
+    hint.merge(ready.hint());
+    return ready.rank();
+  }
+
   /** Профиль кешируется на директиву, пересечение с веткой — на объявление, без повторного вывода типов. */
   private MethodTarget target(DocumentContext owner, Declaration declaration) {
+    var targets = targetsByOwner.get(owner);
+    if (targets == null) {
+      targets = new HashMap<>();
+      targetsByOwner.put(owner, targets);
+    }
+    var target = targets.get(declaration);
+    if (target == null) {
+      target = createTarget(owner, declaration);
+      targets.put(declaration, target);
+    }
+    return target;
+  }
+
+  private MethodTarget createTarget(DocumentContext owner, Declaration declaration) {
     var profile = profiles.computeIfAbsent(new ProfileKey(owner.getUri(), declaration.directive()),
       ignored -> resolver.methodContext(owner, declaration.directive()));
     var contexts = declaration.branch() == null ? Optional.<Set<ExecutionContext>>empty() : profile.map((MethodContext value) -> {
@@ -128,17 +203,28 @@ final class CompletionMethodEvaluation {
       if (!target.owner().getUri().equals(document.getUri()) && !target.declaration().exported()) {
         continue;
       }
-      target.contexts().ifPresentOrElse(hint::include, hint::unknownContexts);
-      var availability = resolver.availability(document, scope, target.owner(), target.declaration(),
-        target.profile(), context);
-      switch (availability) {
+      if (target.contexts().isPresent()) {
+        hint.include(target.contexts().orElseThrow());
+      } else {
+        hint.unknownContexts();
+      }
+      var contextCalls = calls.get(target);
+      if (contextCalls == null) {
+        contextCalls = new EnumMap<>(ExecutionContext.class);
+        calls.put(target, contextCalls);
+      }
+      var call = contextCalls.get(context);
+      if (call == null) {
+        call = evaluateCall(target, context);
+        contextCalls.put(context, call);
+      }
+      switch (call.availability()) {
         case UNKNOWN -> {
           hint.unknownCall();
           rank = AVAILABLE;
         }
         case AVAILABLE -> {
-          var destination = resolver.targetContext(document, target.owner(), target.profile().orElseThrow(), context);
-          hint.knownCall(CompilationContextResolver.isServerTransition(context, destination));
+          hint.knownCall(call.serverTransition());
           rank = AVAILABLE;
         }
         default -> {
@@ -150,5 +236,14 @@ final class CompletionMethodEvaluation {
       hint.unavailableCall();
     }
     return rank;
+  }
+
+  private CallEvaluation evaluateCall(MethodTarget target, ExecutionContext context) {
+    var availability = resolver.availability(document, scope, target.owner(), target.declaration(),
+      target.profile(), context);
+    var serverTransition = availability == CallAvailability.AVAILABLE
+      && CompilationContextResolver.isServerTransition(context,
+        resolver.targetContext(document, target.owner(), target.profile().orElseThrow(), context));
+    return new CallEvaluation(availability, serverTransition);
   }
 }
