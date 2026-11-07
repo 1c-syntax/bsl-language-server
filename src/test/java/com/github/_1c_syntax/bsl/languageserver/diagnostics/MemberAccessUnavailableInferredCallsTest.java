@@ -39,12 +39,12 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class MethodCallUnavailableInferredCallsTest extends AbstractDiagnosticTest<MethodCallUnavailableDiagnostic> {
+class MemberAccessUnavailableInferredCallsTest extends AbstractDiagnosticTest<MemberAccessUnavailableDiagnostic> {
   @Autowired
   private TypeService typeService;
 
-  MethodCallUnavailableInferredCallsTest() {
-    super(MethodCallUnavailableDiagnostic.class);
+  MemberAccessUnavailableInferredCallsTest() {
+    super(MemberAccessUnavailableDiagnostic.class);
   }
 
   @ParameterizedTest

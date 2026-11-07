@@ -13,11 +13,11 @@ User-defined method and property names are preserved without translation.
 
 The diagnostic relies on type inference and member data from the 1C platform syntax assistant (via `bsl-context`) or the bundled reference. Each known receiver type is checked independently: a member present on one possible type does not hide its absence on another. Unresolved and arbitrary types do not prove an error and are skipped.
 
-When module metadata is available, receiver types are inferred separately for each compilation context, taking method directives and preprocessor branches into account. Checked contexts are selected automatically from the root configuration metadata, following the `auto` policy of `MethodCallUnavailable`. Related information identifies the context in which the member is missing. Files without metadata retain ordinary checks of known types and names.
+When module metadata is available, receiver types are inferred separately for each compilation context, taking method directives and preprocessor branches into account. Checked contexts are selected automatically from the root configuration metadata, following the `auto` policy of `MemberAccessUnavailable`. Related information identifies the context in which the member is missing. Files without metadata retain ordinary checks of known types and names.
 
 Provably unreachable branches, such as `#If Server And Not Server`, are skipped. OneScript preprocessor symbols are independent of 1C platform contexts; logical contradictions such as `Windows And Not Windows` also exclude a branch.
 
-A declared method remains a known member even when calling it is prohibited. `MethodCallUnavailable` checks that prohibition, so the same cause is not reported by both diagnostics. Different possible receivers on the same line can have different problems and produce a message from each diagnostic.
+A declared method remains a known member even when calling it is prohibited. `MemberAccessUnavailable` checks that prohibition, so the same cause is not reported by both diagnostics. Different possible receivers on the same line can have different problems and produce a message from each diagnostic.
 
 Members of "open" data objects — `Структура`, a value table row and the like — are collected from the code itself: a key added by `Вставить("Name", …)` or listed in the constructor counts as a known member. The key name is known even when the type of its value cannot be inferred: these are different facts, and the absence of the latter does not cancel the former.
 

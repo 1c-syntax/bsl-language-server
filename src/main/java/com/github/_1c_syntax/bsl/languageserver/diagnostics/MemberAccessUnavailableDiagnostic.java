@@ -57,7 +57,7 @@ import java.util.EnumMap;
   tags = {DiagnosticTag.ERROR}
 )
 @RequiredArgsConstructor
-public class MethodCallUnavailableDiagnostic extends AbstractVisitorDiagnostic {
+public class MemberAccessUnavailableDiagnostic extends AbstractVisitorDiagnostic {
   private final CompilationContextResolver contextResolver;
   private final MemberAccessChecker accessChecker;
 

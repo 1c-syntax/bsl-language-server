@@ -23,7 +23,7 @@ Enabling the shared [`supportThickClientFileMode`](../features/ConfigurationFile
 the file-mode thick client. In that case, a server common module without a client flag does not necessarily make
 `&AtClient` an invalid declaration: its method can still exist in a file-mode thick client.
 By default, that deployment mode is excluded, so such a method is considered unavailable.
-`MethodCallUnavailable` separately checks calls in contexts where the method does not exist.
+`MemberAccessUnavailable` separately checks calls in contexts where the method does not exist.
 The declaration check does not depend on that diagnostic's selected contexts or the surrounding preprocessor branch.
 Missing common-module metadata does not imply incompatible flags.
 

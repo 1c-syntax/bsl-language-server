@@ -213,18 +213,17 @@ final class MemberAccessAnalysis {
     var actual = targets.stream()
       .filter(member -> Objects.equals(member.owner(), owner) && member.descriptor().kind() == expected).toList();
     return !actual.isEmpty() && actual.stream().allMatch(member -> contextData.platformUnavailable(member, context))
-      && !hasAvailablePlatformAlternative(owner, actual, targets, expected, context);
+      && !hasAvailablePlatformAlternative(owner, targets, expected, context);
   }
 
   /**
    * Общий возвращаемый тип СП может включать владельца, отсутствующего в данном режиме.
-   * Явно разрешённый член и известный доступный альтернативный получатель не доказывают ошибку.
-   * Запрет самого члена или отсутствие других получателей сохраняют обычную проверку.
+   * Недоступный тип не доказывает ошибку при известном доступном альтернативном получателе.
+   * Запрет члена у доступного типа или отсутствие других получателей сохраняют обычную проверку.
    */
-  private boolean hasAvailablePlatformAlternative(@Nullable TypeRef owner, List<TypedMember> actual,
-                                                   List<TypedMember> targets, MemberKind expected,
+  private boolean hasAvailablePlatformAlternative(@Nullable TypeRef owner, List<TypedMember> targets, MemberKind expected,
                                                    ExecutionContext context) {
-    if (actual.stream().noneMatch(member -> contextData.platformMemberAvailable(member, context))) {
+    if (owner == null || !contextData.typeUnavailable(owner, context)) {
       return false;
     }
     return targets.stream()

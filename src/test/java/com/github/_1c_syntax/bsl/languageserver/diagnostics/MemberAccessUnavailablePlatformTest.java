@@ -50,7 +50,7 @@ import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class MethodCallUnavailablePlatformTest extends AbstractDiagnosticTest<MethodCallUnavailableDiagnostic> {
+class MemberAccessUnavailablePlatformTest extends AbstractDiagnosticTest<MemberAccessUnavailableDiagnostic> {
   private static final Path ROOT = Path.of("src/test/resources/metadata/designer");
   @Autowired
   private TypeService types;
@@ -66,8 +66,8 @@ class MethodCallUnavailablePlatformTest extends AbstractDiagnosticTest<MethodCal
     Set.of(Availability.THICK_CLIENT), null,
     BilingualString.EMPTY, BilingualString.EMPTY, List.of(), List.of());
 
-  MethodCallUnavailablePlatformTest() {
-    super(MethodCallUnavailableDiagnostic.class);
+  MemberAccessUnavailablePlatformTest() {
+    super(MemberAccessUnavailableDiagnostic.class);
   }
 
   @BeforeEach
@@ -217,9 +217,19 @@ class MethodCallUnavailablePlatformTest extends AbstractDiagnosticTest<MethodCal
   }
 
   @Test
-  void platformReturnDoesNotAssumeMemberAvailabilityWhenItIsUnknown() {
-    assertThat(platformReturn(THICK_CLIENT_METADATA, PlatformMetadata.EMPTY, true)).singleElement()
-      .satisfies(problem -> assertThat(problem.getMessage().getLeft()).startsWith("Метод \"FullName\""));
+  void platformReturnDoesNotRequireMemberMetadataToExcludeAnImpossibleReceiver() {
+    assertThat(platformReturn(THICK_CLIENT_METADATA, PlatformMetadata.EMPTY, true)).isEmpty();
+  }
+
+  @Test
+  void platformReturnExcludesAnImpossibleReceiverEvenWhenItsMethodIsRestricted() {
+    assertThat(platformReturn(THICK_CLIENT_METADATA, THICK_CLIENT_METADATA, true)).isEmpty();
+  }
+
+  @Test
+  void platformReturnExcludesAnImpossibleReceiverEvenWhenItsPropertyIsRestricted() {
+    assertThat(platformReturn(SERVER_METADATA, SERVER_METADATA, THICK_CLIENT_METADATA,
+      THICK_CLIENT_METADATA, true, MemberKind.PROPERTY)).isEmpty();
   }
 
   @Test

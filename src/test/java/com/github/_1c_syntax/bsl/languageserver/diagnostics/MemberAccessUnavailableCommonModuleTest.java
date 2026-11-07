@@ -35,18 +35,18 @@ import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertTha
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
-class MethodCallUnavailableCommonModuleTest extends AbstractDiagnosticTest<MethodCallUnavailableDiagnostic> {
+class MemberAccessUnavailableCommonModuleTest extends AbstractDiagnosticTest<MemberAccessUnavailableDiagnostic> {
 
   private static final String PATH_TO_METADATA = "src/test/resources/metadata/commonModuleCalls";
 
-  MethodCallUnavailableCommonModuleTest() {
-    super(MethodCallUnavailableDiagnostic.class);
+  MemberAccessUnavailableCommonModuleTest() {
+    super(MemberAccessUnavailableDiagnostic.class);
   }
 
   @Test
   void testFormModule() {
     initServerContext(PATH_TO_METADATA);
-    var documentContext = spy(getDocumentContext("MethodCallUnavailableCommon"));
+    var documentContext = spy(getDocumentContext("MemberAccessUnavailableCommon"));
     when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
 
     List<Diagnostic> diagnostics = getDiagnostics(documentContext);
@@ -98,7 +98,7 @@ class MethodCallUnavailableCommonModuleTest extends AbstractDiagnosticTest<Metho
 
   @Test
   void testWithoutMetadata() {
-    var documentContext = spy(getDocumentContext("MethodCallUnavailableCommon"));
+    var documentContext = spy(getDocumentContext("MemberAccessUnavailableCommon"));
     when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
 
     List<Diagnostic> diagnostics = getDiagnostics(documentContext);
@@ -109,7 +109,7 @@ class MethodCallUnavailableCommonModuleTest extends AbstractDiagnosticTest<Metho
   @Test
   void testOtherModule() {
     initServerContext(PATH_TO_METADATA);
-    var documentContext = spy(getDocumentContext("MethodCallUnavailableCommon"));
+    var documentContext = spy(getDocumentContext("MemberAccessUnavailableCommon"));
     when(documentContext.getModuleType()).thenReturn(ModuleType.SessionModule);
 
     List<Diagnostic> diagnostics = getDiagnostics(documentContext);
@@ -121,7 +121,7 @@ class MethodCallUnavailableCommonModuleTest extends AbstractDiagnosticTest<Metho
   @EnumSource(Language.class)
   void localizesModuleAndMethodErrorsWithoutTranslatingUserNames(Language language) {
     initServerContext(PATH_TO_METADATA);
-    var document = spy(getDocumentContext("MethodCallUnavailableCommon"));
+    var document = spy(getDocumentContext("MemberAccessUnavailableCommon"));
     when(document.getModuleType()).thenReturn(ModuleType.FormModule);
     configuration.setLanguage(language);
     diagnosticInstance.getInfo().refresh();

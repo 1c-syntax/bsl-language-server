@@ -23,8 +23,8 @@
                 "$ref": "#/definitions/parameter"
             },
             "properties": {
-                "MethodCallUnavailable": {
-                    "$ref": "parameters-schema.json#/definitions/MethodCallUnavailable"
+                "MemberAccessUnavailable": {
+                    "$ref": "parameters-schema.json#/definitions/MemberAccessUnavailable"
                 },
                 "AllFunctionPathMustHaveReturn": {
                     "$ref": "parameters-schema.json#/definitions/AllFunctionPathMustHaveReturn"

@@ -1,4 +1,4 @@
-# Member access unavailable in the calling context (MethodCallUnavailable)
+# Member access unavailable in the current context (MemberAccessUnavailable)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -7,10 +7,10 @@ Checks whether methods and properties are available in the compilation contexts 
 The calculation combines the module kind, platform type availability from Syntax Assistant,
 common module flags, method directives and preprocessor conditions.
 
-For a compound result declared by Syntax Assistant, an unavailable receiver alternative does not
-prove an error if the member is explicitly allowed and another receiver with that member is explicitly
-available. Unknown alternatives do not lift restrictions. An explicitly unavailable member or a single
-unavailable receiver is still reported.
+For a compound result declared by Syntax Assistant, a type unavailable in the checked context is not
+a proven receiver when another explicitly available type has an available member. Unknown alternatives
+do not lift restrictions. A forbidden member on an available receiver or a single unavailable receiver
+is still reported.
 
 Checks local unqualified calls, exported methods of global common modules, application modules and
 external connection modules, and source methods resolved by type inference through module names,
@@ -71,7 +71,7 @@ For example, a project without COM access can use:
 {
   "diagnostics": {
     "parameters": {
-      "MethodCallUnavailable": {
+      "MemberAccessUnavailable": {
         "checkExternalConnection": "off"
       }
     }

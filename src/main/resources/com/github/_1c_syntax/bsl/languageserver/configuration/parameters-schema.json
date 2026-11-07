@@ -4,14 +4,14 @@
     "type": "object",
     "title": "BSL Language Server Configuration File. Diagnostic parameters definition part",
     "definitions": {
-        "MethodCallUnavailable": {
-            "description": "Member access unavailable in the calling context",
+        "MemberAccessUnavailable": {
+            "description": "Member access unavailable in the current context",
             "default": true,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Member access unavailable in the calling context",
+            "title": "Member access unavailable in the current context",
             "properties": {
                 "checkExternalConnection": {
                     "description": "Check external connection (on/off/auto)",
@@ -74,7 +74,7 @@
                     "title": "Check mobile application (server) (on/off/auto)"
                 }
             },
-            "$id": "#/definitions/MethodCallUnavailable"
+            "$id": "#/definitions/MemberAccessUnavailable"
         },
         "AllFunctionPathMustHaveReturn": {
             "description": "All execution paths of a function must have a Return statement",

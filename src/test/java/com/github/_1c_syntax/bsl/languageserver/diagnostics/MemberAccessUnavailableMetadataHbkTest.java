@@ -40,7 +40,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 @TestPropertySource(properties = "app.platform-context.enabled=true")
 @EnabledIfEnvironmentVariable(named = "BSL_LANGUAGE_SERVER_RUN_HBK_TESTS", matches = "true",
   disabledReason = "Requires the installed 1C syntax helper")
-class MethodCallUnavailableMetadataHbkTest extends AbstractDiagnosticTest<MethodCallUnavailableDiagnostic> {
+class MemberAccessUnavailableMetadataHbkTest extends AbstractDiagnosticTest<MemberAccessUnavailableDiagnostic> {
   private static final Path ROOT = Path.of("src/test/resources/metadata/designer");
 
   @Autowired
@@ -48,13 +48,14 @@ class MethodCallUnavailableMetadataHbkTest extends AbstractDiagnosticTest<Method
   @Autowired
   private TypeRegistry registry;
 
-  MethodCallUnavailableMetadataHbkTest() {
-    super(MethodCallUnavailableDiagnostic.class);
+  MemberAccessUnavailableMetadataHbkTest() {
+    super(MemberAccessUnavailableDiagnostic.class);
   }
 
   @ParameterizedTest
   @CsvSource({"Метаданные, НайтиПоТипу, ПолноеИмя, true", "Metadata, FindByType, FullName, true",
-    "Метаданные, НайтиПоТипу, Имя, false", "Metadata, FindByType, Name, false"})
+    "Метаданные, НайтиПоТипу, Имя, false", "Metadata, FindByType, Name, false",
+    "Метаданные, НайтиПоТипу, ПредставлениеОбъекта, false", "Metadata, FindByType, ObjectPresentation, false"})
   void metadataFoundByTypeMembersAreAvailableOnServer(String metadata, String find, String name, boolean method) {
     initServerContext(ROOT);
     var line = "  Name = %s.%s(ValueType).%s%s;".formatted(metadata, find, name, method ? "()" : "");

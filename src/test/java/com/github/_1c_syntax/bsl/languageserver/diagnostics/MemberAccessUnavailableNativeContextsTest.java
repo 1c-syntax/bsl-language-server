@@ -37,9 +37,9 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
 
 /** Регрессии по результатам /CheckConfig платформы 1С 8.3.27. */
-class MethodCallUnavailableNativeContextsTest extends AbstractDiagnosticTest<MethodCallUnavailableDiagnostic> {
-  MethodCallUnavailableNativeContextsTest() {
-    super(MethodCallUnavailableDiagnostic.class);
+class MemberAccessUnavailableNativeContextsTest extends AbstractDiagnosticTest<MemberAccessUnavailableDiagnostic> {
+  MemberAccessUnavailableNativeContextsTest() {
+    super(MemberAccessUnavailableDiagnostic.class);
   }
 
   @Test

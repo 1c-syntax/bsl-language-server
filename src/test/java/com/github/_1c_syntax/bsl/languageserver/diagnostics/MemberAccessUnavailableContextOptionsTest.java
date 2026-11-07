@@ -43,9 +43,9 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
-class MethodCallUnavailableContextOptionsTest extends AbstractDiagnosticTest<MethodCallUnavailableDiagnostic> {
-  MethodCallUnavailableContextOptionsTest() {
-    super(MethodCallUnavailableDiagnostic.class);
+class MemberAccessUnavailableContextOptionsTest extends AbstractDiagnosticTest<MemberAccessUnavailableDiagnostic> {
+  MemberAccessUnavailableContextOptionsTest() {
+    super(MemberAccessUnavailableDiagnostic.class);
   }
 
   @Test
@@ -125,7 +125,7 @@ class MethodCallUnavailableContextOptionsTest extends AbstractDiagnosticTest<Met
     var options = new HashMap<>(diagnosticInstance.getInfo().getDefaultConfiguration());
     options.replaceAll((name, value) -> "off");
     diagnosticInstance.configure(options);
-    var document = spy(getDocumentContext("MethodCallUnavailableDiagnostic"));
+    var document = spy(getDocumentContext("MemberAccessUnavailableDiagnostic"));
     doReturn(ModuleType.FormModule).when(document).getModuleType();
     assertThat(getDiagnostics(document)).isEmpty();
   }
@@ -167,7 +167,7 @@ class MethodCallUnavailableContextOptionsTest extends AbstractDiagnosticTest<Met
     var options = new HashMap<>(diagnosticInstance.getInfo().getDefaultConfiguration());
     options.replaceAll((name, value) -> mode);
     diagnosticInstance.configure(options);
-    var document = spy(getDocumentContext("MethodCallUnavailableDiagnostic"));
+    var document = spy(getDocumentContext("MemberAccessUnavailableDiagnostic"));
     doReturn(ModuleType.UNKNOWN).when(document).getModuleType();
     assertThat(getDiagnostics(document)).isEmpty();
   }

@@ -36,11 +36,11 @@ import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertTha
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
-class MethodCallUnavailableDiagnosticTest
-  extends AbstractDiagnosticTest<MethodCallUnavailableDiagnostic> {
+class MemberAccessUnavailableDiagnosticTest
+  extends AbstractDiagnosticTest<MemberAccessUnavailableDiagnostic> {
 
-  MethodCallUnavailableDiagnosticTest() {
-    super(MethodCallUnavailableDiagnostic.class);
+  MemberAccessUnavailableDiagnosticTest() {
+    super(MemberAccessUnavailableDiagnostic.class);
   }
 
   @Test
@@ -73,7 +73,7 @@ class MethodCallUnavailableDiagnosticTest
 
   @Test
   void testCommandModule() {
-    var documentContext = getDocumentContext("MethodCallUnavailableDiagnosticCommand");
+    var documentContext = getDocumentContext("MemberAccessUnavailableDiagnosticCommand");
     List<Diagnostic> diagnostics = getDiagnostics(documentContextOf(documentContext, ModuleType.CommandModule));
 
     assertThat(diagnostics).hasSize(3);

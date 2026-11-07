@@ -103,7 +103,7 @@ final class MemberAccessContexts {
         .map(contexts -> contexts.contains(context)).orElse(false);
   }
 
-  private boolean typeUnavailable(TypeRef type, ExecutionContext context) {
+  boolean typeUnavailable(TypeRef type, ExecutionContext context) {
     return typeContexts.computeIfAbsent(type, value -> contextResolver.typeContexts(documentContext, value))
       .map(contexts -> !contexts.contains(context)).orElse(false);
   }

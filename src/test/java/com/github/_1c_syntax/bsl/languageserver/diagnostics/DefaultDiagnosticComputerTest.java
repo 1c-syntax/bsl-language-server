@@ -122,7 +122,7 @@ class DefaultDiagnosticComputerTest {
     executor = Executors.newSingleThreadExecutor();
     var order = new java.util.ArrayList<String>();
     var first = mock(BSLDiagnostic.class);
-    var availability = mock(MethodCallUnavailableDiagnostic.class);
+    var availability = mock(MemberAccessUnavailableDiagnostic.class);
     var last = mock(BSLDiagnostic.class);
     var firstResult = diagnostic("first");
     var availabilityResult = diagnostic("availability");

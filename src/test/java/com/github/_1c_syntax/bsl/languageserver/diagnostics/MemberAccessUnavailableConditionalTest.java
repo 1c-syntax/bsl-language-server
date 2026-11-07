@@ -55,14 +55,14 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
-class MethodCallUnavailableConditionalTest
-  extends AbstractDiagnosticTest<MethodCallUnavailableDiagnostic> {
+class MemberAccessUnavailableConditionalTest
+  extends AbstractDiagnosticTest<MemberAccessUnavailableDiagnostic> {
 
   @Autowired
   private TypeService typeService;
 
-  MethodCallUnavailableConditionalTest() {
-    super(MethodCallUnavailableDiagnostic.class);
+  MemberAccessUnavailableConditionalTest() {
+    super(MemberAccessUnavailableDiagnostic.class);
   }
 
   @ParameterizedTest
@@ -325,7 +325,7 @@ class MethodCallUnavailableConditionalTest
 
   private void useContextResolver(CompilationContextResolver resolver) {
     var info = diagnosticInstance.getInfo();
-    diagnosticInstance = new MethodCallUnavailableDiagnostic(
+    diagnosticInstance = new MemberAccessUnavailableDiagnostic(
       resolver, new MemberAccessChecker(
         resolver, typeService, mock(GlobalScopeProvider.class)));
     diagnosticInstance.setInfo(info);

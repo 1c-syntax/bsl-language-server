@@ -83,7 +83,7 @@ public abstract class DefaultDiagnosticComputer implements DiagnosticComputer {
     for (var pass = 0; pass < 2; pass++) {
       for (var index = 0; index < enabled.size(); index++) {
         var diagnostic = enabled.get(index);
-        if ((diagnostic instanceof MethodCallUnavailableDiagnostic) != (pass == 0)) {
+        if ((diagnostic instanceof MemberAccessUnavailableDiagnostic) != (pass == 0)) {
           continue;
         }
         futures.set(index, executor.submit(() -> {

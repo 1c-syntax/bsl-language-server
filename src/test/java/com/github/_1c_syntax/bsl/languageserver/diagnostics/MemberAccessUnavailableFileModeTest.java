@@ -35,7 +35,7 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class MethodCallUnavailableFileModeTest extends AbstractServerContextAwareTest {
+class MemberAccessUnavailableFileModeTest extends AbstractServerContextAwareTest {
   private static final Path ROOT = Path.of("src/test/resources/metadata/commonModuleCalls");
   @Autowired
   private DiagnosticObjectProvider diagnostics;
@@ -62,7 +62,7 @@ class MethodCallUnavailableFileModeTest extends AbstractServerContextAwareTest {
         #EndIf
       EndProcedure
       """);
-    var diagnostic = diagnostics.get(MethodCallUnavailableDiagnostic.class);
+    var diagnostic = diagnostics.get(MemberAccessUnavailableDiagnostic.class);
     diagnostic.configure(Map.of("checkThickClientManagedApplication", "on"));
 
     assertThat(diagnostic.getDiagnostics(document)).hasSize(enabled ? 1 : 0);
