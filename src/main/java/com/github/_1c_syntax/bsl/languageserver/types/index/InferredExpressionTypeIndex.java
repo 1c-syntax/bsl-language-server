@@ -80,13 +80,17 @@ public class InferredExpressionTypeIndex extends AbstractDocumentLifecycleCleara
 
   private final Map<URI, Map<ParseTree, TypeSet>> typesByUri = new ConcurrentHashMap<>();
   private final Map<URI, Map<ContextualKey, TypeSet>> contextualTypesByUri = new ConcurrentHashMap<>();
-  private volatile long contextualRevision = 0;
+  private volatile long contextualRevision;
 
   /** Документ → те, чьи записи на нём построены. Правка документа сбрасывает их вместе с ним. */
   private final Map<URI, Set<URI>> dependentsByDependency = new ConcurrentHashMap<>();
 
   /** Обратная сторона той же связи — нужна, чтобы снимать её при сбросе документа-потребителя. */
   private final Map<URI, Set<URI>> dependenciesByDependent = new ConcurrentHashMap<>();
+
+  public InferredExpressionTypeIndex() {
+    contextualRevision = 0;
+  }
 
   /** Версия входов; меняется при сбросе документов, зависимостей и настроек рабочей области. */
   public long inputRevision() {
