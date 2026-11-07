@@ -47,8 +47,7 @@ class PlatformContextSnapshotsTest {
   void equivalentCollectionsPreserveAllAvailabilityModes() {
     var first = ModuleCompilationContexts.platformContexts(List.of(Availability.SERVER, Availability.THIN_CLIENT));
     var second = ModuleCompilationContexts.platformContexts(List.of(Availability.THIN_CLIENT, Availability.SERVER, Availability.SERVER));
-    assertThat(second).isEqualTo(first);
-    assertThat(second).contains(ExecutionContext.SERVER, ExecutionContext.THIN_CLIENT);
+    assertThat(second).isEqualTo(first).contains(ExecutionContext.SERVER, ExecutionContext.THIN_CLIENT);
   }
 
   @Test

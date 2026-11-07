@@ -989,7 +989,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     // запросу, с которого круги и начались. Так же не запоминается окружение, посчитанное
     // на значениях, которых ещё нет: следующий расчёт принял бы его за полное.
     if (byBody == null || inputs.session().cellsComputing || inputs.sawMissing().getAsBoolean()
-      || sharedRoot != null && !sharedRoot.getAsBoolean()) {
+      || (sharedRoot != null && !sharedRoot.getAsBoolean())) {
       return computed;
     }
     var previous = byBody.putIfAbsent(body, computed);
