@@ -63,7 +63,7 @@ class ModuleCallInvarianceTest extends AbstractServerContextAwareTest {
   private TypeRegistry counted;
 
   @BeforeEach
-  void init() throws Exception {
+  void init() {
     initServerContext(ROOT);
     target = AopTestUtils.getUltimateTargetObject(inferencer);
     previousPopulation = ReflectionTestUtils.getField(target, "workspacePopulated");

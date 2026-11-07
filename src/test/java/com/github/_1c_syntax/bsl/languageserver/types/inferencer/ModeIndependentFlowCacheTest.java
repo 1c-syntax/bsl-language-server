@@ -216,7 +216,7 @@ class ModeIndependentFlowCacheTest extends AbstractServerContextAwareTest {
       }, (variable, position, incoming) -> incoming, mock(VariableFlowAnalyzer.GuardNarrowing.class));
   }
 
-  private Fixture fixture(String source, String name) throws Exception {
+  private Fixture fixture(String source, String name) {
     initServerContext();
     var document = TestUtils.getDocumentContext(source, context);
     var tree = document.getSymbolTree();
