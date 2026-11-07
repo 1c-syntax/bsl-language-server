@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.languageserver.types.registry.MemberLookupSession;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.MethodCallNode;
@@ -187,7 +188,8 @@ public class DereferenceMemberMatcher {
 
   /** Канонические члены типа из {@link TypeRegistry}. */
   private void collectCanonicalMembers(TypeRef owner, MatchContext ctx, List<TypedMember> sink) {
-    for (var member : typeRegistry.getMembers(owner, ctx.fileType())) {
+    for (var member : MemberLookupSession.candidates(typeRegistry.getMembers(owner, ctx.fileType()),
+      ctx.expectedKind(), ctx.memberName())) {
       if (member.kind() == ctx.expectedKind() && member.matches(ctx.memberName())) {
         sink.add(new TypedMember(owner, member, ctx.range(), ctx.argCount(), ctx.argTypes()));
       }

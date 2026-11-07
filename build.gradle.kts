@@ -10,14 +10,14 @@ plugins {
     `maven-publish`
     jacoco
     id("com.diffplug.spotless") version "7.0.4"
-    // git-versioning 7.0.0 подтягивает JGit 7 без GpgObjectSigner и ломает jreleaserDeploy в JReleaser 1.26.0.
-    // Оставляем 6.4.4 до устранения несовместимости: https://github.com/jreleaser/jreleaser/issues/1846
-    id("me.qoomon.git-versioning") version "7.0.0"
-    id("io.freefair.lombok") version "9.8.2"
-    id("io.freefair.javadoc-links") version "9.8.2"
-    id("io.freefair.javadoc-utf-8") version "9.8.2"
-    id("io.freefair.aspectj.post-compile-weaving") version "9.8.2"
-    id("io.freefair.maven-central.validate-poms") version "9.8.2"
+    // git-versioning 7 подтягивает JGit 7 без GpgObjectSigner и ломает JReleaser 1.26.0.
+    // Остаёмся на 6.4.4 до поддержки JGit 7 в JReleaser 2.x.
+    id("me.qoomon.git-versioning") version "6.4.4"
+    id("io.freefair.lombok") version "9.8.3"
+    id("io.freefair.javadoc-links") version "9.8.3"
+    id("io.freefair.javadoc-utf-8") version "9.8.3"
+    id("io.freefair.aspectj.post-compile-weaving") version "9.8.3"
+    id("io.freefair.maven-central.validate-poms") version "9.8.3"
     id("com.github.ben-manes.versions") version "0.66.0"
     id("org.springframework.boot") version "4.1.0"
     id("io.spring.dependency-management") version "1.1.7"
@@ -98,7 +98,7 @@ dependencies {
     api("org.springframework.ai:spring-ai-starter-mcp-server-webmvc")
 
     // 1c-syntax
-    api("io.github.1c-syntax:bsl-parser:0.40.0")
+    api("io.github.1c-syntax:bsl-parser:0.41.0")
     api("io.github.1c-syntax:utils:0.10.1")
     api("io.github.1c-syntax:mdclasses:0.21.0")
     api("io.github.1c-syntax:bsl-common-library:0.12.5")
@@ -240,7 +240,10 @@ tasks.build {
 }
 
 tasks.test {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        // Генераторы снапшотов запускаются отдельной задачей semanticTokensSnapshots.
+        excludeTags("snapshots")
+    }
 
     testLogging {
         events("passed", "skipped", "failed", "standard_error")
@@ -305,6 +308,31 @@ tasks.test {
             // Don't fail the build if cleanup fails
             logger.warn("Failed to cleanup test cache directories: ${e.message}")
         }
+    }
+}
+
+// PNG-снапшоты семантической подсветки фикстур для Sentry Snapshots
+// (выгружаются в CI через `sentry-cli snapshots upload`).
+val semanticTokensSnapshots by tasks.registering(Test::class) {
+    description = "Renders semantic tokens snapshots of test fixtures to PNG for Sentry Snapshots."
+    group = "verification"
+
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    useJUnitPlatform {
+        includeTags("snapshots")
+    }
+
+    maxHeapSize = "3g"
+
+    val outputDir = layout.buildDirectory.dir("snapshots/semantic-tokens")
+    outputs.dir(outputDir)
+    outputs.upToDateWhen { false }
+    systemProperty("snapshots.outputDir", outputDir.get().asFile.absolutePath)
+    systemProperty("java.awt.headless", "true")
+
+    doFirst {
+        delete(outputDir)
     }
 }
 

@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionCon
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.jspecify.annotations.Nullable;
 
 import java.net.URI;
@@ -47,7 +48,8 @@ final class InferenceContext {
   /** Выбранный режим; {@code null} определяет возможные режимы по модулю, методу и позиции выражения. */
   final @Nullable ExecutionContext executionContext;
   /** Общая для вложенных контекстов одного запроса карта завершённых результатов функций. */
-  final Map<ContextualReturnKey, TypeSet> contextualReturns;
+  final ContextualReturnCache contextualReturns;
+  final CompilationContextMemo compilation;
   final Set<SourceDefinedSymbol> visited;
   /**
    * Тип, накопленный к текущему моменту для символа, инференс которого ещё не
@@ -62,7 +64,9 @@ final class InferenceContext {
    * запрос приходит посреди его же расчёта — тогда он читает строящееся окружение,
    * а не запускает расчёт тела заново.
    */
-  final VariableFlowAnalyzer.FlowSession flowSession = new VariableFlowAnalyzer.FlowSession();
+  final VariableFlowAnalyzer.FlowSession flowSession;
+  /** Исходные данные потока текущего запроса; признак разрешения кеша проверяется при каждом обращении. */
+  VariableFlowAnalyzer.@Nullable FlowInputs flowInputs;
   /**
    * Документы, чьё содержимое участвовало в расчёте: их правка делает
    * закэшированный результат недействительным.
@@ -70,6 +74,10 @@ final class InferenceContext {
   final Set<URI> dependencies;
   /** Методы, типы возврата которых понадобились расчёту. */
   final Set<MethodSymbol> consulted = new HashSet<>();
+  /** Вызовы, отсечённые защитой от повторного входа вместо чтения результата метода. */
+  final Set<MethodSymbol> cutMethods = new HashSet<>();
+  /** Тела, чьи текущие окружения были проверены при вычислении. */
+  final Set<BSLParser.CodeBlockContext> flowBodiesRead = new HashSet<>();
   /** Расчёт упёрся в уже считающийся метод и оборвал цикл. */
   boolean cycleCut;
   /**
@@ -85,17 +93,37 @@ final class InferenceContext {
    * член либо объявление, ведущие в модуль, до которого очередь ещё не дошла.
    */
   boolean sawMissing;
+  /** Расчёт сорвался либо поток не разместил обращение: пустой ответ нельзя сохранять как полный. */
+  boolean failed;
+  /** Расчёт оборван ограничением глубины; результат зависит от оставшегося бюджета. */
+  boolean depthCut;
   int depth;
+  /** Запрос начат публичным выводом выражения; вложенный расчёт потока всё равно не ждёт других владельцев. */
+  boolean sharedRootFlow;
 
   InferenceContext(DocumentContext documentContext, @Nullable ExecutionContext executionContext) {
-    this(documentContext, executionContext, executionContext == null ? Map.of() : new HashMap<>());
+    this(documentContext, executionContext, new ContextualReturnCache(), new CompilationContextMemo());
   }
 
   InferenceContext(DocumentContext documentContext, @Nullable ExecutionContext executionContext,
-                   Map<ContextualReturnKey, TypeSet> contextualReturns) {
+                   CompilationContextMemo compilation) {
+    this(documentContext, executionContext, new ContextualReturnCache(), compilation);
+  }
+
+  private InferenceContext(DocumentContext documentContext, @Nullable ExecutionContext executionContext,
+                           ContextualReturnCache contextualReturns, CompilationContextMemo compilation) {
+    this(documentContext, executionContext, contextualReturns,
+      new VariableFlowAnalyzer.FlowSession(contextualReturns::invalidate), compilation);
+  }
+
+  private InferenceContext(DocumentContext documentContext, @Nullable ExecutionContext executionContext,
+                           ContextualReturnCache contextualReturns, VariableFlowAnalyzer.FlowSession flowSession,
+                           CompilationContextMemo compilation) {
     this.documentContext = documentContext;
     this.executionContext = executionContext;
     this.contextualReturns = contextualReturns;
+    this.compilation = compilation;
+    this.flowSession = flowSession;
     this.visited = new HashSet<>();
     this.inProgress = new HashMap<>();
     this.dependencies = new HashSet<>();
@@ -104,5 +132,29 @@ final class InferenceContext {
   /** Запрос без выбора одного режима объединяет результаты доступных контекстов. */
   static InferenceContext neutral(DocumentContext documentContext) {
     return new InferenceContext(documentContext, null);
+  }
+
+  /** Новый расчёт приближения с общими метаданными, но без прежних значений типов и потока. */
+  InferenceContext forRefinement() {
+    return new InferenceContext(documentContext, null, new ContextualReturnCache(), compilation);
+  }
+
+  /** Состояние одного вложенного расчёта; признаки его неполноты не наследуются от соседних вызовов. */
+  InferenceContext nested(DocumentContext owner, ExecutionContext target) {
+    var session = owner == documentContext && target == executionContext
+      ? flowSession : new VariableFlowAnalyzer.FlowSession(contextualReturns::invalidate);
+    var result = new InferenceContext(owner, target, contextualReturns, session, compilation);
+    if (session != flowSession) {
+      session.contextTracking = flowSession.contextTracking;
+      session.contextFreeDeclarations = flowSession.contextFreeDeclarations;
+      session.contextSensitive = flowSession.contextSensitive;
+      session.contextGeneration = flowSession.contextGeneration;
+    }
+    result.visited.addAll(visited);
+    result.inProgress.putAll(inProgress);
+    result.depth = depth;
+    result.refining = refining;
+    result.sharedRootFlow = sharedRootFlow;
+    return result;
   }
 }

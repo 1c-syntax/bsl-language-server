@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 
 import java.util.Arrays;
+import java.util.BitSet;
 
 /**
  * Тип каждой переменной тела в одной его точке.
@@ -79,6 +80,9 @@ record FlowEnvironment(TypeSet[] types) {
    * Так сходятся пути в точке слияния.
    */
   FlowEnvironment union(FlowEnvironment other) {
+    if (this == other) {
+      return this;
+    }
     if (types.length == 0) {
       return other;
     }
@@ -87,12 +91,44 @@ record FlowEnvironment(TypeSet[] types) {
     }
     TypeSet[] merged = null;
     for (var i = 0; i < types.length; i++) {
+      if (types[i] == other.types[i]) {
+        continue;
+      }
       var united = types[i].union(other.types[i]);
       if (merged == null && !united.equals(types[i])) {
         merged = types.clone();
       }
       if (merged != null) {
         merged[i] = united;
+      }
+    }
+    return merged == null ? this : new FlowEnvironment(merged);
+  }
+
+  /** Объединить изменившиеся переменные; предыдущее входное окружение уже учтено в этом. */
+  FlowEnvironment union(FlowEnvironment other, FlowEnvironment previous, BitSet indexes) {
+    if (this == other || other == previous || indexes.isEmpty() || other.types.length == 0) {
+      return this;
+    }
+    if (types.length == 0 && indexes.nextClearBit(0) >= other.types.length) {
+      return other;
+    }
+    TypeSet[] merged = null;
+    for (var index = indexes.nextSetBit(0); index >= 0; index = indexes.nextSetBit(index + 1)) {
+      var added = other.get(index);
+      if (added == previous.get(index)) {
+        continue;
+      }
+      var retained = get(index);
+      if (retained == added) {
+        continue;
+      }
+      var united = retained.union(added);
+      if (merged == null && !united.equals(retained)) {
+        merged = resized(Math.max(types.length, other.types.length));
+      }
+      if (merged != null) {
+        merged[index] = united;
       }
     }
     return merged == null ? this : new FlowEnvironment(merged);

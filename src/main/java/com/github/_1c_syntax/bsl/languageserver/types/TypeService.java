@@ -66,6 +66,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -593,6 +594,14 @@ public class TypeService implements SelfMemberClassifier {
     return typeRegistry.isVersionedMemberName(name);
   }
 
+  public boolean mayBeDeprecatedMemberName(String name, com.github._1c_syntax.bsl.support.CompatibilityMode target) {
+    return typeRegistry.mayBeDeprecatedMemberName(name, target);
+  }
+
+  public boolean mayBeUnavailableMemberName(String name, com.github._1c_syntax.bsl.support.CompatibilityMode target) {
+    return typeRegistry.mayBeUnavailableMemberName(name, target);
+  }
+
   /**
    * Есть ли среди зарегистрированных типов хотя бы один член, помеченный
    * «только для чтения» — глобальный гейт для диагностики присваивания.
@@ -1014,6 +1023,34 @@ public class TypeService implements SelfMemberClassifier {
   public boolean isUnknownGlobalAt(DocumentContext documentContext, TerminalNode terminal) {
     return membersAt(documentContext, terminal).isEmpty()
       && referenceResolver.findReference(documentContext.getUri(), terminal).isEmpty();
+  }
+
+  /**
+   * Подготовить синтаксис получателя для нескольких режимов одного запроса completion.
+   * Типы по-прежнему выводятся отдельно при каждом обращении; старый AST после сброса не используется.
+   *
+   * @param documentContext документ запроса.
+   * @param position положение члена или висячей точки.
+   * @return запрос, связанный с копией позиции и текущим AST; правка возвращает его к обычному пути.
+   */
+  public Function<@Nullable ExecutionContext, TypeSet> receiverTypesQuery(DocumentContext documentContext,
+                                                                         Position position) {
+    var cursor = new Position(position.getLine(), position.getCharacter());
+    var ast = documentContext.getAst();
+    var version = documentContext.getVersion();
+    var receiver = Trees.findTerminalNodeContainsPosition(ast, cursor)
+      .filter(terminal -> terminal.getSymbol().getType() == BSLParser.IDENTIFIER)
+      .map(DereferenceLocator::locate).map(dereference -> dereference.getLeft());
+    return context -> {
+      if (documentContext.getVersion() != version || documentContext.getAst() != ast) {
+        return receiverTypesAt(documentContext, cursor, context);
+      }
+      var viaMember = receiver.map(expression -> inferencer.infer(expression, documentContext, context))
+        .orElse(TypeSet.EMPTY);
+      if (!viaMember.isEmpty()) return viaMember;
+      return receiverEndBeforeDot(documentContext, cursor)
+        .map(receiverEnd -> receiverSegmentTypes(documentContext, receiverEnd, context)).orElse(TypeSet.EMPTY);
+    };
   }
 
   /**
