@@ -215,7 +215,7 @@ class ContextualExpressionReuseTest extends AbstractServerContextAwareTest {
       index.clear(document.getUri());
       assertThat(inferencer.infer(expression, document, ExecutionContext.SERVER).refs())
         .extracting(TypeRef::qualifiedName).containsExactly("Структура");
-      assertThat(mockingDetails(counted).getInvocations().size()).isGreaterThan(firstCalls);
+      assertThat(mockingDetails(counted).getInvocations()).hasSizeGreaterThan(firstCalls);
     } finally {
       ReflectionTestUtils.setField(target, "returnTypeFromBodyInference", original);
       ReflectionTestUtils.setField(target, "workspacePopulated", populated);
