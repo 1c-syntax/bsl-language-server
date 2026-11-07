@@ -38,9 +38,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.RandomAccess;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -49,11 +51,14 @@ import java.util.stream.Collectors;
  */
 @Value
 public class SymbolTree {
+  private static final int MIN_ORDERED_CHILDREN = 8;
 
   /**
    * Корневой символ модуля документа.
    */
   ModuleSymbol module;
+
+  Basis basis;
 
   /**
    * Условия препроцессора по диапазону имени метода в этой версии дерева.
@@ -63,8 +68,6 @@ public class SymbolTree {
   @Getter(AccessLevel.NONE)
   // Range — сторонний тип LSP; здесь требуется равенство диапазонов, без порядка ключей.
   Map<Range, Set<ExecutionContext>> methodConditions;
-
-  Basis basis;
 
   /**
    * Список всех символов всех уровней (за исключением символа модуля документа), преобразованных в плоский список.
@@ -118,6 +121,10 @@ public class SymbolTree {
    */
   @Getter(value = AccessLevel.PRIVATE, lazy = true)
   SelectionLines symbolsBySelectionLine = createSymbolsBySelectionLine();
+
+  /** Области, чьи дети упорядочены по обеим границам; порядок исходных символов сохраняется. */
+  @Getter(value = AccessLevel.PRIVATE, lazy = true)
+  Set<SourceDefinedSymbol> positionOrderedParents = createPositionOrderedParents();
 
   /**
    * На чём, кроме текста документа, построено дерево: привязка документа к метаданным и голые
@@ -344,13 +351,15 @@ public class SymbolTree {
   /**
    * Поиск самого вложенного символа, содержащего указанную позицию.
    * <p>
-   * Использует иерархический спуск по дереву символов вместо линейного поиска.
+   * Сохраняет порядок дочерних символов при перекрытии диапазонов. Области сами
+   * не возвращаются. Упорядоченные списки детей допускают двоичный поиск первой
+   * возможной границы; остальные просматриваются последовательно.
    *
    * @param position Позиция в документе.
    * @return Символ, содержащий позицию, или символ модуля, если позиция вне всех символов.
    */
   public SourceDefinedSymbol getSymbolAtPosition(Position position) {
-    return SymbolTreeLookup.innermostSymbol(module, position);
+    return findSymbolAtPosition(module, position);
   }
 
   /**
@@ -408,6 +417,77 @@ public class SymbolTree {
     return Optional.empty();
   }
 
+  private SourceDefinedSymbol findSymbolAtPosition(SourceDefinedSymbol parent, Position position) {
+    var children = parent.getChildren();
+    var ordered = children.size() >= MIN_ORDERED_CHILDREN && getPositionOrderedParents().contains(parent);
+    var first = ordered ? firstEndingAtOrAfter(children, position) : 0;
+    for (var iterator = children.listIterator(first); iterator.hasNext();) {
+      var child = iterator.next();
+      if (ordered && before(position, child.getRange().getStart())) {
+        break;
+      }
+      if (child.containsPosition(position)) {
+        // Рекурсивно ищем более вложенный символ
+        var found = findSymbolAtPosition(child, position);
+        // Пропускаем Namespace (Region) - ищем дальше или возвращаем parent
+        if (found.getSymbolKind() == SymbolKind.Namespace) {
+          continue;
+        }
+        return found;
+      }
+    }
+    // Если среди детей не нашли — возвращаем текущий символ
+    return parent;
+  }
+
+  private Set<SourceDefinedSymbol> createPositionOrderedParents() {
+    Set<SourceDefinedSymbol> result = Collections.newSetFromMap(new IdentityHashMap<>());
+    if (orderedRanges(module.getChildren())) {
+      result.add(module);
+    }
+    for (var symbol : getChildrenFlat()) {
+      if (orderedRanges(symbol.getChildren())) {
+        result.add(symbol);
+      }
+    }
+    return Collections.unmodifiableSet(result);
+  }
+
+  private static boolean orderedRanges(List<SourceDefinedSymbol> children) {
+    if (children.size() < MIN_ORDERED_CHILDREN || !(children instanceof RandomAccess)) {
+      return false;
+    }
+    Range previous = null;
+    for (var child : children) {
+      var range = child.getRange();
+      if (before(range.getEnd(), range.getStart())
+        || previous != null && (before(range.getStart(), previous.getStart())
+          || before(range.getEnd(), previous.getEnd()))) {
+        return false;
+      }
+      previous = range;
+    }
+    return true;
+  }
+
+  private static int firstEndingAtOrAfter(List<SourceDefinedSymbol> children, Position position) {
+    var low = 0;
+    var high = children.size();
+    while (low < high) {
+      var middle = (low + high) >>> 1;
+      if (before(children.get(middle).getRange().getEnd(), position)) {
+        low = middle + 1;
+      } else {
+        high = middle;
+      }
+    }
+    return low;
+  }
+
+  private static boolean before(Position left, Position right) {
+    return left.getLine() < right.getLine()
+      || left.getLine() == right.getLine() && left.getCharacter() < right.getCharacter();
+  }
 
   private List<SourceDefinedSymbol> createChildrenFlat() {
     var symbols = new ArrayList<SourceDefinedSymbol>();
