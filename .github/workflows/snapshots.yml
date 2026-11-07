@@ -1,0 +1,43 @@
+name: Snapshots
+
+# Рендер снапшотов выполняет код из PR, поэтому идёт без секретов.
+# Выгрузку в Sentry делает snapshots-upload.yml по workflow_run из артефакта этого workflow.
+
+on:
+  push:
+    branches:
+      - develop
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  semantic-tokens:
+    name: Semantic tokens snapshots
+    if: github.event_name == 'push' || startsWith(github.head_ref, 'translations_') == false
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Sentry сопоставляет базовую сборку по SHA коммита, а не merge-коммита PR.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up JDK
+        uses: actions/setup-java@v6
+        with:
+          java-version: 21
+          distribution: 'corretto'
+          cache: gradle
+      - name: Render snapshots
+        run: ./gradlew semanticTokensSnapshots --stacktrace
+      - name: Archive snapshots
+        uses: actions/upload-artifact@v7
+        with:
+          name: semantic-tokens-snapshots
+          path: build/snapshots/semantic-tokens
+          if-no-files-found: error

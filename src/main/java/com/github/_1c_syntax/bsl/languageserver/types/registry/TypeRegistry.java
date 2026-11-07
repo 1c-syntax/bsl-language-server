@@ -589,9 +589,7 @@ public class TypeRegistry {
    * @return найденный член; empty, если такого нет.
    */
   public Optional<MemberDescriptor> findMember(TypeRef ref, MemberKind kind, String name, FileType fileType) {
-    return getMembers(ref, fileType).stream()
-      .filter(member -> member.kind() == kind && member.matches(name))
-      .findFirst();
+    return MemberLookupSession.first(getMembers(ref, fileType), kind, name);
   }
 
   /** Типы-перечисления (источник пометил {@code isEnum}), в разрезе языка. */
@@ -882,16 +880,20 @@ public class TypeRegistry {
    * Применяется при правке содержимого документа, чьи member-source'ы читают
    * только этот тип (BSL-модуль как источник членов своего типа-обёртки).
    * <p>
-   * Инвалидация — через инкремент пер-типового поколения ({@link #membersGeneration}),
-   * а не удаление записи: это отвергает и уже закэшированный результат, и устаревший
-   * результат параллельного незавершённого {@code computeMembers}, который допишется
-   * в кэш уже после инвалидации. Запись выселяется перезаписью при следующем чтении.
+   * Инвалидация — через инкремент пер-типового поколения ({@link #membersGeneration}):
+   * это отвергает и уже закэшированный результат, и устаревший результат параллельного
+   * незавершённого {@code computeMembers}, который допишется в кэш уже после инвалидации.
+   * Сама запись при этом удаляется: отвергнутая, она держала бы члены прежней редакции, а с
+   * ними символы-источники и всё дерево символов документа, до следующего чтения типа —
+   * которого может и не быть.
    *
    * @param ref тип, memo членов которого нужно пересобрать.
    */
   public void invalidateMembers(TypeRef ref) {
     for (var fileType : FILE_TYPES) {
-      membersGeneration.merge(new MembersKey(ref, fileType), 1L, Long::sum);
+      var key = new MembersKey(ref, fileType);
+      membersGeneration.merge(key, 1L, Long::sum);
+      membersCache.remove(key);
     }
   }
 
@@ -1915,6 +1917,14 @@ public class TypeRegistry {
    */
   public boolean isVersionedMemberName(@Nullable String name) {
     return name != null && memberMetadataIndex.isVersionedName(name);
+  }
+
+  public boolean mayBeDeprecatedMemberName(@Nullable String name, com.github._1c_syntax.bsl.support.CompatibilityMode target) {
+    return name != null && memberMetadataIndex.mayBeDeprecated(name, target);
+  }
+
+  public boolean mayBeUnavailableMemberName(@Nullable String name, com.github._1c_syntax.bsl.support.CompatibilityMode target) {
+    return name != null && memberMetadataIndex.mayBeUnavailable(name, target);
   }
 
   /**

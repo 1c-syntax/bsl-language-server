@@ -279,6 +279,7 @@ class MethodSymbolComputerTest {
     // Create workspace for the path
     serverContextProvider.clear();
     var serverContext = serverContextProvider.addWorkspace(path.toUri());
+    serverContext.awaitPreparation();
     serverContext.setConfigurationRoot(path);
 
     checkModule(serverContext, PATH_TO_MODULE_FILE, 7);
