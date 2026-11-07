@@ -21,10 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.google.gson.Gson;
+
 import com.github._1c_syntax.bsl.context.api.ContextNames;
 import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.completion.CompletionData;
+import com.github._1c_syntax.bsl.languageserver.completion.CompletionMemberKeys;
 import com.github._1c_syntax.bsl.languageserver.completion.CompletionContextRanker;
+import com.github._1c_syntax.bsl.languageserver.completion.CompletionInitialization;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
@@ -178,8 +182,24 @@ public final class CompletionProvider {
   // Если клиент не поддерживает — commitCharacters не задаём вовсе.
   private boolean commitCharactersSupport;
 
+  /**
+   * Подготовить адаптеры дополнительных данных completion без создания или записи полезной нагрузки.
+   *
+   * @param gson настроенный сериализатор протокола.
+   */
+  public static void prepareJsonAdapters(Gson gson) {
+    gson.getAdapter(CompletionData.class);
+  }
+
+  private static void rankDotCompletionItem(CompletionContextRanker ranking, CompletionItem item,
+                                             MemberDescriptor member) {
+    if (member.kind() == MemberKind.PROPERTY) ranking.rankDotPropertyMember(item, member);
+    else ranking.rankDotMember(item, member);
+  }
+
   @EventListener(LanguageServerInitializedEvent.class)
   public void handleInitializeEvent() {
+    CompletionInitialization.initialize();
     var completionItem = clientCapabilitiesHolder.getCapabilities()
       .map(ClientCapabilities::getTextDocument)
       .map(TextDocumentClientCapabilities::getCompletion)
@@ -559,7 +579,7 @@ public final class CompletionProvider {
       var member = filtered.get(i);
       var bucket = localFieldNames.contains(memberKey(member)) ? BUCKET_MEMBER_FIELD : BUCKET_MEMBER_DEFAULT;
       applySortText(items.get(i), bucket, isMemberDeprecated(member, target));
-      ranking.rankDotMember(items.get(i), member);
+      rankDotCompletionItem(ranking, items.get(i), member);
     }
     return items;
   }
@@ -580,7 +600,7 @@ public final class CompletionProvider {
    * один не должен вытеснять другой.
    */
   private static String memberKey(MemberKind kind, String name) {
-    return kind + ":" + name.toLowerCase(Locale.ROOT);
+    return CompletionMemberKeys.of(kind, name);
   }
 
   private static String memberKey(MemberDescriptor member) {
@@ -1624,7 +1644,14 @@ public final class CompletionProvider {
    * @return имена через «{@code  | }»; пустая строка, если показывать нечего.
    */
   private String formatTypeNames(TypeSet types, Language scriptVariant) {
-    return types.refs().stream()
+    var refs = types.refs();
+    if (refs.isEmpty()) {
+      return "";
+    }
+    if (refs.size() == 1) {
+      return formatTypeName(refs.iterator().next(), scriptVariant);
+    }
+    return refs.stream()
       .map(ref -> formatTypeName(ref, scriptVariant))
       .filter(name -> !name.isEmpty())
       .distinct()

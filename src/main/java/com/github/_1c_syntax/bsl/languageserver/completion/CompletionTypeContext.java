@@ -34,13 +34,16 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import org.eclipse.lsp4j.Position;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Stream;
+import java.util.function.Function;
 import java.util.EnumMap;
+import java.util.EnumSet;
+import java.util.Collections;
+import org.jspecify.annotations.Nullable;
 
 import static com.github._1c_syntax.bsl.languageserver.completion.CompletionPriority.*;
 
@@ -50,10 +53,20 @@ final class CompletionTypeContext {
   private final Position position;
   private final CompilationContextResolver resolver;
   private final TypeService types;
+  private @Nullable Function<@Nullable ExecutionContext, TypeSet> receiverQuery;
   private final Map<ExecutionContext, TypeSet> receivers = new EnumMap<>(ExecutionContext.class);
   private final Map<TypeRef, Map<String, List<MemberDescriptor>>> members = new HashMap<>();
   private final Map<Set<Availability>, Set<ExecutionContext>> platformContexts = new HashMap<>();
   private final Map<TypeRef, Optional<Set<ExecutionContext>>> typeContexts = new HashMap<>();
+  private final Map<MemberKind, Map<String, String>> memberKeys = new EnumMap<>(MemberKind.class);
+  private @Nullable Map<MemberDescriptor, PropertyRanks> propertyRanks;
+  private @Nullable Map<Set<ExecutionContext>, EnumSet<ExecutionContext>> contextMasks;
+
+  private record PropertyRanks(EnumSet<ExecutionContext> available, EnumSet<ExecutionContext> possible) {
+    int rank(ExecutionContext context) {
+      return available.contains(context) ? AVAILABLE : (possible.contains(context) ? PARTIAL : UNAVAILABLE);
+    }
+  }
 
   CompletionTypeContext(DocumentContext document, Position position, CompilationContextResolver resolver,
                         TypeService types) {
@@ -64,7 +77,17 @@ final class CompletionTypeContext {
   }
 
   TypeSet receiverTypes(ExecutionContext context) {
-    return receivers.computeIfAbsent(context, mode -> types.receiverTypesAt(document, position, mode));
+    var receiver = receivers.get(context);
+    if (receiver == null) {
+      var query = receiverQuery;
+      if (query == null) {
+        query = types.receiverTypesQuery(document, position);
+        receiverQuery = query;
+      }
+      receiver = query.apply(context);
+      receivers.put(context, receiver);
+    }
+    return receiver;
   }
 
   Optional<TypeRef> resolve(String name) {
@@ -72,7 +95,22 @@ final class CompletionTypeContext {
   }
 
   List<MemberDescriptor> alternatives(TypeRef owner, MemberKind kind, String name) {
-    return members.computeIfAbsent(owner, this::indexMembers).getOrDefault(key(kind, name), List.of());
+    var names = members.get(owner);
+    if (names == null) {
+      names = indexMembers(owner);
+      members.put(owner, names);
+    }
+    var keys = memberKeys.get(kind);
+    if (keys == null) {
+      keys = new IdentityHashMap<>();
+      memberKeys.put(kind, keys);
+    }
+    var lookupKey = keys.get(name);
+    if (lookupKey == null) {
+      lookupKey = key(kind, name);
+      keys.put(name, lookupKey);
+    }
+    return names.getOrDefault(lookupKey, List.of());
   }
 
   Set<ExecutionContext> platformContexts(Set<Availability> availability) {
@@ -80,18 +118,122 @@ final class CompletionTypeContext {
   }
 
   int memberRank(MemberDescriptor member, ExecutionContext context) {
-    var rank = platformRank(member.metadata(), context);
-    if (member.kind() == MemberKind.PROPERTY) {
-      rank = Math.max(rank, combine(member.returnTypes().refs().stream()
-        .mapToInt(type -> typeRank(type, context)).toArray()));
+    return member.kind() == MemberKind.PROPERTY ? propertyRank(member, context) : platformRank(member.metadata(), context);
+  }
+
+  private int propertyRank(MemberDescriptor member, ExecutionContext context) {
+    return propertyRanksFor(member).rank(context);
+  }
+
+  private PropertyRanks propertyRanksFor(MemberDescriptor member) {
+    if (propertyRanks == null) propertyRanks = new IdentityHashMap<>();
+    var known = propertyRanks.get(member);
+    if (known == null) {
+      known = computePropertyRanks(member);
+      propertyRanks.put(member, known);
     }
-    return rank;
+    return known;
+  }
+
+  PropertyScope propertyScope(TypeRef owner, Set<ExecutionContext> contexts) {
+    return new PropertyScope(owner, contexts);
+  }
+
+  /** Оценки свойств одного известного владельца в неизменном наборе режимов запроса. */
+  final class PropertyScope {
+    private final TypeRef owner;
+    private final EnumSet<ExecutionContext> selected;
+    private final EnumSet<ExecutionContext> active;
+    private final boolean ownerEverywhere;
+
+    private PropertyScope(TypeRef owner, Set<ExecutionContext> contexts) {
+      this.owner = owner;
+      selected = contextMask(contexts);
+      active = selected.clone();
+      active.retainAll(typeMask(owner));
+      ownerEverywhere = active.size() == selected.size();
+    }
+
+    int rank(String name) {
+      if (selected.isEmpty()) return AVAILABLE;
+      if (active.isEmpty()) return UNAVAILABLE;
+      var candidates = alternatives(owner, MemberKind.PROPERTY, name);
+      if (candidates.isEmpty()) return UNAVAILABLE;
+      if (candidates.size() == 1) {
+        var ranks = propertyRanksFor(candidates.getFirst());
+        return reduce(ranks.available(), ranks.possible());
+      }
+      var available = EnumSet.noneOf(ExecutionContext.class);
+      var possible = EnumSet.noneOf(ExecutionContext.class);
+      for (var candidate : candidates) {
+        var ranks = propertyRanksFor(candidate);
+        available.addAll(ranks.available());
+        possible.addAll(ranks.possible());
+      }
+      return reduce(available, possible);
+    }
+
+    private int reduce(EnumSet<ExecutionContext> available, EnumSet<ExecutionContext> possible) {
+      if (ownerEverywhere && available.containsAll(selected)) return AVAILABLE;
+      return Collections.disjoint(active, possible) ? UNAVAILABLE : PARTIAL;
+    }
+  }
+
+  private PropertyRanks computePropertyRanks(MemberDescriptor member) {
+    var refs = member.returnTypes().refs();
+    var platform = member.metadata().availabilities();
+    if (refs.isEmpty()) {
+      var allowed = platform.isEmpty() ? EnumSet.allOf(ExecutionContext.class) : contextMask(platformContexts(platform));
+      return new PropertyRanks(allowed, allowed);
+    }
+    if (refs.size() == 1 && platform.isEmpty()) {
+      var allowed = typeMask(refs.iterator().next());
+      return new PropertyRanks(allowed, allowed);
+    }
+    var available = EnumSet.allOf(ExecutionContext.class);
+    var possible = EnumSet.noneOf(ExecutionContext.class);
+    for (var type : refs) {
+      var allowed = typeMask(type);
+      available.retainAll(allowed);
+      possible.addAll(allowed);
+    }
+    if (!platform.isEmpty()) {
+      var allowed = contextMask(platformContexts(platform));
+      available.retainAll(allowed);
+      possible.retainAll(allowed);
+    }
+    return new PropertyRanks(available, possible);
+  }
+
+  private EnumSet<ExecutionContext> typeMask(TypeRef type) {
+    var available = typeContexts.get(type);
+    if (available == null) {
+      available = resolver.typeContexts(document, type);
+      typeContexts.put(type, available);
+    }
+    return available.isEmpty() ? EnumSet.allOf(ExecutionContext.class) : contextMask(available.orElseThrow());
+  }
+
+  /** Снимок неизменяемых метаданных; содержимое общих масок никогда не изменяется. */
+  private EnumSet<ExecutionContext> contextMask(Set<ExecutionContext> contexts) {
+    if (contextMasks == null) contextMasks = new IdentityHashMap<>();
+    var known = contextMasks.get(contexts);
+    if (known == null) {
+      known = EnumSet.noneOf(ExecutionContext.class);
+      known.addAll(contexts);
+      contextMasks.put(contexts, known);
+    }
+    return known;
   }
 
   /** Видимость общего модуля учитывает серверный вызов; прочие типы используют сведения СП. */
   int typeRank(TypeRef type, ExecutionContext context) {
-    return typeContexts.computeIfAbsent(type, candidate -> resolver.typeContexts(document, candidate))
-      .map(contexts -> contexts.contains(context) ? AVAILABLE : UNAVAILABLE).orElse(AVAILABLE);
+    var available = typeContexts.get(type);
+    if (available == null) {
+      available = resolver.typeContexts(document, type);
+      typeContexts.put(type, available);
+    }
+    return available.isEmpty() || available.orElseThrow().contains(context) ? AVAILABLE : UNAVAILABLE;
   }
 
   int platformRank(PlatformMetadata metadata, ExecutionContext context) {
@@ -104,15 +246,19 @@ final class CompletionTypeContext {
   private Map<String, List<MemberDescriptor>> indexMembers(TypeRef type) {
     Map<String, List<MemberDescriptor>> result = new HashMap<>();
     for (var member : types.getMembers(type, document.getFileType())) {
-      for (var name : Stream.of(member.bilingualName().ru(), member.bilingualName().en())
-          .filter(value -> !value.isEmpty()).distinct().toList()) {
-        result.computeIfAbsent(key(member.kind(), name), ignored -> new ArrayList<>()).add(member);
+      var ru = member.bilingualName().ru();
+      var en = member.bilingualName().en();
+      if (!ru.isEmpty()) {
+        result.computeIfAbsent(key(member.kind(), ru), ignored -> new ArrayList<>()).add(member);
+      }
+      if (!en.isEmpty() && !en.equals(ru)) {
+        result.computeIfAbsent(key(member.kind(), en), ignored -> new ArrayList<>()).add(member);
       }
     }
     return result;
   }
 
   private static String key(MemberKind kind, String name) {
-    return kind + ":" + name.toLowerCase(Locale.ROOT);
+    return CompletionMemberKeys.of(kind, name);
   }
 }
