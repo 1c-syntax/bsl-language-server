@@ -65,7 +65,7 @@ class ModeIndependentInferenceTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void localStructureFieldsAreCalculatedOnceAcrossRootModes() throws Exception {
+  void localStructureFieldsAreCalculatedOnceAcrossRootModes() {
     var document = form("""
       &НаКлиентеНаСервереБезКонтекста
       Функция Построить()
@@ -102,7 +102,7 @@ class ModeIndependentInferenceTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void parameterDeclarationsAndFieldArithmeticAreReusedAcrossRootModes() throws Exception {
+  void parameterDeclarationsAndFieldArithmeticAreReusedAcrossRootModes() {
     var document = form("""
       &НаКлиентеНаСервереБезКонтекста
       Функция Построить(Вход)
@@ -140,7 +140,7 @@ class ModeIndependentInferenceTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void aContextDependentMemberCallKeepsBodyFactsSeparate() throws Exception {
+  void aContextDependentMemberCallKeepsBodyFactsSeparate() {
     TestUtils.getDocumentContext(ROOT.resolve("CommonModules/КлиентСерверныйМодуль/Ext/Module.bsl").toUri(), """
       Функция Фабрика() Экспорт
         #Если Сервер Тогда
@@ -174,7 +174,7 @@ class ModeIndependentInferenceTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void aSourceFunctionShadowingAGlobalStillKeepsFlowModesSeparate() throws Exception {
+  void aSourceFunctionShadowingAGlobalStillKeepsFlowModesSeparate() {
     var document = form("""
       &НаКлиентеНаСервереБезКонтекста
       Функция Строка(Вход)
@@ -208,7 +208,7 @@ class ModeIndependentInferenceTest extends AbstractServerContextAwareTest {
 
   @ParameterizedTest
   @CsvSource({"Строка,Строка", "Число,Число", "ЗначениеЗаполнено,Булево"})
-  void globalMetadataReturnTypesDoNotForceAnotherBodyPass(String function, String expected) throws Exception {
+  void globalMetadataReturnTypesDoNotForceAnotherBodyPass(String function, String expected) {
     // The lightweight test registry omits platform return types; provide the descriptor supplied by bsl-context.
     registry.ensureInitialized();
     registry.registerMemberOverride((TypeRef) ReflectionTestUtils.getField(TypeRegistry.class, "GLOBAL_CONTEXT"),
@@ -249,7 +249,7 @@ class ModeIndependentInferenceTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void aContextDependentCalleeKeepsTheCallersLocalFactsSeparate() throws Exception {
+  void aContextDependentCalleeKeepsTheCallersLocalFactsSeparate() {
     var document = form("""
       &НаКлиентеНаСервереБезКонтекста
       Функция Фабрика()
