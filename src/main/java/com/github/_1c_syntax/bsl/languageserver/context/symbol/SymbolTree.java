@@ -461,8 +461,8 @@ public class SymbolTree {
     for (var child : children) {
       var range = child.getRange();
       if (before(range.getEnd(), range.getStart())
-        || previous != null && (before(range.getStart(), previous.getStart())
-          || before(range.getEnd(), previous.getEnd()))) {
+        || (previous != null && (before(range.getStart(), previous.getStart())
+          || before(range.getEnd(), previous.getEnd())))) {
         return false;
       }
       previous = range;
@@ -486,7 +486,7 @@ public class SymbolTree {
 
   private static boolean before(Position left, Position right) {
     return left.getLine() < right.getLine()
-      || left.getLine() == right.getLine() && left.getCharacter() < right.getCharacter();
+      || (left.getLine() == right.getLine() && left.getCharacter() < right.getCharacter());
   }
 
   private List<SourceDefinedSymbol> createChildrenFlat() {
