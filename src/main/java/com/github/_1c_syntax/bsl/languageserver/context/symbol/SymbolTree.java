@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
+import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.AccessLevel;
@@ -28,6 +30,9 @@ import lombok.Getter;
 import lombok.Value;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SymbolKind;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -51,8 +56,14 @@ public class SymbolTree {
   ModuleSymbol module;
 
   /**
-   * На чём, кроме текста документа, построено дерево.
+   * Условия препроцессора по диапазону имени метода в этой версии дерева.
+   * Отсутствующий ключ означает все контексты, значение {@code null} — неизвестное условие,
+   * пустое множество — недостижимую ветку. Диапазоны и множества не удерживают AST.
    */
+  @Getter(AccessLevel.NONE)
+  // Range — сторонний тип LSP; здесь требуется равенство диапазонов, без порядка ключей.
+  Map<Range, Set<ExecutionContext>> methodConditions;
+
   Basis basis;
 
   /**
@@ -152,6 +163,54 @@ public class SymbolTree {
       this.lines = lines;
       this.symbols = symbols;
     }
+  }
+
+  /**
+   * Создать дерево без ограничений препроцессора для объявлений методов.
+   *
+   * @param module корневой символ документа.
+   */
+  public SymbolTree(ModuleSymbol module) {
+    this(module, Map.of());
+  }
+
+  /**
+   * Создать дерево с сохранёнными условиями объявлений методов.
+   * <p>
+   * Карта, её ключи и множества используются без защитного копирования.
+   * Вызывающий код должен обеспечить их неизменность в течение жизни дерева.
+   *
+   * @param module корневой символ документа.
+   * @param methodConditions условия по диапазонам имён методов этой версии документа;
+   *     значения {@code null} допустимы и означают неизвестное условие.
+   */
+  public SymbolTree(ModuleSymbol module, Map<Range, Set<ExecutionContext>> methodConditions) {
+    this(module, methodConditions, Basis.NONE);
+  }
+
+  public SymbolTree(ModuleSymbol module, Basis basis) {
+    this(module, Map.of(), basis);
+  }
+
+  /** Основание классификации и условия объявлений относятся к одной версии дерева. */
+  public SymbolTree(ModuleSymbol module, Map<Range, Set<ExecutionContext>> methodConditions, Basis basis) {
+    this.module = module;
+    this.methodConditions = methodConditions;
+    this.basis = basis;
+  }
+
+  /**
+   * Получить контексты ветки препроцессора, в которой объявлен метод.
+   * <p>
+   * Доступно после выгрузки AST. Контексты модуля, директивы компиляции и настройки
+   * диагностики не учитываются. Возвращённое множество изменять нельзя.
+   *
+   * @param method метод из этой версии символьного дерева.
+   * @return все контексты при отсутствии ограничения, пустое множество для недостижимой
+   *     ветки или {@code null}, если условие нельзя вычислить.
+   */
+  public @Nullable Set<ExecutionContext> getMethodPreprocessorContexts(MethodSymbol method) {
+    return methodConditions.getOrDefault(method.getSubNameRange(), ExecutionContext.ALL);
   }
 
   /**
@@ -255,9 +314,10 @@ public class SymbolTree {
   /**
    * Переменная с именем {@code variableName}, видимая в точке узла {@code node}:
    * сперва — в охватывающем методе (по {@code RULE_sub}), иначе — на уровне модуля.
-   * Единый резолв видимости переменной для потребителей, которым нужно отличить
-   * объявленную переменную от одноимённого self-члена (система типов, индексатор
-   * ссылок).
+   * Из метода видны только переменные модуля, объявленные {@code Перем} (см.
+   * {@link #getModuleVariableVisibleFromMethods(String)}). Единый резолв видимости
+   * переменной для потребителей, которым нужно отличить объявленную переменную от
+   * одноимённого self-члена (система типов, индексатор ссылок).
    *
    * @param node         узел, в точке которого проверяется видимость.
    * @param variableName имя переменной (без учёта регистра — как хранит дерево).
@@ -265,6 +325,20 @@ public class SymbolTree {
    */
   public Optional<VariableSymbol> getVariableSymbolInScope(ParserRuleContext node, String variableName) {
     return SymbolTreeLookup.variableInScope(this, node, variableName);
+  }
+
+  /**
+   * Переменная уровня модуля, видимая из методов. Такова только переменная, объявленная
+   * {@code Перем} на уровне модуля. Переменная, созданная присваиванием в теле модуля, живёт
+   * в одном теле модуля, а переменные и параметры метода с ошибками разбора, оказавшиеся на
+   * уровне модуля, принадлежат своему методу.
+   *
+   * @param variableName имя переменной (без учёта регистра — как хранит дерево).
+   * @return переменная модуля; empty, если такой нет либо из методов она не видна.
+   */
+  public Optional<VariableSymbol> getModuleVariableVisibleFromMethods(String variableName) {
+    return getVariableSymbol(variableName, module)
+      .filter(variable -> variable.getKind() == VariableKind.MODULE);
   }
 
   /**

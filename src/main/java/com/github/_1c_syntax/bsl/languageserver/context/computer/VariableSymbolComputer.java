@@ -73,6 +73,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   private final Set<VariableSymbol> loopVariables = new HashSet<>();
   private final Map<String, String> currentMethodVariables = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
   private final Map<String, String> moduleVariables = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+  private final Map<String, String> declaredModuleVariables = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
   private SourceDefinedSymbol currentMethod;
   private @Nullable Predicate<String> bareSelfProperties;
@@ -93,6 +94,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
     variables.clear();
     loopVariables.clear();
     moduleVariables.clear();
+    declaredModuleVariables.clear();
     visitFile(documentContext.getAst());
     return new ArrayList<>(variables);
   }
@@ -114,7 +116,6 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
 
     var symbol = VariableSymbol.builder()
       .name(ctx.var_name().getText())
-      .owner(documentContext)
       .range(Ranges.create(ctx))
       .variableNameRange(Ranges.create(ctx.var_name()))
       .export(ctx.EXPORT_KEYWORD() != null)
@@ -125,6 +126,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
       .build();
     variables.add(symbol);
     moduleVariables.put(ctx.var_name().getText(), ctx.var_name().getText());
+    declaredModuleVariables.put(ctx.var_name().getText(), ctx.var_name().getText());
     return ctx;
   }
 
@@ -145,7 +147,6 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
 
     var symbol = VariableSymbol.builder()
       .name(ctx.var_name().getText())
-      .owner(documentContext)
       .range(Ranges.create(ctx))
       .variableNameRange(Ranges.create(ctx.var_name()))
       .export(false)
@@ -172,7 +173,6 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
     var variable = VariableSymbol.builder()
       .name(ctx.IDENTIFIER().getText().intern())
       .scope(currentMethod)
-      .owner(documentContext)
       .range(Ranges.create(ctx))
       .variableNameRange(Ranges.create(ctx.IDENTIFIER()))
       .export(false)
@@ -196,7 +196,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
       ctx.getChildCount() > 1
       || ctx.IDENTIFIER() == null
       || currentMethodVariables.containsKey(ctx.getText())
-      || moduleVariables.containsKey(ctx.getText())
+      || isVisibleModuleVariable(ctx.getText())
       // Голое присваивание одноимённому self-реквизиту (без Перем) — это обращение к
       // реквизиту объекта/набора записей/менеджера, а не отдельная переменная: символ не
       // заводим. Имя резолвит self-член machinery (инференсер, PlatformMemberReferenceFinder,
@@ -216,7 +216,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   public ParseTree visitForStatement(BSLParser.ForStatementContext ctx) {
     if (
       currentMethodVariables.containsKey(ctx.IDENTIFIER().getText())
-      || moduleVariables.containsKey(ctx.IDENTIFIER().getText())
+      || isVisibleModuleVariable(ctx.IDENTIFIER().getText())
     ) {
       return super.visitForStatement(ctx);
     }
@@ -233,13 +233,25 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
 
     if (
       currentMethodVariables.containsKey(ctx.IDENTIFIER().getText())
-      || moduleVariables.containsKey(ctx.IDENTIFIER().getText())
+      || isVisibleModuleVariable(ctx.IDENTIFIER().getText())
     ) {
       return super.visitForEachStatement(ctx);
     }
 
     loopVariables.add(updateVariablesCache(ctx.IDENTIFIER(), createDescription(ctx)));
     return super.visitForEachStatement(ctx);
+  }
+
+  /**
+   * Заведена ли уже переменная модуля с этим именем, видимая в текущей точке. В теле
+   * модуля видна любая; в методе — только объявленная {@code Перем}: переменная, созданная
+   * присваиванием в теле модуля, живёт в нём одном, и одноимённое присваивание в методе
+   * заводит переменную метода.
+   */
+  private boolean isVisibleModuleVariable(String name) {
+    return currentMethod == module
+      ? moduleVariables.containsKey(name)
+      : declaredModuleVariables.containsKey(name);
   }
 
   /**
@@ -360,7 +372,6 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   private VariableSymbol updateVariablesCache(TerminalNode node, Optional<VariableDescription> description) {
     var variable = VariableSymbol.builder()
       .name(node.getText().intern())
-      .owner(documentContext)
       .range(Ranges.create(node))
       .variableNameRange(Ranges.create(node))
       .export(false)
