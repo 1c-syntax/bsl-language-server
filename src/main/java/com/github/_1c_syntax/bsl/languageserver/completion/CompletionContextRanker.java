@@ -108,6 +108,11 @@ public final class CompletionContextRanker {
     }
   }
 
+  /** Приоритет свойства с учётом всех выбранных режимов и альтернатив получателя. */
+  public void rankDotPropertyMember(CompletionItem item, MemberDescriptor member) {
+    if (evaluation.hasScope()) remember(item, evaluation.rankDotPropertyMember(item.getLabel(), member));
+  }
+
   /**
    * Оценить член после точки по типам получателя в каждом актуальном режиме.
    *
@@ -120,7 +125,10 @@ public final class CompletionContextRanker {
     }
     var hint = member.kind() == MemberKind.METHOD
       ? new CompletionMethodHint() : null;
-    remember(item, evaluation.rankDotMember(item.getLabel(), member, hint));
+    var rank = hint != null && member.sourceSymbol() instanceof MethodSymbol
+      ? evaluation.rankDotSourceMember(item.getLabel(), member, hint)
+      : evaluation.rankDotMember(item.getLabel(), member, hint);
+    remember(item, rank);
     if (hint != null) {
       hints.put(item, hint);
     }
@@ -148,6 +156,7 @@ public final class CompletionContextRanker {
    */
   public Map<CompletionItem, String> apply(Iterable<CompletionItem> items, boolean labelDetailsSupport) {
     var language = document.getScriptVariantLanguage();
+    var renderer = new CompletionMethodHint.Renderer(language, labelDetailsSupport);
     Map<CompletionItem, String> descriptions = new IdentityHashMap<>();
     for (var item : items) {
       if (!priorities.isEmpty()) {
@@ -155,7 +164,7 @@ public final class CompletionContextRanker {
       }
       var hint = hints.get(item);
       if (hint != null) {
-        var description = hint.apply(item, language, labelDetailsSupport);
+        var description = renderer.apply(hint, item);
         if (!description.isBlank()) {
           descriptions.put(item, description);
         }
