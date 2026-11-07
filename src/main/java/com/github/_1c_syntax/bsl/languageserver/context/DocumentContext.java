@@ -110,8 +110,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
    * вторичных данных: по нему повторный разбор отличает перечитывание того же текста
    * от настоящей правки.
    */
-  @Nullable
-  private byte[] contentFingerprint;
+  private byte @Nullable [] contentFingerprint;
 
   /**
    * Отличалось ли содержимое, с которым документ разобран последний раз, от того,
@@ -164,9 +163,10 @@ public class DocumentContext implements Comparable<DocumentContext> {
   private final Lazy<String[]> contentList = new Lazy<>(this::computeContentList, computeLock);
   private final Lazy<ModuleType> moduleType = new Lazy<>(this::computeModuleType, computeLock);
   // MD-объект и mdoRef документа зависят только от его URI и конфигурации (не от содержимого),
-  // а конфигурация инвариантна на всё время жизни DocumentContext (её перезагрузка в
-  // ServerContext.clear() выбрасывает все документы). Поэтому намеренно НЕ сбрасываются в
-  // clearSecondaryData — считаются один раз на жизнь документа.
+  // а конфигурация после прочтения инвариантна на всё время жизни DocumentContext (её
+  // перезагрузка в ServerContext.clear() выбрасывает все документы). Поэтому намеренно НЕ
+  // сбрасываются в clearSecondaryData. Пересчитываются, только если документ заведён до
+  // прочтения конфигурации (rebindToConfiguration).
   private final Lazy<Optional<MD>> mdObject = new Lazy<>(this::computeMdObject, computeLock);
   private final Lazy<String> mdoRef = new Lazy<>(this::computeMdoRef, computeLock);
   private final Lazy<ComplexityData> cognitiveComplexityData
@@ -520,6 +520,38 @@ public class DocumentContext implements Comparable<DocumentContext> {
         metrics.clear();
         diagnosticIgnoranceData.clear();
       }
+    } finally {
+      releaseLocks();
+    }
+  }
+
+  /**
+   * Пересчитать привязку документа к метаданным конфигурации — тип модуля, объект метаданных и
+   * ссылку на него — и то, что от неё зависит, не разбирая текст заново.
+   * <p>
+   * Дерево символов строится заново по уже разобранному тексту: от привязки зависят имя модуля
+   * и вид методов. Вместе с ним забываются диагностики и сложности, посчитанные по прежним
+   * символам. Если текста у документа нет, дерево не перестроить — тогда забывается отпечаток
+   * содержимого, и следующий разбор даже того же текста считается правкой.
+   *
+   * @return {@code true}, если дерево символов построено заново.
+   */
+  protected boolean rebindToConfiguration() {
+    acquireLocks();
+
+    try {
+      moduleType.clear();
+      mdObject.clear();
+      mdoRef.clear();
+      clearDependantData();
+      cognitiveComplexityData.clear();
+      cyclomaticComplexityData.clear();
+      if (tokenizer == null) {
+        contentFingerprint = null;
+        return false;
+      }
+      symbolTree.set(computeSymbolTree());
+      return true;
     } finally {
       releaseLocks();
     }

@@ -44,7 +44,7 @@ import java.util.Optional;
 @NonFinal
 @ToString(callSuper = true)
 @EqualsAndHashCode(onlyExplicitlyIncluded = true, callSuper = true)
-public class AnnotatedVariableSymbol extends IntBasedVariableSymbol {
+public class AnnotatedVariableSymbol extends DescribedVariableSymbol {
 
   @Getter
   List<Annotation> annotations;

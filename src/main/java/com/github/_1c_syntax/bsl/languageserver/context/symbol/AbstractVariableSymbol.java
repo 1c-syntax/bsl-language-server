@@ -79,25 +79,18 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
    */
   boolean export;
 
-  /**
-   * Описание переменной.
-   */
-  Optional<VariableDescription> description;
-
   protected AbstractVariableSymbol(
     String name,
     SourceDefinedSymbol scope,
     Optional<SourceDefinedSymbol> parent,
     byte kind,
-    boolean export,
-    Optional<VariableDescription> description
+    boolean export
   ) {
     this.name = name;
     this.scope = scope;
     this.parent = parent.orElse(null);
     this.kind = kind;
     this.export = export;
-    this.description = description;
   }
 
   /**
@@ -108,6 +101,15 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
   @EqualsAndHashCode.Include
   public DocumentContext getOwner() {
     return scope.getOwner();
+  }
+
+  /**
+   * Описание переменной. Описана малая доля переменных, и описание хранит отдельный подкласс
+   * ({@link DescribedVariableSymbol}), а не поле каждой переменной.
+   */
+  @Override
+  public Optional<VariableDescription> getDescription() {
+    return Optional.empty();
   }
 
   @Override
@@ -158,6 +160,10 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
     @Setter
     @Accessors(fluent = true, chain = true)
     private List<Annotation> annotations = Collections.emptyList();
+
+    @Setter
+    @Accessors(fluent = true, chain = true)
+    private Optional<VariableDescription> description = Optional.empty();
 
     private int startLine;
     private int startCharacter;
@@ -211,6 +217,25 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
         );
       }
 
+      // Описанных переменных — малая доля, описание хранит только их подкласс.
+      if (description.isPresent()) {
+        return new DescribedVariableSymbol(
+          name,
+          scope,
+          parent,
+          (byte) kind.ordinal(),
+          export,
+          description,
+          startLine,
+          startCharacter,
+          endLine,
+          endCharacter,
+          variableNameLine,
+          variableNameStartCharacter,
+          variableNameEndCharacter
+        );
+      }
+
       // Ленивое булево вычисление диапазона переменной
       var shortBased = startLine <= Short.MAX_VALUE
         && endLine <= Short.MAX_VALUE
@@ -227,7 +252,6 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
           parent,
           (byte) kind.ordinal(),
           export,
-          description,
           (short) startLine,
           (short) startCharacter,
           (short) endLine,
@@ -243,7 +267,6 @@ public abstract class AbstractVariableSymbol implements VariableSymbol {
           parent,
           (byte) kind.ordinal(),
           export,
-          description,
           startLine,
           startCharacter,
           endLine,
