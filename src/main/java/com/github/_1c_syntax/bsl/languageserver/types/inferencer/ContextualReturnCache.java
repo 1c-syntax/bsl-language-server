@@ -54,7 +54,7 @@ final class ContextualReturnCache {
   private final Map<Guard, Result> matchedGuards = new HashMap<>();
   /** Связь тела с объявлением постоянна в пределах запроса и не зависит от приближений ячеек. */
   private final Map<BSLParser.CodeBlockContext, Optional<MethodSymbol>> bodyMethods = new HashMap<>();
-  private long revision;
+  private long revision = 0;
 
   @Nullable TypeSet get(ContextualReturnKey key) {
     return values.get(key);
@@ -103,11 +103,19 @@ final class ContextualReturnCache {
   private record Entry(Guard guard, Result result) {
     boolean matches(Guard current) {
       return (!result.depthCut() || guard.depth() == current.depth())
-        && sameMembership(result.consulted(), guard.visited(), current.visited())
-        && sameMembership(result.cutMethods(), guard.visited(), current.visited())
-        && sameMembership(result.consulted(), guard.activeMethods(), current.activeMethods())
-        && sameMembership(result.cutMethods(), guard.activeMethods(), current.activeMethods())
+        && sameVisited(current)
+        && sameActiveMethods(current)
         && sameMembership(result.flowBodiesRead(), guard.activeBodies(), current.activeBodies());
+    }
+
+    private boolean sameVisited(Guard current) {
+      return sameMembership(result.consulted(), guard.visited(), current.visited())
+        && sameMembership(result.cutMethods(), guard.visited(), current.visited());
+    }
+
+    private boolean sameActiveMethods(Guard current) {
+      return sameMembership(result.consulted(), guard.activeMethods(), current.activeMethods())
+        && sameMembership(result.cutMethods(), guard.activeMethods(), current.activeMethods());
     }
 
     private static <T> boolean sameMembership(Set<T> queries, Set<? super T> previous, Set<? super T> current) {
