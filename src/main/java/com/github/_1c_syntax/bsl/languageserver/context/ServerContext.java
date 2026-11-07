@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.client.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.utils.BSLFiles;
 import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import com.github._1c_syntax.bsl.mdclasses.MDCReadSettings;
@@ -55,12 +56,15 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -125,6 +129,105 @@ public class ServerContext {
   private final Set<DocumentContext> openedDocuments = ConcurrentHashMap.newKeySet();
   private volatile boolean clearing;
 
+  /**
+   * Подготовка рабочей области, идущая в фоне (см. {@link #beginPreparation()}); завершена,
+   * если рабочая область не готовится.
+   */
+  private final AtomicReference<CompletableFuture<@Nullable Void>> preparation
+    = new AtomicReference<>(CompletableFuture.completedFuture(null));
+
+  /** Документы, заведённые, пока рабочая область готовилась в фоне. */
+  private final Set<DocumentContext> createdWhilePreparing = ConcurrentHashMap.newKeySet();
+
+  /**
+   * Отметить начало подготовки рабочей области в фоне — чтения метаданных и регистрации типов
+   * конфигурации. Подготовка идёт до {@link #finishPreparation()}; если она уже идёт, вызов
+   * ничего не меняет.
+   * <p>
+   * Пока рабочая область готовится, {@link #getConfiguration()} при непрочитанных метаданных
+   * отвечает пустой конфигурацией, а не ждёт чтения. Документы, заведённые за это время, по
+   * окончании подготовки привязываются к конфигурации заново
+   * ({@link #refreshDocumentsCreatedWhilePreparing()}). Наполнение начинается не раньше конца
+   * подготовки.
+   */
+  void beginPreparation() {
+    preparation.updateAndGet(current -> current.isDone() ? new CompletableFuture<>() : current);
+  }
+
+  /**
+   * Закончить подготовку рабочей области: заново привязать к конфигурации документы,
+   * заведённые за время подготовки, и отпустить тех, кто её ждёт.
+   * <p>
+   * Берёт блокировки документов по одной, поэтому вызывающий поток не должен держать
+   * блокировку какого-либо документа.
+   */
+  public void finishPreparation() {
+    try {
+      refreshDocumentsCreatedWhilePreparing();
+    } finally {
+      preparation.get().complete(null);
+    }
+    // Документ, заведённый, пока перепривязывались прочие, остался в очереди, если узнал о
+    // подготовке до её конца; узнавший после перепривязал себя сам (createDocumentContext).
+    refreshDocumentsCreatedWhilePreparing();
+  }
+
+  /**
+   * Дождаться конца подготовки рабочей области, если она идёт в фоне: метаданные конфигурации
+   * прочитаны, её типы зарегистрированы.
+   */
+  public void awaitPreparation() {
+    preparation.get().join();
+  }
+
+  /**
+   * Дождаться конца подготовки, показывая клиенту, что ждём регистрацию типов конфигурации:
+   * на большой конфигурации это десятки секунд, и без индикатора они выглядят зависанием.
+   */
+  private void awaitPreparationShowingProgress() {
+    var current = preparation.get();
+    if (current.isDone()) {
+      return;
+    }
+    var progress = workDoneProgressHelper.createProgress(0, "");
+    progress.beginProgress(getMessage("registerConfigurationTypes"));
+    try {
+      current.join();
+    } finally {
+      progress.endProgress(getMessage("registerConfigurationTypesDone"));
+    }
+  }
+
+  /**
+   * Пересчитать привязку к метаданным конфигурации у документов, заведённых, пока шла
+   * подготовка рабочей области в фоне: их тип модуля и ссылка на объект метаданных могли быть
+   * посчитаны без конфигурации ({@link #rebindDocument(DocumentContext)}). Документы,
+   * пересчитанные раньше, повторно не трогаются.
+   * <p>
+   * Берёт блокировки документов по одной, поэтому вызывающий поток не должен держать
+   * блокировку какого-либо документа.
+   */
+  public void refreshDocumentsCreatedWhilePreparing() {
+    if (createdWhilePreparing.isEmpty()) {
+      return;
+    }
+    // Пересчёт и слушатели изменения привязки обращаются к бинам рабочей области, а поток
+    // подготовки её не знает.
+    WorkspaceContextHolder.run(workspaceUri, () -> {
+      for (var documentContext : List.copyOf(createdWhilePreparing)) {
+        var lock = getDocumentLock(documentContext.getUri());
+        lock.writeLock().lock();
+        try {
+          if (createdWhilePreparing.remove(documentContext)) {
+            rebindDocument(documentContext);
+          }
+        } finally {
+          lock.writeLock().unlock();
+        }
+      }
+    });
+  }
+
   public void populateContext() {
     if (configurationRoot == null) {
       LOGGER.info("Can't populate server context. Configuration root is not defined.");
@@ -147,6 +250,13 @@ public class ServerContext {
   }
 
   public void populateContext(Collection<File> files) {
+    // Деревья символов опираются на типы конфигурации и запоминают посчитанное, поэтому
+    // документы разбираются только после того, как типы зарегистрированы.
+    awaitPreparationShowingProgress();
+    // Документы, заведённые во время подготовки, перепривязываются до разбора остальных, даже
+    // если подготовка до них ещё не добралась.
+    refreshDocumentsCreatedWhilePreparing();
+
     var workDoneProgressReporter = workDoneProgressHelper.createProgress(
       files.size(),
       getMessage("populateFilesPostfix")
@@ -493,6 +603,7 @@ public class ServerContext {
     return true;
   }
 
+
   /**
    * Закрыть документ и очистить его содержимое.
    *
@@ -504,7 +615,32 @@ public class ServerContext {
     documentContext.clearSecondaryData();
   }
 
+  /**
+   * Метаданные конфигурации рабочей области; читаются при первом обращении.
+   * <p>
+   * Пока рабочая область готовится в фоне ({@code beginPreparation()}), а метаданные ещё не
+   * прочитаны, отвечает пустой конфигурацией, не дожидаясь чтения.
+   *
+   * @return метаданные конфигурации; пустые, если конфигурации нет или она ещё читается.
+   */
   public Solution getConfiguration() {
+    if (!configurationMetadata.isPresent() && isPreparing()) {
+      // На большой конфигурации чтение занимает десятки секунд. До его конца рабочая область
+      // выглядит как каталог без конфигурации, а документы, заведённые за это время,
+      // по окончании подготовки привязываются к ней заново.
+      return Solution.EMPTY;
+    }
+    return configurationMetadata.getOrCompute();
+  }
+
+  /**
+   * Метаданные конфигурации рабочей области, дождавшись их чтения. В отличие от
+   * {@link #getConfiguration()}, пустой конфигурацией, пока рабочая область готовится, не
+   * отвечает: метаданные читаются здесь же или дожидаются чтения, начатого раньше.
+   *
+   * @return метаданные конфигурации; пустые, если конфигурации нет.
+   */
+  public Solution awaitConfiguration() {
     return configurationMetadata.getOrCompute();
   }
 
@@ -552,16 +688,56 @@ public class ServerContext {
    * @return общий модуль или {@link Optional#empty()}, если такого нет
    */
   public Optional<CommonModule> findCommonModule(String name) {
+    if (!configurationMetadata.isPresent()) {
+      // Ответ по ещё не прочитанной конфигурации запоминать нельзя: промах остался бы в кэше.
+      return getConfiguration().findCommonModule(name);
+    }
     return commonModuleCache.get(name, key -> getConfiguration().findCommonModule(key));
   }
 
   private DocumentContext createDocumentContext(URI uri) {
+    var whilePreparing = isPreparing();
     var documentContext = documentContextProvider.getObject(uri, this);
 
     documents.put(uri, documentContext);
     addMdoRefByUri(uri, documentContext);
 
+    if (whilePreparing) {
+      createdWhilePreparing.add(documentContext);
+      // Подготовка могла закончиться, пока документ заводился, и пересчитать его уже некому.
+      // Блокировка этого документа у вызывающего уже взята, а текста у нового документа нет.
+      if (!isPreparing() && createdWhilePreparing.remove(documentContext)) {
+        rebindDocument(documentContext);
+      }
+    }
+
     return documentContext;
+  }
+
+  /**
+   * Пересчитать привязку документа к метаданным текущей конфигурации — тип модуля, объект
+   * метаданных и ссылку на него ({@link DocumentContext#rebindToConfiguration()}) — и
+   * переложить документ в индексе по ссылке на объект метаданных.
+   * <p>
+   * Блокировка документа на запись должна быть взята.
+   *
+   * @param documentContext документ.
+   * @return {@code true}, если дерево символов документа построено заново; {@code false}, если
+   *     документ уже снят с рабочей области или у него нет текста.
+   */
+  boolean rebindDocument(DocumentContext documentContext) {
+    var uri = documentContext.getUri();
+    if (documents.get(uri) != documentContext) {
+      return false;
+    }
+    removeDocumentMdoRefByUri(uri);
+    var rebuilt = documentContext.rebindToConfiguration();
+    addMdoRefByUri(uri, documentContext);
+    return rebuilt;
+  }
+
+  private boolean isPreparing() {
+    return !preparation.get().isDone();
   }
 
   private Solution computeConfigurationMetadata() {
@@ -617,7 +793,10 @@ public class ServerContext {
     if (mdoRef != null) {
       var documentsGroup = documentsByMDORef.get(mdoRef);
       if (documentsGroup != null) {
-        documentsGroup.remove(documents.get(uri).getModuleType());
+        // По самому документу, а не по типу модуля: документ, заведённый до прочтения
+        // конфигурации, лежит в группе под типом, посчитанным без неё, а тип, посчитанный заново
+        // после очистки вторичных данных, уже другой.
+        documentsGroup.values().remove(documents.get(uri));
         if (documentsGroup.isEmpty()) {
           documentsByMDORef.remove(mdoRef);
         }

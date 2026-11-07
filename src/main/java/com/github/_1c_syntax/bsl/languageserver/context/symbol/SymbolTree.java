@@ -22,7 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Value;
@@ -61,6 +63,8 @@ public class SymbolTree {
   @Getter(AccessLevel.NONE)
   // Range — сторонний тип LSP; здесь требуется равенство диапазонов, без порядка ключей.
   Map<Range, Set<ExecutionContext>> methodConditions;
+
+  Basis basis;
 
   /**
    * Список всех символов всех уровней (за исключением символа модуля документа), преобразованных в плоский список.
@@ -116,6 +120,35 @@ public class SymbolTree {
   SelectionLines symbolsBySelectionLine = createSymbolsBySelectionLine();
 
   /**
+   * На чём, кроме текста документа, построено дерево: привязка документа к метаданным и голые
+   * имена, признанные при построении реквизитами своего типа. Символов у таких имён нет, поэтому
+   * из самого дерева их не восстановить.
+   *
+   * @param moduleType         тип модуля документа.
+   * @param mdoRef             ссылка на объект метаданных документа.
+   * @param bareSelfProperties голые имена, признанные реквизитами своего типа.
+   * @param loopVariables      переменные, впервые объявленные заголовком цикла.
+   */
+  public record Basis(ModuleType moduleType, String mdoRef, Set<String> bareSelfProperties,
+                      Set<VariableSymbol> loopVariables) {
+    /**
+     * Основание дерева, построенного не по документу: годным для документа такое дерево не бывает.
+     * Узнаётся по ссылке, а не по значениям полей.
+     */
+    public static final Basis NONE = new Basis(ModuleType.UNKNOWN, "", Set.of());
+
+    public Basis {
+      bareSelfProperties = Set.copyOf(bareSelfProperties);
+      loopVariables = Set.copyOf(loopVariables);
+    }
+
+    public Basis(ModuleType moduleType, String mdoRef, Set<String> bareSelfProperties) {
+      this(moduleType, mdoRef, bareSelfProperties, Set.of());
+    }
+
+  }
+
+  /**
    * Символы, упорядоченные по строке {@code selectionRange}: {@code symbols[i]} объявлен на
    * строке {@code lines[i]}. Два массива вместо карты «строка → список»: на большой
    * конфигурации у деревьев миллионы символов, а карта платила за каждый узлом, ключом и списком.
@@ -152,8 +185,18 @@ public class SymbolTree {
    *     значения {@code null} допустимы и означают неизвестное условие.
    */
   public SymbolTree(ModuleSymbol module, Map<Range, Set<ExecutionContext>> methodConditions) {
+    this(module, methodConditions, Basis.NONE);
+  }
+
+  public SymbolTree(ModuleSymbol module, Basis basis) {
+    this(module, Map.of(), basis);
+  }
+
+  /** Основание классификации и условия объявлений относятся к одной версии дерева. */
+  public SymbolTree(ModuleSymbol module, Map<Range, Set<ExecutionContext>> methodConditions, Basis basis) {
     this.module = module;
     this.methodConditions = methodConditions;
+    this.basis = basis;
   }
 
   /**
@@ -218,20 +261,7 @@ public class SymbolTree {
    * @return найденный символ метода.
    */
   public Optional<MethodSymbol> getMethodSymbol(ParserRuleContext ctx) {
-    var subNameRange = SymbolDeclarationRanges.methodName(ctx);
-
-    // subNameRange == selectionRange метода, поэтому ищем через O(1)-индекс
-    // селекшн-рейнджей (тот же, что и findSymbolBySelectionRange), а не линейным
-    // сканом getMethods() с Range.equals на каждом.
-    // Точное равенство диапазона обязательно: часть вызывающих передаёт не узел
-    // объявления, а произвольный/ошибочный контекст (напр. ctx.getParent()),
-    // старт которого может попасть в selectionRange соседнего символа. Прежний
-    // скан для таких возвращал пусто (точное равенство не выполнялось) —
-    // сохраняем это, иначе резолвится «лишний» метод.
-    return findSymbolBySelectionRange(subNameRange.getStart())
-      .filter(MethodSymbol.class::isInstance)
-      .map(MethodSymbol.class::cast)
-      .filter(methodSymbol -> methodSymbol.getSubNameRange().equals(subNameRange));
+    return SymbolTreeLookup.methodByNode(this, ctx);
   }
 
   /**
@@ -253,20 +283,7 @@ public class SymbolTree {
    * @return найденный символ переменной.
    */
   public Optional<VariableSymbol> getVariableSymbol(ParserRuleContext ctx) {
-
-    var variableNameRange = SymbolDeclarationRanges.variableName(ctx);
-
-    // variableNameRange == selectionRange переменной, поэтому ищем через
-    // индекс селекшн-рейнджей, а не линейным сканом getVariables() с
-    // Range.equals на каждом.
-    // Точное равенство диапазона обязательно: часть вызывающих передаёт не узел
-    // объявления, а произвольный/ошибочный контекст, старт которого может
-    // попасть в selectionRange соседнего символа. Прежний скан для таких
-    // возвращал пусто — сохраняем это, иначе резолвится «лишняя» переменная.
-    return findSymbolBySelectionRange(variableNameRange.getStart())
-      .filter(VariableSymbol.class::isInstance)
-      .map(VariableSymbol.class::cast)
-      .filter(variableSymbol -> variableSymbol.getVariableNameRange().equals(variableNameRange));
+    return SymbolTreeLookup.variableByNode(this, ctx);
   }
 
   /**
@@ -297,18 +314,31 @@ public class SymbolTree {
   /**
    * Переменная с именем {@code variableName}, видимая в точке узла {@code node}:
    * сперва — в охватывающем методе (по {@code RULE_sub}), иначе — на уровне модуля.
-   * Единый резолв видимости переменной для потребителей, которым нужно отличить
-   * объявленную переменную от одноимённого self-члена (система типов, индексатор
-   * ссылок).
+   * Из метода видны только переменные модуля, объявленные {@code Перем} (см.
+   * {@link #getModuleVariableVisibleFromMethods(String)}). Единый резолв видимости
+   * переменной для потребителей, которым нужно отличить объявленную переменную от
+   * одноимённого self-члена (система типов, индексатор ссылок).
    *
    * @param node         узел, в точке которого проверяется видимость.
    * @param variableName имя переменной (без учёта регистра — как хранит дерево).
    * @return видимая переменная; empty, если такой в области видимости нет.
    */
   public Optional<VariableSymbol> getVariableSymbolInScope(ParserRuleContext node, String variableName) {
-    return SymbolDeclarationRanges.enclosingMethod(node).flatMap(this::getMethodSymbol)
-      .flatMap(method -> getVariableSymbol(variableName, method))
-      .or(() -> getVariableSymbol(variableName, module));
+    return SymbolTreeLookup.variableInScope(this, node, variableName);
+  }
+
+  /**
+   * Переменная уровня модуля, видимая из методов. Такова только переменная, объявленная
+   * {@code Перем} на уровне модуля. Переменная, созданная присваиванием в теле модуля, живёт
+   * в одном теле модуля, а переменные и параметры метода с ошибками разбора, оказавшиеся на
+   * уровне модуля, принадлежат своему методу.
+   *
+   * @param variableName имя переменной (без учёта регистра — как хранит дерево).
+   * @return переменная модуля; empty, если такой нет либо из методов она не видна.
+   */
+  public Optional<VariableSymbol> getModuleVariableVisibleFromMethods(String variableName) {
+    return getVariableSymbol(variableName, module)
+      .filter(variable -> variable.getKind() == VariableKind.MODULE);
   }
 
   /**
@@ -320,7 +350,7 @@ public class SymbolTree {
    * @return Символ, содержащий позицию, или символ модуля, если позиция вне всех символов.
    */
   public SourceDefinedSymbol getSymbolAtPosition(Position position) {
-    return findSymbolAtPosition(module, position);
+    return SymbolTreeLookup.innermostSymbol(module, position);
   }
 
   /**
@@ -378,22 +408,6 @@ public class SymbolTree {
     return Optional.empty();
   }
 
-  private SourceDefinedSymbol findSymbolAtPosition(SourceDefinedSymbol parent, Position position) {
-    // Ищем среди детей символ, содержащий позицию
-    for (var child : parent.getChildren()) {
-      if (Ranges.containsPosition(child.getRange(), position)) {
-        // Рекурсивно ищем более вложенный символ
-        var found = findSymbolAtPosition(child, position);
-        // Пропускаем Namespace (Region) - ищем дальше или возвращаем parent
-        if (found.getSymbolKind() == SymbolKind.Namespace) {
-          continue;
-        }
-        return found;
-      }
-    }
-    // Если среди детей не нашли — возвращаем текущий символ
-    return parent;
-  }
 
   private List<SourceDefinedSymbol> createChildrenFlat() {
     var symbols = new ArrayList<SourceDefinedSymbol>();
