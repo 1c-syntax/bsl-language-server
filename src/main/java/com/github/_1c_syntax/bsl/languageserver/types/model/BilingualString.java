@@ -44,13 +44,19 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Language;
  * @param ru русское написание (пустая строка, если отсутствует)
  * @param en английское написание (пустая строка, если отсутствует)
  */
-public record BilingualString(String ru, String en) {
+public record BilingualString(String ru, String en) implements Comparable<BilingualString> {
 
   public static final BilingualString EMPTY = new BilingualString("", "");
 
   public BilingualString {
     ru = ru == null ? "" : ru;
     en = en == null ? "" : en;
+  }
+
+  @Override
+  public int compareTo(BilingualString other) {
+    var byRu = ru.compareTo(other.ru);
+    return byRu == 0 ? en.compareTo(other.en) : byRu;
   }
 
   /**
