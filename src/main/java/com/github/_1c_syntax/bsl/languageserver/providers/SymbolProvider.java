@@ -124,20 +124,41 @@ public class SymbolProvider {
       return List.of();
     }
 
-    if (globalConfiguration.getWorkspaceSymbol().isSyncFuzzySearch()
-      && !queryString.isEmpty()) {
-      // Клиент без потоковой выдачи: блокирующий fuzzy-скан дописывается в синхронный ответ.
-      var tail = workspaceSymbolIndex.searchFuzzyTail(queryString, identitySetOf(fast), cancelChecker);
-      var result = new ArrayList<WorkspaceSymbol>(fast.size() + tail.size());
-      fast.forEach(entry -> result.add(createWorkspaceSymbol(entry)));
-      tail.forEach(entry -> result.add(createWorkspaceSymbol(entry)));
-      return result;
-    }
+    // Клиент без потоковой выдачи: fuzzy-хвост дописывается в синхронный ответ только по настройке
+    // syncFuzzySearch (по умолчанию выключена — медленный fuzzy-скан не запускаем).
+    return collect(queryString, fast, globalConfiguration.getWorkspaceSymbol().isSyncFuzzySearch(), cancelChecker);
+  }
 
-    // syncFuzzySearch == false (по умолчанию): только древесная выдача, медленный fuzzy-скан не запускаем.
-    return fast.stream()
-      .map(SymbolProvider::createWorkspaceSymbol)
-      .toList();
+  /**
+   * Поиск символов рабочей области одним синхронным списком: быстрая древесная выдача и, при
+   * {@code includeFuzzyTail}, блокирующий fuzzy-хвост (подстрока внутри слова, подпоследовательность).
+   * <p>
+   * Для клиентов без канала {@code $/progress}: настройка {@code workspaceSymbol.syncFuzzySearch} здесь
+   * не участвует, нужен ли хвост, решает вызывающий.
+   *
+   * @param query            Строка поиска.
+   * @param includeFuzzyTail Дописывать ли fuzzy-хвост после быстрой выдачи.
+   * @param cancelChecker    Проверка отмены.
+   * @return Символы по убыванию релевантности.
+   */
+  public List<WorkspaceSymbol> searchSymbols(String query, boolean includeFuzzyTail, CancelChecker cancelChecker) {
+    var fast = workspaceSymbolIndex.search(query, cancelChecker);
+    return collect(query, fast, includeFuzzyTail, cancelChecker);
+  }
+
+  private List<WorkspaceSymbol> collect(
+    String query,
+    List<Entry> fast,
+    boolean includeFuzzyTail,
+    CancelChecker cancelChecker
+  ) {
+    var result = new ArrayList<WorkspaceSymbol>(fast.size());
+    fast.forEach(entry -> result.add(createWorkspaceSymbol(entry)));
+    if (includeFuzzyTail && !query.isEmpty()) {
+      var tail = workspaceSymbolIndex.searchFuzzyTail(query, identitySetOf(fast), cancelChecker);
+      tail.forEach(entry -> result.add(createWorkspaceSymbol(entry)));
+    }
+    return result;
   }
 
   /**
