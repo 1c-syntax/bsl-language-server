@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
@@ -29,7 +30,10 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.Arrays;
+import java.util.Map;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -42,9 +46,25 @@ import java.util.regex.Pattern;
 
 )
 public class FunctionNameStartsWithGetDiagnostic extends AbstractVisitorDiagnostic {
-  private static final Pattern get = CaseInsensitivePattern.compile(
-    "^Получить.*$"
-  );
+  private static final Pattern GET_PATTERN = CaseInsensitivePattern.compile("^Получить");
+
+  @DiagnosticParameter(type = String.class)
+  private String prefixes = "";
+
+  private Pattern functionNamePattern = GET_PATTERN;
+
+  @Override
+  public void configure(Map<String, Object> configuration) {
+    prefixes = (String) configuration.getOrDefault("prefixes", "");
+    var quotedPrefixes = Arrays.stream(prefixes.split(","))
+      .map(String::trim)
+      .filter(prefix -> !prefix.isEmpty())
+      .map(Pattern::quote)
+      .collect(Collectors.joining("|"));
+    functionNamePattern = quotedPrefixes.isEmpty()
+      ? GET_PATTERN
+      : CaseInsensitivePattern.compile("^(?:" + quotedPrefixes + ")?Получить");
+  }
 
   @Override
   public ParseTree visitFuncDeclaration(BSLParser.FuncDeclarationContext ctx) {
@@ -55,7 +75,7 @@ public class FunctionNameStartsWithGetDiagnostic extends AbstractVisitorDiagnost
       return ctx;
     }
 
-    if (get.matcher(subName.getText()).matches()) {
+    if (functionNamePattern.matcher(subName.getText()).lookingAt()) {
       diagnosticStorage.addDiagnostic(subName);
     }
 

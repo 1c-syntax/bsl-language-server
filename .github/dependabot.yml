@@ -11,6 +11,7 @@ updates:
       interval: "daily"
     ignore:
       - dependency-name: "com.diffplug.spotless"
+      - dependency-name: "me.qoomon.git-versioning"
     groups:
       freefair:
         patterns:
