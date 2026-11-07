@@ -56,7 +56,6 @@ public class VariableSymbolCreate {
   public void createVariableSymbols(Blackhole bh) {
     var test = VariableSymbol.builder()
       .name("test")
-      .owner(null)
       .range(range)
       .variableNameRange(range)
       .export(true)

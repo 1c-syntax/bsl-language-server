@@ -107,7 +107,7 @@ class BSLWorkspaceServiceTest {
   void setUp() {
     // Register workspace for temp directory
     var workspaceFolder = new org.eclipse.lsp4j.WorkspaceFolder(tempDir.toUri().toString(), "test-workspace");
-    serverContextProvider.addWorkspace(workspaceFolder);
+    serverContextProvider.addWorkspace(workspaceFolder).awaitPreparation();
   }
 
   @Test
