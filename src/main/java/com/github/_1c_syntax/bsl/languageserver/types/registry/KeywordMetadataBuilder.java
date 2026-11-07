@@ -26,19 +26,14 @@ import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider.KeywordDescription;
 import org.jspecify.annotations.Nullable;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Set;
-import java.util.function.Predicate;
 
 /**
  * Аккумулирует разбор записей {@code builtin-keywords.json} в {@link KeywordMetadata}:
- * плоский список имён + scope (для no-dot completion), сниппеты и описания
+ * сниппеты и описания
  * (включая {@code descriptionByParent}). Каждое имя добавляется по обоим
  * написаниям (ru-canonical и en-alias) lower-cased — независимо от того, какое
  * пишет пользователь.
@@ -47,7 +42,6 @@ final class KeywordMetadataBuilder {
 
   private static final String FIELD_NAME = "name";
   private static final String FIELD_ALIAS = "alias";
-  private static final String FIELD_CATEGORY = "category";
   private static final String FIELD_SNIPPET = "snippet";
   private static final String FIELD_DESCRIPTION = "description";
   private static final String FIELD_DESCRIPTION_EN = "descriptionEn";
@@ -55,15 +49,8 @@ final class KeywordMetadataBuilder {
   private static final String LOCALE_RU = "ru";
   private static final String LOCALE_EN = "en";
 
-  private final Predicate<String> includeInCompletion;
-  private final Set<String> seen = new HashSet<>();
-  private final List<String> keywords = new ArrayList<>();
   private final Map<String, LanguageKeywordSnippet> snippets = new HashMap<>();
   private final Map<String, KeywordDescription> descriptions = new HashMap<>();
-
-  KeywordMetadataBuilder(Predicate<String> includeInCompletion) {
-    this.includeInCompletion = includeInCompletion;
-  }
 
   void add(Map<String, Object> entry) {
     var name = stringField(entry, FIELD_NAME);
@@ -71,25 +58,12 @@ final class KeywordMetadataBuilder {
       return;
     }
     var alias = stringField(entry, FIELD_ALIAS);
-    if (includeInCompletion.test(stringField(entry, FIELD_CATEGORY))) {
-      register(name);
-      if (!alias.isBlank()) {
-        register(alias);
-      }
-    }
     indexSnippet(entry, name, alias);
     indexDescription(entry, name, alias);
   }
 
   KeywordMetadata build() {
-    return new KeywordMetadata(List.copyOf(keywords),
-      Map.copyOf(snippets), Map.copyOf(descriptions));
-  }
-
-  private void register(String written) {
-    if (seen.add(written.toLowerCase(Locale.ROOT))) {
-      keywords.add(written);
-    }
+    return new KeywordMetadata(Map.copyOf(snippets), Map.copyOf(descriptions));
   }
 
   private void indexSnippet(Map<String, Object> entry, String name, String alias) {
