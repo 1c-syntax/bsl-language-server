@@ -35,7 +35,9 @@ import org.eclipse.lsp4j.jsonrpc.json.MessageJsonHandler;
 import org.eclipse.lsp4j.jsonrpc.messages.Message;
 import java.io.Writer;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import org.jspecify.annotations.Nullable;
 
 /** Буфер отдельного сообщения не разделяется между потоками и не требует синхронизации. */
 final class StringBuilderMessageJsonHandler extends MessageJsonHandler {
@@ -62,37 +64,37 @@ final class StringBuilderMessageJsonHandler extends MessageJsonHandler {
   /** Одно чистое преобразование, ограниченное длиной; пользовательские адаптеры сохраняют приоритет. */
   private static final class UriEncodingFactory implements TypeAdapterFactory {
     @Override
-    public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
+    public <T> @Nullable TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
       if (type.getRawType() != URI.class) {
         return null;
       }
       var delegate = gson.getDelegateAdapter(this, type);
       return new TypeAdapter<>() {
-        private volatile UriEncoding last;
+        private final AtomicReference<@Nullable UriEncoding> last = new AtomicReference<>();
 
         @Override
-        public void write(JsonWriter out, T value) throws IOException {
+        public void write(JsonWriter out, @Nullable T value) throws IOException {
           if (value == null) {
             out.nullValue();
             return;
           }
           var uri = (URI) value;
           var raw = uri.toString();
-          var known = last;
+          var known = last.get();
           String ascii;
           if (known != null && known.raw().equals(raw)) {
             ascii = known.ascii();
           } else {
             ascii = uri.toASCIIString();
             if (raw.length() <= 8192) {
-              last = new UriEncoding(raw, ascii);
+              last.set(new UriEncoding(raw, ascii));
             }
           }
           out.value(ascii);
         }
 
         @Override
-        public T read(JsonReader in) throws IOException {
+        public @Nullable T read(JsonReader in) throws IOException {
           return delegate.read(in);
         }
       };
