@@ -56,7 +56,7 @@ class SmallCollectionsTest {
     var visited = new ArrayList<String>();
     copy.forEach((key, value) -> visited.add(key));
     assertThat(visited).containsExactlyElementsOf(source.keySet());
-    source.forEach((key, value) -> assertThat(copy.get(key)).isEqualTo(value));
+    source.forEach((key, value) -> assertThat(copy).containsEntry(key, value));
     assertThat(copy.get("нет такого")).isNull();
     assertThat(copy.containsKey("нет такого")).isFalse();
     assertThatThrownBy(() -> copy.put("новый", 0)).isInstanceOf(UnsupportedOperationException.class);
@@ -111,7 +111,7 @@ class SmallCollectionsTest {
     copy.forEach(visited::add);
     assertThat(visited).containsExactlyElementsOf(source);
     source.forEach(element -> assertThat(copy).contains(element));
-    assertThat(copy.contains("нет такого")).isFalse();
+    assertThat(copy).doesNotContain("нет такого");
     assertThatThrownBy(() -> copy.add("новый")).isInstanceOf(UnsupportedOperationException.class);
   }
 

@@ -49,6 +49,7 @@ final class SmallCollections {
 
   /** Наибольший размер, который хранится массивом; крупнее — {@link LinkedHashMap}/{@link LinkedHashSet}. */
   static final int MAX_ARRAY_SIZE = 8;
+  private static final int ENTRY_WIDTH = 2;
 
   private SmallCollections() {
     // фабрики статические
@@ -72,11 +73,13 @@ final class SmallCollections {
       var entry = source.entrySet().iterator().next();
       return Map.of(entry.getKey(), entry.getValue());
     }
-    var keysAndValues = new Object[size * 2];
+    var keysAndValues = new Object[size * ENTRY_WIDTH];
     var i = 0;
     for (var entry : source.entrySet()) {
-      keysAndValues[i++] = entry.getKey();
-      keysAndValues[i++] = entry.getValue();
+      keysAndValues[i] = entry.getKey();
+      i++;
+      keysAndValues[i] = entry.getValue();
+      i++;
     }
     return new ArrayMap<>(keysAndValues);
   }
@@ -136,7 +139,7 @@ final class SmallCollections {
 
     @Override
     public int size() {
-      return keysAndValues.length / 2;
+      return keysAndValues.length / ENTRY_WIDTH;
     }
 
     @Override
@@ -152,7 +155,7 @@ final class SmallCollections {
     }
 
     private int indexOf(@Nullable Object key) {
-      for (var i = 0; i < keysAndValues.length; i += 2) {
+      for (var i = 0; i < keysAndValues.length; i += ENTRY_WIDTH) {
         if (keysAndValues[i].equals(key)) {
           return i;
         }
@@ -163,7 +166,7 @@ final class SmallCollections {
     @Override
     @SuppressWarnings("unchecked")
     public void forEach(BiConsumer<? super K, ? super V> action) {
-      for (var i = 0; i < keysAndValues.length; i += 2) {
+      for (var i = 0; i < keysAndValues.length; i += ENTRY_WIDTH) {
         action.accept((K) keysAndValues[i], (V) keysAndValues[i + 1]);
       }
     }
@@ -188,7 +191,7 @@ final class SmallCollections {
                 throw new NoSuchElementException();
               }
               var entry = Map.entry((K) keysAndValues[next], (V) keysAndValues[next + 1]);
-              next += 2;
+              next += ENTRY_WIDTH;
               return entry;
             }
           };
@@ -252,7 +255,9 @@ final class SmallCollections {
           if (!hasNext()) {
             throw new NoSuchElementException();
           }
-          return (E) elements[next++];
+          var element = (E) elements[next];
+          next++;
+          return element;
         }
       };
     }
