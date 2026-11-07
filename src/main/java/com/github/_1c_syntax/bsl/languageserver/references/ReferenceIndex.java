@@ -232,7 +232,7 @@ public class ReferenceIndex {
    *
    * @param occurrences Отброшенные вхождения.
    */
-  public void discardOccurrences(List<SymbolOccurrence> occurrences) {
+  public void discardOccurrences(Iterable<SymbolOccurrence> occurrences) {
     occurrences.forEach(occurrence -> symbolOccurrenceRepository.releaseUnused(occurrence.symbol()));
   }
 
