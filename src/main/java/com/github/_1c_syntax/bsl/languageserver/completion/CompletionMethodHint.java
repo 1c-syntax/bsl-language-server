@@ -26,12 +26,15 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionItemLabelDetails;
+import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 
 /** Контексты метода и наблюдавшиеся пути вызова; состояние одного пункта completion. */
 final class CompletionMethodHint {
@@ -39,6 +42,42 @@ final class CompletionMethodHint {
   private final Set<ExecutionContext> contexts = EnumSet.noneOf(ExecutionContext.class);
   private final Set<CallPath> paths = EnumSet.noneOf(CallPath.class);
   private boolean knownContexts = true;
+
+  private record DescriptionKey(Set<ExecutionContext> contexts, Set<CallPath> paths, boolean knownContexts) { }
+
+  private record Description(String text, @Nullable String serverLabel) { }
+
+  /** Готовые пояснения для одинаковых состояний подсказки в одном запросе. */
+  static final class Renderer {
+    private final Language language;
+    private final boolean labelDetailsSupport;
+    private final Map<DescriptionKey, Description> descriptions = new HashMap<>();
+
+    Renderer(Language language, boolean labelDetailsSupport) {
+      this.language = language;
+      this.labelDetailsSupport = labelDetailsSupport;
+    }
+
+    String apply(CompletionMethodHint hint, CompletionItem item) {
+      var key = new DescriptionKey(EnumSet.copyOf(hint.contexts), EnumSet.copyOf(hint.paths), hint.knownContexts);
+      var description = descriptions.computeIfAbsent(key, ignored -> hint.render(language));
+      var label = description.serverLabel();
+      if (label != null) {
+        if (labelDetailsSupport) {
+          prependServerLabel(item, label);
+        } else {
+          appendServerDetail(item, label);
+        }
+      }
+      return description.text();
+    }
+  }
+
+  void merge(CompletionMethodHint contribution) {
+    contexts.addAll(contribution.contexts);
+    paths.addAll(contribution.paths);
+    knownContexts &= contribution.knownContexts;
+  }
 
   void include(Collection<ExecutionContext> declared) {
     contexts.addAll(declared);
@@ -60,22 +99,15 @@ final class CompletionMethodHint {
     unknownCall();
   }
 
-  /** В списке остаётся серверная стрелка, а пояснение добавляется после документации. */
-  String apply(CompletionItem item, Language language, boolean labelDetailsSupport) {
+  private Description render(Language language) {
     var explanation = new ArrayList<String>();
     if (knownContexts) {
       explanation.add(tr(language, "contexts").formatted(contextNames(language)));
     }
     appendCallDescription(explanation, language);
-    if (paths.contains(CallPath.SERVER)) {
-      var label = tr(language, paths.size() > 1 ? "possibleServerCall" : "serverCall");
-      if (labelDetailsSupport) {
-        prependServerLabel(item, label);
-      } else {
-        appendServerDetail(item, label);
-      }
-    }
-    return String.join("\n\n", explanation);
+    var label = paths.contains(CallPath.SERVER)
+      ? tr(language, paths.size() > 1 ? "possibleServerCall" : "serverCall") : null;
+    return new Description(String.join("\n\n", explanation), label);
   }
 
   private String contextNames(Language language) {
