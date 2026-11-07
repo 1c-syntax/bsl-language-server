@@ -86,20 +86,6 @@ public class EventHandlerResolver implements EventHandlerClassifier {
   );
 
   /**
-   * Модули, чей owner-тип — фиксированный платформенный тип, не зависящий
-   * от имени MDO (модуль команды, модуль HTTP/Web/Bot/Integration сервиса).
-   * Если такого типа в реестре HBK нет — события просто не найдутся,
-   * lookup отдаст {@link Optional#empty()}.
-   */
-  private static final Map<ModuleType, String> MODULE_TYPE_TO_FIXED_OWNER_RU = Map.of(
-    ModuleType.CommandModule, "Модуль команды",
-    ModuleType.HTTPServiceModule, "Модуль HTTP-сервиса",
-    ModuleType.WEBServiceModule, "Модуль Web-сервиса",
-    ModuleType.IntegrationServiceModule, "Модуль сервиса интеграции",
-    ModuleType.BotModule, "Модуль бота"
-  );
-
-  /**
    * Глобальные модули прикладного решения. Их события — события объекта
    * {@code ГлобальныйКонтекст} платформы; ищем их в типе-обёртке самого
    * приложения, чьё qualifiedName совпадает с именем модуля.
@@ -376,12 +362,12 @@ public class EventHandlerResolver implements EventHandlerClassifier {
         .flatMap(md -> ConfigurationModuleMembersProvider.selfTypeQualifiedName(moduleType, md))
         .flatMap(typeRegistry::resolve);
     }
-    var fixed = MODULE_TYPE_TO_FIXED_OWNER_RU.get(moduleType);
-    if (fixed != null) {
+    var family = ModulePlatformTypeNames.familyName(moduleType);
+    if (family != null) {
       return documentContext.getMdObject()
-        .map(md -> fixed + "." + md.getName())
+        .map(md -> family + "." + md.getName())
         .flatMap(typeRegistry::resolve)
-        .or(() -> typeRegistry.resolve(fixed));
+        .or(() -> typeRegistry.resolve(family));
     }
     var wrapperRu = MODULE_TYPE_TO_WRAPPER_RU.get(moduleType);
     if (wrapperRu == null) {

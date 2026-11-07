@@ -750,8 +750,14 @@ public class TypeRegistry {
         if (isSuppressed(member, suppressed)) {
           continue;
         }
-        byNameAndKind.putIfAbsent(
-          new MemberKey(member.kind(), member.name().toLowerCase(Locale.ROOT)), member);
+        var memberKey = new MemberKey(member.kind(), member.name().toLowerCase(Locale.ROOT));
+        var previous = byNameAndKind.putIfAbsent(memberKey, member);
+        // Конфигурация уточняет тип глобального значения (например, Справочники),
+        // сохраняя ограничения исходного свойства СП, в том числе доступность и режим чтения.
+        if (previous != null && GLOBAL_CONTEXT.equals(ref) && member.kind() == MemberKind.PROPERTY
+            && previous.metadata().isEmpty() && !member.metadata().isEmpty()) {
+          byNameAndKind.put(memberKey, previous.withMetadata(member.metadata()));
+        }
       }
     }
     // Неизменяемый список: память шарится между вызовами, случайная мутация
@@ -1473,10 +1479,17 @@ public class TypeRegistry {
    *
    * @param ref      ссылка на тип.
    * @param fileType язык файла-потребителя.
-   * @return метаданные либо {@link PlatformMetadata#EMPTY}, если источник их не дал.
+   * @return собственные метаданные либо метаданные исходного generic-типа специализации;
+   *     {@link PlatformMetadata#EMPTY}, если источник их не дал.
    */
   public PlatformMetadata getTypeMetadata(TypeRef ref, FileType fileType) {
-    return typeMetadata.get(fileType).getOrDefault(ref, PlatformMetadata.EMPTY);
+    var metadata = typeMetadata.get(fileType);
+    var direct = metadata.get(ref);
+    if (direct != null) {
+      return direct;
+    }
+    return genericOf(ref).map(generic -> metadata.getOrDefault(generic, PlatformMetadata.EMPTY))
+      .orElse(PlatformMetadata.EMPTY);
   }
 
   /**

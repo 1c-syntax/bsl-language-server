@@ -42,6 +42,9 @@ import java.util.Optional;
  * <p>
  * Создаёт иерархическую структуру символов документа (модуль, методы, регионы, переменные),
  * правильно расставляя родительско-дочерние связи между символами.
+ * В дерево также передаются условия препроцессора для объявлений методов, собранные
+ * {@link RegionVariableSymbolComputer} в том же обходе, что переменные и регионы.
+ * Эти условия не удерживают AST и остаются доступны после выгрузки содержимого документа.
  */
 public class SymbolTreeComputer implements Computer<SymbolTree> {
 
@@ -61,7 +64,7 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
 
     ModuleSymbol moduleSymbol = new ModuleSymbolComputer(documentContext).compute();
     List<MethodSymbol> methods = new MethodSymbolComputer(documentContext, eventHandlerClassifier).compute();
-    // Переменные и регионы — за один общий обход дерева (оба обходят его вглубь).
+    // Переменные, регионы и условия препроцессора — за один общий обход дерева.
     var regionVariableComputer =
       new RegionVariableSymbolComputer(documentContext, moduleSymbol, methods, selfMemberClassifier);
     List<VariableSymbol> variables = regionVariableComputer.compute();
@@ -82,7 +85,7 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
 
     collapseChildrenCollection(moduleSymbol);
 
-    return new SymbolTree(moduleSymbol);
+    return new SymbolTree(moduleSymbol, regionVariableComputer.getMethodConditions());
   }
 
   /**
