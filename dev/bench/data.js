@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794079926359,
+  "lastUpdate": 1794082801698,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -46500,6 +46500,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.9146759051142435",
             "extra": "mean: 81.08581829071045 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "97e9a97b1849867d99167252247d7aa8e707faca",
+          "message": "Merge pull request #4609 from 1c-syntax/fix/references-module-body-implicit-variable-scope\n\nОбращение из метода не связывается с переменной, созданной в теле модуля",
+          "timestamp": "2026-11-07T17:40:28+01:00",
+          "tree_id": "e152044ddc2686742d5b77308eacd6bad8492cbe",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/97e9a97b1849867d99167252247d7aa8e707faca"
+        },
+        "date": 1794082772751,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 81.90616925557454,
+            "unit": "sec",
+            "range": "stddev: 0.9023301285763508",
+            "extra": "mean: 81.90616925557454 sec\nrounds: 3"
           }
         ]
       }
