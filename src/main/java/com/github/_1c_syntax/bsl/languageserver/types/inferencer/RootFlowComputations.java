@@ -41,7 +41,8 @@ final class RootFlowComputations {
   private record Key(URI uri, Object source, @Nullable ExecutionContext context) {
     @Override
     public boolean equals(Object other) {
-      return other instanceof Key that && uri.equals(that.uri) && source == that.source && context == that.context;
+      return other instanceof Key(var otherUri, var otherSource, var otherContext)
+        && uri.equals(otherUri) && source == otherSource && context == otherContext;
     }
 
     @Override
@@ -52,12 +53,12 @@ final class RootFlowComputations {
 
   <T> T compute(URI uri, BSLParser.CodeBlockContext body, @Nullable ExecutionContext context,
                 Supplier<@Nullable T> cached, Supplier<T> calculation) {
-    return computeSource(uri, body, context, cached, calculation);
+    return this.<T>computeSource(uri, body, context, cached, calculation);
   }
 
   <T> T computeCells(URI uri, SymbolTree tree, @Nullable ExecutionContext context,
                      Supplier<@Nullable T> cached, Supplier<T> calculation) {
-    return computeSource(uri, tree, context, cached, calculation);
+    return this.<T>computeSource(uri, tree, context, cached, calculation);
   }
 
   private <T> T computeSource(URI uri, Object source, @Nullable ExecutionContext context,
