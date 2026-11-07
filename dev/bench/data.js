@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794090064602,
+  "lastUpdate": 1794091288873,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -46593,6 +46593,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.6789147063372931",
             "extra": "mean: 84.09898392359416 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f3d32702edb7ffeb5454b18ed9144a73cc925434",
+          "message": "Merge pull request #4670 from 1c-syntax/fix/client-progress-before-initialized\n\nИндикатор хода работы, начатый до initialized, показывается клиенту",
+          "timestamp": "2026-11-07T20:51:52+01:00",
+          "tree_id": "af75a38b7d78a10af8ad8799ce0ca07ea34b3950",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/f3d32702edb7ffeb5454b18ed9144a73cc925434"
+        },
+        "date": 1794091261979,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 83.93672927220662,
+            "unit": "sec",
+            "range": "stddev: 1.114937870194508",
+            "extra": "mean: 83.93672927220662 sec\nrounds: 3"
           }
         ]
       }
