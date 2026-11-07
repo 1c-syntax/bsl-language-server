@@ -36,34 +36,9 @@ final class CodeBlockLookup {
   }
 
   static BSLParser.@Nullable CodeBlockContext at(BSLParser.FileContext ast, Position position) {
-    var subs = ast.subs();
-    if (subs != null) {
-      var low = 0;
-      var high = subs.getChildCount();
-      while (low < high) {
-        var middle = (low + high) >>> 1;
-        if (endsBefore(subs.getChild(middle), position)) {
-          low = middle + 1;
-        } else {
-          high = middle;
-        }
-      }
-      for (var i = low; i < subs.getChildCount(); i++) {
-        var child = subs.getChild(i);
-        var start = startOf(child);
-        if (start.getLine() - 1 > position.getLine()
-          || (start.getLine() - 1 == position.getLine() && start.getCharPositionInLine() > position.getCharacter())) {
-          break;
-        }
-        if (child instanceof BSLParser.SubContext sub && contains(sub, position)) {
-          var procedure = sub.procedure();
-          if (procedure != null) {
-            return procedure.subCodeBlock().codeBlock();
-          }
-          var function = sub.function();
-          return function == null ? null : function.subCodeBlock().codeBlock();
-        }
-      }
+    var sub = enclosingSub(ast.subs(), position);
+    if (sub != null) {
+      return bodyOf(sub);
     }
     var before = ast.fileCodeBlockBeforeSub();
     var covering = covering(before == null ? null : before.codeBlock(), position);
@@ -72,6 +47,51 @@ final class CodeBlockLookup {
     }
     var after = ast.fileCodeBlock();
     return covering(after == null ? null : after.codeBlock(), position);
+  }
+
+  private static BSLParser.@Nullable SubContext enclosingSub(BSLParser.@Nullable SubsContext subs,
+                                                            Position position) {
+    if (subs == null) {
+      return null;
+    }
+    for (var i = firstCandidate(subs, position); i < subs.getChildCount(); i++) {
+      var child = subs.getChild(i);
+      if (startsAfter(startOf(child), position)) {
+        break;
+      }
+      if (child instanceof BSLParser.SubContext sub && contains(sub, position)) {
+        return sub;
+      }
+    }
+    return null;
+  }
+
+  private static int firstCandidate(BSLParser.SubsContext subs, Position position) {
+    var low = 0;
+    var high = subs.getChildCount();
+    while (low < high) {
+      var middle = (low + high) >>> 1;
+      if (endsBefore(subs.getChild(middle), position)) {
+        low = middle + 1;
+      } else {
+        high = middle;
+      }
+    }
+    return low;
+  }
+
+  private static boolean startsAfter(Token start, Position position) {
+    return start.getLine() - 1 > position.getLine()
+      || (start.getLine() - 1 == position.getLine() && start.getCharPositionInLine() > position.getCharacter());
+  }
+
+  private static BSLParser.@Nullable CodeBlockContext bodyOf(BSLParser.SubContext sub) {
+    var procedure = sub.procedure();
+    if (procedure != null) {
+      return procedure.subCodeBlock().codeBlock();
+    }
+    var function = sub.function();
+    return function == null ? null : function.subCodeBlock().codeBlock();
   }
 
   private static Token startOf(ParseTree node) {
