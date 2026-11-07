@@ -26,7 +26,6 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
-import com.github._1c_syntax.bsl.languageserver.utils.ModuleReference;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.MethodCallNode;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
@@ -47,8 +46,7 @@ import java.util.Objects;
  * Какие вызовы считать таким получателем, задаёт настройка
  * {@code references.commonModuleAccessors} — та же, по которой индекс ссылок разбирает
  * {@code ОбщийМодуль("Имя").Метод(...)}, чтобы переход по F12 вёл в конкретный модуль.
- * Здесь она читается на каждом обращении: настройка меняется на лету, а разбор списка
- * стоит дешевле, чем инвалидация кэша по событию её изменения.
+ * Разобранные паттерны предоставляет конфигурация с учётом изменения настроек на лету.
  */
 @Component
 @WorkspaceScope
@@ -72,8 +70,7 @@ public class CommonModuleByNameInference {
   @Nullable
   public TypeSet refinedCallTypes(TypeSet receiverTypes, String memberName,
                                   MethodCallNode call, FileType fileType) {
-    var accessors = ModuleReference.parseAccessors(
-      configuration.getReferencesOptions().getCommonModuleAccessors());
+    var accessors = configuration.getParsedCommonModuleAccessors();
     var member = memberName.toLowerCase(Locale.ENGLISH);
     var matches = receiverTypes.refs().stream()
       .map(ref -> accessors.moduleMethodPairs().get(ref.qualifiedName().toLowerCase(Locale.ENGLISH)))
@@ -92,8 +89,7 @@ public class CommonModuleByNameInference {
    */
   @Nullable
   public TypeSet localCallTypes(MethodCallNode call, FileType fileType) {
-    var accessors = ModuleReference.parseAccessors(
-      configuration.getReferencesOptions().getCommonModuleAccessors());
+    var accessors = configuration.getParsedCommonModuleAccessors();
     var callName = call.getName().getText().toLowerCase(Locale.ENGLISH);
     return accessors.localMethods().contains(callName) ? namedModuleType(call, fileType) : null;
   }
@@ -118,4 +114,5 @@ public class CommonModuleByNameInference {
     }
     return typeRegistry.resolve(moduleName.trim(), fileType).map(TypeSet::of).orElse(null);
   }
+
 }

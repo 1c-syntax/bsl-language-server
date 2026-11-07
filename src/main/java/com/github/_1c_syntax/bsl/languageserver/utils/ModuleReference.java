@@ -62,9 +62,7 @@ public class ModuleReference {
   ) {}
 
   /**
-   * Разбирает список паттернов доступа к общим модулям один раз.
-   * <p>
-   * Вызывается один раз при инициализации и результат кэшируется.
+   * Разбирает список паттернов доступа к общим модулям в неизменяемые коллекции.
    *
    * @param commonModuleAccessors Список паттернов "Модуль.Метод" или "Метод" для локального вызова
    * @return Предварительно разобранные паттерны
@@ -88,7 +86,8 @@ public class ModuleReference {
       }
     }
 
-    return new ParsedAccessors(localMethods, moduleMethodPairs);
+    moduleMethodPairs.replaceAll((module, methods) -> Set.copyOf(methods));
+    return new ParsedAccessors(Set.copyOf(localMethods), Map.copyOf(moduleMethodPairs));
   }
 
   /**
