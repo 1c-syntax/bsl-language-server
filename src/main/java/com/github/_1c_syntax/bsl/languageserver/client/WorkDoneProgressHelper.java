@@ -36,7 +36,12 @@ import org.eclipse.lsp4j.services.LanguageClient;
 import org.springframework.stereotype.Component;
 
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 /**
  * Помощник для работы с progress-уведомлениями LSP.
@@ -47,6 +52,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Component
 @RequiredArgsConstructor
 public class WorkDoneProgressHelper {
+
+  private static final int MAX_PERCENTAGE = 100;
 
   private final LanguageClientHolder languageClientHolder;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
@@ -82,6 +89,8 @@ public class WorkDoneProgressHelper {
     private final String messagePostfix;
 
     private final AtomicInteger counter = new AtomicInteger();
+    private final AtomicBoolean finished = new AtomicBoolean();
+    private final AtomicBoolean activityStarted = new AtomicBoolean();
 
     public void beginProgress(String title) {
       if (!isWorkDoneProgressSupported) {
@@ -97,8 +106,8 @@ public class WorkDoneProgressHelper {
       });
     }
 
-    public void tick(String message, int percentage) {
-      if (!isWorkDoneProgressSupported) {
+    public synchronized void tick(String message, int percentage) {
+      if (!isWorkDoneProgressSupported || finished.get()) {
         return;
       }
 
@@ -113,20 +122,58 @@ public class WorkDoneProgressHelper {
       });
     }
 
-    public void tick() {
-      if (!isWorkDoneProgressSupported) {
+    public synchronized void tick() {
+      if (!isWorkDoneProgressSupported || finished.get()) {
         return;
       }
 
       var currentCounter = counter.incrementAndGet();
-      var message = "%d/%d%s".formatted(currentCounter, size, messagePostfix);
-      var percentage = (double) currentCounter / size * 100;
-
-      tick(message, (int) percentage);
+      tick(counterMessage(currentCounter), percentage(currentCounter));
     }
 
-    public void endProgress(String message) {
-      if (!isWorkDoneProgressSupported) {
+    /** Показывать текущую работу раз в секунду, пока операция не закончена. */
+    public boolean reportActivity(Supplier<String> description) {
+      if (!isWorkDoneProgressSupported || finished.get()) {
+        return false;
+      }
+      return reportActivity(description, CompletableFuture.delayedExecutor(1, TimeUnit.SECONDS));
+    }
+
+    boolean reportActivity(Supplier<String> description, Executor delayedExecutor) {
+      if (!isWorkDoneProgressSupported || finished.get() || !activityStarted.compareAndSet(false, true)) {
+        return false;
+      }
+      scheduleActivity(description, delayedExecutor);
+      return true;
+    }
+
+    private void scheduleActivity(Supplier<String> description, Executor delayedExecutor) {
+      delayedExecutor.execute(() -> {
+        synchronized (this) {
+          if (finished.get()) {
+            return;
+          }
+          var current = counter.get();
+          var activity = description.get();
+          var message = counterMessage(current);
+          tick(activity.isEmpty() ? message : message + "; " + activity, percentage(current));
+        }
+        if (!finished.get()) {
+          scheduleActivity(description, delayedExecutor);
+        }
+      });
+    }
+
+    private String counterMessage(int current) {
+      return "%d/%d%s".formatted(current, size, messagePostfix);
+    }
+
+    private int percentage(int current) {
+      return size <= 0 ? 0 : Math.min(MAX_PERCENTAGE, (int) ((double) current / size * MAX_PERCENTAGE));
+    }
+
+    public synchronized void endProgress(String message) {
+      if (!finished.compareAndSet(false, true) || !isWorkDoneProgressSupported) {
         return;
       }
 
