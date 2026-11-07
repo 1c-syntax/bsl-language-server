@@ -116,16 +116,6 @@ import java.util.function.Function;
 @Slf4j
 public class ExpressionTypeInferencer {
 
-  private InferenceContext contextFor(DocumentContext document, @Nullable ExecutionContext executionContext) {
-    if (DiagnosticDeclarationSession.current() == null) {
-      return new InferenceContext(document, executionContext);
-    }
-    var compilation = DiagnosticDeclarationSession.compilationMemo(
-      com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder.get(),
-      inferredExpressionTypeIndex.inputRevision());
-    return new InferenceContext(document, executionContext, compilation);
-  }
-
   private static final int MAX_DEPTH = 32;
   private static final Set<String> MODE_INDEPENDENT_DATA_TYPES = Set.of("Структура", "ФиксированнаяСтруктура",
     "Массив", "Соответствие", "ФиксированноеСоответствие", "ТаблицаЗначений", "СписокЗначений");
@@ -182,6 +172,16 @@ public class ExpressionTypeInferencer {
    * рабочую область, поэтому и признак — её собственный.
    */
   private volatile boolean workspacePopulated;
+
+  private InferenceContext contextFor(DocumentContext document, @Nullable ExecutionContext executionContext) {
+    if (DiagnosticDeclarationSession.current() == null) {
+      return new InferenceContext(document, executionContext);
+    }
+    var compilation = DiagnosticDeclarationSession.compilationMemo(
+      com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder.get(),
+      inferredExpressionTypeIndex.inputRevision());
+    return new InferenceContext(document, executionContext, compilation);
+  }
 
   /**
    * Запоминает, что рабочая область наполнена.

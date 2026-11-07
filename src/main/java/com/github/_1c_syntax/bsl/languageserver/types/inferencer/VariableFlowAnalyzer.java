@@ -106,8 +106,6 @@ import java.util.stream.Stream;
 @WorkspaceScope
 @RequiredArgsConstructor
 public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableIndex {
-  private final RootFlowComputations rootComputations = new RootFlowComputations();
-
   /**
    * Предел проходов по графу. Тип, приходящий по обратному ребру цикла, доезжает до
    * ранее посещённых вершин за считанные проходы; предел — страховка от незавершающегося
@@ -115,6 +113,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    */
   static final int MAX_PASSES = 16;
 
+  private final RootFlowComputations rootComputations = new RootFlowComputations();
   private final ControlFlowGraphIndex controlFlowGraphIndex;
 
   private final Map<URI, Map<BSLParser.CodeBlockContext, FlowLayout>> layoutsByUri = new ConcurrentHashMap<>();
@@ -130,13 +129,6 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   private record ModeIndependentFacts(Facts facts, long generation) {
   }
 
-  /** Включить отслеживание только для колбэков инференсера, знающих о зависимости от режима. */
-  void startContextTracking(FlowSession session) {
-    if (!session.contextTracking) {
-      session.contextTracking = true;
-      session.contextGeneration = modeFactsGeneration.get();
-    }
-  }
   /**
    * Окружения по документу, режиму и телу. Создаются только для запрошенных режимов,
    * удаляются при очистке документа; результаты без ограничения режима хранятся в {@code factsByUri}.
@@ -168,6 +160,14 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    */
   private final SourceBoundRecords<SymbolTree, Map<VariableSymbol, Changes>> changesByUri =
     new SourceBoundRecords<>();
+
+  /** Включить отслеживание только для колбэков инференсера, знающих о зависимости от режима. */
+  void startContextTracking(FlowSession session) {
+    if (!session.contextTracking) {
+      session.contextTracking = true;
+      session.contextGeneration = modeFactsGeneration.get();
+    }
+  }
 
   /**
    * Расчёты по телам, идущие прямо сейчас в рамках одного вывода типов.
