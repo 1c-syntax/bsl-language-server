@@ -239,6 +239,9 @@ public class McpWorkspaceBootstrap {
     var workspaceUri = srcDir.toUri();
     var addedHere = !serverContextProvider.getAllContexts().containsKey(workspaceUri);
     var serverContext = serverContextProvider.addWorkspace(workspaceUri, workspaceName);
+    // Типы конфигурации регистрируются по настройкам, с которыми рабочая область добавлена, —
+    // до их обновления ниже.
+    serverContext.awaitPreparation();
 
     try (var ignored = WorkspaceContextHolder.forUri(workspaceUri)) {
       configuration.update(new File(""));

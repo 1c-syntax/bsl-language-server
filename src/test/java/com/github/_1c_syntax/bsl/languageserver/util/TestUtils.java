@@ -62,6 +62,7 @@ public class TestUtils {
     // Register new workspace
     var workspaceFolder = new WorkspaceFolder(metadataPath.toUri().toString(), TEST_WORKSPACE_NAME);
     var context = provider.addWorkspace(workspaceFolder);
+    context.awaitPreparation();
     context.setConfigurationRoot(metadataPath);
     return context;
   }
@@ -96,7 +97,9 @@ public class TestUtils {
         parentDir = absolutePath;
       }
       var workspaceFolder = new WorkspaceFolder(parentDir.toUri().toString(), "test-" + parentDir.getFileName());
-      return provider.addWorkspace(workspaceFolder);
+      var context = provider.addWorkspace(workspaceFolder);
+      context.awaitPreparation();
+      return context;
     } else if (allContexts.size() == 1) {
       // Single context - use it
       return allContexts.values().iterator().next();

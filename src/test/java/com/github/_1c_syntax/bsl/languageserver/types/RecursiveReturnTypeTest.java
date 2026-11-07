@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
@@ -31,8 +32,11 @@ import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.Duration;
+
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 /**
  * Функция, кладущая свой же результат в поле возвращаемой структуры, задаёт значением
@@ -153,6 +157,33 @@ class RecursiveReturnTypeTest extends AbstractServerContextAwareTest {
       .as("значение функции, вызвавшей рекурсию через тело из кругов по ячейкам")
       .extracting(TypeRef::qualifiedName)
       .containsExactly("Структура");
+  }
+
+  @Test
+  void moduleVariableJoiningTwoRecursiveFunctionsIsInferredInFiniteTime() {
+    // given: переменная модуля формы получает значение одной из двух рекурсивных функций
+    // общего модуля, и обе кладут в своё значение собственный же результат.
+    initServerContext("./src/test/resources/metadata/recursiveFunctionsThroughModuleVariable");
+    var documentContext = context.getDocuments().values().stream()
+      .filter(candidate -> candidate.getUri().toString().contains("CommonForms"))
+      .findFirst()
+      .orElseThrow();
+    context.rebuildDocument(documentContext);
+
+    // when: запрос типа другой переменной модуля поднимает расчёт по ячейкам всего модуля,
+    // и в него попадает чтение элемента у объединения значений обеих функций.
+    // Ограничение по времени прерывает расчёт в отдельном потоке — workspace передаётся ему явно.
+    var position = positionOf(documentContext, "Браузер.форма");
+    var types = assertTimeoutPreemptively(Duration.ofSeconds(30),
+      () -> WorkspaceContextHolder.call(context.getWorkspaceUri(),
+        () -> typeService.expressionTypesAt(documentContext, position)));
+    // Тот же расчёт поднимает и диагностика присваивания свойству только для чтения — на ней
+    // зависал `analyze`.
+    assertTimeoutPreemptively(Duration.ofSeconds(30),
+      () -> WorkspaceContextHolder.call(context.getWorkspaceUri(), documentContext::getDiagnostics));
+
+    // then
+    assertThat(types.refs()).isEmpty();
   }
 
   /** Позиция первого вхождения текста в документе — на его первом символе. */

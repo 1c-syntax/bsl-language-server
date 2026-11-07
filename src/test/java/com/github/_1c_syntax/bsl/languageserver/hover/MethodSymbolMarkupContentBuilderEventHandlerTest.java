@@ -37,6 +37,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.EventHandlerResolver;
 import com.github._1c_syntax.bsl.languageserver.types.registry.FormHandlerRoleIndex;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.bsl.languageserver.util.EventHandlerResolverStubs;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Location;
 import org.junit.jupiter.api.BeforeEach;
@@ -71,6 +72,7 @@ class MethodSymbolMarkupContentBuilderEventHandlerTest extends AbstractServerCon
 
   @BeforeEach
   void resetResolver() {
+    EventHandlerResolverStubs.delegateEventHandlersOfToIsEventHandler(eventHandlerResolver);
     when(formHandlerRoleIndex.roleOf(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
       .thenReturn(Optional.empty());
     when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
