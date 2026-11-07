@@ -50,10 +50,11 @@ import java.util.Set;
 /** Возможности модулей и типов из метаданных конфигурации и синтакс-помощника. */
 @RequiredArgsConstructor
 final class ModuleCompilationContexts {
-  private final TypeRegistry typeRegistry;
   private record PlatformContextsKey(Set<Availability> available, Set<ExecutionContext> supported) { }
   private static final LoadingCache<PlatformContextsKey, Set<ExecutionContext>> PLATFORM_CONTEXTS =
     Caffeine.newBuilder().maximumSize(128).build(ModuleCompilationContexts::computePlatformContexts);
+
+  private final TypeRegistry typeRegistry;
 
   /**
    * Режимы, поддержка которых включена для проекта, до ограничений конкретного модуля.

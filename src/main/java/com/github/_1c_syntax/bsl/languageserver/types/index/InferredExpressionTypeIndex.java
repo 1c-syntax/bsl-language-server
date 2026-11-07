@@ -82,6 +82,12 @@ public class InferredExpressionTypeIndex extends AbstractDocumentLifecycleCleara
   private final Map<URI, Map<ContextualKey, TypeSet>> contextualTypesByUri = new ConcurrentHashMap<>();
   private volatile long contextualRevision;
 
+  /** Документ → те, чьи записи на нём построены. Правка документа сбрасывает их вместе с ним. */
+  private final Map<URI, Set<URI>> dependentsByDependency = new ConcurrentHashMap<>();
+
+  /** Обратная сторона той же связи — нужна, чтобы снимать её при сбросе документа-потребителя. */
+  private final Map<URI, Set<URI>> dependenciesByDependent = new ConcurrentHashMap<>();
+
   /** Версия входов; меняется при сбросе документов, зависимостей и настроек рабочей области. */
   public long inputRevision() {
     return contextualRevision;
@@ -154,12 +160,6 @@ public class InferredExpressionTypeIndex extends AbstractDocumentLifecycleCleara
     typesByUri.computeIfAbsent(root.uri, ignored -> new ConcurrentHashMap<>()).put(root.key.node, union);
     return true;
   }
-
-  /** Документ → те, чьи записи на нём построены. Правка документа сбрасывает их вместе с ним. */
-  private final Map<URI, Set<URI>> dependentsByDependency = new ConcurrentHashMap<>();
-
-  /** Обратная сторона той же связи — нужна, чтобы снимать её при сбросе документа-потребителя. */
-  private final Map<URI, Set<URI>> dependenciesByDependent = new ConcurrentHashMap<>();
 
   /**
    * Кэшированный тип узла-выражения либо {@code null}, если ещё не вычислялся.
