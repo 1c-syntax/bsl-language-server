@@ -703,7 +703,9 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
         inputs.session().contextSensitive = true;
       }
       if (inputs.sharedWithOtherBodies().test(variable)) {
-        if (inputs.session().contextTracking) inputs.session().contextSensitive = true;
+        if (inputs.session().contextTracking) {
+          inputs.session().contextSensitive = true;
+        }
         shared.add(variable);
       }
     }

@@ -320,7 +320,7 @@ public class ExpressionTypeInferencer {
   // Core dispatch
   // ---------------------------------------------------------------------------
 
-  private TypeSet inferInternal(BslExpression node, InferenceContext ctx) {
+  private TypeSet inferInternal(@Nullable BslExpression node, InferenceContext ctx) {
     return inferInternal(node, ctx, false);
   }
 
@@ -330,7 +330,7 @@ public class ExpressionTypeInferencer {
    * фиксировать его по контексту одного вызывающего. Кеш выражения остаётся общим для
    * позиционных запросов, а вычисления внутри выбранного режима используют отдельные окружения.
    */
-  private TypeSet inferInternal(BslExpression node, InferenceContext ctx, boolean useCallerContext) {
+  private TypeSet inferInternal(@Nullable BslExpression node, InferenceContext ctx, boolean useCallerContext) {
     if (node == null) {
       return TypeSet.EMPTY;
     }
