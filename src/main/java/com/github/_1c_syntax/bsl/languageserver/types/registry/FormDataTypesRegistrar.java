@@ -104,6 +104,12 @@ class FormDataTypesRegistrar {
   private final Map<TypeRef, MemberSource> columnsByCollection = new ConcurrentHashMap<>();
 
   /**
+   * Отображаемые имена зеркал, по одному экземпляру на имя: базовых типов единицы, а зеркал
+   * десятки тысяч, и одно имя на всех не заводится заново на каждое.
+   */
+  private final Map<BilingualString, BilingualString> mirrorDisplayNames = new ConcurrentHashMap<>();
+
+  /**
    * Табличные части, которым конкретная форма добавила свои колонки:
    * {@code реквизит формы → (табличная часть объекта → коллекция этого реквизита)}
    * (ключ — {@link #ownSectionsKey}).
@@ -619,7 +625,8 @@ class FormDataTypesRegistrar {
     }
     // Отображаемое имя — базовое: синтетический суффикс нужен реестру, чтобы различать
     // специализации, а пользователю показывать надо реальный тип значения.
-    typeRegistry.registerDisplayName(ref, BilingualString.of(baseRu, baseEn));
+    var displayName = BilingualString.of(baseRu, baseEn);
+    typeRegistry.registerDisplayName(ref, mirrorDisplayNames.computeIfAbsent(displayName, name -> name));
     if (baseRef != null && !baseRef.equals(ref)) {
       typeRegistry.registerExtension(ref, baseRef, FileType.BSL);
     }
