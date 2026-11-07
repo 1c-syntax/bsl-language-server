@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.cfg.BasicBlockVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.CfgVertex;
+import com.github._1c_syntax.bsl.languageserver.cfg.CfgEdge;
 import com.github._1c_syntax.bsl.languageserver.cfg.ConditionalVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraph;
 import com.github._1c_syntax.bsl.languageserver.cfg.ForLoopVertex;
@@ -39,6 +40,8 @@ import org.jspecify.annotations.Nullable;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Collections;
+import java.util.Iterator;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
@@ -202,26 +205,33 @@ final class FlowLayout {
     byStatement.put(statement, slot);
   }
 
+  /** Один незавершённый шаг обхода; стек Java при обходе длинных графов не растёт. */
+  private record TraversalFrame(CfgVertex vertex, Iterator<CfgEdge> edges) { }
+
   /**
-   * Вершины в порядке обхода от входа: так за один проход расчёта тип продвигается по
-   * прямым рёбрам как можно дальше. Недостижимые из входа вершины (мёртвый код) — в конце.
+   * Вершины в обратном порядке завершения обхода в глубину. В ациклической части графа
+   * предшественники стоят перед преемниками, в том числе при разной длине веток.
+   * Недостижимые из входа вершины сохраняют порядок графа и добавляются в конец.
    */
   private static List<CfgVertex> orderVertices(ControlFlowGraph graph) {
     var ordered = new ArrayList<CfgVertex>(graph.vertexSet().size());
     var visited = new HashSet<CfgVertex>();
-    var queue = new ArrayDeque<CfgVertex>();
-    queue.add(graph.getEntryPoint());
-    visited.add(graph.getEntryPoint());
-    while (!queue.isEmpty()) {
-      var vertex = queue.poll();
-      ordered.add(vertex);
-      for (var edge : graph.outgoingEdgesOf(vertex)) {
-        var target = graph.getEdgeTarget(edge);
+    var pending = new ArrayDeque<TraversalFrame>();
+    var entry = graph.getEntryPoint();
+    visited.add(entry);
+    pending.push(new TraversalFrame(entry, reverseEdges(graph, entry)));
+    while (!pending.isEmpty()) {
+      var frame = pending.peek();
+      if (frame.edges().hasNext()) {
+        var target = graph.getEdgeTarget(frame.edges().next());
         if (visited.add(target)) {
-          queue.add(target);
+          pending.push(new TraversalFrame(target, reverseEdges(graph, target)));
         }
+      } else {
+        ordered.add(pending.pop().vertex());
       }
     }
+    Collections.reverse(ordered);
     for (var vertex : graph.vertexSet()) {
       if (visited.add(vertex)) {
         ordered.add(vertex);
@@ -230,7 +240,13 @@ final class FlowLayout {
     return List.copyOf(ordered);
   }
 
-  /** Вершины в порядке обхода от входа. */
+  /** Обратный просмотр рёбер сохраняет порядок веток после разворота списка вершин. */
+  private static Iterator<CfgEdge> reverseEdges(ControlFlowGraph graph, CfgVertex vertex) {
+    var edges = graph.outgoingEdgesOf(vertex);
+    return edges.size() < 2 ? edges.iterator() : List.copyOf(edges).reversed().iterator();
+  }
+
+  /** Вершины в порядке расчёта потока. */
   List<CfgVertex> orderedVertices() {
     return orderedVertices;
   }

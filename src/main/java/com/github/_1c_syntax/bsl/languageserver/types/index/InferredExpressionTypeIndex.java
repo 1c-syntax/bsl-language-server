@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types.index;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
@@ -39,6 +40,7 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -62,6 +64,9 @@ import java.util.concurrent.ConcurrentHashMap;
  * Ключ — сам {@link ParseTree}-узел (identity equals/hashCode ANTLR-контекста);
  * при перепарсинге документа узлы получают новые идентичности, а старый бакет
  * URI сбрасывается по событию изменения содержимого.
+ * Завершённые внешние запросы для конкретного режима хранятся отдельно от общего
+ * результата. Расчёт получает бакет до начала вывода: сброс входов отклоняет его
+ * позднюю публикацию, даже если зависимости ещё не были зарегистрированы.
  * <p>
  * Инвалидация — per-URI
  * через {@link AbstractDocumentLifecycleClearableIndex} (изменение / очистка
@@ -74,6 +79,81 @@ import java.util.concurrent.ConcurrentHashMap;
 public class InferredExpressionTypeIndex extends AbstractDocumentLifecycleClearableIndex {
 
   private final Map<URI, Map<ParseTree, TypeSet>> typesByUri = new ConcurrentHashMap<>();
+  private final Map<URI, Map<ContextualKey, TypeSet>> contextualTypesByUri = new ConcurrentHashMap<>();
+  private volatile long contextualRevision;
+
+  /** Версия входов; меняется при сбросе документов, зависимостей и настроек рабочей области. */
+  public long inputRevision() {
+    return contextualRevision;
+  }
+
+  private record ContextualKey(ParseTree node, @Nullable ExecutionContext context) { }
+
+  /** Снимок бакета до корневого расчёта; сброс не позволяет опубликовать старый результат. */
+  public static final class ContextualQuery {
+    private final URI uri;
+    private final ContextualKey key;
+    private final Map<ContextualKey, TypeSet> bucket;
+    private final long revision;
+
+    private ContextualQuery(URI uri, ContextualKey key, Map<ContextualKey, TypeSet> bucket, long revision) {
+      this.uri = uri;
+      this.key = key;
+      this.bucket = bucket;
+      this.revision = revision;
+    }
+
+    /** Уже завершённый результат для этого AST-узла и того же режима. */
+    public @Nullable TypeSet cached() {
+      return bucket.get(key);
+    }
+  }
+
+  /** Начать отдельный корневой запрос; результаты разных режимов не объединяются. */
+  public ContextualQuery contextualQuery(URI uri, ParseTree node, @Nullable ExecutionContext context) {
+    var revision = contextualRevision;
+    var bucket = contextualTypesByUri.computeIfAbsent(uri, ignored -> new ConcurrentHashMap<>());
+    return new ContextualQuery(uri, new ContextualKey(node, context), bucket, revision);
+  }
+
+  /** Публикация полного корневого результата с проверкой, что его входы ещё не сброшены. */
+  public synchronized void put(ContextualQuery query, TypeSet types, Set<URI> dependencies) {
+    if (query.revision != contextualRevision || contextualTypesByUri.get(query.uri) != query.bucket) {
+      return;
+    }
+    rememberDependencies(query.uri, dependencies);
+    query.bucket.put(query.key, types);
+  }
+
+  /**
+   * Запомнить объединённый внешний ответ, если все отдельные режимы уже опубликованы.
+   * Зависимости частей зарегистрированы на том же URI; их сброс удаляет и объединение.
+   * Само объединение строится вызывающим кодом вне замка: тип может быть ленивым.
+   *
+   * @param root нейтральный запрос, начатый до определения его возможных режимов.
+   * @param parts запросы для одного узла и документа.
+   * @param values использованные полные результаты частей.
+   * @param union их объединение.
+   * @return удалось ли опубликовать ответ без изменения входов.
+   */
+  public synchronized boolean putNeutralFromContexts(ContextualQuery root, List<ContextualQuery> parts,
+                                                      List<TypeSet> values, TypeSet union) {
+    if (parts.isEmpty() || parts.size() != values.size() || root.key.context != null
+      || root.revision != contextualRevision || contextualTypesByUri.get(root.uri) != root.bucket) {
+      return false;
+    }
+    for (var i = 0; i < parts.size(); i++) {
+      var query = parts.get(i);
+      if (query.key.context == null || query.revision != root.revision || query.bucket != root.bucket
+        || !query.uri.equals(root.uri) || query.key.node != root.key.node
+        || query.cached() == null || query.cached() != values.get(i)) {
+        return false;
+      }
+    }
+    root.bucket.put(root.key, union);
+    typesByUri.computeIfAbsent(root.uri, ignored -> new ConcurrentHashMap<>()).put(root.key.node, union);
+    return true;
+  }
 
   /** Документ → те, чьи записи на нём построены. Правка документа сбрасывает их вместе с ним. */
   private final Map<URI, Set<URI>> dependentsByDependency = new ConcurrentHashMap<>();
@@ -114,7 +194,8 @@ public class InferredExpressionTypeIndex extends AbstractDocumentLifecycleCleara
    * @param uri URI документа.
    */
   @Override
-  public void clear(URI uri) {
+  public synchronized void clear(URI uri) {
+    contextualRevision++;
     clearRecursive(uri, Collections.newSetFromMap(new HashMap<>()));
   }
 
@@ -127,8 +208,10 @@ public class InferredExpressionTypeIndex extends AbstractDocumentLifecycleCleara
    * @param event событие освобождения вторичных данных документа.
    */
   @Override
-  public void handleDataCleared(ServerContextDocumentClearedEvent event) {
+  public synchronized void handleDataCleared(ServerContextDocumentClearedEvent event) {
+    contextualRevision++;
     typesByUri.remove(event.getDocumentContext().getUri());
+    contextualTypesByUri.remove(event.getDocumentContext().getUri());
   }
 
   /**
@@ -158,6 +241,7 @@ public class InferredExpressionTypeIndex extends AbstractDocumentLifecycleCleara
       return;
     }
     typesByUri.remove(uri);
+    contextualTypesByUri.remove(uri);
     var dependencies = dependenciesByDependent.remove(uri);
     if (dependencies != null) {
       for (var dependency : dependencies) {
@@ -200,8 +284,10 @@ public class InferredExpressionTypeIndex extends AbstractDocumentLifecycleCleara
   }
 
   /** Сбросить и типы, и связи между документами. */
-  private void clearAll() {
+  private synchronized void clearAll() {
+    contextualRevision++;
     typesByUri.clear();
+    contextualTypesByUri.clear();
     dependentsByDependency.clear();
     dependenciesByDependent.clear();
   }

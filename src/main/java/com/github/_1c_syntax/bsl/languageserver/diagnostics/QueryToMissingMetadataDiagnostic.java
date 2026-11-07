@@ -33,6 +33,7 @@ import com.github._1c_syntax.bsl.mdo.children.ExternalDataSourceCubeDimensionTab
 import com.github._1c_syntax.bsl.parser.SDBLParser;
 import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.MDOType;
+import com.github._1c_syntax.bsl.types.MdoReference;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.Objects;
@@ -104,8 +105,7 @@ public class QueryToMissingMetadataDiagnostic extends AbstractSDBLVisitorDiagnos
 
   private Optional<MD> getMdo(String mdoTypeName, String mdoName) {
     return MDOType.fromValue(mdoTypeName).flatMap(mdoType ->
-      documentContext.getServerContext().getConfiguration().findChild(mdo -> mdo.getMdoType() == mdoType
-        && mdoName.equalsIgnoreCase(mdo.getName())));
+      documentContext.getServerContext().getConfiguration().findChild(MdoReference.create(mdoType, mdoName)));
   }
 
   /**
