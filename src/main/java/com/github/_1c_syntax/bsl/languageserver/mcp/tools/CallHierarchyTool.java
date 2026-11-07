@@ -114,6 +114,9 @@ public class CallHierarchyTool {
         .stream().map(CallDto::outgoing).toList();
 
       return new Result(CallHierarchyItemDto.from(item), incoming, outgoing);
-    });
+    },
+      // Вызываемые символы исходников находятся по индексу ссылок и дереву символов без текста. Если
+      // текст понадобился, под курсором ключевое слово, член платформенного типа или конструктор.
+      () -> new Result(null, List.of(), List.of()));
   }
 }

@@ -22,9 +22,13 @@
 package com.github._1c_syntax.bsl.languageserver.mcp;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContentUnavailableException;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.AnalyzeFileTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.CallHierarchyTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.DefinitionTool;
@@ -202,21 +206,64 @@ class McpToolsTest {
   }
 
   @Test
-  void findReferencesRebuildsClearedDocumentWhenPositionIsOutsideReferenceIndex() {
-    // После индексации текст и AST документа очищены. Позиция (0, 0) — ключевое слово «Процедура»:
-    // индекс ссылок и дерево символов её не покрывают, и резолвер доходит до finder'ов, которым нужен AST.
-    var uri = Absolute.uri(new File(FILE));
-    var serverContext = serverContextProvider.getServerContext(uri).orElseThrow();
-    var documentContext = serverContext.getDocument(uri);
-    serverContext.tryClearDocument(documentContext);
-    assertThat(serverContext.getDocumentState(documentContext)).isEqualTo(DocumentState.WITHOUT_CONTENT);
+  void findReferencesAnswersEmptyForReleasedDocumentOutsideReferenceIndex() {
+    // Позиция (0, 0) — ключевое слово «Процедура»: индекс ссылок и дерево символов её не покрывают,
+    // и резолвер доходит до finder'ов, которым нужен AST.
+    var documentContext = releasedDocument();
 
     var result = findReferencesTool.findReferences(FILE, 0, 0);
 
     assertThat(result.referencesCount()).isZero();
     assertThat(result.references()).isEmpty();
-    // Пересобранный для чтения документ снова освобождён, как после analyze_file.
+    assertThat(serverContext().getDocumentState(documentContext)).isEqualTo(DocumentState.WITHOUT_CONTENT);
+  }
+
+  @Test
+  void callHierarchyAnswersEmptyForReleasedDocumentOutsideReferenceIndex() {
+    releasedDocument();
+
+    var result = callHierarchyTool.callHierarchy(FILE, 0, 0);
+
+    assertThat(result.target()).isNull();
+    assertThat(result.incoming()).isEmpty();
+    assertThat(result.outgoing()).isEmpty();
+  }
+
+  @Test
+  void readRethrowsMissingContentOfAnotherDocument() {
+    releasedDocument();
+    var otherUri = Absolute.uri(new File(SRC_DIR, "documentSymbol.bsl"));
+
+    assertThatThrownBy(() -> documentReader.read(FILE, documentContext -> {
+      throw new DocumentContentUnavailableException(otherUri);
+    }, () -> "fallback"))
+      .isInstanceOf(DocumentContentUnavailableException.class);
+  }
+
+  @Test
+  void readRethrowsMissingContentOfDocumentWithContent() {
+    var documentContext = releasedDocument();
+    var serverContext = serverContext();
+    WorkspaceContextHolder.run(serverContext.getWorkspaceUri(), () -> serverContext.rebuildDocument(documentContext));
+    assertThat(serverContext.getDocumentState(documentContext)).isEqualTo(DocumentState.WITH_CONTENT);
+
+    assertThatThrownBy(() -> documentReader.read(FILE, document -> {
+      throw new DocumentContentUnavailableException(document.getUri());
+    }, () -> "fallback"))
+      .isInstanceOf(DocumentContentUnavailableException.class);
+  }
+
+  private ServerContext serverContext() {
+    return serverContextProvider.getServerContext(Absolute.uri(new File(FILE))).orElseThrow();
+  }
+
+  // Индексация и так освобождает текст документа; явная очистка убирает зависимость теста от неё.
+  private DocumentContext releasedDocument() {
+    var serverContext = serverContext();
+    var documentContext = serverContext.getDocument(Absolute.uri(new File(FILE)));
+    serverContext.tryClearDocument(documentContext);
     assertThat(serverContext.getDocumentState(documentContext)).isEqualTo(DocumentState.WITHOUT_CONTENT);
+    return documentContext;
   }
 
   @Test

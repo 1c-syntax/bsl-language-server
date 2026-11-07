@@ -23,18 +23,21 @@ package com.github._1c_syntax.bsl.languageserver.mcp;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContentUnavailableException;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.net.URI;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * Доступ MCP-инструментов к документам через общий {@link ServerContextProvider} —
@@ -65,10 +68,6 @@ public class McpDocumentReader {
 
   /**
    * Прочитать вычисленные данные документа (дерево символов, ссылки) без повторного разбора AST.
-   * <p>
-   * У не открытого документа после индексации текст и AST очищены. Если действию они всё же
-   * понадобились (позиция не покрыта индексом ссылок: ключевое слово, член платформенного типа,
-   * конструктор), документ пересобирается из файла, как в {@link #analyze(String, Function)}.
    *
    * @param path Путь к файлу (абсолютный или относительный).
    * @param action Действие над контекстом документа.
@@ -76,7 +75,26 @@ public class McpDocumentReader {
    * @return Результат действия.
    */
   public <T> T read(String path, Function<DocumentContext, T> action) {
-    return access(path, action, false);
+    return access(path, action, false, null);
+  }
+
+  /**
+   * Прочитать вычисленные данные документа без повторного разбора AST, с ответом на случай, когда
+   * действию понадобился освобождённый текст документа.
+   * <p>
+   * У не открытого в редакторе документа после индексации текст и AST освобождены. Если действие
+   * обратилось к ним ({@link DocumentContentUnavailableException} с URI этого документа), файл не
+   * перечитывается: возвращается {@code whenContentUnavailable}. Если текста нет у другого документа
+   * или документ числится с текстом, исключение пробрасывается как есть.
+   *
+   * @param path Путь к файлу (абсолютный или относительный).
+   * @param action Действие над контекстом документа.
+   * @param whenContentUnavailable Ответ, если действию понадобился освобождённый текст документа.
+   * @param <T> Тип результата.
+   * @return Результат действия либо {@code whenContentUnavailable}.
+   */
+  public <T> T read(String path, Function<DocumentContext, T> action, Supplier<T> whenContentUnavailable) {
+    return access(path, action, false, whenContentUnavailable);
   }
 
   /**
@@ -92,10 +110,11 @@ public class McpDocumentReader {
    * @return Результат действия.
    */
   public <T> T analyze(String path, Function<DocumentContext, T> action) {
-    return access(path, action, true);
+    return access(path, action, true, null);
   }
 
-  private <T> T access(String path, Function<DocumentContext, T> action, boolean requireFreshAst) {
+  private <T> T access(String path, Function<DocumentContext, T> action, boolean requireFreshAst,
+                       @Nullable Supplier<T> whenContentUnavailable) {
     var uri = Absolute.uri(new File(path));
     var serverContext = serverContextProvider.getServerContext(uri)
       .orElseThrow(() -> new IllegalArgumentException(
@@ -113,21 +132,27 @@ public class McpDocumentReader {
       try (var ignored = WorkspaceContextHolder.forUri(serverContext.getWorkspaceUri())) {
         return action.apply(existing);
       } catch (DocumentContentUnavailableException e) {
-        // Документ проиндексирован, но его текст и AST очищены (populateContext → tryClearDocument),
-        // а действию они понадобились: индекс ссылок и дерево символов позицию не покрыли. У открытого
-        // документа текст есть всегда, поэтому для него это настоящая ошибка, а не повод перечитать файл.
-        if (serverContext.isDocumentOpened(existing)) {
+        if (whenContentUnavailable == null || !isReleasedContentOf(serverContext, existing, e)) {
           throw e;
         }
-        LOGGER.debug("Content of {} is cleared, rebuilding the document for a cached read", uri);
+        LOGGER.debug("Content of `{}` is released, answering without it", uri);
+        return whenContentUnavailable.get();
       } finally {
         lock.readLock().unlock();
       }
     }
 
-    // Нужна сборка: новый документ, инструмент, которому требуется свежий AST, либо очищенный
-    // документ, которому AST понадобился по ходу чтения.
+    // Нужна сборка: новый документ либо инструмент, которому требуется свежий AST.
     return buildAndAnalyze(serverContext, lock, uri, action);
+  }
+
+  // Текста нет именно у читаемого документа, и тот не числится с текстом — так же решает обработчик
+  // LSP-запросов (BSLTextDocumentService#toResponseError). Нехватка текста у другого документа или у
+  // документа с текстом — ошибка, её надо видеть.
+  private static boolean isReleasedContentOf(ServerContext serverContext, DocumentContext documentContext,
+                                             DocumentContentUnavailableException e) {
+    return e.getUri().equals(documentContext.getUri())
+      && serverContext.getDocumentState(documentContext) != DocumentState.WITH_CONTENT;
   }
 
   // AST строим и освобождаем под writeLock, но само действие выполняем под readLock: диагностики и
