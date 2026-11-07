@@ -59,7 +59,8 @@ public final class DiagnosticDeclarationSession {
   private record Key(VariableSymbol variable, long revision) {
     @Override
     public boolean equals(Object other) {
-      return other instanceof Key key && variable == key.variable && revision == key.revision;
+      return other instanceof Key(var otherVariable, var otherRevision)
+        && variable == otherVariable && revision == otherRevision;
     }
 
     @Override
@@ -71,7 +72,8 @@ public final class DiagnosticDeclarationSession {
   private record MethodKey(MethodSymbol method, long revision) {
     @Override
     public boolean equals(Object other) {
-      return other instanceof MethodKey key && method == key.method && revision == key.revision;
+      return other instanceof MethodKey(var otherMethod, var otherRevision)
+        && method == otherMethod && revision == otherRevision;
     }
 
     @Override
@@ -84,7 +86,9 @@ public final class DiagnosticDeclarationSession {
   boolean moduleReturnsOnly(MethodSymbol method, long revision, BooleanSupplier proof) {
     var key = new MethodKey(method, revision);
     var known = moduleReturnProofs.get(key);
-    if (known != null) return known;
+    if (known != null) {
+      return known;
+    }
     var computed = proof.getAsBoolean();
     var previous = moduleReturnProofs.putIfAbsent(key, computed);
     return previous == null ? computed : previous;
@@ -104,7 +108,9 @@ public final class DiagnosticDeclarationSession {
   /** Только метаданные компиляции: отдельный ленивый кеш задачи, сбрасываемый вместе с входами. */
   static CompilationContextMemo compilationMemo(@Nullable URI workspace, long revision) {
     var scope = CURRENT.get();
-    if (scope == null) return new CompilationContextMemo();
+    if (scope == null) {
+      return new CompilationContextMemo();
+    }
     if (scope.compilation == null || scope.compilationRevision != revision
       || !Objects.equals(scope.workspace, workspace)) {
       scope.compilation = new CompilationContextMemo();
