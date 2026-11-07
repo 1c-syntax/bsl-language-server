@@ -1,0 +1,118 @@
+name: Snapshots upload
+
+# Выгружает в Sentry снапшоты, отрисованные workflow Snapshots.
+# Код из PR здесь не выполняется: нет checkout, из артефакта берутся только картинки,
+# а метаданные PR (номер, SHA, ветки) — из события workflow_run и API GitHub.
+# Статус в PR публикует GitHub App Sentry (проверка «Snapshot Testing»).
+
+on:
+  workflow_run:
+    workflows: [Snapshots]
+    types: [completed]
+
+# Номер PR здесь недоступен (workflow_run), поэтому PR идентифицируется парой "репозиторий-источник + ветка".
+# Новый коммит в PR отменяет предыдущую выгрузку. Для push (develop) группа уникальна по run_id.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.workflow_run.event == 'pull_request' && format('{0}:{1}', github.event.workflow_run.head_repository.full_name, github.event.workflow_run.head_branch) || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  upload:
+    name: Upload semantic tokens snapshots
+    runs-on: ubuntu-latest
+    if: >
+      github.event.workflow_run.conclusion == 'success' &&
+      (github.event.workflow_run.event == 'pull_request' ||
+       (github.event.workflow_run.event == 'push' &&
+        github.event.workflow_run.head_repository.full_name == github.repository))
+    permissions:
+      actions: read
+      pull-requests: read
+    steps:
+      - name: Download snapshots
+        uses: actions/download-artifact@v8
+        with:
+          name: semantic-tokens-snapshots
+          path: snapshots
+          run-id: ${{ github.event.workflow_run.id }}
+          github-token: ${{ github.token }}
+
+      - name: Resolve VCS metadata
+        id: vcs
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event.workflow_run.event }}
+          REPO: ${{ github.repository }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+          HEAD_REPO: ${{ github.event.workflow_run.head_repository.full_name }}
+          HEAD_OWNER: ${{ github.event.workflow_run.head_repository.owner.login }}
+        run: |
+          {
+            echo "head_sha=$HEAD_SHA"
+            echo "head_ref=$HEAD_BRANCH"
+            echo "head_repo=$HEAD_REPO"
+          } >> "$GITHUB_OUTPUT"
+
+          if [ "$EVENT" != "pull_request" ]; then
+            exit 0
+          fi
+
+          # Открытый PR, чей head указывает ровно на отрисованный коммит.
+          pr=$(gh api -X GET "repos/$REPO/pulls" \
+                 -f state=open -f head="$HEAD_OWNER:$HEAD_BRANCH" \
+               | jq -c --arg sha "$HEAD_SHA" '[.[] | select(.head.sha == $sha)] | first // empty')
+          if [ -z "$pr" ]; then
+            echo "::warning::Открытый PR для $HEAD_OWNER:$HEAD_BRANCH @ $HEAD_SHA не найден, выгрузка пропущена"
+            exit 0
+          fi
+
+          {
+            echo "pr_number=$(jq -r '.number' <<< "$pr")"
+            echo "base_sha=$(jq -r '.base.sha' <<< "$pr")"
+            echo "base_ref=$(jq -r '.base.ref' <<< "$pr")"
+            echo "base_repo=$(jq -r '.base.repo.full_name' <<< "$pr")"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Upload snapshots to Sentry
+        if: github.event.workflow_run.event == 'push' || steps.vcs.outputs.pr_number != ''
+        # Закреплённый бинарник из релиза вместо npm-пакета: без install-скриптов и плавающей версии.
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+          SENTRY_CLI_VERSION: 3.8.2
+          SENTRY_CLI_SHA256: c958865f9d4000183509ea21b1f04925d5390de6d8d87386b9e69f2b305070c3
+          HEAD_SHA: ${{ steps.vcs.outputs.head_sha }}
+          HEAD_REF: ${{ steps.vcs.outputs.head_ref }}
+          HEAD_REPO: ${{ steps.vcs.outputs.head_repo }}
+          PR_NUMBER: ${{ steps.vcs.outputs.pr_number }}
+          BASE_SHA: ${{ steps.vcs.outputs.base_sha }}
+          BASE_REF: ${{ steps.vcs.outputs.base_ref }}
+          BASE_REPO: ${{ steps.vcs.outputs.base_repo }}
+        run: |
+          curl -sSfL --proto '=https' --tlsv1.2 -o "$RUNNER_TEMP/sentry-cli" \
+            "https://github.com/getsentry/sentry-cli/releases/download/${SENTRY_CLI_VERSION}/sentry-cli-Linux-x86_64"
+          echo "${SENTRY_CLI_SHA256}  $RUNNER_TEMP/sentry-cli" | sha256sum --check --strict
+          chmod +x "$RUNNER_TEMP/sentry-cli"
+
+          # Автоопределение git-метаданных в workflow_run не видит PR (и здесь нет checkout),
+          # поэтому все метаданные передаются явно.
+          args=(
+            --app-id bsl-language-server-semantic-tokens
+            --no-git-metadata
+            --vcs-provider github
+            --head-sha "$HEAD_SHA"
+            --head-ref "$HEAD_REF"
+            --head-repo-name "$HEAD_REPO"
+          )
+          if [ -n "$PR_NUMBER" ]; then
+            args+=(
+              --pr-number "$PR_NUMBER"
+              --base-sha "$BASE_SHA"
+              --base-ref "$BASE_REF"
+              --base-repo-name "$BASE_REPO"
+            )
+          fi
+
+          "$RUNNER_TEMP/sentry-cli" snapshots upload snapshots "${args[@]}"

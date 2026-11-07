@@ -41,6 +41,8 @@ import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 
 import java.net.URI;
@@ -87,9 +89,6 @@ class MethodReturnTypeIndexerTest {
 
   private static final TypeSet STRING = TypeSet.of(new TypeRef(TypeKind.PRIMITIVE, "Строка"));
   private static final TypeSet NUMBER = TypeSet.of(new TypeRef(TypeKind.PRIMITIVE, "Число"));
-
-  /** Сколько документов большой цикл разбирает впереди расчёта: предел разом разобранных без одного. */
-  private static final int AHEAD_WINDOW = 7;
 
   /** Предел разом разобранных документов: окно впереди и документ, который считается. */
   private static final int DOCUMENTS_IN_MEMORY = 8;
@@ -525,45 +524,43 @@ class MethodReturnTypeIndexerTest {
     assertThat(ticksOf(reporter)).isEqualTo(planned);
   }
 
-  @Test
-  void cycleTooLargeToHoldIsParsedAheadWithinLimitAndReleased() {
-    // Ожидание в расчёте не должно занимать единственный поток предзагрузки.
-    var executor = Executors.newFixedThreadPool(2);
-    try {
-      var configuration = mock(GlobalLanguageServerConfiguration.class);
-      when(configuration.getLanguage()).thenReturn(Language.RU);
-      indexer = new MethodReturnTypeIndexer(inferencer, symbolTypeIndex,
-        mock(WorkDoneProgressHelper.class, RETURNS_DEEP_STUBS), configuration, executor);
-
-      // Двадцать документов по кругу, все отложены и все освобождены.
-      var ring = ring("ahead", 20);
-      var documents = ring.documents();
-      var methods = ring.methods();
-      var serverContext = serverContextOf(documents);
-      var loading = trackLoading(serverContext, documents);
-      var computations = new AtomicInteger();
-      for (var i = 0; i < methods.length; i++) {
-        var next = methods[(i + 1) % methods.length];
-        when(inferencer.computeReturnTypes(methods[i])).thenAnswer(invocation -> {
-          // Ждёт фактически первый метод прохода: порядок Tarjan не обязан начинаться с methods[0].
-          if (computations.getAndIncrement() == 0) {
-            await().atMost(10, SECONDS).until(() -> loading.loaded().size() >= AHEAD_WINDOW);
-          }
-          return new ComputedReturnTypes(TypeSet.EMPTY, Set.of(next), false);
-        });
-      }
-
-      indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
-
-      // Каждый документ разобран ровно раз и отпущен. Окно заполнено, лимит не превышен.
-      for (var documentContext : documents) {
-        verify(serverContext, times(1)).rebuildDocument(documentContext);
-      }
-      assertThat(loading.loaded()).isEmpty();
-      assertThat(loading.peak().get()).isBetween(AHEAD_WINDOW, DOCUMENTS_IN_MEMORY);
-    } finally {
-      executor.shutdownNow();
+  @ParameterizedTest
+  @ValueSource(ints = {2, 4})
+  void cycleTooLargeToHoldIsParsedAheadWithinLimitAndReleased(int workers) {
+    // Ожидание предзагрузки внутри расчёта оставляет второй поток свободным для разбора.
+    resolveExecutor.shutdownNow();
+    resolveExecutor = Executors.newFixedThreadPool(workers);
+    indexer = indexerOn(resolveExecutor);
+    // given: двадцать документов по кругу, все отложены и все освобождены.
+    var ring = ring("ahead", 20);
+    var documents = ring.documents();
+    var methods = ring.methods();
+    var serverContext = serverContextOf(documents);
+    var loading = trackLoading(serverContext, documents);
+    // Расчёт первого документа ждёт, пока разбор впереди заполнит всё окно: иначе мгновенный
+    // расчёт на заглушках успевал бы за разбором, и разом разобранным всегда был бы один.
+    var firstComputation = new AtomicBoolean(true);
+    for (var index = 0; index < methods.length; index++) {
+      var next = methods[(index + 1) % methods.length];
+      when(inferencer.computeReturnTypes(methods[index])).thenAnswer(invocation -> {
+        if (firstComputation.getAndSet(false)) {
+          await().atMost(10, SECONDS).until(() -> loading.peak().get() >= DOCUMENTS_IN_MEMORY);
+        }
+        return new ComputedReturnTypes(TypeSet.EMPTY, Set.of(next), false);
+      });
     }
+
+    // when
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+    // then: каждый документ разобран ровно раз — разбор впереди расчёта не дублирует разбор
+    // на месте — и отпущен; разом разобрано не больше предела: семь впереди и документ,
+    // который считается, — восьмое место впереди не занимается.
+    for (var documentContext : documents) {
+      verify(serverContext, times(1)).rebuildDocument(documentContext);
+    }
+    assertThat(loading.loaded()).isEmpty();
+    assertThat(loading.peak()).hasValue(DOCUMENTS_IN_MEMORY);
   }
 
   @Test

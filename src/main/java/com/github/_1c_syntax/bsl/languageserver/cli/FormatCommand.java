@@ -117,6 +117,9 @@ public class FormatCommand implements Callable<Integer> {
       srcDir = srcDir.getParent();
     }
     serverContext = serverContextProvider.addWorkspace(srcDir.toUri());
+    // Язык ключевых слов форматтер берёт из метаданных конфигурации, а до конца подготовки
+    // рабочая область выглядит как каталог без конфигурации.
+    serverContext.awaitPreparation();
 
     try (var ctx = WorkspaceContextHolder.forUri(srcDir.toUri())) {
       List<File> files = findFilesForFormatting(filePaths);
