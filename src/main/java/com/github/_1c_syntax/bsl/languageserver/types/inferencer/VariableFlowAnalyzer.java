@@ -783,7 +783,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     var before = facts.beforeStatement().getOrDefault(useStatement, Environment.EMPTY).get(index);
     var inclusive = useNode == null
       ? atDefinition
-      : change != null && change.definition() && Ranges.containsPosition(Ranges.create(useNode), change.position());
+      : change != null && change.definition() && Ranges.containsPosition(useNode, change.position());
     if (!inclusive || change == null) {
       return narrowedInsideCondition(layout, useStatement, usePosition, variable, before, inputs);
     }
@@ -1334,7 +1334,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     var subs = ast.subs();
     if (subs != null) {
       for (var sub : subs.sub()) {
-        if (!Ranges.containsPosition(Ranges.create(sub), position)) {
+        if (!Ranges.containsPosition(sub, position)) {
           continue;
         }
         var procedure = sub.procedure();
@@ -1362,6 +1362,6 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     BSLParser.@Nullable CodeBlockContext codeBlock,
     Position position
   ) {
-    return codeBlock != null && Ranges.containsPosition(Ranges.create(codeBlock), position) ? codeBlock : null;
+    return codeBlock != null && Ranges.containsPosition(codeBlock, position) ? codeBlock : null;
   }
 }

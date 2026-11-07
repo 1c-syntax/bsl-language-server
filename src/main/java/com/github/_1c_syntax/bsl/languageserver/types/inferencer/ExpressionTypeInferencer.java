@@ -1598,7 +1598,7 @@ public class ExpressionTypeInferencer {
     }
     return block.statements().stream()
       .anyMatch(statement -> positions.stream()
-        .anyMatch(position -> Ranges.containsPosition(Ranges.create(statement), position)));
+        .anyMatch(position -> Ranges.containsPosition(statement, position)));
   }
 
   /**
