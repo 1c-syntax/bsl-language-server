@@ -61,6 +61,8 @@ import java.util.Set;
  */
 final class FlowLayout {
 
+  private static final int MIN_BRANCH_EDGES = 2;
+
   /**
    * Оператор с границами и вершиной, которой он принадлежит.
    */
@@ -243,7 +245,7 @@ final class FlowLayout {
   /** Обратный просмотр рёбер сохраняет порядок веток после разворота списка вершин. */
   private static Iterator<CfgEdge> reverseEdges(ControlFlowGraph graph, CfgVertex vertex) {
     var edges = graph.outgoingEdgesOf(vertex);
-    return edges.size() < 2 ? edges.iterator() : List.copyOf(edges).reversed().iterator();
+    return edges.size() < MIN_BRANCH_EDGES ? edges.iterator() : List.copyOf(edges).reversed().iterator();
   }
 
   /** Вершины в порядке расчёта потока. */

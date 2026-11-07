@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.references.model.LocationRepository;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.references.model.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrence;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrenceRepository;
@@ -77,7 +78,7 @@ class ReferenceTargetLookupTest {
   @Test
   void targetLookupSkipsCallerSymbolAndRangeReconstruction() {
     var method = method(false, false);
-    assertThat(index.getReference(uri, position)).get().extracting(reference -> reference.symbol()).isSameAs(method);
+    assertThat(index.getReference(uri, position)).get().extracting(Reference::symbol).isSameAs(method);
     clearInvocations(tree);
     assertThat(index.getTargetSymbol(uri, position)).containsSame(method);
     verify(tree, never()).getSymbolAtPosition(any());
@@ -149,7 +150,7 @@ class ReferenceTargetLookupTest {
   }
 
   private void assertEquivalent(com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol expected) {
-    assertThat(index.getTargetSymbol(uri, position)).isEqualTo(index.getReference(uri, position).map(reference -> reference.symbol()));
+    assertThat(index.getTargetSymbol(uri, position)).isEqualTo(index.getReference(uri, position).map(Reference::symbol));
     if (expected == null) {
       assertThat(index.getTargetSymbol(uri, position)).isEmpty();
     } else {
