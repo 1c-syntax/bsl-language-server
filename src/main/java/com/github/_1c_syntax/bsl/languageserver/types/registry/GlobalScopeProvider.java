@@ -219,8 +219,8 @@ public class GlobalScopeProvider {
       var bslMembers = asList(bslSource);
       var osMembers = asList(osSource);
       var rebuilt = new GlobalIndex(bslSource, osSource, bslMembers, osMembers, Map.of(
-        FileType.BSL, globalNameIndex(bslMembers),
-        FileType.OS, globalNameIndex(osMembers)));
+        FileType.BSL, globalNameIndex(bslMembers, index, FileType.BSL),
+        FileType.OS, globalNameIndex(osMembers, index, FileType.OS)));
       globalIndexRef.set(rebuilt);
       return rebuilt;
     }
@@ -295,6 +295,24 @@ public class GlobalScopeProvider {
       }
     }
     return result;
+  }
+
+  /** Имена и позиции могут сохраниться при обновлении типов, символов и метаданных членов. */
+  private static Map<String, Integer> globalNameIndex(List<MemberDescriptor> members,
+      @org.jspecify.annotations.Nullable GlobalIndex previous, FileType fileType) {
+    if (previous != null) {
+      var oldMembers = fileType == FileType.OS ? previous.osMembers() : previous.bslMembers();
+      if (sameGlobalNames(members, oldMembers)) return previous.byName().get(fileType);
+    }
+    return globalNameIndex(members);
+  }
+
+  private static boolean sameGlobalNames(List<MemberDescriptor> members, List<MemberDescriptor> previous) {
+    if (members.size() != previous.size()) return false;
+    for (var index = 0; index < members.size(); index++) {
+      if (!members.get(index).bilingualName().equals(previous.get(index).bilingualName())) return false;
+    }
+    return true;
   }
 
   private static Map<String, Integer> globalNameIndex(List<MemberDescriptor> members) {
