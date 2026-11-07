@@ -30,7 +30,7 @@ enum CommonModuleNameFilter {
 
   private final boolean dottedNames;
 
-  private CommonModuleNameFilter(boolean dottedNames) {
+  CommonModuleNameFilter(boolean dottedNames) {
     this.dottedNames = dottedNames;
   }
 

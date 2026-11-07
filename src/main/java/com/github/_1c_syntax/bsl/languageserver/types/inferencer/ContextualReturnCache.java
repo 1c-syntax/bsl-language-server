@@ -54,7 +54,11 @@ final class ContextualReturnCache {
   private final Map<Guard, Result> matchedGuards = new HashMap<>();
   /** Связь тела с объявлением постоянна в пределах запроса и не зависит от приближений ячеек. */
   private final Map<BSLParser.CodeBlockContext, Optional<MethodSymbol>> bodyMethods = new HashMap<>();
-  private long revision = 0;
+  private long revision;
+
+  ContextualReturnCache() {
+    revision = 0;
+  }
 
   @Nullable TypeSet get(ContextualReturnKey key) {
     return values.get(key);
