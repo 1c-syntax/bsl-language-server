@@ -29,6 +29,8 @@ import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
 
@@ -50,6 +52,48 @@ class MemberAccessUnavailableMetadataHbkTest extends AbstractDiagnosticTest<Memb
 
   MemberAccessUnavailableMetadataHbkTest() {
     super(MemberAccessUnavailableDiagnostic.class);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"Ссылка", "Номер", "Дата"})
+  void managedDocumentPropertiesAreAvailableInThinClient(String member) {
+    initServerContext(ROOT);
+    var document = TestUtils.getDocumentContext(
+      ROOT.resolve("Documents/Документ1/Forms/ФормаДокумента/Ext/Form/Module.bsl").toUri(),
+      "&НаКлиенте\nПроцедура Проверка()\n  Результат = Объект." + member + ";\nКонецПроцедуры\n", context);
+    enableThinClient();
+    assertThat(getDiagnostics(document)).isEmpty();
+  }
+
+  @Test
+  void managedRegisterRowsAreAvailableInThinClient() {
+    initServerContext(ROOT);
+    var document = TestUtils.getDocumentContext(
+      ROOT.resolve("InformationRegisters/РегистрСведений1/Forms/ФормаНабораЗаписей/Ext/Form/Module.bsl").toUri(),
+      "&НаКлиенте\nПроцедура Проверка()\n  Результат = НаборЗаписей[0].Справочник1;\nКонецПроцедуры\n", context);
+    enableThinClient();
+    assertThat(getDiagnostics(document)).isEmpty();
+  }
+
+  @ParameterizedTest
+  @CsvSource({"ДокументОбъект.Документ1, Ссылка, ''", "РегистрСведенийНаборЗаписей.РегистрСведений1, Добавить, ()"})
+  void rawDomainValuesRemainUnavailableInThinClient(String type, String member, String suffix) {
+    initServerContext(ROOT);
+    var document = TestUtils.getDocumentContext(
+      ROOT.resolve("Documents/Документ1/Forms/ФормаДокумента/Ext/Form/Module.bsl").toUri(),
+      "// Параметры:\n//  Значение - " + type
+        + "\n&НаКлиенте\nПроцедура Проверка(Значение)\n  Результат = Значение."
+        + member + suffix + ";\nКонецПроцедуры\n", context);
+    enableThinClient();
+    assertThat(getDiagnostics(document)).singleElement()
+      .satisfies(problem -> assertThat(problem.getMessage().getLeft()).contains("\"" + member + "\""));
+  }
+
+  private void enableThinClient() {
+    var options = new HashMap<>(diagnosticInstance.getInfo().getDefaultConfiguration());
+    options.replaceAll((name, value) -> "off");
+    options.put("checkThinClient", "on");
+    diagnosticInstance.configure(options);
   }
 
   @ParameterizedTest
