@@ -127,4 +127,23 @@ class BilingualStringTest {
     assertThat(onlyRu.matches("")).isFalse();
     assertThat(onlyRu.matches("Истина")).isTrue();
   }
+
+  @Test
+  void orderingIsConsistentWithBothLocaleValuesAndNormalization() {
+    var values = java.util.List.of(
+      BilingualString.EMPTY,
+      new BilingualString(null, null),
+      BilingualString.of("А", "One"),
+      BilingualString.of("А", "Two"),
+      BilingualString.of("Б", "One"),
+      BilingualString.of("а", "One"));
+    for (var left : values) {
+      for (var right : values) {
+        assertThat(left.compareTo(right) == 0).isEqualTo(left.equals(right));
+        assertThat(Integer.signum(left.compareTo(right))).isEqualTo(-Integer.signum(right.compareTo(left)));
+      }
+    }
+    assertThat(BilingualString.of("А", "One").compareTo(BilingualString.of("А", "Two"))).isNegative();
+    assertThat(BilingualString.of("А", "Two").compareTo(BilingualString.of("Б", "One"))).isNegative();
+  }
 }
