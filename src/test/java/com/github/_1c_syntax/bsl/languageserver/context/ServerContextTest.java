@@ -172,8 +172,7 @@ class ServerContextTest extends AbstractServerContextAwareTest {
     var moduleDocuments = context.getDocuments().values().stream()
       .filter(documentContext -> configuration.getModuleByUri(documentContext.getUri()).isPresent())
       .toList();
-    assertThat(moduleDocuments).isNotEmpty().contains(added);
-    assertThat(moduleDocuments).allSatisfy(documentContext ->
+    assertThat(moduleDocuments).isNotEmpty().contains(added).allSatisfy(documentContext ->
       assertThat(documentContext.getUri())
         .isSameAs(configuration.getModuleByUri(documentContext.getUri()).orElseThrow().getUri()));
   }
