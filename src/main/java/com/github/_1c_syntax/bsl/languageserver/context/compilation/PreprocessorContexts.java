@@ -21,6 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.compilation;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import org.antlr.v4.runtime.Token;
+
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -42,12 +45,24 @@ import java.util.Set;
  * Перед повторным обходом нужен {@link #clear()}.
  * <p>
  * Пустое множество означает известную недостижимость, {@code null} — неизвестное условие,
- * например символ ОС. Неизвестность распространяется на остаток инструкции и вложенные ветки.
+ * например пользовательский символ. Неизвестность распространяется на остаток инструкции и вложенные ветки.
  * Диагностика в этом случае пропускает проверку, а фильтрация CFG сохраняет обе ветки.
  * Экземпляр относится к одному обходу и не предназначен для совместного использования потоками.
  * Статический {@link #evaluate} не использует состояние обхода.
  */
 public final class PreprocessorContexts {
+
+  private final FileType fileType;
+  private final Set<ExecutionContext> universe;
+
+  public PreprocessorContexts() {
+    this(FileType.BSL);
+  }
+
+  public PreprocessorContexts(FileType fileType) {
+    this.fileType = fileType;
+    universe = ExecutionContext.forFileType(fileType);
+  }
 
   /**
    * Открытые инструкции {@code #Если}, внутренняя - сверху.
@@ -92,8 +107,8 @@ public final class PreprocessorContexts {
    */
   public void enterIf(BSLParser.Preproc_ifContext ctx) {
     var parent = branches.peek();
-    var branch = new Branch(parent == null ? ExecutionContext.ALL : parent.active);
-    branch.enter(evaluate(ctx.preproc_expression()));
+    var branch = new Branch(parent == null ? universe : parent.active);
+    branch.enter(evaluate(ctx.preproc_expression(), fileType));
     branches.push(branch);
   }
 
@@ -106,7 +121,7 @@ public final class PreprocessorContexts {
   public void enterElsif(BSLParser.Preproc_elsifContext ctx) {
     var branch = branches.peek();
     if (branch != null) {
-      branch.enter(evaluate(ctx.preproc_expression()));
+      branch.enter(evaluate(ctx.preproc_expression(), fileType));
     }
   }
 
@@ -140,7 +155,7 @@ public final class PreprocessorContexts {
    */
   public @Nullable Set<ExecutionContext> active() {
     var branch = branches.peek();
-    return branch == null ? ExecutionContext.ALL : branch.active;
+    return branch == null ? universe : branch.active;
   }
 
   /**
@@ -155,21 +170,27 @@ public final class PreprocessorContexts {
    *     {@code null} для отсутствующего или невычислимого условия.
    */
   public static @Nullable Set<ExecutionContext> evaluate(BSLParser.@Nullable Preproc_expressionContext expression) {
+    return evaluate(expression, FileType.BSL);
+  }
+
+  /** Вычислить условие по символам выбранного диалекта, сохраняя неизвестность пользовательских флагов. */
+  public static @Nullable Set<ExecutionContext> evaluate(BSLParser.@Nullable Preproc_expressionContext expression,
+                                                        FileType fileType) {
     if (expression == null) {
       return null;
     }
-    var tokens = new ArrayList<Integer>();
-    collectTokenTypes(expression, tokens);
-    return PreprocessorExpressionEvaluator.evaluate(tokens);
+    var tokens = new ArrayList<Token>();
+    collectTokens(expression, tokens);
+    return PreprocessorExpressionEvaluator.evaluate(tokens, fileType);
   }
 
-  private static void collectTokenTypes(ParseTree tree, List<Integer> tokens) {
+  private static void collectTokens(ParseTree tree, List<Token> tokens) {
     if (tree instanceof TerminalNode terminal) {
-      tokens.add(terminal.getSymbol().getType());
+      tokens.add(terminal.getSymbol());
       return;
     }
     for (var i = 0; i < tree.getChildCount(); i++) {
-      collectTokenTypes(tree.getChild(i), tokens);
+      collectTokens(tree.getChild(i), tokens);
     }
   }
 

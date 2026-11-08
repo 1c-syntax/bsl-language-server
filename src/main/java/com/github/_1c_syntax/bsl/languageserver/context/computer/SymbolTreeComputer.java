@@ -70,25 +70,7 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
 
     // Имя, признанное реквизитом, символа не получает: запомнить его можно только здесь.
     var bareSelfProperties = new HashSet<String>();
-    SelfMemberClassifier recordingClassifier = new SelfMemberClassifier() {
-      @Override
-      public boolean isBareSelfProperty(DocumentContext document, String name) {
-        return recorded(selfMemberClassifier.isBareSelfProperty(document, name), name);
-      }
-
-      @Override
-      public Predicate<String> bareSelfPropertiesOf(DocumentContext document) {
-        var bareSelfProperty = selfMemberClassifier.bareSelfPropertiesOf(document);
-        return name -> recorded(bareSelfProperty.test(name), name);
-      }
-
-      private boolean recorded(boolean bareSelfProperty, String name) {
-        if (bareSelfProperty) {
-          bareSelfProperties.add(name);
-        }
-        return bareSelfProperty;
-      }
-    };
+    var recordingClassifier = new RecordingSelfMemberClassifier(selfMemberClassifier, bareSelfProperties);
     ModuleSymbol moduleSymbol = new ModuleSymbolComputer(documentContext).compute();
     List<MethodSymbol> methods = new MethodSymbolComputer(documentContext, eventHandlerClassifier).compute();
     // Переменные, регионы и условия препроцессора — за один общий обход дерева.

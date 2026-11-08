@@ -21,13 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.compilation;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
+
 import java.util.Collection;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.Set;
 
 /**
- * Контексты компиляции, различаемые инструкциями препроцессора 1С.
+ * Контексты компиляции, различаемые инструкциями препроцессора 1С и OneScript.
  * <p>
  * Контекст различает режим запуска и сторону компиляции. В файловом толстом клиенте
  * символы {@code Клиент} и {@code Сервер} истинны одновременно, в том числе в модуле
@@ -72,10 +74,27 @@ public enum ExecutionContext {
   /** Клиентская часть управляемой формы или команды в файловом обычном приложении. */
   THICK_CLIENT_ORDINARY_FILE_CLIENT,
   /** Серверная часть управляемой формы или команды в файловом обычном приложении. */
-  THICK_CLIENT_ORDINARY_FILE_SERVER;
+  THICK_CLIENT_ORDINARY_FILE_SERVER,
 
-  /** Все контексты модели; неизменяемое множество. */
-  public static final Set<ExecutionContext> ALL = Collections.unmodifiableSet(EnumSet.allOf(ExecutionContext.class));
+  /** OneScript в Windows без Mono. */
+  OSCRIPT_WINDOWS,
+  /** OneScript в Windows под Mono. */
+  OSCRIPT_WINDOWS_MONO,
+  /** OneScript в Linux без Mono. */
+  OSCRIPT_LINUX,
+  /** OneScript в Linux под Mono. */
+  OSCRIPT_LINUX_MONO,
+  /** OneScript в MacOS без Mono. */
+  OSCRIPT_MACOS,
+  /** OneScript в MacOS под Mono. */
+  OSCRIPT_MACOS_MONO;
+
+  /** Все контексты 1С; неизменяемое множество. */
+  public static final Set<ExecutionContext> ALL =
+    Collections.unmodifiableSet(EnumSet.range(SERVER, THICK_CLIENT_ORDINARY_FILE_SERVER));
+  /** Все сочетания ОС и признака Mono в OneScript. */
+  public static final Set<ExecutionContext> OSCRIPT =
+    Collections.unmodifiableSet(EnumSet.range(OSCRIPT_WINDOWS, OSCRIPT_MACOS_MONO));
   /** Контексты проекта без поддержки файлового толстого клиента; внешнее соединение сохраняется. */
   public static final Set<ExecutionContext> WITHOUT_THICK_CLIENT_FILE =
     Collections.unmodifiableSet(EnumSet.copyOf(withoutThickClientFile()));
@@ -187,15 +206,24 @@ public enum ExecutionContext {
    * @return новое изменяемое множество дополнения
    */
   public static Set<ExecutionContext> complementOf(Collection<ExecutionContext> contexts) {
-    var result = EnumSet.allOf(ExecutionContext.class);
+    var result = copyOf(ALL);
     result.removeAll(contexts);
     return result;
   }
 
   private static Set<ExecutionContext> withoutThickClientFile() {
-    var result = EnumSet.allOf(ExecutionContext.class);
+    var result = copyOf(ALL);
     result.removeIf(ExecutionContext::isThickClientFileMode);
     return result;
+  }
+
+  /** Контексты соответствующего диалекта; контексты 1С и OneScript не пересекаются. */
+  public static Set<ExecutionContext> forFileType(FileType fileType) {
+    return fileType == FileType.OS ? OSCRIPT : ALL;
+  }
+
+  public boolean isOneScript() {
+    return OSCRIPT.contains(this);
   }
 
 }

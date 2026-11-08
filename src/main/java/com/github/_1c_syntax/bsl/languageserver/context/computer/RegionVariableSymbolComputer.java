@@ -66,7 +66,7 @@ public final class RegionVariableSymbolComputer extends VariableSymbolComputer {
   private final DocumentContext documentContext;
   private final Deque<RegionSymbol.RegionSymbolBuilder> regionStack = new ArrayDeque<>();
   private final Set<RegionSymbol> regions = new HashSet<>();
-  private final PreprocessorContexts preprocessor = new PreprocessorContexts();
+  private final PreprocessorContexts preprocessor;
   // Ключи — неизменяемые в течение обхода диапазоны LSP; их порядок не используется.
   private final Map<Range, Set<ExecutionContext>> methodConditions = new HashMap<>();
 
@@ -76,6 +76,7 @@ public final class RegionVariableSymbolComputer extends VariableSymbolComputer {
                                       SelfMemberClassifier selfMemberClassifier) {
     super(documentContext, module, methods, selfMemberClassifier);
     this.documentContext = documentContext;
+    preprocessor = new PreprocessorContexts(documentContext.getFileType());
   }
 
   @Override

@@ -46,9 +46,7 @@ public interface TypePackProvider {
    * Объявление одного типа для регистрации.
    *
    * @param kind                категория типа
-   * @param name                двуязычное имя типа (ru + en); primary-форма
-   *                            используется как канонический ключ в реестре,
-   *                            альтернативная сторона регистрируется как alias
+   * @param name                двуязычное имя типа (ru + en), обе стороны регистрируются как алиасы
    * @param members             свойства и методы типа
    * @param description         описание типа (для hover'а класса)
    * @param constructors        сигнатуры конструкторов {@code Новый Тип(...)}; пустой список — без конструкторов
@@ -88,6 +86,8 @@ public interface TypePackProvider {
    *                            без такой информации (конфигурационные,
    *                            пользовательские, JSON-паки) —
    *                            {@link PlatformMetadata#EMPTY}.
+   * @param qualifiedName      уникальный ключ типа; обычно совпадает с основным именем,
+   *                            но может отличаться для типов с одинаковым отображаемым именем
    */
   record TypeDecl(
     TypeKind kind,
@@ -102,7 +102,8 @@ public interface TypePackProvider {
     BilingualString indexAccessDescription,
     List<String> typeParameters,
     boolean isEnum,
-    PlatformMetadata metadata
+    PlatformMetadata metadata,
+    String qualifiedName
   ) {
 
     public TypeDecl {
@@ -116,6 +117,17 @@ public interface TypePackProvider {
       if (metadata == null) {
         metadata = PlatformMetadata.EMPTY;
       }
+    }
+
+    public TypeDecl(TypeKind kind, BilingualString name, Collection<MemberDescriptor> members,
+                    BilingualString description,
+                    List<SignatureDescriptor> constructors, List<TypeRef> defaultElementTypes,
+                    boolean supportsForEach, boolean supportsIndexAccess,
+                    BilingualString forEachDescription, BilingualString indexAccessDescription,
+                    List<String> typeParameters, boolean isEnum, PlatformMetadata metadata) {
+      this(kind, name, members, description, constructors, defaultElementTypes,
+        supportsForEach, supportsIndexAccess, forEachDescription, indexAccessDescription,
+        typeParameters, isEnum, metadata, name.primary());
     }
 
     /** Compat-конструктор без {@code metadata} ({@link PlatformMetadata#EMPTY}). */
@@ -145,11 +157,6 @@ public interface TypePackProvider {
         supportsForEach, supportsIndexAccess,
         BilingualString.of(forEachDescription), BilingualString.of(indexAccessDescription),
         typeParameters, isEnum);
-    }
-
-    /** Каноничное имя типа (ru-сторона; для legacy-источников — primary). */
-    public String qualifiedName() {
-      return name.primary();
     }
 
     public TypeRef toRef() {

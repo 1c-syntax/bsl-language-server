@@ -793,8 +793,10 @@ public class SymbolTypeIndex {
 
   /** Сбросить результаты расчёта по телам при смене режимов, сохранив типы из описаний. */
   public void clearInferredReturnTypes() {
-    inferredReturnTypes.clear();
-    inferredByUri.clear();
+    inferredByUri.keySet().forEach(uri -> inferredByUri.computeIfPresent(uri, (key, methods) -> {
+      methods.forEach(inferredReturnTypes::remove);
+      return null;
+    }));
     combinedReturnTypes.clear();
   }
 
