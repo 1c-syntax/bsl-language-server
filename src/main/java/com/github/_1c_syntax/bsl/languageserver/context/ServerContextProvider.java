@@ -132,7 +132,7 @@ public class ServerContextProvider {
    * @param workspaceName имя workspace (если null — извлекается из URI)
    * @return созданный контекст сервера
    */
-  public ServerContext addWorkspace(URI workspaceUri, @Nullable String workspaceName) {
+  public synchronized ServerContext addWorkspace(URI workspaceUri, @Nullable String workspaceName) {
 
     if (contexts.containsKey(workspaceUri)) {
       LOGGER.debug("Workspace {} already exists", workspaceUri);
@@ -184,7 +184,7 @@ public class ServerContextProvider {
    *
    * @return дефолтный контекст сервера (идемпотентно: повторные вызовы возвращают существующий)
    */
-  public ServerContext registerDefaultWorkspace() {
+  public synchronized ServerContext registerDefaultWorkspace() {
     var existing = contexts.get(DEFAULT_WORKSPACE_URI);
     if (existing != null) {
       return existing;
@@ -211,14 +211,15 @@ public class ServerContextProvider {
    *
    * @param workspaceFolder информация о workspace folder
    */
-  public void removeWorkspace(WorkspaceFolder workspaceFolder) {
+  public synchronized void removeWorkspace(WorkspaceFolder workspaceFolder) {
     var uri = Absolute.uri(workspaceFolder.getUri());
     var preparing = contexts.get(uri);
-    if (preparing != null) {
-      // Обработчик подготовки ищет контекст в этой карте, чтобы завершить её.
-      // Сохраняем контекст и его бины до конца подготовки, даже если обработчик ещё не запущен.
-      preparing.awaitPreparation();
+    if (preparing == null) {
+      return;
     }
+    // Обработчик подготовки ищет контекст в этой карте, чтобы завершить её.
+    // Сохраняем контекст и его бины до конца подготовки, даже если обработчик ещё не запущен.
+    preparing.awaitPreparation();
     // Переставляем главный контекст на другой ДО удаления из карты, чтобы primary никогда не
     // указывал на уже удалённый контекст (иначе getPrimaryContext упал бы в гонке с маршрутизацией).
     repointPrimaryBeforeRemoval(uri);
@@ -409,7 +410,7 @@ public class ServerContextProvider {
   /**
    * Очистить все workspaces.
    */
-  public void clear() {
+  public synchronized void clear() {
     new ArrayList<>(contexts.keySet()).forEach(uri ->
       removeWorkspace(new WorkspaceFolder(uri.toString(), uri.toString()))
     );
