@@ -69,7 +69,7 @@ class CompletionMemberKeysTest {
 
   @Test
   void collidingHashesNeverReturnAnotherName() {
-    assertThat("Aa".hashCode()).isEqualTo("BB".hashCode());
+    assertThat("Aa").hasSameHashCodeAs("BB");
     for (var repeat = 0; repeat < 100; repeat++) {
       assertThat(CompletionMemberKeys.of(MemberKind.METHOD, "Aa")).isEqualTo("METHOD:aa");
       assertThat(CompletionMemberKeys.of(MemberKind.METHOD, "BB")).isEqualTo("METHOD:bb");

@@ -133,11 +133,7 @@ final class CompletionMethodEvaluation {
       return targets;
     }
     var owner = method.getOwner();
-    var declarations = declarationsByOwner.get(owner);
-    if (declarations == null) {
-      declarations = resolver.declarations(owner);
-      declarationsByOwner.put(owner, declarations);
-    }
+    var declarations = declarationsByOwner.computeIfAbsent(owner, resolver::declarations);
     var named = declarations.getOrDefault(method.getName(), List.of());
     if (named.isEmpty()) {
       targets = List.of();
@@ -162,11 +158,7 @@ final class CompletionMethodEvaluation {
     if (targets.size() != 1) {
       return null;
     }
-    var byTarget = sharedRanks.get(owner);
-    if (byTarget == null) {
-      byTarget = new IdentityHashMap<>();
-      sharedRanks.put(owner, byTarget);
-    }
+    var byTarget = sharedRanks.computeIfAbsent(owner, ignored -> new IdentityHashMap<>());
     var target = targets.getFirst();
     var ready = byTarget.get(target);
     if (ready == null) {
@@ -191,17 +183,8 @@ final class CompletionMethodEvaluation {
    * Профиль кешируется на директиву, пересечение с веткой — на объявление, без повторного вывода типов.
    */
   private MethodTarget target(DocumentContext owner, Declaration declaration) {
-    var targets = targetsByOwner.get(owner);
-    if (targets == null) {
-      targets = new HashMap<>();
-      targetsByOwner.put(owner, targets);
-    }
-    var target = targets.get(declaration);
-    if (target == null) {
-      target = createTarget(owner, declaration);
-      targets.put(declaration, target);
-    }
-    return target;
+    var targets = targetsByOwner.computeIfAbsent(owner, ignored -> new HashMap<>());
+    return targets.computeIfAbsent(declaration, candidate -> createTarget(owner, candidate));
   }
 
   private MethodTarget createTarget(DocumentContext owner, Declaration declaration) {
@@ -228,39 +211,33 @@ final class CompletionMethodEvaluation {
       if (!target.owner().getUri().equals(document.getUri()) && !target.declaration().exported()) {
         continue;
       }
-      if (target.contexts().isPresent()) {
-        hint.include(target.contexts().orElseThrow());
-      } else {
-        hint.unknownContexts();
-      }
-      var contextCalls = calls.get(target);
-      if (contextCalls == null) {
-        contextCalls = new EnumMap<>(ExecutionContext.class);
-        calls.put(target, contextCalls);
-      }
-      var call = contextCalls.get(context);
-      if (call == null) {
-        call = evaluateCall(target, context);
-        contextCalls.put(context, call);
-      }
-      switch (call.availability()) {
-        case UNKNOWN -> {
-          hint.unknownCall();
-          rank = AVAILABLE;
-        }
-        case AVAILABLE -> {
-          hint.knownCall(call.serverTransition());
-          rank = AVAILABLE;
-        }
-        default -> {
-          // Недоступная альтернатива не перекрывает уже найденную доступную.
-        }
-      }
+      rank = Math.min(rank, rankTarget(target, context, hint));
     }
     if (rank == UNAVAILABLE) {
       hint.unavailableCall();
     }
     return rank;
+  }
+
+  private int rankTarget(MethodTarget target, ExecutionContext context, CompletionMethodHint hint) {
+    if (target.contexts().isPresent()) {
+      hint.include(target.contexts().orElseThrow());
+    } else {
+      hint.unknownContexts();
+    }
+    var contextCalls = calls.computeIfAbsent(target, ignored -> new EnumMap<>(ExecutionContext.class));
+    var call = contextCalls.computeIfAbsent(context, selected -> evaluateCall(target, selected));
+    return switch (call.availability()) {
+      case UNKNOWN -> {
+        hint.unknownCall();
+        yield AVAILABLE;
+      }
+      case AVAILABLE -> {
+        hint.knownCall(call.serverTransition());
+        yield AVAILABLE;
+      }
+      default -> UNAVAILABLE;
+    };
   }
 
   private CallEvaluation evaluateCall(MethodTarget target, ExecutionContext context) {

@@ -69,7 +69,7 @@ class SharedReceiverRankingTest {
     var shared = new CompletionMethodHint();
     assertThat(evaluation.rankDotSourceMember("First", fixture.first(), original)).isZero();
     assertThat(evaluation.rankDotSourceMember("Second", fixture.second(), shared)).isZero();
-    var renderer = new CompletionMethodHint.Renderer(Language.RU, true);
+    var renderer = new CompletionMethodHintRenderer(Language.RU, true);
     var expected = renderer.apply(original, new CompletionItem("method"));
     assertThat(renderer.apply(shared, new CompletionItem("method"))).isEqualTo(expected);
     shared.unknownReceiver();
@@ -87,7 +87,7 @@ class SharedReceiverRankingTest {
     for (var member : List.of(fixture.first(), fixture.second())) {
       var hint = new CompletionMethodHint();
       assertThat(evaluation.rankDotSourceMember(member.name(), member, hint)).isZero();
-      assertThat(new CompletionMethodHint.Renderer(Language.RU, true)
+      assertThat(new CompletionMethodHintRenderer(Language.RU, true)
         .apply(hint, new CompletionItem("method"))).isEmpty();
     }
     verify(fixture.resolver(), times(1)).availability(any(), any(), any(), any(), any(), any());
@@ -113,7 +113,7 @@ class SharedReceiverRankingTest {
       .thenReturn(CallAvailability.UNKNOWN);
     var second = new CompletionMethodHint();
     fixture.evaluation().rankDotSourceMember("First", fixture.first(), second);
-    var renderer = new CompletionMethodHint.Renderer(Language.EN, true);
+    var renderer = new CompletionMethodHintRenderer(Language.EN, true);
     var oldItem = new CompletionItem("method");
     var newItem = new CompletionItem("method");
     assertThat(renderer.apply(second, newItem)).isNotEqualTo(renderer.apply(first, oldItem));

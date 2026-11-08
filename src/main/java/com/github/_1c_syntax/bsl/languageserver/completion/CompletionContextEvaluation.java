@@ -44,6 +44,7 @@ import static com.github._1c_syntax.bsl.languageserver.completion.CompletionPrio
  * Объединяет оценки по контекстам вызова и возможным типам получателя.
  */
 final class CompletionContextEvaluation {
+  private static final int MIN_RECEIVER_UNION_SIZE = 2;
   private final Optional<MethodContext> scope;
   private final CompletionTypeContext typeContext;
   private final Optional<CompletionMethodEvaluation> methods;
@@ -51,7 +52,7 @@ final class CompletionContextEvaluation {
   private @Nullable TypeRef sharedReceiver;
   private @Nullable Set<TypeRef> sharedReceiverUnion;
   private boolean propertyReceiverChecked;
-  private CompletionTypeContext.@Nullable PropertyScope propertyScope;
+  private @Nullable CompletionPropertyScope propertyScope;
 
   /**
    * Подготовить контекст один раз для всех предлагаемых имён.
@@ -175,7 +176,7 @@ final class CompletionContextEvaluation {
     Set<TypeRef> owners = null;
     for (var context : scope.orElseThrow().contexts()) {
       var refs = typeContext.receiverTypes(context).refs();
-      if (refs.size() < 2 || refs.contains(TypeRef.ANY) || refs.contains(TypeRef.UNKNOWN)) {
+      if (refs.size() < MIN_RECEIVER_UNION_SIZE || refs.contains(TypeRef.ANY) || refs.contains(TypeRef.UNKNOWN)) {
         return;
       }
       if (owners != null && !owners.equals(refs)) {
