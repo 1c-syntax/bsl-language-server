@@ -166,6 +166,9 @@ public class ServerContextProvider {
       promoteToPrimary(workspaceUri);
 
       return serverContext;
+    } catch (RuntimeException | Error failure) {
+      rollbackWorkspaceRegistration(workspaceUri, failure);
+      throw failure;
     }
   }
 
@@ -203,6 +206,9 @@ public class ServerContextProvider {
       markPrimaryIfAbsent(DEFAULT_WORKSPACE_URI);
 
       return serverContext;
+    } catch (RuntimeException | Error failure) {
+      rollbackWorkspaceRegistration(DEFAULT_WORKSPACE_URI, failure);
+      throw failure;
     }
   }
 
@@ -515,6 +521,23 @@ public class ServerContextProvider {
           ? DEFAULT_WORKSPACE_URI : null
       );
     primaryWorkspaceUri.set(next);
+  }
+
+  /** Откатить регистрацию до публикации WorkspaceAddedEvent, сохранив исходную ошибку. */
+  @SuppressWarnings("java:S1698") // Самоподавление исключения запрещено: нужна проверка экземпляра.
+  private void rollbackWorkspaceRegistration(URI uri, Throwable failure) {
+    repointPrimaryBeforeRemoval(uri);
+    contexts.remove(uri);
+    workspaceRoots.remove(uri);
+    try (var ctx = WorkspaceContextHolder.forUri(uri)) {
+      workspaceScope.removeWorkspace(uri);
+    } catch (RuntimeException | Error cleanupFailure) {
+      if (cleanupFailure != failure) {
+        failure.addSuppressed(cleanupFailure);
+      }
+    } finally {
+      WorkspaceContextHolder.unregisterWorkspace(uri);
+    }
   }
 
   private static String extractWorkspaceName(URI workspaceUri) {
