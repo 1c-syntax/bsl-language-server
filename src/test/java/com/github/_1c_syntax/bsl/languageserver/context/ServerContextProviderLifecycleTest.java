@@ -33,6 +33,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.support.StaticListableBeanFactory;
 
+import java.lang.management.ManagementFactory;
 import java.net.URI;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -55,6 +56,7 @@ import static org.mockito.Mockito.verify;
 
 class ServerContextProviderLifecycleTest {
 
+  /** Новые внешние документы выбирают оставшийся контекст, пока старый ещё завершает подготовку. */
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
   void removalRepointsFallbackBeforeWaitingForPreparation(boolean synthetic, @TempDir Path root) {
@@ -96,6 +98,7 @@ class ServerContextProviderLifecycleTest {
     }
   }
 
+  /** Удаляемый последний контекст перестаёт принимать fallback-документы до очистки. */
   @Test
   void removingLastWorkspaceStopsFallbackBeforeWaitingForPreparation(@TempDir Path root) {
     var context = mock(ServerContext.class);
@@ -122,6 +125,7 @@ class ServerContextProviderLifecycleTest {
     }
   }
 
+  /** Ошибка отката дополняет исходную ошибку регистрации и не удерживает имя workspace. */
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
   void failedCleanupPreservesRegistrationErrorAndReleasesName(boolean linkageError) {
@@ -144,6 +148,7 @@ class ServerContextProviderLifecycleTest {
     verify(scope).removeWorkspace(uri);
   }
 
+  /** Неудачная регистрация освобождает scoped-бины до повторной попытки с тем же URI. */
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
   void failedRegistrationRollsBackScopeAndNameBeforeRetry(boolean synthetic, @TempDir Path root) {
@@ -198,6 +203,7 @@ class ServerContextProviderLifecycleTest {
     assertThat(destructions).hasValue(2);
   }
 
+  /** Отложенный обработчик подготовки находит контекст и бины до начала их очистки. */
   @Test
   void removalKeepsWorkspaceAvailableUntilPreparationHandlerCompletes(@TempDir Path root) {
     var context = mock(ServerContext.class);
@@ -232,6 +238,7 @@ class ServerContextProviderLifecycleTest {
       WorkspaceContextHolder.unregisterWorkspace(uri);
     }
   }
+  /** Новая регистрация того же URI ждёт окончания удаления прежнего scope. */
   @Test
   void registrationWaitsUntilPreviousWorkspaceScopeIsRemoved(@TempDir Path root) throws Exception {
     var previous = mock(ServerContext.class);
@@ -262,8 +269,7 @@ class ServerContextProviderLifecycleTest {
         return provider.addWorkspace(folder);
       });
       await().atMost(Duration.ofSeconds(5)).until(() ->
-        addition.isDone() || (additionThread.get() != null
-          && additionThread.get().getState() == Thread.State.BLOCKED));
+        addition.isDone() || isBlockedOnProvider(additionThread, provider));
 
       assertThat(addition.isDone()).isFalse();
       releaseCleanup.countDown();
@@ -280,6 +286,7 @@ class ServerContextProviderLifecycleTest {
     }
   }
 
+  /** Два одновременных удаления ожидают подготовку и очищают workspace ровно один раз. */
   @Test
   void concurrentRemovalsPrepareAndClearTheWorkspaceOnlyOnce(@TempDir Path root) throws Exception {
     var context = mock(ServerContext.class);
@@ -310,8 +317,7 @@ class ServerContextProviderLifecycleTest {
         provider.removeWorkspace(folder);
       });
       await().atMost(Duration.ofSeconds(5)).until(() ->
-        preparationCalls.get() == 2 || (secondThread.get() != null
-          && secondThread.get().getState() == Thread.State.BLOCKED));
+        preparationCalls.get() == 2 || isBlockedOnProvider(secondThread, provider));
       releasePreparation.countDown();
       first.get(5, TimeUnit.SECONDS);
       second.get(5, TimeUnit.SECONDS);
@@ -328,4 +334,18 @@ class ServerContextProviderLifecycleTest {
     }
   }
 
+  /** Проверить ожидание монитора именно провайдера, исключая блокировку внутри executor или Spring. */
+  private static boolean isBlockedOnProvider(AtomicReference<Thread> threadReference, ServerContextProvider provider) {
+    var thread = threadReference.get();
+    if (thread == null) {
+      return false;
+    }
+    var info = ManagementFactory.getThreadMXBean().getThreadInfo(thread.threadId());
+    if (info == null || info.getThreadState() != Thread.State.BLOCKED || info.getLockInfo() == null) {
+      return false;
+    }
+    var lock = info.getLockInfo();
+    return lock.getClassName().equals(ServerContextProvider.class.getName())
+      && lock.getIdentityHashCode() == System.identityHashCode(provider);
+  }
 }
