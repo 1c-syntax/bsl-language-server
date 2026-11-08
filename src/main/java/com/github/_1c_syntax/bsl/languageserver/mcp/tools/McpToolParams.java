@@ -44,14 +44,14 @@ final class McpToolParams {
     + "(exact > prefix > substring > subsequence, case-insensitive, over both the Russian and English "
     + "spelling, e.g. `Сценар` / `Script`), like the editor's autocomplete. Results are ranked by "
     + "relevance. When omitted, every member in the selected categories is returned.";
-  static final String WORKSPACE_SYMBOL_QUERY = "Search query matched against symbol names, case-insensitive: "
+  static final String FOLDER_SYMBOL_QUERY = "Search query matched against symbol names, case-insensitive: "
     + "exact name, prefix, camel-hump (`ПолДат` for `ПолучитьДату`) and the start of a word inside the name "
     + "(`Дату`) are found first; with `fuzzy`, a substring inside a word and a scattered subsequence follow. "
     + "An empty query returns the folder's symbols unranked, up to `limit`.";
-  static final String WORKSPACE_SYMBOL_FUZZY = "Whether to append fuzzy matches (substring inside a word, scattered "
+  static final String FOLDER_SYMBOL_FUZZY = "Whether to append fuzzy matches (substring inside a word, scattered "
     + "subsequence) after the exact, prefix, camel-hump and word-start ones. Default `true`; pass `false` for a "
     + "faster answer on a large workspace.";
-  static final String WORKSPACE_SYMBOL_LIMIT = "Maximum number of symbols to return. Default 200.";
+  static final String FOLDER_SYMBOL_LIMIT = "Maximum number of symbols to return. Default 200.";
   static final String WORKSPACE_FOLDER = """
     URI of the workspace folder to answer for — one of the `uri` values returned by the \
     `list_workspace_folders` tool. Required because the answer can differ between folders: 1C \

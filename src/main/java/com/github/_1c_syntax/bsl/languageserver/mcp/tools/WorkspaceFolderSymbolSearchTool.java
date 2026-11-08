@@ -41,7 +41,7 @@ import java.net.URI;
 import java.util.List;
 
 /**
- * MCP-инструмент {@code workspace_symbol_search}: поиск символов по рабочей папке —
+ * MCP-инструмент {@code workspace_folder_symbol_search}: поиск символов по рабочей папке —
  * та же ранжированная выдача, что у LSP-запроса {@code workspace/symbol}.
  * <p>
  * Клиенту MCP нечем принять потоковые чанки {@code $/progress}, поэтому ответ собирается целиком:
@@ -52,7 +52,7 @@ import java.util.List;
 @Component
 @Profile("mcp")
 @RequiredArgsConstructor
-public class WorkspaceSymbolSearchTool {
+public class WorkspaceFolderSymbolSearchTool {
 
   private static final int DEFAULT_LIMIT = 200;
   private static final CancelChecker NEVER_CANCELLED = () -> {
@@ -90,7 +90,7 @@ public class WorkspaceSymbolSearchTool {
    * @throws IllegalArgumentException Если {@code limit} не положительный или папка не зарегистрирована.
    */
   @McpTool(
-    name = "workspace_symbol_search",
+    name = "workspace_folder_symbol_search",
     description = "Search methods and module-level variables of a registered workspace folder by name (regions are "
       + "not indexed): exact, prefix, camel-hump and word-start matches first, then (with `fuzzy`) "
       + "substring-inside-word and subsequence ones, ranked like the editor's workspace/symbol request. "
@@ -108,13 +108,13 @@ public class WorkspaceSymbolSearchTool {
       idempotentHint = true,
       openWorldHint = false))
   public Result search(
-    @McpToolParam(required = true, description = McpToolParams.WORKSPACE_SYMBOL_QUERY)
+    @McpToolParam(required = true, description = McpToolParams.FOLDER_SYMBOL_QUERY)
     String query,
     @McpToolParam(required = true, description = McpToolParams.WORKSPACE_FOLDER)
     String workspaceFolder,
-    @McpToolParam(required = false, description = McpToolParams.WORKSPACE_SYMBOL_FUZZY)
+    @McpToolParam(required = false, description = McpToolParams.FOLDER_SYMBOL_FUZZY)
     @Nullable Boolean fuzzy,
-    @McpToolParam(required = false, description = McpToolParams.WORKSPACE_SYMBOL_LIMIT)
+    @McpToolParam(required = false, description = McpToolParams.FOLDER_SYMBOL_LIMIT)
     @Nullable Integer limit
   ) {
     var includeFuzzyTail = fuzzy == null || fuzzy;

@@ -27,7 +27,7 @@ import org.eclipse.lsp4j.WorkspaceSymbol;
 import org.jspecify.annotations.Nullable;
 
 /**
- * Символ рабочей папки в ответе MCP-инструмента {@code workspace_symbol_search}.
+ * Символ рабочей папки в ответе MCP-инструмента {@code workspace_folder_symbol_search}.
  *
  * @param name Имя символа.
  * @param kind Вид символа ({@link org.eclipse.lsp4j.SymbolKind}).

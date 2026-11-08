@@ -37,7 +37,7 @@ import com.github._1c_syntax.bsl.languageserver.mcp.tools.RegisterWorkspaceFolde
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.TypeAtPositionTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.TypeInfoTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.UnregisterWorkspaceFolderTool;
-import com.github._1c_syntax.bsl.languageserver.mcp.tools.WorkspaceSymbolSearchTool;
+import com.github._1c_syntax.bsl.languageserver.mcp.tools.WorkspaceFolderSymbolSearchTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.TypeMemberDto;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.WorkspaceFolderDto;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.WorkspaceSymbolDto;
@@ -113,7 +113,7 @@ class McpToolsTest {
   @Autowired
   private GlobalMemberSearchTool globalMemberSearchTool;
   @Autowired
-  private WorkspaceSymbolSearchTool workspaceSymbolSearchTool;
+  private WorkspaceFolderSymbolSearchTool workspaceFolderSymbolSearchTool;
   @Autowired
   private ListWorkspaceFoldersTool listWorkspaceFoldersTool;
   @Autowired
@@ -416,8 +416,8 @@ class McpToolsTest {
   }
 
   @Test
-  void workspaceSymbolSearchFindsMethodsByPrefix() {
-    var result = workspaceSymbolSearchTool.search("ПерваяФ", WORKSPACE_FOLDER, null, null);
+  void workspaceFolderSymbolSearchFindsMethodsByPrefix() {
+    var result = workspaceFolderSymbolSearchTool.search("ПерваяФ", WORKSPACE_FOLDER, null, null);
 
     assertThat(result.symbols())
       .filteredOn(symbol -> symbol.name().equals("ПерваяФункция"))
@@ -428,19 +428,19 @@ class McpToolsTest {
   }
 
   @Test
-  void workspaceSymbolSearchAppendsFuzzyMatchesOnlyWithFuzzy() {
+  void workspaceFolderSymbolSearchAppendsFuzzyMatchesOnlyWithFuzzy() {
     // «ваяФунк» — подстрока внутри слова «ПерваяФункция»: ни префиксом, ни началом слова, ни
     // camel-hump она не совпадает, её находит только fuzzy-хвост.
-    var withFuzzy = workspaceSymbolSearchTool.search("ваяФунк", WORKSPACE_FOLDER, true, null);
-    var withoutFuzzy = workspaceSymbolSearchTool.search("ваяФунк", WORKSPACE_FOLDER, false, null);
+    var withFuzzy = workspaceFolderSymbolSearchTool.search("ваяФунк", WORKSPACE_FOLDER, true, null);
+    var withoutFuzzy = workspaceFolderSymbolSearchTool.search("ваяФунк", WORKSPACE_FOLDER, false, null);
 
     assertThat(withFuzzy.symbols()).extracting(WorkspaceSymbolDto::name).contains("ПерваяФункция");
     assertThat(withoutFuzzy.symbols()).extracting(WorkspaceSymbolDto::name).doesNotContain("ПерваяФункция");
   }
 
   @Test
-  void workspaceSymbolSearchHonoursLimit() {
-    var result = workspaceSymbolSearchTool.search("Перв", WORKSPACE_FOLDER, false, 1);
+  void workspaceFolderSymbolSearchHonoursLimit() {
+    var result = workspaceFolderSymbolSearchTool.search("Перв", WORKSPACE_FOLDER, false, 1);
 
     assertThat(result.symbols()).hasSize(1);
     assertThat(result.symbolsCount()).isEqualTo(1);
@@ -448,20 +448,20 @@ class McpToolsTest {
   }
 
   @Test
-  void workspaceSymbolSearchRejectsNonPositiveLimit() {
-    assertThatThrownBy(() -> workspaceSymbolSearchTool.search("Перв", WORKSPACE_FOLDER, null, 0))
+  void workspaceFolderSymbolSearchRejectsNonPositiveLimit() {
+    assertThatThrownBy(() -> workspaceFolderSymbolSearchTool.search("Перв", WORKSPACE_FOLDER, null, 0))
       .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
-  void workspaceSymbolSearchReturnsOnlySymbolsOfRequestedFolder() {
+  void workspaceFolderSymbolSearchReturnsOnlySymbolsOfRequestedFolder() {
     // Индекс символов общий на все папки: вторая папка содержит метод «Тест» в types.bsl.
     var otherDir = Absolute.path("src/test/resources/mcp");
     registerWorkspaceFolderTool.registerWorkspaceFolder(otherDir.toString(), null);
     var otherFolder = otherDir.toUri().toString();
 
-    var inOther = workspaceSymbolSearchTool.search("Тест", otherFolder, false, null);
-    var inMain = workspaceSymbolSearchTool.search("Тест", WORKSPACE_FOLDER, false, null);
+    var inOther = workspaceFolderSymbolSearchTool.search("Тест", otherFolder, false, null);
+    var inMain = workspaceFolderSymbolSearchTool.search("Тест", WORKSPACE_FOLDER, false, null);
 
     assertThat(inOther.symbols())
       .anySatisfy(symbol -> {
@@ -477,7 +477,7 @@ class McpToolsTest {
   }
 
   @Test
-  void workspaceSymbolSearchDistinguishesNestedFolders() {
+  void workspaceFolderSymbolSearchDistinguishesNestedFolders() {
     // autumn-deadlock лежит внутри mcp: его документы входят в оба контекста, но сопоставление
     // по префиксу пути отдало бы их произвольной из двух папок.
     var outerDir = Absolute.path("src/test/resources/mcp");
@@ -487,8 +487,8 @@ class McpToolsTest {
     var outerFolder = outerDir.toUri().toString();
     var innerFolder = innerDir.toUri().toString();
 
-    var inInner = workspaceSymbolSearchTool.search("ПолучитьЛоггер", innerFolder, false, null);
-    var inOuter = workspaceSymbolSearchTool.search("ПолучитьЛоггер", outerFolder, false, null);
+    var inInner = workspaceFolderSymbolSearchTool.search("ПолучитьЛоггер", innerFolder, false, null);
+    var inOuter = workspaceFolderSymbolSearchTool.search("ПолучитьЛоггер", outerFolder, false, null);
 
     assertThat(inInner.symbols())
       .isNotEmpty()

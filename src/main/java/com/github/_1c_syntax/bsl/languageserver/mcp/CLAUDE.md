@@ -71,7 +71,7 @@ Roots объявлены deprecated в спеке MCP 2026-07-28 (`roots/list_ch
 члены, конструкторы, метаданные СП самого типа и его членов — `ApiMetadataDto`) ·
 `TypeAtPositionTool` (вывод типа в позиции) · `HoverTool` · `DefinitionTool` ·
 `FindReferencesTool` · `CallHierarchyTool` · `GlobalMemberInfoTool` · `GlobalMemberSearchTool`
-(нечёткий поиск по глобальному контексту) · `WorkspaceSymbolSearchTool` (поиск символов по
+(нечёткий поиск по глобальному контексту) · `WorkspaceFolderSymbolSearchTool` (поиск символов по
 рабочей папке). DTO — в `mcp/dto/`.
 
 ## Правки в этом каталоге
