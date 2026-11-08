@@ -55,15 +55,20 @@ final class MethodCompilationContexts {
 
   static Optional<MethodContext> commonMethodContext(DocumentContext document, CompilerDirectiveKind kind,
                                                             Set<ExecutionContext> contexts) {
+    var directive = CompilerDirectiveKind.of(kind.getTokenType());
+    if (!supportsCommonDirective(kind)) {
+      return Optional.of(new MethodContext(directive, Set.of()));
+    }
     if (document.getMdObject().filter(CommonModule.class::isInstance).isEmpty()) {
       return Optional.empty();
     }
-    var directive = CompilerDirectiveKind.of(kind.getTokenType());
-    if (kind != CompilerDirectiveKind.AT_CLIENT && kind != CompilerDirectiveKind.AT_SERVER) {
-      return Optional.of(new MethodContext(directive, Set.of()));
-    }
     restrictToDirective(contexts, kind);
     return Optional.of(new MethodContext(directive, Set.copyOf(contexts)));
+  }
+
+  /** Допустимость директивы общего модуля, не зависящая от его флагов и загруженных метаданных. */
+  static boolean supportsCommonDirective(CompilerDirectiveKind kind) {
+    return kind == CompilerDirectiveKind.AT_CLIENT || kind == CompilerDirectiveKind.AT_SERVER;
   }
 
   private static void restrictToDirective(Set<ExecutionContext> contexts, CompilerDirectiveKind directive) {
