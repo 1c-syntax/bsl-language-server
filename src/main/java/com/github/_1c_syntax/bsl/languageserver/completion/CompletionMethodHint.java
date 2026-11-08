@@ -24,8 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.completion;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
-import org.eclipse.lsp4j.CompletionItem;
-import org.eclipse.lsp4j.CompletionItemLabelDetails;
 import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.EnumSet;
@@ -33,8 +31,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 
 /** Контексты метода и наблюдавшиеся пути вызова; состояние одного пункта completion. */
 final class CompletionMethodHint {
@@ -43,34 +39,12 @@ final class CompletionMethodHint {
   private final Set<CallPath> paths = EnumSet.noneOf(CallPath.class);
   private boolean knownContexts = true;
 
-  private record DescriptionKey(Set<ExecutionContext> contexts, Set<CallPath> paths, boolean knownContexts) { }
+  record DescriptionKey(Set<ExecutionContext> contexts, Set<CallPath> paths, boolean knownContexts) { }
 
-  private record Description(String text, @Nullable String serverLabel) { }
+  record Description(String text, @Nullable String serverLabel) { }
 
-  /** Готовые пояснения для одинаковых состояний подсказки в одном запросе. */
-  static final class Renderer {
-    private final Language language;
-    private final boolean labelDetailsSupport;
-    private final Map<DescriptionKey, Description> descriptions = new HashMap<>();
-
-    Renderer(Language language, boolean labelDetailsSupport) {
-      this.language = language;
-      this.labelDetailsSupport = labelDetailsSupport;
-    }
-
-    String apply(CompletionMethodHint hint, CompletionItem item) {
-      var key = new DescriptionKey(EnumSet.copyOf(hint.contexts), EnumSet.copyOf(hint.paths), hint.knownContexts);
-      var description = descriptions.computeIfAbsent(key, ignored -> hint.render(language));
-      var label = description.serverLabel();
-      if (label != null) {
-        if (labelDetailsSupport) {
-          prependServerLabel(item, label);
-        } else {
-          appendServerDetail(item, label);
-        }
-      }
-      return description.text();
-    }
+  DescriptionKey descriptionKey() {
+    return new DescriptionKey(EnumSet.copyOf(contexts), EnumSet.copyOf(paths), knownContexts);
   }
 
   void merge(CompletionMethodHint contribution) {
@@ -99,14 +73,16 @@ final class CompletionMethodHint {
     unknownCall();
   }
 
-  private Description render(Language language) {
+  Description render(Language language) {
     var explanation = new ArrayList<String>();
     if (knownContexts) {
       explanation.add(tr(language, "contexts").formatted(contextNames(language)));
     }
     appendCallDescription(explanation, language);
-    var label = paths.contains(CallPath.SERVER)
-      ? tr(language, paths.size() > 1 ? "possibleServerCall" : "serverCall") : null;
+    String label = null;
+    if (paths.contains(CallPath.SERVER)) {
+      label = tr(language, paths.size() > 1 ? "possibleServerCall" : "serverCall");
+    }
     return new Description(String.join("\n\n", explanation), label);
   }
 
@@ -132,29 +108,6 @@ final class CompletionMethodHint {
 
   private boolean only(CallPath path) {
     return paths.size() == 1 && paths.contains(path);
-  }
-
-  private static void prependServerLabel(CompletionItem item, String serverCall) {
-    var labels = item.getLabelDetails();
-    if (labels == null) {
-      labels = new CompletionItemLabelDetails();
-      item.setLabelDetails(labels);
-    }
-    var type = labels.getDescription();
-    if (type == null || type.isBlank()) {
-      labels.setDescription(serverCall);
-    } else {
-      labels.setDescription(serverCall + " · " + type);
-    }
-  }
-
-  private static void appendServerDetail(CompletionItem item, String serverCall) {
-    var detail = item.getDetail();
-    if (detail == null || detail.isBlank()) {
-      item.setDetail(serverCall);
-    } else {
-      item.setDetail(detail + " · " + serverCall);
-    }
   }
 
   private static String tr(Language language, String key) {
