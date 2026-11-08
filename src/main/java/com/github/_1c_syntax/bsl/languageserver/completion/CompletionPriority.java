@@ -22,8 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.completion;
 
 
-
-/** Приоритет предложения с учётом всех возможных контекстов и получателей. */
+/**
+ * Приоритет предложения с учётом всех возможных контекстов и получателей.
+ */
 final class CompletionPriority {
   static final int AVAILABLE = 0;
   static final int PARTIAL = 1;
@@ -32,7 +33,9 @@ final class CompletionPriority {
   private CompletionPriority() {
   }
 
-  /** Пустой набор означает отсутствие сведений; смешанная доступность — отдельную промежуточную группу. */
+  /**
+   * Пустой набор означает отсутствие сведений; смешанная доступность — отдельную промежуточную группу.
+   */
   static int combine(int[] ranks) {
     var available = false;
     var unavailable = false;
@@ -40,6 +43,10 @@ final class CompletionPriority {
       available |= rank != UNAVAILABLE;
       unavailable |= rank != AVAILABLE;
     }
+    return combine(available, unavailable);
+  }
+
+  static int combine(boolean available, boolean unavailable) {
     if (!unavailable) {
       return AVAILABLE;
     }

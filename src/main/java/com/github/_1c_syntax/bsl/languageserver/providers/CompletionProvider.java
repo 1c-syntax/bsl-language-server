@@ -182,9 +182,12 @@ public final class CompletionProvider {
   private boolean commitCharactersSupport;
 
   private static void rankDotCompletionItem(CompletionContextRanker ranking, CompletionItem item,
-                                             MemberDescriptor member) {
-    if (member.kind() == MemberKind.PROPERTY) ranking.rankDotPropertyMember(item, member);
-    else ranking.rankDotMember(item, member);
+                                            MemberDescriptor member) {
+    if (member.kind() == MemberKind.PROPERTY) {
+      ranking.rankDotPropertyMember(item, member);
+    } else {
+      ranking.rankDotMember(item, member);
+    }
   }
 
   @EventListener(LanguageServerInitializedEvent.class)
@@ -326,8 +329,8 @@ public final class CompletionProvider {
 
   /**
    * @return предложения автодополнения для указанной позиции, обёрнутые в {@link CompletionList}.
-   *     {@code isIncomplete = false}: список содержит все валидные кандидаты для текущего префикса
-   *     — клиент может фильтровать дальше локально, повторно к серверу обращаться не обязан.
+   * {@code isIncomplete = false}: список содержит все валидные кандидаты для текущего префикса
+   * — клиент может фильтровать дальше локально, повторно к серверу обращаться не обязан.
    */
   public CompletionList getCompletion(DocumentContext documentContext, CompletionParams params) {
     var position = params.getPosition();
@@ -378,7 +381,9 @@ public final class CompletionProvider {
     return unresolved;
   }
 
-  /** Сохранить приписку для resolve либо сразу добавить её к уже сформированной документации. */
+  /**
+   * Сохранить приписку для resolve либо сразу добавить её к уже сформированной документации.
+   */
   private void attachContextDescription(CompletionItem item, String description) {
     if (item.getData() instanceof CompletionData data) {
       data.setContextDescription(description);
@@ -387,7 +392,9 @@ public final class CompletionProvider {
     }
   }
 
-  /** Контексты идут обычным текстом после назначения метода, без отдельного заголовка в detail. */
+  /**
+   * Контексты идут обычным текстом после назначения метода, без отдельного заголовка в detail.
+   */
   private void appendContextDescription(CompletionItem item, String description) {
     var documentation = item.getDocumentation();
     var original = "";
@@ -470,7 +477,7 @@ public final class CompletionProvider {
   }
 
   private List<CompletionItem> dotCompletion(DocumentContext documentContext, Position position,
-                                            CompletionContextRanker ranking) {
+                                             CompletionContextRanker ranking) {
     var dotInfo = dotCompletionInfo(documentContext, position);
     if (dotInfo == null) {
       return List.of();
@@ -661,7 +668,7 @@ public final class CompletionProvider {
    * Метод, в области видимости которого находится {@code position}.
    *
    * @return метод, содержащий позицию; {@code empty}, если позиция вне
-   *         какого-либо метода (уровень модуля).
+   * какого-либо метода (уровень модуля).
    */
   private static Optional<MethodSymbol> enclosingMethod(DocumentContext documentContext, Position position) {
     var symbol = documentContext.getSymbolTree().getSymbolAtPosition(position);
@@ -680,14 +687,14 @@ public final class CompletionProvider {
    * такой self-член добавит {@link #collectSelfMembers}, а не эта ветка.
    */
   private static boolean isVariableHiddenFromNoDotCompletion(VariableSymbol variable,
-                                                      SourceDefinedSymbol moduleSymbol,
-                                                      @Nullable MethodSymbol enclosingMethod) {
+                                                             SourceDefinedSymbol moduleSymbol,
+                                                             @Nullable MethodSymbol enclosingMethod) {
     var scope = variable.getScope();
     return !scope.equals(moduleSymbol) && !scope.equals(enclosingMethod);
   }
 
   private List<CompletionItem> noDotCompletion(DocumentContext documentContext, Position position,
-                                              CompletionContextRanker ranking) {
+                                               CompletionContextRanker ranking) {
     var lineInfo = currentLineInfo(documentContext, position);
     if (lineInfo == null) {
       return List.of();
@@ -750,10 +757,13 @@ public final class CompletionProvider {
     return items;
   }
 
-  /** Общие значения одного запроса без точки; язык и видимость библиотек фиксируются один раз. */
+  /**
+   * Общие значения одного запроса без точки; язык и видимость библиотек фиксируются один раз.
+   */
   private record NoDotContext(DocumentContext document, Position position, String prefix, FileType fileType,
                               Language language, Set<String> usedLibraries, Optional<String> ownLibraryOrigin,
-                              CompletionContextRanker ranking) { }
+                              CompletionContextRanker ranking) {
+  }
 
   private void collectPlatformConstructors(NoDotContext query, List<CompletionItem> items) {
 
@@ -1243,7 +1253,9 @@ public final class CompletionProvider {
     return item;
   }
 
-  /** Помечает item устаревшим, если {@code member} устарел для целевой версии. */
+  /**
+   * Помечает item устаревшим, если {@code member} устарел для целевой версии.
+   */
   private void markDeprecated(CompletionItem item, MemberDescriptor member, CompatibilityMode target) {
     if (isMemberDeprecated(member, target)) {
       markDeprecatedItem(item);
@@ -1527,7 +1539,9 @@ public final class CompletionProvider {
     return " (" + signature + ")";
   }
 
-  /** Сигнатура «{@code (Пар1, Пар2?)}» с пометкой «?» у необязательных параметров. */
+  /**
+   * Сигнатура «{@code (Пар1, Пар2?)}» с пометкой «?» у необязательных параметров.
+   */
   private String formatParameterList(SignatureDescriptor signature, Language scriptVariant) {
     var sb = new StringBuilder();
     sb.append('(');
