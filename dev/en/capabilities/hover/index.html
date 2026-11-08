@@ -2393,6 +2393,12 @@
 <p><img alt="hover-01-method" src="https://github.com/user-attachments/assets/cff69a27-5b22-45a0-abac-1681ba649cd1" /></p>
 <h2 id="Hover-on-a-variable">Hover on a variable<a class="headerlink" href="#Hover-on-a-variable" title="Permanent link">&para;</a></h2>
 <p>The cursor hovers over a variable in the module code. The popup shows the variable name and the inferred type of its value.</p>
+<p>When the called function's body is available, its return type is refined using the calling method's context and preprocessor branch.
+If an <code>&amp;AtClientAtServerNoContext</code> function returns a number under <code>#If Server</code> and a string under <code>#Else</code>,
+by default the receiving variable has type <code>String</code> in a client procedure and <code>Number</code> in a server procedure.
+With the shared <a href="../../features/ConfigurationFile/"><code>supportThickClientFileMode</code></a> setting enabled, the client result
+also includes <code>Number</code>: in a file-mode thick client, <code>Server</code> is true even inside a client form procedure.
+The same setting applies to method context descriptions and inlay hints.</p>
 <p><img alt="hover-02-variable" src="https://github.com/user-attachments/assets/6582bfce-5c67-4e00-9550-c158763d8a44" /></p>
 <h2 id="Hover-on-a-platform-method">Hover on a platform method<a class="headerlink" href="#Hover-on-a-platform-method" title="Permanent link">&para;</a></h2>
 <p>The cursor hovers over the platform function <code>СтрДлина</code> in the code. The popup shows its signature, return type and description from the platform documentation.</p>
