@@ -23,13 +23,11 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypePackProvider.TypeDecl;
-import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
-import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
-import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -62,7 +60,7 @@ class BuiltinTypesJsonLoaderTest {
   void oscriptVariadicConstructorsHaveBilingualTypedTails() {
     for (var name : List.of("Массив", "Структура", "ФиксированнаяСтруктура")) {
       var tails = oscriptType(name).constructors().stream()
-        .flatMap(signature -> signature.parameters().stream()).filter(parameter -> parameter.variadic()).toList();
+        .flatMap(signature -> signature.parameters().stream()).filter(ParameterDescriptor::variadic).toList();
       assertThat(tails).as(name).isNotEmpty().allSatisfy(parameter -> {
         assertThat(parameter.optional()).isTrue();
         assertThat(parameter.bilingualName().ru()).isNotBlank();

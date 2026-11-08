@@ -311,17 +311,7 @@ public class BuiltinTypesJsonLoader {
    * Специализация generic-плейсхолдеров происходит ниже по конвейеру.
    */
   static TypeSet readTypeSet(Map<String, Object> raw, String listKey, String singleKey) {
-    var names = new ArrayList<String>();
-    if (raw.get(listKey) instanceof List<?> list) {
-      for (var item : list) {
-        if (item instanceof String s && !s.isBlank()) {
-          names.add(s);
-        }
-      }
-    }
-    if (names.isEmpty() && raw.get(singleKey) instanceof String s && !s.isBlank()) {
-      names.add(s);
-    }
+    var names = readTypeNames(raw, listKey, singleKey);
     if (names.isEmpty()) {
       return TypeSet.EMPTY;
     }
@@ -334,6 +324,21 @@ public class BuiltinTypesJsonLoader {
       }
     }
     return TypeSet.of(refs);
+  }
+
+  private static List<String> readTypeNames(Map<String, Object> raw, String listKey, String singleKey) {
+    var names = new ArrayList<String>();
+    if (raw.get(listKey) instanceof List<?> list) {
+      for (var item : list) {
+        if (item instanceof String s && !s.isBlank()) {
+          names.add(s);
+        }
+      }
+    }
+    if (names.isEmpty() && raw.get(singleKey) instanceof String s && !s.isBlank()) {
+      names.add(s);
+    }
+    return names;
   }
 
   @SuppressWarnings("unchecked")
