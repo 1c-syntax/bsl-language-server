@@ -2194,6 +2194,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#Thick-client-support-in-file-mode" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Thick client support in file mode
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#Global-and-Local-Configuration" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2320,6 +2331,22 @@
 
 <h1 id="BSL-Language-Server-Configuration">BSL Language Server Configuration<a class="headerlink" href="#BSL-Language-Server-Configuration" title="Permanent link">&para;</a></h1>
 <p>BSL Language Server provides the ability to change settings using a configuration file in JSON format.</p>
+<h2 id="Thick-client-support-in-file-mode">Thick client support in file mode<a class="headerlink" href="#Thick-client-support-in-file-mode" title="Permanent link">&para;</a></h2>
+<p>The workspace-wide <code>supportThickClientFileMode</code> option controls file-mode thick client contexts
+in diagnostics, type inference, hover, completion, and inlay hints. It is disabled by default:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"supportThickClientFileMode"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>With <code>false</code>, analysis keeps client and server contexts separate and excludes file-mode thick clients.
+Client/server thick clients and file-mode external connections remain supported.</p>
+<p>Set the option to <code>true</code> when the configuration supports a thick client connected to a file infobase.
+Both <code>Client</code> and <code>Server</code> can then be true, including inside a managed form's client method.
+This does not imply a server call: method directives and side transitions are checked separately.
+A function returning a number under <code>#If Server</code> and a string under <code>#Else</code> may give a client caller
+the union <code>String | Number</code>. These branches are not treated as unconditionally unreachable.</p>
+<p>The option does not apply to OneScript. Changing it recalculates context-dependent types and refreshes
+diagnostics and hints. Recalculation can take time in large projects.</p>
 <h2 id="Global-and-Local-Configuration">Global and Local Configuration<a class="headerlink" href="#Global-and-Local-Configuration" title="Permanent link">&para;</a></h2>
 <p>BSL Language Server uses a two-level configuration system:</p>
 <ul>

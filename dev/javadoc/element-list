@@ -32,6 +32,7 @@ com.github._1c_syntax.bsl.languageserver.configuration.references
 com.github._1c_syntax.bsl.languageserver.configuration.semantictokens
 com.github._1c_syntax.bsl.languageserver.configuration.watcher
 com.github._1c_syntax.bsl.languageserver.context
+com.github._1c_syntax.bsl.languageserver.context.compilation
 com.github._1c_syntax.bsl.languageserver.context.computer
 com.github._1c_syntax.bsl.languageserver.context.events
 com.github._1c_syntax.bsl.languageserver.context.symbol
@@ -70,6 +71,7 @@ com.github._1c_syntax.bsl.languageserver.reporters.databind
 com.github._1c_syntax.bsl.languageserver.semantictokens
 com.github._1c_syntax.bsl.languageserver.semantictokens.strings
 com.github._1c_syntax.bsl.languageserver.types
+com.github._1c_syntax.bsl.languageserver.types.compilation
 com.github._1c_syntax.bsl.languageserver.types.index
 com.github._1c_syntax.bsl.languageserver.types.inferencer
 com.github._1c_syntax.bsl.languageserver.types.model
