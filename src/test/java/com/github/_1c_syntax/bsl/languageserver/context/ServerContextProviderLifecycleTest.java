@@ -28,6 +28,9 @@ import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.support.StaticListableBeanFactory;
 
 import java.nio.file.Path;
@@ -36,9 +39,11 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.inOrder;
@@ -47,6 +52,60 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 class ServerContextProviderLifecycleTest {
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void failedRegistrationRollsBackScopeAndNameBeforeRetry(boolean synthetic, @TempDir Path root) {
+    var uri = synthetic ? ServerContextProvider.DEFAULT_WORKSPACE_URI : Absolute.uri(root.toUri());
+    var scope = new WorkspaceBeanScope();
+    var context = mock(ServerContext.class);
+    var first = new AtomicBoolean(true);
+    var initialBean = new AtomicReference<Object>();
+    var retriedBean = new AtomicReference<Object>();
+    var destructions = new AtomicInteger();
+    var beans = new StaticListableBeanFactory();
+    beans.addBean("serverContext", new FactoryBean<ServerContext>() {
+      @Override
+      public ServerContext getObject() {
+        var partial = scope.get("partial", Object::new);
+        scope.registerDestructionCallback("partial", destructions::incrementAndGet);
+        if (first.getAndSet(false)) {
+          initialBean.set(partial);
+          throw new IllegalStateException("broken context");
+        }
+        retriedBean.set(partial);
+        return context;
+      }
+
+      @Override
+      public Class<?> getObjectType() {
+        return ServerContext.class;
+      }
+    });
+    var provider = new ServerContextProvider(beans.getBeanProvider(ServerContext.class),
+      mock(LanguageServerConfiguration.class), scope);
+    try {
+      assertThatThrownBy(() -> {
+        if (synthetic) {
+          provider.registerDefaultWorkspace();
+        } else {
+          provider.addWorkspace(uri);
+        }
+      }).hasStackTraceContaining("broken context");
+      assertThat(provider.getAllContexts()).isEmpty();
+      assertThat(scope.getRegisteredWorkspaceUris()).isEmpty();
+      assertThat(destructions).hasValue(1);
+      assertThatThrownBy(() -> WorkspaceContextHolder.set(uri)).isInstanceOf(IllegalStateException.class);
+
+      var retried = synthetic ? provider.registerDefaultWorkspace() : provider.addWorkspace(uri);
+      assertThat(retried).isSameAs(context);
+      assertThat(retriedBean.get()).isNotSameAs(initialBean.get());
+    } finally {
+      provider.clear();
+      WorkspaceContextHolder.unregisterWorkspace(uri);
+    }
+    assertThat(destructions).hasValue(2);
+  }
 
   @Test
   void removalKeepsWorkspaceAvailableUntilPreparationHandlerCompletes(@TempDir Path root) {
