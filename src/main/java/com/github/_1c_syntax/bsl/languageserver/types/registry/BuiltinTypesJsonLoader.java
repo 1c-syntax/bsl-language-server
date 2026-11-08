@@ -132,7 +132,7 @@ public class BuiltinTypesJsonLoader {
         var elementTypeNames = (List<String>) entry.getOrDefault("elementTypes", Collections.emptyList());
         var defaultElementTypes = new ArrayList<TypeRef>(elementTypeNames.size());
         for (var name : elementTypeNames) {
-          defaultElementTypes.add(new TypeRef(TypeKind.PLATFORM, name));
+          defaultElementTypes.add(typeRef(name));
         }
         var supportsForEach = Boolean.TRUE.equals(entry.get("supportsForEach"));
         var supportsIndexAccess = Boolean.TRUE.equals(entry.get("supportsIndexAccess"));
@@ -289,13 +289,28 @@ public class BuiltinTypesJsonLoader {
     return value instanceof String s ? s : "";
   }
 
+  /** Примитивы из JSON должны совпадать с типами литералов, в том числе при английском написании. */
+  static TypeRef typeRef(String name) {
+    var primitive = switch (name.trim().toLowerCase(Locale.ROOT)) {
+      case "строка", "string" -> "Строка";
+      case "число", "number" -> "Число";
+      case "булево", "boolean" -> "Булево";
+      case "дата", "date", "datetime" -> "Дата";
+      case "тип", "type" -> "Тип";
+      case "неопределено", "undefined" -> "Неопределено";
+      case "null" -> "Null";
+      default -> null;
+    };
+    return primitive == null ? new TypeRef(TypeKind.PLATFORM, name) : new TypeRef(TypeKind.PRIMITIVE, primitive);
+  }
+
   /**
    * Читает набор типов из JSON: сперва массив {@code listKey} ({@code ["Число","Строка"]}),
    * иначе одиночное строковое поле {@code singleKey}. Пустые/отсутствующие → {@link TypeSet#EMPTY}.
-   * Все имена трактуются как платформенные ({@link TypeKind#PLATFORM}); специализация
-   * generic-плейсхолдеров происходит ниже по конвейеру.
+   * Примитивы канонизируются по языковым именам; остальные ссылки остаются платформенными.
+   * Специализация generic-плейсхолдеров происходит ниже по конвейеру.
    */
-  private static TypeSet readTypeSet(Map<String, Object> raw, String listKey, String singleKey) {
+  static TypeSet readTypeSet(Map<String, Object> raw, String listKey, String singleKey) {
     var names = new ArrayList<String>();
     if (raw.get(listKey) instanceof List<?> list) {
       for (var item : list) {
@@ -312,13 +327,17 @@ public class BuiltinTypesJsonLoader {
     }
     var refs = new ArrayList<TypeRef>(names.size());
     for (var name : names) {
-      refs.add(new TypeRef(TypeKind.PLATFORM, name));
+      for (var alternative : name.split("\\|")) {
+        if (!alternative.isBlank()) {
+          refs.add(typeRef(alternative.trim()));
+        }
+      }
     }
     return TypeSet.of(refs);
   }
 
   @SuppressWarnings("unchecked")
-  private static List<SignatureDescriptor> readSignatures(
+  static List<SignatureDescriptor> readSignatures(
     List<Map<String, Object>> raw,
     TypeSet fallbackReturnTypes
   ) {

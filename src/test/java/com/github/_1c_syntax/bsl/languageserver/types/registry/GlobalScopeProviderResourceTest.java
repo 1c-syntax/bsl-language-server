@@ -25,6 +25,12 @@ import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
+import java.util.Map;
+
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -34,6 +40,33 @@ import static org.assertj.core.api.Assertions.assertThat;
  * IOException-fallback на отсутствующий ресурс.
  */
 class GlobalScopeProviderResourceTest {
+
+  @Test
+  @SneakyThrows
+  @SuppressWarnings("unchecked")
+  void globalSignaturesPreservePrimitiveTypesAliasesDefaultsAndVariadicParameters() {
+    var loaded = invokeLoadFromResource("oscript-metadata/globals.json");
+    var accessor = loaded.getClass().getDeclaredMethod("functions");
+    accessor.setAccessible(true);
+    var functions = (Map<String, MemberDescriptor>) accessor.invoke(loaded);
+    var signature = functions.values().stream().filter(member -> member.matches("ТестФормат"))
+      .findFirst().orElseThrow().signatures().getFirst();
+
+    assertThat(signature.returnTypes().refs()).singleElement().satisfies(ref -> {
+      assertThat(ref.kind()).isEqualTo(TypeKind.PRIMITIVE);
+      assertThat(ref.qualifiedName()).isEqualTo("Строка");
+    });
+    var template = signature.parameters().getFirst();
+    assertThat(template.displayName(Language.RU)).isEqualTo("Шаблон");
+    assertThat(template.displayName(Language.EN)).isEqualTo("template");
+    assertThat(template.types().refs()).singleElement()
+      .satisfies(ref -> assertThat(ref.kind()).isEqualTo(TypeKind.PRIMITIVE));
+    var values = signature.parameters().getLast();
+    assertThat(values.variadic()).isTrue();
+    assertThat(values.optional()).isTrue();
+    assertThat(values.defaultValue()).isEqualTo("Неопределено");
+    assertThat(values.types().refs()).containsExactly(TypeRef.ANY);
+  }
 
   @Test
   void loadFromResourceMergesLegacyKeywordsField() {

@@ -27,6 +27,9 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypePackProvider.TypeDecl;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -43,6 +46,31 @@ class BuiltinTypesJsonLoaderTest {
     "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-oscript-platform-types.json";
   private static final String BSL_RESOURCE =
     "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-platform-types.json";
+
+  @Test
+  void oscriptStringPropertiesUseTheSameTypeAsStringLiterals() {
+    var name = oscriptType("Файл").members().stream().filter(member -> member.matches("Имя"))
+      .findFirst().orElseThrow();
+    var literal = new TypeRef(TypeKind.PRIMITIVE, "Строка");
+
+    assertThat(name.returnTypes().refs()).containsExactly(literal);
+    assertThat(name.returnTypes().union(TypeSet.of(literal)).refs())
+      .containsExactly(literal);
+  }
+
+  @Test
+  void oscriptVariadicConstructorsHaveBilingualTypedTails() {
+    for (var name : List.of("Массив", "Структура", "ФиксированнаяСтруктура")) {
+      var tails = oscriptType(name).constructors().stream()
+        .flatMap(signature -> signature.parameters().stream()).filter(parameter -> parameter.variadic()).toList();
+      assertThat(tails).as(name).isNotEmpty().allSatisfy(parameter -> {
+        assertThat(parameter.optional()).isTrue();
+        assertThat(parameter.bilingualName().ru()).isNotBlank();
+        assertThat(parameter.bilingualName().en()).isNotBlank();
+        assertThat(parameter.types()).isNotEqualTo(TypeSet.EMPTY);
+      });
+    }
+  }
 
   @Test
   void oscriptBilingualMemberIsSingleBilingualMember() {

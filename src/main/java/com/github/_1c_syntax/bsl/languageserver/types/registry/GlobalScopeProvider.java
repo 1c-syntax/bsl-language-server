@@ -37,7 +37,6 @@ import com.github._1c_syntax.bsl.context.platform.PlatformLanguageKeyword;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
-import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
@@ -821,11 +820,9 @@ public class GlobalScopeProvider {
   @SuppressWarnings("unchecked")
   private static MemberDescriptor functionMember(String name, Map<String, Object> entry) {
     var description = (String) entry.getOrDefault("description", "");
-    var returnTypeName = (String) entry.get(RETURN_TYPE_FIELD);
-    var returnType = returnTypeName == null
-      ? TypeRef.UNKNOWN
-      : new TypeRef(TypeKind.PLATFORM, returnTypeName);
-    var signatures = readSignatures((List<Map<String, Object>>) entry.get("signatures"), returnType);
+    var returnTypes = BuiltinTypesJsonLoader.readTypeSet(entry, "returnTypes", RETURN_TYPE_FIELD);
+    var signatures = readSignatures((List<Map<String, Object>>) entry.get("signatures"),
+      returnTypes.isEmpty() ? TypeSet.of(TypeRef.UNKNOWN) : returnTypes);
     var member = withFirstAliasName(
       MemberDescriptor.method(name, description, signatures).withStandardLibrary(true), entry);
     if (Boolean.TRUE.equals(entry.get("async"))) {
@@ -843,7 +840,7 @@ public class GlobalScopeProvider {
     var typeName = (String) entry.get("type");
     var typeRef = typeName == null || typeName.isBlank()
       ? TypeRef.UNKNOWN
-      : new TypeRef(TypeKind.PLATFORM, typeName);
+      : BuiltinTypesJsonLoader.typeRef(typeName);
     return withFirstAliasName(MemberDescriptor.property(name, typeRef, description), entry);
   }
 
@@ -872,7 +869,7 @@ public class GlobalScopeProvider {
       var typeName = (String) entry.get("type");
       var typeRef = typeName == null || typeName.isBlank()
         ? TypeRef.UNKNOWN
-        : new TypeRef(TypeKind.PLATFORM, typeName);
+        : BuiltinTypesJsonLoader.typeRef(typeName);
       var aliases = (List<String>) entry.getOrDefault(ALIASES_FIELD, Collections.emptyList());
       result.add(new PlatformVariable(name, List.copyOf(aliases), description, typeRef));
     }
@@ -889,12 +886,10 @@ public class GlobalScopeProvider {
         continue;
       }
       var description = (String) entry.getOrDefault("description", "");
-      var returnTypeName = (String) entry.get(RETURN_TYPE_FIELD);
-      var returnType = returnTypeName == null
-        ? TypeRef.UNKNOWN
-        : new TypeRef(TypeKind.PLATFORM, returnTypeName);
+      var returnTypes = BuiltinTypesJsonLoader.readTypeSet(entry, "returnTypes", RETURN_TYPE_FIELD);
       var signatures = readSignatures(
-        (List<Map<String, Object>>) entry.get("signatures"), returnType
+        (List<Map<String, Object>>) entry.get("signatures"),
+        returnTypes.isEmpty() ? TypeSet.of(TypeRef.UNKNOWN) : returnTypes
       );
       var descriptor = MemberDescriptor.method(name, description, signatures)
         .withStandardLibrary(true);
@@ -961,32 +956,9 @@ public class GlobalScopeProvider {
 
   @SuppressWarnings("unchecked")
   private static List<SignatureDescriptor> readSignatures(
-    List<Map<String, Object>> raw, TypeRef fallbackReturnType
+    List<Map<String, Object>> raw, TypeSet fallbackReturnTypes
   ) {
-    if (raw == null || raw.isEmpty()) {
-      return Collections.emptyList();
-    }
-    var result = new ArrayList<SignatureDescriptor>(raw.size());
-    for (var sig : raw) {
-      var description = (String) sig.getOrDefault("description", "");
-      var returnTypeName = (String) sig.get(RETURN_TYPE_FIELD);
-      var returnType = returnTypeName == null
-        ? fallbackReturnType
-        : new TypeRef(TypeKind.PLATFORM, returnTypeName);
-      var rawParams = (List<Map<String, Object>>) sig.getOrDefault("parameters", Collections.emptyList());
-      var params = new ArrayList<ParameterDescriptor>(rawParams.size());
-      for (var p : rawParams) {
-        var pname = (String) p.get("name");
-        var optional = Boolean.TRUE.equals(p.get("optional"));
-        var pdesc = (String) p.getOrDefault("description", "");
-        var pNameRu = stringEntry(p, "nameRu");
-        var pNameEn = stringEntry(p, "nameEn");
-        params.add(new ParameterDescriptor(pname, TypeSet.EMPTY, optional, pdesc, "",
-          BilingualString.of(pNameRu, pNameEn)));
-      }
-      result.add(new SignatureDescriptor(params, returnType, description));
-    }
-    return result;
+    return BuiltinTypesJsonLoader.readSignatures(raw, fallbackReturnTypes);
   }
 
   /**
