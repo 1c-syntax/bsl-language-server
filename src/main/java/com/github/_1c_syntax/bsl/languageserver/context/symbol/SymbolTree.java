@@ -134,7 +134,8 @@ public class SymbolTree {
    * @param moduleType         тип модуля документа.
    * @param mdoRef             ссылка на объект метаданных документа.
    * @param bareSelfProperties голые имена, признанные реквизитами своего типа.
-   * @param loopVariables      переменные, впервые объявленные заголовком цикла.
+   * @param loopVariables      переменные из этого же дерева, впервые объявленные заголовком цикла;
+   *     снимок используется только при проверке своего дерева и не переносится в следующее.
    */
   public record Basis(ModuleType moduleType, String mdoRef, Set<String> bareSelfProperties,
                       Set<VariableSymbol> loopVariables) {
