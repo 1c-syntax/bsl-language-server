@@ -50,7 +50,8 @@ class CommonModuleAccessorsConfigurationTest {
     patterns.set(0, "OtherMethod");
     assertThat(configuration.getReferencesOptions().getCommonModuleAccessors()).contains("CommonModule");
     assertThat(options.getCommonModuleAccessors()).contains("CommonModule");
-    assertThatThrownBy(() -> options.getCommonModuleAccessors().clear())
+    var storedPatterns = options.getCommonModuleAccessors();
+    assertThatThrownBy(storedPatterns::clear)
       .isInstanceOf(UnsupportedOperationException.class);
     options.setCommonModuleAccessors(patterns);
     configuration.setReferencesOptions(options);

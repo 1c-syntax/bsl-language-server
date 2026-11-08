@@ -85,7 +85,7 @@ public class ReferencesOptions {
 
   @JsonCreator(mode = JsonCreator.Mode.DISABLED)
   public ReferencesOptions(List<String> commonModuleAccessors) {
-    setCommonModuleAccessors(commonModuleAccessors);
+    updateCommonModuleAccessors(commonModuleAccessors);
   }
 
   /**
@@ -94,6 +94,10 @@ public class ReferencesOptions {
    * @param commonModuleAccessors шаблоны методов доступа к общим модулям.
    */
   public void setCommonModuleAccessors(List<String> commonModuleAccessors) {
+    updateCommonModuleAccessors(commonModuleAccessors);
+  }
+
+  private void updateCommonModuleAccessors(List<String> commonModuleAccessors) {
     var snapshot = Collections.unmodifiableList(new ArrayList<>(commonModuleAccessors));
     var accessors = ModuleReference.parseAccessors(snapshot);
     this.commonModuleAccessors = snapshot;
