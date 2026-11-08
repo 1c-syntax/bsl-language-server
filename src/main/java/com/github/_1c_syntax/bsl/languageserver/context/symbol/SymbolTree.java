@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.context.symbol;
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Value;
@@ -57,8 +56,6 @@ public class SymbolTree {
    * Корневой символ модуля документа.
    */
   ModuleSymbol module;
-
-  Basis basis;
 
   /**
    * Условия препроцессора по диапазону имени метода в этой версии дерева.
@@ -127,35 +124,6 @@ public class SymbolTree {
   Set<SourceDefinedSymbol> positionOrderedParents = createPositionOrderedParents();
 
   /**
-   * На чём, кроме текста документа, построено дерево: привязка документа к метаданным и голые
-   * имена, признанные при построении реквизитами своего типа. Символов у таких имён нет, поэтому
-   * из самого дерева их не восстановить.
-   *
-   * @param moduleType         тип модуля документа.
-   * @param mdoRef             ссылка на объект метаданных документа.
-   * @param bareSelfProperties голые имена, признанные реквизитами своего типа.
-   * @param loopVariables      переменные, впервые объявленные заголовком цикла.
-   */
-  public record Basis(ModuleType moduleType, String mdoRef, Set<String> bareSelfProperties,
-                      Set<VariableSymbol> loopVariables) {
-    /**
-     * Основание дерева, построенного не по документу: годным для документа такое дерево не бывает.
-     * Узнаётся по ссылке, а не по значениям полей.
-     */
-    public static final Basis NONE = new Basis(ModuleType.UNKNOWN, "", Set.of());
-
-    public Basis {
-      bareSelfProperties = Set.copyOf(bareSelfProperties);
-      loopVariables = Set.copyOf(loopVariables);
-    }
-
-    public Basis(ModuleType moduleType, String mdoRef, Set<String> bareSelfProperties) {
-      this(moduleType, mdoRef, bareSelfProperties, Set.of());
-    }
-
-  }
-
-  /**
    * Символы, упорядоченные по строке {@code selectionRange}: {@code symbols[i]} объявлен на
    * строке {@code lines[i]}. Два массива вместо карты «строка → список»: на большой
    * конфигурации у деревьев миллионы символов, а карта платила за каждый узлом, ключом и списком.
@@ -192,18 +160,8 @@ public class SymbolTree {
    *     значения {@code null} допустимы и означают неизвестное условие.
    */
   public SymbolTree(ModuleSymbol module, Map<Range, Set<ExecutionContext>> methodConditions) {
-    this(module, methodConditions, Basis.NONE);
-  }
-
-  public SymbolTree(ModuleSymbol module, Basis basis) {
-    this(module, Map.of(), basis);
-  }
-
-  /** Основание классификации и условия объявлений относятся к одной версии дерева. */
-  public SymbolTree(ModuleSymbol module, Map<Range, Set<ExecutionContext>> methodConditions, Basis basis) {
     this.module = module;
     this.methodConditions = methodConditions;
-    this.basis = basis;
   }
 
   /**

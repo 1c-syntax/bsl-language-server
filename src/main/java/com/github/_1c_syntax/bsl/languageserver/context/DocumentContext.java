@@ -427,12 +427,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
         tokenizer = new BSLTokenizer(content);
       }
       this.version = version;
-      // Перечитывание того же текста — документ освобождали, а теперь он снова нужен проходу
-      // доразрешения или пакетному анализу — дерева не меняет, пока оно годно: строить его
-      // заново значило бы повторить заметную долю всего разбора ради того же результата.
-      if (contentChanged || !isSymbolTreeUpToDate()) {
-        symbolTree.set(computeSymbolTree());
-      }
+      symbolTree.set(computeSymbolTree());
 
       // Отпечаток запоминается последним, когда содержимое уже применено и дерево построено:
       // сорвавшийся разбор не должен выглядеть состоявшимся, иначе повторная попытка сочтёт
@@ -610,10 +605,6 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
   private SymbolTree computeSymbolTree() {
     return new SymbolTreeComputer(this, selfMemberClassifier, eventHandlerClassifier).compute();
-  }
-
-  private boolean isSymbolTreeUpToDate() {
-    return new SymbolTreeComputer(this, selfMemberClassifier, eventHandlerClassifier).isUpToDate(symbolTree.get());
   }
 
 
