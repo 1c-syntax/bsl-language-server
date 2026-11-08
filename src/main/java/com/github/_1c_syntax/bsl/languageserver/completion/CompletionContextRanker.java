@@ -114,7 +114,9 @@ public final class CompletionContextRanker {
    * Приоритет свойства с учётом всех выбранных режимов и альтернатив получателя.
    */
   public void rankDotPropertyMember(CompletionItem item, MemberDescriptor member) {
-    if (evaluation.hasScope()) remember(item, evaluation.rankDotPropertyMember(item.getLabel(), member));
+    if (evaluation.hasScope()) {
+      remember(item, evaluation.rankDotPropertyMember(item.getLabel(), member));
+    }
   }
 
   /**
@@ -160,7 +162,7 @@ public final class CompletionContextRanker {
    */
   public Map<CompletionItem, String> apply(Iterable<CompletionItem> items, boolean labelDetailsSupport) {
     var language = document.getScriptVariantLanguage();
-    var renderer = new CompletionMethodHint.Renderer(language, labelDetailsSupport);
+    var renderer = new CompletionMethodHintRenderer(language, labelDetailsSupport);
     Map<CompletionItem, String> descriptions = new IdentityHashMap<>();
     for (var item : items) {
       if (!priorities.isEmpty()) {

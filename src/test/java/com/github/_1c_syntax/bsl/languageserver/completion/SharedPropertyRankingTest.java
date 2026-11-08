@@ -29,6 +29,8 @@ import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationCon
 import com.github._1c_syntax.bsl.languageserver.types.model.*;
 import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import java.util.*;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -51,8 +53,11 @@ class SharedPropertyRankingTest {
     verify(f.types,times(6)).receiverTypesAt(any(),any(),any());
   }
 
-  @Test void alternativesAreCombinedInsideEachContextBeforeCombiningContexts() {
-    var f=fixture(true,false,false);
+  @ParameterizedTest
+  @CsvSource({"true, false, false", "false, true, false", "false, false, true"})
+  void alternativesUnknownReceiversAndLocalFieldsRemainAvailable(boolean alternative, boolean unknownClient,
+                                                                boolean localField) {
+    var f=fixture(alternative,unknownClient,localField);
     assertSameRanks(f);
     var query=f.query();query.rankDotPropertyMember("First",f.first);
     assertThat(query.rankDotPropertyMember("Second",f.second)).isEqualTo(CompletionPriority.AVAILABLE);
@@ -65,20 +70,6 @@ class SharedPropertyRankingTest {
     assertSameRanks(f);
     var query=f.query();query.rankDotPropertyMember("First",f.first);
     assertThat(query.rankDotPropertyMember("Second",f.second)).isEqualTo(CompletionPriority.UNAVAILABLE);
-  }
-
-  @Test void unknownReceiversKeepTheOriginalConservativePath() {
-    var f=fixture(false,true,false);
-    assertSameRanks(f);
-    var query=f.query();query.rankDotPropertyMember("First",f.first);
-    assertThat(query.rankDotPropertyMember("Second",f.second)).isEqualTo(CompletionPriority.AVAILABLE);
-  }
-
-  @Test void localFieldsKeepTheirPriorityOverPlatformMembers() {
-    var f=fixture(false,false,true);
-    assertSameRanks(f);
-    var query=f.query();query.rankDotPropertyMember("First",f.first);
-    assertThat(query.rankDotPropertyMember("Second",f.second)).isEqualTo(CompletionPriority.AVAILABLE);
   }
 
   @Test void differentKnownReceiversRetainThePerContextPath() {

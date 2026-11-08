@@ -29,6 +29,9 @@ import java.util.concurrent.atomic.AtomicReferenceArray;
 
 /** Ключи имён с различением вида члена и регистром по {@link Locale#ROOT}. */
 public final class CompletionMemberKeys {
+  private static final int MAX_CACHED_NAME_LENGTH = 256;
+  private static final int HASH_MULTIPLIER = 31;
+  private static final int HASH_SPREAD_SHIFT = 16;
   private record Entry(@Nullable MemberKind kind, String name, String value) { }
 
   private static final AtomicReferenceArray<Entry> KEYS = new AtomicReferenceArray<>(8192);
@@ -47,11 +50,11 @@ public final class CompletionMemberKeys {
    * @return вид члена, двоеточие и имя в нижнем регистре по {@link Locale#ROOT}.
    */
   public static String of(@Nullable MemberKind kind, String name) {
-    if (name.length() > 256) {
+    if (name.length() > MAX_CACHED_NAME_LENGTH) {
       return normalize(kind, name);
     }
-    var hash = 31 * name.hashCode() + (kind == null ? 0 : kind.ordinal());
-    var index = (hash ^ (hash >>> 16)) & (KEYS.length() - 1);
+    var hash = HASH_MULTIPLIER * name.hashCode() + (kind == null ? 0 : kind.ordinal());
+    var index = (hash ^ (hash >>> HASH_SPREAD_SHIFT)) & (KEYS.length() - 1);
     var cached = KEYS.get(index);
     if (cached != null && cached.kind() == kind && cached.name().equals(name)) {
       return cached.value();

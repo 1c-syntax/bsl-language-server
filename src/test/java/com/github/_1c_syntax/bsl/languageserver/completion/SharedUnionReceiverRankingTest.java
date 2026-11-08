@@ -118,7 +118,7 @@ class SharedUnionReceiverRankingTest {
         .isEqualTo(old.rankDotMember(member.name(),member,expected));
       for(var language:List.of(Language.RU,Language.EN)) {
         for(var labels:List.of(true,false)) {
-          var renderer=new CompletionMethodHint.Renderer(language,labels);
+          var renderer=new CompletionMethodHintRenderer(language,labels);
           var before=new CompletionItem("method");var after=new CompletionItem("method");
           assertThat(renderer.apply(actual,after)).isEqualTo(renderer.apply(expected,before));
           assertThat(after).isEqualTo(before);

@@ -44,6 +44,7 @@ import static com.github._1c_syntax.bsl.languageserver.completion.CompletionPrio
  * Объединяет оценки по контекстам вызова и возможным типам получателя.
  */
 final class CompletionContextEvaluation {
+  private static final int MIN_RECEIVER_UNION_SIZE = 2;
   private final Optional<MethodContext> scope;
   private final CompletionTypeContext typeContext;
   private final Optional<CompletionMethodEvaluation> methods;
@@ -51,7 +52,7 @@ final class CompletionContextEvaluation {
   private @Nullable TypeRef sharedReceiver;
   private @Nullable Set<TypeRef> sharedReceiverUnion;
   private boolean propertyReceiverChecked;
-  private CompletionTypeContext.@Nullable PropertyScope propertyScope;
+  private @Nullable CompletionPropertyScope propertyScope;
 
   /**
    * Подготовить контекст один раз для всех предлагаемых имён.
@@ -111,25 +112,7 @@ final class CompletionContextEvaluation {
 
   private void checkSharedPropertyReceiver() {
     propertyReceiverChecked = true;
-    if (scope.isEmpty()) {
-      return;
-    }
-    @Nullable TypeRef owner = null;
-    for (var context : scope.orElseThrow().contexts()) {
-      var receiver = typeContext.receiverTypes(context);
-      if (receiver.refs().size() != 1) {
-        return;
-      }
-      var candidate = receiver.refs().iterator().next();
-      if (candidate.equals(TypeRef.ANY) || candidate.equals(TypeRef.UNKNOWN)
-        || !receiver.getLocalFields(candidate).isEmpty()) {
-        return;
-      }
-      if (owner != null && !owner.equals(candidate)) {
-        return;
-      }
-      owner = candidate;
-    }
+    var owner = sharedReceiverOwner();
     if (owner != null) {
       propertyScope = typeContext.propertyScope(owner, scope.orElseThrow().contexts());
     }
@@ -175,7 +158,7 @@ final class CompletionContextEvaluation {
     Set<TypeRef> owners = null;
     for (var context : scope.orElseThrow().contexts()) {
       var refs = typeContext.receiverTypes(context).refs();
-      if (refs.size() < 2 || refs.contains(TypeRef.ANY) || refs.contains(TypeRef.UNKNOWN)) {
+      if (refs.size() < MIN_RECEIVER_UNION_SIZE || refs.contains(TypeRef.ANY) || refs.contains(TypeRef.UNKNOWN)) {
         return;
       }
       if (owners != null && !owners.equals(refs)) {
@@ -214,26 +197,31 @@ final class CompletionContextEvaluation {
 
   private void checkSharedReceiver() {
     receiverChecked = true;
+    sharedReceiver = sharedReceiverOwner();
+  }
+
+  /** Единственный известный получатель без локальных полей, одинаковый во всех контекстах. */
+  private @Nullable TypeRef sharedReceiverOwner() {
     if (scope.isEmpty()) {
-      return;
+      return null;
     }
     @Nullable TypeRef owner = null;
     for (var context : scope.orElseThrow().contexts()) {
       var receiver = typeContext.receiverTypes(context);
       if (receiver.refs().size() != 1) {
-        return;
+        return null;
       }
       var candidate = receiver.refs().iterator().next();
       if (candidate.equals(TypeRef.ANY) || candidate.equals(TypeRef.UNKNOWN)
         || !receiver.getLocalFields(candidate).isEmpty()) {
-        return;
+        return null;
       }
       if (owner != null && !owner.equals(candidate)) {
-        return;
+        return null;
       }
       owner = candidate;
     }
-    sharedReceiver = owner;
+    return owner;
   }
 
   private int rankDotInContext(String name, MemberDescriptor member, @Nullable CompletionMethodHint hint,
