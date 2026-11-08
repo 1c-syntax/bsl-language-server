@@ -30,7 +30,6 @@ import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextH
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
@@ -75,7 +74,7 @@ public class McpDocumentReader {
    * @return Результат действия.
    */
   public <T> T read(String path, Function<DocumentContext, T> action) {
-    return access(path, action, false, null);
+    return access(path, action, false);
   }
 
   /**
@@ -94,7 +93,17 @@ public class McpDocumentReader {
    * @return Результат действия либо {@code whenContentUnavailable}.
    */
   public <T> T read(String path, Function<DocumentContext, T> action, Supplier<T> whenContentUnavailable) {
-    return access(path, action, false, whenContentUnavailable);
+    return read(path, documentContext -> {
+      try {
+        return action.apply(documentContext);
+      } catch (DocumentContentUnavailableException e) {
+        if (!isReleasedContentOf(documentContext, e)) {
+          throw e;
+        }
+        LOGGER.debug("Content of `{}` is released, answering without it", documentContext.getUri());
+        return whenContentUnavailable.get();
+      }
+    });
   }
 
   /**
@@ -110,11 +119,10 @@ public class McpDocumentReader {
    * @return Результат действия.
    */
   public <T> T analyze(String path, Function<DocumentContext, T> action) {
-    return access(path, action, true, null);
+    return access(path, action, true);
   }
 
-  private <T> T access(String path, Function<DocumentContext, T> action, boolean requireFreshAst,
-                       @Nullable Supplier<T> whenContentUnavailable) {
+  private <T> T access(String path, Function<DocumentContext, T> action, boolean requireFreshAst) {
     var uri = Absolute.uri(new File(path));
     var serverContext = serverContextProvider.getServerContext(uri)
       .orElseThrow(() -> new IllegalArgumentException(
@@ -131,12 +139,6 @@ public class McpDocumentReader {
       lock.readLock().lock();
       try (var ignored = WorkspaceContextHolder.forUri(serverContext.getWorkspaceUri())) {
         return action.apply(existing);
-      } catch (DocumentContentUnavailableException e) {
-        if (whenContentUnavailable == null || !isReleasedContentOf(serverContext, existing, e)) {
-          throw e;
-        }
-        LOGGER.debug("Content of `{}` is released, answering without it", uri);
-        return whenContentUnavailable.get();
       } finally {
         lock.readLock().unlock();
       }
@@ -149,10 +151,9 @@ public class McpDocumentReader {
   // Текста нет именно у читаемого документа, и тот не числится с текстом — так же решает обработчик
   // LSP-запросов (BSLTextDocumentService#toResponseError). Нехватка текста у другого документа или у
   // документа с текстом — ошибка, её надо видеть.
-  private static boolean isReleasedContentOf(ServerContext serverContext, DocumentContext documentContext,
-                                             DocumentContentUnavailableException e) {
+  private static boolean isReleasedContentOf(DocumentContext documentContext, DocumentContentUnavailableException e) {
     return e.getUri().equals(documentContext.getUri())
-      && serverContext.getDocumentState(documentContext) != DocumentState.WITH_CONTENT;
+      && documentContext.getServerContext().getDocumentState(documentContext) != DocumentState.WITH_CONTENT;
   }
 
   // AST строим и освобождаем под writeLock, но само действие выполняем под readLock: диагностики и
