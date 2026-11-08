@@ -406,7 +406,8 @@ class FormItemTypesRegistrar {
     var itemsRef = typeFactory.registerWithAlias(
       kind.itemsTypeRu() + "." + suffixRu,
       kind.itemsTypeEn() + "." + FormPlatformTypes.mdoSuffixEn(form));
-    var itemsBaseRef = typeRegistry.resolve(kind.itemsTypeRu()).orElse(null);
+    var itemsBaseRef = typeRegistry.resolve(kind.itemsTypeEn())
+      .or(() -> typeRegistry.resolve(kind.itemsTypeRu())).orElse(null);
     if (itemsBaseRef != null) {
       typeRegistry.registerExtension(itemsRef, itemsBaseRef, FileType.BSL);
       typeRegistry.inheritCollectionTraits(itemsRef, itemsBaseRef, FileType.BSL);
