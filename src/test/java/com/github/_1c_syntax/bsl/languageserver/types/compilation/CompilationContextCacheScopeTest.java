@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwa
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.utils.Absolute;
 import com.github.benmanes.caffeine.cache.Cache;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -46,8 +47,8 @@ class CompilationContextCacheScopeTest extends AbstractServerContextAwareTest {
 
   @Test
   void declarationsAreSharedWithinAWorkspaceAndIsolatedBetweenWorkspaces(@TempDir Path root) throws Exception {
-    var first = provider.addWorkspace(Files.createDirectory(root.resolve("first")).toUri());
-    var second = provider.addWorkspace(Files.createDirectory(root.resolve("second")).toUri());
+    var first = provider.addWorkspace(Absolute.uri(Files.createDirectory(root.resolve("first")).toUri()));
+    var second = provider.addWorkspace(Absolute.uri(Files.createDirectory(root.resolve("second")).toUri()));
     first.awaitPreparation();
     second.awaitPreparation();
     var one = TestUtils.getDocumentContext(root.resolve("first/module.bsl").toUri(),
