@@ -22,26 +22,21 @@
 package com.github._1c_syntax.bsl.languageserver.completion;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.completion.CompletionMethodTargets.MethodTarget;
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
 import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver;
 import com.github._1c_syntax.bsl.languageserver.types.compilation.CallAvailability;
-import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver.Declaration;
 import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver.MethodContext;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import org.jspecify.annotations.Nullable;
 
-import java.util.ArrayList;
-import java.net.URI;
 import java.util.HashMap;
 import java.util.EnumMap;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.Set;
 import java.util.function.ToIntFunction;
 
 import static com.github._1c_syntax.bsl.languageserver.completion.CompletionPriority.*;
@@ -54,36 +49,11 @@ final class CompletionMethodEvaluation {
   private final CompilationContextResolver resolver;
   private final MethodContext scope;
   private final CompletionTypeContext typeContext;
-  private final Map<MethodSymbol, List<MethodTarget>> methodTargets = new IdentityHashMap<>();
-  private final Map<ProfileKey, Optional<MethodContext>> profiles = new HashMap<>();
-  private final Map<DocumentContext, Map<String, List<Declaration>>> declarationsByOwner = new IdentityHashMap<>();
-  private final Map<DocumentContext, Map<Declaration, MethodTarget>> targetsByOwner = new IdentityHashMap<>();
+  private final CompletionMethodTargets methodTargets;
   private final Map<MethodTarget, Map<ExecutionContext, CallEvaluation>> calls = new IdentityHashMap<>();
   private final Map<TypeRef, Map<MethodTarget, SharedRank>> sharedRanks = new HashMap<>();
 
   private record SharedRank(int rank, CompletionMethodHint hint) {
-  }
-
-  /**
-   * Порядок ключа согласован с URI и необязательной директивой.
-   */
-  private record ProfileKey(URI uri, Optional<CompilerDirectiveKind> directive) implements Comparable<ProfileKey> {
-    @Override
-    public int compareTo(ProfileKey other) {
-      var byUri = uri.compareTo(other.uri);
-      return byUri == 0 ? Integer.compare(directiveOrdinal(), other.directiveOrdinal()) : byUri;
-    }
-
-    private int directiveOrdinal() {
-      return directive.isPresent() ? directive.orElseThrow().ordinal() : -1;
-    }
-  }
-
-  /**
-   * Объявление и вычисленные один раз профиль и контексты его компиляции.
-   */
-  private record MethodTarget(DocumentContext owner, Declaration declaration, Optional<MethodContext> profile,
-                              Optional<Set<ExecutionContext>> contexts) {
   }
 
   private record CallEvaluation(CallAvailability availability, boolean serverTransition) {
@@ -95,13 +65,11 @@ final class CompletionMethodEvaluation {
     this.resolver = resolver;
     this.scope = scope;
     this.typeContext = typeContext;
+    methodTargets = new CompletionMethodTargets(resolver);
   }
 
   ToIntFunction<ExecutionContext> localMethod(MethodSymbol method, CompletionMethodHint hint) {
-    var owner = method.getOwner();
-    var targets = List.of(target(owner,
-      new Declaration(method.getCompilerDirectiveKind(),
-        owner.getSymbolTreeNoLock().getMethodPreprocessorContexts(method), method.isExport())));
+    var targets = methodTargets.localMethod(method);
     return context -> methodRank(targets, context, hint);
   }
 
@@ -110,7 +78,7 @@ final class CompletionMethodEvaluation {
    */
   int methodRank(MemberDescriptor member, ExecutionContext context, CompletionMethodHint hint) {
     if (member.sourceSymbol() instanceof MethodSymbol method) {
-      return methodRank(targetsFor(method), context, hint);
+      return methodRank(methodTargets.forMethod(method), context, hint);
     }
     var available = member.metadata().availabilities();
     if (available.isEmpty()) {
@@ -127,34 +95,11 @@ final class CompletionMethodEvaluation {
     return rank;
   }
 
-  private List<MethodTarget> targetsFor(MethodSymbol method) {
-    var targets = methodTargets.get(method);
-    if (targets != null) {
-      return targets;
-    }
-    var owner = method.getOwner();
-    var declarations = declarationsByOwner.computeIfAbsent(owner, resolver::declarations);
-    var named = declarations.getOrDefault(method.getName(), List.of());
-    if (named.isEmpty()) {
-      targets = List.of();
-    } else if (named.size() == 1) {
-      targets = List.of(target(owner, named.getFirst()));
-    } else {
-      var values = new ArrayList<MethodTarget>(named.size());
-      for (var declaration : named) {
-        values.add(target(owner, declaration));
-      }
-      targets = List.copyOf(values);
-    }
-    methodTargets.put(method, targets);
-    return targets;
-  }
-
   @Nullable Integer sharedReceiverRank(MemberDescriptor member, TypeRef owner, CompletionMethodHint hint) {
     if (!(member.sourceSymbol() instanceof MethodSymbol method)) {
       return null;
     }
-    var targets = targetsFor(method);
+    var targets = methodTargets.forMethod(method);
     if (targets.size() != 1) {
       return null;
     }
@@ -177,25 +122,6 @@ final class CompletionMethodEvaluation {
     }
     hint.merge(ready.hint());
     return ready.rank();
-  }
-
-  /**
-   * Профиль кешируется на директиву, пересечение с веткой — на объявление, без повторного вывода типов.
-   */
-  private MethodTarget target(DocumentContext owner, Declaration declaration) {
-    var targets = targetsByOwner.computeIfAbsent(owner, ignored -> new HashMap<>());
-    return targets.computeIfAbsent(declaration, candidate -> createTarget(owner, candidate));
-  }
-
-  private MethodTarget createTarget(DocumentContext owner, Declaration declaration) {
-    var profile = profiles.computeIfAbsent(new ProfileKey(owner.getUri(), declaration.directive()),
-      ignored -> resolver.methodContext(owner, declaration.directive()));
-    var contexts = declaration.branch() == null ? Optional.<Set<ExecutionContext>>empty() : profile.map((MethodContext value) -> {
-      var declared = ExecutionContext.copyOf(value.contexts());
-      declared.retainAll(declaration.branch());
-      return Set.copyOf(declared);
-    });
-    return new MethodTarget(owner, declaration, profile, contexts);
   }
 
   /**
