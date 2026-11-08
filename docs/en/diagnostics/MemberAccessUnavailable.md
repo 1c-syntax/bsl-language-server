@@ -7,6 +7,12 @@ Checks whether methods and properties are available in the compilation contexts 
 The calculation combines the module kind, platform type availability from Syntax Assistant,
 common module flags, method directives and preprocessor conditions.
 
+For OneScript, conditional method declarations and calls inside `#If` branches are checked.
+`Windows`, `Linux` and `MacOS` are mutually exclusive; `MONO` is independent of the OS.
+A Windows-only caller cannot call a method declared only for Linux. All OS/Mono combinations
+are considered rather than just the language server's host OS. Unknown user-defined symbols
+remain uncertain and do not by themselves prove that an access is unavailable.
+
 For a compound result declared by Syntax Assistant, a type unavailable in the checked context is not
 a proven receiver when another explicitly available type has an available member. Unknown alternatives
 do not lift restrictions. A forbidden member on an available receiver or a single unavailable receiver

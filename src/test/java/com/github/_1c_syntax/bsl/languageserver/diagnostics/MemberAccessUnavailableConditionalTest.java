@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextTestFactory;
+
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
@@ -278,7 +280,7 @@ class MemberAccessUnavailableConditionalTest
       КонецПроцедуры
       """, context));
     doReturn(moduleType).when(document).getModuleType();
-    var resolver = new CompilationContextResolver(mock(TypeRegistry.class));
+    var resolver = CompilationContextTestFactory.resolver(mock(TypeRegistry.class));
     useContextResolver(resolver);
 
     assertThat(getDiagnostics(document)).isEmpty();
@@ -320,7 +322,7 @@ class MemberAccessUnavailableConditionalTest
     var type = new TypeRef(TypeKind.PLATFORM, family);
     when(registry.resolve(family)).thenReturn(Optional.of(type));
     when(registry.getTypeMetadata(type, FileType.BSL)).thenReturn(metadata);
-    useContextResolver(new CompilationContextResolver(registry));
+    useContextResolver(CompilationContextTestFactory.resolver(registry));
   }
 
   private void useContextResolver(CompilationContextResolver resolver) {

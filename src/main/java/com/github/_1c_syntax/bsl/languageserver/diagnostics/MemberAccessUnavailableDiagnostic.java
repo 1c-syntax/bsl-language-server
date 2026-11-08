@@ -52,7 +52,7 @@ import java.util.EnumMap;
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
   severity = DiagnosticSeverity.CRITICAL,
-  scope = DiagnosticScope.BSL,
+  scope = DiagnosticScope.ALL,
   minutesToFix = 5,
   tags = {DiagnosticTag.ERROR}
 )
@@ -125,7 +125,7 @@ public class MemberAccessUnavailableDiagnostic extends AbstractVisitorDiagnostic
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
     var automatic = contextResolver.automaticContexts(documentContext);
-    var enabled = ExecutionContext.copyOf(ExecutionContext.ALL);
+    var enabled = ExecutionContext.copyOf(ExecutionContext.forFileType(documentContext.getFileType()));
     var modes = configuredModes();
     enabled.removeIf(context -> !isEnabled(modes.get(context.optionContext()), context, automatic));
     for (var problem : accessChecker.check(documentContext, enabled, Set.of(MemberAccessCheckKind.AVAILABILITY))) {
