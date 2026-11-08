@@ -22,10 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.cli.lsp;
 
 import org.eclipse.lsp4j.jsonrpc.MessageConsumer;
-import org.eclipse.lsp4j.CompletionList;
-import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import com.google.gson.Gson;
-import java.util.function.Consumer;
 import org.eclipse.lsp4j.jsonrpc.TracingMessageConsumer.RequestMetadata;
 import org.eclipse.lsp4j.jsonrpc.json.MessageJsonHandler;
 import org.eclipse.lsp4j.launch.LSPLauncher;
@@ -41,28 +37,19 @@ import java.util.Objects;
 /** Подключает трассировку до валидации и дополнительных обёрток потребителя сообщений. */
 final class TraceAwareLauncherBuilder extends LSPLauncher.Builder<LanguageClient> {
   private final FileAwarePrintWriter writer;
-  private final Consumer<Gson> initializeAdapters;
   private final Map<String, RequestMetadata> sent = Collections.synchronizedMap(new HashMap<>());
   private final Map<String, RequestMetadata> received = Collections.synchronizedMap(new HashMap<>());
   private final Clock clock = Clock.systemDefaultZone();
   private @Nullable MessageJsonHandler handler;
 
   TraceAwareLauncherBuilder(FileAwarePrintWriter writer) {
-    this(writer, gson -> { });
-  }
-
-  TraceAwareLauncherBuilder(FileAwarePrintWriter writer, Consumer<Gson> initializeAdapters) {
     this.writer = writer;
-    this.initializeAdapters = Objects.requireNonNull(initializeAdapters);
   }
 
   @Override
   protected MessageJsonHandler createJsonHandler() {
     var result = configureGson == null ? new StringBuilderMessageJsonHandler(getSupportedMethods())
       : new StringBuilderMessageJsonHandler(getSupportedMethods(), configureGson);
-    result.getGson().getAdapter(CompletionList.class);
-    result.getGson().getAdapter(Either.class);
-    initializeAdapters.accept(result.getGson());
     handler = result;
     return result;
   }
