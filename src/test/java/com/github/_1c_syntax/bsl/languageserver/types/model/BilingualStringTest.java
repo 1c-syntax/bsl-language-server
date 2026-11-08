@@ -143,7 +143,7 @@ class BilingualStringTest {
         assertThat(Integer.signum(left.compareTo(right))).isEqualTo(-Integer.signum(right.compareTo(left)));
       }
     }
-    assertThat(BilingualString.of("А", "One").compareTo(BilingualString.of("А", "Two"))).isNegative();
-    assertThat(BilingualString.of("А", "Two").compareTo(BilingualString.of("Б", "One"))).isNegative();
+    assertThat(BilingualString.of("А", "One")).isLessThan(BilingualString.of("А", "Two"));
+    assertThat(BilingualString.of("А", "Two")).isLessThan(BilingualString.of("Б", "One"));
   }
 }
