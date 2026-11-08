@@ -105,6 +105,7 @@ jobs:
           "$RUNNER_TEMP/sentry-cli" snapshots upload snapshots \
             --app-id bsl-language-server-semantic-tokens \
             --no-git-metadata \
+            --vcs-provider github \
             --head-sha "$SOURCE_SHA" \
             --head-ref "$SOURCE_REF" \
             --head-repo-name "$HEAD_REPO"
