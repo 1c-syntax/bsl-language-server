@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
+import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.junit.jupiter.api.Test;
@@ -34,6 +35,21 @@ class SymbolTreeComputerTest {
 
   @Autowired
   private com.github._1c_syntax.bsl.languageserver.context.symbol.EventHandlerClassifier eventHandlerClassifier;
+
+  @Test
+  void unconditionalOneScriptMethodsDoNotNeedStoredConditions() {
+    var document = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI,
+      "Процедура Открыть()\nКонецПроцедуры");
+    var tree = document.getSymbolTree();
+    var variables = new RegionVariableSymbolComputer(document, tree.getModule(), tree.getMethods(),
+      (doc, name) -> false);
+
+    variables.compute();
+
+    assertThat(variables.getMethodConditions()).isEmpty();
+    var method = tree.getMethodSymbol("Открыть").orElseThrow();
+    assertThat(tree.getMethodPreprocessorContexts(method)).containsExactlyInAnyOrderElementsOf(ExecutionContext.OSCRIPT);
+  }
 
   @Test
   void testModule() {
