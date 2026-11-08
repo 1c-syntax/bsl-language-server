@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types.compilation;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.types.model.Availability;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
@@ -37,6 +38,7 @@ import com.github._1c_syntax.bsl.mdo.support.ApplicationRunMode;
 import com.github._1c_syntax.bsl.mdo.support.UsePurposes;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -47,7 +49,9 @@ import java.util.Set;
 
 /** Возможности модулей и типов из метаданных конфигурации и синтакс-помощника. */
 @RequiredArgsConstructor
-final class ModuleCompilationContexts {
+@Component
+@WorkspaceScope
+class ModuleCompilationContexts {
   private final TypeRegistry typeRegistry;
 
   /**

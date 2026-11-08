@@ -60,7 +60,9 @@ import static org.mockito.Mockito.when;
 
 class CompilationContextResolverTest {
   private final TypeRegistry registry = mock(TypeRegistry.class);
-  private final CompilationContextResolver resolver = new CompilationContextResolver(registry);
+  private final CompilationContextCacheConfiguration caches = new CompilationContextCacheConfiguration();
+  private final CompilationContextResolver resolver = new CompilationContextResolver(new ModuleCompilationContexts(registry),
+    new CompilationContextIndex(caches.compilationContextDeclarationsCache(), caches.compilationContextBranchesCache()));
 
   @Test
   void serverCallChangesVisibilityWithoutChangingExecutionContexts() {

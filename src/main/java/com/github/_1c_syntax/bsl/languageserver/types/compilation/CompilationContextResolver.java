@@ -29,7 +29,6 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Compi
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.Availability;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
-import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.mdo.CommonModule;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Position;
@@ -58,7 +57,7 @@ import java.util.Set;
 public class CompilationContextResolver {
 
   private final ModuleCompilationContexts modules;
-  private final CompilationContextIndex index = new CompilationContextIndex();
+  private final CompilationContextIndex index;
 
   /**
    * Объявление метода без привязки к текущим флагам метаданных.
@@ -94,10 +93,12 @@ public class CompilationContextResolver {
   /**
    * Создать резолвер рабочей области.
    *
-   * @param typeRegistry реестр типов той же рабочей области
+   * @param modules возможности модулей той же рабочей области
+   * @param index индекс объявлений и веток препроцессора той же рабочей области
    */
-  public CompilationContextResolver(TypeRegistry typeRegistry) {
-    modules = new ModuleCompilationContexts(typeRegistry);
+  CompilationContextResolver(ModuleCompilationContexts modules, CompilationContextIndex index) {
+    this.modules = modules;
+    this.index = index;
   }
 
   /**
