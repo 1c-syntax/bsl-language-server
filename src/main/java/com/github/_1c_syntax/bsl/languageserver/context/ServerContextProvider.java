@@ -219,12 +219,11 @@ public class ServerContextProvider {
     if (preparing == null) {
       return;
     }
+    // Новые untitled-буферы и внешние файлы не должны попасть в контекст, который скоро очистится.
+    repointPrimaryBeforeRemoval(uri);
     // Обработчик подготовки ищет контекст в этой карте, чтобы завершить её.
     // Сохраняем контекст и его бины до конца подготовки, даже если обработчик ещё не запущен.
     preparing.awaitPreparation();
-    // Переставляем главный контекст на другой ДО удаления из карты, чтобы primary никогда не
-    // указывал на уже удалённый контекст (иначе getPrimaryContext упал бы в гонке с маршрутизацией).
-    repointPrimaryBeforeRemoval(uri);
     var serverContext = contexts.remove(uri);
     workspaceRoots.remove(uri);
 

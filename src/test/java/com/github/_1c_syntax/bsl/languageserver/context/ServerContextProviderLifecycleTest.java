@@ -33,6 +33,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.FactoryBean;
 import org.springframework.beans.factory.support.StaticListableBeanFactory;
 
+import java.net.URI;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.concurrent.CountDownLatch;
@@ -53,6 +54,73 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 
 class ServerContextProviderLifecycleTest {
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void removalRepointsFallbackBeforeWaitingForPreparation(boolean synthetic, @TempDir Path root) {
+    var removed = mock(ServerContext.class);
+    var remaining = mock(ServerContext.class);
+    var beans = new StaticListableBeanFactory();
+    beans.addBean("serverContext", removed);
+    var provider = new ServerContextProvider(beans.getBeanProvider(ServerContext.class),
+      mock(LanguageServerConfiguration.class), mock(WorkspaceBeanScope.class));
+    var removedUri = Absolute.uri(root.resolve("removed").toUri());
+    var remainingUri = synthetic ? ServerContextProvider.DEFAULT_WORKSPACE_URI
+      : Absolute.uri(root.resolve("remaining").toUri());
+    var folder = new WorkspaceFolder(removedUri.toString(), "removed");
+    provider.addWorkspace(folder);
+    beans.addBean("serverContext", remaining);
+    if (synthetic) {
+      provider.registerDefaultWorkspace();
+    } else {
+      provider.addWorkspace(remainingUri);
+    }
+    try {
+      doAnswer(invocation -> {
+        assertThat(provider.getAllContexts()).containsEntry(removedUri, removed);
+        assertThat(provider.resolveContextForDocument(URI.create("untitled:NewDocument")))
+          .isSameAs(remaining);
+        assertThat(provider.resolveContextForDocument(Absolute.uri(root.resolve("outside.bsl").toUri())))
+          .isSameAs(remaining);
+        verify(removed, never()).clear();
+        return null;
+      }).when(removed).awaitPreparation();
+
+      provider.removeWorkspace(folder);
+
+      assertThat(provider.getAllContexts()).containsEntry(remainingUri, remaining).doesNotContainKey(removedUri);
+      verify(removed).clear();
+    } finally {
+      WorkspaceContextHolder.unregisterWorkspace(removedUri);
+      WorkspaceContextHolder.unregisterWorkspace(remainingUri);
+    }
+  }
+
+  @Test
+  void removingLastWorkspaceStopsFallbackBeforeWaitingForPreparation(@TempDir Path root) {
+    var context = mock(ServerContext.class);
+    var beans = new StaticListableBeanFactory();
+    beans.addBean("serverContext", context);
+    var provider = new ServerContextProvider(beans.getBeanProvider(ServerContext.class),
+      mock(LanguageServerConfiguration.class), mock(WorkspaceBeanScope.class));
+    var uri = Absolute.uri(root.toUri());
+    var folder = new WorkspaceFolder(uri.toString(), "last");
+    provider.addWorkspace(folder);
+    try {
+      doAnswer(invocation -> {
+        assertThat(provider.getAllContexts()).containsEntry(uri, context);
+        assertThatThrownBy(() -> provider.resolveContextForDocument(URI.create("untitled:NewDocument")))
+          .isInstanceOf(IllegalStateException.class);
+        return null;
+      }).when(context).awaitPreparation();
+
+      provider.removeWorkspace(folder);
+
+      assertThat(provider.getAllContexts()).isEmpty();
+    } finally {
+      WorkspaceContextHolder.unregisterWorkspace(uri);
+    }
+  }
 
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
