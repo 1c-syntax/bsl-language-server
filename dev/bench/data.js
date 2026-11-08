@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794093702842,
+  "lastUpdate": 1794096076350,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -46655,6 +46655,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.3444626800531283",
             "extra": "mean: 80.70192058881123 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "57bb0b8f67313cb5b39aec59660e640935297705",
+          "message": "Merge pull request #4891 from 1c-syntax/ccr-d81e5114-3w2dsa\n\nfix(semantictokens): do not paint OneScript constructor reference as method",
+          "timestamp": "2026-11-07T20:56:59+01:00",
+          "tree_id": "1c0ddab5fbc98a550a90466a6e07e8c9c06485e4",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/57bb0b8f67313cb5b39aec59660e640935297705"
+        },
+        "date": 1794096049019,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 81.77890006701152,
+            "unit": "sec",
+            "range": "stddev: 3.9495238887158113",
+            "extra": "mean: 81.77890006701152 sec\nrounds: 3"
           }
         ]
       }
