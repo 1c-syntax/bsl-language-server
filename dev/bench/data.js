@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794096076350,
+  "lastUpdate": 1794100563830,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -46686,6 +46686,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.9495238887158113",
             "extra": "mean: 81.77890006701152 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "dd7776da48d38b73c3f54fb3165d7b407ed3780b",
+          "message": "Merge pull request #4678 from 1c-syntax/perf/types-metadata-declared-collections\n\nКоллекции метаданных заводятся только у объектов, в описании которых они есть",
+          "timestamp": "2026-11-07T21:15:17+01:00",
+          "tree_id": "f19a608434e950768f5ad773bd34162a36fd8067",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/dd7776da48d38b73c3f54fb3165d7b407ed3780b"
+        },
+        "date": 1794100548019,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 80.17776974042256,
+            "unit": "sec",
+            "range": "stddev: 1.1392527326514061",
+            "extra": "mean: 80.17776974042256 sec\nrounds: 3"
           }
         ]
       }
