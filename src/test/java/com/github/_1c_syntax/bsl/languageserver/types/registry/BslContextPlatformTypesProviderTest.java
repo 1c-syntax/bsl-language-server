@@ -110,6 +110,53 @@ class BslContextPlatformTypesProviderTest {
   }
 
   @Test
+  void homonymousTypesHaveDistinctKeysAndPreserveReferencedIdentity() {
+    for (var reversed : List.of(false, true)) {
+      var ordinary = PlatformContextType.builder()
+        .name(new ContextName("ЭлементыФормы", "Controls"))
+        .properties(List.of()).methods(List.of()).events(List.of()).constructors(List.of())
+        .availabilities(List.of(com.github._1c_syntax.bsl.context.api.Availability.THICK_CLIENT)).build();
+      var managed = PlatformContextType.builder()
+        .name(new ContextName("ЭлементыФормы", "FormItems"))
+        .properties(List.of()).methods(List.of()).events(List.of()).constructors(List.of())
+        .availabilities(List.of(com.github._1c_syntax.bsl.context.api.Availability.THIN_CLIENT)).build();
+      var children = PlatformContextProperty.builder()
+        .name(new ContextName("ПодчиненныеЭлементы", "ChildItems"))
+        .rawTypes(List.of("ЭлементыФормы")).availabilities(List.of()).build();
+      var group = PlatformContextType.builder()
+        .name(new ContextName("ГруппаФормы", "FormGroup"))
+        .properties(new ArrayList<>(List.of(children)))
+        .methods(List.of()).events(List.of()).constructors(List.of()).build();
+      var controls = PlatformContextProperty.builder()
+        .name(new ContextName("ЭлементыФормы", "Controls"))
+        .rawTypes(List.of("ЭлементыФормы")).availabilities(List.of()).build();
+      var form = PlatformContextType.builder()
+        .name(new ContextName("Форма", "Form"))
+        .properties(new ArrayList<>(List.of(controls)))
+        .methods(List.of()).events(List.of()).constructors(List.of()).build();
+      var provider = reversed ? providerOf(group, managed, ordinary, form) : providerOf(form, ordinary, managed, group);
+
+      var types = new BslContextPlatformTypesProvider(holderOf(provider)).getTypes();
+
+      assertThat(types).extracting(TypePackProvider.TypeDecl::qualifiedName)
+        .containsExactlyInAnyOrder("Controls", "FormItems", "ГруппаФормы", "Форма");
+      assertThat(types.stream().filter(type -> type.qualifiedName().equals("FormItems")).findFirst().orElseThrow())
+        .satisfies(type -> {
+          assertThat(type.name().ru()).isEqualTo("ЭлементыФормы");
+          assertThat(type.metadata().availabilities()).containsExactly(Availability.THIN_CLIENT);
+        });
+      var groupType = types.stream().filter(type -> type.qualifiedName().equals("ГруппаФормы"))
+        .findFirst().orElseThrow();
+      assertThat(groupType.members()).singleElement().satisfies(member ->
+        assertThat(member.returnTypes().refs()).extracting(ref -> ref.qualifiedName()).containsExactly("FormItems"));
+      var formType = types.stream().filter(type -> type.qualifiedName().equals("Форма"))
+        .findFirst().orElseThrow();
+      assertThat(formType.members()).singleElement().satisfies(member ->
+        assertThat(member.returnTypes().refs()).extracting(ref -> ref.qualifiedName()).containsExactly("Controls"));
+    }
+  }
+
+  @Test
   void platformTypePublishesMethodsAndPropertiesAsMembers() {
     var stringType = primitive("Строка", "String");
     var numberType = primitive("Число", "Number");

@@ -21,10 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
+import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
-import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Value;
@@ -32,14 +31,18 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.RandomAccess;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -47,11 +50,21 @@ import java.util.stream.Collectors;
  */
 @Value
 public class SymbolTree {
+  private static final int MIN_ORDERED_CHILDREN = 8;
 
   /**
    * Корневой символ модуля документа.
    */
   ModuleSymbol module;
+
+  /**
+   * Условия препроцессора по диапазону имени метода в этой версии дерева.
+   * Отсутствующий ключ означает все контексты, значение {@code null} — неизвестное условие,
+   * пустое множество — недостижимую ветку. Диапазоны и множества не удерживают AST.
+   */
+  @Getter(AccessLevel.NONE)
+  // Range — сторонний тип LSP; здесь требуется равенство диапазонов, без порядка ключей.
+  Map<Range, Set<ExecutionContext>> methodConditions;
 
   /**
    * Список всех символов всех уровней (за исключением символа модуля документа), преобразованных в плоский список.
@@ -106,6 +119,10 @@ public class SymbolTree {
   @Getter(value = AccessLevel.PRIVATE, lazy = true)
   SelectionLines symbolsBySelectionLine = createSymbolsBySelectionLine();
 
+  /** Области, чьи дети упорядочены по обеим границам; порядок исходных символов сохраняется. */
+  @Getter(value = AccessLevel.PRIVATE, lazy = true)
+  Set<SourceDefinedSymbol> positionOrderedParents = createPositionOrderedParents();
+
   /**
    * Символы, упорядоченные по строке {@code selectionRange}: {@code symbols[i]} объявлен на
    * строке {@code lines[i]}. Два массива вместо карты «строка → список»: на большой
@@ -121,6 +138,44 @@ public class SymbolTree {
       this.lines = lines;
       this.symbols = symbols;
     }
+  }
+
+  /**
+   * Создать дерево без ограничений препроцессора для объявлений методов.
+   *
+   * @param module корневой символ документа.
+   */
+  public SymbolTree(ModuleSymbol module) {
+    this(module, Map.of());
+  }
+
+  /**
+   * Создать дерево с сохранёнными условиями объявлений методов.
+   * <p>
+   * Карта, её ключи и множества используются без защитного копирования.
+   * Вызывающий код должен обеспечить их неизменность в течение жизни дерева.
+   *
+   * @param module корневой символ документа.
+   * @param methodConditions условия по диапазонам имён методов этой версии документа;
+   *     значения {@code null} допустимы и означают неизвестное условие.
+   */
+  public SymbolTree(ModuleSymbol module, Map<Range, Set<ExecutionContext>> methodConditions) {
+    this.module = module;
+    this.methodConditions = methodConditions;
+  }
+
+  /**
+   * Получить контексты ветки препроцессора, в которой объявлен метод.
+   * <p>
+   * Доступно после выгрузки AST. Контексты модуля, директивы компиляции и настройки
+   * диагностики не учитываются. Возвращённое множество изменять нельзя.
+   *
+   * @param method метод из этой версии символьного дерева.
+   * @return все контексты при отсутствии ограничения, пустое множество для недостижимой
+   *     ветки или {@code null}, если условие нельзя вычислить.
+   */
+  public @Nullable Set<ExecutionContext> getMethodPreprocessorContexts(MethodSymbol method) {
+    return methodConditions.getOrDefault(method.getSubNameRange(), ExecutionContext.ALL);
   }
 
   /**
@@ -171,33 +226,7 @@ public class SymbolTree {
    * @return найденный символ метода.
    */
   public Optional<MethodSymbol> getMethodSymbol(ParserRuleContext ctx) {
-    ParserRuleContext subNameNode;
-    if (Trees.nodeContainsErrors(ctx)) {
-      subNameNode = ctx;
-    } else if (ctx instanceof BSLParser.SubContext subContext) {
-      if (subContext.function() == null) {
-        subNameNode = subContext.procedure().procDeclaration().subName();
-      } else {
-        subNameNode = subContext.function().funcDeclaration().subName();
-      }
-    } else {
-      subNameNode = ctx;
-    }
-
-    Range subNameRange = Ranges.create(subNameNode);
-
-    // subNameRange == selectionRange метода, поэтому ищем через O(1)-индекс
-    // селекшн-рейнджей (тот же, что и findSymbolBySelectionRange), а не линейным
-    // сканом getMethods() с Range.equals на каждом.
-    // Точное равенство диапазона обязательно: часть вызывающих передаёт не узел
-    // объявления, а произвольный/ошибочный контекст (напр. ctx.getParent()),
-    // старт которого может попасть в selectionRange соседнего символа. Прежний
-    // скан для таких возвращал пусто (точное равенство не выполнялось) —
-    // сохраняем это, иначе резолвится «лишний» метод.
-    return findSymbolBySelectionRange(subNameRange.getStart())
-      .filter(MethodSymbol.class::isInstance)
-      .map(MethodSymbol.class::cast)
-      .filter(methodSymbol -> methodSymbol.getSubNameRange().equals(subNameRange));
+    return SymbolTreeLookup.methodByNode(this, ctx);
   }
 
   /**
@@ -219,32 +248,7 @@ public class SymbolTree {
    * @return найденный символ переменной.
    */
   public Optional<VariableSymbol> getVariableSymbol(ParserRuleContext ctx) {
-
-    ParserRuleContext varNameNode;
-
-    if (Trees.nodeContainsErrors(ctx)) {
-      varNameNode = ctx;
-    } else if (ctx instanceof BSLParser.ModuleVarDeclarationContext moduleVarDeclarationContext) {
-      varNameNode = moduleVarDeclarationContext.var_name();
-    } else if (ctx instanceof BSLParser.SubVarDeclarationContext subVarDeclarationContext) {
-      varNameNode = subVarDeclarationContext.var_name();
-    } else {
-      varNameNode = ctx;
-    }
-
-    Range variableNameRange = Ranges.create(varNameNode);
-
-    // variableNameRange == selectionRange переменной, поэтому ищем через
-    // индекс селекшн-рейнджей, а не линейным сканом getVariables() с
-    // Range.equals на каждом.
-    // Точное равенство диапазона обязательно: часть вызывающих передаёт не узел
-    // объявления, а произвольный/ошибочный контекст, старт которого может
-    // попасть в selectionRange соседнего символа. Прежний скан для таких
-    // возвращал пусто — сохраняем это, иначе резолвится «лишняя» переменная.
-    return findSymbolBySelectionRange(variableNameRange.getStart())
-      .filter(VariableSymbol.class::isInstance)
-      .map(VariableSymbol.class::cast)
-      .filter(variableSymbol -> variableSymbol.getVariableNameRange().equals(variableNameRange));
+    return SymbolTreeLookup.variableByNode(this, ctx);
   }
 
   /**
@@ -285,19 +289,7 @@ public class SymbolTree {
    * @return видимая переменная; empty, если такой в области видимости нет.
    */
   public Optional<VariableSymbol> getVariableSymbolInScope(ParserRuleContext node, String variableName) {
-    var sub = Trees.getRootParent(node, BSLParser.RULE_sub);
-    if (sub instanceof BSLParser.SubContext subContext) {
-      var inMethod = getMethodSymbol(subContext).flatMap(method -> getVariableSymbol(variableName, method));
-      if (inMethod.isPresent()) {
-        return inMethod;
-      }
-      // У метода с ошибками разбора объявленные и созданные в нём переменные заводятся на
-      // уровне модуля — свои они ему от этого быть не перестают.
-      return getVariableSymbol(variableName, module)
-        .filter(variable -> variable.getKind() == VariableKind.MODULE
-          || Ranges.containsRange(Ranges.create(subContext), variable.getRange()));
-    }
-    return getVariableSymbol(variableName, module);
+    return SymbolTreeLookup.variableInScope(this, node, variableName);
   }
 
   /**
@@ -317,7 +309,9 @@ public class SymbolTree {
   /**
    * Поиск самого вложенного символа, содержащего указанную позицию.
    * <p>
-   * Использует иерархический спуск по дереву символов вместо линейного поиска.
+   * Сохраняет порядок дочерних символов при перекрытии диапазонов. Области сами
+   * не возвращаются. Упорядоченные списки детей допускают двоичный поиск первой
+   * возможной границы; остальные просматриваются последовательно.
    *
    * @param position Позиция в документе.
    * @return Символ, содержащий позицию, или символ модуля, если позиция вне всех символов.
@@ -382,9 +376,15 @@ public class SymbolTree {
   }
 
   private SourceDefinedSymbol findSymbolAtPosition(SourceDefinedSymbol parent, Position position) {
-    // Ищем среди детей символ, содержащий позицию
-    for (var child : parent.getChildren()) {
-      if (Ranges.containsPosition(child.getRange(), position)) {
+    var children = parent.getChildren();
+    var ordered = children.size() >= MIN_ORDERED_CHILDREN && getPositionOrderedParents().contains(parent);
+    var first = ordered ? firstEndingAtOrAfter(children, position) : 0;
+    for (var iterator = children.listIterator(first); iterator.hasNext();) {
+      var child = iterator.next();
+      if (ordered && before(position, child.getRange().getStart())) {
+        break;
+      }
+      if (child.containsPosition(position)) {
         // Рекурсивно ищем более вложенный символ
         var found = findSymbolAtPosition(child, position);
         // Пропускаем Namespace (Region) - ищем дальше или возвращаем parent
@@ -396,6 +396,55 @@ public class SymbolTree {
     }
     // Если среди детей не нашли — возвращаем текущий символ
     return parent;
+  }
+
+  private Set<SourceDefinedSymbol> createPositionOrderedParents() {
+    Set<SourceDefinedSymbol> result = Collections.newSetFromMap(new IdentityHashMap<>());
+    if (orderedRanges(module.getChildren())) {
+      result.add(module);
+    }
+    for (var symbol : getChildrenFlat()) {
+      if (orderedRanges(symbol.getChildren())) {
+        result.add(symbol);
+      }
+    }
+    return Collections.unmodifiableSet(result);
+  }
+
+  private static boolean orderedRanges(List<SourceDefinedSymbol> children) {
+    if (children.size() < MIN_ORDERED_CHILDREN || !(children instanceof RandomAccess)) {
+      return false;
+    }
+    Range previous = null;
+    for (var child : children) {
+      var range = child.getRange();
+      if (before(range.getEnd(), range.getStart())
+        || (previous != null && (before(range.getStart(), previous.getStart())
+          || before(range.getEnd(), previous.getEnd())))) {
+        return false;
+      }
+      previous = range;
+    }
+    return true;
+  }
+
+  private static int firstEndingAtOrAfter(List<SourceDefinedSymbol> children, Position position) {
+    var low = 0;
+    var high = children.size();
+    while (low < high) {
+      var middle = (low + high) >>> 1;
+      if (before(children.get(middle).getRange().getEnd(), position)) {
+        low = middle + 1;
+      } else {
+        high = middle;
+      }
+    }
+    return low;
+  }
+
+  private static boolean before(Position left, Position right) {
+    return left.getLine() < right.getLine()
+      || (left.getLine() == right.getLine() && left.getCharacter() < right.getCharacter());
   }
 
   private List<SourceDefinedSymbol> createChildrenFlat() {
