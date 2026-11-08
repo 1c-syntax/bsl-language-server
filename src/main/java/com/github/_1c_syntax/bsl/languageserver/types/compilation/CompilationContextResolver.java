@@ -29,7 +29,6 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Compi
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.Availability;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
-import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.mdo.CommonModule;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Position;
@@ -58,7 +57,7 @@ import java.util.Set;
 public class CompilationContextResolver {
 
   private final ModuleCompilationContexts modules;
-  private final CompilationContextIndex index = new CompilationContextIndex();
+  private final CompilationContextIndex index;
 
   /**
    * Объявление метода без привязки к текущим флагам метаданных.
@@ -94,10 +93,12 @@ public class CompilationContextResolver {
   /**
    * Создать резолвер рабочей области.
    *
-   * @param typeRegistry реестр типов той же рабочей области
+   * @param modules возможности модулей той же рабочей области
+   * @param index индекс объявлений и веток препроцессора той же рабочей области
    */
-  public CompilationContextResolver(TypeRegistry typeRegistry) {
-    modules = new ModuleCompilationContexts(typeRegistry);
+  CompilationContextResolver(ModuleCompilationContexts modules, CompilationContextIndex index) {
+    this.modules = modules;
+    this.index = index;
   }
 
   /**
@@ -133,13 +134,10 @@ public class CompilationContextResolver {
    *
    * @param method метод текущего символьного дерева документа.
    * @return неизменяемые контексты, включая пустое множество для исключённого объявления;
-   *     пустой Optional при недостатке метаданных, неизвестном условии или для OneScript.
+   *     пустой Optional при недостатке метаданных или неизвестном условии.
    */
   public Optional<Set<ExecutionContext>> declarationContexts(MethodSymbol method) {
     var owner = method.getOwner();
-    if (owner.getFileType() != FileType.BSL) {
-      return Optional.empty();
-    }
     var branch = owner.getSymbolTreeNoLock().getMethodPreprocessorContexts(method);
     if (branch == null) {
       return Optional.empty();
@@ -157,17 +155,14 @@ public class CompilationContextResolver {
    * Учитываются возможности модуля, директива охватывающего метода и ветка его объявления.
    * Неизвестные ограничения сохраняют все ещё возможные режимы, а не исключают код.
    * Результат задаёт верхнюю границу доступности; настройки проверяемых диагностикой режимов
-   * на него не влияют. Для OneScript контексты платформы не применяются.
+   * на него не влияют. Для OneScript используются сочетания ОС и признака Mono.
    *
    * @param document документ с построенным символьным деревом.
    * @param node тело метода, модуля или узел внутри него.
    * @return неизменяемые возможные контексты BSL, включая пустое множество для исключённого
-   *     объявления; пустой Optional для OneScript.
+   *     объявления; пустой Optional при неизвестном условии объявления.
    */
   public Optional<Set<ExecutionContext>> possibleContexts(DocumentContext document, ParseTree node) {
-    if (document.getFileType() != FileType.BSL) {
-      return Optional.empty();
-    }
     var sub = CompilationContextIndex.enclosingMethod(node);
     if (sub == null) {
       var contexts = moduleContexts(document);
@@ -198,15 +193,12 @@ public class CompilationContextResolver {
    * @param node узел внутри охватывающего тела.
    * @param position позиция запроса внутри этого тела.
    * @return суженные режимы, в том числе пустое множество для исключённого кода;
-   *     пустой Optional, если дополнительного ограничения нет или это OneScript.
+   *     пустой Optional, если дополнительного ограничения нет.
    */
   public Optional<Set<ExecutionContext>> narrowedContextsAt(DocumentContext document, ParseTree node,
                                                            Position position) {
-    if (document.getFileType() != FileType.BSL) {
-      return Optional.empty();
-    }
     var branch = index.preprocessorContextsAt(document, position);
-    if (branch == null || branch.equals(ExecutionContext.ALL)) {
+    if (branch == null || branch.equals(ExecutionContext.forFileType(document.getFileType()))) {
       return Optional.empty();
     }
     var possible = possibleContexts(document, node).orElseThrow();
@@ -227,12 +219,9 @@ public class CompilationContextResolver {
    * @param document документ с AST.
    * @param position позиция в коде, включая пробелы и незавершённые идентификаторы.
    * @return профиль с пересечением контекстов метода и текущей ветки, либо пустой Optional
-   *     при неизвестном контексте, внутри директивы препроцессора или для OneScript.
+   *     при неизвестном контексте или внутри директивы препроцессора.
    */
   public Optional<MethodContext> contextAt(DocumentContext document, Position position) {
-    if (document.getFileType() != FileType.BSL) {
-      return Optional.empty();
-    }
     var symbol = document.getSymbolTree().getSymbolAtPosition(position);
     var method = symbol instanceof MethodSymbol enclosing ? Optional.of(enclosing)
       : symbol.getRootParent(MethodSymbol.class).map(MethodSymbol.class::cast);
@@ -300,6 +289,9 @@ public class CompilationContextResolver {
    * @return неизменяемое множество автоматически выбранных режимов.
    */
   public Set<ExecutionContext> automaticContexts(DocumentContext document) {
+    if (document.getFileType() == FileType.OS) {
+      return ExecutionContext.OSCRIPT;
+    }
     return ModuleCompilationContexts.automaticContexts(document);
   }
 
@@ -317,6 +309,9 @@ public class CompilationContextResolver {
    *     проверяемых режимов здесь не учитываются.
    */
   public Set<ExecutionContext> moduleContexts(DocumentContext document) {
+    if (document.getFileType() == FileType.OS) {
+      return ExecutionContext.OSCRIPT;
+    }
     return modules.moduleContexts(document);
   }
 
@@ -334,6 +329,9 @@ public class CompilationContextResolver {
    *     из {@link Declaration#branch()} вызывающий код пересекает с результатом отдельно.
    */
   public Optional<MethodContext> methodContext(DocumentContext document, Optional<CompilerDirectiveKind> directive) {
+    if (document.getFileType() == FileType.OS) {
+      return Optional.of(new MethodContext(Optional.empty(), ExecutionContext.OSCRIPT));
+    }
     var contexts = ExecutionContext.copyOf(moduleContexts(document));
     if (contexts.isEmpty()) {
       return Optional.empty();

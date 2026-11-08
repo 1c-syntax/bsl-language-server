@@ -31,7 +31,9 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.SubContext;
 import com.github.benmanes.caffeine.cache.Cache;
-import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -45,18 +47,26 @@ import java.util.Set;
 import java.util.TreeMap;
 
 /** Объявления и границы препроцессора одной версии дерева; значения не удерживают AST. */
-final class CompilationContextIndex {
+@Component
+@WorkspaceScope
+class CompilationContextIndex {
   /**
    * Объявления по идентичности символьного дерева. Значения не удерживают дерево или документ;
    * слабый ключ позволяет удалить запись после освобождения всех внешних ссылок на старое дерево.
    */
-  private final Cache<SymbolTree, Map<String, List<Declaration>>> declarations =
-    Caffeine.newBuilder().weakKeys().build();
+  private final Cache<SymbolTree, Map<String, List<Declaration>>> declarations;
   /** Границы инструкций и ограничения после них. Значения не удерживают AST или документ. */
-  private final Cache<SymbolTree, List<PreprocessorBranch>> preprocessorBranches =
-    Caffeine.newBuilder().weakKeys().build();
+  private final Cache<SymbolTree, List<PreprocessorBranch>> preprocessorBranches;
 
-  private record PreprocessorBranch(Range directive, @Nullable Set<ExecutionContext> contexts) { }
+  record PreprocessorBranch(Range directive, @Nullable Set<ExecutionContext> contexts) { }
+
+  CompilationContextIndex(
+    @Qualifier("compilationContextDeclarationsCache") Cache<SymbolTree, Map<String, List<Declaration>>> declarations,
+    @Qualifier("compilationContextBranchesCache") Cache<SymbolTree, List<PreprocessorBranch>> preprocessorBranches
+  ) {
+    this.declarations = declarations;
+    this.preprocessorBranches = preprocessorBranches;
+  }
 
 
   /** Охватывающее объявление метода; null у кода уровня модуля. */
@@ -88,7 +98,7 @@ final class CompilationContextIndex {
       }
     }
     if (low == 0) {
-      return ExecutionContext.ALL;
+      return ExecutionContext.forFileType(document.getFileType());
     }
     var branch = branches.get(low - 1);
     return Ranges.containsPosition(branch.directive(), position) ? null : branch.contexts();
@@ -96,7 +106,7 @@ final class CompilationContextIndex {
 
   private static List<PreprocessorBranch> collectPreprocessorBranches(DocumentContext document) {
     var result = new ArrayList<PreprocessorBranch>();
-    var preprocessor = new PreprocessorContexts();
+    var preprocessor = new PreprocessorContexts(document.getFileType());
     for (var tree : Trees.findAllRuleNodes(document.getAst(), BSLParser.RULE_preprocessor)) {
       var node = (BSLParser.PreprocessorContext) tree;
       if (!preprocessor.enter(node)) {
