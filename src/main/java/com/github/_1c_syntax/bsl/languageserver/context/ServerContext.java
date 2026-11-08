@@ -327,19 +327,7 @@ public class ServerContext {
             activeFiles.put(uri, System.nanoTime());
           }
           try {
-            var lock = getDocumentLock(uri);
-            lock.writeLock().lock();
-            try {
-              var documentContext = documents.get(uri);
-              if (documentContext == null) {
-                documentContext = createDocumentContext(uri);
-                rebuildDocument(documentContext);
-                documentContext.freezeComputedData();
-                tryClearDocument(documentContext);
-              }
-            } finally {
-              lock.writeLock().unlock();
-            }
+            populateDocument(uri);
             workDoneProgressReporter.tick();
           } finally {
             if (showActivity) {
@@ -365,6 +353,22 @@ public class ServerContext {
     }
     LOGGER.info("Context of {} populated with {} files in {} ms",
       configurationRoot, files.size(), millisSince(startedAt));
+  }
+
+  private void populateDocument(URI uri) {
+    var lock = getDocumentLock(uri);
+    lock.writeLock().lock();
+    try {
+      var documentContext = documents.get(uri);
+      if (documentContext == null) {
+        documentContext = createDocumentContext(uri);
+        rebuildDocument(documentContext);
+        documentContext.freezeComputedData();
+        tryClearDocument(documentContext);
+      }
+    } finally {
+      lock.writeLock().unlock();
+    }
   }
 
   private static String describeActiveFile(Map<URI, Long> activeFiles, @Nullable Path root, String pattern) {

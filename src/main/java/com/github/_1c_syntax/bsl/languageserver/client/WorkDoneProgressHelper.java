@@ -214,7 +214,7 @@ public class WorkDoneProgressHelper {
           var current = counter.get();
           var activity = description.get();
           var message = counterMessage(current);
-          tick(activity.isEmpty() ? message : message + "; " + activity, percentage(current));
+          tick(activity.isEmpty() ? message : (message + "; " + activity), percentage(current));
         }
         if (!ended) {
           scheduleActivity(description, delayedExecutor);
