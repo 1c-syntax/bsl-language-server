@@ -36,7 +36,6 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 
 import static com.github._1c_syntax.bsl.languageserver.context.compilation.PreprocessorCondition.and;
@@ -47,7 +46,8 @@ import static com.github._1c_syntax.bsl.languageserver.context.compilation.Prepr
  * Проверка достижимости текущей ветки препроцессора при последовательном обходе файла.
  * <p>
  * Для BSL учитываются допустимые сочетания символов платформы из {@link PreprocessorContexts}.
- * В OneScript символы считаются независимыми: определять их может вызывающее приложение.
+ * В OneScript одна из ОС Windows/Linux/MacOS выбрана обязательно; Mono и пользовательские символы
+ * независимы от ОС. Ограничение ОС сохраняется и в формулах с неизвестными пользовательскими флагами.
  * В обоих диалектах дополнительно проверяются логические противоречия, включая символы ОС.
  * Конкретная ОС и пользовательские определения не предполагаются.
  * <p>
@@ -55,7 +55,9 @@ import static com.github._1c_syntax.bsl.languageserver.context.compilation.Prepr
  * сохраняют потенциальную достижимость. Экземпляр принадлежит одному обходу файла.
  */
 public final class PreprocessorReachability {
-  private final Optional<PreprocessorContexts> platform;
+  private final PreprocessorContexts platform;
+  private final Set<ExecutionContext> universe;
+  private final PreprocessorCondition assumptions;
   private final Deque<Branch> branches = new ArrayDeque<>();
   private final Map<String, Symbol> symbols = new HashMap<>();
   private boolean wellFormed = true;
@@ -63,10 +65,21 @@ public final class PreprocessorReachability {
   /**
    * Создать состояние для одного файла.
    *
-   * @param fileType диалект; ограничения контекстов 1С применяются только к BSL.
+   * @param fileType диалект, определяющий известные символы и допустимые контексты.
    */
   public PreprocessorReachability(FileType fileType) {
-    platform = fileType == FileType.BSL ? Optional.of(new PreprocessorContexts()) : Optional.empty();
+    platform = new PreprocessorContexts(fileType);
+    universe = ExecutionContext.forFileType(fileType);
+    assumptions = fileType == FileType.OS ? operatingSystemConstraint() : Value.TRUE;
+  }
+
+  private PreprocessorCondition operatingSystemConstraint() {
+    var windows = symbols.computeIfAbsent("windows", ignored -> new Symbol(symbols.size()));
+    var linux = symbols.computeIfAbsent("linux", ignored -> new Symbol(symbols.size()));
+    var macos = symbols.computeIfAbsent("macos", ignored -> new Symbol(symbols.size()));
+    var atLeastOne = or(windows, or(linux, macos));
+    var atMostOne = and(not(and(windows, linux)), and(not(and(windows, macos)), not(and(linux, macos))));
+    return and(atLeastOne, atMostOne);
   }
 
   /**
@@ -96,9 +109,9 @@ public final class PreprocessorReachability {
    * @param node директива с условием первой ветки.
    */
   public void enterIf(BSLParser.Preproc_ifContext node) {
-    platform.ifPresent(contexts -> contexts.enterIf(node));
+    platform.enterIf(node);
     var parent = branches.peek();
-    var branch = new Branch(parent == null ? Value.TRUE : parent.active);
+    var branch = new Branch(parent == null ? assumptions : parent.active);
     enter(branch, node.preproc_expression());
     branches.push(branch);
   }
@@ -109,7 +122,7 @@ public final class PreprocessorReachability {
    * @param node директива с условием следующей ветки.
    */
   public void enterElsif(BSLParser.Preproc_elsifContext node) {
-    platform.ifPresent(contexts -> contexts.enterElsif(node));
+    platform.enterElsif(node);
     var branch = branches.peek();
     if (branch == null) {
       wellFormed = false;
@@ -120,7 +133,7 @@ public final class PreprocessorReachability {
 
   /** Перейти в остаток инструкции; повторный или непарный {@code #Иначе} не доказывает недостижимость. */
   public void enterElse() {
-    platform.ifPresent(PreprocessorContexts::enterElse);
+    platform.enterElse();
     var branch = branches.peek();
     if (branch == null || branch.otherwise) {
       wellFormed = false;
@@ -132,7 +145,7 @@ public final class PreprocessorReachability {
 
   /** Закрыть инструкцию и восстановить состояние родительской ветки. */
   public void enterEndif() {
-    platform.ifPresent(PreprocessorContexts::enterEndif);
+    platform.enterEndif();
     if (branches.poll() == null) {
       wellFormed = false;
     }
@@ -144,14 +157,14 @@ public final class PreprocessorReachability {
    * @return {@code true} только при доказанной недостижимости; неизвестность даёт {@code false}.
    */
   public boolean isUnreachable() {
-    return isUnreachable(ExecutionContext.ALL);
+    return isUnreachable(universe);
   }
 
   /**
    * Проверить ветку с учётом возможностей охватывающего модуля и директивы метода.
    *
    * @param possibleContexts возможные режимы окружающего кода; неизвестные ограничения
-   *     не должны сужать это множество. В OneScript множество не используется.
+   *     не должны сужать это множество.
    * @return {@code true}, если ветка исключена во всех возможных режимах.
    */
   public boolean isUnreachable(Set<ExecutionContext> possibleContexts) {
@@ -162,11 +175,9 @@ public final class PreprocessorReachability {
     if (branch.active == Value.FALSE) {
       return true;
     }
-    if (platform.isPresent()) {
-      var contexts = platform.get().active();
-      if (contexts != null) {
-        return Collections.disjoint(contexts, possibleContexts);
-      }
+    var contexts = platform.active();
+    if (contexts != null) {
+      return Collections.disjoint(contexts, possibleContexts);
     }
     return !new PreprocessorSatisfiability(symbols.size()).canBeTrue(branch.active);
   }
@@ -174,11 +185,11 @@ public final class PreprocessorReachability {
   /**
    * Получить ограничения текущей ветки по режимам платформы.
    *
-   * @return множество режимов BSL, включая пустое для исключённой ветки; {@code null}
-   *     для OneScript, неизвестного условия или повреждённой структуры. Множество нельзя изменять.
+   * @return множество режимов соответствующего диалекта, включая пустое для исключённой ветки;
+   *     {@code null} для неизвестного условия или повреждённой структуры. Множество нельзя изменять.
    */
   public @Nullable Set<ExecutionContext> activeContexts() {
-    return wellFormed && platform.isPresent() ? platform.orElseThrow().active() : null;
+    return wellFormed ? platform.active() : null;
   }
 
   /**

@@ -340,6 +340,7 @@ public class ExpressionTypeInferencer {
     }
     var cacheKey = cacheKeyFor(node, ctx);
     var uri = ctx.documentContext.getUri();
+    var revision = inferredExpressionTypeIndex.inputRevision();
     if (cacheKey != null) {
       var cached = inferredExpressionTypeIndex.get(uri, cacheKey);
       if (cached != null) {
@@ -350,7 +351,7 @@ public class ExpressionTypeInferencer {
     try {
       var result = inferWithContexts(node, ctx, useCallerContext);
       if (cacheKey != null && !ctx.cycleCut && !ctx.bodyInFlowCut && !ctx.depthCut && !ctx.failed) {
-        inferredExpressionTypeIndex.put(uri, cacheKey, result, ctx.dependencies);
+        inferredExpressionTypeIndex.put(uri, cacheKey, result, ctx.dependencies, revision);
       }
       return result;
     } finally {
@@ -1118,7 +1119,7 @@ public class ExpressionTypeInferencer {
     var owner = method.getOwner();
     if (owner != ctx.documentContext || !method.isFunction() || method.getCompilerDirectiveKind().isPresent()
         || owner.getMdObject().filter(CommonModule.class::isInstance).isEmpty()
-        || !ExecutionContext.ALL.equals(owner.getSymbolTree().getMethodPreprocessorContexts(method))) {
+        || !ExecutionContext.forFileType(owner.getFileType()).equals(owner.getSymbolTree().getMethodPreprocessorContexts(method))) {
       return false;
     }
     var session = DiagnosticDeclarationSession.current();

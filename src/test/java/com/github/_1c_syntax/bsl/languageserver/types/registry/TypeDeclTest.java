@@ -72,6 +72,7 @@ class TypeDeclTest {
 
     // then
     assertThat(decl.name()).isSameAs(BilingualString.EMPTY);
+    assertThat(decl.qualifiedName()).isEmpty();
     assertThat(decl.description()).isSameAs(BilingualString.EMPTY);
     assertThat(decl.forEachDescription()).isSameAs(BilingualString.EMPTY);
     assertThat(decl.indexAccessDescription()).isSameAs(BilingualString.EMPTY);

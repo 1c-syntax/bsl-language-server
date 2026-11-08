@@ -185,12 +185,14 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * <p>
    * Выполняется после сброса окружений и выражений, до обновления диагностик и подсказок.
    * Используется обычный проход индекса с ограничением числа одновременно загруженных документов.
+   * Смена настроек ждёт завершения активного прохода: его финальная очистка очереди
+   * не должна стереть новый план пересчёта. Рабочие задачи прохода этот монитор не берут.
    *
    * @param event новые настройки рабочей области.
    */
   @Order(Ordered.HIGHEST_PRECEDENCE + 100)
   @EventListener
-  public void handleConfigurationChanged(LanguageServerConfigurationChangedEvent event) {
+  public synchronized void handleConfigurationChanged(LanguageServerConfigurationChangedEvent event) {
     var enabled = event.getSource().isSupportThickClientFileMode();
     if (enabled == supportThickClientFileMode) {
       return;
@@ -343,7 +345,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * @param event событие наполнения рабочей области.
    */
   @EventListener
-  public void handleServerContextPopulated(ServerContextPopulatedEvent event) {
+  public synchronized void handleServerContextPopulated(ServerContextPopulatedEvent event) {
     var serverContext = event.getSource();
     maintenance = true;
     var deferred = pending.size();

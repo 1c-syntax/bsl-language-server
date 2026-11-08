@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types.compilation;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.types.model.Availability;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
@@ -39,6 +40,7 @@ import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -49,7 +51,9 @@ import java.util.Set;
 
 /** Возможности модулей и типов из метаданных конфигурации и синтакс-помощника. */
 @RequiredArgsConstructor
-final class ModuleCompilationContexts {
+@Component
+@WorkspaceScope
+class ModuleCompilationContexts {
   private record PlatformContextsKey(Set<Availability> available, Set<ExecutionContext> supported) { }
   private static final LoadingCache<PlatformContextsKey, Set<ExecutionContext>> PLATFORM_CONTEXTS =
     Caffeine.newBuilder().maximumSize(128).build(ModuleCompilationContexts::computePlatformContexts);
@@ -63,6 +67,9 @@ final class ModuleCompilationContexts {
    * @return все контексты либо множество без файловых вариантов толстого клиента.
    */
   public static Set<ExecutionContext> supportedContexts(DocumentContext document) {
+    if (document.getFileType() == FileType.OS) {
+      return ExecutionContext.OSCRIPT;
+    }
     return document.getServerContext().getLanguageServerConfiguration().isSupportThickClientFileMode()
       ? ExecutionContext.ALL : ExecutionContext.WITHOUT_THICK_CLIENT_FILE;
   }

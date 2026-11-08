@@ -5,12 +5,13 @@ name: Snapshots
 
 on:
   push:
-    branches:
-      - develop
+    # Ветка PR может быть базой другого PR: её SHA также нужен Sentry как baseline.
+    branches-ignore:
+      - gh-pages
   pull_request:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:

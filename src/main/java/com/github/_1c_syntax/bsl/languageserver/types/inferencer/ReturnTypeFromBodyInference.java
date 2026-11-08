@@ -129,7 +129,7 @@ public class ReturnTypeFromBodyInference {
         }
         return contexts.contains(context) ? Set.of(context) : Set.<ExecutionContext>of();
       })
-      .map(contexts -> PreprocessorFlow.of(graph, contexts)).orElse(null);
+      .map(contexts -> PreprocessorFlow.of(graph, contexts, owner.getFileType())).orElse(null);
     var exitPoint = graph.getExitPoint();
     var result = TypeSet.EMPTY;
     for (var edge : graph.incomingEdgesOf(exitPoint)) {
