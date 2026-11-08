@@ -78,6 +78,11 @@ class FormParametersRegistrar {
   /** Параметр формы записи регистра сведений: ключ записи, открытой на изменение. */
   private static final String SOURCE_RECORD_KEY = "ИсходныйКлючЗаписи";
 
+  /** Параметр обработчика команды — сама команда. */
+  private static final BilingualString COMMAND_PARAMETER = BilingualString.of("Команда", "Command");
+  private static final BilingualString COMMAND_PARAMETER_DESCRIPTION = BilingualString.of(
+    "Команда формы, которой вызван обработчик.", "The form command the handler was invoked by.");
+
   private final TypeRegistry typeRegistry;
   private final FormParametersResolver formParametersResolver;
   private final FormDataTypesRegistrar formDataTypes;
@@ -359,10 +364,7 @@ class FormParametersRegistrar {
       .orElse(TypeSet.EMPTY);
     return new SignatureDescriptor(
       List.of(new ParameterDescriptor(
-        BilingualString.of("Команда", "Command"), commandTypes, false,
-        BilingualString.of("Команда формы, которой вызван обработчик.",
-          "The form command the handler was invoked by."),
-        "")),
+        COMMAND_PARAMETER, commandTypes, false, COMMAND_PARAMETER_DESCRIPTION, "")),
       TypeSet.EMPTY, BilingualString.EMPTY);
   }
 

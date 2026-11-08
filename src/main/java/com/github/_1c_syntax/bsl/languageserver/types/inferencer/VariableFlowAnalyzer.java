@@ -21,17 +21,16 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.cfg.CfgBuildOptions;
-import com.github._1c_syntax.bsl.languageserver.cfg.CfgEdgeType;
-import com.github._1c_syntax.bsl.languageserver.cfg.CfgVertex;
-import com.github._1c_syntax.bsl.languageserver.cfg.ConditionalVertex;
-import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraph;
+import com.github._1c_syntax.bsl.languageserver.cfg.PreprocessorFlow;
+import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraphIndex;
-import com.github._1c_syntax.bsl.languageserver.cfg.WhileLoopVertex;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.index.AbstractDocumentLifecycleClearableIndex;
 import com.github._1c_syntax.bsl.languageserver.index.SourceBoundRecords;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
@@ -40,27 +39,33 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Position;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BooleanSupplier;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**
@@ -79,7 +84,7 @@ import java.util.stream.Stream;
  * даёт разные ответы в разных местах.
  * <p>
  * Единица расчёта — <b>тело целиком</b>: один поиск неподвижной точки считает
- * {@link Environment окружение} — тип каждой переменной тела в каждой его точке. Поэтому
+ * {@link FlowEnvironment окружение} — тип каждой переменной тела в каждой его точке. Поэтому
  * запрос про любую переменную тела — чтение готового ответа, а не отдельный расчёт.
  * <p>
  * Про присваиваемые типы, изменения мутаторов и сужение по условиям анализатор не знает
@@ -90,23 +95,52 @@ import java.util.stream.Stream;
  * по позициям тело и рассчитанные по нему окружения. Без второго неподвижная точка
  * считалась бы заново на каждый запрос типа, а диагностики спрашивают тип на каждое
  * обращение к члену.
+ * <p>
+ * Окружения и ячейки для конкретных контекстов создаются по запросу и хранятся отдельно
+ * от результата без ограничения режима. Иначе запрос для {@code #Если Сервер}
+ * мог бы заменить тип, нужный другому клиенту API. Разложение тела общее: контекст
+ * исключает недостижимые вершины и рёбра без изменения исходного графа.
+ * Все варианты очищаются через {@link #clear(URI)} по жизненному циклу документа.
  */
 @Component
 @WorkspaceScope
 @RequiredArgsConstructor
 public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableIndex {
-
   /**
    * Предел проходов по графу. Тип, приходящий по обратному ребру цикла, доезжает до
    * ранее посещённых вершин за считанные проходы; предел — страховка от незавершающегося
    * расчёта на неожиданной форме графа.
    */
-  private static final int MAX_PASSES = 16;
+  static final int MAX_PASSES = 16;
 
+  private final RootFlowComputations rootComputations = new RootFlowComputations();
   private final ControlFlowGraphIndex controlFlowGraphIndex;
 
   private final Map<URI, Map<BSLParser.CodeBlockContext, FlowLayout>> layoutsByUri = new ConcurrentHashMap<>();
+  /** Переменные и места их изменений не зависят от режима или текущих приближений типов. */
+  private final SourceBoundRecords<SymbolTree, Map<BSLParser.CodeBlockContext, FlowVariables>> variablesByUri =
+    new SourceBoundRecords<>();
   private final Map<URI, Map<BSLParser.CodeBlockContext, Facts>> factsByUri = new ConcurrentHashMap<>();
+  /** Только завершённые внешние расчёты без зависимости от выбранного режима. */
+  private final Map<URI, Map<BSLParser.CodeBlockContext, ModeIndependentFacts>> modeIndependentFactsByUri =
+    new ConcurrentHashMap<>();
+  private final AtomicLong modeFactsGeneration = new AtomicLong();
+
+  private record ModeIndependentFacts(Facts facts, long generation) {
+  }
+
+  /**
+   * Окружения по документу, режиму и телу. Создаются только для запрошенных режимов,
+   * удаляются при очистке документа; результаты без ограничения режима хранятся в {@code factsByUri}.
+   */
+  private final Map<URI, Map<ExecutionContext, Map<BSLParser.CodeBlockContext, Facts>>> contextualFactsByUri =
+    new ConcurrentHashMap<>();
+  /**
+   * Ячейки переменных модуля по режимам и версии дерева символов. Смена дерева
+   * обесценивает запись целиком, даже если символ переменной сравнивается равным прежнему.
+   */
+  private final SourceBoundRecords<SymbolTree, Map<ExecutionContext, Map<VariableSymbol, TypeSet>>>
+    contextualCellsByUri = new SourceBoundRecords<>();
   /**
    * Ячейки переменных, видимых другим телам.
    * <p>
@@ -127,6 +161,14 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   private final SourceBoundRecords<SymbolTree, Map<VariableSymbol, Changes>> changesByUri =
     new SourceBoundRecords<>();
 
+  /** Включить отслеживание только для колбэков инференсера, знающих о зависимости от режима. */
+  void startContextTracking(FlowSession session) {
+    if (!session.contextTracking) {
+      session.contextTracking = true;
+      session.contextGeneration = modeFactsGeneration.get();
+    }
+  }
+
   /**
    * Расчёты по телам, идущие прямо сейчас в рамках одного вывода типов.
    * <p>
@@ -139,21 +181,52 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * явный, время жизни — вызов вывода; общего изменяемого состояния между потоками нет.
    */
   public static final class FlowSession {
+    boolean contextTracking;
+    boolean contextFreeDeclarations;
+    boolean contextSensitive;
+    long contextGeneration;
 
-    private final Map<BSLParser.CodeBlockContext, Pass> active = new IdentityHashMap<>();
+    private final Map<BSLParser.CodeBlockContext, VariableFlowPass> active = new IdentityHashMap<>(0);
 
     /**
      * Ячейки переменных, видимых другим телам: пока идут круги — приближения, после —
      * посчитанные значения. Запрос, пришедший в середину кругов, читает отсюда, иначе
      * круги запускались бы заново из самих себя.
      */
-    private final Map<VariableSymbol, TypeSet> cells = new IdentityHashMap<>();
+    private final Map<VariableSymbol, TypeSet> cells = new IdentityHashMap<>(0);
 
     /** Переменные, ячейки которых в этом выводе типов уже посчитаны. */
-    private final Set<VariableSymbol> cellsDone = Collections.newSetFromMap(new IdentityHashMap<>());
+    private final Set<VariableSymbol> cellsDone = Collections.newSetFromMap(new IdentityHashMap<>(0));
 
     /** Идут ли круги прямо сейчас: изнутри них ячейки заново не считаются. */
     private boolean cellsComputing;
+
+    private final Runnable cellsChanged;
+
+    /** Создать сессию без внешних результатов, зависящих от её приближений. */
+    public FlowSession() {
+      this(() -> {
+        // У автономной сессии нет внешнего кеша результатов.
+      });
+    }
+
+    /**
+     * Создать сессию с уведомлением об изменении входа переменных модуля.
+     *
+     * @param cellsChanged сброс результатов, вычисленных по прежним приближениям.
+     */
+    public FlowSession(Runnable cellsChanged) {
+      this.cellsChanged = cellsChanged;
+    }
+
+    private boolean replaceCell(VariableSymbol variable, TypeSet type) {
+      var previous = cells.put(variable, type);
+      if (type.equals(previous)) {
+        return false;
+      }
+      cellsChanged.run();
+      return true;
+    }
 
     /**
      * Идут ли прямо сейчас круги по ячейкам переменных модуля.
@@ -191,118 +264,25 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     public boolean computing(BSLParser.CodeBlockContext body) {
       return active.containsKey(body);
     }
-  }
 
-  /**
-   * Тип каждой переменной тела в одной его точке.
-   * <p>
-   * Неизменяемо, поэтому соседние точки, между которыми ничего не поменялось, ссылаются на
-   * одно окружение. За счёт этого хранение растёт по числу мест, где тип меняется, а не по
-   * числу операторов, помноженному на число переменных.
-   *
-   * @param types типы переменных; переменных, о которых ничего не известно, в карте нет.
-   */
-  private record Environment(TypeSet[] types) {
-
-    /**
-     * Пустое окружение нулевой длины — обращение к любой переменной даёт пустой набор.
-     * Годится как начальное значение для тела любого размера.
-     */
-    private static final Environment EMPTY = new Environment(new TypeSet[0]);
-
-    /**
-     * Окружение, в котором о переменных ничего не известно.
-     *
-     * @param size число переменных тела.
-     * @return окружение нужного размера.
-     */
-    static Environment blank(int size) {
-      var types = new TypeSet[size];
-      Arrays.fill(types, TypeSet.EMPTY);
-      return new Environment(types);
-    }
-
-    /** Тип переменной по её номеру; пустой набор, если про неё здесь ничего не известно. */
-    TypeSet get(int index) {
-      return index < types.length ? types[index] : TypeSet.EMPTY;
-    }
-
-    /**
-     * Окружение с изменённым типом одной переменной.
-     * <p>
-     * Если тип не поменялся, возвращается это же окружение: так соседние точки, между
-     * которыми ничего не произошло, ссылаются на один объект.
-     */
-    Environment with(int index, TypeSet type, int size) {
-      if (type.equals(get(index))) {
-        return this;
-      }
-      var changed = resized(size);
-      changed[index] = type;
-      return new Environment(changed);
-    }
-
-    /**
-     * Объединение с другим окружением: тип каждой переменной — объединение её типов.
-     * Так сходятся пути в точке слияния.
-     */
-    Environment union(Environment other) {
-      if (types.length == 0) {
-        return other;
-      }
-      if (other.types.length == 0) {
-        return this;
-      }
-      TypeSet[] merged = null;
-      for (var i = 0; i < types.length; i++) {
-        var united = types[i].union(other.types[i]);
-        if (merged == null && !united.equals(types[i])) {
-          merged = types.clone();
-        }
-        if (merged != null) {
-          merged[i] = united;
-        }
-      }
-      return merged == null ? this : new Environment(merged);
-    }
-
-    /** Копия массива нужной длины: пустое окружение растягивается до размера тела. */
-    private TypeSet[] resized(int size) {
-      if (types.length == size) {
-        return types.clone();
-      }
-      var grown = new TypeSet[size];
-      Arrays.fill(grown, TypeSet.EMPTY);
-      System.arraycopy(types, 0, grown, 0, types.length);
-      return grown;
-    }
-
-    @Override
-    public boolean equals(Object other) {
-      return this == other || other instanceof Environment that && Arrays.equals(types, that.types);
-    }
-
-    @Override
-    public int hashCode() {
-      return Arrays.hashCode(types);
-    }
-
-    /** По содержимому, а не по ссылке на массив: иначе в отладке смысла не видно. */
-    @Override
-    public String toString() {
-      return "Environment" + Arrays.toString(types);
+    /** Снимок тел, повторный вход в которые сейчас отсекается. */
+    public Set<BSLParser.CodeBlockContext> activeBodies() {
+      return Set.copyOf(active.keySet());
     }
   }
+
+
 
   /**
    * Изменение типа одной переменной одним оператором.
    *
    * @param variable   переменная.
+   * @param index номер переменной в окружениях тела.
    * @param position   позиция присваивания либо оператора-мутатора.
    * @param definition {@code true} — присваивание (задаёт тип заново),
    *                   {@code false} — мутатор (дополняет накопленный).
    */
-  private record Change(VariableSymbol variable, int index, Position position, boolean definition) {
+  record Change(VariableSymbol variable, int index, Position position, boolean definition) {
   }
 
   /**
@@ -314,11 +294,11 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * @param beforeStatement   окружение перед каждым оператором тела.
    * @param changesByStatement изменения типов по операторам, в которых они стоят.
    */
-  private record Facts(
+  record Facts(
     Map<VariableSymbol, Integer> indexes,
-    Map<ParserRuleContext, Environment> beforeStatement,
+    Map<ParserRuleContext, FlowEnvironment> beforeStatement,
     Map<ParserRuleContext, List<Change>> changesByStatement,
-    Environment leaving
+    FlowEnvironment leaving
   ) {
 
     /** Номер переменной в окружении; {@code null}, если расчёт по потоку к ней неприменим. */
@@ -428,8 +408,15 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * Исходные данные расчёта по телу.
    *
    * @param session             расчёты, идущие прямо сейчас в рамках этого вывода типов.
+   * @param activeBodyRead      уведомление о проверке текущего окружения тела, включая
+   *                            проверку при отсутствии активного расчёта.
    * @param cacheable           можно ли запоминать результат: вложенный расчёт мог быть
    *                            усечён защитой от циклов, такой результат переиспользовать нельзя.
+   * @param executionContext    режим для выбора кеша; {@code null} использует общий результат
+   *                            по всем возможным контекстам модуля и метода.
+   * @param compilationContexts возможные режимы каждого тела с учётом выбранного контекста,
+   *                            модуля, директивы и ветки объявления метода. Пустое множество
+   *                            исключает тело; пустой Optional отключает модель контекстов 1С.
    * @param sawMissing          видел ли вывод типов значения, которых ещё нет: пока рабочая
    *                            область наполняется, так бывает с функциями модулей, до которых
    *                            очередь не дошла. Посчитанное на них неполно и в кэши, живущие
@@ -458,7 +445,10 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    */
   public record FlowInputs(
     FlowSession session,
+    Consumer<BSLParser.CodeBlockContext> activeBodyRead,
     boolean cacheable,
+    @Nullable ExecutionContext executionContext,
+    Function<BSLParser.CodeBlockContext, Optional<Set<ExecutionContext>>> compilationContexts,
     BooleanSupplier sawMissing,
     Function<BSLParser.CodeBlockContext, Collection<VariableSymbol>> variables,
     Predicate<VariableSymbol> sharedWithOtherBodies,
@@ -489,6 +479,27 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     VariableSymbol variable,
     FlowInputs inputs
   ) {
+    return typeAt(documentContext, use, variable, inputs, null);
+  }
+
+  /**
+   * Внешний запрос выражения: независимые запросы могут дождаться опубликованных фактов.
+   * Активные тела, круги по ячейкам и незапоминаемые расчёты используют обычный путь.
+   *
+   * @param documentContext документ обращения.
+   * @param use узел обращения.
+   * @param variable переменная.
+   * @param inputs данные текущего вывода типов.
+   * @param complete завершился ли вывод без отсечения рекурсии или глубины.
+   * @return тип в позиции либо {@code null}, если обращение не размещено.
+   */
+  public @Nullable TypeSet typeAtRoot(DocumentContext documentContext, ParserRuleContext use,
+                                     VariableSymbol variable, FlowInputs inputs, BooleanSupplier complete) {
+    return typeAt(documentContext, use, variable, inputs, complete);
+  }
+
+  private @Nullable TypeSet typeAt(DocumentContext documentContext, ParserRuleContext use,
+                                   VariableSymbol variable, FlowInputs inputs, @Nullable BooleanSupplier sharedRoot) {
     var body = enclosingBody(use);
     if (body == null) {
       return null;
@@ -499,7 +510,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       return null;
     }
     return typeAtStatement(
-      documentContext, body, layout, useStatement, use, Ranges.create(use).getStart(), false, variable, inputs);
+      documentContext, body, layout, useStatement, use, Ranges.create(use).getStart(), false, variable, inputs, sharedRoot);
   }
 
   /**
@@ -583,18 +594,30 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * @param inputs          исходные данные расчёта.
    * @return тип на входе в тело.
    */
-  private TypeSet cellOf(DocumentContext documentContext, VariableSymbol variable, FlowInputs inputs) {
-    var settled = cellsOf(documentContext).get(variable);
+  TypeSet cellOf(DocumentContext documentContext, VariableSymbol variable, FlowInputs inputs) {
+    var settled = cellsOf(documentContext, inputs.executionContext()).get(variable);
     if (settled != null) {
       return settled;
     }
-    return inputs.session().cells.getOrDefault(variable, inputs.declaredFact().apply(variable));
+    var current = inputs.session().cells.get(variable);
+    return current == null ? inputs.declaredFact().apply(variable) : current;
   }
 
-  /** Готовые ячейки документа — посчитанные по его нынешнему дереву символов. */
-  private Map<VariableSymbol, TypeSet> cellsOf(DocumentContext documentContext) {
-    return cellsByUri.get(documentContext.getUri(), documentContext.getSymbolTreeNoLock(),
-      tree -> new ConcurrentHashMap<>());
+  /**
+   * Получить хранилище завершённых ячеек для текущей версии дерева и выбранного режима.
+   *
+   * @param documentContext документ — владелец переменных.
+   * @param context режим компиляции или {@code null} для общего хранилища.
+   * @return изменяемая потокобезопасная карта, создаваемая при первом обращении.
+   */
+  private Map<VariableSymbol, TypeSet> cellsOf(DocumentContext documentContext, @Nullable ExecutionContext context) {
+    if (context == null) {
+      return cellsByUri.get(documentContext.getUri(), documentContext.getSymbolTreeNoLock(),
+        tree -> new ConcurrentHashMap<>());
+    }
+    return contextualCellsByUri
+      .get(documentContext.getUri(), documentContext.getSymbolTreeNoLock(), tree -> new ConcurrentHashMap<>())
+      .computeIfAbsent(context, ignored -> new ConcurrentHashMap<>());
   }
 
   /**
@@ -629,12 +652,17 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * @param inputs          исходные данные расчёта.
    */
   private void ensureCellsFor(DocumentContext documentContext, List<VariableSymbol> shared, FlowInputs inputs) {
+    ensureCellsFor(documentContext, shared, inputs, null);
+  }
+
+  private void ensureCellsFor(DocumentContext documentContext, List<VariableSymbol> shared, FlowInputs inputs,
+                              @Nullable BooleanSupplier complete) {
     var session = inputs.session();
     // Готовые ячейки — общие на весь документ и переживают отдельный вывод типов. Без
     // этой проверки круги гонялись бы заново на каждый запрос типа: своя память о них
     // заводится на один вывод, а запросов на документ тысячи. Посчитанное кладётся туда
     // же, откуда прочитано, — к дереву символов, по которому шёл расчёт.
-    var settled = cellsOf(documentContext);
+    var settled = cellsOf(documentContext, inputs.executionContext());
     var pending = new ArrayList<VariableSymbol>(shared.size());
     for (var variable : shared) {
       if (!settled.containsKey(variable) && session.cellsDone.add(variable)) {
@@ -649,16 +677,19 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     // дорогу запускать себя заново.
     var outerComputing = session.cellsComputing;
     session.cellsComputing = true;
+    session.cellsChanged.run();
     try {
       for (var variable : pending) {
-        session.cells.put(variable, inputs.declaredFact().apply(variable));
+        session.replaceCell(variable, inputs.declaredFact().apply(variable));
       }
       grow(documentContext, pending, inputs);
-      if (inputs.cacheable() && !inputs.sawMissing().getAsBoolean()) {
+      if (inputs.cacheable() && !inputs.sawMissing().getAsBoolean()
+        && (complete == null || complete.getAsBoolean())) {
         pending.forEach(variable -> settled.putIfAbsent(variable, session.cells.get(variable)));
       }
     } finally {
       session.cellsComputing = outerComputing;
+      session.cellsChanged.run();
     }
   }
 
@@ -666,7 +697,15 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   private static List<VariableSymbol> sharedVariablesOf(BSLParser.CodeBlockContext body, FlowInputs inputs) {
     var shared = new ArrayList<VariableSymbol>(0);
     for (var variable : inputs.variables().apply(body)) {
+      if (inputs.session().contextTracking && ((variable.getKind() == VariableKind.PARAMETER
+          && !inputs.session().contextFreeDeclarations)
+        || variable.getKind() == VariableKind.MODULE || variable.getKind() == VariableKind.GLOBAL)) {
+        inputs.session().contextSensitive = true;
+      }
       if (inputs.sharedWithOtherBodies().test(variable)) {
+        if (inputs.session().contextTracking) {
+          inputs.session().contextSensitive = true;
+        }
         shared.add(variable);
       }
     }
@@ -680,22 +719,32 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     for (var round = 0; round < MAX_PASSES && !bodies.isEmpty(); round++) {
       var grown = false;
       for (var body : bodies) {
+        if (inputs.compilationContexts().apply(body).map(Set::isEmpty).orElse(false)) {
+          continue;
+        }
         // Окружения не запоминаются: они посчитаны по промежуточному приближению входа
         // и через круг устареют.
         var facts = compute(documentContext, body, layoutOf(documentContext, body), inputs);
-        for (var variable : shared) {
-          var index = facts.indexOf(variable);
-          if (index == null) {
-            continue;
-          }
-          var united = session.cells.get(variable).union(facts.leaving().get(index));
-          grown |= !united.equals(session.cells.put(variable, united));
-        }
+        grown |= growCells(shared, session, facts);
       }
       if (!grown) {
         break;
       }
     }
+  }
+
+  /** Добавить выходные типы тела к текущим приближениям общих ячеек. */
+  private static boolean growCells(List<VariableSymbol> shared, FlowSession session, Facts facts) {
+    var grown = false;
+    for (var variable : shared) {
+      var index = facts.indexOf(variable);
+      if (index == null) {
+        continue;
+      }
+      var united = session.cells.get(variable).union(facts.leaving().get(index));
+      grown |= session.replaceCell(variable, united);
+    }
+    return grown;
   }
 
   /** Тела, в которых эти переменные меняются, — по одному на тело и без повторов. */
@@ -726,10 +775,28 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    */
   @Override
   public void clear(URI uri) {
+    modeFactsGeneration.incrementAndGet();
+    modeIndependentFactsByUri.remove(uri);
     layoutsByUri.remove(uri);
+    variablesByUri.remove(uri);
     factsByUri.remove(uri);
+    contextualFactsByUri.remove(uri);
     cellsByUri.remove(uri);
+    contextualCellsByUri.remove(uri);
     changesByUri.remove(uri);
+  }
+
+  /** Настройки обесценивают окружения и привязки переменных; раскладка неизменённого AST сохраняется. */
+  @Order(Ordered.HIGHEST_PRECEDENCE)
+  @EventListener
+  public void handleConfigurationChanged(LanguageServerConfigurationChangedEvent event) {
+    modeFactsGeneration.incrementAndGet();
+    modeIndependentFactsByUri.clear();
+    variablesByUri.clear();
+    factsByUri.clear();
+    contextualFactsByUri.clear();
+    cellsByUri.clear();
+    contextualCellsByUri.clear();
   }
 
   /**
@@ -764,23 +831,32 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     VariableSymbol variable,
     FlowInputs inputs
   ) {
+    return typeAtStatement(documentContext, body, layout, useStatement, useNode, usePosition,
+      atDefinition, variable, inputs, null);
+  }
+
+  private @Nullable TypeSet typeAtStatement(DocumentContext documentContext, BSLParser.CodeBlockContext body,
+    FlowLayout layout, ParserRuleContext useStatement, @Nullable ParserRuleContext useNode,
+    Position usePosition, boolean atDefinition, VariableSymbol variable, FlowInputs inputs,
+    @Nullable BooleanSupplier sharedRoot) {
     if (layout.vertexOf(useStatement) == null) {
       return null;
     }
     // Запрос пришёл посреди расчёта этого же тела — из вывода типа чьего-то присваивания.
     // Отвечаем тем, что насчитано к этому моменту: перезапуск расчёта дал бы тот же ответ,
     // только пройдя тело ещё раз.
+    inputs.activeBodyRead().accept(body);
     var active = inputs.session().active.get(body);
     if (active != null) {
       return active.estimateAt(useStatement, variable);
     }
-    var facts = factsOf(documentContext, body, layout, inputs);
+    var facts = factsOf(documentContext, body, layout, inputs, sharedRoot);
     var index = facts.indexOf(variable);
     if (index == null) {
       return null;
     }
     var change = facts.changeOf(useStatement, variable);
-    var before = facts.beforeStatement().getOrDefault(useStatement, Environment.EMPTY).get(index);
+    var before = facts.beforeStatement().getOrDefault(useStatement, FlowEnvironment.EMPTY).get(index);
     var inclusive = useNode == null
       ? atDefinition
       : change != null && change.definition() && Ranges.containsPosition(useNode, change.position());
@@ -824,9 +900,13 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   }
 
   /**
-   * Рассчитанные по телу окружения — из кэша либо посчитанные на месте. Окружения не
-   * зависят от точки запроса, поэтому одного расчёта хватает на все обращения ко всем
-   * переменным тела.
+   * Рассчитанные по телу окружения — из кеша выбранного режима либо посчитанные на месте.
+   * Окружения не зависят от точки запроса, поэтому одного расчёта хватает на все обращения
+   * ко всем переменным тела в этом режиме.
+   * <p>
+   * Запись разрешена только для самостоятельного расчёта с полными исходными данными
+   * и завершёнными ячейками переменных модуля. Промежуточный результат возвращается
+   * текущему запросу, но не публикуется для следующих запросов.
    */
   private Facts factsOf(
     DocumentContext documentContext,
@@ -834,15 +914,69 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     FlowLayout layout,
     FlowInputs inputs
   ) {
-    var byBody = inputs.cacheable()
-      ? factsByUri.computeIfAbsent(documentContext.getUri(), uri -> new ConcurrentHashMap<>())
-      : null;
+    return factsOf(documentContext, body, layout, inputs, null);
+  }
+
+  private Facts factsOf(DocumentContext documentContext, BSLParser.CodeBlockContext body,
+    FlowLayout layout, FlowInputs inputs, @Nullable BooleanSupplier sharedRoot) {
+    Map<BSLParser.CodeBlockContext, Facts> byBody = null;
+    if (inputs.cacheable()) {
+      byBody = inputs.executionContext() == null
+        ? factsByUri.computeIfAbsent(documentContext.getUri(), uri -> new ConcurrentHashMap<>())
+        : contextualFactsByUri.computeIfAbsent(documentContext.getUri(), uri -> new ConcurrentHashMap<>())
+          .computeIfAbsent(inputs.executionContext(), context -> new ConcurrentHashMap<>());
+    }
     if (byBody != null) {
       var cached = byBody.get(body);
       if (cached != null) {
         return cached;
       }
     }
+    if (sharedRoot != null && sharedRoot.getAsBoolean() && byBody != null && !inputs.session().computing()
+      && !inputs.sawMissing().getAsBoolean()) {
+      var independent = modeIndependentFacts(documentContext, body, inputs);
+      if (independent != null) {
+        return independent;
+      }
+      ensureRootCells(documentContext, body, inputs, sharedRoot);
+      if (sharedRoot.getAsBoolean() && !inputs.session().computing() && !inputs.sawMissing().getAsBoolean()) {
+        var target = byBody;
+        return rootComputations.compute(documentContext.getUri(), body, inputs.executionContext(),
+          () -> target.get(body), () -> computeAndPublish(documentContext, body, layout, inputs, target, sharedRoot));
+      }
+    }
+    return computeAndPublish(documentContext, body, layout, inputs, byBody, sharedRoot);
+  }
+
+  /** Разные внешние тела одного модуля ждут общие ячейки до захвата собственного расчёта тела. */
+  private void ensureRootCells(DocumentContext documentContext, BSLParser.CodeBlockContext body, FlowInputs inputs,
+                               BooleanSupplier complete) {
+    var shared = sharedVariablesOf(body, inputs);
+    if (shared.isEmpty()) {
+      return;
+    }
+    var tree = documentContext.getSymbolTreeNoLock();
+    Supplier<@Nullable Boolean> cached = () -> {
+      if (documentContext.getSymbolTreeNoLock() != tree) {
+        return null;
+      }
+      var settled = cellsOf(documentContext, inputs.executionContext());
+      for (var variable : shared) {
+        if (!settled.containsKey(variable)) {
+          return null;
+        }
+      }
+      return Boolean.TRUE;
+    };
+    rootComputations.computeCells(documentContext.getUri(), tree, inputs.executionContext(), cached, () -> {
+      ensureCellsFor(documentContext, shared, inputs, complete);
+      return Boolean.TRUE;
+    });
+  }
+
+  private Facts computeAndPublish(DocumentContext documentContext, BSLParser.CodeBlockContext body,
+    FlowLayout layout, FlowInputs inputs, @Nullable Map<BSLParser.CodeBlockContext, Facts> byBody,
+    @Nullable BooleanSupplier sharedRoot) {
     // Расчёт идёт ВНЕ computeIfAbsent: он не мгновенный, и под замком корзины на нём
     // выстраивались бы все потоки пакетного анализа. Вдобавок расчёт тянет вывод типов,
     // который может попросить тип переменной другого тела того же документа, — это
@@ -854,11 +988,56 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     // Запомненное, оно пережило бы круги и отвечало бы приближением всем, в том числе
     // запросу, с которого круги и начались. Так же не запоминается окружение, посчитанное
     // на значениях, которых ещё нет: следующий расчёт принял бы его за полное.
-    if (byBody == null || inputs.session().cellsComputing || inputs.sawMissing().getAsBoolean()) {
+    if (byBody == null || inputs.session().cellsComputing || inputs.sawMissing().getAsBoolean()
+      || (sharedRoot != null && !sharedRoot.getAsBoolean())) {
       return computed;
     }
     var previous = byBody.putIfAbsent(body, computed);
+    if (sharedRoot != null && sharedRoot.getAsBoolean() && independentInputsCurrent(inputs)
+      && inputs.compilationContexts().apply(body).map(contexts -> contexts.contains(inputs.executionContext())).orElse(false)
+      && !containsPreprocessor(body)) {
+      var value = new ModeIndependentFacts(computed, inputs.session().contextGeneration);
+      modeIndependentFactsByUri.computeIfAbsent(documentContext.getUri(), ignored -> new ConcurrentHashMap<>())
+        .compute(body, (ignored, current) -> current == null || current.generation() < value.generation() ? value : current);
+    }
     return previous == null ? computed : previous;
+  }
+
+  private @Nullable Facts modeIndependentFacts(DocumentContext document, BSLParser.CodeBlockContext body,
+                                               FlowInputs inputs) {
+    if (!independentInputsCurrent(inputs)) {
+      return null;
+    }
+    var byBody = modeIndependentFactsByUri.get(document.getUri());
+    var cached = byBody == null ? null : byBody.get(body);
+    return cached != null && cached.generation() == inputs.session().contextGeneration
+      && inputs.compilationContexts().apply(body).map(contexts -> contexts.contains(inputs.executionContext())).orElse(false)
+      ? cached.facts() : null;
+  }
+
+  private boolean independentInputsCurrent(FlowInputs inputs) {
+    var session = inputs.session();
+    return session.contextTracking && !session.contextSensitive && !session.computing()
+      && inputs.executionContext() != null && session.contextGeneration == modeFactsGeneration.get();
+  }
+
+  /** В том числе директивы внутри выражений, которые могли не стать отдельной вершиной CFG. */
+  static boolean containsPreprocessor(BSLParser.CodeBlockContext body) {
+    var pending = new ArrayDeque<ParseTree>();
+    pending.add(body);
+    while (!pending.isEmpty()) {
+      var node = pending.removeLast();
+      if (node instanceof ParserRuleContext context) {
+        var rule = context.getRuleIndex();
+        if (rule < 0 || rule >= BSLParser.ruleNames.length || BSLParser.ruleNames[rule].startsWith("preproc")) {
+          return true;
+        }
+      }
+      for (var index = 0; index < node.getChildCount(); index++) {
+        pending.add(node.getChild(index));
+      }
+    }
+    return false;
   }
 
   /**
@@ -883,7 +1062,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * @param definitions позиции присваиваний.
    * @param mutations   позиции операторов, меняющих тип на месте.
    */
-  private record Changes(Collection<Position> definitions, Collection<Position> mutations) {
+  record Changes(Collection<Position> definitions, Collection<Position> mutations) {
   }
 
   /** Собрать изменения типов по операторам и посчитать по ним окружения тела. */
@@ -896,35 +1075,14 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     // До того, как тело попадёт в список идущих расчётов: круги по ячейкам считают и его
     // тоже, а тело из этого списка отдало бы им пустой вклад.
     ensureCells(documentContext, body, inputs);
-    // Каждой переменной, попавшей в расчёт, достаётся номер — её место в окружении.
-    // Окружение хранится массивом по этим номерам, а не картой: копия массива на десяток
-    // элементов дешевле копирования и перехеширования карты, а копий тут много — на
-    // каждое изменение, слияние и сужение в каждом проходе.
-    Map<VariableSymbol, Integer> indexes = new IdentityHashMap<>();
-    var variables = new ArrayList<VariableSymbol>();
-    Map<ParserRuleContext, List<Change>> changesByStatement = new IdentityHashMap<>();
-    for (var variable : inputs.variables().apply(body)) {
-      var changes = changesOf(documentContext, variable, inputs);
-      var definitions = changes.definitions();
-      var mutations = changes.mutations();
-      // Если хоть одно изменение типа не легло в граф отдельным оператором, его вклад
-      // потерялся бы — тогда точнее прежний путь с обходом всей области видимости.
-      // Отсутствие присваиваний расчёту не мешает: тип такой переменной — входной факт по
-      // всему телу, и это тот же ответ, что дал бы обход области видимости.
-      if (!allPlaced(layout, definitions) || !allPlaced(layout, mutations)) {
-        continue;
-      }
-      var index = variables.size();
-      indexes.put(variable, index);
-      variables.add(variable);
-      collectChanges(layout, variable, index, definitions, true, changesByStatement);
-      collectChanges(layout, variable, index, mutations, false, changesByStatement);
-    }
-    if (variables.isEmpty()) {
-      return new Facts(Map.of(), Map.of(), Map.of(), Environment.EMPTY);
+    var variables = variablesOf(documentContext, body, layout, inputs);
+    if (variables.variables().isEmpty()) {
+      return new Facts(Map.of(), Map.of(), Map.of(), FlowEnvironment.EMPTY);
     }
     var graph = controlFlowGraphIndex.graphOf(documentContext, body, CfgBuildOptions.defaults());
-    var pass = new Pass(this, documentContext, graph, layout, inputs, variables, indexes, changesByStatement);
+    var compiled = inputs.compilationContexts().apply(body)
+      .map(contexts -> PreprocessorFlow.of(graph, contexts, documentContext.getFileType())).orElse(null);
+    var pass = new VariableFlowPass(this, documentContext, graph, layout, inputs, compiled, variables);
     var active = inputs.session().active;
     active.put(body, pass);
     try {
@@ -934,366 +1092,24 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     }
   }
 
-  /** Разложить позиции изменений по операторам, в которых они стоят. */
-  private static void collectChanges(
-    FlowLayout layout,
-    VariableSymbol variable,
-    int index,
-    Collection<Position> positions,
-    boolean definition,
-    Map<ParserRuleContext, List<Change>> target
-  ) {
-    layout.index(positions).forEach((statement, position) ->
-      target.computeIfAbsent(statement, key -> new ArrayList<>(1))
-        .add(new Change(variable, index, position, definition)));
+  /** Структура переменных тела для текущего дерева символов, общая для всех режимов расчёта. */
+  private FlowVariables variablesOf(DocumentContext documentContext, BSLParser.CodeBlockContext body,
+                                    FlowLayout layout, FlowInputs inputs) {
+    var byBody = variablesByUri.get(documentContext.getUri(), documentContext.getSymbolTree(),
+      tree -> new ConcurrentHashMap<>());
+    var cached = byBody.get(body);
+    if (cached != null) {
+      return cached;
+    }
+    var computed = FlowVariables.collect(body, layout, inputs,
+      variable -> changesOf(documentContext, variable, inputs));
+    var previous = byBody.putIfAbsent(body, computed);
+    return previous == null ? computed : previous;
   }
 
-  /** Все ли изменения типа легли в операторы графа. */
-  private static boolean allPlaced(FlowLayout layout, Collection<Position> positions) {
-    for (var position : positions) {
-      if (layout.insideBody(position) && !layout.isPlaced(position)) {
-        return false;
-      }
-    }
-    return true;
-  }
 
-  /**
-   * Один расчёт по телу: держит исходные данные и разложенное тело, чтобы не таскать их
-   * через все шаги.
-   */
-  private static final class Pass {
 
-    private final VariableFlowAnalyzer analyzer;
-    private final DocumentContext documentContext;
-    private final ControlFlowGraph graph;
-    private final FlowLayout layout;
-    private final FlowInputs inputs;
-    /** Переменные тела по их номерам в окружении. */
-    private final List<VariableSymbol> variables;
-    private final Map<VariableSymbol, Integer> indexes;
-    private final Map<ParserRuleContext, List<Change>> changesByStatement;
-    /** Номера переменных, видимых другим телам: их тип сбрасывается на вызовах. */
-    private final List<Integer> shared;
 
-    /**
-     * Присваиваемые типы, уже посчитанные в этом расчёте. Каждый проход до неподвижной
-     * точки заново проходит по тем же присваиваниям, а вывод типа выражения справа —
-     * самая дорогая часть шага.
-     */
-    private final Map<Position, TypeSet> assignedTypes = new HashMap<>();
-
-    /**
-     * Окружение перед каждым оператором. Заполняется по ходу расчёта, а не только в конце:
-     * пока идут проходы, отсюда отвечают вложенные запросы про переменные этого же тела.
-     */
-    private final Map<ParserRuleContext, Environment> beforeStatement = new IdentityHashMap<>();
-
-    /** Окружение на входе в тело: считается по первому требованию и переиспользуется. */
-    @Nullable
-    private Environment entry;
-
-    /**
-     * Окружение, с которым управление покидает тело: объединение значений перед каждым
-     * вызовом. Нужно переменным, видимым другим телам: вызванный метод застаёт их
-     * такими, какими они были в точке вызова.
-     */
-    private Environment leaving = Environment.EMPTY;
-
-    /** Посчитанное окружение на выходе вершины и вход, для которого он посчитан. */
-    private final Map<CfgVertex, Environment> outgoing = new IdentityHashMap<>();
-    private final Map<CfgVertex, Environment> outgoingInput = new IdentityHashMap<>();
-
-    private Pass(
-      VariableFlowAnalyzer analyzer,
-      DocumentContext documentContext,
-      ControlFlowGraph graph,
-      FlowLayout layout,
-      FlowInputs inputs,
-      List<VariableSymbol> variables,
-      Map<VariableSymbol, Integer> indexes,
-      Map<ParserRuleContext, List<Change>> changesByStatement
-    ) {
-      this.analyzer = analyzer;
-      this.documentContext = documentContext;
-      this.graph = graph;
-      this.layout = layout;
-      this.inputs = inputs;
-      this.variables = variables;
-      this.indexes = indexes;
-      this.changesByStatement = changesByStatement;
-      this.shared = new ArrayList<>(0);
-      for (var i = 0; i < variables.size(); i++) {
-        if (inputs.sharedWithOtherBodies().test(variables.get(i))) {
-          shared.add(i);
-        }
-      }
-    }
-
-    /**
-     * Окружение перед каждым оператором тела и окружение на выходе из него. Считается
-     * один раз: сперва окружения по вершинам до неподвижной точки, затем один проход по
-     * операторам каждой вершины.
-     *
-     * @return окружения тела.
-     */
-    private Facts computeFacts() {
-      var byVertex = computeEntryFacts();
-      for (var vertex : layout.orderedVertices()) {
-        // Через тот же кэш выхода: к концу поиска неподвижной точки он уже посчитан для
-        // этих же входных окружений, и повторный проход по операторам не нужен — вместе с
-        // ним не нужны и повторные вызовы колбэков мутаторов.
-        outgoingOf(vertex, byVertex.getOrDefault(vertex, Environment.EMPTY));
-      }
-      // Окружение на входе в вершину выхода — это и есть окружение на выходе из тела:
-      // в неё сходятся все пути, включая Возврат из середины. Факта у неё может не быть
-      // (тело пустое либо выход недостижим) — тогда с чем вошли, с тем и вышли.
-      var exit = byVertex.getOrDefault(graph.getExitPoint(), entryEnvironment());
-      return new Facts(indexes, beforeStatement, changesByStatement, exit.union(leaving));
-    }
-
-    /**
-     * Тип переменной перед оператором по тому, что насчитано к этому моменту. Отвечает на
-     * вложенный запрос из вывода типа чьего-то присваивания в этом же теле.
-     *
-     * @param statement оператор, перед которым нужен тип.
-     * @param variable  переменная.
-     * @return тип; {@code null}, если до этого оператора расчёт ещё не дошёл и ответа
-     *     у него нет.
-     */
-    @Nullable
-    private TypeSet estimateAt(ParserRuleContext statement, VariableSymbol variable) {
-      var index = indexes.get(variable);
-      if (index == null) {
-        return null;
-      }
-      var environment = beforeStatement.get(statement);
-      return environment == null ? null : environment.get(index);
-    }
-
-    /**
-     * Окружение на входе в каждую вершину. Расчёт идёт проходами по всем вершинам, пока
-     * значения не перестанут меняться: так тип, приходящий по обратному ребру цикла,
-     * доезжает до вершин, посещённых раньше него.
-     */
-    private Map<CfgVertex, Environment> computeEntryFacts() {
-      Map<CfgVertex, Environment> facts = new IdentityHashMap<>();
-      facts.put(graph.getEntryPoint(), entryEnvironment());
-
-      for (var pass = 0; pass < MAX_PASSES; pass++) {
-        var changed = false;
-        for (var vertex : layout.orderedVertices()) {
-          var incoming = joinOfPredecessors(vertex, facts);
-          if (vertex == graph.getEntryPoint()) {
-            incoming = incoming.union(entryEnvironment());
-          }
-          if (!incoming.equals(facts.get(vertex))) {
-            facts.put(vertex, incoming);
-            changed = true;
-          }
-        }
-        if (!changed) {
-          break;
-        }
-      }
-      return facts;
-    }
-
-    /**
-     * Окружение на входе в тело: что известно о переменных до первого присваивания.
-     * Считается один раз — источники объявленного типа тянут разбор комментариев и
-     * аннотаций, а спрашивают их в каждом проходе.
-     */
-    private Environment entryEnvironment() {
-      if (entry == null) {
-        var types = Environment.blank(variables.size());
-        var current = types;
-        for (var i = 0; i < variables.size(); i++) {
-          current = current.with(i, entryFactOf(variables.get(i)), variables.size());
-        }
-        entry = current;
-      }
-      return entry;
-    }
-
-    /**
-     * Тип переменной на входе в это тело. У переменной, живущей в одном теле, это
-     * объявленное о ней; у видимой другим телам — то, с чем из тел выходят.
-     */
-    private TypeSet entryFactOf(VariableSymbol variable) {
-      return inputs.sharedWithOtherBodies().test(variable)
-        ? analyzer.cellOf(documentContext, variable, inputs)
-        : inputs.declaredFact().apply(variable);
-    }
-
-    /**
-     * Объединение окружений на выходе всех предшественников вершины. По рёбрам веток
-     * условия окружение проходит суженным: на истинной ветке верно само условие, на
-     * ложной — его отрицание. Этим же получается сужение охранным предложением
-     * ({@code Если Х = Неопределено Тогда Возврат; КонецЕсли;}) — до кода за условием
-     * доходит только ложная ветка.
-     */
-    private Environment joinOfPredecessors(CfgVertex vertex, Map<CfgVertex, Environment> facts) {
-      var joined = Environment.EMPTY;
-      for (var edge : graph.incomingEdgesOf(vertex)) {
-        var predecessor = graph.getEdgeSource(edge);
-        var atPredecessor = facts.get(predecessor);
-        if (atPredecessor != null) {
-          var outgoing = outgoingOf(predecessor, atPredecessor);
-          joined = joined.union(narrowedByEdge(predecessor, edge.getType(), outgoing));
-        }
-      }
-      return joined;
-    }
-
-    /**
-     * Окружение на выходе вершины — то же, что на входе, но с применёнными операторами.
-     * <p>
-     * Считается один раз на каждое входное окружение, а не на каждое исходящее ребро.
-     * Иначе операторы вершины проигрывались бы заново для каждого её последователя, а
-     * вместе с ними — колбэки операторов-мутаторов, которые тянут разбор вызова и вывод
-     * типа значения. Сравнение входа идёт по ссылке: окружения неизменяемы, и при
-     * изменении на месте старого создаётся новое.
-     *
-     * @param vertex   вершина.
-     * @param incoming окружение на входе в неё.
-     * @return окружение на выходе.
-     */
-    private Environment outgoingOf(CfgVertex vertex, Environment incoming) {
-      if (outgoingInput.get(vertex) == incoming) {
-        return outgoing.get(vertex);
-      }
-      var result = applyStatements(vertex, incoming);
-      outgoingInput.put(vertex, incoming);
-      outgoing.put(vertex, result);
-      return result;
-    }
-
-    /**
-     * Окружение, прошедшее по ребру ветки условия. Условие цикла {@code Пока} сужает так
-     * же, как условие {@code Если}: на входе в тело оно верно, за циклом — ложно.
-     */
-    private Environment narrowedByEdge(CfgVertex predecessor, CfgEdgeType edgeType, Environment outgoing) {
-      if (edgeType != CfgEdgeType.TRUE_BRANCH && edgeType != CfgEdgeType.FALSE_BRANCH) {
-        return outgoing;
-      }
-      var condition = conditionOf(predecessor);
-      if (condition == null) {
-        return outgoing;
-      }
-      // Сужаем только переменные, о которых условие правда что-то утверждает: перебор всех
-      // переменных тела давал бы вызов колбэка на каждую, а условие обычно про одну.
-      var mentioned = inputs.narrowing().variablesOf(condition);
-      if (mentioned.isEmpty()) {
-        return outgoing;
-      }
-      var whenTrue = edgeType == CfgEdgeType.TRUE_BRANCH;
-      var narrowed = outgoing;
-      for (var symbol : mentioned) {
-        var index = indexes.get(symbol);
-        if (index == null) {
-          continue;
-        }
-        var variable = variables.get(index);
-        narrowed = narrowed.with(
-          index,
-          inputs.narrowing().narrow(variable, condition, whenTrue, narrowed.get(index)),
-          variables.size());
-      }
-      return narrowed;
-    }
-
-    /** Условие вершины-ветвления; {@code null}, если вершина условия не несёт. */
-    private static BSLParser.@Nullable ExpressionContext conditionOf(CfgVertex vertex) {
-      if (vertex instanceof ConditionalVertex conditional) {
-        return conditional.getExpression();
-      }
-      return vertex instanceof WhileLoopVertex loop ? loop.getExpression() : null;
-    }
-
-    /**
-     * Применить к окружению все операторы вершины по порядку, попутно запоминая окружение
-     * перед каждым из них: пока идут проходы, отсюда отвечают вложенные запросы.
-     */
-    private Environment applyStatements(CfgVertex vertex, Environment incoming) {
-      var current = incoming;
-      for (var statement : layout.statementsOf(vertex)) {
-        beforeStatement.put(statement, current);
-        current = applyStatement(statement, current);
-      }
-      return current;
-    }
-
-    /**
-     * Изменение окружения одним оператором: присваивание задаёт тип переменной заново,
-     * оператор-мутатор дополняет уже накопленный. Операторов без изменений — большинство,
-     * и они окружение не трогают.
-     */
-    private Environment applyStatement(ParserRuleContext statement, Environment incoming) {
-      var changes = changesByStatement.get(statement);
-      var current = incoming;
-      if (changes != null) {
-        for (var change : changes) {
-          var variable = change.variable();
-          var updated = change.definition()
-            ? assignedTypes.computeIfAbsent(
-              change.position(), position -> inputs.assigned().at(variable, statement, position))
-            : inputs.mutations().apply(variable, change.position(), current.get(change.index()));
-          current = current.with(change.index(), updated, variables.size());
-        }
-      }
-      return forgetSharedAfterCall(statement, changes, current);
-    }
-
-    /**
-     * Вернуть к объединению по области видимости переменные, видимые другим телам,
-     * если оператор содержит вызов.
-     * <p>
-     * Вызванный метод мог присвоить такой переменной что угодно, поэтому дальше по коду
-     * известно только объединение по области видимости — оно же входной факт. Присваивание в самом
-     * операторе сильнее: оно происходит после того, как вызов вернул управление.
-     * Точность здесь оператора, а не выражения: если вызов и обращение стоят в одном
-     * операторе, обращение считается случившимся до вызова.
-     *
-     * @param statement оператор.
-     * @param changes   изменения этого оператора; {@code null}, если их нет.
-     * @param current   окружение после изменений оператора.
-     * @return окружение с возвращёнными к объединению переменными.
-     */
-    private Environment forgetSharedAfterCall(
-      ParserRuleContext statement,
-      @Nullable List<Change> changes,
-      Environment current
-    ) {
-      if (shared.isEmpty() || !layout.hasCall(statement)) {
-        return current;
-      }
-      // То, что переменная содержит перед вызовом, вызванный метод видит — значит это
-      // часть её значения на входе в другие тела, наравне со значением на выходе.
-      leaving = leaving.union(current);
-      var result = current;
-      for (var index : shared) {
-        if (assignedBy(changes, index)) {
-          continue;
-        }
-        result = result.with(index, entryEnvironment().get(index), variables.size());
-      }
-      return result;
-    }
-
-    /** Задаёт ли оператор тип переменной заново. */
-    private static boolean assignedBy(@Nullable List<Change> changes, int index) {
-      if (changes == null) {
-        return false;
-      }
-      for (var change : changes) {
-        if (change.index() == index && change.definition()) {
-          return true;
-        }
-      }
-      return false;
-    }
-  }
 
   /**
    * Тело метода или код модуля, которому принадлежит узел, — единица, по которой строится
@@ -1326,42 +1142,12 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   }
 
   /**
-   * Тело метода или код модуля, накрывающие позицию. Перебираются только объявления
-   * верхнего уровня — в операторы разбор не спускается.
+   * Тело метода или код модуля, накрывающие позицию. Поиск идёт по упорядоченным
+   * узлам верхнего уровня — в операторы разбор не спускается.
    */
   static BSLParser.@Nullable CodeBlockContext bodyAt(DocumentContext documentContext, Position position) {
-    var ast = documentContext.getAst();
-    var subs = ast.subs();
-    if (subs != null) {
-      for (var sub : subs.sub()) {
-        if (!Ranges.containsPosition(sub, position)) {
-          continue;
-        }
-        var procedure = sub.procedure();
-        if (procedure != null) {
-          return procedure.subCodeBlock().codeBlock();
-        }
-        var function = sub.function();
-        return function == null ? null : function.subCodeBlock().codeBlock();
-      }
-    }
-    // Тело модуля в дереве может быть не одно: код до объявлений методов (так пишут на
-    // OneScript) и после них (так требует 1С). Отдаём блок, только если он правда
-    // накрывает позицию: иначе расчёт пошёл бы по чужому телу.
-    var beforeSubs = ast.fileCodeBlockBeforeSub();
-    var covering = covering(beforeSubs == null ? null : beforeSubs.codeBlock(), position);
-    if (covering != null) {
-      return covering;
-    }
-    var fileCodeBlock = ast.fileCodeBlock();
-    return covering(fileCodeBlock == null ? null : fileCodeBlock.codeBlock(), position);
+    return CodeBlockLookup.at(documentContext.getAst(), position);
   }
 
-  /** Блок кода, если он есть и накрывает позицию. */
-  private static BSLParser.@Nullable CodeBlockContext covering(
-    BSLParser.@Nullable CodeBlockContext codeBlock,
-    Position position
-  ) {
-    return codeBlock != null && Ranges.containsPosition(codeBlock, position) ? codeBlock : null;
-  }
+
 }
