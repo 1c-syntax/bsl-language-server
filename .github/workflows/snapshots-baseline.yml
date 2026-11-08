@@ -1,0 +1,110 @@
+name: Bootstrap snapshot baseline
+
+# Ручной bootstrap исторического SHA: рендер идёт без секретов,
+# а отдельный upload job получает только готовые изображения.
+on:
+  workflow_dispatch:
+    inputs:
+      source_sha:
+        description: Полный SHA коммита, для которого нужен baseline
+        required: true
+        type: string
+      source_ref:
+        description: Имя ветки baseline без refs/heads/ (в том числе историческое)
+        required: true
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.source_ref }}-${{ inputs.source_sha }}
+  cancel-in-progress: false
+
+jobs:
+  render:
+    name: Render pinned baseline
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      source_sha: ${{ steps.source.outputs.sha }}
+    steps:
+      - name: Validate pinned source
+        id: source
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SOURCE_SHA: ${{ inputs.source_sha }}
+          SOURCE_REF: ${{ inputs.source_ref }}
+          WORKFLOW_REF: ${{ github.ref }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          if [ "$WORKFLOW_REF" != "refs/heads/$DEFAULT_BRANCH" ]; then
+            echo "::error::Run the workflow from the default branch"
+            exit 1
+          fi
+          if [[ ! "$SOURCE_SHA" =~ ^[0-9a-fA-F]{40}$ ]]; then
+            echo "::error::source_sha must be a full 40-character commit SHA"
+            exit 1
+          fi
+          if [[ "$SOURCE_REF" == refs/* || "$SOURCE_REF" == -* ]]; then
+            echo "::error::source_ref must be a branch name without refs/heads/"
+            exit 1
+          fi
+          git check-ref-format "refs/heads/$SOURCE_REF"
+          resolved=$(gh api "repos/$GITHUB_REPOSITORY/commits/$SOURCE_SHA" --jq '.sha')
+          test "$resolved" = "${SOURCE_SHA,,}"
+          echo "sha=$resolved" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ steps.source.outputs.sha }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Set up JDK
+        uses: actions/setup-java@v6
+        with:
+          java-version: 21
+          distribution: corretto
+          cache: gradle
+      - name: Render snapshots
+        run: ./gradlew semanticTokensSnapshots --stacktrace
+      - name: Archive baseline
+        uses: actions/upload-artifact@v7
+        with:
+          name: semantic-baseline-${{ inputs.source_sha }}
+          path: build/snapshots/semantic-tokens
+          if-no-files-found: error
+
+  upload:
+    name: Upload pinned baseline
+    needs: render
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+    steps:
+      - name: Download rendered baseline
+        uses: actions/download-artifact@v8
+        with:
+          name: semantic-baseline-${{ inputs.source_sha }}
+          path: snapshots
+      - name: Upload baseline to Sentry
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+          SOURCE_SHA: ${{ needs.render.outputs.source_sha }}
+          SOURCE_REF: ${{ inputs.source_ref }}
+          HEAD_REPO: ${{ github.repository }}
+          SENTRY_CLI_VERSION: 3.8.2
+          SENTRY_CLI_SHA256: c958865f9d4000183509ea21b1f04925d5390de6d8d87386b9e69f2b305070c3
+        run: |
+          curl -sSfL --retry 3 --retry-all-errors --connect-timeout 15 --max-time 120 \
+            --proto '=https' --tlsv1.2 -o "$RUNNER_TEMP/sentry-cli" \
+            "https://github.com/getsentry/sentry-cli/releases/download/${SENTRY_CLI_VERSION}/sentry-cli-Linux-x86_64"
+          echo "${SENTRY_CLI_SHA256}  $RUNNER_TEMP/sentry-cli" | sha256sum --check --strict
+          chmod +x "$RUNNER_TEMP/sentry-cli"
+          "$RUNNER_TEMP/sentry-cli" snapshots upload snapshots \
+            --app-id bsl-language-server-semantic-tokens \
+            --no-git-metadata \
+            --head-sha "$SOURCE_SHA" \
+            --head-ref "$SOURCE_REF" \
+            --head-repo-name "$HEAD_REPO"
