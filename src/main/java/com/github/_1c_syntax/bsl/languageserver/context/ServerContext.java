@@ -131,13 +131,8 @@ public class ServerContext {
   private final Map<DocumentContext, DocumentState> states = new ConcurrentHashMap<>();
   private final Set<DocumentContext> openedDocuments = ConcurrentHashMap.newKeySet();
   private volatile boolean clearing;
-  /**
-   * Фоновая работа над рабочей областью: наполнение и обработка его окончания — слушатели
-   * {@code ServerContextPopulatedEvent}. Идёт под этой блокировкой на чтение, остановка берёт её
-   * на запись и тем дожидается конца работы.
-   */
-  private final ReadWriteLock backgroundWork = new ReentrantReadWriteLock();
-  private volatile boolean backgroundWorkStopped;
+  /** Жизненный цикл фоновой работы этой рабочей области. */
+  private final WorkspaceBackgroundWork backgroundWork = new WorkspaceBackgroundWork();
 
   /**
    * Подготовка рабочей области, идущая в фоне (см. {@link #beginPreparation()}); завершена,
@@ -320,7 +315,7 @@ public class ServerContext {
       getConfiguration();
       populateContextExecutor.submit(() ->
         files.parallelStream().forEach((File file) -> {
-          if (backgroundWorkStopped) {
+          if (backgroundWork.isStopped()) {
             return;
           }
           var uri = Absolute.uri(file.toURI());
@@ -337,7 +332,7 @@ public class ServerContext {
           }
         })
       ).get();
-      complete = !backgroundWorkStopped;
+      complete = !backgroundWork.isStopped();
     } catch (ExecutionException e) {
       throw new IllegalStateException("Error populating context", e);
     } catch (InterruptedException e) {
@@ -347,7 +342,7 @@ public class ServerContext {
       workDoneProgressReporter.endProgress(complete ? getMessage("populateContextPopulated") : "");
     }
 
-    if (backgroundWorkStopped) {
+    if (backgroundWork.isStopped()) {
       // Часть файлов пропущена, и обрабатывать окончание наполнения незачем: рабочую
       // область закрывают.
       throw new CancellationException("Populating context stopped");
@@ -572,16 +567,7 @@ public class ServerContext {
    * @return {@code true}, если работа выполнена; {@code false}, если фоновая работа уже остановлена.
    */
   public boolean runBackgroundWork(Runnable work) {
-    backgroundWork.readLock().lock();
-    try {
-      if (backgroundWorkStopped) {
-        return false;
-      }
-      work.run();
-      return true;
-    } finally {
-      backgroundWork.readLock().unlock();
-    }
+    return backgroundWork.run(work);
   }
 
   /**
@@ -592,9 +578,7 @@ public class ServerContext {
    * Вызывающий поток не должен держать блокировок, которых может ждать фоновая работа.
    */
   public void stopBackgroundWork() {
-    backgroundWorkStopped = true;
-    backgroundWork.writeLock().lock();
-    backgroundWork.writeLock().unlock();
+    backgroundWork.stop();
   }
 
   /**
@@ -603,7 +587,7 @@ public class ServerContext {
    * @return {@code true}, если остановлена: долгой работе пора заканчиваться.
    */
   public boolean isBackgroundWorkStopped() {
-    return backgroundWorkStopped;
+    return backgroundWork.isStopped();
   }
 
   /**
