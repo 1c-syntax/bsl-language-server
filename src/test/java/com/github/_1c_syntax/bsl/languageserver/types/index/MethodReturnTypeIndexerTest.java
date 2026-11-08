@@ -23,14 +23,18 @@ package com.github._1c_syntax.bsl.languageserver.types.index;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.client.WorkDoneProgressHelper;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.types.index.MethodReturnTypeIndexer.ComputedReturnTypes;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
@@ -97,6 +101,8 @@ class MethodReturnTypeIndexerTest {
   private SymbolTypeIndex symbolTypeIndex;
   private MethodReturnTypeIndexer indexer;
   private ExecutorService resolveExecutor;
+  private LanguageServerConfiguration languageConfiguration;
+  private ServerContextProvider serverContextProvider;
 
   private DocumentContext source;
   private DocumentContext consumer;
@@ -113,11 +119,14 @@ class MethodReturnTypeIndexerTest {
     // Ярусы прохода считаются на пуле; здесь он однопоточный, чтобы проверялось поведение
     // прохода, а не работа пула.
     resolveExecutor = Executors.newSingleThreadExecutor();
+    languageConfiguration = new LanguageServerConfiguration();
+    serverContextProvider = mock(ServerContextProvider.class);
     indexer = new MethodReturnTypeIndexer(
       inferencer,
       symbolTypeIndex,
       mock(WorkDoneProgressHelper.class, RETURNS_DEEP_STUBS),
       configuration,
+      languageConfiguration, serverContextProvider,
       resolveExecutor
     );
 
@@ -143,6 +152,55 @@ class MethodReturnTypeIndexerTest {
   @AfterEach
   void stopExecutor() {
     resolveExecutor.shutdownNow();
+  }
+
+  @Test
+  void settingsChangeWaitsForActivePassAndResolvesAgain() throws Exception {
+    indexer.captureCompilationSettings();
+    indexer.computeIfAbsent(sourceMethod, () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.of(), true));
+    var serverContext = serverContextOf(source);
+    var workspace = URI.create("file:///settings-workspace");
+    when(serverContextProvider.getAllContexts()).thenReturn(Map.of(workspace, serverContext));
+    var started = new CountDownLatch(1);
+    var release = new CountDownLatch(1);
+    var first = new AtomicBoolean(true);
+    var resetDuringPass = new AtomicBoolean();
+    doAnswer(invocation -> {
+      resetDuringPass.set(release.getCount() != 0);
+      return null;
+    }).when(symbolTypeIndex).clearInferredReturnTypes();
+    when(inferencer.computeReturnTypes(sourceMethod)).thenAnswer(invocation -> {
+      if (first.getAndSet(false)) {
+        started.countDown();
+        assertThat(release.await(10, SECONDS)).isTrue();
+        return new ComputedReturnTypes(STRING, Set.of(), false);
+      }
+      return new ComputedReturnTypes(NUMBER, Set.of(), false);
+    });
+    try (var executor = Executors.newFixedThreadPool(2)) {
+      var pass = executor.submit(() -> indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext)));
+      assertThat(started.await(10, SECONDS)).isTrue();
+      var thread = new java.util.concurrent.atomic.AtomicReference<Thread>();
+      var change = executor.submit(() -> {
+        thread.set(Thread.currentThread());
+        try (var scope = WorkspaceContextHolder.forUri(workspace, "settings-workspace")) {
+          languageConfiguration.setSupportThickClientFileMode(!languageConfiguration.isSupportThickClientFileMode());
+          indexer.handleConfigurationChanged(new LanguageServerConfigurationChangedEvent(languageConfiguration));
+        }
+      });
+      try {
+        await().atMost(10, SECONDS).until(() -> resetDuringPass.get()
+          || thread.get() != null && thread.get().getState() == Thread.State.BLOCKED);
+        assertThat(resetDuringPass).isFalse();
+      } finally {
+        release.countDown();
+      }
+      pass.get(10, SECONDS);
+      change.get(10, SECONDS);
+    }
+    verify(symbolTypeIndex).clearInferredReturnTypes();
+    verify(inferencer, times(2)).computeReturnTypes(sourceMethod);
+    assertThat(symbolTypeIndex.getReturnTypes(sourceMethod)).isEqualTo(NUMBER);
   }
 
   @Test
@@ -490,7 +548,8 @@ class MethodReturnTypeIndexerTest {
     when(progressHelper.createProgress(anyInt(), anyString())).thenReturn(reporter);
     var configuration = mock(GlobalLanguageServerConfiguration.class);
     when(configuration.getLanguage()).thenReturn(Language.RU);
-    indexer = new MethodReturnTypeIndexer(inferencer, symbolTypeIndex, progressHelper, configuration, resolveExecutor);
+    indexer = new MethodReturnTypeIndexer(inferencer, symbolTypeIndex, progressHelper, configuration,
+      new LanguageServerConfiguration(), mock(ServerContextProvider.class), resolveExecutor);
     var ring = ring("cycle", 9);
     var documents = ring.documents();
     var methods = ring.methods();
@@ -969,6 +1028,8 @@ class MethodReturnTypeIndexerTest {
       symbolTypeIndex,
       mock(WorkDoneProgressHelper.class, RETURNS_DEEP_STUBS),
       configuration,
+      new LanguageServerConfiguration(),
+      mock(ServerContextProvider.class),
       executor
     );
   }

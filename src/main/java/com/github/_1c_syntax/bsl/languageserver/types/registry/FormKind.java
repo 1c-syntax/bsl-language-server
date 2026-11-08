@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.mdo.support.FormType;
 
 enum FormKind {
@@ -42,6 +43,7 @@ enum FormKind {
   private final String itemsTypeEn;
   private final String itemsPropertyRu;
   private final String itemsPropertyEn;
+  private final BilingualString itemsProperty;
 
   FormKind(String baseTypeRu, String baseTypeEn, String itemsTypeRu, String itemsTypeEn,
            String itemsPropertyRu, String itemsPropertyEn) {
@@ -51,6 +53,7 @@ enum FormKind {
     this.itemsTypeEn = itemsTypeEn;
     this.itemsPropertyRu = itemsPropertyRu;
     this.itemsPropertyEn = itemsPropertyEn;
+    this.itemsProperty = BilingualString.of(itemsPropertyRu, itemsPropertyEn);
   }
 
   String baseTypeRu() {
@@ -76,6 +79,11 @@ enum FormKind {
 
   String itemsPropertyEn() {
     return itemsPropertyEn;
+  }
+
+  /** Имя свойства формы, отдающего коллекцию элементов, на обоих языках. */
+  BilingualString itemsProperty() {
+    return itemsProperty;
   }
 
   /**

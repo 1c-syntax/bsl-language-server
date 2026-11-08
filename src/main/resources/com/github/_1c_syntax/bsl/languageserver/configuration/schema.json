@@ -720,6 +720,13 @@
         }
     },
     "properties": {
+        "supportThickClientFileMode": {
+            "$id": "#/properties/supportThickClientFileMode",
+            "type": "boolean",
+            "default": false,
+            "title": "Support the thick client in file mode.",
+            "description": "Include file-mode thick client contexts in diagnostics, type inference and editor hints. Client and Server preprocessor symbols can both be true in these contexts. Does not disable client/server thick clients or file-mode external connections."
+        },
         "language": {
             "$id": "#/properties/language",
             "type": "string",

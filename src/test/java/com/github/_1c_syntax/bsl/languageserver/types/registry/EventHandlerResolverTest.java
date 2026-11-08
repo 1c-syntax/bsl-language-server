@@ -199,7 +199,7 @@ class EventHandlerResolverTest {
 
   @Test
   void commandModuleResolvesViaFixedOwnerType() {
-    // CommandModule идёт через MODULE_TYPE_TO_FIXED_OWNER_RU = "Модуль команды".
+    // Контракт берётся из платформенного типа модуля команды.
     var commandRef = new TypeRef(TypeKind.PLATFORM, "Модуль команды");
     when(typeRegistry.resolve("Модуль команды")).thenReturn(Optional.of(commandRef));
     var eventDescriptor = MemberDescriptor.event(
@@ -214,6 +214,38 @@ class EventHandlerResolverTest {
 
     assertThat(resolver.lookupContract(doc, "ОбработкаКоманды")).isPresent();
     assertThat(resolver.lookupContract(doc, "ЧтоТоЕщё")).isEmpty();
+  }
+
+  @Test
+  void webSocketModuleResolvesEventsFromItsPlatformType() {
+    var moduleRef = new TypeRef(TypeKind.PLATFORM, "Модуль WebSocket клиента");
+    when(typeRegistry.resolve(moduleRef.qualifiedName())).thenReturn(Optional.of(moduleRef));
+    var event = MemberDescriptor.event("ПриПолученииСообщения", "",
+      List.of(new SignatureDescriptor(List.of(), TypeSet.EMPTY, "")));
+    when(typeRegistry.getMembers(moduleRef, FileType.BSL)).thenReturn(List.of(event));
+    var doc = mock(DocumentContext.class);
+    when(doc.getModuleType()).thenReturn(ModuleType.WEBSocketClientModule);
+    when(doc.getFileType()).thenReturn(FileType.BSL);
+
+    assertThat(resolver.lookupContract(doc, "ПриПолученииСообщения")).contains(event);
+    assertThat(resolver.eventOwnerTypeRef(doc)).contains(moduleRef);
+    assertThat(resolver.allEvents(doc)).containsExactly(event);
+  }
+
+  @Test
+  void recalculationModuleResolvesEventsOfItsRecordSet() {
+    var moduleRef = new TypeRef(TypeKind.CONFIGURATION, "ПерерасчетНаборЗаписей.Начисления");
+    when(typeRegistry.resolve(moduleRef.qualifiedName())).thenReturn(Optional.of(moduleRef));
+    var event = MemberDescriptor.event("ПередЗаписью", "", List.of());
+    when(typeRegistry.getMembers(moduleRef, FileType.BSL)).thenReturn(List.of(event));
+    var md = com.github._1c_syntax.bsl.mdo.children.Recalculation.builder().name("Начисления").build();
+    var doc = mock(DocumentContext.class);
+    when(doc.getModuleType()).thenReturn(ModuleType.RecalculationModule);
+    when(doc.getMdObject()).thenReturn(Optional.of(md));
+    when(doc.getFileType()).thenReturn(FileType.BSL);
+
+    assertThat(resolver.lookupContract(doc, "ПередЗаписью")).contains(event);
+    assertThat(resolver.eventOwnerTypeRef(doc)).contains(moduleRef);
   }
 
   @Test
