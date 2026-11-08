@@ -57,6 +57,9 @@ final class ModuleCompilationContexts {
    * @return все контексты либо множество без файловых вариантов толстого клиента.
    */
   public static Set<ExecutionContext> supportedContexts(DocumentContext document) {
+    if (document.getFileType() == FileType.OS) {
+      return ExecutionContext.OSCRIPT;
+    }
     return document.getServerContext().getLanguageServerConfiguration().isSupportThickClientFileMode()
       ? ExecutionContext.ALL : ExecutionContext.WITHOUT_THICK_CLIENT_FILE;
   }

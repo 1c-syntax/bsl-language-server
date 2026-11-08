@@ -204,17 +204,22 @@ class CompilationContextContractsTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void unknownAndOneScriptConditionsDoNotInventAvailability() {
+  void oneScriptPlatformDefinitionsDoNotAffectBsl() {
     var source = "&AtClient\nProcedure P()\n#If Windows Then\nValue = 1;\n#EndIf\nEndProcedure";
     var document = form(source);
     var node = Trees.findAllRuleNodes(document.getAst(), BSLParser.RULE_assignment).iterator().next();
     assertThat(resolver.contextAt(document, at(source, "Value"))).isEmpty();
     assertThat(resolver.narrowedContextsAt(document, node, at(source, "Value"))).isEmpty();
-    var os = TestUtils.getDocumentContext(URI.create("file:///model.os"), source, context);
-    assertThat(resolver.contextAt(os, at(source, "Value"))).isEmpty();
-    assertThat(resolver.possibleContexts(os, os.getAst())).isEmpty();
-    assertThat(resolver.narrowedContextsAt(os, os.getAst(), at(source, "Value"))).isEmpty();
-    assertThat(resolver.declarationContexts(os.getSymbolTree().getMethodSymbol("P").orElseThrow())).isEmpty();
+    var osSource = source.replace("&AtClient\n", "");
+    var os = TestUtils.getDocumentContext(URI.create("file:///model.os"), osSource, context);
+    assertThat(resolver.contextAt(os, at(osSource, "Value")).orElseThrow().contexts())
+      .containsExactlyInAnyOrder(ExecutionContext.OSCRIPT_WINDOWS, ExecutionContext.OSCRIPT_WINDOWS_MONO);
+    assertThat(resolver.possibleContexts(os, os.getAst()).orElseThrow())
+      .containsExactlyInAnyOrderElementsOf(ExecutionContext.OSCRIPT);
+    assertThat(resolver.narrowedContextsAt(os, os.getAst(), at(osSource, "Value")).orElseThrow())
+      .containsExactlyInAnyOrder(ExecutionContext.OSCRIPT_WINDOWS, ExecutionContext.OSCRIPT_WINDOWS_MONO);
+    assertThat(resolver.declarationContexts(os.getSymbolTree().getMethodSymbol("P").orElseThrow()).orElseThrow())
+      .containsExactlyInAnyOrderElementsOf(ExecutionContext.OSCRIPT);
   }
 
   @Test

@@ -88,7 +88,7 @@ final class CompilationContextIndex {
       }
     }
     if (low == 0) {
-      return ExecutionContext.ALL;
+      return ExecutionContext.forFileType(document.getFileType());
     }
     var branch = branches.get(low - 1);
     return Ranges.containsPosition(branch.directive(), position) ? null : branch.contexts();
@@ -96,7 +96,7 @@ final class CompilationContextIndex {
 
   private static List<PreprocessorBranch> collectPreprocessorBranches(DocumentContext document) {
     var result = new ArrayList<PreprocessorBranch>();
-    var preprocessor = new PreprocessorContexts();
+    var preprocessor = new PreprocessorContexts(document.getFileType());
     for (var tree : Trees.findAllRuleNodes(document.getAst(), BSLParser.RULE_preprocessor)) {
       var node = (BSLParser.PreprocessorContext) tree;
       if (!preprocessor.enter(node)) {
