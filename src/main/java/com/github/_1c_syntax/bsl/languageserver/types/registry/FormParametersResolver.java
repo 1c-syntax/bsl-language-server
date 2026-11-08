@@ -93,6 +93,7 @@ public class FormParametersResolver {
     }
     var provider = providerOpt.get();
     var enLookup = BslContextPlatformTypesProvider.enLookupOf(provider);
+    var typeNames = BslContextPlatformTypesProvider.typeNamesOf(provider);
     Map<String, List<MemberDescriptor>> byType = new HashMap<>();
     for (var context : provider.getContexts()) {
       if (!(context instanceof ContextType type)) {
@@ -103,7 +104,7 @@ public class FormParametersResolver {
         continue;
       }
       var members = withCopyingValueType(formParameters.stream()
-        .map(parameter -> BslContextPlatformTypesProvider.toMemberDescriptor(parameter, enLookup))
+        .map(parameter -> BslContextPlatformTypesProvider.toMemberDescriptor(parameter, enLookup, typeNames))
         .toList());
       // Имя типа в HBK не уникально (например, «Расширение динамического списка» —
       // и у формы списка, и у таблицы формы). Параметры есть только у одного из

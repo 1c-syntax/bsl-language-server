@@ -100,6 +100,7 @@ public class ServerContext {
    * регистра в {@code CaseInsensitiveMap} конфигурации. Сбрасывается в {@link #clear()}.
    */
   private final Cache<String, Optional<CommonModule>> commonModuleCache;
+  private volatile CommonModuleNameFilter commonModuleNameFilter = CommonModuleNameFilter.ALLOW_ALL;
 
   @Getter
   @Setter
@@ -465,6 +466,7 @@ public class ServerContext {
       documentsByMDORef.clear();
       mdoRefs.clear();
       documentLocks.clear();
+      commonModuleNameFilter = CommonModuleNameFilter.ALLOW_ALL;
       commonModuleCache.invalidateAll();
       configurationMetadata.clear();
     } finally {
@@ -708,6 +710,22 @@ public class ServerContext {
       .orElse(uri);
   }
 
+  /**
+   * Найти общий модуль по полному имени типа.
+   * <p>
+   * Составное имя отбрасывается только тогда, когда загруженный словарь гарантированно
+   * не содержит имён с точкой. Пока метаданные не прочитаны, действует обычный резолв.
+   *
+   * @param name полное имя типа.
+   * @return общий модуль с совпадающим именем либо пустой результат.
+   */
+  public Optional<CommonModule> findCommonModuleForTypeName(String name) {
+    if (configurationMetadata.isPresent() && !commonModuleNameFilter.mayContain(name)) {
+      return Optional.empty();
+    }
+    return findCommonModule(name);
+  }
+
   private DocumentContext createDocumentContext(URI uri) {
     var whilePreparing = isPreparing();
     var documentContext = documentContextProvider.getObject(uri, this);
@@ -775,6 +793,8 @@ public class ServerContext {
       Thread.currentThread().interrupt();
     }
 
+    commonModuleNameFilter = CommonModuleNameFilter.fromNames(
+      configuration.getMergedConfiguration().getCommonModulesByName().keySet());
     progress.endProgress(getMessage("computeConfigurationMetadataDone"));
     LOGGER.info("Configuration metadata of {} read in {} ms", configurationRoot, millisSince(startedAt));
 

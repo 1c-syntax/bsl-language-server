@@ -149,7 +149,7 @@ public class PlatformMemberVersions {
    */
   @Nullable
   private static CompatibilityMode normalize(@Nullable String version, int defaultPatch) {
-    if (version == null) {
+    if (version == null || version.isEmpty()) {
       return null;
     }
     var matcher = VERSION_PATTERN.matcher(version);
