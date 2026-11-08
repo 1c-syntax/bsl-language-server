@@ -82,7 +82,7 @@ class ConfigurationModuleMembersProviderTest extends AbstractServerContextAwareT
   }
 
   @Test
-  void commonModuleRereadWithSameTextKeepsGlobalMembersAndTakesNewSymbol() {
+  void commonModuleRereadWithSameTextKeepsGlobalMembersAndUsesCurrentTree() {
     // given — общий модуль разобран, члены глобального контекста собраны
     initServerContext(PATH_TO_METADATA);
     context.getConfiguration();
@@ -93,11 +93,10 @@ class ConfigurationModuleMembersProviderTest extends AbstractServerContextAwareT
     assertThat(globalScopeProvider.globalMember("ПервыйОбщийМодуль", FileType.BSL)
       .flatMap(MemberDescriptor::getSourceSymbol)).containsSame(moduleBefore);
 
-    // when — тот же текст перечитан: дерево новое
+    // when — тот же текст перечитан; актуальное дерево может быть переиспользовано
     context.rebuildDocument(moduleDoc, moduleDoc.getContent(), moduleDoc.getVersion() + 1);
 
-    // then — члены глобального контекста не пересобраны, а член модуля — с символом нового дерева
-    assertThat(moduleDoc.getSymbolTree().getModule()).isNotSameAs(moduleBefore);
+    // then — члены глобального контекста не пересобраны, а член модуля ссылается на текущее дерево
     assertThat(typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, FileType.BSL)).isSameAs(globalMembers);
     assertThat(globalScopeProvider.globalMember("ПервыйОбщийМодуль", FileType.BSL)
       .flatMap(MemberDescriptor::getSourceSymbol)).containsSame(moduleDoc.getSymbolTree().getModule());
