@@ -28,23 +28,30 @@ import com.google.gson.TypeAdapterFactory;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
+
 import java.io.IOException;
 import java.net.URI;
+
 import org.eclipse.lsp4j.jsonrpc.json.JsonRpcMethod;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.json.MessageJsonHandler;
 import org.eclipse.lsp4j.jsonrpc.messages.Message;
+
 import java.io.Writer;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+
 import org.jspecify.annotations.Nullable;
 
-/** Буфер отдельного сообщения не разделяется между потоками и не требует синхронизации. */
+/**
+ * Буфер отдельного сообщения не разделяется между потоками и не требует синхронизации.
+ */
 final class StringBuilderMessageJsonHandler extends MessageJsonHandler {
   StringBuilderMessageJsonHandler(Map<String, JsonRpcMethod> methods) {
-    this(methods, builder -> { });
+    this(methods, builder -> {
+    });
   }
 
   StringBuilderMessageJsonHandler(Map<String, JsonRpcMethod> methods, Consumer<GsonBuilder> configure) {
@@ -64,9 +71,12 @@ final class StringBuilderMessageJsonHandler extends MessageJsonHandler {
     return writer.toString();
   }
 
-  private record UriEncoding(String raw, String ascii) { }
+  private record UriEncoding(String raw, String ascii) {
+  }
 
-  /** Одно чистое преобразование, ограниченное длиной; пользовательские адаптеры сохраняют приоритет. */
+  /**
+   * Одно чистое преобразование, ограниченное длиной; пользовательские адаптеры сохраняют приоритет.
+   */
   private static final class UriEncodingFactory implements TypeAdapterFactory {
     @Override
     public <T> @Nullable TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
@@ -108,12 +118,40 @@ final class StringBuilderMessageJsonHandler extends MessageJsonHandler {
 
   private static final class StringBuilderWriter extends Writer {
     private final StringBuilder value = new StringBuilder();
-    @Override public void write(char[] chars, int offset, int length) { value.append(chars, offset, length); }
-    @Override public void write(int character) { value.append((char) character); }
-    @Override public void write(String text, int offset, int length) { value.append(text, offset, offset + length); }
-    @Override public void write(String text) { value.append(text); }
-    @Override public void flush() { }
-    @Override public void close() { }
-    @Override public String toString() { return value.toString(); }
+
+    @Override
+    public void write(char[] chars, int offset, int length) {
+      value.append(chars, offset, length);
+    }
+
+    @Override
+    public void write(int character) {
+      value.append((char) character);
+    }
+
+    @Override
+    public void write(String text, int offset, int length) {
+      value.append(text, offset, offset + length);
+    }
+
+    @Override
+    public void write(String text) {
+      value.append(text);
+    }
+
+    @Override
+    public void flush() {
+      // Данные уже находятся в StringBuilder, сбрасывать буфер не требуется.
+    }
+
+    @Override
+    public void close() {
+      // Буфер сообщения не владеет внешними ресурсами.
+    }
+
+    @Override
+    public String toString() {
+      return value.toString();
+    }
   }
 }

@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import org.eclipse.lsp4j.Position;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -43,11 +44,14 @@ import java.util.function.Function;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.Collections;
+
 import org.jspecify.annotations.Nullable;
 
 import static com.github._1c_syntax.bsl.languageserver.completion.CompletionPriority.*;
 
-/** Типы получателей, члены и платформенные ограничения одного запроса completion. */
+/**
+ * Типы получателей, члены и платформенные ограничения одного запроса completion.
+ */
 final class CompletionTypeContext {
   private final DocumentContext document;
   private final Position position;
@@ -64,7 +68,10 @@ final class CompletionTypeContext {
 
   private record PropertyRanks(EnumSet<ExecutionContext> available, EnumSet<ExecutionContext> possible) {
     int rank(ExecutionContext context) {
-      return available.contains(context) ? AVAILABLE : (possible.contains(context) ? PARTIAL : UNAVAILABLE);
+      if (available.contains(context)) {
+        return AVAILABLE;
+      }
+      return possible.contains(context) ? PARTIAL : UNAVAILABLE;
     }
   }
 
@@ -126,7 +133,9 @@ final class CompletionTypeContext {
   }
 
   private PropertyRanks propertyRanksFor(MemberDescriptor member) {
-    if (propertyRanks == null) propertyRanks = new IdentityHashMap<>();
+    if (propertyRanks == null) {
+      propertyRanks = new IdentityHashMap<>();
+    }
     var known = propertyRanks.get(member);
     if (known == null) {
       known = computePropertyRanks(member);
@@ -139,7 +148,9 @@ final class CompletionTypeContext {
     return new PropertyScope(owner, contexts);
   }
 
-  /** Оценки свойств одного известного владельца в неизменном наборе режимов запроса. */
+  /**
+   * Оценки свойств одного известного владельца в неизменном наборе режимов запроса.
+   */
   final class PropertyScope {
     private final TypeRef owner;
     private final EnumSet<ExecutionContext> selected;
@@ -155,10 +166,16 @@ final class CompletionTypeContext {
     }
 
     int rank(String name) {
-      if (selected.isEmpty()) return AVAILABLE;
-      if (active.isEmpty()) return UNAVAILABLE;
+      if (selected.isEmpty()) {
+        return AVAILABLE;
+      }
+      if (active.isEmpty()) {
+        return UNAVAILABLE;
+      }
       var candidates = alternatives(owner, MemberKind.PROPERTY, name);
-      if (candidates.isEmpty()) return UNAVAILABLE;
+      if (candidates.isEmpty()) {
+        return UNAVAILABLE;
+      }
       if (candidates.size() == 1) {
         var ranks = propertyRanksFor(candidates.getFirst());
         return reduce(ranks.available(), ranks.possible());
@@ -174,7 +191,9 @@ final class CompletionTypeContext {
     }
 
     private int reduce(EnumSet<ExecutionContext> available, EnumSet<ExecutionContext> possible) {
-      if (ownerEverywhere && available.containsAll(selected)) return AVAILABLE;
+      if (ownerEverywhere && available.containsAll(selected)) {
+        return AVAILABLE;
+      }
       return Collections.disjoint(active, possible) ? UNAVAILABLE : PARTIAL;
     }
   }
@@ -210,9 +229,13 @@ final class CompletionTypeContext {
     return available.isEmpty() ? EnumSet.allOf(ExecutionContext.class) : contextMask(available.orElseThrow());
   }
 
-  /** Снимок неизменяемых метаданных; содержимое общих масок никогда не изменяется. */
+  /**
+   * Снимок неизменяемых метаданных; содержимое общих масок никогда не изменяется.
+   */
   private EnumSet<ExecutionContext> contextMask(Set<ExecutionContext> contexts) {
-    if (contextMasks == null) contextMasks = new IdentityHashMap<>();
+    if (contextMasks == null) {
+      contextMasks = new IdentityHashMap<>();
+    }
     var known = contextMasks.get(contexts);
     if (known == null) {
       known = EnumSet.noneOf(ExecutionContext.class);
@@ -222,7 +245,9 @@ final class CompletionTypeContext {
     return known;
   }
 
-  /** Видимость общего модуля учитывает серверный вызов; прочие типы используют сведения СП. */
+  /**
+   * Видимость общего модуля учитывает серверный вызов; прочие типы используют сведения СП.
+   */
   int typeRank(TypeRef type, ExecutionContext context) {
     var available = typeContexts(type);
     return available.isEmpty() || available.orElseThrow().contains(context) ? AVAILABLE : UNAVAILABLE;
@@ -241,7 +266,9 @@ final class CompletionTypeContext {
       ? AVAILABLE : UNAVAILABLE;
   }
 
-  /** Имена обоих языков индексируются один раз на тип, локальные поля остаются в контекстном TypeSet. */
+  /**
+   * Имена обоих языков индексируются один раз на тип, локальные поля остаются в контекстном TypeSet.
+   */
   private Map<String, List<MemberDescriptor>> indexMembers(TypeRef type) {
     Map<String, List<MemberDescriptor>> result = new HashMap<>();
     for (var member : types.getMembers(type, document.getFileType())) {

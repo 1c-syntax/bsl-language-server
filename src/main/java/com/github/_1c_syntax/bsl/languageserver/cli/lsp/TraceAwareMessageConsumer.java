@@ -31,7 +31,9 @@ import org.eclipse.lsp4j.jsonrpc.messages.ResponseMessage;
 import java.time.Clock;
 import java.util.Map;
 
-/** Форматирует trace при включённом файле, сохраняя сведения о незавершённых запросах во всех режимах. */
+/**
+ * Форматирует trace при включённом файле, сохраняя сведения о незавершённых запросах во всех режимах.
+ */
 final class TraceAwareMessageConsumer extends TracingMessageConsumer {
   private final MessageConsumer consumer;
   private final Map<String, RequestMetadata> sent;
@@ -40,6 +42,8 @@ final class TraceAwareMessageConsumer extends TracingMessageConsumer {
   private final Clock clock;
   private final boolean incoming;
 
+  // Карты общие у обоих направлений: копирование разорвёт связь запроса с ответом.
+  @SuppressWarnings("java:S2384")
   TraceAwareMessageConsumer(MessageConsumer consumer, Map<String, RequestMetadata> sent,
                             Map<String, RequestMetadata> received, FileAwarePrintWriter writer, Clock clock) {
     super(consumer, sent, received, writer, clock);
