@@ -14,7 +14,9 @@ node scripts/oscript-metadata/update.cjs build/oscript-runtime.json src/main/res
 
 The exporter reads attributes and signatures from the release assemblies. XML comments are parsed with the SDK's Roslyn parser without compiling OneScript or running user scripts. The server's JSON schema is shared with the 1C fallback metadata: bilingual names, parameter types/defaults, unions and `variadic` tails.
 
-`parameter-aliases.json` supplies Russian parameter labels; the English identifiers remain those declared by the runtime. Intrinsic compiler functions are identified by the matching `BasicMethods.json`; their existing descriptions and overloads are retained. Existing collection traits and primitive declarations are retained as well. Regeneration must be idempotent.
+`parameter-aliases.json` supplies Russian parameter labels; the English identifiers remain those declared by the runtime. Intrinsic compiler functions are identified by the matching `BasicMethods.json` and `LanguageDef.cs` token declarations; their existing descriptions and overloads are retained. Existing collection traits, deprecation annotations and primitive declarations are retained as well. Regeneration must be idempotent.
+
+Legacy enumeration values registered with literal `WrapClrValue` or `MakeValue` calls are read from source syntax. Their constructors are never executed. The two structure constructors refine the runtime's generic `param1` label and `IValue` type using the accepted string/structure alternatives in their source bodies.
 
 OneScript constructors capture array parameters as an argument tail even without the CLR `ParamArray` attribute; see `ScriptEngine/Machine/TypeFactory.cs` in the source release. Ordinary array-valued method parameters remain ordinary parameters.
 

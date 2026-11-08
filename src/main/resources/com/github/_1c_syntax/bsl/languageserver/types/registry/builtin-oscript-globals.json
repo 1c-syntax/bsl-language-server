@@ -4500,6 +4500,22 @@
       "nameEn": "Title"
     },
     {
+      "name": "ТекущаяДата",
+      "aliases": [
+        "CurrentDate"
+      ],
+      "description": "Определяет текущую (системную) дату на компьютере.\n\nВозвращаемое значение: Тип: Дата. Текущая (системная) дата.",
+      "returnType": "Дата",
+      "signatures": [
+        {
+          "parameters": [],
+          "returnType": "Дата"
+        }
+      ],
+      "nameRu": "ТекущаяДата",
+      "nameEn": "CurrentDate"
+    },
+    {
       "name": "ТекущаяУниверсальнаяДата",
       "nameRu": "ТекущаяУниверсальнаяДата",
       "nameEn": "CurrentUniversalDate",

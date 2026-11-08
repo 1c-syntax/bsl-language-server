@@ -33,6 +33,7 @@ if (args.Length is < 2 or > 3)
     throw new ArgumentException("Usage: MetadataExporter <OneScript bin directory> <output.json> [source directory]");
 
 var documentation = args.Length == 3 ? Documentation(args[2]) : new Dictionary<string, XElement>();
+var sourceEnumValues = args.Length == 3 ? SourceEnumValues(args[2]) : new Dictionary<string, Name[]>();
 Console.Error.WriteLine($"Loaded {documentation.Count} source documentation entries");
 
 var directory = Path.GetFullPath(args[0]);
@@ -117,6 +118,8 @@ foreach (var type in types.OrderBy(type => type.FullName, StringComparer.Ordinal
         .Select(field => new { field, attribute = Attribute(field, "EnumValueAttribute") })
         .Where(item => item.attribute != null)
         .Select(item => AttributeName(item.attribute!, item.field.Name)).ToArray();
+    if (enumeration && values.Length == 0 && sourceEnumValues.TryGetValue(type.FullName!, out var declaredValues))
+        values = declaredValues;
     output.Add(new
     {
         name = names.GetValueOrDefault(type, new Name(type.Name, "")),
@@ -131,6 +134,19 @@ foreach (var type in types.OrderBy(type => type.FullName, StringComparer.Ordinal
         constructors,
         values
     });
+}
+
+if (args.Length == 3)
+{
+    var language = Path.Combine(args[2], "src", "OneScript.Language", "LanguageDef.cs");
+    var intrinsicNames = CSharpSyntaxTree.ParseText(File.ReadAllText(language)).GetRoot()
+        .DescendantNodes().OfType<InvocationExpressionSyntax>()
+        .Where(call => call.Expression is IdentifierNameSyntax name && name.Identifier.ValueText == "AddToken")
+        .SelectMany(call => call.ArgumentList.Arguments.Skip(1))
+        .Where(argument => argument.Expression is LiteralExpressionSyntax literal && literal.Token.Value is string)
+        .Select(argument => ((LiteralExpressionSyntax)argument.Expression).Token.ValueText).Distinct().ToArray();
+    output.Add(new { name = new Name("$compiler", ""), global = true, enumeration = false,
+        methods = Array.Empty<object>(), properties = Array.Empty<object>(), values = Array.Empty<Name>(), intrinsicNames });
 }
 
 File.WriteAllText(args[1], JsonSerializer.Serialize(output, new JsonSerializerOptions
@@ -191,6 +207,38 @@ static bool IsManaged(string file)
 
 static string DocumentationKey(string type, string name, IEnumerable<string> parameters) =>
     type + "." + name + "(" + string.Join(",", parameters) + ")";
+
+// Legacy EnumerationContext values are registered in constructors rather than attributes.
+// Read literal WrapClrValue names from matching source without executing those constructors.
+static Dictionary<string, Name[]> SourceEnumValues(string directory)
+{
+    var result = new Dictionary<string, Name[]>();
+    foreach (var file in Directory.EnumerateFiles(directory, "*.cs", SearchOption.AllDirectories))
+    {
+        var root = CSharpSyntaxTree.ParseText(File.ReadAllText(file)).GetRoot();
+        foreach (var declaration in root.DescendantNodes().OfType<ClassDeclarationSyntax>())
+        {
+            var values = declaration.DescendantNodes().OfType<InvocationExpressionSyntax>()
+                .Where(call => call.Expression is MemberAccessExpressionSyntax member
+                        && member.Name.Identifier.ValueText == "WrapClrValue"
+                    || call.Expression is IdentifierNameSyntax name && name.Identifier.ValueText == "MakeValue")
+                .Select(call => call.ArgumentList.Arguments)
+                .Where(arguments => arguments.Count >= 2
+                    && arguments[0].Expression is LiteralExpressionSyntax literal && literal.Token.Value is string)
+                .Select(arguments => new Name(((LiteralExpressionSyntax)arguments[0].Expression).Token.ValueText,
+                    arguments[1].Expression is LiteralExpressionSyntax alias && alias.Token.Value is string
+                        ? alias.Token.ValueText : ""))
+                .Distinct().ToArray();
+            if (values.Length == 0) continue;
+            var namespaces = declaration.Ancestors().OfType<BaseNamespaceDeclarationSyntax>().Reverse()
+                .Select(value => value.Name.ToString());
+            var containers = declaration.Ancestors().OfType<BaseTypeDeclarationSyntax>().Reverse()
+                .Select(value => value.Identifier.ValueText).Append(declaration.Identifier.ValueText);
+            result[string.Join(".", namespaces) + "." + string.Join("+", containers)] = values;
+        }
+    }
+    return result;
+}
 
 static Dictionary<string, XElement> Documentation(string directory)
 {

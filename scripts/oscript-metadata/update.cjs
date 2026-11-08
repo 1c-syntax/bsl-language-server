@@ -13,7 +13,10 @@ const globalsFile = path.join(resourceDirectory, 'builtin-oscript-globals.json')
 const oldTypes = JSON.parse(fs.readFileSync(typesFile, 'utf8'));
 const oldGlobals = JSON.parse(fs.readFileSync(globalsFile, 'utf8'));
 const lower = value => (value || '').toLocaleLowerCase('en-US');
-const intrinsicNamesSet = new Set(Object.values(basicMethods).flatMap(group => Object.keys(group.methods || {})).map(lower));
+const intrinsicNamesSet = new Set([
+  ...Object.values(basicMethods).flatMap(group => Object.keys(group.methods || {})),
+  ...raw.flatMap(context => context.intrinsicNames || [])
+].map(lower));
 const compare = (left, right) => left.name < right.name ? -1 : left.name > right.name ? 1 : 0;
 const named = value => ({name: value.Ru, nameRu: value.Ru, nameEn: value.En || ''});
 const matches = (value, name) => [value.name, value.nameRu, value.nameEn, ...(value.aliases || [])]
@@ -26,9 +29,9 @@ let parameterCount = 0, russianCount = 0, variadicCount = 0;
 const missing = new Set();
 function parameter(value, previous = {}) {
   parameterCount++;
-  let ru = aliases[lower(value.name)];
+  let ru = value.nameRu || aliases[lower(value.name)];
   if (!ru && /^(p|param|number)\d+$/i.test(value.name)) {
-    ru = value.name.replace(/^(p|param)/i, 'Параметр').replace(/^number/i, 'Число');
+    ru = value.name.replace(/^(param|p)/i, 'Параметр').replace(/^number/i, 'Число');
   }
   if (!ru && /[А-Яа-яЁё]/.test(value.name)) ru = value.name;
   if (!ru && previous.nameRu) ru = previous.nameRu;
@@ -47,12 +50,18 @@ function signature(method, previous = {}, constructorType) {
   const returns = constructorType || (method.returnType === 'Произвольный' && previous.returnType
     ? previous.returnType : method.returnType);
   return {
-    parameters: method.parameters.map((value, index) => parameter(value,
+    parameters: method.parameters.map((value, index) => parameter(constructorParameter(value, constructorType),
       old?.parameters.find(candidate => lower(candidate.nameEn || candidate.name) === lower(value.name))
       || old?.parameters[index])),
     ...typeFields(returns, 'returnType'),
     ...(method.description || old?.description ? {description: method.description || old.description} : {})
   };
+}
+
+function constructorParameter(value, type) {
+  if (value.name !== 'param1' || !['Структура', 'ФиксированнаяСтруктура'].includes(type)) return value;
+  return {...value, type: `Строка|${type === 'Структура' ? 'ФиксированнаяСтруктура' : 'Структура'}`,
+    nameRu: 'КлючиИлиСтруктура'};
 }
 
 function members(context, old) {
@@ -72,6 +81,8 @@ function members(context, old) {
     let member = methods.get(key);
     if (!member) {
       member = {...named(method.name), kind: 'METHOD', description: method.description || previous.description || '',
+        ...(previous.deprecatedSinceVersion ? {deprecatedSinceVersion: previous.deprecatedSinceVersion} : {}),
+        ...(previous.recommendedReplacements ? {recommendedReplacements: previous.recommendedReplacements} : {}),
         ...(previous.async ? {async: true} : {}),
         ...typeFields(method.returnType === 'Произвольный' && previous.returnType
           ? previous.returnType : method.returnType, 'returnType'), signatures: []};

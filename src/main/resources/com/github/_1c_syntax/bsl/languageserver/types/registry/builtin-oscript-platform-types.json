@@ -3718,7 +3718,36 @@
     "nameRu": "ЗавершенностьПростогоТипаXS",
     "nameEn": "XSSimpleFinal",
     "description": "",
-    "members": []
+    "members": [
+      {
+        "name": "Все",
+        "nameRu": "Все",
+        "nameEn": "All",
+        "kind": "PROPERTY",
+        "returnType": "ЗавершенностьПростогоТипаXS"
+      },
+      {
+        "name": "Объединение",
+        "nameRu": "Объединение",
+        "nameEn": "Union",
+        "kind": "PROPERTY",
+        "returnType": "ЗавершенностьПростогоТипаXS"
+      },
+      {
+        "name": "Ограничение",
+        "nameRu": "Ограничение",
+        "nameEn": "Restriction",
+        "kind": "PROPERTY",
+        "returnType": "ЗавершенностьПростогоТипаXS"
+      },
+      {
+        "name": "Список",
+        "nameRu": "Список",
+        "nameEn": "List",
+        "kind": "PROPERTY",
+        "returnType": "ЗавершенностьПростогоТипаXS"
+      }
+    ]
   },
   {
     "kind": "ENUM",
@@ -3726,7 +3755,29 @@
     "nameRu": "ЗавершенностьСоставногоТипаXS",
     "nameEn": "XSComplexFinal",
     "description": "",
-    "members": []
+    "members": [
+      {
+        "name": "Все",
+        "nameRu": "Все",
+        "nameEn": "All",
+        "kind": "PROPERTY",
+        "returnType": "ЗавершенностьСоставногоТипаXS"
+      },
+      {
+        "name": "Ограничение",
+        "nameRu": "Ограничение",
+        "nameEn": "Restriction",
+        "kind": "PROPERTY",
+        "returnType": "ЗавершенностьСоставногоТипаXS"
+      },
+      {
+        "name": "Список",
+        "nameRu": "Список",
+        "nameEn": "List",
+        "kind": "PROPERTY",
+        "returnType": "ЗавершенностьСоставногоТипаXS"
+      }
+    ]
   },
   {
     "kind": "ENUM",
@@ -3734,7 +3785,43 @@
     "nameRu": "ЗавершенностьСхемыXS",
     "nameEn": "XSSchemaFinal",
     "description": "",
-    "members": []
+    "members": [
+      {
+        "name": "Все",
+        "nameRu": "Все",
+        "nameEn": "All",
+        "kind": "PROPERTY",
+        "returnType": "ЗавершенностьСхемыXS"
+      },
+      {
+        "name": "Объединение",
+        "nameRu": "Объединение",
+        "nameEn": "Union",
+        "kind": "PROPERTY",
+        "returnType": "ЗавершенностьСхемыXS"
+      },
+      {
+        "name": "Ограничение",
+        "nameRu": "Ограничение",
+        "nameEn": "Restriction",
+        "kind": "PROPERTY",
+        "returnType": "ЗавершенностьСхемыXS"
+      },
+      {
+        "name": "Расширение",
+        "nameRu": "Расширение",
+        "nameEn": "Extension",
+        "kind": "PROPERTY",
+        "returnType": "ЗавершенностьСхемыXS"
+      },
+      {
+        "name": "Список",
+        "nameRu": "Список",
+        "nameEn": "List",
+        "kind": "PROPERTY",
+        "returnType": "ЗавершенностьСхемыXS"
+      }
+    ]
   },
   {
     "kind": "TYPE",
@@ -4795,8 +4882,8 @@
             "defaultValue": "Неопределено"
           },
           {
-            "name": "Параметрaram5",
-            "nameRu": "Параметрaram5",
+            "name": "Параметр5",
+            "nameRu": "Параметр5",
             "nameEn": "param5",
             "type": "Произвольный",
             "optional": true,
@@ -4804,8 +4891,8 @@
             "defaultValue": "Неопределено"
           },
           {
-            "name": "Параметрaram6",
-            "nameRu": "Параметрaram6",
+            "name": "Параметр6",
+            "nameRu": "Параметр6",
             "nameEn": "param6",
             "type": "Произвольный",
             "optional": true,
@@ -4813,8 +4900,8 @@
             "defaultValue": "Неопределено"
           },
           {
-            "name": "Параметрaram7",
-            "nameRu": "Параметрaram7",
+            "name": "Параметр7",
+            "nameRu": "Параметр7",
             "nameEn": "param7",
             "type": "Произвольный",
             "optional": true,
@@ -5190,8 +5277,8 @@
             "defaultValue": "Неопределено"
           },
           {
-            "name": "Параметрaram4",
-            "nameRu": "Параметрaram4",
+            "name": "Параметр4",
+            "nameRu": "Параметр4",
             "nameEn": "param4",
             "type": "Произвольный",
             "optional": true,
@@ -5199,8 +5286,8 @@
             "defaultValue": "Неопределено"
           },
           {
-            "name": "Параметрaram5",
-            "nameRu": "Параметрaram5",
+            "name": "Параметр5",
+            "nameRu": "Параметр5",
             "nameEn": "param5",
             "type": "Произвольный",
             "optional": true,
@@ -5319,8 +5406,8 @@
                 "defaultValue": "Неопределено"
               },
               {
-                "name": "Параметрaram4",
-                "nameRu": "Параметрaram4",
+                "name": "Параметр4",
+                "nameRu": "Параметр4",
                 "nameEn": "param4",
                 "type": "Произвольный",
                 "optional": true,
@@ -5328,8 +5415,8 @@
                 "defaultValue": "Неопределено"
               },
               {
-                "name": "Параметрaram5",
-                "nameRu": "Параметрaram5",
+                "name": "Параметр5",
+                "nameRu": "Параметр5",
                 "nameEn": "param5",
                 "type": "Произвольный",
                 "optional": true,
@@ -5349,7 +5436,29 @@
     "nameRu": "ЗапрещенныеПодстановкиXS",
     "nameEn": "XSProhibitedSubstitutions",
     "description": "",
-    "members": []
+    "members": [
+      {
+        "name": "Все",
+        "nameRu": "Все",
+        "nameEn": "All",
+        "kind": "PROPERTY",
+        "returnType": "ЗапрещенныеПодстановкиXS"
+      },
+      {
+        "name": "Ограничение",
+        "nameRu": "Ограничение",
+        "nameEn": "Restriction",
+        "kind": "PROPERTY",
+        "returnType": "ЗапрещенныеПодстановкиXS"
+      },
+      {
+        "name": "Расширение",
+        "nameRu": "Расширение",
+        "nameEn": "Extension",
+        "kind": "PROPERTY",
+        "returnType": "ЗапрещенныеПодстановкиXS"
+      }
+    ]
   },
   {
     "kind": "TYPE",
@@ -6403,7 +6512,29 @@
     "nameRu": "ИсключенияГруппПодстановкиXS",
     "nameEn": "XSSubstitutionGroupExclusions",
     "description": "",
-    "members": []
+    "members": [
+      {
+        "name": "Все",
+        "nameRu": "Все",
+        "nameEn": "All",
+        "kind": "PROPERTY",
+        "returnType": "ИсключенияГруппПодстановкиXS"
+      },
+      {
+        "name": "Ограничение",
+        "nameRu": "Ограничение",
+        "nameEn": "Restriction",
+        "kind": "PROPERTY",
+        "returnType": "ИсключенияГруппПодстановкиXS"
+      },
+      {
+        "name": "Расширение",
+        "nameRu": "Расширение",
+        "nameEn": "Extension",
+        "kind": "PROPERTY",
+        "returnType": "ИсключенияГруппПодстановкиXS"
+      }
+    ]
   },
   {
     "kind": "ENUM",
@@ -7031,7 +7162,50 @@
     "nameRu": "КодировкаТекста",
     "nameEn": "TextEncoding",
     "description": "Определяет набор допустимых кодировок текстовых файлов.",
-    "members": []
+    "members": [
+      {
+        "name": "ANSI",
+        "nameRu": "ANSI",
+        "nameEn": "default",
+        "kind": "PROPERTY",
+        "returnType": "КодировкаТекста"
+      },
+      {
+        "name": "OEM",
+        "nameRu": "OEM",
+        "nameEn": "default",
+        "kind": "PROPERTY",
+        "returnType": "КодировкаТекста"
+      },
+      {
+        "name": "UTF16",
+        "nameRu": "UTF16",
+        "nameEn": "default",
+        "kind": "PROPERTY",
+        "returnType": "КодировкаТекста"
+      },
+      {
+        "name": "UTF8",
+        "nameRu": "UTF8",
+        "nameEn": "default",
+        "kind": "PROPERTY",
+        "returnType": "КодировкаТекста"
+      },
+      {
+        "name": "UTF8БезBOM",
+        "nameRu": "UTF8БезBOM",
+        "nameEn": "UTF8NoBOM",
+        "kind": "PROPERTY",
+        "returnType": "КодировкаТекста"
+      },
+      {
+        "name": "Системная",
+        "nameRu": "Системная",
+        "nameEn": "System",
+        "kind": "PROPERTY",
+        "returnType": "КодировкаТекста"
+      }
+    ]
   },
   {
     "kind": "TYPE",
@@ -9965,7 +10139,36 @@
     "nameRu": "НедопустимыеПодстановкиXS",
     "nameEn": "XSDisallowedSubstitutions",
     "description": "",
-    "members": []
+    "members": [
+      {
+        "name": "Все",
+        "nameRu": "Все",
+        "nameEn": "All",
+        "kind": "PROPERTY",
+        "returnType": "НедопустимыеПодстановкиXS"
+      },
+      {
+        "name": "Ограничение",
+        "nameRu": "Ограничение",
+        "nameEn": "Restriction",
+        "kind": "PROPERTY",
+        "returnType": "НедопустимыеПодстановкиXS"
+      },
+      {
+        "name": "Подстановка",
+        "nameRu": "Подстановка",
+        "nameEn": "Substitution",
+        "kind": "PROPERTY",
+        "returnType": "НедопустимыеПодстановкиXS"
+      },
+      {
+        "name": "Расширение",
+        "nameRu": "Расширение",
+        "nameEn": "Extension",
+        "kind": "PROPERTY",
+        "returnType": "НедопустимыеПодстановкиXS"
+      }
+    ]
   },
   {
     "kind": "PRIMITIVE_TYPE",
@@ -14600,7 +14803,22 @@
     "nameRu": "ПробельныеСимволыXML",
     "nameEn": "XMLSpace",
     "description": "",
-    "members": []
+    "members": [
+      {
+        "name": "ПоУмолчанию",
+        "nameRu": "ПоУмолчанию",
+        "nameEn": "Default",
+        "kind": "PROPERTY",
+        "returnType": "ПробельныеСимволыXML"
+      },
+      {
+        "name": "Сохранять",
+        "nameRu": "Сохранять",
+        "nameEn": "Preserve",
+        "kind": "PROPERTY",
+        "returnType": "ПробельныеСимволыXML"
+      }
+    ]
   },
   {
     "kind": "TYPE",
@@ -15849,6 +16067,10 @@
         "nameEn": "EnvironmentVariables",
         "kind": "METHOD",
         "description": "Возвращает соответствие переменных среды. Ключом является имя переменной, а значением - значение переменной",
+        "deprecatedSinceVersion": "*",
+        "recommendedReplacements": [
+          "ПеременныеСреды"
+        ],
         "returnType": "Соответствие",
         "signatures": [
           {
@@ -15873,6 +16095,10 @@
         "nameEn": "GetEnvironmentVariable",
         "kind": "METHOD",
         "description": "Получить значение переменной среды.",
+        "deprecatedSinceVersion": "*",
+        "recommendedReplacements": [
+          "ПолучитьПеременнуюСреды"
+        ],
         "returnType": "Произвольный",
         "signatures": [
           {
@@ -15948,6 +16174,10 @@
         "nameEn": "SetEnvironmentVariable",
         "kind": "METHOD",
         "description": "Позволяет установить переменную среды. Переменная устанавливается в области видимости процесса и очищается после его завершения.",
+        "deprecatedSinceVersion": "*",
+        "recommendedReplacements": [
+          "УстановитьПеременнуюСреды"
+        ],
         "signatures": [
           {
             "parameters": [
@@ -17272,7 +17502,92 @@
     "nameRu": "СпециальнаяПапка",
     "nameEn": "SpecialFolder",
     "description": "Системное перечисление для специальных папок.",
-    "members": []
+    "members": [
+      {
+        "name": "ДанныеПриложений",
+        "nameRu": "ДанныеПриложений",
+        "nameEn": "ApplicationData",
+        "kind": "PROPERTY",
+        "returnType": "СпециальнаяПапка"
+      },
+      {
+        "name": "КаталогРабочийСтол",
+        "nameRu": "КаталогРабочийСтол",
+        "nameEn": "DesktopDirectory",
+        "kind": "PROPERTY",
+        "returnType": "СпециальнаяПапка"
+      },
+      {
+        "name": "ЛокальныйКаталогДанныхПриложений",
+        "nameRu": "ЛокальныйКаталогДанныхПриложений",
+        "nameEn": "LocalApplicationData",
+        "kind": "PROPERTY",
+        "returnType": "СпециальнаяПапка"
+      },
+      {
+        "name": "МоиВидеозаписи",
+        "nameRu": "МоиВидеозаписи",
+        "nameEn": "MyVideos",
+        "kind": "PROPERTY",
+        "returnType": "СпециальнаяПапка"
+      },
+      {
+        "name": "МоиДокументы",
+        "nameRu": "МоиДокументы",
+        "nameEn": "MyDocuments",
+        "kind": "PROPERTY",
+        "returnType": "СпециальнаяПапка"
+      },
+      {
+        "name": "МоиРисунки",
+        "nameRu": "МоиРисунки",
+        "nameEn": "MyPictures",
+        "kind": "PROPERTY",
+        "returnType": "СпециальнаяПапка"
+      },
+      {
+        "name": "МояМузыка",
+        "nameRu": "МояМузыка",
+        "nameEn": "MyMusic",
+        "kind": "PROPERTY",
+        "returnType": "СпециальнаяПапка"
+      },
+      {
+        "name": "ОбщиеШаблоны",
+        "nameRu": "ОбщиеШаблоны",
+        "nameEn": "CommonTemplates",
+        "kind": "PROPERTY",
+        "returnType": "СпециальнаяПапка"
+      },
+      {
+        "name": "ОбщийКаталогДанныхПриложения",
+        "nameRu": "ОбщийКаталогДанныхПриложения",
+        "nameEn": "CommonApplicationData",
+        "kind": "PROPERTY",
+        "returnType": "СпециальнаяПапка"
+      },
+      {
+        "name": "ПрофильПользователя",
+        "nameRu": "ПрофильПользователя",
+        "nameEn": "UserProfile",
+        "kind": "PROPERTY",
+        "returnType": "СпециальнаяПапка"
+      },
+      {
+        "name": "РабочийСтол",
+        "nameRu": "РабочийСтол",
+        "nameEn": "Desktop",
+        "kind": "PROPERTY",
+        "returnType": "СпециальнаяПапка"
+      },
+      {
+        "name": "Шаблоны",
+        "nameRu": "Шаблоны",
+        "nameEn": "Templates",
+        "kind": "PROPERTY",
+        "returnType": "СпециальнаяПапка"
+      }
+    ]
   },
   {
     "kind": "TYPE",
@@ -18280,10 +18595,13 @@
       {
         "parameters": [
           {
-            "name": "Параметрaram1",
-            "nameRu": "Параметрaram1",
+            "name": "КлючиИлиСтруктура",
+            "nameRu": "КлючиИлиСтруктура",
             "nameEn": "param1",
-            "type": "Произвольный",
+            "types": [
+              "Строка",
+              "ФиксированнаяСтруктура"
+            ],
             "optional": false,
             "description": "Фиксированная структура либо строка с именами свойств, указанными через запятую."
           },
@@ -19670,7 +19988,57 @@
     "nameRu": "ТипДиска",
     "nameEn": "DriveType",
     "description": "Типы дисков: - Диск является устройством оптических дисков, такие как компакт-ДИСК или DVD-диск. - Диск является жестким диском. - Диск является сетевым диском. - Диск не имеет корневой каталог. - Диск является диском ОЗУ. - Диск является съемное запоминающее устройство, например, дисковод гибких дисков или USB-устройство флэш-памяти. - Тип диска неизвестен.",
-    "members": []
+    "members": [
+      {
+        "name": "ДискОЗУ",
+        "nameRu": "ДискОЗУ",
+        "nameEn": "Ram",
+        "kind": "PROPERTY",
+        "returnType": "ТипДиска"
+      },
+      {
+        "name": "ЖесткийДиск",
+        "nameRu": "ЖесткийДиск",
+        "nameEn": "Fixed",
+        "kind": "PROPERTY",
+        "returnType": "ТипДиска"
+      },
+      {
+        "name": "НеИмеетКорневойКаталог",
+        "nameRu": "НеИмеетКорневойКаталог",
+        "nameEn": "NoRootDirectory",
+        "kind": "PROPERTY",
+        "returnType": "ТипДиска"
+      },
+      {
+        "name": "Неизвестный",
+        "nameRu": "Неизвестный",
+        "nameEn": "Unknown",
+        "kind": "PROPERTY",
+        "returnType": "ТипДиска"
+      },
+      {
+        "name": "ОптическийДиск",
+        "nameRu": "ОптическийДиск",
+        "nameEn": "CDRom",
+        "kind": "PROPERTY",
+        "returnType": "ТипДиска"
+      },
+      {
+        "name": "СетевойДиск",
+        "nameRu": "СетевойДиск",
+        "nameEn": "Network",
+        "kind": "PROPERTY",
+        "returnType": "ТипДиска"
+      },
+      {
+        "name": "СъемноеЗапоминающееУстройство",
+        "nameRu": "СъемноеЗапоминающееУстройство",
+        "nameEn": "Removable",
+        "kind": "PROPERTY",
+        "returnType": "ТипДиска"
+      }
+    ]
   },
   {
     "kind": "ENUM",
@@ -20078,7 +20446,29 @@
     "nameRu": "ТипПроверкиXML",
     "nameEn": "XMLValidationType",
     "description": "",
-    "members": []
+    "members": [
+      {
+        "name": "НетПроверки",
+        "nameRu": "НетПроверки",
+        "nameEn": "NoValidate",
+        "kind": "PROPERTY",
+        "returnType": "ТипПроверкиXML"
+      },
+      {
+        "name": "ОпределениеТипаДокумента",
+        "nameRu": "ОпределениеТипаДокумента",
+        "nameEn": "DocumentTypeDefinition",
+        "kind": "PROPERTY",
+        "returnType": "ТипПроверкиXML"
+      },
+      {
+        "name": "СхемаXML",
+        "nameRu": "СхемаXML",
+        "nameEn": "XMLSchema",
+        "kind": "PROPERTY",
+        "returnType": "ТипПроверкиXML"
+      }
+    ]
   },
   {
     "kind": "ENUM",
@@ -20116,7 +20506,113 @@
     "nameRu": "ТипУзлаXML",
     "nameEn": "XMLNodeType",
     "description": "Содержит варианты узлов XML, которые могут быть получены при чтении XML с помощью объекта ЧтениеXML.",
-    "members": []
+    "members": [
+      {
+        "name": "Атрибут",
+        "nameRu": "Атрибут",
+        "nameEn": "Attribute",
+        "kind": "PROPERTY",
+        "returnType": "ТипУзлаXML"
+      },
+      {
+        "name": "ИнструкцияОбработки",
+        "nameRu": "ИнструкцияОбработки",
+        "nameEn": "ProcessingInstruction",
+        "kind": "PROPERTY",
+        "returnType": "ТипУзлаXML"
+      },
+      {
+        "name": "Комментарий",
+        "nameRu": "Комментарий",
+        "nameEn": "Comment",
+        "kind": "PROPERTY",
+        "returnType": "ТипУзлаXML"
+      },
+      {
+        "name": "КонецСущности",
+        "nameRu": "КонецСущности",
+        "nameEn": "EndEntity",
+        "kind": "PROPERTY",
+        "returnType": "ТипУзлаXML"
+      },
+      {
+        "name": "КонецЭлемента",
+        "nameRu": "КонецЭлемента",
+        "nameEn": "EndElement",
+        "kind": "PROPERTY",
+        "returnType": "ТипУзлаXML"
+      },
+      {
+        "name": "НачалоЭлемента",
+        "nameRu": "НачалоЭлемента",
+        "nameEn": "StartElement",
+        "kind": "PROPERTY",
+        "returnType": "ТипУзлаXML"
+      },
+      {
+        "name": "Ничего",
+        "nameRu": "Ничего",
+        "nameEn": "None",
+        "kind": "PROPERTY",
+        "returnType": "ТипУзлаXML"
+      },
+      {
+        "name": "Нотация",
+        "nameRu": "Нотация",
+        "nameEn": "Notation",
+        "kind": "PROPERTY",
+        "returnType": "ТипУзлаXML"
+      },
+      {
+        "name": "ОбъявлениеXML",
+        "nameRu": "ОбъявлениеXML",
+        "nameEn": "XMLDeclaration",
+        "kind": "PROPERTY",
+        "returnType": "ТипУзлаXML"
+      },
+      {
+        "name": "ОпределениеТипаДокумента",
+        "nameRu": "ОпределениеТипаДокумента",
+        "nameEn": "DocumentTypeDefinition",
+        "kind": "PROPERTY",
+        "returnType": "ТипУзлаXML"
+      },
+      {
+        "name": "ПробельныеСимволы",
+        "nameRu": "ПробельныеСимволы",
+        "nameEn": "Whitespace",
+        "kind": "PROPERTY",
+        "returnType": "ТипУзлаXML"
+      },
+      {
+        "name": "СекцияCDATA",
+        "nameRu": "СекцияCDATA",
+        "nameEn": "CDATASection",
+        "kind": "PROPERTY",
+        "returnType": "ТипУзлаXML"
+      },
+      {
+        "name": "СсылкаНаСущность",
+        "nameRu": "СсылкаНаСущность",
+        "nameEn": "EntityReference",
+        "kind": "PROPERTY",
+        "returnType": "ТипУзлаXML"
+      },
+      {
+        "name": "Сущность",
+        "nameRu": "Сущность",
+        "nameEn": "Entity",
+        "kind": "PROPERTY",
+        "returnType": "ТипУзлаXML"
+      },
+      {
+        "name": "Текст",
+        "nameRu": "Текст",
+        "nameEn": "Text",
+        "kind": "PROPERTY",
+        "returnType": "ТипУзлаXML"
+      }
+    ]
   },
   {
     "kind": "TYPE",
@@ -22973,10 +23469,13 @@
       {
         "parameters": [
           {
-            "name": "Параметрaram1",
-            "nameRu": "Параметрaram1",
+            "name": "КлючиИлиСтруктура",
+            "nameRu": "КлючиИлиСтруктура",
             "nameEn": "param1",
-            "type": "Произвольный",
+            "types": [
+              "Строка",
+              "Структура"
+            ],
             "optional": false,
             "description": "Структура либо строка с именами свойств, указанными через запятую."
           },
@@ -23494,7 +23993,22 @@
     "nameRu": "ФормаПредставленияXS",
     "nameEn": "XSForm",
     "description": "",
-    "members": []
+    "members": [
+      {
+        "name": "Квалифицированная",
+        "nameRu": "Квалифицированная",
+        "nameEn": "Qualified",
+        "kind": "PROPERTY",
+        "returnType": "ФормаПредставленияXS"
+      },
+      {
+        "name": "Неквалифицированная",
+        "nameRu": "Неквалифицированная",
+        "nameEn": "Unqualified",
+        "kind": "PROPERTY",
+        "returnType": "ФормаПредставленияXS"
+      }
+    ]
   },
   {
     "kind": "ENUM",
@@ -23880,7 +24394,120 @@
     "nameRu": "ЦветКонсоли",
     "nameEn": "ConsoleColor",
     "description": "Цвет шрифта текста, выводимого в консоли.",
-    "members": []
+    "members": [
+      {
+        "name": "Белый",
+        "nameRu": "Белый",
+        "nameEn": "White",
+        "kind": "PROPERTY",
+        "returnType": "ЦветКонсоли"
+      },
+      {
+        "name": "Бирюза",
+        "nameRu": "Бирюза",
+        "nameEn": "Cyan",
+        "kind": "PROPERTY",
+        "returnType": "ЦветКонсоли"
+      },
+      {
+        "name": "Желтый",
+        "nameRu": "Желтый",
+        "nameEn": "Yellow",
+        "kind": "PROPERTY",
+        "returnType": "ЦветКонсоли"
+      },
+      {
+        "name": "Зеленый",
+        "nameRu": "Зеленый",
+        "nameEn": "Green",
+        "kind": "PROPERTY",
+        "returnType": "ЦветКонсоли"
+      },
+      {
+        "name": "Красный",
+        "nameRu": "Красный",
+        "nameEn": "Red",
+        "kind": "PROPERTY",
+        "returnType": "ЦветКонсоли"
+      },
+      {
+        "name": "Малиновый",
+        "nameRu": "Малиновый",
+        "nameEn": "Magenta",
+        "kind": "PROPERTY",
+        "returnType": "ЦветКонсоли"
+      },
+      {
+        "name": "Серый",
+        "nameRu": "Серый",
+        "nameEn": "Gray",
+        "kind": "PROPERTY",
+        "returnType": "ЦветКонсоли"
+      },
+      {
+        "name": "Синий",
+        "nameRu": "Синий",
+        "nameEn": "Blue",
+        "kind": "PROPERTY",
+        "returnType": "ЦветКонсоли"
+      },
+      {
+        "name": "ТемноБирюзовый",
+        "nameRu": "ТемноБирюзовый",
+        "nameEn": "DarkCyan",
+        "kind": "PROPERTY",
+        "returnType": "ЦветКонсоли"
+      },
+      {
+        "name": "ТемноЖелтый",
+        "nameRu": "ТемноЖелтый",
+        "nameEn": "DarkYellow",
+        "kind": "PROPERTY",
+        "returnType": "ЦветКонсоли"
+      },
+      {
+        "name": "ТемноЗеленый",
+        "nameRu": "ТемноЗеленый",
+        "nameEn": "DarkGreen",
+        "kind": "PROPERTY",
+        "returnType": "ЦветКонсоли"
+      },
+      {
+        "name": "ТемноКрасный",
+        "nameRu": "ТемноКрасный",
+        "nameEn": "DarkRed",
+        "kind": "PROPERTY",
+        "returnType": "ЦветКонсоли"
+      },
+      {
+        "name": "ТемноМалиновый",
+        "nameRu": "ТемноМалиновый",
+        "nameEn": "DarkMagenta",
+        "kind": "PROPERTY",
+        "returnType": "ЦветКонсоли"
+      },
+      {
+        "name": "ТемноСерый",
+        "nameRu": "ТемноСерый",
+        "nameEn": "DarkGray",
+        "kind": "PROPERTY",
+        "returnType": "ЦветКонсоли"
+      },
+      {
+        "name": "ТемноСиний",
+        "nameRu": "ТемноСиний",
+        "nameEn": "DarkBlue",
+        "kind": "PROPERTY",
+        "returnType": "ЦветКонсоли"
+      },
+      {
+        "name": "Черный",
+        "nameRu": "Черный",
+        "nameEn": "Black",
+        "kind": "PROPERTY",
+        "returnType": "ЦветКонсоли"
+      }
+    ]
   },
   {
     "kind": "ENUM",
