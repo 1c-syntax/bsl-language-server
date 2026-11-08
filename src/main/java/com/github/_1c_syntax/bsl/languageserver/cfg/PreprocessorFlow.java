@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.cfg;
 
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.context.compilation.PreprocessorContexts;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 
 import java.util.ArrayDeque;
@@ -62,6 +63,11 @@ public record PreprocessorFlow(Set<CfgVertex> vertices, Set<CfgEdge> edges) {
    * @return новое представление с неизменяемыми множествами объектов исходного графа.
    */
   public static PreprocessorFlow of(ControlFlowGraph graph, Set<ExecutionContext> contexts) {
+    return of(graph, contexts, FileType.BSL);
+  }
+
+  /** Построить достижимую часть графа по символам выбранного диалекта. */
+  public static PreprocessorFlow of(ControlFlowGraph graph, Set<ExecutionContext> contexts, FileType fileType) {
     if (contexts.isEmpty()) {
       return new PreprocessorFlow(Set.of(), Set.of());
     }
@@ -73,7 +79,7 @@ public record PreprocessorFlow(Set<CfgVertex> vertices, Set<CfgEdge> edges) {
     while (!pending.isEmpty()) {
       var vertex = pending.removeFirst();
       for (var edge : graph.outgoingEdgesOf(vertex)) {
-        var allowed = allowedContexts(vertex, edge.getType(), reachable.get(vertex));
+        var allowed = allowedContexts(vertex, edge.getType(), reachable.get(vertex), fileType);
         if (allowed.isEmpty()) {
           continue;
         }
@@ -91,14 +97,14 @@ public record PreprocessorFlow(Set<CfgVertex> vertices, Set<CfgEdge> edges) {
   }
 
   private static Set<ExecutionContext> allowedContexts(CfgVertex vertex, CfgEdgeType edge,
-                                                       Set<ExecutionContext> contexts) {
+                                                       Set<ExecutionContext> contexts, FileType fileType) {
     if (!(vertex instanceof PreprocessorConditionVertex)
         || (edge != CfgEdgeType.TRUE_BRANCH && edge != CfgEdgeType.FALSE_BRANCH)) {
       return edge == CfgEdgeType.ADJACENT_CODE ? Set.of() : contexts;
     }
     var expression = vertex.getAst().orElseThrow()
       .getRuleContext(BSLParser.Preproc_expressionContext.class, 0);
-    var active = PreprocessorContexts.evaluate(expression);
+    var active = PreprocessorContexts.evaluate(expression, fileType);
     if (active == null) {
       return contexts;
     }

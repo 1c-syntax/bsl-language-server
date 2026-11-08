@@ -1118,7 +1118,7 @@ public class ExpressionTypeInferencer {
     var owner = method.getOwner();
     if (owner != ctx.documentContext || !method.isFunction() || method.getCompilerDirectiveKind().isPresent()
         || owner.getMdObject().filter(CommonModule.class::isInstance).isEmpty()
-        || !ExecutionContext.ALL.equals(owner.getSymbolTree().getMethodPreprocessorContexts(method))) {
+        || !ExecutionContext.forFileType(owner.getFileType()).equals(owner.getSymbolTree().getMethodPreprocessorContexts(method))) {
       return false;
     }
     var session = DiagnosticDeclarationSession.current();

@@ -53,6 +53,7 @@ import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -265,9 +266,11 @@ class MetadataCollectionSpecializerUnitTest {
     registry.registerMemberSource(baseCollectionRef,
       () -> List.of(generic), FileType.BSL);
 
-    // Документ-тип содержит nested-collection "Реквизиты".
-    var docAttrs = MemberDescriptor.property("Реквизиты", baseCollectionRef, "");
-    registry.registerMemberSource(documentTypeRef, () -> List.of(docAttrs), FileType.BSL);
+    // Документ-тип содержит nested-collection "Реквизиты" и прочие коллекции документа.
+    var docCollections = Stream.of("Реквизиты", "ТабличныеЧасти", "Формы", "Команды", "Макеты", "Движения")
+      .map(name -> MemberDescriptor.property(name, baseCollectionRef, ""))
+      .toList();
+    registry.registerMemberSource(documentTypeRef, () -> docCollections, FileType.BSL);
 
     var docsMember = MemberDescriptor.property("Документы", baseCollectionRef, "");
     registry.registerMemberSource(ownerRef, () -> List.of(docsMember), FileType.BSL);
@@ -343,7 +346,10 @@ class MetadataCollectionSpecializerUnitTest {
     var perMdoMembers = registry.getMembers(perMdoRef, FileType.BSL);
     // у perMdoRef должны быть override-членов известных коллекций.
     var perMdoNames = perMdoMembers.stream().map(MemberDescriptor::name).toList();
-    assertThat(perMdoNames).contains("Реквизиты", "ТабличныеЧасти", "Формы", "Команды", "Макеты");
+    // Коллекций, которых нет в описании документа, нет и у самого документа.
+    assertThat(perMdoNames)
+      .contains("Реквизиты", "ТабличныеЧасти", "Формы", "Команды", "Макеты")
+      .doesNotContain("Подсистемы", "Кубы", "Характеристики");
 
     assertThat(perMdoRef).isNotNull();
   }
