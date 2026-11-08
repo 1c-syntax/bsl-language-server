@@ -53,6 +53,13 @@ public record BilingualString(String ru, String en) implements Comparable<Biling
     en = en == null ? "" : en;
   }
 
+  /**
+   * Регистрозависимый лексикографический порядок: сначала русское написание, затем английское.
+   *
+   * @param other сравниваемая строка.
+   * @return отрицательное число, ноль или положительное число согласно порядку написаний;
+   *     ноль соответствует {@link #equals(Object)}.
+   */
   @Override
   public int compareTo(BilingualString other) {
     var byRu = ru.compareTo(other.ru);
