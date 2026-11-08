@@ -528,8 +528,12 @@ public class ServerContextProvider {
       committed = true;
     }
 
-    /** Откатить незавершённую регистрацию и освободить её scoped-бины. */
-    private void rollback() {
+    /** Откатить неподтверждённую регистрацию; ошибку очистки передать вызывающей стороне. */
+    @Override
+    public void close() {
+      if (committed) {
+        return;
+      }
       repointPrimaryBeforeRemoval(uri);
       contexts.remove(uri);
       workspaceRoots.remove(uri);
@@ -540,13 +544,6 @@ public class ServerContextProvider {
       }
     }
 
-    /** Откатить неподтверждённую регистрацию; ошибку очистки передать вызывающей стороне. */
-    @Override
-    public void close() {
-      if (!committed) {
-        rollback();
-      }
-    }
   }
 
   private static String extractWorkspaceName(URI workspaceUri) {
