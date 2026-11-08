@@ -19,13 +19,13 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.providers;
+package com.github._1c_syntax.bsl.languageserver.cli.lsp;
 
 import com.github._1c_syntax.bsl.languageserver.completion.CompletionData;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import org.eclipse.lsp4j.jsonrpc.json.MessageJsonHandler;
 import com.google.gson.TypeAdapter;
 import com.google.gson.TypeAdapterFactory;
 import com.google.gson.reflect.TypeToken;
@@ -34,18 +34,17 @@ import com.google.gson.stream.JsonWriter;
 import org.junit.jupiter.api.Test;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import static org.assertj.core.api.Assertions.assertThat;
 
 class CompletionSerializationInitializationTest {
   @Test
   void preparationPreservesDefaultPayloadBytesAndRoundTrip() {
-    var expected = new GsonBuilder().create();
-    var prepared = new GsonBuilder().create();
+    var expected = new MessageJsonHandler(Map.of()).getGson();
+    var prepared = new StringBuilderMessageJsonHandler(Map.of()).getGson();
     var data = CompletionData.forFunction(URI.create("file:///workspace/Модуль.bsl"), "Формат", FileType.BSL, Language.RU);
     data.setContextDescription("Описание контекста");
-    CompletionProvider.prepareJsonAdapters(prepared);
-    CompletionProvider.prepareJsonAdapters(prepared);
     var encoded = prepared.toJson(data);
     assertThat(encoded).isEqualTo(expected.toJson(data));
     assertThat(prepared.fromJson(encoded, CompletionData.class))
@@ -56,7 +55,7 @@ class CompletionSerializationInitializationTest {
   void preparationUsesConfiguredAdaptersWithoutSerializing() {
     var creations = new AtomicInteger();
     var writes = new AtomicInteger();
-    var gson = new GsonBuilder().registerTypeAdapterFactory(new TypeAdapterFactory() {
+    var gson = new StringBuilderMessageJsonHandler(Map.of(), builder -> builder.registerTypeAdapterFactory(new TypeAdapterFactory() {
       @Override
       public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
         if (type.getRawType() != CompletionData.class) return null;
@@ -75,12 +74,11 @@ class CompletionSerializationInitializationTest {
           }
         };
       }
-    }).create();
-    CompletionProvider.prepareJsonAdapters(gson);
-    CompletionProvider.prepareJsonAdapters(gson);
-    assertThat(creations).hasValue(1);
+    })).getGson();
+    assertThat(creations).hasValue(0);
     assertThat(writes).hasValue(0);
     assertThat(gson.toJson(new CompletionData())).isEqualTo("\"configured\"");
+    assertThat(creations).hasValue(1);
     assertThat(writes).hasValue(1);
   }
 }

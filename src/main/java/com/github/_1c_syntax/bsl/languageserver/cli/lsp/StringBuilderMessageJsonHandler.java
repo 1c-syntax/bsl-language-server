@@ -31,6 +31,8 @@ import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
 import java.net.URI;
 import org.eclipse.lsp4j.jsonrpc.json.JsonRpcMethod;
+import org.eclipse.lsp4j.CompletionList;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.json.MessageJsonHandler;
 import org.eclipse.lsp4j.jsonrpc.messages.Message;
 import java.io.Writer;
@@ -50,6 +52,9 @@ final class StringBuilderMessageJsonHandler extends MessageJsonHandler {
       builder.registerTypeAdapterFactory(new UriEncodingFactory());
       configure.accept(builder);
     });
+    var gson = getGson();
+    gson.getAdapter(CompletionList.class);
+    gson.getAdapter(Either.class);
   }
 
   @Override
