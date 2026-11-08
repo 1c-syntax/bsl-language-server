@@ -234,7 +234,7 @@ class CompilationContextContractsTest extends AbstractServerContextAwareTest {
     assertThat(resolver.typeContexts(document, TypeRef.UNKNOWN)).isEmpty();
     var server = mock(ServerContext.class);
     when(server.getLanguageServerConfiguration()).thenReturn(context.getLanguageServerConfiguration());
-    when(server.findCommonModule("Remote")).thenReturn(Optional.of(
+    when(server.findCommonModuleForTypeName("Remote")).thenReturn(Optional.of(
       CommonModule.builder().name("Remote").server(true).serverCall(true).build()));
     when(document.getServerContext()).thenReturn(server);
     assertThat(resolver.typeContexts(document, new TypeRef(TypeKind.CONFIGURATION, "Remote")).orElseThrow())
