@@ -224,10 +224,26 @@ class UnknownMemberCompilationContextTest extends AbstractDiagnosticTest<Unknown
   }
 
   @ParameterizedTest
+  @CsvSource({
+    "Windows И НЕ MONO, Windows", "Windows И MONO, Windows (Mono)",
+    "Linux И НЕ MONO, Linux", "Linux И MONO, Linux (Mono)",
+    "MacOS И НЕ MONO, macOS", "MacOS И MONO, macOS (Mono)"
+  })
+  void oneScriptDiagnosticsNameTheOperatingSystemContext(String condition, String label) {
+    var document = standalone("#Если " + condition + " Тогда\nНетМетода();\n#КонецЕсли", FileType.OS);
+    configuration.setLanguage(Language.RU);
+    diagnosticInstance.getInfo().refresh();
+
+    assertThat(getDiagnostics(document)).singleElement().satisfies(diagnostic ->
+      assertThat(diagnostic.getRelatedInformation().getLast().getMessage())
+        .isEqualTo("Контекст компиляции: " + label));
+  }
+
+  @ParameterizedTest
   @EnumSource(FileType.class)
   void unknownPreprocessorSymbolsPreserveOrdinaryNameChecks(FileType type) {
     var document = standalone("""
-      #Если Windows Тогда
+      #Если ПользовательскийФлаг Тогда
         НесуществующаяПервая();
       #Иначе
         НесуществующаяВторая();
