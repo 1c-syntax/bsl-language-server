@@ -112,25 +112,7 @@ final class CompletionContextEvaluation {
 
   private void checkSharedPropertyReceiver() {
     propertyReceiverChecked = true;
-    if (scope.isEmpty()) {
-      return;
-    }
-    @Nullable TypeRef owner = null;
-    for (var context : scope.orElseThrow().contexts()) {
-      var receiver = typeContext.receiverTypes(context);
-      if (receiver.refs().size() != 1) {
-        return;
-      }
-      var candidate = receiver.refs().iterator().next();
-      if (candidate.equals(TypeRef.ANY) || candidate.equals(TypeRef.UNKNOWN)
-        || !receiver.getLocalFields(candidate).isEmpty()) {
-        return;
-      }
-      if (owner != null && !owner.equals(candidate)) {
-        return;
-      }
-      owner = candidate;
-    }
+    var owner = sharedReceiverOwner();
     if (owner != null) {
       propertyScope = typeContext.propertyScope(owner, scope.orElseThrow().contexts());
     }
@@ -215,26 +197,31 @@ final class CompletionContextEvaluation {
 
   private void checkSharedReceiver() {
     receiverChecked = true;
+    sharedReceiver = sharedReceiverOwner();
+  }
+
+  /** Единственный известный получатель без локальных полей, одинаковый во всех контекстах. */
+  private @Nullable TypeRef sharedReceiverOwner() {
     if (scope.isEmpty()) {
-      return;
+      return null;
     }
     @Nullable TypeRef owner = null;
     for (var context : scope.orElseThrow().contexts()) {
       var receiver = typeContext.receiverTypes(context);
       if (receiver.refs().size() != 1) {
-        return;
+        return null;
       }
       var candidate = receiver.refs().iterator().next();
       if (candidate.equals(TypeRef.ANY) || candidate.equals(TypeRef.UNKNOWN)
         || !receiver.getLocalFields(candidate).isEmpty()) {
-        return;
+        return null;
       }
       if (owner != null && !owner.equals(candidate)) {
-        return;
+        return null;
       }
       owner = candidate;
     }
-    sharedReceiver = owner;
+    return owner;
   }
 
   private int rankDotInContext(String name, MemberDescriptor member, @Nullable CompletionMethodHint hint,

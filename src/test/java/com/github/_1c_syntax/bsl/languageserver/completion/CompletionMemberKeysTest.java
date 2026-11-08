@@ -23,6 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.completion;
 
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.util.List;
 import java.util.Locale;
@@ -67,12 +69,13 @@ class CompletionMemberKeysTest {
     assertThat(CompletionMemberKeys.of(MemberKind.METHOD, "AI")).isEqualTo("METHOD:ai");
   }
 
-  @Test
-  void collidingHashesNeverReturnAnotherName() {
-    assertThat("Aa").hasSameHashCodeAs("BB");
+  @ParameterizedTest
+  @CsvSource({"Aa, BB, METHOD:aa, METHOD:bb", "FB, Ea, METHOD:fb, METHOD:ea"})
+  void collidingHashesNeverReturnAnotherName(String first, String second, String firstKey, String secondKey) {
+    assertThat(first).hasSameHashCodeAs(second);
     for (var repeat = 0; repeat < 100; repeat++) {
-      assertThat(CompletionMemberKeys.of(MemberKind.METHOD, "Aa")).isEqualTo("METHOD:aa");
-      assertThat(CompletionMemberKeys.of(MemberKind.METHOD, "BB")).isEqualTo("METHOD:bb");
+      assertThat(CompletionMemberKeys.of(MemberKind.METHOD, first)).isEqualTo(firstKey);
+      assertThat(CompletionMemberKeys.of(MemberKind.METHOD, second)).isEqualTo(secondKey);
     }
   }
 

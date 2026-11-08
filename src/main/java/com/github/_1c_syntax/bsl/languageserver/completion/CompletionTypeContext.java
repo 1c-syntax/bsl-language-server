@@ -43,7 +43,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.EnumMap;
 import java.util.EnumSet;
-import java.util.Collections;
 
 import org.jspecify.annotations.Nullable;
 
@@ -169,7 +168,7 @@ final class CompletionTypeContext {
     if (contextMasks == null) {
       contextMasks = new IdentityHashMap<>();
     }
-    return contextMasks.computeIfAbsent(contexts, selected -> {
+    return contextMasks.computeIfAbsent(contexts, (Set<ExecutionContext> selected) -> {
       var known = EnumSet.noneOf(ExecutionContext.class);
       known.addAll(selected);
       return known;
