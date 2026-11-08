@@ -5,9 +5,8 @@ name: Snapshots
 
 on:
   push:
-    # Ветка PR может быть базой другого PR: её SHA также нужен Sentry как baseline.
-    branches-ignore:
-      - gh-pages
+    branches:
+      - develop
   pull_request:
 
 concurrency:
