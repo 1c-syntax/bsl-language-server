@@ -74,9 +74,9 @@ class QueryToMissingMetadataDiagnosticTest extends AbstractDiagnosticTest<QueryT
       Запрос.Текст = "SELECT * FROM Catalog.сПРАВОЧНИК1";
       Запрос.Текст = "SELECT * FROM InformationRegister.НетТакогоРегистра";
       """, context);
-    assertThat(getDiagnostics(document)).hasSize(1)
-      .allSatisfy(diagnostic -> org.assertj.core.api.Assertions.assertThat(diagnostic.getMessage().toString())
-        .contains("InformationRegister.НетТакогоРегистра"));
+    assertThat(getDiagnostics(document), true).hasSize(1)
+      .hasMessageOnRange("Исправьте обращение к несуществующему метаданному "
+        + "\"InformationRegister.НетТакогоРегистра\" в запросе", 3, 30, 67);
   }
 
   @Test
