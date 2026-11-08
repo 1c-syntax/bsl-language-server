@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli.lsp;
 
+import com.github._1c_syntax.bsl.languageserver.completion.CompletionData;
 import org.eclipse.lsp4j.CompletionList;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import com.google.gson.Gson;
@@ -76,24 +77,18 @@ class TraceAwareLauncherBuilderTest {
       assertThat(writes).hasValue(1);
     }
   }
-  private record Payload(String text) { }
-
   @Test
-  void preparesAdditionalAdaptersOnTheActualHandlerWithoutWritingData() throws Exception {
-    var initialized = new AtomicInteger();
+  void preservesLazyFeatureDataAdaptersWithoutWritingData() throws Exception {
     var creations = new AtomicInteger();
     var writes = new AtomicInteger();
     try (var writer = new FileAwarePrintWriter()) {
-      var builder = new TraceAwareLauncherBuilder(writer, gson -> {
-        initialized.incrementAndGet();
-        gson.getAdapter(Payload.class);
-      });
+      var builder = new TraceAwareLauncherBuilder(writer);
       builder.setLocalService(new Object());
       builder.setRemoteInterface(LanguageClient.class);
       builder.configureGson(gson -> gson.registerTypeAdapterFactory(new TypeAdapterFactory() {
         @Override
         public <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
-          if (type.getRawType() != Payload.class) return null;
+          if (type.getRawType() != CompletionData.class) return null;
           creations.incrementAndGet();
           return new TypeAdapter<>() {
             @Override
@@ -111,12 +106,11 @@ class TraceAwareLauncherBuilderTest {
         }
       }));
       var handler = builder.createJsonHandler();
-      assertThat(initialized).hasValue(1);
-      assertThat(creations).hasValue(1);
+      assertThat(creations).hasValue(0);
       assertThat(writes).hasValue(0);
       var response = new ResponseMessage();
       response.setId(2);
-      response.setResult(new Payload("value"));
+      response.setResult(new CompletionData());
       assertThat(handler.serialize(response)).contains("\"result\":\"configured-payload\"");
       assertThat(writes).hasValue(1);
       assertThat(creations).hasValue(1);

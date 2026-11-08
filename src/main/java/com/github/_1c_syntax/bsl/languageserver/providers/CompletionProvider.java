@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import com.google.gson.Gson;
 
 import com.github._1c_syntax.bsl.context.api.ContextNames;
 import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
@@ -182,15 +181,6 @@ public final class CompletionProvider {
   // членам-объектам и переменным/модулям — ["."] (осмысленно дальнейшее обращение).
   // Если клиент не поддерживает — commitCharacters не задаём вовсе.
   private boolean commitCharactersSupport;
-
-  /**
-   * Подготовить адаптеры дополнительных данных completion без создания или записи полезной нагрузки.
-   *
-   * @param gson настроенный сериализатор протокола.
-   */
-  public static void prepareJsonAdapters(Gson gson) {
-    gson.getAdapter(CompletionData.class);
-  }
 
   private static void rankDotCompletionItem(CompletionContextRanker ranking, CompletionItem item,
                                              MemberDescriptor member) {

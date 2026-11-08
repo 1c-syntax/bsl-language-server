@@ -1081,7 +1081,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     }
     var graph = controlFlowGraphIndex.graphOf(documentContext, body, CfgBuildOptions.defaults());
     var compiled = inputs.compilationContexts().apply(body)
-      .map(contexts -> PreprocessorFlow.of(graph, contexts)).orElse(null);
+      .map(contexts -> PreprocessorFlow.of(graph, contexts, documentContext.getFileType())).orElse(null);
     var pass = new VariableFlowPass(this, documentContext, graph, layout, inputs, compiled, variables);
     var active = inputs.session().active;
     active.put(body, pass);
