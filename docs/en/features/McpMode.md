@@ -82,7 +82,7 @@ Additional sources of workspace folders:
 | `unregister_workspace_folder` | Remove a workspace folder and release its index |
 | `analyze_file` | Diagnostics for a file |
 | `document_symbols` | Symbol tree of a file (methods, regions, variables) |
-| `symbol_text` | Source text of a symbol of a file — a region, method or `Перем`-declared variable, as in `document_symbols`: by name (case-insensitive) or by line (the most deeply nested symbol containing it); for methods the description comment above the declaration is included |
+| `symbol_text` | Source text of a symbol of a file — a region, method or `Перем`-declared variable, as in `document_symbols`: by name (case-insensitive), optionally narrowed by `scope` — a method name or `module` for the module level, or by position (the symbol whose name is there, otherwise the innermost method or variable containing it). Each match tells its `scope`, where it is declared; for methods the description comment above the declaration is included |
 | `find_references` | All references to the symbol at a position |
 | `call_hierarchy` | Incoming and outgoing calls of the method/procedure at a position |
 | `hover` | Hover info for a symbol (signature, type, documentation) |

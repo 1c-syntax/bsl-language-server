@@ -35,8 +35,12 @@ final class McpToolParams {
   static final String CHARACTER = "Zero-based character offset within the line.";
   static final String SYMBOL_NAME = "Name of a region, method or `Перем`-declared variable of the file, "
     + "case-insensitive. Pass either `name` or `line`; when both are given, `name` is used.";
-  static final String SYMBOL_LINE = "Zero-based line number; the most deeply nested region, method or "
-    + "`Перем`-declared variable containing it is returned. Pass either `name` or `line`.";
+  static final String SYMBOL_SCOPE = "Only with `name`: where the symbol is declared — the name of a method of "
+    + "the file, or `module` for the module level. Omit to get every symbol with that name.";
+  static final String SYMBOL_LINE = "Zero-based line of a position in the file; the symbol at the position is "
+    + "returned. Pass either `name` or `line`.";
+  static final String SYMBOL_CHARACTER = "Zero-based character of the position within `line`. Default 0, the "
+    + "start of the line.";
   static final String TYPE_NAME = "1C/BSL type name in Russian or English (e.g. `Массив` / `Array`).";
   static final String LANGUAGE = "Language for names and descriptions: `RU` (default) or `EN`.";
   static final String GLOBAL_MEMBER_NAME = "Global function, property or enum name in Russian or English "

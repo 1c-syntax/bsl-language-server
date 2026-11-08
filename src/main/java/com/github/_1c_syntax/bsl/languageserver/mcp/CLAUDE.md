@@ -68,7 +68,7 @@ Roots объявлены deprecated в спеке MCP 2026-07-28 (`roots/list_ch
 
 `ListWorkspaceFoldersTool`/`RegisterWorkspaceFolderTool`/`UnregisterWorkspaceFolderTool` (управление
 рабочими папками) · `AnalyzeFileTool` (диагностики файла) · `DocumentSymbolsTool` ·
-`SymbolTextTool` (текст символа по имени или строке) · `TypeInfoTool` (тип по имени:
+`SymbolTextTool` (текст символа по имени или позиции) · `TypeInfoTool` (тип по имени:
 члены, конструкторы, метаданные СП самого типа и его членов — `ApiMetadataDto`) ·
 `TypeAtPositionTool` (вывод типа в позиции) · `HoverTool` · `DefinitionTool` ·
 `FindReferencesTool` · `CallHierarchyTool` · `GlobalMemberInfoTool` · `GlobalMemberSearchTool`
