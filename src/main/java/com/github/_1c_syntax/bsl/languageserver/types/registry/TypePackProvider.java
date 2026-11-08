@@ -127,7 +127,7 @@ public interface TypePackProvider {
                     List<String> typeParameters, boolean isEnum, PlatformMetadata metadata) {
       this(kind, name, members, description, constructors, defaultElementTypes,
         supportsForEach, supportsIndexAccess, forEachDescription, indexAccessDescription,
-        typeParameters, isEnum, metadata, name == null ? "" : name.primary());
+        typeParameters, isEnum, metadata, name.primary());
     }
 
     /** Compat-конструктор без {@code metadata} ({@link PlatformMetadata#EMPTY}). */

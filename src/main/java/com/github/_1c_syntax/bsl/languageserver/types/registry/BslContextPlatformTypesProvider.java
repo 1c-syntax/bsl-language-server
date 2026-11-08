@@ -176,7 +176,7 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     }
     var ambiguous = aliases.entrySet().stream().filter(entry -> entry.getValue().size() > 1)
       .map(Map.Entry::getKey).collect(Collectors.toSet());
-    return context -> {
+    return (Context context) -> {
       var name = context.name();
       var primary = safe(name.getName());
       var alias = safe(name.getAlias());
