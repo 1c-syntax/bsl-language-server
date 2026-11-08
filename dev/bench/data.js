@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794100563830,
+  "lastUpdate": 1794128439107,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -46717,6 +46717,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.1392527326514061",
             "extra": "mean: 80.17776974042256 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "67f1292792d35d41fcbc71225ef08f40acc4b555",
+          "message": "Merge pull request #4695 from 1c-syntax/perf/types-form-member-names-shared\n\nПостоянные имена и описания членов форм заводятся один раз, а не на каждую форму",
+          "timestamp": "2026-11-08T08:52:21+01:00",
+          "tree_id": "28e4d2acaa0ddc0078f25dcfe1d13720d69342ea",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/67f1292792d35d41fcbc71225ef08f40acc4b555"
+        },
+        "date": 1794128411743,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 83.06975611050923,
+            "unit": "sec",
+            "range": "stddev: 2.0622031055585697",
+            "extra": "mean: 83.06975611050923 sec\nrounds: 3"
           }
         ]
       }
