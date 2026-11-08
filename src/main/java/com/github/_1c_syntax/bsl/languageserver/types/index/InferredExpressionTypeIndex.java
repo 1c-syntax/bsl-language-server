@@ -196,9 +196,24 @@ public class InferredExpressionTypeIndex extends AbstractDocumentLifecycleCleara
    * @param dependencies URI документов, чьё содержимое участвовало в расчёте: их правка
    *                     делает запись недействительной.
    */
-  public void put(URI uri, ParseTree node, TypeSet types, Set<URI> dependencies) {
+  public synchronized void put(URI uri, ParseTree node, TypeSet types, Set<URI> dependencies) {
     typesByUri.computeIfAbsent(uri, k -> new ConcurrentHashMap<>()).put(node, types);
     rememberDependencies(uri, dependencies);
+  }
+
+  /**
+   * Опубликовать результат, только если входные данные не менялись за время расчёта.
+   *
+   * @param uri URI документа.
+   * @param node узел выражения.
+   * @param types рассчитанные типы.
+   * @param dependencies документы, участвовавшие в расчёте.
+   * @param revision версия входных данных до начала расчёта.
+   */
+  public synchronized void put(URI uri, ParseTree node, TypeSet types, Set<URI> dependencies, long revision) {
+    if (revision == contextualRevision) {
+      put(uri, node, types, dependencies);
+    }
   }
 
   /**
