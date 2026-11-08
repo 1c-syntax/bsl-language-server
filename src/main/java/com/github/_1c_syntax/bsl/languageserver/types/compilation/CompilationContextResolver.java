@@ -239,7 +239,7 @@ public class CompilationContextResolver {
    */
   public Optional<MethodContext> contextAt(DocumentContext document, Position position,
                                            Optional<MethodContext> profile) {
-    if (document.getFileType() != FileType.BSL || profile.isEmpty()) {
+    if (profile.isEmpty()) {
       return Optional.empty();
     }
     var branch = index.preprocessorContextsAt(document, position);
