@@ -13,7 +13,7 @@ For BSL, the module contexts and the method's compilation directive are also con
 
 In BSL, assignments and returns excluded by compilation contexts do not contribute to inferred types. After a `#If Server And Not Server` branch assigning a number and an `#Else` branch assigning a string, the variable has only the `String` type. Repeating `#If Client` selects values from the earlier client branch, including values copied through intermediate variables.
 
-For OneScript, symbols are independent and may be defined by the host application. `Windows` alone does not make a branch unreachable, whereas `Windows And Not Windows` excludes it for any definitions.
+For OneScript, exactly one of `Windows`, `Linux`, and `MacOS` is active; `MONO` is an independent additional symbol. A `Linux` branch nested inside `Windows`, or a `Windows And Linux` condition, is unreachable. Host-defined symbols remain conservative: a branch is excluded only when its condition is provably impossible.
 
 The whole excluded branch is highlighted, including method declarations, comments, and nested regions. Overlapping findings are merged. Diagnostics carry the LSP `Unnecessary` tag so that editors can dim unreachable code.
 

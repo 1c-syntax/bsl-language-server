@@ -147,6 +147,42 @@ class UnreachableCodePreprocessorTest extends AbstractDiagnosticTest<Unreachable
   }
 
   @Test
+  void oneScriptNestedOperatingSystemsExcludeTheInnerBranch() {
+    var diagnostics = diagnostics("""
+      #Если Windows Тогда
+      Процедура Пример()
+          #Если Linux Тогда
+              Dead();
+          #КонецЕсли
+      КонецПроцедуры
+      #КонецЕсли
+      """, FileType.OS);
+
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true).hasRange(3, 8, 15);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"Windows И Linux", "Linux И MacOS", "MacOS И Windows", "MONO И НЕ MONO"})
+  void oneScriptContradictionsAreReported(String condition) {
+    var diagnostics = diagnostics("#Если " + condition + " Тогда\nDead();\n#КонецЕсли", FileType.OS);
+
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true).hasRange(1, 0, 7);
+  }
+
+  @Test
+  void monoAndCustomFlagsLeavePossibleBranchesReachable() {
+    assertThat(diagnostics("""
+      #Если Windows И MONO И ПользовательскийФлаг Тогда
+          First();
+      #Иначе
+          Second();
+      #КонецЕсли
+      """, FileType.OS)).isEmpty();
+  }
+
+  @Test
   void findsImpossibleAlternativesInOneScript() {
     var diagnostics = diagnostics("""
       #Если Windows Тогда

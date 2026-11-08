@@ -91,7 +91,7 @@ final class PreprocessorDeadCode {
           node.getStart().getLine(),
           node.getStart().getCharPositionInLine() - 1));
       if (reachability.isUnreachable(compilationContextResolver.possibleContexts(documentContext, previous)
-        .orElse(ExecutionContext.ALL))) {
+        .orElse(ExecutionContext.forFileType(documentContext.getFileType())))) {
         addUnreachableBranch(previous, node);
       }
     }
