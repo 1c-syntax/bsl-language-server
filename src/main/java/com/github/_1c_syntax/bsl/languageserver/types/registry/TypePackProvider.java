@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.List;
@@ -119,19 +120,19 @@ public interface TypePackProvider {
       }
     }
 
-    public TypeDecl(TypeKind kind, BilingualString name, Collection<MemberDescriptor> members,
+    public TypeDecl(TypeKind kind, @Nullable BilingualString name, Collection<MemberDescriptor> members,
                     BilingualString description,
                     List<SignatureDescriptor> constructors, List<TypeRef> defaultElementTypes,
                     boolean supportsForEach, boolean supportsIndexAccess,
                     BilingualString forEachDescription, BilingualString indexAccessDescription,
                     List<String> typeParameters, boolean isEnum, PlatformMetadata metadata) {
-      this(kind, name, members, description, constructors, defaultElementTypes,
+      this(kind, name == null ? BilingualString.EMPTY : name, members, description, constructors, defaultElementTypes,
         supportsForEach, supportsIndexAccess, forEachDescription, indexAccessDescription,
-        typeParameters, isEnum, metadata, name.primary());
+        typeParameters, isEnum, metadata, name == null ? "" : name.primary());
     }
 
     /** Compat-конструктор без {@code metadata} ({@link PlatformMetadata#EMPTY}). */
-    public TypeDecl(TypeKind kind, BilingualString name, Collection<MemberDescriptor> members,
+    public TypeDecl(TypeKind kind, @Nullable BilingualString name, Collection<MemberDescriptor> members,
                     BilingualString description,
                     List<SignatureDescriptor> constructors, List<TypeRef> defaultElementTypes,
                     boolean supportsForEach, boolean supportsIndexAccess,
@@ -146,7 +147,7 @@ public interface TypePackProvider {
      * Compat-конструктор: одноязычные {@code description}/{@code forEachDescription}/
      * {@code indexAccessDescription} строками.
      */
-    public TypeDecl(TypeKind kind, BilingualString name, Collection<MemberDescriptor> members,
+    public TypeDecl(TypeKind kind, @Nullable BilingualString name, Collection<MemberDescriptor> members,
                     String description,
                     List<SignatureDescriptor> constructors, List<TypeRef> defaultElementTypes,
                     boolean supportsForEach, boolean supportsIndexAccess,
