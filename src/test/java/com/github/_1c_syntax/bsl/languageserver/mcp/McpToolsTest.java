@@ -95,6 +95,10 @@ class McpToolsTest {
   private static final int CALL_LINE = 1;
   private static final int CALL_CHARACTER = 15;
 
+  // OneScript-библиотека: Вызывающий.os вызывает метод модуля Помощник из lib.config.
+  private static final String CROSS_MODULE_DIR = "src/test/resources/oscript-libraries/cross-module-call";
+  private static final String CROSS_MODULE_CALLER = CROSS_MODULE_DIR + "/src/Вызывающий.os";
+
   @Autowired
   private McpWorkspaceBootstrap workspaceBootstrap;
   @Autowired
@@ -254,13 +258,21 @@ class McpToolsTest {
   }
 
   private ServerContext serverContext() {
-    return serverContextProvider.getServerContext(Absolute.uri(new File(FILE))).orElseThrow();
+    return serverContext(FILE);
+  }
+
+  private ServerContext serverContext(String file) {
+    return serverContextProvider.getServerContext(Absolute.uri(new File(file))).orElseThrow();
+  }
+
+  private DocumentContext releasedDocument() {
+    return releasedDocument(FILE);
   }
 
   // Индексация и так освобождает текст документа; явная очистка убирает зависимость теста от неё.
-  private DocumentContext releasedDocument() {
-    var serverContext = serverContext();
-    var documentContext = serverContext.getDocument(Absolute.uri(new File(FILE)));
+  private DocumentContext releasedDocument(String file) {
+    var serverContext = serverContext(file);
+    var documentContext = serverContext.getDocument(Absolute.uri(new File(file)));
     serverContext.tryClearDocument(documentContext);
     assertThat(serverContext.getDocumentState(documentContext)).isEqualTo(DocumentState.WITHOUT_CONTENT);
     return documentContext;
@@ -299,6 +311,36 @@ class McpToolsTest {
 
     assertThat(result.definitions()).isNotEmpty();
     assertThat(result.definitions().get(0).selectionRange().startLine()).isEqualTo(DECLARATION_LINE);
+  }
+
+  @Test
+  void callHierarchyAtCallSiteOfAnotherModuleMethodReportsThatMethod() {
+    registerWorkspaceFolderTool.registerWorkspaceFolder(Absolute.path(CROSS_MODULE_DIR).toString(), null);
+
+    // Строка 1 — «    Помощник.Сделать();» в Вызывающий.os, позиция на «Сделать».
+    var result = callHierarchyTool.callHierarchy(CROSS_MODULE_CALLER, 1, 13);
+
+    assertThat(result.target()).isNotNull();
+    assertThat(result.target().name()).isEqualTo("Сделать");
+    assertThat(URI.create(result.target().uri()).getPath()).endsWith("/src/Помощник.os");
+    // Вызовы самого Сделать, а не метода, чьё имя стоит на тех же координатах в Вызывающий.os.
+    assertThat(result.incoming()).extracting(call -> call.item().name()).containsExactly("Выполнить");
+    assertThat(result.outgoing()).isEmpty();
+  }
+
+  @Test
+  void callHierarchyAtCallSiteOfAnotherModuleMethodInReleasedDocumentsReportsThatMethod() {
+    registerWorkspaceFolderTool.registerWorkspaceFolder(Absolute.path(CROSS_MODULE_DIR).toString(), null);
+    releasedDocument(CROSS_MODULE_CALLER);
+    releasedDocument(CROSS_MODULE_DIR + "/src/Помощник.os");
+
+    var result = callHierarchyTool.callHierarchy(CROSS_MODULE_CALLER, 1, 13);
+
+    // Найденный элемент не теряется за пустым ответом для документа без текста.
+    assertThat(result.target()).isNotNull();
+    assertThat(result.target().name()).isEqualTo("Сделать");
+    assertThat(result.incoming()).extracting(call -> call.item().name()).containsExactly("Выполнить");
+    assertThat(result.outgoing()).isEmpty();
   }
 
   @Test
