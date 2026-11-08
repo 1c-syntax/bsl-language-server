@@ -84,6 +84,23 @@ class SymbolTypeIndexDeclaredTypesTest {
   }
 
   @Test
+  void inferredResetPreservesDeclarationsAndTracksLaterWrites() {
+    knownToRegistry(true);
+    index.handleEvent(new DocumentContextContentChangedEvent(documentContext));
+    var method = documentContext.getSymbolTree().getMethods().get(0);
+    var inferred = TypeSet.of(new TypeRef(TypeKind.PRIMITIVE, "Строка"));
+    index.putReturnTypes(method, inferred);
+
+    index.clearInferredReturnTypes();
+
+    assertThat(index.getReturnTypes(method)).isEqualTo(index.getDeclaredReturnTypes(method));
+    index.putReturnTypes(method, inferred);
+    assertThat(index.getReturnTypes(method).refs()).containsAll(inferred.refs());
+    index.clear(documentContext.getUri());
+    assertThat(index.getReturnTypes(method)).isEqualTo(TypeSet.EMPTY);
+  }
+
+  @Test
   void declaredTypesAreRebuiltWhenWorkspaceIsPopulated() {
     // given: документ разобран, когда имя типа реестру ещё неизвестно.
     knownToRegistry(false);

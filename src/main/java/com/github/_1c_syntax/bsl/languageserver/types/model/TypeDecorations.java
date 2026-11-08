@@ -43,11 +43,9 @@ final class TypeDecorations {
     // операции статические
   }
 
-  /** Неизменяемая копия плоской карты (пустая — общий emptyMap). */
+  /** Неизменяемая копия плоской карты, компактная для малых размеров (см. {@link SmallCollections}). */
   static <K, V> Map<K, V> immutableCopy(Map<K, V> source) {
-    return source.isEmpty()
-      ? Collections.emptyMap()
-      : Collections.unmodifiableMap(new LinkedHashMap<>(source));
+    return SmallCollections.orderedMap(source);
   }
 
   /** Неизменяемая глубокая копия вложенной карты (ключ → имя → значение). */
@@ -57,9 +55,9 @@ final class TypeDecorations {
     }
     var copy = new LinkedHashMap<K, Map<N, V>>();
     for (var entry : source.entrySet()) {
-      copy.put(entry.getKey(), Collections.unmodifiableMap(new LinkedHashMap<>(entry.getValue())));
+      copy.put(entry.getKey(), SmallCollections.orderedMap(entry.getValue()));
     }
-    return Collections.unmodifiableMap(copy);
+    return SmallCollections.orderedMap(copy);
   }
 
   /** Слияние плоских карт: пересекающиеся ключи сливаются {@code merger}. */
