@@ -55,6 +55,42 @@ class MemberAccessUnavailableMetadataHbkTest extends AbstractDiagnosticTest<Memb
   }
 
   @ParameterizedTest
+  @CsvSource({"ГруппаФормы, ПодчиненныеЭлементы, Количество", "FormGroup, ChildItems, Count"})
+  void managedChildCollectionsAreAvailableInThinClient(String type, String children, String count) {
+    initServerContext(ROOT);
+    var line = "  Результат = Значение." + children + "." + count + "();";
+    var document = TestUtils.getDocumentContext(
+      ROOT.resolve("Documents/Документ1/Forms/ФормаДокумента/Ext/Form/Module.bsl").toUri(),
+      "// Параметры:\n//  Значение - " + type
+        + "\n&НаКлиенте\nПроцедура Проверка(Значение)\n" + line + "\nКонецПроцедуры\n", context);
+    enableThinClient();
+    var targets = types.membersAt(document, new Position(4, line.lastIndexOf(count)));
+    assertThat(targets).isNotEmpty();
+    var owners = targets.stream().map(target -> target.owner() + ": "
+      + target.descriptor().metadata().availabilities()).toList();
+
+    var managed = registry.resolve("FormItems").orElseThrow();
+    assertThat(managed).isNotEqualTo(registry.resolve("Controls").orElseThrow());
+    assertThat(targets).extracting(target -> target.owner()).containsExactly(managed);
+    assertThat(getDiagnostics(document)).as("targets=%s", owners).isEmpty();
+  }
+
+  @ParameterizedTest
+  @CsvSource({"ЭлементыФормы, Количество", "Controls, Count"})
+  void ordinaryFormControlsRemainAvailableInThickClient(String items, String count) {
+    var root = Path.of("src/test/resources/metadata/ordinaryForms");
+    initServerContext(root);
+    var form = registry.resolve("Форма.Справочник.Справочник1.Форма.ФормаЭлемента (модуль)").orElseThrow();
+    var collection = registry.getMembers(form, FileType.BSL).stream().filter(member -> member.matches(items))
+      .findFirst().orElseThrow().returnTypes().refs().iterator().next();
+    var method = registry.getMembers(collection, FileType.BSL).stream().filter(member -> member.matches(count))
+      .findFirst().orElseThrow();
+    assertThat(method.metadata().availabilities())
+      .contains(com.github._1c_syntax.bsl.languageserver.types.model.Availability.THICK_CLIENT)
+      .doesNotContain(com.github._1c_syntax.bsl.languageserver.types.model.Availability.THIN_CLIENT);
+  }
+
+  @ParameterizedTest
   @ValueSource(strings = {"Ссылка", "Номер", "Дата"})
   void managedDocumentPropertiesAreAvailableInThinClient(String member) {
     initServerContext(ROOT);
@@ -76,7 +112,8 @@ class MemberAccessUnavailableMetadataHbkTest extends AbstractDiagnosticTest<Memb
   }
 
   @ParameterizedTest
-  @CsvSource({"ДокументОбъект.Документ1, Ссылка, ''", "РегистрСведенийНаборЗаписей.РегистрСведений1, Добавить, ()"})
+  @CsvSource({"ДокументОбъект.Документ1, Ссылка, ''", "РегистрСведенийНаборЗаписей.РегистрСведений1, Добавить, ()",
+    "Controls, Count, ()", "Controls, Количество, ()"})
   void rawDomainValuesRemainUnavailableInThinClient(String type, String member, String suffix) {
     initServerContext(ROOT);
     var document = TestUtils.getDocumentContext(
