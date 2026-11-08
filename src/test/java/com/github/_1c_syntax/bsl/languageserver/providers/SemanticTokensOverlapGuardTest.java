@@ -23,9 +23,13 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
+import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.eclipse.lsp4j.SemanticTokenTypes;
 import org.eclipse.lsp4j.SemanticTokensLegend;
+import org.eclipse.lsp4j.SymbolKind;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -52,9 +56,14 @@ class SemanticTokensOverlapGuardTest extends AbstractServerContextAwareTest {
 
   private static final String MODULE =
     PATH_TO_METADATA + "/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
+  private static final String ONESCRIPT_LIBRARY_WORKSPACE =
+    "src/test/resources/oscript-libraries/internal-classes-test";
 
   @Autowired
   private SemanticTokensProvider provider;
+
+  @Autowired
+  private ReferenceIndex referenceIndex;
 
   @Autowired
   private SemanticTokensLegend legend;
@@ -142,6 +151,44 @@ class SemanticTokensOverlapGuardTest extends AbstractServerContextAwareTest {
     } finally {
       context.removeDocument(documentContext.getUri());
     }
+  }
+
+  @Test
+  void libraryClassConstructorCallDoesNotOverlapWithTypeToken() {
+    // given — workspace OneScript с библиотекой в oscript_modules; у класса библиотеки
+    // есть конструктор ПриСозданииОбъекта, на который ссылается `Новый PublicEntity()`.
+    initServerContext(Path.of(ONESCRIPT_LIBRARY_WORKSPACE).toAbsolutePath(), false);
+    var content = """
+      #Использовать internal-classes-lib
+      Сущность = Новый PublicEntity();
+      """;
+    var documentContext =
+      TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
+
+    // when — собираем токены тем же путём, что и провайдер для full-запроса.
+    var allTokens = provider.collectTokens(documentContext);
+    var lines = documentContext.getContentList();
+    var overlaps = TokenOverlaps.findOverlaps(allTokens,
+      line -> line >= 0 && line < lines.length ? lines[line].length() : 0);
+
+    // then — библиотека подключилась: на `PublicEntity` есть ссылка на конструктор,
+    // иначе проверка пересечений прошла бы впустую.
+    assertThat(referenceIndex.getReferencesFrom(documentContext.getUri(), SymbolKind.Method))
+      .as("ссылка на конструктор библиотечного класса")
+      .anyMatch(reference -> reference.symbol() instanceof ConstructorSymbol);
+    // имя типа после `Новый` размечается ровно одним токеном Type.
+    var typeIndex = legend.getTokenTypes().indexOf(SemanticTokenTypes.Type);
+    assertThat(allTokens)
+      .filteredOn(token -> token.line() == 1 && token.start() == 17)
+      .as("токены на имени типа PublicEntity")
+      .singleElement()
+      .satisfies(token -> {
+        assertThat(token.length()).isEqualTo("PublicEntity".length());
+        assertThat(token.type()).isEqualTo(typeIndex);
+      });
+    assertThat(overlaps)
+      .as("Конфликты подсветки: %s", describe(overlaps, documentContext))
+      .isEmpty();
   }
 
   private String describe(List<TokenOverlaps.TokenOverlap> overlaps, DocumentContext documentContext) {

@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.client;
 
-import lombok.AllArgsConstructor;
+import com.github._1c_syntax.bsl.languageserver.client.events.ClientInitializedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import org.eclipse.lsp4j.ClientCapabilities;
@@ -30,13 +30,18 @@ import org.eclipse.lsp4j.WindowClientCapabilities;
 import org.eclipse.lsp4j.WorkDoneProgressBegin;
 import org.eclipse.lsp4j.WorkDoneProgressCreateParams;
 import org.eclipse.lsp4j.WorkDoneProgressEnd;
+import org.eclipse.lsp4j.WorkDoneProgressNotification;
 import org.eclipse.lsp4j.WorkDoneProgressReport;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import org.eclipse.lsp4j.services.LanguageClient;
+import org.jspecify.annotations.Nullable;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -48,6 +53,13 @@ import java.util.function.Supplier;
  * <p>
  * Управляет созданием и обновлением индикаторов прогресса выполнения
  * длительных операций (WorkDoneProgress).
+ * <p>
+ * Индикатор, начатый до того, как клиент готов их показывать ({@link #handleEvent(ClientInitializedEvent)}),
+ * клиенту не отправляется, а только запоминается: создать индикатор по запросу сервера клиент
+ * может лишь после уведомления {@code initialized} — раньше запрос
+ * {@code window/workDoneProgress/create} ему нечем обработать, и индикатор теряется. Когда
+ * клиент готов, индикаторы, ещё не законченные к этому моменту, создаются у него с текущим
+ * состоянием; законченные раньше не показываются вовсе.
  */
 @Component
 @RequiredArgsConstructor
@@ -60,6 +72,12 @@ public class WorkDoneProgressHelper {
 
   private boolean isWorkDoneProgressSupported;
 
+  /** Готов ли клиент показывать индикаторы (см. {@link #handleEvent(ClientInitializedEvent)}). */
+  private volatile boolean clientInitialized;
+
+  /** Индикаторы, начатые до готовности клиента и ещё не законченные. */
+  private final Set<WorkDoneProgressReporter> deferred = ConcurrentHashMap.newKeySet();
+
   public WorkDoneProgressReporter createProgress(int size, String messagePostfix) {
     isWorkDoneProgressSupported = clientCapabilitiesHolder.getCapabilities()
       .map(ClientCapabilities::getWindow)
@@ -70,18 +88,37 @@ public class WorkDoneProgressHelper {
       return new WorkDoneProgressReporter("", 0, "");
     }
 
-    var token = UUID.randomUUID().toString();
-    var createProgressParams = new WorkDoneProgressCreateParams(Either.forLeft(token));
-
-    languageClientHolder.execIfConnected(languageClient ->
-      languageClient.createProgress(createProgressParams)
-    );
-
-    return new WorkDoneProgressReporter(token, size, messagePostfix);
+    var reporter = new WorkDoneProgressReporter(UUID.randomUUID().toString(), size, messagePostfix);
+    if (clientInitialized) {
+      reporter.reveal();
+      return reporter;
+    }
+    deferred.add(reporter);
+    // Клиент мог стать готов, пока индикатор откладывался, и показать его уже некому.
+    if (clientInitialized && deferred.remove(reporter)) {
+      reporter.reveal();
+    }
+    return reporter;
   }
 
+  /**
+   * Клиент готов показывать индикаторы — пришло уведомление {@code initialized}.
+   * <p>
+   * Индикаторы, начатые раньше и ещё не законченные, создаются у клиента с текущим
+   * состоянием; новые создаются сразу.
+   *
+   * @param event событие окончания инициализации клиента.
+   */
+  @EventListener
+  public void handleEvent(ClientInitializedEvent event) {
+    clientInitialized = true;
+    for (var reporter : List.copyOf(deferred)) {
+      if (deferred.remove(reporter)) {
+        reporter.reveal();
+      }
+    }
+  }
 
-  @AllArgsConstructor
   public class WorkDoneProgressReporter {
     private final String token;
     @Setter
@@ -89,41 +126,62 @@ public class WorkDoneProgressHelper {
     private final String messagePostfix;
 
     private final AtomicInteger counter = new AtomicInteger();
-    private final AtomicBoolean finished = new AtomicBoolean();
     private final AtomicBoolean activityStarted = new AtomicBoolean();
+
+    /** Создан ли индикатор у клиента; до этого его состояние только запоминается. */
+    private boolean revealed;
+    private volatile boolean ended;
+    private @Nullable String title;
+    private @Nullable WorkDoneProgressReport lastReport;
+
+    WorkDoneProgressReporter(String token, int size, String messagePostfix) {
+      this.token = token;
+      this.size = size;
+      this.messagePostfix = messagePostfix;
+    }
 
     public void beginProgress(String title) {
       if (!isWorkDoneProgressSupported) {
         return;
       }
 
-      languageClientHolder.execIfConnected((LanguageClient languageClient) -> {
-        var value = new WorkDoneProgressBegin();
-        value.setTitle(title);
+      var value = new WorkDoneProgressBegin();
+      value.setTitle(title);
 
-        var params = new ProgressParams(Either.forLeft(token), Either.forLeft(value));
-        languageClient.notifyProgress(params);
-      });
+      synchronized (this) {
+        if (ended) {
+          return;
+        }
+        this.title = title;
+        if (revealed) {
+          notifyProgress(value);
+        }
+      }
     }
 
-    public synchronized void tick(String message, int percentage) {
-      if (!isWorkDoneProgressSupported || finished.get()) {
+    public void tick(String message, int percentage) {
+      if (!isWorkDoneProgressSupported || ended) {
         return;
       }
 
-      languageClientHolder.execIfConnected((LanguageClient languageClient) -> {
-        var value = new WorkDoneProgressReport();
-        value.setMessage(message);
-        value.setCancellable(false);
-        value.setPercentage(percentage);
+      var value = new WorkDoneProgressReport();
+      value.setMessage(message);
+      value.setCancellable(false);
+      value.setPercentage(percentage);
 
-        var params = new ProgressParams(Either.forLeft(token), Either.forLeft(value));
-        languageClient.notifyProgress(params);
-      });
+      synchronized (this) {
+        if (ended) {
+          return;
+        }
+        lastReport = value;
+        if (revealed) {
+          notifyProgress(value);
+        }
+      }
     }
 
-    public synchronized void tick() {
-      if (!isWorkDoneProgressSupported || finished.get()) {
+    public void tick() {
+      if (!isWorkDoneProgressSupported || ended) {
         return;
       }
 
@@ -133,14 +191,14 @@ public class WorkDoneProgressHelper {
 
     /** Показывать текущую работу раз в секунду, пока операция не закончена. */
     public boolean reportActivity(Supplier<String> description) {
-      if (!isWorkDoneProgressSupported || finished.get()) {
+      if (!isWorkDoneProgressSupported || ended) {
         return false;
       }
       return reportActivity(description, CompletableFuture.delayedExecutor(1, TimeUnit.SECONDS));
     }
 
     boolean reportActivity(Supplier<String> description, Executor delayedExecutor) {
-      if (!isWorkDoneProgressSupported || finished.get() || !activityStarted.compareAndSet(false, true)) {
+      if (!isWorkDoneProgressSupported || ended || !activityStarted.compareAndSet(false, true)) {
         return false;
       }
       scheduleActivity(description, delayedExecutor);
@@ -150,7 +208,7 @@ public class WorkDoneProgressHelper {
     private void scheduleActivity(Supplier<String> description, Executor delayedExecutor) {
       delayedExecutor.execute(() -> {
         synchronized (this) {
-          if (finished.get()) {
+          if (ended) {
             return;
           }
           var current = counter.get();
@@ -158,7 +216,7 @@ public class WorkDoneProgressHelper {
           var message = counterMessage(current);
           tick(activity.isEmpty() ? message : message + "; " + activity, percentage(current));
         }
-        if (!finished.get()) {
+        if (!ended) {
           scheduleActivity(description, delayedExecutor);
         }
       });
@@ -172,18 +230,54 @@ public class WorkDoneProgressHelper {
       return size <= 0 ? 0 : Math.min(MAX_PERCENTAGE, (int) ((double) current / size * MAX_PERCENTAGE));
     }
 
-    public synchronized void endProgress(String message) {
-      if (!finished.compareAndSet(false, true) || !isWorkDoneProgressSupported) {
+    public void endProgress(String message) {
+      if (!isWorkDoneProgressSupported || ended) {
         return;
       }
 
-      languageClientHolder.execIfConnected((LanguageClient languageClient) -> {
-        var value = new WorkDoneProgressEnd();
-        value.setMessage(message);
+      var value = new WorkDoneProgressEnd();
+      value.setMessage(message);
 
-        var params = new ProgressParams(Either.forLeft(token), Either.forLeft(value));
-        languageClient.notifyProgress(params);
-      });
+      synchronized (this) {
+        if (ended) {
+          return;
+        }
+        ended = true;
+        if (revealed) {
+          notifyProgress(value);
+        } else {
+          // Закончен раньше, чем клиент стал готов: показывать нечего.
+          deferred.remove(this);
+        }
+      }
+    }
+
+    /**
+     * Создать индикатор у клиента и показать накопленное состояние: заголовок и последний
+     * отчёт о ходе работы.
+     */
+    private synchronized void reveal() {
+      if (revealed || ended) {
+        return;
+      }
+      revealed = true;
+      languageClientHolder.execIfConnected(languageClient ->
+        languageClient.createProgress(new WorkDoneProgressCreateParams(Either.forLeft(token)))
+      );
+      if (title != null) {
+        var begin = new WorkDoneProgressBegin();
+        begin.setTitle(title);
+        notifyProgress(begin);
+      }
+      if (lastReport != null) {
+        notifyProgress(lastReport);
+      }
+    }
+
+    private void notifyProgress(WorkDoneProgressNotification value) {
+      languageClientHolder.execIfConnected(languageClient ->
+        languageClient.notifyProgress(new ProgressParams(Either.forLeft(token), Either.forLeft(value)))
+      );
     }
   }
 }

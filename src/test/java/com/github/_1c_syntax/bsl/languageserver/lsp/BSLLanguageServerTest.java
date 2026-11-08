@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.lsp;
 
+import com.github._1c_syntax.bsl.languageserver.client.events.ClientInitializedEvent;
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.client.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
@@ -55,6 +56,8 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.event.ApplicationEvents;
+import org.springframework.test.context.event.RecordApplicationEvents;
 
 import java.io.IOException;
 import java.net.URI;
@@ -76,10 +79,14 @@ import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
+@RecordApplicationEvents
 class BSLLanguageServerTest {
 
   @Autowired
   private BSLLanguageServer server;
+
+  @Autowired
+  private ApplicationEvents applicationEvents;
 
   @Autowired
   private GlobalLanguageServerConfiguration globalConfiguration;
@@ -267,6 +274,20 @@ class BSLLanguageServerTest {
     InitializedParams params = new InitializedParams();
     // then - should not throw
     server.initialized(params);
+  }
+
+  @Test
+  void initializedPublishesClientInitializedEvent(@TempDir Path workspaceRoot) {
+    // given
+    var initParams = new InitializeParams();
+    initParams.setWorkspaceFolders(List.of(new WorkspaceFolder(workspaceRoot.toUri().toString(), "test")));
+    server.initialize(initParams);
+
+    // when
+    server.initialized(new InitializedParams());
+
+    // then
+    assertThat(applicationEvents.stream(ClientInitializedEvent.class)).hasSize(1);
   }
 
   @Test
