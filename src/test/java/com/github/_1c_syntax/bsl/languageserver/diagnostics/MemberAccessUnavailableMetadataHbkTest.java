@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
+import com.github._1c_syntax.bsl.languageserver.types.TypeService.TypedMember;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Position;
@@ -71,7 +72,7 @@ class MemberAccessUnavailableMetadataHbkTest extends AbstractDiagnosticTest<Memb
 
     var managed = registry.resolve("FormItems").orElseThrow();
     assertThat(managed).isNotEqualTo(registry.resolve("Controls").orElseThrow());
-    assertThat(targets).extracting(target -> target.owner()).containsExactly(managed);
+    assertThat(targets).extracting(TypedMember::owner).containsExactly(managed);
     assertThat(getDiagnostics(document)).as("targets=%s", owners).isEmpty();
   }
 

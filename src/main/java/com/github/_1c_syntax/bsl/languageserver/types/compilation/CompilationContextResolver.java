@@ -343,10 +343,9 @@ public class CompilationContextResolver {
     if (usesFormDirectives(document)) {
       return MethodCompilationContexts.formMethodContext(document, directive.orElse(CompilerDirectiveKind.AT_SERVER), contexts);
     }
-    if (directive.isEmpty()) {
-      return Optional.of(new MethodContext(directive, Set.copyOf(contexts)));
-    }
-    return MethodCompilationContexts.commonMethodContext(document, directive.orElseThrow(), contexts);
+    return directive.isEmpty()
+      ? Optional.of(new MethodContext(directive, Set.copyOf(contexts)))
+      : MethodCompilationContexts.commonMethodContext(document, directive.orElseThrow(), contexts);
   }
 
   /**

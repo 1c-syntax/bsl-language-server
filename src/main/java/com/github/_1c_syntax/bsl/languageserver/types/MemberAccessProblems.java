@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.types.MemberAccessChecker.Unavai
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.mdo.CommonModule;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -68,24 +69,24 @@ final class MemberAccessProblems {
       ? documentContext.getServerContext().findCommonModule(access.node().getText())
         .filter(module -> !contextResolver.canSeeCommonModule(module, context))
       : Optional.<CommonModule>empty();
-    reportUnavailable(access, context, common.map(CommonModule::getName), common.isPresent());
+    reportUnavailable(access, context, common.map(CommonModule::getName).orElse(null), common.isPresent());
   }
 
   void reportGlobalUnavailable(MemberAccessSite access, ExecutionContext context) {
-    reportUnavailable(access, context, Optional.empty(), false);
+    reportUnavailable(access, context, null, false);
   }
 
   void reportSourceUnavailable(MemberAccessSite access, ExecutionContext context, DocumentContext owner,
                                boolean singleOwner, boolean moduleUnavailable) {
     var common = singleOwner ? commonModule(owner) : Optional.<CommonModule>empty();
-    reportUnavailable(access, context, common.map(CommonModule::getName), common.isPresent() && moduleUnavailable);
+    reportUnavailable(access, context, common.map(CommonModule::getName).orElse(null), common.isPresent() && moduleUnavailable);
   }
 
   /** Первое недоступное звено цепочки заменяет сообщения о зависящих от него обращениях в том же режиме. */
-  private void reportUnavailable(MemberAccessSite access, ExecutionContext context, Optional<String> moduleName,
+  private void reportUnavailable(MemberAccessSite access, ExecutionContext context, @Nullable String moduleName,
                                   boolean moduleUnavailable) {
     problems.add(new UnavailableMember(Ranges.create(access.node()), access.node().getText(), context,
-      access.method() ? MemberKind.METHOD : MemberKind.PROPERTY, moduleName, moduleUnavailable));
+      access.method() ? MemberKind.METHOD : MemberKind.PROPERTY, Optional.ofNullable(moduleName), moduleUnavailable));
     unavailableChains.computeIfAbsent(access.chain(), ignored -> ExecutionContext.copyOf(Set.of())).add(context);
   }
 

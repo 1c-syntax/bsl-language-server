@@ -217,6 +217,7 @@ class FlowInputsReuseTest extends AbstractServerContextAwareTest {
         escapedInput = factory.invoke(target, arguments);
       }
       var allocated = allocations.getThreadAllocatedBytes(thread) - before;
+      assertThat(escapedInput).isNotNull();
       reporter.publishEntry("flowInputBytesFor1000Reads", Long.toString(allocated));
       assertThat(allocated).isBetween(0L, 64_000L);
     } finally {

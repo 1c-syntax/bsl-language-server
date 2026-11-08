@@ -56,6 +56,7 @@ import java.util.function.Predicate;
 @Slf4j
 @RequiredArgsConstructor
 public abstract class DefaultDiagnosticComputer implements DiagnosticComputer {
+  private static final int DIAGNOSTIC_SUBMISSION_PASSES = 2;
 
   private final LanguageServerConfiguration configuration;
 
@@ -74,13 +75,24 @@ public abstract class DefaultDiagnosticComputer implements DiagnosticComputer {
       ? GitBlameComputer.Data.empty()
       : new GitBlameComputer(documentContext.getUri(), ignoredAuthors).compute();
 
+    var futures = submitDiagnostics(documentContext);
+
+    return futures.stream()
+      .map(DefaultDiagnosticComputer::getUninterruptibly)
+      .flatMap(List::stream)
+      .filter(Predicate.not(diagnosticIgnorance::diagnosticShouldBeIgnored))
+      .filter(Predicate.not(gitBlameIgnorance::diagnosticShouldBeIgnored))
+      .toList();
+  }
+
+  private List<Future<List<Diagnostic>>> submitDiagnostics(DocumentContext documentContext) {
     var memberLookups = new MemberLookupSession();
     var declarations = new DiagnosticDeclarationSession();
     var enabled = diagnostics(documentContext);
     List<Future<List<Diagnostic>>> futures = new ArrayList<>(Collections.nCopies(enabled.size(), null));
     // Проверка доступности использует вывод типов и часто завершает весь пакет.
     // Запускаем её раньше, а результаты собираем в исходном порядке диагностик.
-    for (var pass = 0; pass < 2; pass++) {
+    for (var pass = 0; pass < DIAGNOSTIC_SUBMISSION_PASSES; pass++) {
       for (var index = 0; index < enabled.size(); index++) {
         var diagnostic = enabled.get(index);
         if ((diagnostic instanceof MemberAccessUnavailableDiagnostic) != (pass == 0)) {
@@ -94,12 +106,7 @@ public abstract class DefaultDiagnosticComputer implements DiagnosticComputer {
       }
     }
 
-    return futures.stream()
-      .map(DefaultDiagnosticComputer::getUninterruptibly)
-      .flatMap(List::stream)
-      .filter(Predicate.not(diagnosticIgnorance::diagnosticShouldBeIgnored))
-      .filter(Predicate.not(gitBlameIgnorance::diagnosticShouldBeIgnored))
-      .toList();
+    return futures;
   }
 
   private List<Diagnostic> safeGetDiagnostics(BSLDiagnostic diagnostic, DocumentContext documentContext) {

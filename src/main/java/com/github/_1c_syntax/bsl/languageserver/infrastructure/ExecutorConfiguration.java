@@ -197,7 +197,7 @@ public class ExecutorConfiguration {
     // Вызывающий поток ждёт Future, а запросы типов внутри правил могут ждать общий расчёт.
     // Дополнительный работник ограничен размером пула; компенсирующие потоки не создаются.
     var parallelism = System.getProperty("java.util.concurrent.ForkJoinPool.common.parallelism") == null
-      ? Runtime.getRuntime().availableProcessors() + 1
+      ? (Runtime.getRuntime().availableProcessors() + 1)
       : ForkJoinPool.getCommonPoolParallelism();
     var factory = new NamedThreadFactory(prefix + workspaceName + "-");
     var pool = new ThreadPoolExecutor(
