@@ -33,13 +33,16 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import org.eclipse.lsp4j.Position;
 import org.jspecify.annotations.Nullable;
+
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.ToIntFunction;
 
 import static com.github._1c_syntax.bsl.languageserver.completion.CompletionPriority.*;
 
-/** Объединяет оценки по контекстам вызова и возможным типам получателя. */
+/**
+ * Объединяет оценки по контекстам вызова и возможным типам получателя.
+ */
 final class CompletionContextEvaluation {
   private final Optional<MethodContext> scope;
   private final CompletionTypeContext typeContext;
@@ -56,10 +59,10 @@ final class CompletionContextEvaluation {
    * @param document документ запроса.
    * @param position позиция курсора, в том числе после незавершённой точки.
    * @param resolver общая модель компиляции и серверных переходов.
-   * @param types служба вывода типов и поиска членов.
+   * @param types    служба вывода типов и поиска членов.
    */
   CompletionContextEvaluation(DocumentContext document, Position position, CompilationContextResolver resolver,
-                                 TypeService types) {
+                              TypeService types) {
     typeContext = new CompletionTypeContext(document, position, resolver, types);
     scope = resolver.contextAt(document, position).map((MethodContext profile) -> {
       var contexts = ExecutionContext.copyOf(profile.contexts());
@@ -96,26 +99,40 @@ final class CompletionContextEvaluation {
 
   int rankDotPropertyMember(String name, MemberDescriptor member) {
     var prepared = propertyScope;
-    if (prepared != null) return prepared.rank(name);
+    if (prepared != null) {
+      return prepared.rank(name);
+    }
     var rank = rankDotMember(name, member, null);
-    if (!propertyReceiverChecked) checkSharedPropertyReceiver();
+    if (!propertyReceiverChecked) {
+      checkSharedPropertyReceiver();
+    }
     return rank;
   }
 
   private void checkSharedPropertyReceiver() {
     propertyReceiverChecked = true;
-    if (scope.isEmpty()) return;
+    if (scope.isEmpty()) {
+      return;
+    }
     @Nullable TypeRef owner = null;
     for (var context : scope.orElseThrow().contexts()) {
       var receiver = typeContext.receiverTypes(context);
-      if (receiver.refs().size() != 1) return;
+      if (receiver.refs().size() != 1) {
+        return;
+      }
       var candidate = receiver.refs().iterator().next();
       if (candidate.equals(TypeRef.ANY) || candidate.equals(TypeRef.UNKNOWN)
-        || !receiver.getLocalFields(candidate).isEmpty()) return;
-      if (owner != null && !owner.equals(candidate)) return;
+        || !receiver.getLocalFields(candidate).isEmpty()) {
+        return;
+      }
+      if (owner != null && !owner.equals(candidate)) {
+        return;
+      }
       owner = candidate;
     }
-    if (owner != null) propertyScope = typeContext.propertyScope(owner, scope.orElseThrow().contexts());
+    if (owner != null) {
+      propertyScope = typeContext.propertyScope(owner, scope.orElseThrow().contexts());
+    }
   }
 
   int rankDotSourceMember(String name, MemberDescriptor member, CompletionMethodHint hint) {
@@ -123,39 +140,57 @@ final class CompletionContextEvaluation {
       return acrossContexts(context -> rankDotInContext(name, member, hint, context));
     }
     var shared = sharedReceiver;
-    if (shared != null && hint != null) {
+    if (shared != null) {
       var candidates = typeContext.alternatives(shared, member.kind(), name);
       if (candidates.size() == 1) {
         var rank = methods.orElseThrow().sharedReceiverRank(candidates.getFirst(), shared, hint);
-        if (rank != null) return rank;
+        if (rank != null) {
+          return rank;
+        }
       }
     }
     if (sharedReceiverUnion != null && member.kind() == MemberKind.METHOD) {
       var rank = rankSharedReceiverUnion(name, member, hint);
-      if (rank != null) return rank;
+      if (rank != null) {
+        return rank;
+      }
     }
     var rank = acrossContexts(context -> rankDotInContext(name, member, hint, context));
     if (!receiverChecked) {
       checkSharedReceiver();
-      if (sharedReceiver == null) checkSharedReceiverUnion();
+      if (sharedReceiver == null) {
+        checkSharedReceiverUnion();
+      }
     }
     return rank;
   }
 
-  /** Тот же набор известных владельцев во всех режимах; локальные поля не меняют поиск методов. */
+  /**
+   * Тот же набор известных владельцев во всех режимах; локальные поля не меняют поиск методов.
+   */
   private void checkSharedReceiverUnion() {
-    if (scope.isEmpty()) return;
+    if (scope.isEmpty()) {
+      return;
+    }
     Set<TypeRef> owners = null;
     for (var context : scope.orElseThrow().contexts()) {
       var refs = typeContext.receiverTypes(context).refs();
-      if (refs.size() < 2 || refs.contains(TypeRef.ANY) || refs.contains(TypeRef.UNKNOWN)) return;
-      if (owners != null && !owners.equals(refs)) return;
+      if (refs.size() < 2 || refs.contains(TypeRef.ANY) || refs.contains(TypeRef.UNKNOWN)) {
+        return;
+      }
+      if (owners != null && !owners.equals(refs)) {
+        return;
+      }
       owners = refs;
     }
-    if (owners != null) sharedReceiverUnion = Set.copyOf(owners);
+    if (owners != null) {
+      sharedReceiverUnion = Set.copyOf(owners);
+    }
   }
 
-  /** Обе свёртки AVAILABLE/PARTIAL/UNAVAILABLE сохраняют признаки доступной и недоступной альтернативы. */
+  /**
+   * Обе свёртки AVAILABLE/PARTIAL/UNAVAILABLE сохраняют признаки доступной и недоступной альтернативы.
+   */
   private @Nullable Integer rankSharedReceiverUnion(String name, MemberDescriptor member,
                                                     CompletionMethodHint hint) {
     var contribution = new CompletionMethodHint();
@@ -163,34 +198,46 @@ final class CompletionContextEvaluation {
     var unavailable = false;
     for (var owner : sharedReceiverUnion) {
       var candidates = typeContext.alternatives(owner, member.kind(), name);
-      if (candidates.size() != 1) return null;
+      if (candidates.size() != 1) {
+        return null;
+      }
       var rank = methods.orElseThrow().sharedReceiverRank(candidates.getFirst(), owner, contribution);
-      if (rank == null) return null;
+      if (rank == null) {
+        return null;
+      }
       available |= rank != UNAVAILABLE;
       unavailable |= rank != AVAILABLE;
     }
     hint.merge(contribution);
-    return unavailable ? (available ? PARTIAL : UNAVAILABLE) : AVAILABLE;
+    return combine(available, unavailable);
   }
 
   private void checkSharedReceiver() {
     receiverChecked = true;
-    if (scope.isEmpty()) return;
+    if (scope.isEmpty()) {
+      return;
+    }
     @Nullable TypeRef owner = null;
     for (var context : scope.orElseThrow().contexts()) {
       var receiver = typeContext.receiverTypes(context);
-      if (receiver.refs().size() != 1) return;
+      if (receiver.refs().size() != 1) {
+        return;
+      }
       var candidate = receiver.refs().iterator().next();
       if (candidate.equals(TypeRef.ANY) || candidate.equals(TypeRef.UNKNOWN)
-        || !receiver.getLocalFields(candidate).isEmpty()) return;
-      if (owner != null && !owner.equals(candidate)) return;
+        || !receiver.getLocalFields(candidate).isEmpty()) {
+        return;
+      }
+      if (owner != null && !owner.equals(candidate)) {
+        return;
+      }
       owner = candidate;
     }
     sharedReceiver = owner;
   }
 
   private int rankDotInContext(String name, MemberDescriptor member, @Nullable CompletionMethodHint hint,
-                                ExecutionContext context) {
+                               ExecutionContext context) {
     var receiver = typeContext.receiverTypes(context);
     if (receiver.isEmpty()) {
       if (hint != null) {
@@ -205,7 +252,7 @@ final class CompletionContextEvaluation {
       available |= rank != UNAVAILABLE;
       unavailable |= rank != AVAILABLE;
     }
-    return unavailable ? (available ? PARTIAL : UNAVAILABLE) : AVAILABLE;
+    return combine(available, unavailable);
   }
 
   private int rankReceiver(String name, MemberDescriptor member, @Nullable CompletionMethodHint hint,
@@ -216,10 +263,8 @@ final class CompletionContextEvaluation {
       }
       return AVAILABLE;
     }
-    if (member.kind() == MemberKind.PROPERTY) {
-      for (var field : receiver.getLocalFields(owner).keySet()) {
-        if (name.equalsIgnoreCase(field)) return typeContext.typeRank(owner, context);
-      }
+    if (member.kind() == MemberKind.PROPERTY && hasLocalProperty(receiver, owner, name)) {
+      return typeContext.typeRank(owner, context);
     }
     var alternatives = typeContext.alternatives(owner, member.kind(), name);
     if (alternatives.isEmpty()) {
@@ -237,8 +282,19 @@ final class CompletionContextEvaluation {
     return Math.max(typeContext.typeRank(owner, context), rank);
   }
 
+  private static boolean hasLocalProperty(TypeSet receiver, TypeRef owner, String name) {
+    for (var field : receiver.getLocalFields(owner).keySet()) {
+      if (name.equalsIgnoreCase(field)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   private int acrossContexts(ToIntFunction<ExecutionContext> rank) {
-    if (scope.isEmpty()) return AVAILABLE;
+    if (scope.isEmpty()) {
+      return AVAILABLE;
+    }
     var available = false;
     var unavailable = false;
     for (var context : scope.orElseThrow().contexts()) {
@@ -246,6 +302,6 @@ final class CompletionContextEvaluation {
       available |= value != UNAVAILABLE;
       unavailable |= value != AVAILABLE;
     }
-    return unavailable ? (available ? PARTIAL : UNAVAILABLE) : AVAILABLE;
+    return combine(available, unavailable);
   }
 }

@@ -33,14 +33,16 @@ import com.google.gson.stream.JsonWriter;
 import org.eclipse.lsp4j.jsonrpc.messages.ResponseMessage;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.junit.jupiter.api.Test;
+
 import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
+
 import static org.assertj.core.api.Assertions.assertThat;
 
 class TraceAwareLauncherBuilderTest {
   @Test
-  void preparesConfiguredCompletionAdaptersWithoutSerializingAResponse() throws Exception {
+  void preparesConfiguredCompletionAdaptersWithoutSerializingAResponse() {
     var creations = new AtomicInteger();
     var writes = new AtomicInteger();
     try (var writer = new FileAwarePrintWriter()) {
@@ -77,8 +79,9 @@ class TraceAwareLauncherBuilderTest {
       assertThat(writes).hasValue(1);
     }
   }
+
   @Test
-  void preservesLazyFeatureDataAdaptersWithoutWritingData() throws Exception {
+  void preservesLazyFeatureDataAdaptersWithoutWritingData() {
     var creations = new AtomicInteger();
     var writes = new AtomicInteger();
     try (var writer = new FileAwarePrintWriter()) {
@@ -118,7 +121,7 @@ class TraceAwareLauncherBuilderTest {
   }
 
   @Test
-  void preparesRawEitherResultsWithoutWritingAndKeepsCustomAdapters() throws Exception {
+  void preparesRawEitherResultsWithoutWritingAndKeepsCustomAdapters() {
     var creations = new AtomicInteger();
     var writes = new AtomicInteger();
     try (var writer = new FileAwarePrintWriter()) {

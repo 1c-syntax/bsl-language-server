@@ -52,6 +52,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class LanguageServerLauncherConfigurationTest {
   @TempDir
   Path directory;
+
   @Test
   void disabledTraceDoesNotSerializeNotificationTwice() {
     var server = new TestServer();
@@ -85,16 +86,19 @@ class LanguageServerLauncherConfigurationTest {
       System.setIn(new ByteArrayInputStream(new byte[0]));
       System.setOut(stream);
       var launcher = new LanguageServerLauncherConfiguration().launcher(new TestServer(), writer);
-      var first = new CountingMap(); first.put("key", "first");
+      var first = new CountingMap();
+      first.put("key", "first");
       launcher.getRemoteEndpoint().notify("probe", first);
       assertThat(first.serializations).isEqualTo(1);
       writer.setFile(trace.toFile());
-      var second = new CountingMap(); second.put("key", "second");
+      var second = new CountingMap();
+      second.put("key", "second");
       launcher.getRemoteEndpoint().notify("probe", second);
       assertThat(second.serializations).isEqualTo(2);
       assertThat(Files.readString(trace)).contains("probe", "second");
       writer.setFile(null);
-      var third = new CountingMap(); third.put("key", "third");
+      var third = new CountingMap();
+      third.put("key", "third");
       launcher.getRemoteEndpoint().notify("probe", third);
       assertThat(third.serializations).isEqualTo(1);
       assertThat(Files.readString(trace)).doesNotContain("third");
@@ -108,24 +112,55 @@ class LanguageServerLauncherConfigurationTest {
     public CompletableFuture<InitializeResult> initialize(InitializeParams params) {
       return CompletableFuture.completedFuture(new InitializeResult(new ServerCapabilities()));
     }
-    public CompletableFuture<Object> shutdown() { return CompletableFuture.completedFuture(null); }
-    public void exit() { }
-    public TextDocumentService getTextDocumentService() { return new TestDocuments(); }
-    public WorkspaceService getWorkspaceService() { return new TestWorkspace(); }
+
+    public CompletableFuture<Object> shutdown() {
+      return CompletableFuture.completedFuture(null);
+    }
+
+    public void exit() {
+      // Тестовый сервер не завершает процесс.
+    }
+
+    public TextDocumentService getTextDocumentService() {
+      return new TestDocuments();
+    }
+
+    public WorkspaceService getWorkspaceService() {
+      return new TestWorkspace();
+    }
   }
+
   private static final class TestDocuments implements TextDocumentService {
-    public void didOpen(DidOpenTextDocumentParams params) { }
-    public void didChange(DidChangeTextDocumentParams params) { }
-    public void didClose(DidCloseTextDocumentParams params) { }
-    public void didSave(DidSaveTextDocumentParams params) { }
+    public void didOpen(DidOpenTextDocumentParams params) {
+      // Проверяется транспорт, обработка уведомления в заглушке не требуется.
+    }
+
+    public void didChange(DidChangeTextDocumentParams params) {
+      // Проверяется транспорт, обработка уведомления в заглушке не требуется.
+    }
+
+    public void didClose(DidCloseTextDocumentParams params) {
+      // Проверяется транспорт, обработка уведомления в заглушке не требуется.
+    }
+
+    public void didSave(DidSaveTextDocumentParams params) {
+      // Проверяется транспорт, обработка уведомления в заглушке не требуется.
+    }
   }
+
   private static final class TestWorkspace implements WorkspaceService {
-    public void didChangeConfiguration(DidChangeConfigurationParams params) { }
-    public void didChangeWatchedFiles(DidChangeWatchedFilesParams params) { }
+    public void didChangeConfiguration(DidChangeConfigurationParams params) {
+      // Проверяется транспорт, обработка уведомления в заглушке не требуется.
+    }
+
+    public void didChangeWatchedFiles(DidChangeWatchedFilesParams params) {
+      // Проверяется транспорт, обработка уведомления в заглушке не требуется.
+    }
   }
 
   private static final class CountingMap extends LinkedHashMap<String, String> {
     private int serializations;
+
     @Override
     public Set<Map.Entry<String, String>> entrySet() {
       serializations++;
