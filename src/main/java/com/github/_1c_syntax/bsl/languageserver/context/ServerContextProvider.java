@@ -509,18 +509,6 @@ public class ServerContextProvider {
     primaryWorkspaceUri.set(next);
   }
 
-  /** Откатить незавершённую регистрацию и освободить её scoped-бины. */
-  private void rollbackWorkspaceRegistration(URI uri) {
-    repointPrimaryBeforeRemoval(uri);
-    contexts.remove(uri);
-    workspaceRoots.remove(uri);
-    try (var ctx = WorkspaceContextHolder.forUri(uri)) {
-      workspaceScope.removeWorkspace(uri);
-    } finally {
-      WorkspaceContextHolder.unregisterWorkspace(uri);
-    }
-  }
-
   /** Незавершённая регистрация откатывается при закрытии, подтверждённая сохраняется. */
   private final class WorkspaceRegistration implements AutoCloseable {
     private final URI uri;
@@ -540,11 +528,23 @@ public class ServerContextProvider {
       committed = true;
     }
 
+    /** Откатить незавершённую регистрацию и освободить её scoped-бины. */
+    private void rollback() {
+      repointPrimaryBeforeRemoval(uri);
+      contexts.remove(uri);
+      workspaceRoots.remove(uri);
+      try (var ctx = WorkspaceContextHolder.forUri(uri)) {
+        workspaceScope.removeWorkspace(uri);
+      } finally {
+        WorkspaceContextHolder.unregisterWorkspace(uri);
+      }
+    }
+
     /** Откатить неподтверждённую регистрацию; ошибку очистки передать вызывающей стороне. */
     @Override
     public void close() {
       if (!committed) {
-        rollbackWorkspaceRegistration(uri);
+        rollback();
       }
     }
   }

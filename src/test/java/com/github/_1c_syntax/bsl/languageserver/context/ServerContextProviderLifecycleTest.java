@@ -109,10 +109,11 @@ class ServerContextProviderLifecycleTest {
     var uri = Absolute.uri(root.toUri());
     var folder = new WorkspaceFolder(uri.toString(), "last");
     provider.addWorkspace(folder);
+    var externalDocument = URI.create("untitled:NewDocument");
     try {
       doAnswer(invocation -> {
         assertThat(provider.getAllContexts()).containsEntry(uri, context);
-        assertThatThrownBy(() -> provider.resolveContextForDocument(URI.create("untitled:NewDocument")))
+        assertThatThrownBy(() -> provider.resolveContextForDocument(externalDocument))
           .isInstanceOf(IllegalStateException.class);
         return null;
       }).when(context).awaitPreparation();
