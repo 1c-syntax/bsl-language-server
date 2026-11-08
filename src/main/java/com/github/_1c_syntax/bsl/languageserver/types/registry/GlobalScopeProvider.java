@@ -483,6 +483,7 @@ public class GlobalScopeProvider {
 
   private static LanguageData buildBslFromContext(ContextProvider provider) {
     var globalContext = provider.getGlobalContext();
+    var typeNames = BslContextPlatformTypesProvider.typeNamesOf(provider);
     // Bilingual: если provider — Platform, тащим en-attachments для всех
     // глобальных функций (description, returnValueDescription, notes,
     // examples, seeAlso). MemberDescriptor станет bilingual.
@@ -494,7 +495,7 @@ public class GlobalScopeProvider {
     var functions = new LinkedHashMap<String, MemberDescriptor>();
     if (globalContext != null) {
       for (var method : globalContext.methods()) {
-        var descriptor = BslContextPlatformTypesProvider.toMemberDescriptor(method, enLookup);
+        var descriptor = BslContextPlatformTypesProvider.toMemberDescriptor(method, enLookup, typeNames);
         putFunction(functions, method.name().getName(), descriptor);
         putFunction(functions, method.name().getAlias(), descriptor);
       }

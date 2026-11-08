@@ -67,6 +67,43 @@ class ContextualTypeInferenceTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void oneScriptCallsNarrowReturnsByOperatingSystemAndMonoWithoutPollutingNeutralResults() {
+    var document = TestUtils.getDocumentContext(URI.create("file:///operating-systems.os"), """
+      Функция Вычислить()
+      #Если Windows Тогда
+        Возврат "Windows";
+      #ИначеЕсли MONO Тогда
+        Возврат Истина;
+      #Иначе
+        Возврат 1;
+      #КонецЕсли
+      КонецФункции
+      Процедура ВсеРежимы()
+        А = Вычислить(); // neutral
+      КонецПроцедуры
+      #Если Windows Тогда
+      Процедура Окна()
+        А = Вычислить(); // windows
+      КонецПроцедуры
+      #ИначеЕсли Linux И MONO Тогда
+      Процедура ЛинуксМоно()
+        А = Вычислить(); // mono
+      КонецПроцедуры
+      #ИначеЕсли MacOS И НЕ MONO Тогда
+      Процедура Мак()
+        А = Вычислить(); // macos
+      КонецПроцедуры
+      #КонецЕсли
+      """, context);
+
+    assertThat(expressionAt(document, "А = Вычислить(); // windows", 4)).containsExactly("Строка");
+    assertThat(expressionAt(document, "А = Вычислить(); // mono", 4)).containsExactly("Булево");
+    assertThat(expressionAt(document, "А = Вычислить(); // macos", 4)).containsExactly("Число");
+    assertThat(expressionAt(document, "А = Вычислить(); // neutral", 4))
+      .containsExactlyInAnyOrder("Строка", "Булево", "Число");
+  }
+
+  @Test
   void ordinaryTypeQueriesUseTheCallingMethodDirective() {
     var document = form("""
       &НаКлиентеНаСервереБезКонтекста

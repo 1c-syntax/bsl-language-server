@@ -21,11 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.compilation;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import org.antlr.v4.runtime.Token;
+
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.jspecify.annotations.Nullable;
 
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -54,15 +58,24 @@ final class PreprocessorExpressionEvaluator {
   );
 
 
-  private final List<Integer> tokens;
+  private static final Map<String, Set<ExecutionContext>> OSCRIPT_SYMBOLS = Map.of(
+    "windows", EnumSet.of(ExecutionContext.OSCRIPT_WINDOWS, ExecutionContext.OSCRIPT_WINDOWS_MONO),
+    "linux", EnumSet.of(ExecutionContext.OSCRIPT_LINUX, ExecutionContext.OSCRIPT_LINUX_MONO),
+    "macos", EnumSet.of(ExecutionContext.OSCRIPT_MACOS, ExecutionContext.OSCRIPT_MACOS_MONO),
+    "mono", EnumSet.of(ExecutionContext.OSCRIPT_WINDOWS_MONO, ExecutionContext.OSCRIPT_LINUX_MONO,
+      ExecutionContext.OSCRIPT_MACOS_MONO));
+
+  private final List<Token> tokens;
+  private final FileType fileType;
   private int position;
 
-  private PreprocessorExpressionEvaluator(List<Integer> tokens) {
+  private PreprocessorExpressionEvaluator(List<Token> tokens, FileType fileType) {
     this.tokens = List.copyOf(tokens);
+    this.fileType = fileType;
   }
 
-  static @Nullable Set<ExecutionContext> evaluate(List<Integer> tokens) {
-    return new PreprocessorExpressionEvaluator(tokens).evaluate();
+  static @Nullable Set<ExecutionContext> evaluate(List<Token> tokens, FileType fileType) {
+    return new PreprocessorExpressionEvaluator(tokens, fileType).evaluate();
   }
 
   private @Nullable Set<ExecutionContext> evaluate() {
@@ -97,7 +110,12 @@ final class PreprocessorExpressionEvaluator {
   private @Nullable Set<ExecutionContext> not() {
     if (accept(BSLParser.PREPROC_NOT_KEYWORD)) {
       var operand = not();
-      return operand == null ? null : ExecutionContext.complementOf(operand);
+      if (operand == null) {
+        return null;
+      }
+      var result = ExecutionContext.copyOf(ExecutionContext.forFileType(fileType));
+      result.removeAll(operand);
+      return result;
     }
     return operand();
   }
@@ -110,13 +128,16 @@ final class PreprocessorExpressionEvaluator {
     if (position >= tokens.size()) {
       return null;
     }
-    var contexts = SYMBOL_CONTEXTS.get(tokens.get(position));
+    var token = tokens.get(position);
+    var contexts = fileType == FileType.OS
+      ? OSCRIPT_SYMBOLS.get(token.getText().toLowerCase(Locale.ROOT))
+      : SYMBOL_CONTEXTS.get(token.getType());
     position++;
     return contexts == null ? null : ExecutionContext.copyOf(contexts);
   }
 
   private boolean accept(int tokenType) {
-    if (position < tokens.size() && tokens.get(position) == tokenType) {
+    if (position < tokens.size() && tokens.get(position).getType() == tokenType) {
       position++;
       return true;
     }

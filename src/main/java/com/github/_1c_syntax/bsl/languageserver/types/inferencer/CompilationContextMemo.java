@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import org.eclipse.lsp4j.Position;
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
@@ -45,9 +44,6 @@ final class CompilationContextMemo {
 
   Optional<MethodContext> contextAt(DocumentContext document, Position position,
                                      CompilationContextResolver resolver) {
-    if (document.getFileType() != FileType.BSL) {
-      return Optional.empty();
-    }
     var symbol = document.getSymbolTree().getSymbolAtPosition(position);
     var method = symbol instanceof MethodSymbol enclosing ? Optional.of(enclosing)
       : symbol.getRootParent(MethodSymbol.class).map(MethodSymbol.class::cast);
