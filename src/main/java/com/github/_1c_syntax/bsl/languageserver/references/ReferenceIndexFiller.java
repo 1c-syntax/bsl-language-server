@@ -783,24 +783,17 @@ public class ReferenceIndexFiller {
       var variableName = ctx.IDENTIFIER().getText();
       var variableKey = variableName.toLowerCase(Locale.ENGLISH);
 
-      // Check if variable references a common module
-      var commonModuleMdoRef = variableToCommonModuleMap.get(variableKey);
-
-      if (commonModuleMdoRef != null) {
-        // Только первое звено обращается к исходному модулю: остальные — к результату обращения.
-        if (!ctx.modifier().isEmpty()) {
-          processCommonModuleMethodCalls(ctx.modifier(), commonModuleMdoRef);
-        } else if (ctx.accessCall() != null) {
-          processCommonModuleAccessCall(ctx.accessCall(), commonModuleMdoRef);
+      // Только первое звено обращается к исходному модулю: остальные — к результату обращения.
+      var modifiers = ctx.modifier();
+      var accessCall = modifiers.isEmpty() ? ctx.accessCall() : modifiers.getFirst().accessCall();
+      if (accessCall != null) {
+        var commonModuleMdoRef = variableToCommonModuleMap.get(variableKey);
+        if (commonModuleMdoRef != null) {
+          processCommonModuleAccessCall(accessCall, commonModuleMdoRef);
         }
-      }
-
-      var libClassUri = variableToLibraryClassUriMap.get(variableKey);
-      if (libClassUri != null) {
-        if (!ctx.modifier().isEmpty()) {
-          processLibraryClassMethodCalls(ctx.modifier(), libClassUri);
-        } else if (ctx.accessCall() != null) {
-          processLibraryClassAccessCall(ctx.accessCall(), libClassUri);
+        var libClassUri = variableToLibraryClassUriMap.get(variableKey);
+        if (libClassUri != null) {
+          processLibraryClassAccessCall(accessCall, libClassUri);
         }
       }
 
