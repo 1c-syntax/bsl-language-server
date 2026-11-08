@@ -29,8 +29,10 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.Position;
+
 import java.util.IdentityHashMap;
 import java.util.Map;
+
 import static com.github._1c_syntax.bsl.languageserver.completion.CompletionPriority.AVAILABLE;
 import static com.github._1c_syntax.bsl.languageserver.completion.CompletionPriority.UNAVAILABLE;
 
@@ -57,7 +59,7 @@ public final class CompletionContextRanker {
    * @param document документ запроса.
    * @param position позиция курсора, в том числе после незавершённой точки.
    * @param resolver общая модель компиляции и серверных переходов.
-   * @param types служба вывода типов и поиска членов.
+   * @param types    служба вывода типов и поиска членов.
    */
   public CompletionContextRanker(DocumentContext document, Position position, CompilationContextResolver resolver,
                                  TypeService types) {
@@ -68,7 +70,7 @@ public final class CompletionContextRanker {
   /**
    * Оценить член без уточнения получателя: глобальную функцию, свойство или неявный self-член.
    *
-   * @param item сформированный пункт completion.
+   * @param item   сформированный пункт completion.
    * @param member предлагаемый член.
    */
   public void rankMember(CompletionItem item, MemberDescriptor member) {
@@ -84,7 +86,7 @@ public final class CompletionContextRanker {
   /**
    * Оценить конкретное локальное объявление, сохраняя различие одноимённых веток.
    *
-   * @param item пункт локального метода.
+   * @param item   пункт локального метода.
    * @param method объявление, чья сигнатура вставляется этим пунктом.
    */
   public void rankLocalMethod(CompletionItem item, MethodSymbol method) {
@@ -108,7 +110,9 @@ public final class CompletionContextRanker {
     }
   }
 
-  /** Приоритет свойства с учётом всех выбранных режимов и альтернатив получателя. */
+  /**
+   * Приоритет свойства с учётом всех выбранных режимов и альтернатив получателя.
+   */
   public void rankDotPropertyMember(CompletionItem item, MemberDescriptor member) {
     if (evaluation.hasScope()) remember(item, evaluation.rankDotPropertyMember(item.getLabel(), member));
   }
@@ -116,7 +120,7 @@ public final class CompletionContextRanker {
   /**
    * Оценить член после точки по типам получателя в каждом актуальном режиме.
    *
-   * @param item пункт dot-completion.
+   * @param item   пункт dot-completion.
    * @param member член из исходного объединения типов.
    */
   public void rankDotMember(CompletionItem item, MemberDescriptor member) {
@@ -150,7 +154,7 @@ public final class CompletionContextRanker {
   /**
    * Добавить группу доступности и пометку серверного вызова, сохранив имя, сигнатуру и текст вставки.
    *
-   * @param items отобранные предложения, включая переменные и ключевые слова без ограничений.
+   * @param items               отобранные предложения, включая переменные и ключевые слова без ограничений.
    * @param labelDetailsSupport поддерживает ли клиент подпись справа от сигнатуры.
    * @return пояснения для добавления после документации метода; ключи сравниваются по идентичности.
    */

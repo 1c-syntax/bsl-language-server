@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationCon
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import org.jspecify.annotations.Nullable;
+
 import java.util.ArrayList;
 import java.net.URI;
 import java.util.HashMap;
@@ -45,7 +46,9 @@ import java.util.function.ToIntFunction;
 
 import static com.github._1c_syntax.bsl.languageserver.completion.CompletionPriority.*;
 
-/** Исходные объявления методов, их профили и переходы для одного запроса completion. */
+/**
+ * Исходные объявления методов, их профили и переходы для одного запроса completion.
+ */
 final class CompletionMethodEvaluation {
   private final DocumentContext document;
   private final CompilationContextResolver resolver;
@@ -57,9 +60,13 @@ final class CompletionMethodEvaluation {
   private final Map<DocumentContext, Map<Declaration, MethodTarget>> targetsByOwner = new IdentityHashMap<>();
   private final Map<MethodTarget, Map<ExecutionContext, CallEvaluation>> calls = new IdentityHashMap<>();
   private final Map<TypeRef, Map<MethodTarget, SharedRank>> sharedRanks = new HashMap<>();
-  private record SharedRank(int rank, CompletionMethodHint hint) { }
 
-  /** Порядок ключа согласован с URI и необязательной директивой. */
+  private record SharedRank(int rank, CompletionMethodHint hint) {
+  }
+
+  /**
+   * Порядок ключа согласован с URI и необязательной директивой.
+   */
   private record ProfileKey(URI uri, Optional<CompilerDirectiveKind> directive) implements Comparable<ProfileKey> {
     @Override
     public int compareTo(ProfileKey other) {
@@ -72,11 +79,15 @@ final class CompletionMethodEvaluation {
     }
   }
 
-  /** Объявление и вычисленные один раз профиль и контексты его компиляции. */
+  /**
+   * Объявление и вычисленные один раз профиль и контексты его компиляции.
+   */
   private record MethodTarget(DocumentContext owner, Declaration declaration, Optional<MethodContext> profile,
-                              Optional<Set<ExecutionContext>> contexts) { }
+                              Optional<Set<ExecutionContext>> contexts) {
+  }
 
-  private record CallEvaluation(CallAvailability availability, boolean serverTransition) { }
+  private record CallEvaluation(CallAvailability availability, boolean serverTransition) {
+  }
 
   CompletionMethodEvaluation(DocumentContext document, CompilationContextResolver resolver,
                              MethodContext scope, CompletionTypeContext typeContext) {
@@ -94,7 +105,9 @@ final class CompletionMethodEvaluation {
     return context -> methodRank(targets, context, hint);
   }
 
-  /** Платформенная доступность сама по себе не доказывает наличие или отсутствие серверного перехода. */
+  /**
+   * Платформенная доступность сама по себе не доказывает наличие или отсутствие серверного перехода.
+   */
   int methodRank(MemberDescriptor member, ExecutionContext context, CompletionMethodHint hint) {
     if (member.sourceSymbol() instanceof MethodSymbol method) {
       return methodRank(targetsFor(method), context, hint);
@@ -116,7 +129,9 @@ final class CompletionMethodEvaluation {
 
   private List<MethodTarget> targetsFor(MethodSymbol method) {
     var targets = methodTargets.get(method);
-    if (targets != null) return targets;
+    if (targets != null) {
+      return targets;
+    }
     var owner = method.getOwner();
     var declarations = declarationsByOwner.get(owner);
     if (declarations == null) {
@@ -130,7 +145,9 @@ final class CompletionMethodEvaluation {
       targets = List.of(target(owner, named.getFirst()));
     } else {
       var values = new ArrayList<MethodTarget>(named.size());
-      for (var declaration : named) values.add(target(owner, declaration));
+      for (var declaration : named) {
+        values.add(target(owner, declaration));
+      }
       targets = List.copyOf(values);
     }
     methodTargets.put(method, targets);
@@ -138,9 +155,13 @@ final class CompletionMethodEvaluation {
   }
 
   @Nullable Integer sharedReceiverRank(MemberDescriptor member, TypeRef owner, CompletionMethodHint hint) {
-    if (!(member.sourceSymbol() instanceof MethodSymbol method)) return null;
+    if (!(member.sourceSymbol() instanceof MethodSymbol method)) {
+      return null;
+    }
     var targets = targetsFor(method);
-    if (targets.size() != 1) return null;
+    if (targets.size() != 1) {
+      return null;
+    }
     var byTarget = sharedRanks.get(owner);
     if (byTarget == null) {
       byTarget = new IdentityHashMap<>();
@@ -158,7 +179,7 @@ final class CompletionMethodEvaluation {
         available |= rank != UNAVAILABLE;
         unavailable |= rank != AVAILABLE;
       }
-      var rank = unavailable ? (available ? PARTIAL : UNAVAILABLE) : AVAILABLE;
+      var rank = combine(available, unavailable);
       ready = new SharedRank(rank, contribution);
       byTarget.put(target, ready);
     }
@@ -166,7 +187,9 @@ final class CompletionMethodEvaluation {
     return ready.rank();
   }
 
-  /** Профиль кешируется на директиву, пересечение с веткой — на объявление, без повторного вывода типов. */
+  /**
+   * Профиль кешируется на директиву, пересечение с веткой — на объявление, без повторного вывода типов.
+   */
   private MethodTarget target(DocumentContext owner, Declaration declaration) {
     var targets = targetsByOwner.get(owner);
     if (targets == null) {
@@ -192,7 +215,9 @@ final class CompletionMethodEvaluation {
     return new MethodTarget(owner, declaration, profile, contexts);
   }
 
-  /** Найденные исходные цели проверяются теми же правилами перехода, что и диагностика. */
+  /**
+   * Найденные исходные цели проверяются теми же правилами перехода, что и диагностика.
+   */
   private int methodRank(List<MethodTarget> targets, ExecutionContext context, CompletionMethodHint hint) {
     if (targets.isEmpty()) {
       hint.unknownReceiver();
@@ -243,7 +268,7 @@ final class CompletionMethodEvaluation {
       target.profile(), context);
     var serverTransition = availability == CallAvailability.AVAILABLE
       && CompilationContextResolver.isServerTransition(context,
-        resolver.targetContext(document, target.owner(), target.profile().orElseThrow(), context));
+      resolver.targetContext(document, target.owner(), target.profile().orElseThrow(), context));
     return new CallEvaluation(availability, serverTransition);
   }
 }
