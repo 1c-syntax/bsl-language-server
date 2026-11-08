@@ -254,7 +254,7 @@ public class ReferenceIndexFiller {
     private final DocumentContext documentContext;
     private final BatchingSink sink;
     private final ModuleReference.ParsedAccessors parsedAccessors =
-      configuration.getParsedCommonModuleAccessors();
+      configuration.getReferencesOptions().getModuleAccessors();
     private Set<String> commonModuleMdoRefFromSubParams = Collections.emptySet();
 
     @Override
@@ -631,7 +631,7 @@ public class ReferenceIndexFiller {
     private VariableSymbolReferenceIndexFinder(DocumentContext documentContext, BatchingSink sink) {
       this.documentContext = documentContext;
       this.sink = sink;
-      this.parsedAccessors = configuration.getParsedCommonModuleAccessors();
+      this.parsedAccessors = configuration.getReferencesOptions().getModuleAccessors();
     }
 
     @Override

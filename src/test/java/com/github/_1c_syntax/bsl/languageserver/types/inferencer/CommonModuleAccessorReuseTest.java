@@ -89,12 +89,12 @@ class CommonModuleAccessorReuseTest {
     configuration.setReferencesOptions(options);
     assertThat(inference.localCallTypes(call("Первый"), FileType.BSL)).isNull();
     assertThat(inference.localCallTypes(call("Второй"), FileType.BSL)).isNotNull();
-    options.getCommonModuleAccessors().add("Первый");
+    options.setCommonModuleAccessors(List.of("Второй", "Первый"));
     assertThat(inference.localCallTypes(call("Первый"), FileType.BSL)).isNull();
     configuration.setReferencesOptions(options);
     assertThat(inference.localCallTypes(call("Первый"), FileType.BSL)).isNotNull();
-    var current = configuration.getReferencesOptions();
-    current.getCommonModuleAccessors().remove("Второй");
+    var current = new ReferencesOptions(configuration.getReferencesOptions().getCommonModuleAccessors());
+    current.setCommonModuleAccessors(List.of("Первый"));
     assertThat(inference.localCallTypes(call("Второй"), FileType.BSL)).isNotNull();
     configuration.setReferencesOptions(current);
     assertThat(inference.localCallTypes(call("Второй"), FileType.BSL)).isNull();

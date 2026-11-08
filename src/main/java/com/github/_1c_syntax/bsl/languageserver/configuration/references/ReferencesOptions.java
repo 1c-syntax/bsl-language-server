@@ -22,12 +22,18 @@
 package com.github._1c_syntax.bsl.languageserver.configuration.references;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import lombok.AllArgsConstructor;
+import com.github._1c_syntax.bsl.languageserver.utils.ModuleReference;
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
+import lombok.ToString;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -37,7 +43,6 @@ import java.util.List;
  * (например, ОбщегоНазначения.ОбщийМодуль("ИмяМодуля")).
  */
 @Data
-@AllArgsConstructor(onConstructor_ = {@JsonCreator(mode = JsonCreator.Mode.DISABLED)})
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class ReferencesOptions {
@@ -55,7 +60,7 @@ public class ReferencesOptions {
    * <p>
    * По умолчанию включает стандартные варианты из БСП.
    */
-  private List<String> commonModuleAccessors = new ArrayList<>(List.of(
+  private List<String> commonModuleAccessors = List.of(
     // Локальный вызов
     "ОбщийМодуль",
     "CommonModule",
@@ -70,5 +75,28 @@ public class ReferencesOptions {
     "CommonUseClient.CommonModule",
     "CommonUseServer.CommonModule",
     "CommonUseClientServer.CommonModule"
-  ));
+  );
+
+  @JsonIgnore
+  @Setter(AccessLevel.NONE)
+  @EqualsAndHashCode.Exclude
+  @ToString.Exclude
+  private ModuleReference.ParsedAccessors moduleAccessors = ModuleReference.parseAccessors(commonModuleAccessors);
+
+  @JsonCreator(mode = JsonCreator.Mode.DISABLED)
+  public ReferencesOptions(List<String> commonModuleAccessors) {
+    setCommonModuleAccessors(commonModuleAccessors);
+  }
+
+  /**
+   * Заменить исходные шаблоны и их неизменяемое представление для поиска.
+   *
+   * @param commonModuleAccessors шаблоны методов доступа к общим модулям.
+   */
+  public void setCommonModuleAccessors(List<String> commonModuleAccessors) {
+    var snapshot = Collections.unmodifiableList(new ArrayList<>(commonModuleAccessors));
+    var accessors = ModuleReference.parseAccessors(snapshot);
+    this.commonModuleAccessors = snapshot;
+    this.moduleAccessors = accessors;
+  }
 }

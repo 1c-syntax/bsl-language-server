@@ -36,7 +36,6 @@ import com.github._1c_syntax.bsl.languageserver.configuration.platform.V8Platfor
 import com.github._1c_syntax.bsl.languageserver.configuration.references.ReferencesOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.semantictokens.SemanticTokensOptions;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
-import com.github._1c_syntax.bsl.languageserver.utils.ModuleReference;
 import com.github._1c_syntax.utils.Absolute;
 import jakarta.annotation.PostConstruct;
 import lombok.AccessLevel;
@@ -113,13 +112,6 @@ public class LanguageServerConfiguration {
   @Setter(value = AccessLevel.NONE)
   private ReferencesOptions referencesOptions = new ReferencesOptions();
 
-  @JsonIgnore
-  @Setter(AccessLevel.NONE)
-  @EqualsAndHashCode.Exclude
-  @ToString.Exclude
-  private ModuleReference.ParsedAccessors parsedCommonModuleAccessors
-    = ModuleReference.parseAccessors(referencesOptions.getCommonModuleAccessors());
-
   @JsonProperty("semanticTokens")
   @Setter(value = AccessLevel.NONE)
   private SemanticTokensOptions semanticTokensOptions = new SemanticTokensOptions();
@@ -178,17 +170,13 @@ public class LanguageServerConfiguration {
   private LanguageServerConfiguration initialSnapshot;
 
   /**
-   * Применить настройки ссылок и вычислить их неизменяемое разобранное представление.
-   * Изменения списка методов доступа применяются этим сеттером.
+   * Применить независимый снимок настроек ссылок.
    *
    * @param referencesOptions новые настройки ссылок.
    */
   @JsonProperty("references")
   public void setReferencesOptions(ReferencesOptions referencesOptions) {
-    var snapshot = new ReferencesOptions(new ArrayList<>(referencesOptions.getCommonModuleAccessors()));
-    var parsed = ModuleReference.parseAccessors(snapshot.getCommonModuleAccessors());
-    this.referencesOptions = snapshot;
-    this.parsedCommonModuleAccessors = parsed;
+    this.referencesOptions = new ReferencesOptions(referencesOptions.getCommonModuleAccessors());
   }
 
   /**

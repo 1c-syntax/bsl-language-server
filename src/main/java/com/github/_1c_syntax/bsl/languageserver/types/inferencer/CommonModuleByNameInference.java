@@ -70,7 +70,7 @@ public class CommonModuleByNameInference {
   @Nullable
   public TypeSet refinedCallTypes(TypeSet receiverTypes, String memberName,
                                   MethodCallNode call, FileType fileType) {
-    var accessors = configuration.getParsedCommonModuleAccessors();
+    var accessors = configuration.getReferencesOptions().getModuleAccessors();
     var member = memberName.toLowerCase(Locale.ENGLISH);
     var matches = receiverTypes.refs().stream()
       .map(ref -> accessors.moduleMethodPairs().get(ref.qualifiedName().toLowerCase(Locale.ENGLISH)))
@@ -89,7 +89,7 @@ public class CommonModuleByNameInference {
    */
   @Nullable
   public TypeSet localCallTypes(MethodCallNode call, FileType fileType) {
-    var accessors = configuration.getParsedCommonModuleAccessors();
+    var accessors = configuration.getReferencesOptions().getModuleAccessors();
     var callName = call.getName().getText().toLowerCase(Locale.ENGLISH);
     return accessors.localMethods().contains(callName) ? namedModuleType(call, fileType) : null;
   }

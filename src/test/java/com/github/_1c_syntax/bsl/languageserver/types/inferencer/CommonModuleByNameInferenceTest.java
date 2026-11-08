@@ -61,7 +61,7 @@ class CommonModuleByNameInferenceTest {
     assertThat(inference.localCallTypes(call, FileType.BSL)).isEqualTo(TypeSet.of(moduleRef));
 
     // изменённые настройки применили через сеттер конфигурации
-    options.getCommonModuleAccessors().set(0, "ДругойМетод");
+    options.setCommonModuleAccessors(List.of("ДругойМетод"));
     configuration.setReferencesOptions(options);
     assertThat(inference.localCallTypes(call, FileType.BSL)).isNull();
 

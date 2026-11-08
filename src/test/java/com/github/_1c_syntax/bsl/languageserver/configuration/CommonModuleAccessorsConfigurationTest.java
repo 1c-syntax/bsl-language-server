@@ -41,21 +41,26 @@ class CommonModuleAccessorsConfigurationTest {
   void setterUpdatesPatternsWithoutChangingPreviousSnapshots() {
     var configuration = new LanguageServerConfiguration();
     var options = configuration.getReferencesOptions();
-    options.setCommonModuleAccessors(new ArrayList<>(List.of("CommonModule", "CommonUse.Module")));
+    var patterns = new ArrayList<>(List.of("CommonModule", "CommonUse.Module"));
+    options.setCommonModuleAccessors(patterns);
     configuration.setReferencesOptions(options);
-    var first = configuration.getParsedCommonModuleAccessors();
+    var first = configuration.getReferencesOptions().getModuleAccessors();
 
-    assertThat(configuration.getParsedCommonModuleAccessors()).isSameAs(first);
-    options.getCommonModuleAccessors().set(0, "OtherMethod");
+    assertThat(configuration.getReferencesOptions().getModuleAccessors()).isSameAs(first);
+    patterns.set(0, "OtherMethod");
     assertThat(configuration.getReferencesOptions().getCommonModuleAccessors()).contains("CommonModule");
+    assertThat(options.getCommonModuleAccessors()).contains("CommonModule");
+    assertThatThrownBy(() -> options.getCommonModuleAccessors().clear())
+      .isInstanceOf(UnsupportedOperationException.class);
+    options.setCommonModuleAccessors(patterns);
     configuration.setReferencesOptions(options);
-    var changed = configuration.getParsedCommonModuleAccessors();
+    var changed = configuration.getReferencesOptions().getModuleAccessors();
     assertThat(changed.localMethods()).containsExactly("othermethod");
     assertThat(first.localMethods()).containsExactly("commonmodule");
 
     options.setCommonModuleAccessors(List.of("Restored"));
     configuration.setReferencesOptions(options);
-    assertThat(configuration.getParsedCommonModuleAccessors().localMethods()).containsExactly("restored");
+    assertThat(configuration.getReferencesOptions().getModuleAccessors().localMethods()).containsExactly("restored");
     var localMethods = first.localMethods();
     var moduleMethods = first.moduleMethodPairs();
     var commonUseMethods = moduleMethods.get("commonuse");
@@ -72,9 +77,22 @@ class CommonModuleAccessorsConfigurationTest {
       {"references": {"commonModuleAccessors": ["CustomMethod"]}}
       """, LanguageServerConfiguration.class);
 
-    assertThat(configuration.getParsedCommonModuleAccessors().localMethods()).containsExactly("custommethod");
-    assertThat(configuration.getParsedCommonModuleAccessors().moduleMethodPairs()).isEmpty();
-    assertThat(mapper.writeValueAsString(configuration)).doesNotContain("parsedCommonModuleAccessors");
+    assertThat(configuration.getReferencesOptions().getModuleAccessors().localMethods()).containsExactly("custommethod");
+    assertThat(configuration.getReferencesOptions().getModuleAccessors().moduleMethodPairs()).isEmpty();
+    assertThat(mapper.writeValueAsString(configuration)).doesNotContain("\"moduleAccessors\"");
+  }
+
+  @Test
+  void referencesOptionsOwnTheCacheAndRefreshItOnAssignment() {
+    var options = new ReferencesOptions(List.of("CommonUse.Module"));
+    var original = options.getModuleAccessors();
+    assertThat(options.getModuleAccessors()).isSameAs(original);
+
+    options.setCommonModuleAccessors(List.of("LocalMethod"));
+
+    assertThat(options.getModuleAccessors().localMethods()).containsExactly("localmethod");
+    assertThat(options.getModuleAccessors().moduleMethodPairs()).isEmpty();
+    assertThat(original.moduleMethodPairs().get("commonuse")).containsExactly("module");
   }
 
   @Test
@@ -88,26 +106,26 @@ class CommonModuleAccessorsConfigurationTest {
 
     configuration.reset();
 
-    assertThat(configuration.getParsedCommonModuleAccessors().localMethods()).containsExactly("initialmethod");
+    assertThat(configuration.getReferencesOptions().getModuleAccessors().localMethods()).containsExactly("initialmethod");
   }
 
   @Test
   void cachedPatternsFollowFileUpdateAndReset(@TempDir Path directory) throws IOException {
     var configuration = new LanguageServerConfiguration();
-    var defaults = configuration.getParsedCommonModuleAccessors();
+    var defaults = configuration.getReferencesOptions().getModuleAccessors();
     var file = directory.resolve("config.json");
     Files.writeString(file, """
       {"references": {"commonModuleAccessors": ["CustomModule.CustomMethod"]}}
       """);
 
     configuration.update(file.toFile());
-    var updated = configuration.getParsedCommonModuleAccessors();
+    var updated = configuration.getReferencesOptions().getModuleAccessors();
     assertThat(updated.localMethods()).isEmpty();
     assertThat(updated.moduleMethodPairs()).containsOnlyKeys("custommodule");
     assertThat(updated.moduleMethodPairs().get("custommodule")).containsExactly("custommethod");
 
     configuration.reset();
-    assertThat(configuration.getParsedCommonModuleAccessors()).isEqualTo(defaults);
+    assertThat(configuration.getReferencesOptions().getModuleAccessors()).isEqualTo(defaults);
   }
 
   @Test
