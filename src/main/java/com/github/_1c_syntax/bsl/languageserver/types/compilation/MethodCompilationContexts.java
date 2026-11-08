@@ -55,13 +55,10 @@ final class MethodCompilationContexts {
 
   static Optional<MethodContext> commonMethodContext(DocumentContext document, CompilerDirectiveKind kind,
                                                             Set<ExecutionContext> contexts) {
-    var directive = CompilerDirectiveKind.of(kind.getTokenType());
-    if (!supportsCommonDirective(kind)) {
-      return Optional.of(new MethodContext(directive, Set.of()));
-    }
     if (document.getMdObject().filter(CommonModule.class::isInstance).isEmpty()) {
       return Optional.empty();
     }
+    var directive = CompilerDirectiveKind.of(kind.getTokenType());
     restrictToDirective(contexts, kind);
     return Optional.of(new MethodContext(directive, Set.copyOf(contexts)));
   }
