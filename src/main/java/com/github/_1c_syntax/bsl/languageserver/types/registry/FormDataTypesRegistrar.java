@@ -35,6 +35,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormAdditionalColumnsAttribute;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormAttribute;
+import com.github._1c_syntax.utils.GenericInterner;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
@@ -105,6 +106,12 @@ class FormDataTypesRegistrar {
    * складываются из колонок объекта и добавленных формой.
    */
   private final Map<TypeRef, MemberSource> columnsByCollection = new ConcurrentHashMap<>();
+
+  /**
+   * Отображаемые имена зеркал, по одному экземпляру на имя: базовых типов единицы, а зеркал
+   * десятки тысяч, и одно имя на всех не заводится заново на каждое.
+   */
+  private final GenericInterner<BilingualString> mirrorDisplayNames = new GenericInterner<>();
 
   /**
    * Табличные части, которым конкретная форма добавила свои колонки:
@@ -624,7 +631,8 @@ class FormDataTypesRegistrar {
     }
     // Отображаемое имя — базовое: синтетический суффикс нужен реестру, чтобы различать
     // специализации, а пользователю показывать надо реальный тип значения.
-    typeRegistry.registerDisplayName(ref, BilingualString.of(baseRu, baseEn));
+    var displayName = BilingualString.of(baseRu, baseEn);
+    typeRegistry.registerDisplayName(ref, mirrorDisplayNames.intern(displayName));
     if (baseRef != null && !baseRef.equals(ref)) {
       typeRegistry.registerExtension(ref, baseRef, FileType.BSL);
       typeRegistry.registerTypeMetadata(ref, typeRegistry.getTypeMetadata(baseRef, FileType.BSL), FileType.BSL);
