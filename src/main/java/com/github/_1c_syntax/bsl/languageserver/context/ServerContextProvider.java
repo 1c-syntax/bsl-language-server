@@ -522,18 +522,26 @@ public class ServerContextProvider {
     }
   }
 
+  /** Незавершённая регистрация откатывается при закрытии, подтверждённая сохраняется. */
   private final class WorkspaceRegistration implements AutoCloseable {
     private final URI uri;
     private boolean committed;
 
+    /**
+     * Связать операцию с URI регистрации.
+     *
+     * @param uri URI рабочей области.
+     */
     private WorkspaceRegistration(URI uri) {
       this.uri = uri;
     }
 
+    /** Подтвердить регистрацию и отменить её автоматический откат. */
     private void commit() {
       committed = true;
     }
 
+    /** Откатить неподтверждённую регистрацию; ошибку очистки передать вызывающей стороне. */
     @Override
     public void close() {
       if (!committed) {
