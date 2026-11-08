@@ -22,6 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 
@@ -44,6 +46,18 @@ public interface SourceDefinedSymbol extends Symbol {
    * @return Диапазон, который захватывает символ.
    */
   Range getRange();
+
+  /**
+   * Накрывает ли диапазон символа позицию — ответ как у
+   * {@code Ranges.containsPosition(getRange(), position)}. Символы, которые хранят диапазон
+   * числами, отвечают без создания диапазона.
+   *
+   * @param position позиция в документе.
+   * @return {@code true}, если позиция в диапазоне символа (включая начало, исключая конец).
+   */
+  default boolean containsPosition(Position position) {
+    return Ranges.containsPosition(getRange(), position);
+  }
 
   /**
    * @return Место интереса символа.

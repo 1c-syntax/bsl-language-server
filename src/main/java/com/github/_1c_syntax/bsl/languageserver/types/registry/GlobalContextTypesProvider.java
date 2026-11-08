@@ -117,14 +117,15 @@ public class GlobalContextTypesProvider implements PlatformTypesProvider {
    */
   private static List<MemberDescriptor> membersFromContext(ContextProvider provider) {
     var enLookup = BslContextPlatformTypesProvider.enLookupOf(provider);
+    var typeNames = BslContextPlatformTypesProvider.typeNamesOf(provider);
     var members = new ArrayList<MemberDescriptor>();
     var globalContext = provider.getGlobalContext();
     if (globalContext != null) {
       for (var method : globalContext.methods()) {
-        members.add(BslContextPlatformTypesProvider.toMemberDescriptor(method, enLookup));
+        members.add(BslContextPlatformTypesProvider.toMemberDescriptor(method, enLookup, typeNames));
       }
       for (var property : globalContext.properties()) {
-        members.add(BslContextPlatformTypesProvider.toMemberDescriptor(property, enLookup));
+        members.add(BslContextPlatformTypesProvider.toMemberDescriptor(property, enLookup, typeNames));
       }
     }
     for (var context : provider.getContexts()) {
@@ -132,7 +133,7 @@ public class GlobalContextTypesProvider implements PlatformTypesProvider {
         members.add(enumAsProperty(
           enumeration.name().getName(),
           enumeration.name().getAlias(),
-          new TypeRef(TypeKind.PLATFORM, enumeration.name().getName())));
+          new TypeRef(TypeKind.PLATFORM, typeNames.apply(enumeration))));
       }
     }
     return members;

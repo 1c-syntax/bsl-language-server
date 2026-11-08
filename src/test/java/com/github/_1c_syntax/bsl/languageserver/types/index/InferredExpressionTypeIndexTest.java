@@ -125,6 +125,24 @@ class InferredExpressionTypeIndexTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void rejectsNeutralResultComputedBeforeDependencyChange() {
+    var document = TestUtils.getDocumentContext("Процедура Тест() КонецПроцедуры");
+    var dependency = java.net.URI.create("file:///dependency.bsl");
+    var node = document.getAst();
+    var types = TypeSet.of(new TypeRef(TypeKind.PRIMITIVE, "Строка"));
+    var revision = index.inputRevision();
+
+    index.clear(dependency);
+    index.put(document.getUri(), node, types, Set.of(dependency), revision);
+
+    assertThat(index.get(document.getUri(), node)).isNull();
+    index.put(document.getUri(), node, types, Set.of(dependency), index.inputRevision());
+    assertThat(index.get(document.getUri(), node)).isEqualTo(types);
+    index.clear(dependency);
+    assertThat(index.get(document.getUri(), node)).isNull();
+  }
+
+  @Test
   void survivesCircularDependencies() {
     // given — документы ссылаются друг на друга.
     var doc1 = TestUtils.getDocumentContext("Процедура Тест1() КонецПроцедуры");
