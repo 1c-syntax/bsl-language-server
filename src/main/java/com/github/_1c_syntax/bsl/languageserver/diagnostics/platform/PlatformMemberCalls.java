@@ -96,15 +96,6 @@ public final class PlatformMemberCalls {
   ) {
   }
 
-  /**
-   * Собирает все места обращения к платформенному API модуля за один обход AST
-   * (раньше на каждый вид обращения был свой {@code findAllRuleNodes} — то есть
-   * отдельный полный обход дерева). Нерезолвленные имена пропускаются.
-   */
-  public static CallSites collect(DocumentContext documentContext, TypeService typeService) {
-    return collect(documentContext, typeService, typeService::isVersionedMemberName, true);
-  }
-
   public static CallSites collectDeprecated(DocumentContext documentContext, TypeService typeService,
                                              CompatibilityMode target) {
     return collect(documentContext, typeService, name -> typeService.mayBeDeprecatedMemberName(name, target), true);
