@@ -132,7 +132,7 @@ public class ServerContextProvider {
    * @param workspaceName имя workspace (если null — извлекается из URI)
    * @return созданный контекст сервера
    */
-  public synchronized ServerContext addWorkspace(URI workspaceUri, @Nullable String workspaceName) {
+  public ServerContext addWorkspace(URI workspaceUri, @Nullable String workspaceName) {
 
     if (contexts.containsKey(workspaceUri)) {
       LOGGER.debug("Workspace {} already exists", workspaceUri);
@@ -166,9 +166,6 @@ public class ServerContextProvider {
       promoteToPrimary(workspaceUri);
 
       return serverContext;
-    } catch (RuntimeException | Error failure) {
-      rollbackWorkspaceRegistration(workspaceUri, failure);
-      throw failure;
     }
   }
 
@@ -187,7 +184,7 @@ public class ServerContextProvider {
    *
    * @return дефолтный контекст сервера (идемпотентно: повторные вызовы возвращают существующий)
    */
-  public synchronized ServerContext registerDefaultWorkspace() {
+  public ServerContext registerDefaultWorkspace() {
     var existing = contexts.get(DEFAULT_WORKSPACE_URI);
     if (existing != null) {
       return existing;
@@ -206,9 +203,6 @@ public class ServerContextProvider {
       markPrimaryIfAbsent(DEFAULT_WORKSPACE_URI);
 
       return serverContext;
-    } catch (RuntimeException | Error failure) {
-      rollbackWorkspaceRegistration(DEFAULT_WORKSPACE_URI, failure);
-      throw failure;
     }
   }
 
@@ -217,15 +211,14 @@ public class ServerContextProvider {
    *
    * @param workspaceFolder информация о workspace folder
    */
-  public synchronized void removeWorkspace(WorkspaceFolder workspaceFolder) {
+  public void removeWorkspace(WorkspaceFolder workspaceFolder) {
     var uri = Absolute.uri(workspaceFolder.getUri());
     var preparing = contexts.get(uri);
-    if (preparing == null) {
-      return;
+    if (preparing != null) {
+      // Обработчик подготовки ищет контекст в этой карте, чтобы завершить её.
+      // Сохраняем контекст и его бины до конца подготовки, даже если обработчик ещё не запущен.
+      preparing.awaitPreparation();
     }
-    // Обработчик подготовки ищет контекст в этой карте, чтобы завершить её.
-    // Сохраняем контекст и его бины до конца подготовки, даже если обработчик ещё не запущен.
-    preparing.awaitPreparation();
     // Переставляем главный контекст на другой ДО удаления из карты, чтобы primary никогда не
     // указывал на уже удалённый контекст (иначе getPrimaryContext упал бы в гонке с маршрутизацией).
     repointPrimaryBeforeRemoval(uri);
@@ -416,7 +409,7 @@ public class ServerContextProvider {
   /**
    * Очистить все workspaces.
    */
-  public synchronized void clear() {
+  public void clear() {
     new ArrayList<>(contexts.keySet()).forEach(uri ->
       removeWorkspace(new WorkspaceFolder(uri.toString(), uri.toString()))
     );
@@ -512,23 +505,6 @@ public class ServerContextProvider {
           ? DEFAULT_WORKSPACE_URI : null
       );
     primaryWorkspaceUri.set(next);
-  }
-
-  /** Откатить регистрацию до публикации WorkspaceAddedEvent, сохранив исходную ошибку. */
-  @SuppressWarnings("java:S1698") // Самоподавление исключения запрещено: нужна проверка экземпляра.
-  private void rollbackWorkspaceRegistration(URI uri, Throwable failure) {
-    repointPrimaryBeforeRemoval(uri);
-    contexts.remove(uri);
-    workspaceRoots.remove(uri);
-    try (var ctx = WorkspaceContextHolder.forUri(uri)) {
-      workspaceScope.removeWorkspace(uri);
-    } catch (RuntimeException | Error cleanupFailure) {
-      if (cleanupFailure != failure) {
-        failure.addSuppressed(cleanupFailure);
-      }
-    } finally {
-      WorkspaceContextHolder.unregisterWorkspace(uri);
-    }
   }
 
   private static String extractWorkspaceName(URI workspaceUri) {
