@@ -134,14 +134,35 @@ class MethodAvailabilityRendererTest extends AbstractServerContextAwareTest {
 
   @ParameterizedTest
   @ValueSource(strings = {"bsl", "os"})
-  void filesWithoutMetadataDoNotGainPlatformContexts(String extension) {
+  void filesWithoutMetadataUseOnlyTheirFileContexts(String extension) {
     initServerContext();
     var document = TestUtils.getDocumentContext(URI.create("file:///method-hover." + extension), """
       Процедура Цель()
       КонецПроцедуры
       """, context);
 
-    assertThat(renderer.render(document.getSymbolTree().getMethodSymbol("Цель").orElseThrow())).isEmpty();
+    var rendered = renderer.render(document.getSymbolTree().getMethodSymbol("Цель").orElseThrow());
+    if (extension.equals("os")) {
+      assertThat(rendered).contains("Windows", "Linux", "macOS", "Mono").doesNotContain("сервер", "клиент");
+    } else {
+      assertThat(rendered).isEmpty();
+    }
+  }
+
+  @ParameterizedTest
+  @CsvSource({"RU, Контексты компиляции", "EN, Compilation contexts"})
+  void oneScriptAvailabilityUsesOsAndMonoGuards(Language language, String title) {
+    initServerContext();
+    context.getLanguageServerConfiguration().setLanguage(language);
+    var document = TestUtils.getDocumentContext(URI.create("file:///os-context-hover.os"), """
+      #Если Windows И MONO Тогда
+      Процедура Цель()
+      КонецПроцедуры
+      #КонецЕсли
+      """, context);
+
+    assertThat(renderer.render(document.getSymbolTree().getMethodSymbol("Цель").orElseThrow()))
+      .isEqualTo("**" + title + ":** Windows (Mono)");
   }
 
   @ParameterizedTest
