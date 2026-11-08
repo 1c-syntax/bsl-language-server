@@ -37,6 +37,8 @@ import com.github._1c_syntax.bsl.mdo.support.FormType;
 import com.github._1c_syntax.bsl.mdo.support.ApplicationRunMode;
 import com.github._1c_syntax.bsl.mdo.support.UsePurposes;
 import com.github._1c_syntax.bsl.types.ModuleType;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.github.benmanes.caffeine.cache.LoadingCache;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
@@ -52,6 +54,10 @@ import java.util.Set;
 @Component
 @WorkspaceScope
 class ModuleCompilationContexts {
+  private record PlatformContextsKey(Set<Availability> available, Set<ExecutionContext> supported) { }
+  private static final LoadingCache<PlatformContextsKey, Set<ExecutionContext>> PLATFORM_CONTEXTS =
+    Caffeine.newBuilder().maximumSize(128).build(ModuleCompilationContexts::computePlatformContexts);
+
   private final TypeRegistry typeRegistry;
 
   /**
@@ -75,7 +81,19 @@ class ModuleCompilationContexts {
    * @return поддерживаемые режимы; пустой вход означает отсутствие сведений, а не запрет.
    */
   public static Set<ExecutionContext> platformContexts(Collection<Availability> availabilities) {
-    var direct = fromAvailability(availabilities);
+    return platformContexts(availabilities, ExecutionContext.ALL);
+  }
+
+  /** Чистое отображение двух снимков enum-наборов; в кеше нет данных документа или типов. */
+  static Set<ExecutionContext> platformContexts(Collection<Availability> availabilities,
+                                               Set<ExecutionContext> supported) {
+    var available = EnumSet.noneOf(Availability.class);
+    available.addAll(availabilities);
+    return PLATFORM_CONTEXTS.get(new PlatformContextsKey(available, ExecutionContext.copyOf(supported)));
+  }
+
+  private static Set<ExecutionContext> computePlatformContexts(PlatformContextsKey key) {
+    var direct = fromAvailability(key.available());
     var result = ExecutionContext.copyOf(direct);
     for (var context : ExecutionContext.ALL) {
       if (direct.contains(context.sharedFileContext())
@@ -84,6 +102,7 @@ class ModuleCompilationContexts {
         result.add(context);
       }
     }
+    result.retainAll(key.supported());
     return Set.copyOf(result);
   }
 
@@ -103,7 +122,7 @@ class ModuleCompilationContexts {
       return Optional.empty();
     }
     if (type.kind() == TypeKind.CONFIGURATION) {
-      var module = document.getServerContext().findCommonModule(type.qualifiedName());
+      var module = document.getServerContext().findCommonModuleForTypeName(type.qualifiedName());
       if (module.isPresent()) {
         var contexts = ExecutionContext.copyOf(supportedContexts(document));
         contexts.removeIf(context -> !canSeeCommonModule(module.orElseThrow(), context));
@@ -114,9 +133,7 @@ class ModuleCompilationContexts {
     if (available.isEmpty()) {
       return Optional.empty();
     }
-    var contexts = ExecutionContext.copyOf(platformContexts(available));
-    contexts.retainAll(supportedContexts(document));
-    return Optional.of(Set.copyOf(contexts));
+    return Optional.of(platformContexts(available, supportedContexts(document)));
   }
 
   /**

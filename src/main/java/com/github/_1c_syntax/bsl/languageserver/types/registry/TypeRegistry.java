@@ -589,9 +589,7 @@ public class TypeRegistry {
    * @return найденный член; empty, если такого нет.
    */
   public Optional<MemberDescriptor> findMember(TypeRef ref, MemberKind kind, String name, FileType fileType) {
-    return getMembers(ref, fileType).stream()
-      .filter(member -> member.kind() == kind && member.matches(name))
-      .findFirst();
+    return MemberLookupSession.first(getMembers(ref, fileType), kind, name);
   }
 
   /** Типы-перечисления (источник пометил {@code isEnum}), в разрезе языка. */
@@ -1919,6 +1917,14 @@ public class TypeRegistry {
    */
   public boolean isVersionedMemberName(@Nullable String name) {
     return name != null && memberMetadataIndex.isVersionedName(name);
+  }
+
+  public boolean mayBeDeprecatedMemberName(@Nullable String name, com.github._1c_syntax.bsl.support.CompatibilityMode target) {
+    return name != null && memberMetadataIndex.mayBeDeprecated(name, target);
+  }
+
+  public boolean mayBeUnavailableMemberName(@Nullable String name, com.github._1c_syntax.bsl.support.CompatibilityMode target) {
+    return name != null && memberMetadataIndex.mayBeUnavailable(name, target);
   }
 
   /**
