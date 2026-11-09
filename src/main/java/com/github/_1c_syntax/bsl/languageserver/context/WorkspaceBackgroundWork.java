@@ -32,8 +32,12 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * {@link #isStopped()} и заканчивается, освободив блокировку. Остановленный объект не переиспользуется.
  */
 final class WorkspaceBackgroundWork {
-  private final ReadWriteLock lock = new ReentrantReadWriteLock();
-  private volatile boolean stopped = false;
+  private final ReadWriteLock lock;
+  private volatile boolean stopped;
+
+  WorkspaceBackgroundWork() {
+    lock = new ReentrantReadWriteLock();
+  }
 
   boolean run(Runnable work) {
     lock.readLock().lock();
