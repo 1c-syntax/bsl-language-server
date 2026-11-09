@@ -27,7 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.completion.CompletionData;
 import com.github._1c_syntax.bsl.languageserver.completion.CompletionMemberKeys;
 import com.github._1c_syntax.bsl.languageserver.completion.CompletionContextRanker;
-import com.github._1c_syntax.bsl.languageserver.completion.CompletionInitialization;
+import com.github._1c_syntax.bsl.languageserver.completion.CompletionMethodHintRenderer;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
@@ -139,6 +139,7 @@ public final class CompletionProvider {
 
   private final TypeService typeService;
   private final CompilationContextResolver compilationContexts;
+  private final CompletionMethodHintRenderer completionMethodHintRenderer;
   private final GlobalScopeProvider globalScopeProvider;
   private final EventContractsIndex eventContractsIndex;
   private final OScriptLibraryIndex oScriptLibraryIndex;
@@ -192,7 +193,6 @@ public final class CompletionProvider {
 
   @EventListener(LanguageServerInitializedEvent.class)
   public void handleInitializeEvent() {
-    CompletionInitialization.initialize();
     var completionItem = clientCapabilitiesHolder.getCapabilities()
       .map(ClientCapabilities::getTextDocument)
       .map(TextDocumentClientCapabilities::getCompletion)
@@ -385,10 +385,10 @@ public final class CompletionProvider {
     var items = isDotCompletion(documentContext, position)
       ? dotCompletion(documentContext, position, ranking)
       : noDotCompletion(documentContext, position, ranking);
-    if (configuration.getCompletionOptions().isHideUnavailableByContext()) {
+    if (Boolean.TRUE.equals(configuration.getCompletionOptions().getHideUnavailableByContext())) {
       items = items.stream().filter(item -> !ranking.isUnavailable(item)).toList();
     }
-    ranking.apply(items, labelDetailsSupport).forEach(this::attachContextDescription);
+    completionMethodHintRenderer.apply(ranking, items, labelDetailsSupport).forEach(this::attachContextDescription);
     return new CompletionList(false, items);
   }
 

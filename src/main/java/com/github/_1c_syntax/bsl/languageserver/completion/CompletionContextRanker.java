@@ -22,6 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.completion;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import org.jspecify.annotations.Nullable;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver;
@@ -153,30 +155,18 @@ public final class CompletionContextRanker {
     return priorities.getOrDefault(item, AVAILABLE) == UNAVAILABLE;
   }
 
-  /**
-   * Добавить группу доступности и пометку серверного вызова, сохранив имя, сигнатуру и текст вставки.
-   *
-   * @param items               отобранные предложения, включая переменные и ключевые слова без ограничений.
-   * @param labelDetailsSupport поддерживает ли клиент подпись справа от сигнатуры.
-   * @return пояснения для добавления после документации метода; ключи сравниваются по идентичности.
-   */
-  public Map<CompletionItem, String> apply(Iterable<CompletionItem> items, boolean labelDetailsSupport) {
-    var language = document.getScriptVariantLanguage();
-    var renderer = new CompletionMethodHintRenderer(language, labelDetailsSupport);
-    Map<CompletionItem, String> descriptions = new IdentityHashMap<>();
-    for (var item : items) {
-      if (!priorities.isEmpty()) {
-        item.setSortText(priorities.getOrDefault(item, AVAILABLE) + "_" + item.getSortText());
-      }
-      var hint = hints.get(item);
-      if (hint != null) {
-        var description = renderer.apply(hint, item);
-        if (!description.isBlank()) {
-          descriptions.put(item, description);
-        }
-      }
+  Language language() {
+    return document.getScriptVariantLanguage();
+  }
+
+  void applyPriority(CompletionItem item) {
+    if (!priorities.isEmpty()) {
+      item.setSortText(priorities.getOrDefault(item, AVAILABLE) + "_" + item.getSortText());
     }
-    return descriptions;
+  }
+
+  @Nullable CompletionMethodHint hint(CompletionItem item) {
+    return hints.get(item);
   }
 
   private void remember(CompletionItem item, int priority) {

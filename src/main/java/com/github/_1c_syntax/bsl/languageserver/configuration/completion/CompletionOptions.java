@@ -23,6 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.configuration.completion;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSetter;
+import com.fasterxml.jackson.annotation.Nulls;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -40,5 +42,6 @@ public class CompletionOptions {
    * При выключении они остаются в конце списка. Частично доступные варианты,
    * неизвестная доступность и разрешённые серверные вызовы не исключаются.
    */
-  private boolean hideUnavailableByContext = true;
+  @JsonSetter(nulls = Nulls.SKIP)
+  private Boolean hideUnavailableByContext = true;
 }

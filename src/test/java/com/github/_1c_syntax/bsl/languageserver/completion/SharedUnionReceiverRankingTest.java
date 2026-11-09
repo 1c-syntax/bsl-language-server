@@ -118,9 +118,10 @@ class SharedUnionReceiverRankingTest {
         .isEqualTo(old.rankDotMember(member.name(),member,expected));
       for(var language:List.of(Language.RU,Language.EN)) {
         for(var labels:List.of(true,false)) {
-          var renderer=new CompletionMethodHintRenderer(language,labels);
+          var renderer=new CompletionMethodHintRenderer();
           var before=new CompletionItem("method");var after=new CompletionItem("method");
-          assertThat(renderer.apply(actual,after)).isEqualTo(renderer.apply(expected,before));
+          assertThat(renderer.apply(actual,after,language,labels))
+            .isEqualTo(renderer.apply(expected,before,language,labels));
           assertThat(after).isEqualTo(before);
         }
       }

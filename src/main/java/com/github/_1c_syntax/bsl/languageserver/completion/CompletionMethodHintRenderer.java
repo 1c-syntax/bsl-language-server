@@ -26,23 +26,48 @@ import com.github._1c_syntax.bsl.languageserver.completion.CompletionMethodHint.
 import com.github._1c_syntax.bsl.languageserver.completion.CompletionMethodHint.DescriptionKey;
 import org.eclipse.lsp4j.CompletionItem;
 import org.eclipse.lsp4j.CompletionItemLabelDetails;
+import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Map;
 
-/** Готовые пояснения для одинаковых состояний подсказки в одном запросе. */
-final class CompletionMethodHintRenderer {
-  private final Language language;
-  private final boolean labelDetailsSupport;
-  private final Map<DescriptionKey, Description> descriptions = new HashMap<>();
+/** Форматирование пояснений completion; изменяемые кеши принадлежат одному вызову. */
+@Component
+public final class CompletionMethodHintRenderer {
 
-  CompletionMethodHintRenderer(Language language, boolean labelDetailsSupport) {
-    this.language = language;
-    this.labelDetailsSupport = labelDetailsSupport;
+  /**
+   * Применить приоритеты и пояснения, сохранив имя, сигнатуру и текст вставки.
+   *
+   * @param ranking оценки и контексты текущего запроса.
+   * @param items отобранные предложения, включая варианты без ограничений.
+   * @param labelDetailsSupport поддерживает ли клиент подпись рядом с сигнатурой.
+   * @return пояснения для документации; ключи сравниваются по идентичности пунктов.
+   */
+  public Map<CompletionItem, String> apply(CompletionContextRanker ranking, Iterable<CompletionItem> items,
+                                          boolean labelDetailsSupport) {
+    var language = ranking.language();
+    Map<DescriptionKey, Description> descriptions = new HashMap<>();
+    Map<CompletionItem, String> result = new IdentityHashMap<>();
+    for (var item : items) {
+      ranking.applyPriority(item);
+      var hint = ranking.hint(item);
+      if (hint != null) {
+        var description = descriptions.computeIfAbsent(hint.descriptionKey(), ignored -> hint.render(language));
+        var text = apply(description, item, labelDetailsSupport);
+        if (!text.isBlank()) {
+          result.put(item, text);
+        }
+      }
+    }
+    return result;
   }
 
-  String apply(CompletionMethodHint hint, CompletionItem item) {
-    var description = descriptions.computeIfAbsent(hint.descriptionKey(), ignored -> hint.render(language));
+  String apply(CompletionMethodHint hint, CompletionItem item, Language language, boolean labelDetailsSupport) {
+    return apply(hint.render(language), item, labelDetailsSupport);
+  }
+
+  private static String apply(Description description, CompletionItem item, boolean labelDetailsSupport) {
     var label = description.serverLabel();
     if (label != null) {
       if (labelDetailsSupport) {

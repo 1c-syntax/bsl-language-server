@@ -69,13 +69,13 @@ class SharedReceiverRankingTest {
     var shared = new CompletionMethodHint();
     assertThat(evaluation.rankDotSourceMember("First", fixture.first(), original)).isZero();
     assertThat(evaluation.rankDotSourceMember("Second", fixture.second(), shared)).isZero();
-    var renderer = new CompletionMethodHintRenderer(Language.RU, true);
-    var expected = renderer.apply(original, new CompletionItem("method"));
-    assertThat(renderer.apply(shared, new CompletionItem("method"))).isEqualTo(expected);
+    var renderer = new CompletionMethodHintRenderer();
+    var expected = renderer.apply(original, new CompletionItem("method"), Language.RU, true);
+    assertThat(renderer.apply(shared, new CompletionItem("method"), Language.RU, true)).isEqualTo(expected);
     shared.unknownReceiver();
     var third = new CompletionMethodHint();
     evaluation.rankDotSourceMember("Second", fixture.second(), third);
-    assertThat(renderer.apply(third, new CompletionItem("method"))).isEqualTo(expected);
+    assertThat(renderer.apply(third, new CompletionItem("method"), Language.RU, true)).isEqualTo(expected);
     verify(fixture.resolver(), times(2)).availability(any(), any(), any(), any(), any(), any());
     verify(fixture.types(), times(2)).receiverTypesAt(any(), any(), any());
   }
@@ -87,8 +87,8 @@ class SharedReceiverRankingTest {
     for (var member : List.of(fixture.first(), fixture.second())) {
       var hint = new CompletionMethodHint();
       assertThat(evaluation.rankDotSourceMember(member.name(), member, hint)).isZero();
-      assertThat(new CompletionMethodHintRenderer(Language.RU, true)
-        .apply(hint, new CompletionItem("method"))).isEmpty();
+      assertThat(new CompletionMethodHintRenderer()
+        .apply(hint, new CompletionItem("method"), Language.RU, true)).isEmpty();
     }
     verify(fixture.resolver(), times(1)).availability(any(), any(), any(), any(), any(), any());
   }
@@ -113,10 +113,11 @@ class SharedReceiverRankingTest {
       .thenReturn(CallAvailability.UNKNOWN);
     var second = new CompletionMethodHint();
     fixture.evaluation().rankDotSourceMember("First", fixture.first(), second);
-    var renderer = new CompletionMethodHintRenderer(Language.EN, true);
+    var renderer = new CompletionMethodHintRenderer();
     var oldItem = new CompletionItem("method");
     var newItem = new CompletionItem("method");
-    assertThat(renderer.apply(second, newItem)).isNotEqualTo(renderer.apply(first, oldItem));
+    assertThat(renderer.apply(second, newItem, Language.EN, true))
+      .isNotEqualTo(renderer.apply(first, oldItem, Language.EN, true));
     assertThat(oldItem.getLabelDetails()).isNotNull();
     assertThat(newItem.getLabelDetails()).isNull();
   }
