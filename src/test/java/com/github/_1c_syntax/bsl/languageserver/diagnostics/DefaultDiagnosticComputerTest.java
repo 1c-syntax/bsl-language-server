@@ -39,6 +39,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -142,6 +146,68 @@ class DefaultDiagnosticComputerTest {
     var computer = computerWith(List.of(first, availability, last));
     assertThat(computer.compute(documentContext)).containsExactly(firstResult, availabilityResult, lastResult);
     assertThat(order).containsExactly("availability", "first", "last");
+  }
+
+  @Test
+  void interruptedCollectionCancelsRunningAndQueuedDiagnostics() throws Exception {
+    executor.shutdownNow();
+    executor = Executors.newSingleThreadExecutor();
+    var running = new CountDownLatch(1);
+    var release = new CountDownLatch(1);
+    var interrupted = new CountDownLatch(1);
+    var finished = new CountDownLatch(1);
+    var queuedStarted = new AtomicBoolean();
+    var interruptPreserved = new AtomicBoolean();
+    var failure = new AtomicReference<RuntimeException>();
+    var first = mock(BSLDiagnostic.class);
+    when(first.getDiagnostics(documentContext)).thenAnswer(ignored -> {
+      running.countDown();
+      try {
+        if (!release.await(10, TimeUnit.SECONDS)) {
+          throw new AssertionError("Diagnostic was not released");
+        }
+      } catch (InterruptedException exception) {
+        interrupted.countDown();
+        if (!release.await(5, TimeUnit.SECONDS)) {
+          throw new AssertionError("Cancelled diagnostic was not released");
+        }
+        Thread.currentThread().interrupt();
+      }
+      return List.of();
+    });
+    var queued = mock(BSLDiagnostic.class);
+    when(queued.getDiagnostics(documentContext)).thenAnswer(ignored -> {
+      queuedStarted.set(true);
+      return List.of();
+    });
+    var computer = computerWith(List.of(first, queued));
+    var caller = Thread.ofPlatform().start(() -> {
+      try {
+        computer.compute(documentContext);
+      } catch (RuntimeException exception) {
+        failure.set(exception);
+        interruptPreserved.set(Thread.currentThread().isInterrupted());
+      } finally {
+        finished.countDown();
+      }
+    });
+    try {
+      assertThat(running.await(5, TimeUnit.SECONDS)).isTrue();
+      caller.interrupt();
+      assertThat(finished.await(5, TimeUnit.SECONDS)).isTrue();
+      assertThat(failure.get()).isInstanceOf(IllegalStateException.class)
+        .hasCauseInstanceOf(InterruptedException.class);
+      assertThat(interruptPreserved).isTrue();
+      assertThat(interrupted.await(5, TimeUnit.SECONDS)).isTrue();
+      release.countDown();
+      executor.submit(() -> { }).get(5, TimeUnit.SECONDS);
+      assertThat(queuedStarted).isFalse();
+    } finally {
+      release.countDown();
+      caller.interrupt();
+      caller.join(5000);
+      assertThat(caller.isAlive()).isFalse();
+    }
   }
 
   private DefaultDiagnosticComputer computerWith(List<BSLDiagnostic> diagnostics) {

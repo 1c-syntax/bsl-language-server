@@ -77,12 +77,17 @@ public abstract class DefaultDiagnosticComputer implements DiagnosticComputer {
 
     var futures = submitDiagnostics(documentContext);
 
-    return futures.stream()
-      .map(DefaultDiagnosticComputer::getUninterruptibly)
-      .flatMap(List::stream)
-      .filter(Predicate.not(diagnosticIgnorance::diagnosticShouldBeIgnored))
-      .filter(Predicate.not(gitBlameIgnorance::diagnosticShouldBeIgnored))
-      .toList();
+    try {
+      return futures.stream()
+        .map(DefaultDiagnosticComputer::getUninterruptibly)
+        .flatMap(List::stream)
+        .filter(Predicate.not(diagnosticIgnorance::diagnosticShouldBeIgnored))
+        .filter(Predicate.not(gitBlameIgnorance::diagnosticShouldBeIgnored))
+        .toList();
+    } catch (RuntimeException exception) {
+      futures.forEach(future -> future.cancel(true));
+      throw exception;
+    }
   }
 
   private List<Future<List<Diagnostic>>> submitDiagnostics(DocumentContext documentContext) {
