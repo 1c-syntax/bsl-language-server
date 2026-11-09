@@ -33,7 +33,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  */
 final class WorkspaceBackgroundWork {
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
-  private volatile boolean stopped;
+  private volatile boolean stopped = false;
 
   boolean run(Runnable work) {
     lock.readLock().lock();
