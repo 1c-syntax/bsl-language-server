@@ -82,7 +82,7 @@ class CompletionContextFilteringTest extends AbstractServerContextAwareTest {
 
   @Test
   void hidesUnavailableLocalMethodsByDefaultAndKeepsVariablesAndKeywords() {
-    assertThat(context.getLanguageServerConfiguration().getCompletionOptions().isHideUnavailableByContext()).isTrue();
+    assertThat(context.getLanguageServerConfiguration().getCompletionOptions().getHideUnavailableByContext()).isTrue();
 
     assertThat(form(SERVER_CALLER)).extracting(CompletionItem::getLabel)
       .contains("ServerMethod", "Локальная", "Если").doesNotContain("ClientMethod");
@@ -275,12 +275,18 @@ class CompletionContextFilteringTest extends AbstractServerContextAwareTest {
     Files.writeString(file, "{\"completion\":{\"hideUnavailableByContext\":false}}");
     configuration.update(file.toFile());
 
-    assertThat(configuration.getCompletionOptions().isHideUnavailableByContext()).isFalse();
+    assertThat(configuration.getCompletionOptions().getHideUnavailableByContext()).isFalse();
     assertThat(complete(document, position)).extracting(CompletionItem::getLabel).contains("ClientMethod");
     assertThat(complete(document, position)).filteredOn(item -> item.getLabel().equals("ClientMethod"))
       .singleElement().satisfies(item -> assertThat(item.getSortText()).startsWith("2_"));
+    Files.writeString(file, "{\"completion\":{\"hideUnavailableByContext\":null}}");
+    configuration.update(file.toFile());
+    assertThat(configuration.getCompletionOptions().getHideUnavailableByContext()).isTrue();
+    assertThat(complete(document, position)).extracting(CompletionItem::getLabel).doesNotContain("ClientMethod");
+
+    configuration.getCompletionOptions().setHideUnavailableByContext(false);
     configuration.reset();
-    assertThat(configuration.getCompletionOptions().isHideUnavailableByContext()).isTrue();
+    assertThat(configuration.getCompletionOptions().getHideUnavailableByContext()).isTrue();
     assertThat(complete(document, position)).extracting(CompletionItem::getLabel).doesNotContain("ClientMethod");
     assertThat(document.getSymbolTree()).isSameAs(tree);
   }
