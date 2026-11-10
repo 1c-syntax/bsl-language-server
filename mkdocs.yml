@@ -111,7 +111,7 @@ markdown_extensions:
   - pymdownx.superfences
   - markdown.extensions.toc:
       permalink: true
-      slugify: !!python/name:pymdownx.slugs.uslugify_cased
+      slugify: !!python/object/apply:pymdownx.slugs.slugify {}
       toc_depth: 2
 
 plugins:
