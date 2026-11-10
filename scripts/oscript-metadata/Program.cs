@@ -26,6 +26,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Xml.Linq;
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
@@ -236,10 +237,16 @@ static Dictionary<string, Name[]> SourceEnumValues(string directory)
                     || call.Expression is IdentifierNameSyntax name && name.Identifier.ValueText == "MakeValue")
                 .Select(call => call.ArgumentList.Arguments)
                 .Where(arguments => arguments.Count >= 2
-                    && arguments[0].Expression is LiteralExpressionSyntax literal && literal.Token.Value is string)
-                .Select(arguments => new Name(((LiteralExpressionSyntax)arguments[0].Expression).Token.ValueText,
-                    arguments[1].Expression is LiteralExpressionSyntax alias && alias.Token.Value is string
-                        ? alias.Token.ValueText : ""))
+                    && arguments[0].Expression is LiteralExpressionSyntax literal
+                    && literal.IsKind(SyntaxKind.StringLiteralExpression))
+                .Select(arguments =>
+                {
+                    var name = ((LiteralExpressionSyntax)arguments[0].Expression).Token.ValueText;
+                    var alias = arguments[1].Expression is LiteralExpressionSyntax literal
+                        && literal.IsKind(SyntaxKind.StringLiteralExpression)
+                            ? literal.Token.ValueText : name.All(character => character < 128) ? name : "";
+                    return new Name(name, alias);
+                })
                 .Distinct().ToArray();
             if (values.Length == 0) continue;
             var namespaces = declaration.Ancestors().OfType<BaseNamespaceDeclarationSyntax>().Reverse()

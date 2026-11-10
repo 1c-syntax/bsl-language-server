@@ -91,6 +91,9 @@ class BuiltinTypesJsonLoaderTest {
 
   @Test
   void oscriptEnumPairsKeepCuratedDescriptionsAndCorrectEnglishNames() {
+    for (var name : List.of("ANSI", "OEM", "UTF16", "UTF8")) {
+      assertThat(member(oscriptType("КодировкаТекста"), name).displayName(Language.EN)).isEqualTo(name);
+    }
     var all = member(oscriptType("ВидГруппыМоделиXS"), "Все");
     assertThat(all.displayName(Language.EN)).isEqualTo("All");
     assertThat(all.bilingualDescription().ru()).contains("без требования последовательности");

@@ -7367,7 +7367,7 @@
       {
         "name": "ANSI",
         "nameRu": "ANSI",
-        "nameEn": "default",
+        "nameEn": "ANSI",
         "kind": "PROPERTY",
         "returnType": "КодировкаТекста",
         "description": "Файл в формате ANSI."
@@ -7375,7 +7375,7 @@
       {
         "name": "OEM",
         "nameRu": "OEM",
-        "nameEn": "default",
+        "nameEn": "OEM",
         "kind": "PROPERTY",
         "returnType": "КодировкаТекста",
         "description": "Файл в формате DOS."
@@ -7383,7 +7383,7 @@
       {
         "name": "UTF16",
         "nameRu": "UTF16",
-        "nameEn": "default",
+        "nameEn": "UTF16",
         "kind": "PROPERTY",
         "returnType": "КодировкаТекста",
         "description": "Файл в формате UTF-16."
@@ -7391,7 +7391,7 @@
       {
         "name": "UTF8",
         "nameRu": "UTF8",
-        "nameEn": "default",
+        "nameEn": "UTF8",
         "kind": "PROPERTY",
         "returnType": "КодировкаТекста",
         "description": "Файл в формате UTF-8."
