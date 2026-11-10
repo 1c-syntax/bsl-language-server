@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794312772119,
+  "lastUpdate": 1794316624301,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -46996,6 +46996,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.667281528435932",
             "extra": "mean: 90.93052061398824 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c800744b930f4e2145bd4bc15cca8530f3f6f7f6",
+          "message": "Merge pull request #4694 from 1c-syntax/perf/context-variables-by-scope-without-nodes\n\nПеременные по области в дереве символов хранятся неизменяемой картой, без узла на запись",
+          "timestamp": "2026-11-10T12:51:54+01:00",
+          "tree_id": "e1c068fc91d90eeff78181fc6166daed61176f6e",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/c800744b930f4e2145bd4bc15cca8530f3f6f7f6"
+        },
+        "date": 1794316596365,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 88.64525087674458,
+            "unit": "sec",
+            "range": "stddev: 1.6675479655892673",
+            "extra": "mean: 88.64525087674458 sec\nrounds: 3"
           }
         ]
       }
