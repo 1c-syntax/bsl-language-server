@@ -208,18 +208,12 @@ public class ReferenceIndexFiller {
     var batch = new ArrayList<SymbolOccurrence>();
     var sink = new BatchingSink(batch);
     var documentContextAst = documentContext.getAst();
-    try {
-      new MethodSymbolReferenceIndexFinder(documentContext, sink).visitFile(documentContextAst);
-      new VariableSymbolReferenceIndexFinder(documentContext, sink).visitFile(documentContextAst);
-      // Неквалифицированные self-члены (реквизиты/платформенные методы self-типа модуля)
-      // индексируются только если у модуля вообще есть self-тип — иначе проход впустую.
-      if (globalScopeProvider.moduleTypeRefByUri(documentContext.getUri()).isPresent()) {
-        new SelfMemberReferenceIndexFinder(documentContext, sink).visitFile(documentContextAst);
-      }
-    } catch (RuntimeException e) {
-      // Пачка не публикуется, а символы её вхождений уже интернированы — остались бы в индексе метками.
-      index.discardOccurrences(batch);
-      throw e;
+    new MethodSymbolReferenceIndexFinder(documentContext, sink).visitFile(documentContextAst);
+    new VariableSymbolReferenceIndexFinder(documentContext, sink).visitFile(documentContextAst);
+    // Неквалифицированные self-члены (реквизиты/платформенные методы self-типа модуля)
+    // индексируются только если у модуля вообще есть self-тип — иначе проход впустую.
+    if (globalScopeProvider.moduleTypeRefByUri(documentContext.getUri()).isPresent()) {
+      new SelfMemberReferenceIndexFinder(documentContext, sink).visitFile(documentContextAst);
     }
     index.replaceReferences(documentContext.getUri(), batch);
     filled.add(documentContext.getUri());

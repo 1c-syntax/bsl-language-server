@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.references;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.references.model.LocationRepository;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
-import com.github._1c_syntax.bsl.languageserver.references.model.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrence;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrenceRepository;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
@@ -42,7 +41,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.annotation.DirtiesContext;
 
 import java.nio.file.Path;
-import java.util.List;
 import java.util.stream.Collectors;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
@@ -117,8 +115,6 @@ class ReferenceIndexTest extends AbstractServerContextAwareTest {
       assertThat(occurrences)
         .isNotEmpty()
         .allSatisfy(occurrence -> assertThat(occurrence.symbol()).isSameAs(key));
-      var copy = new Symbol(key.mdoRef(), key.moduleType(), key.scopeName(), key.symbolKind(), key.symbolName());
-      assertThat(symbolOccurrenceRepository.intern(copy)).isSameAs(key);
     });
   }
 
@@ -452,23 +448,6 @@ class ReferenceIndexTest extends AbstractServerContextAwareTest {
       var reference = referenceIndex.getReference(uri, position);
 
       assertThat(reference).isEmpty();
-    }
-
-    @Test
-    @DirtiesContext
-    void discardedOccurrencesReleaseTheirInternedSymbols() {
-      // given: вхождение построено (символ интернирован), но в индекс не попало
-      var uri = context.getDocuments().keySet().iterator().next();
-      var occurrence = referenceIndex.methodCallOccurrence(
-        uri, "CommonModule.ОтброшенныйМодуль", ModuleType.CommonModule, "Метод", Ranges.create(0, 0, 5));
-
-      // when
-      referenceIndex.discardOccurrences(List.of(occurrence));
-
-      // then: метки символа в индексе не осталось
-      var key = occurrence.symbol();
-      var copy = new Symbol(key.mdoRef(), key.moduleType(), key.scopeName(), key.symbolKind(), key.symbolName());
-      assertThat(symbolOccurrenceRepository.intern(copy)).isNotSameAs(key);
     }
 
     @Test

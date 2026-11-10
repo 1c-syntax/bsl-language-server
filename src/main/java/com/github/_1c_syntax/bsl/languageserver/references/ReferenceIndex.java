@@ -35,6 +35,7 @@ import com.github._1c_syntax.bsl.languageserver.references.model.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrence;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrenceRepository;
 import com.github._1c_syntax.bsl.types.ModuleType;
+import com.github._1c_syntax.utils.GenericInterner;
 import com.github._1c_syntax.utils.StringInterner;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Position;
@@ -74,6 +75,7 @@ public class ReferenceIndex {
 
   private final ServerContextProvider serverContextProvider;
   private final StringInterner stringInterner;
+  private final GenericInterner<Symbol> referenceSymbolInterner;
   private final LocationRepository locationRepository;
   private final SymbolOccurrenceRepository symbolOccurrenceRepository;
   private final SelfMemberResolver selfMemberResolver;
@@ -215,6 +217,7 @@ public class ReferenceIndex {
   public void clear() {
     symbolOccurrenceRepository.clear();
     locationRepository.clear();
+    referenceSymbolInterner.clear();
   }
 
   /**
@@ -255,16 +258,6 @@ public class ReferenceIndex {
     // набора вхождений документа — плотнее (массив вместо concurrent-множества)
     // и без «пустого окна» для читателей.
     locationRepository.replaceOccurrences(uri, replacement);
-  }
-
-  /**
-   * Отказаться от построенных, но не опубликованных вхождений: символы, интернированные при их
-   * построении и так и не получившие обращений, перестают занимать место в индексе.
-   *
-   * @param occurrences Отброшенные вхождения.
-   */
-  public void discardOccurrences(Iterable<SymbolOccurrence> occurrences) {
-    occurrences.forEach(occurrence -> symbolOccurrenceRepository.releaseUnused(occurrence.symbol()));
   }
 
   /**
@@ -323,7 +316,7 @@ public class ReferenceIndex {
                                                   String symbolName, Range range) {
     var symbolNameCanonical = stringInterner.intern(symbolName.toLowerCase(Locale.ENGLISH));
 
-    var symbol = symbolOccurrenceRepository.intern(Symbol.builder()
+    var symbol = referenceSymbolInterner.intern(Symbol.builder()
       .mdoRef(mdoRef)
       .moduleType(moduleType)
       .scopeName("")
@@ -352,7 +345,7 @@ public class ReferenceIndex {
       ModuleSymbol.nameOf(mdoRef, moduleType).toLowerCase(Locale.ENGLISH)
     );
 
-    var symbol = symbolOccurrenceRepository.intern(Symbol.builder()
+    var symbol = referenceSymbolInterner.intern(Symbol.builder()
       .mdoRef(mdoRef)
       .moduleType(moduleType)
       .scopeName("")
@@ -386,7 +379,7 @@ public class ReferenceIndex {
     var methodNameCanonical = stringInterner.intern(methodName.toLowerCase(Locale.ENGLISH));
     var variableNameCanonical = stringInterner.intern(variableName.toLowerCase(Locale.ENGLISH));
 
-    var symbol = symbolOccurrenceRepository.intern(Symbol.builder()
+    var symbol = referenceSymbolInterner.intern(Symbol.builder()
       .mdoRef(mdoRef)
       .moduleType(moduleType)
       .scopeName(methodNameCanonical)
@@ -417,7 +410,7 @@ public class ReferenceIndex {
                                                   OccurrenceType occurrenceType) {
     var nameCanonical = stringInterner.intern(name.toLowerCase(Locale.ENGLISH));
 
-    var symbol = symbolOccurrenceRepository.intern(Symbol.builder()
+    var symbol = referenceSymbolInterner.intern(Symbol.builder()
       .mdoRef(mdoRef)
       .moduleType(moduleType)
       .scopeName(SELF_MEMBER_SCOPE)
