@@ -7,7 +7,7 @@ The current resources target **OneScript 2.2.0**. The binary input is `OneScript
 Requirements: .NET SDK 8 and Node.js. Roslyn 4.11.0 is pinned through NuGet and the checked-in lock file; restoring the tool requires access to NuGet or a populated package cache. Obtain the matching OneScript source tree and runtime archive; extraction does not require a git checkout.
 
 ```sh
-dotnet restore scripts/oscript-metadata/MetadataExporter.csproj --locked-mode --artifacts-path build/oscript-metadata
+dotnet restore scripts/oscript-metadata/MetadataExporter.csproj --locked-mode -p:ArtifactsPath="$(pwd)/build/oscript-metadata"
 dotnet build scripts/oscript-metadata/MetadataExporter.csproj --no-restore --artifacts-path build/oscript-metadata
 dotnet build/oscript-metadata/bin/MetadataExporter/debug/MetadataExporter.dll /path/to/runtime/bin build/oscript-runtime.json /path/to/onescript/source
 node scripts/oscript-metadata/update.cjs build/oscript-runtime.json src/main/resources/com/github/_1c_syntax/bsl/languageserver/types/registry /path/to/onescript/source/src/OneScriptDocumenter/BasicMethods.json
