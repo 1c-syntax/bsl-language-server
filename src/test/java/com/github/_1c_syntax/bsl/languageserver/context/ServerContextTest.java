@@ -273,6 +273,33 @@ class ServerContextTest extends AbstractServerContextAwareTest {
     assertThat(context.getDocuments()).isEmpty();
   }
 
+  /** Закрытие области после появления индикатора отменяет загрузку файлов без сообщения об успехе. */
+  @Test
+  void stoppingPopulationAfterProgressStartsSkipsFilesAndDoesNotReportCompletion() throws Exception {
+    initServerContext(PATH_TO_METADATA, false);
+    var reporter = mock(WorkDoneProgressHelper.WorkDoneProgressReporter.class);
+    var stopping = new AtomicReference<CompletableFuture<Void>>();
+    var activity = new AtomicReference<Supplier<String>>();
+    doReturn(reporter).when(workDoneProgressHelper)
+      .createProgress(ArgumentMatchers.anyInt(), ArgumentMatchers.anyString());
+    doAnswer(invocation -> {
+      activity.set(invocation.getArgument(0));
+      stopping.set(CompletableFuture.runAsync(context::stopBackgroundWork));
+      await().atMost(Duration.ofSeconds(10)).until(context::isBackgroundWorkStopped);
+      return true;
+    }).when(reporter).reportActivity(ArgumentMatchers.any());
+
+    context.populateContext(List.of(new File(PATH_TO_METADATA, PATH_TO_MODULE_FILE)));
+
+    assertThat(stopping.get()).isNotNull();
+    stopping.get().get(10, TimeUnit.SECONDS);
+    assertThat(context.getDocuments()).isEmpty();
+    assertThat(activity.get()).isNotNull();
+    assertThat(activity.get().get()).isEmpty();
+    verify(reporter, never()).tick();
+    verify(reporter).endProgress("");
+  }
+
   @Test
   void stoppingBackgroundWorkWaitsForWorkInProgress() throws Exception {
     // given — фоновая работа идёт
