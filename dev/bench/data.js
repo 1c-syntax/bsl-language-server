@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794329619841,
+  "lastUpdate": 1794332868282,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -47120,6 +47120,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.5307924287618326",
             "extra": "mean: 88.61813155810039 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "171ebe69f4115b500cd35bb5bfad67ba9b64b9e6",
+          "message": "Merge pull request #4683 from 1c-syntax/perf/types-alias-index-without-lowercase-copies\n\nИндекс имён типов не держит копии имён в нижнем регистре",
+          "timestamp": "2026-11-10T18:07:03+01:00",
+          "tree_id": "7b49c5f89351881da64f658c44aabcaadd83b62a",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/171ebe69f4115b500cd35bb5bfad67ba9b64b9e6"
+        },
+        "date": 1794332839131,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 87.22536245981853,
+            "unit": "sec",
+            "range": "stddev: 2.273700308774721",
+            "extra": "mean: 87.22536245981853 sec\nrounds: 3"
           }
         ]
       }
