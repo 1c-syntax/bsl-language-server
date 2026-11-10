@@ -55,6 +55,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -72,6 +73,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
@@ -210,12 +212,11 @@ public class TypeRegistry {
    * @param epoch      эпоха, при которой они собраны.
    * @param generation поколение типа, при котором они собраны.
    * @param members    члены — неизменяемый вид.
-   * @param slots      те же члены как список фиксированной длины, в котором их можно подменять на
-   *                   месте, если члены освежаются (только у {@link #GLOBAL_CONTEXT}); иначе
-   *                   {@code null}.
+   * @param slots      атомарные ячейки тех же членов, обновляемые на месте только у
+   *                   {@link #GLOBAL_CONTEXT}; иначе {@code null}.
    */
   private record CachedMembers(long epoch, long generation, List<MemberDescriptor> members,
-                               @Nullable List<MemberDescriptor> slots) {
+                               @Nullable AtomicReferenceArray<MemberDescriptor> slots) {
   }
 
   /**
@@ -580,18 +581,33 @@ public class TypeRegistry {
     var key = new MembersKey(ref, fileType);
     var generation = membersGeneration.getOrDefault(key, 0L);
     var members = computeMembers(ref, fileType);
-    List<MemberDescriptor> slots = null;
+    AtomicReferenceArray<MemberDescriptor> slots = null;
     if (GLOBAL_CONTEXT.equals(ref)) {
       // Символ-источник глобального свойства освежается на месте (см.
-      // refreshGlobalPropertyDeclaration), поэтому под неизменяемым видом — свой список.
-      slots = Arrays.asList(members.toArray(MemberDescriptor[]::new));
-      members = Collections.unmodifiableList(slots);
+      // refreshGlobalPropertyDeclaration). Атомарные ячейки публикуют замену читателям,
+      // которые обращаются к сохранённому виду списка без globalContextLock.
+      slots = new AtomicReferenceArray<>(members.toArray(MemberDescriptor[]::new));
+      members = globalMembersView(slots);
     }
     // Штампуем поколением, снятым ДО вычисления: если во время computeMembers прошла
     // точечная инвалидация (bump поколения), запись окажется устаревшей и будет
     // отвергнута следующим чтением — гонка «публикация устаревшего результата» закрыта.
     membersCache.put(key, new CachedMembers(epoch, generation, members, slots));
     return members;
+  }
+
+  private static List<MemberDescriptor> globalMembersView(AtomicReferenceArray<MemberDescriptor> slots) {
+    return Collections.unmodifiableList(new AbstractList<>() {
+      @Override
+      public MemberDescriptor get(int index) {
+        return slots.get(index);
+      }
+
+      @Override
+      public int size() {
+        return slots.length();
+      }
+    });
   }
 
   /**
@@ -719,8 +735,8 @@ public class TypeRegistry {
     }
   }
 
-  private static void replaceDeclaration(List<MemberDescriptor> slots, SourceDefinedSymbol declaration) {
-    for (var i = 0; i < slots.size(); i++) {
+  private static void replaceDeclaration(AtomicReferenceArray<MemberDescriptor> slots, SourceDefinedSymbol declaration) {
+    for (var i = 0; i < slots.length(); i++) {
       var member = slots.get(i);
       // Документ сравнивается по ссылке — он у символа один и тот же, а полное равенство
       // сравнивало бы адреса всех членов глобального контекста.
