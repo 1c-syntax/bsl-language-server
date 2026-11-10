@@ -788,8 +788,8 @@ public final class CompletionProvider {
     collectGlobalProperties(query, items);
     var target = PlatformMemberVersions.targetCompatibilityMode(documentContext, configuration);
     collectGlobalFunctions(query, items, target);
-    collectLocalMethods(query, items);
-    var declaredLocalNames = collectLocalVariables(query, items);
+    var declaredLocalNames = collectLocalMethods(query, items);
+    collectLocalVariables(query, items, declaredLocalNames);
 
     selfRef.ifPresent(ref -> collectSelfMembers(ref, documentContext, declaredLocalNames, target, prefix, items, ranking));
     // Заглушки ещё не объявленных обработчиков платформенных событий owner-типа модуля —
@@ -906,7 +906,9 @@ public final class CompletionProvider {
     }
   }
 
-  private void collectLocalMethods(NoDotContext query, List<CompletionItem> items) {
+  private Set<String> collectLocalMethods(NoDotContext query, List<CompletionItem> items) {
+    var declaredLocalNames = new HashSet<String>();
+    var hideUnavailable = Boolean.TRUE.equals(configuration.getCompletionOptions().getHideUnavailableByContext());
     // Local methods of current document
     for (var method : query.document().getSymbolTree().getMethods()) {
       if (matches(method.getName(), query.prefix())) {
@@ -923,32 +925,25 @@ public final class CompletionProvider {
         applySortText(item, method.getSymbolKind() == SymbolKind.Event ? BUCKET_EVENT_STUB : BUCKET_LOCAL,
           method.isDeprecated());
         query.ranking().rankLocalMethod(item, method);
+        if (!hideUnavailable || !query.ranking().isUnavailable(item)) {
+          declaredLocalNames.add(memberKey(MemberKind.METHOD, method.getName()));
+        }
         applyCommitCharacters(item);
         items.add(item);
       }
     }
+    return declaredLocalNames;
   }
 
-  private Set<String> collectLocalVariables(NoDotContext query, List<CompletionItem> items) {
+  private void collectLocalVariables(NoDotContext query, List<CompletionItem> items, Set<String> declaredLocalNames) {
     // Local variables of current document — только модульного уровня и текущей
     // области видимости (параметры/локальные переменные метода, в котором стоит
     // курсор); переменные и параметры ДРУГИХ методов документа не видны здесь и
     // не должны предлагаться (см. VariableSymbol.getScope()).
     var moduleSymbol = query.document().getSymbolTree().getModule();
     var enclosingMethod = enclosingMethod(query.document(), query.position());
-    // Имена локальных объявлений, видимых в текущей области, — приоритетнее
-    // одноимённого self-члена (см. collectSelfMembers), но только внутри
-    // СВОЕГО вида: локальный метод перекрывает self-метод того же имени
-    // (вызов "Имя(...)" — процедуры/функции), локальная переменная —
-    // self-свойство (голая ссылка на имя — переменные); они живут в разных
-    // пространствах имён BSL, поэтому ключ дедупликации несёт вид члена (см.
-    // memberKey). Методы документа видны из любой его точки, поэтому
-    // в дедупликацию идут все целиком; переменные — только модульного уровня
-    // и текущей области (та же видимость, что и в цикле ниже).
-    var declaredLocalNames = new HashSet<String>();
-    for (var method : query.document().getSymbolTree().getMethods()) {
-      declaredLocalNames.add(memberKey(MemberKind.METHOD, method.getName()));
-    }
+    // Видимая переменная перекрывает только self-свойство: переменные и методы
+    // живут в разных пространствах имён, поэтому ключ дедупликации несёт вид члена.
     for (var variable : query.document().getSymbolTree().getVariables()) {
       if (isVariableHiddenFromNoDotCompletion(variable, moduleSymbol, enclosingMethod.orElse(null))) {
         continue;
@@ -969,7 +964,6 @@ public final class CompletionProvider {
         items.add(item);
       }
     }
-    return declaredLocalNames;
   }
 
   private void collectKeywords(NoDotContext query, List<CompletionItem> items) {

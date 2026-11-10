@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.CompletionItem;
@@ -72,6 +73,8 @@ class CompletionContextFilteringTest extends AbstractServerContextAwareTest {
   private CompletionProvider provider;
   @Autowired
   private TypeRegistry registry;
+  @Autowired
+  private GlobalScopeProvider globals;
   @TempDir
   Path temporary;
 
@@ -294,6 +297,33 @@ class CompletionContextFilteringTest extends AbstractServerContextAwareTest {
   @Test
   void emptyDotCompletionDoesNotRequireAMutableList() {
     assertThat(form("&AtClient\nProcedure Caller()\n  Unknown.|\nEndProcedure")).isEmpty();
+  }
+
+  @Test
+  void preprocessorExcludesLocalNamesakeButKeepsTheAvailableSelfMethod() {
+    var source = """
+      #If ThinClient Then
+      &AtClient
+      Procedure Открыть()
+      EndProcedure
+      #EndIf
+      &AtClient
+      Procedure Caller()
+        #If WebClient Then
+          Откр|
+        #EndIf
+      EndProcedure
+      """;
+    var document = TestUtils.getDocumentContext(ROOT.resolve("CommonForms/Тест/Ext/Form/Module.bsl").toUri(),
+      source.replace("|", ""), context);
+    var selfType = globals.moduleTypeRefByUri(document.getUri()).orElseThrow();
+    registry.registerMemberOverride(selfType, () -> List.of(
+      MemberDescriptor.method("Открыть", "", List.of()).withMetadata(metadata(Set.of(Availability.WEB_CLIENT)))
+    ), FileType.BSL);
+
+    var items = complete(document, position(source));
+
+    assertThat(items).filteredOn(item -> item.getLabel().equals("Открыть")).hasSize(1);
   }
 
   private List<CompletionItem> form(String source) {
