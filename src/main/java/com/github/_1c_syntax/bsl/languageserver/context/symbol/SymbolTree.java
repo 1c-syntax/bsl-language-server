@@ -104,7 +104,7 @@ public class SymbolTree {
 
   /**
    * Переменные по области объявления: в каждой области упорядочены по имени без учёта
-   * регистра, из одноимённых — первая объявленная.
+   * регистра, из одноимённых — первая объявленная. Карта неизменяемая.
    */
   @Getter(value = AccessLevel.PRIVATE, lazy = true)
   Map<SourceDefinedSymbol, VariableSymbol[]> variablesByScope = createVariablesByScope();
@@ -526,7 +526,7 @@ public class SymbolTree {
     }
     Map<SourceDefinedSymbol, VariableSymbol[]> result = HashMap.newHashMap(byScope.size());
     byScope.forEach((scope, inScope) -> result.put(scope, sortedUniqueByName(inScope, new VariableSymbol[0])));
-    return result;
+    return Map.copyOf(result);
   }
 
   private MethodSymbol[] createMethodsByName() {
