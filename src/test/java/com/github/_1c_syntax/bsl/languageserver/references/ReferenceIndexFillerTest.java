@@ -515,6 +515,44 @@ class ReferenceIndexFillerTest extends AbstractServerContextAwareTest {
     assertThat(referencesToFuncFromTest).hasSize(1);
   }
 
+  /**
+   * Переменная тела модуля без {@code Перем} из методов не видна, поэтому её связь с общим
+   * модулем в метод не переносится, даже когда тело модуля стоит до методов.
+   */
+  @Test
+  void testCommonModuleMappingOfModuleBodyVariableDoesNotReachMethods() throws IOException {
+    initServerContext(PATH_TO_METADATA);
+
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexCommonModuleBodyBeforeMethods.bsl"
+    );
+
+    var file = new File(PATH_TO_METADATA,
+      "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
+    var uri = Absolute.uri(file);
+    var commonModuleContext = TestUtils.getDocumentContext(
+      uri,
+      FileUtils.readFileToString(file, StandardCharsets.UTF_8),
+      context
+    );
+
+    referenceIndexFiller.fill(documentContext);
+
+    // Вызов из тела модуля индексируется
+    var procMethod = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяПроцедура");
+    assertThat(procMethod).isPresent();
+    assertThat(referenceIndex.getReferencesTo(procMethod.get()))
+      .filteredOn(ref -> ref.uri().equals(documentContext.getUri()))
+      .hasSize(1);
+
+    // Одноимённое обращение из метода к объекту тела модуля не относится
+    var funcMethod = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяФункция");
+    assertThat(funcMethod).isPresent();
+    assertThat(referenceIndex.getReferencesTo(funcMethod.get()))
+      .filteredOn(ref -> ref.uri().equals(documentContext.getUri()))
+      .isEmpty();
+  }
+
   @Test
   void testCommonModuleVariableIsolationBetweenMethods() throws IOException {
     initServerContext(PATH_TO_METADATA);
@@ -712,5 +750,25 @@ class ReferenceIndexFillerTest extends AbstractServerContextAwareTest {
     );
     // Не должно быть ссылки на модуль ПервыйОбщийМодуль, т.к. это строковый литерал - параметр метода
     assertThat(referenceOnModuleName).isEmpty();
+  }
+
+  @Test
+  void testFindVariablesInModuleWithoutMethods() {
+    // given: код модуля без единого метода — область метода так и не появляется.
+    var documentContext = TestUtils.getDocumentContext("""
+      Перем Счетчик;
+      Счетчик = 1;
+      Сообщить(Счетчик);
+      """);
+
+    // when
+    referenceIndexFiller.fill(documentContext);
+
+    // then: обращение находит переменную модуля.
+    var referencedSymbol = referenceIndex.getReference(documentContext.getUri(), new Position(2, 10));
+    assertThat(referencedSymbol).get()
+      .extracting(Reference::symbol)
+      .extracting(Symbol::getName)
+      .isEqualTo("Счетчик");
   }
 }

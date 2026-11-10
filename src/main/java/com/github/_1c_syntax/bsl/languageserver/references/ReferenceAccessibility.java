@@ -22,7 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Exportable;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 
 /**
@@ -45,9 +47,12 @@ final class ReferenceAccessibility {
       return true;
     }
 
-    var to = reference.getSourceDefinedSymbol().orElseThrow();
-    var from = reference.from();
-    if (to.getOwner().equals(from.getOwner())) {
+    return isAccessible(reference.from().getOwner(), reference.getSourceDefinedSymbol().orElseThrow());
+  }
+
+  /** Та же проверка, когда вызывающему нужна только цель и известен документ обращения. */
+  static boolean isAccessible(DocumentContext fromOwner, SourceDefinedSymbol to) {
+    if (to.getOwner().equals(fromOwner)) {
       return true;
     }
 
