@@ -2390,6 +2390,9 @@
 <p><a href="../">← All features</a></p>
 <h2 id="Quick-documentation-on-hover">Quick documentation on hover<a class="headerlink" href="#Quick-documentation-on-hover" title="Permanent link">&para;</a></h2>
 <p>The cursor hovers over a method call in the module code. The popup shows the method's signature and its description from the doc comment.</p>
+<p>For an application method, hover also shows <strong>compilation contexts</strong>: the intersection of module flags, the method directive and the preprocessor condition surrounding its declaration. For example, a client method under <code>#If WebClient</code> lists only the web client. Same-named declarations in separate branches retain their own contexts.</p>
+<p>The <strong>Server call</strong> note appears when a transition to the method's server context is possible. It accounts for form or command directives, common module exports and the Server call flag, and the declaration condition. The <code>MethodCallUnavailable</code> diagnostic separately checks whether a particular procedure may make a particular call.</p>
+<p>This information describes the method's capabilities independently of enabled diagnostics and their selected checking modes. File-mode variants are listed separately when availability is limited to them. No 1C compilation-context section is added for unknown preprocessor conditions, missing module information or OneScript. A provably excluded declaration is shown as having no compilation contexts.</p>
 <p><img alt="hover-01-method" src="https://github.com/user-attachments/assets/cff69a27-5b22-45a0-abac-1681ba649cd1" /></p>
 <h2 id="Hover-on-a-variable">Hover on a variable<a class="headerlink" href="#Hover-on-a-variable" title="Permanent link">&para;</a></h2>
 <p>The cursor hovers over a variable in the module code. The popup shows the variable name and the inferred type of its value.</p>
@@ -2416,7 +2419,7 @@ The same setting applies to method context descriptions and inlay hints.</p>
 <p>The cursor hovers over the variable <code>Количество</code>, assigned the result of <code>Массив.Количество()</code>. The popup shows the type <code>Число</code>, inferred from that expression.</p>
 <p><img alt="hover-07-inferred-type" src="https://github.com/user-attachments/assets/e6f4ff0d-8a56-4027-836e-05d50ce7a5b5" /></p>
 <h2 id="Hover-on-a-common-module">Hover on a common module<a class="headerlink" href="#Hover-on-a-common-module" title="Permanent link">&para;</a></h2>
-<p>The cursor hovers over a common module name in the code. The popup shows the common module's name and its description.</p>
+<p>The cursor hovers over a common module name in the code. The popup shows its name, description, module flags and return-value reuse setting.</p>
 <p><img alt="hover-08-common-module" src="https://github.com/user-attachments/assets/52795e2a-612e-4e9a-aa38-02122f54f097" /></p>
 <h2 id="OneScript-hover-on-an-annotation">OneScript: hover on an annotation<a class="headerlink" href="#OneScript-hover-on-an-annotation" title="Permanent link">&para;</a></h2>
 <p>The cursor hovers over a usage of the <code>&amp;Кэшировать</code> annotation in a OneScript module. The popup shows the description of that annotation.</p>
