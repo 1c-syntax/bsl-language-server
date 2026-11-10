@@ -45,7 +45,8 @@ AssemblyLoadContext.Default.Resolving += (_, name) =>
 
 var assemblies = Directory.GetFiles(directory, "*.dll")
     .Where(file => Path.GetFileName(file).StartsWith("OneScript.", StringComparison.Ordinal)
-        || Path.GetFileName(file).StartsWith("ScriptEngine", StringComparison.Ordinal))
+        || Path.GetFileName(file).StartsWith("ScriptEngine", StringComparison.Ordinal)
+        || Path.GetFileName(file).Equals("oscript.dll", StringComparison.OrdinalIgnoreCase))
     .Where(IsManaged)
     .OrderBy(file => file, StringComparer.Ordinal).Select(AssemblyLoadContext.Default.LoadFromAssemblyPath).ToArray();
 var types = assemblies.SelectMany(assembly => assembly.GetTypes()).ToArray();
@@ -76,6 +77,7 @@ foreach (var type in types.OrderBy(type => type.FullName, StringComparer.Ordinal
             .Select(parameter => new
             {
                 name = parameter.Name,
+                clrType = parameter.ParameterType.Name,
                 description = Text(doc?.Elements("param")
                     .FirstOrDefault(element => (string?)element.Attribute("name") == parameter.Name)),
                 type = TypeName(parameter.ParameterType.IsByRef || IsVariadic(parameter, constructor != null)
@@ -88,6 +90,11 @@ foreach (var type in types.OrderBy(type => type.FullName, StringComparer.Ordinal
         {
             name = AttributeName(attribute ?? constructor!, method.Name),
             clrName = method.Name,
+            deprecatedNames = method.GetCustomAttributesData()
+                .Where(item => item.AttributeType.Name == "DeprecatedNameAttribute")
+                .SelectMany(item => item.ConstructorArguments
+                    .Where(argument => argument.ArgumentType == typeof(string))
+                    .Select(argument => (string)argument.Value!)).ToArray(),
             description = Text(doc?.Element("summary")),
             returnDescription = Text(doc?.Element("returns")),
             documentation = documentation.GetValueOrDefault(DocumentationKey(method.DeclaringType!.FullName!, method.Name,
@@ -110,8 +117,8 @@ foreach (var type in types.OrderBy(type => type.FullName, StringComparer.Ordinal
                 ?.Element("summary")),
             documentation = documentation.GetValueOrDefault(property.DeclaringType!.FullName + "." + property.Name)?.ToString(),
             type = TypeName(property.PropertyType),
-            canRead = property.GetMethod?.IsPublic == true,
-            canWrite = property.SetMethod?.IsPublic == true
+            canRead = property.GetMethod?.IsPublic == true && AttributeBoolean(attribute, "CanRead", true),
+            canWrite = property.SetMethod?.IsPublic == true && AttributeBoolean(attribute, "CanWrite", true)
         });
     }
     var values = type.GetFields(BindingFlags.Public | BindingFlags.Static)
@@ -166,12 +173,17 @@ Name AttributeName(CustomAttributeData attribute, string fallback)
     return new Name(strings.FirstOrDefault() ?? named ?? fallback, strings.Skip(1).FirstOrDefault() ?? "");
 }
 
+static bool AttributeBoolean(CustomAttributeData attribute, string name, bool fallback) =>
+    attribute.NamedArguments.FirstOrDefault(argument => argument.MemberName == name).TypedValue.Value
+        is bool value ? value : fallback;
+
 static bool IsVariadic(ParameterInfo parameter, bool constructor) =>
     constructor && parameter.ParameterType.IsArray
     || parameter.GetCustomAttributesData().Any(item => item.AttributeType == typeof(ParamArrayAttribute));
 
 string TypeName(Type type)
 {
+    type = Nullable.GetUnderlyingType(type) ?? type;
     if (names.TryGetValue(type, out var name)) return name.Ru;
     if (type == typeof(string)) return "Строка";
     if (type == typeof(bool)) return "Булево";

@@ -21,4 +21,4 @@ Legacy enumeration values registered with literal `WrapClrValue` or `MakeValue` 
 
 OneScript constructors capture array parameters as an argument tail even without the CLR `ParamArray` attribute; see `ScriptEngine/Machine/TypeFactory.cs` in the source release. Ordinary array-valued method parameters remain ordinary parameters.
 
-After regeneration run the builtin-loader, global inference and signature-help tests. Review API removals and uncertain types: a CLR `IValue` alone cannot describe a more specific script union.
+After regeneration run `node --test scripts/oscript-metadata/update.test.cjs` and the builtin-loader, global inference and signature-help tests. Review API removals and uncertain types: a CLR `IValue` alone cannot describe a more specific script union.

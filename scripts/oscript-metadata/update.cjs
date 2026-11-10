@@ -22,8 +22,48 @@ const named = value => ({name: value.Ru, nameRu: value.Ru, nameEn: value.En || '
 const matches = (value, name) => [value.name, value.nameRu, value.nameEn, ...(value.aliases || [])]
   .some(candidate => candidate && lower(candidate) === lower(name));
 const find = (values, name) => values.find(value => matches(value, name));
+const documentedEnums = new Map([
+  ...oldTypes.filter(type => type.kind === 'ENUM').flatMap(type => [type.name, type.nameEn, ...(type.aliases || [])].filter(Boolean)
+    .map(name => [lower(name), type.name])),
+  ...raw.filter(context => context.enumeration).flatMap(context => [context.name.Ru, context.name.En].filter(Boolean)
+    .map(name => [lower(name), context.name.Ru]))
+]);
 const typeFields = (value, field = 'type') => !value ? {} : value.includes('|')
   ? {[field === 'type' ? 'types' : 'returnTypes']: value.split('|').map(name => name.trim())} : {[field]: value};
+const typeNotes = {
+  'Консоль': 'Используйте глобальный объект Консоль: конструктор этого типа не предоставляется.'
+};
+
+function typeDescription(context, previous) {
+  const description = context.description || previous.description || '';
+  const note = typeNotes[context.name.Ru];
+  return note && !description.includes(note) ? `${description} ${note}`.trim() : description;
+}
+
+function parameterType(value, previous) {
+  if (value.type !== 'Произвольный' || value.variadic) return value.type;
+  const first = (value.description || '').replace(/^Тип:\s*/i, '').match(/^([^\s.,;(]+)/)?.[1];
+  const documented = documentedEnums.get(lower(first));
+  if (documented) return documented;
+  const sameParameter = lower(previous.nameEn || previous.name) === lower(value.name);
+  return sameParameter ? documentedEnums.get(lower(previous.type)) || value.type : value.type;
+}
+
+function methodDescription(method, previous) {
+  const description = method.description || previous.description || '';
+  const returns = method.returnDescription;
+  const normalize = value => value.replace(/\s+/g, ' ').trim();
+  return returns && !normalize(description).includes(normalize(returns))
+    ? `${description}\n\nВозвращаемое значение: ${returns}`.trim() : description;
+}
+
+function previousSignature(method, previous) {
+  const candidates = (previous.signatures || [])
+    .filter(value => value.parameters?.length === method.parameters.length);
+  const named = candidates.filter(value => value.parameters.every((parameter, index) =>
+    lower(parameter.nameEn || parameter.name) === lower(method.parameters[index].name)));
+  return named.length === 1 ? named[0] : candidates.length === 1 ? candidates[0] : undefined;
+}
 
 let parameterCount = 0, russianCount = 0, variadicCount = 0;
 const missing = new Set();
@@ -39,14 +79,14 @@ function parameter(value, previous = {}) {
   if (value.variadic) variadicCount++;
   return {
     name: ru || value.name, nameRu: ru || '', nameEn: value.name,
-    ...typeFields(value.type), optional: value.optional, description: value.description || previous.description || '',
+    ...typeFields(parameterType(value, previous)), optional: value.optional, description: value.description || previous.description || '',
     ...(value.defaultValue != null ? {defaultValue: value.defaultValue} : {}),
     ...(value.variadic ? {variadic: true} : {})
   };
 }
 
 function signature(method, previous = {}, constructorType) {
-  const old = (previous.signatures || []).find(value => value.parameters?.length === method.parameters.length);
+  const old = previousSignature(method, previous);
   const returns = constructorType || (method.returnType === 'Произвольный' && previous.returnType
     ? previous.returnType : method.returnType);
   return {
@@ -66,6 +106,7 @@ function constructorParameter(value, type) {
 
 function members(context, old) {
   const result = [];
+  const deprecated = new Map();
   for (const property of context.properties) {
     const previous = find(old, property.name.Ru) || {};
     result.push({...named(property.name), kind: 'PROPERTY',
@@ -80,7 +121,7 @@ function members(context, old) {
     const key = lower(method.name.Ru);
     let member = methods.get(key);
     if (!member) {
-      member = {...named(method.name), kind: 'METHOD', description: method.description || previous.description || '',
+      member = {...named(method.name), kind: 'METHOD', description: methodDescription(method, previous),
         ...(previous.deprecatedSinceVersion ? {deprecatedSinceVersion: previous.deprecatedSinceVersion} : {}),
         ...(previous.recommendedReplacements ? {recommendedReplacements: previous.recommendedReplacements} : {}),
         ...(previous.async ? {async: true} : {}),
@@ -89,12 +130,25 @@ function members(context, old) {
       methods.set(key, member);
     }
     member.signatures.push(signature(method, previous));
+    for (const alias of method.deprecatedNames || []) deprecated.set(alias, method.name.Ru);
   }
   result.push(...methods.values());
+  for (const [alias, primaryName] of deprecated) {
+    if (find(result, alias)) continue;
+    const primary = methods.get(lower(primaryName));
+    const previous = find(old, alias) || {};
+    result.push({...primary, name: alias, nameRu: '', nameEn: alias,
+      description: previous.description || primary.description,
+      deprecatedSinceVersion: '*',
+      recommendedReplacements: previous.recommendedReplacements || [primaryName]});
+  }
   for (const value of context.values) {
-    const previous = find(old, value.Ru) || {};
+    const previous = find(old, value.Ru);
+    const legacyEnglish = old.find(member =>
+      !/[А-Яа-яЁё]/.test(member.nameRu || member.name || '') && matches(member, value.En));
+    const description = previous?.description || legacyEnglish?.description;
     result.push({...named(value), kind: 'PROPERTY', returnType: context.name.Ru,
-      ...(previous.description ? {description: previous.description} : {})});
+      ...(description ? {description} : {})});
   }
   return result.sort(compare);
 }
@@ -105,7 +159,7 @@ const types = raw.filter(context => !context.global).map(context => {
     {signatures: previous.constructors || []}, context.name.Ru));
   return {
     kind: context.enumeration ? 'ENUM' : 'TYPE', ...named(context.name),
-    description: context.description || previous.description || '',
+    description: typeDescription(context, previous),
     ...(previous.supportsForEach ? {supportsForEach: true} : {}),
     ...(previous.supportsIndexAccess ? {supportsIndexAccess: true} : {}),
     ...(previous.elementTypes ? {elementTypes: previous.elementTypes} : {}),
