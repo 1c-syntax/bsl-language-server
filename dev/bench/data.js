@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794324460089,
+  "lastUpdate": 1794327474164,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -47058,6 +47058,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.8624528630892208",
             "extra": "mean: 87.84033123652141 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "00cf56acb072c004abf7f6137782ff219c2630f8",
+          "message": "Merge pull request #4922 from 1c-syntax/fix/model-review-contracts-20261108\n\nfix: согласовать безусловные контексты OneScript",
+          "timestamp": "2026-11-10T15:21:41+01:00",
+          "tree_id": "95fa6a770fc6f0c13c4da6d9318234ca9e51748a",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/00cf56acb072c004abf7f6137782ff219c2630f8"
+        },
+        "date": 1794327441742,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 87.9877056280772,
+            "unit": "sec",
+            "range": "stddev: 2.3826153582530627",
+            "extra": "mean: 87.9877056280772 sec\nrounds: 3"
           }
         ]
       }
