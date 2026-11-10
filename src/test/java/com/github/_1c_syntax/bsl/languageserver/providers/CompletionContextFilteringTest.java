@@ -43,6 +43,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import tools.jackson.databind.exc.MismatchedInputException;
 
 import java.io.IOException;
 import java.net.URI;
@@ -52,6 +53,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class CompletionContextFilteringTest extends AbstractServerContextAwareTest {
   private static final Path ROOT = Path.of("src/test/resources/metadata/commonModuleCalls");
@@ -85,7 +87,7 @@ class CompletionContextFilteringTest extends AbstractServerContextAwareTest {
 
   @Test
   void hidesUnavailableLocalMethodsByDefaultAndKeepsVariablesAndKeywords() {
-    assertThat(context.getLanguageServerConfiguration().getCompletionOptions().getHideUnavailableByContext()).isTrue();
+    assertThat(context.getLanguageServerConfiguration().getCompletionOptions().isHideUnavailableByContext()).isTrue();
 
     assertThat(form(SERVER_CALLER)).extracting(CompletionItem::getLabel)
       .contains("ServerMethod", "Локальная", "Если").doesNotContain("ClientMethod");
@@ -278,18 +280,18 @@ class CompletionContextFilteringTest extends AbstractServerContextAwareTest {
     Files.writeString(file, "{\"completion\":{\"hideUnavailableByContext\":false}}");
     configuration.update(file.toFile());
 
-    assertThat(configuration.getCompletionOptions().getHideUnavailableByContext()).isFalse();
+    assertThat(configuration.getCompletionOptions().isHideUnavailableByContext()).isFalse();
     assertThat(complete(document, position)).extracting(CompletionItem::getLabel).contains("ClientMethod");
     assertThat(complete(document, position)).filteredOn(item -> item.getLabel().equals("ClientMethod"))
       .singleElement().satisfies(item -> assertThat(item.getSortText()).startsWith("2_"));
     Files.writeString(file, "{\"completion\":{\"hideUnavailableByContext\":null}}");
-    configuration.update(file.toFile());
-    assertThat(configuration.getCompletionOptions().getHideUnavailableByContext()).isTrue();
-    assertThat(complete(document, position)).extracting(CompletionItem::getLabel).doesNotContain("ClientMethod");
+    assertThatThrownBy(() -> configuration.update(file.toFile())).isInstanceOf(MismatchedInputException.class);
+    assertThat(configuration.getCompletionOptions().isHideUnavailableByContext()).isFalse();
+    assertThat(complete(document, position)).extracting(CompletionItem::getLabel).contains("ClientMethod");
 
     configuration.getCompletionOptions().setHideUnavailableByContext(false);
     configuration.reset();
-    assertThat(configuration.getCompletionOptions().getHideUnavailableByContext()).isTrue();
+    assertThat(configuration.getCompletionOptions().isHideUnavailableByContext()).isTrue();
     assertThat(complete(document, position)).extracting(CompletionItem::getLabel).doesNotContain("ClientMethod");
     assertThat(document.getSymbolTree()).isSameAs(tree);
   }
