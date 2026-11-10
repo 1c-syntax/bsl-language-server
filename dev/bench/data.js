@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794311395659,
+  "lastUpdate": 1794312772119,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -46965,6 +46965,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.156729388380896",
             "extra": "mean: 89.70976328849792 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "baa03a0cb7467caeeb14a534b7e0b5bc8e14697a",
+          "message": "Merge pull request #4927 from 1c-syntax/fix/oscript-constructor-reference-stability-20261109\n\nfix(oscript): перепривязать класс, созданный до обнаружения библиотеки",
+          "timestamp": "2026-11-10T11:52:06+01:00",
+          "tree_id": "79d4a24f999dcb582c6f96071353949dc60b015b",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/baa03a0cb7467caeeb14a534b7e0b5bc8e14697a"
+        },
+        "date": 1794312741832,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 90.93052061398824,
+            "unit": "sec",
+            "range": "stddev: 2.667281528435932",
+            "extra": "mean: 90.93052061398824 sec\nrounds: 3"
           }
         ]
       }
