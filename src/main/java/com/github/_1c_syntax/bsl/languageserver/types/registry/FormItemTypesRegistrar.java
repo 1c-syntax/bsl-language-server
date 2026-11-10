@@ -267,7 +267,7 @@ class FormItemTypesRegistrar {
       typeRegistry.displayName(rowBaseRef, Language.EN)));
     typeRegistry.registerMemberOverride(tableRef,
       () -> List.of(FormPlatformTypes.platformProperty(
-        BilingualString.of(FormPlatformTypes.CURRENT_DATA_RU, FormPlatformTypes.CURRENT_DATA_EN),
+        FormPlatformTypes.CURRENT_DATA,
         rowRef, BilingualString.EMPTY)),
       FileType.BSL);
   }
@@ -406,7 +406,8 @@ class FormItemTypesRegistrar {
     var itemsRef = typeFactory.registerWithAlias(
       kind.itemsTypeRu() + "." + suffixRu,
       kind.itemsTypeEn() + "." + FormPlatformTypes.mdoSuffixEn(form));
-    var itemsBaseRef = typeRegistry.resolve(kind.itemsTypeRu()).orElse(null);
+    var itemsBaseRef = typeRegistry.resolve(kind.itemsTypeEn())
+      .or(() -> typeRegistry.resolve(kind.itemsTypeRu())).orElse(null);
     if (itemsBaseRef != null) {
       typeRegistry.registerExtension(itemsRef, itemsBaseRef, FileType.BSL);
       typeRegistry.inheritCollectionTraits(itemsRef, itemsBaseRef, FileType.BSL);

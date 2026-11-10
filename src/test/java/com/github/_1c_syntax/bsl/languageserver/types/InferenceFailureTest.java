@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.types;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.CommonModuleByNameInference;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.ReturnTypeFromBodyInference;
+import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraphIndex;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionTreeBuildingVisitor;
@@ -38,6 +38,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.verify;
 
 /**
  * Сорвавшийся расчёт не роняет анализ: он отдаёт пустой тип и оставляет запись в журнале.
@@ -53,7 +55,7 @@ class InferenceFailureTest extends AbstractServerContextAwareTest {
   private ExpressionTypeInferencer inferencer;
 
   @MockitoBean
-  private ReturnTypeFromBodyInference returnTypeFromBodyInference;
+  private ControlFlowGraphIndex controlFlowGraphIndex;
 
   @MockitoBean
   private CommonModuleByNameInference commonModuleByNameInference;
@@ -61,7 +63,7 @@ class InferenceFailureTest extends AbstractServerContextAwareTest {
   @Test
   void failedComputationOfMethodValueYieldsEmptyInsteadOfPropagating() {
     // given: расчёт значения метода срывается.
-    when(returnTypeFromBodyInference.of(any(), any())).thenThrow(new IllegalStateException("сбой"));
+    when(controlFlowGraphIndex.graphOf(any(), any(), any())).thenThrow(new IllegalStateException("сбой"));
     var documentContext = TestUtils.getDocumentContext("""
       Функция Ф() Экспорт
         Возврат Новый Массив;
@@ -69,12 +71,14 @@ class InferenceFailureTest extends AbstractServerContextAwareTest {
       """);
     var method = documentContext.getSymbolTree().getMethodSymbol("Ф");
     assertThat(method).isPresent();
+    clearInvocations(controlFlowGraphIndex);
 
     // when, then: наружу срыв не выходит, значение выходит пустым.
     assertThatCode(() -> {
       var computed = inferencer.computeReturnTypes(method.get());
       assertThat(computed.types().isEmpty()).isTrue();
     }).doesNotThrowAnyException();
+    verify(controlFlowGraphIndex).graphOf(any(), any(), any());
   }
 
   @Test
