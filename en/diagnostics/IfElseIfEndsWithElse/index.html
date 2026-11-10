@@ -21,7 +21,7 @@
       
       
       <link rel="icon" href="../../assets/images/logo.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.8.1">
     
     
       
@@ -29,10 +29,10 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.57a0d79d.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.fb2fffe2.min.css">
       
       
 
@@ -2252,24 +2252,24 @@
 </table>
 <!-- Блоки выше заполняются автоматически, не трогать -->
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
-<p>The rule is applied whenever the conditional operator <strong>If Then ElseIf</strong> contains one or more blocks <strong>ElseIf </strong>. After block <strong>ElseIf</strong> must be followed by block <strong>Else</strong>.</p>
+<p>The rule is applied whenever the conditional operator <strong>If Then ElseIf</strong> contains one or more blocks **ElseIf **. After block <strong>ElseIf</strong> must be followed by block <strong>Else</strong>.</p>
 <p>The requirement to the final block<strong>Else</strong> - it protective programming. Such constructions are resistant to possible changes and do not mask possible errors.</p>
 <p>The construct <strong>Else</strong> must either take appropriate action or contain a suitable comment as to why no action is being taken.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <p>Incorrect:</p>
-<div class="highlight"><pre><span></span><code><span class="k">If</span> <span class="nb">TypeOf</span><span class="p">(</span><span class="nv">InputParameter</span><span class="p">)</span> <span class="o">=</span> <span class="nb">Type</span><span class="p">(</span><span class="s">&quot;Structure&quot;</span><span class="p">)</span> <span class="k">Then</span>
+<div class="highlight"><pre><span></span><code><span class="k">If</span> <span class="nb">TypeOf</span><span class="p">(</span><span class="nv">InputParameter</span><span class="p">)</span> <span class="o">=</span> <span class="nb">Type</span><span class="p">(</span><span class="s">"Structure"</span><span class="p">)</span> <span class="k">Then</span>
     <span class="nv">Result</span> <span class="o">=</span> <span class="nf">FillByStructure</span><span class="p">(</span><span class="nv">InputParameter</span><span class="p">);</span>
-<span class="k">ElsIf</span> <span class="nb">TypeOf</span><span class="p">(</span><span class="nv">InputParameter</span><span class="p">)</span> <span class="o">=</span> <span class="nb">Type</span><span class="p">(</span><span class="s">&quot;Document.Ref.MajorDocument&quot;</span><span class="p">)</span> <span class="k">Then</span>
+<span class="k">ElsIf</span> <span class="nb">TypeOf</span><span class="p">(</span><span class="nv">InputParameter</span><span class="p">)</span> <span class="o">=</span> <span class="nb">Type</span><span class="p">(</span><span class="s">"Document.Ref.MajorDocument"</span><span class="p">)</span> <span class="k">Then</span>
     <span class="nv">Result</span> <span class="o">=</span> <span class="nf">FillByDocument</span><span class="p">(</span><span class="nv">InputParameter</span><span class="p">);</span>
 <span class="k">EndIf</span><span class="p">;</span>
 </code></pre></div>
 <p>Correct:</p>
-<div class="highlight"><pre><span></span><code><span class="k">If</span> <span class="nb">TypeOf</span><span class="p">(</span><span class="nv">InputParameter</span><span class="p">)</span> <span class="o">=</span> <span class="nb">Type</span><span class="p">(</span><span class="s">&quot;Structure&quot;</span><span class="p">)</span> <span class="k">Then</span>
+<div class="highlight"><pre><span></span><code><span class="k">If</span> <span class="nb">TypeOf</span><span class="p">(</span><span class="nv">InputParameter</span><span class="p">)</span> <span class="o">=</span> <span class="nb">Type</span><span class="p">(</span><span class="s">"Structure"</span><span class="p">)</span> <span class="k">Then</span>
     <span class="nv">Result</span> <span class="o">=</span> <span class="nf">FillByStructure</span><span class="p">(</span><span class="nv">InputParameter</span><span class="p">);</span>
-<span class="k">ElsIf</span> <span class="nb">TypeOf</span><span class="p">(</span><span class="nv">InputParameter</span><span class="p">)</span> <span class="o">=</span> <span class="nb">Type</span><span class="p">(</span><span class="s">&quot;Document.Ref.MajorDocument&quot;</span><span class="p">)</span> <span class="k">Then</span>
+<span class="k">ElsIf</span> <span class="nb">TypeOf</span><span class="p">(</span><span class="nv">InputParameter</span><span class="p">)</span> <span class="o">=</span> <span class="nb">Type</span><span class="p">(</span><span class="s">"Document.Ref.MajorDocument"</span><span class="p">)</span> <span class="k">Then</span>
     <span class="nv">Result</span> <span class="o">=</span> <span class="nf">FillByDocument</span><span class="p">(</span><span class="nv">InputParameter</span><span class="p">);</span>
 <span class="k">Else</span>
-    <span class="ne">Raise</span> <span class="s">&quot;Parameter of invalid type passed&quot;</span><span class="p">;</span>
+    <span class="ne">Raise</span> <span class="s">"Parameter of invalid type passed"</span><span class="p">;</span>
 <span class="k">EndIf</span><span class="p">;</span>
 </code></pre></div>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>
@@ -2279,7 +2279,7 @@
 <span class="c1">// BSLLS:IfElseIfEndsWithElse-on</span>
 </code></pre></div>
 <h3 id="Parameter-for-config">Parameter for config<a class="headerlink" href="#Parameter-for-config" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="nt">&quot;IfElseIfEndsWithElse&quot;</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
+<div class="highlight"><pre><span></span><code><span class="nt">"IfElseIfEndsWithElse"</span><span class="p">:</span><span class="w"> </span><span class="kc">false</span>
 </code></pre></div>
 
 
@@ -2357,10 +2357,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "search.highlight", "toc.integrate", "header.autohide"], "search": "../../assets/javascripts/workers/search.a7633da7.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../../assets/javascripts/bundle.a5f9d56c.min.js"></script>
       
         <script src="https://cdnjs.cloudflare.com/ajax/libs/tablesort/5.2.1/tablesort.min.js"></script>
       
