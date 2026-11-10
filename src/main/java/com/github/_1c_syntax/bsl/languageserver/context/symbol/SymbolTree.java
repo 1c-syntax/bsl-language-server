@@ -218,7 +218,8 @@ public class SymbolTree {
    *     ветки или {@code null}, если условие нельзя вычислить.
    */
   public @Nullable Set<ExecutionContext> getMethodPreprocessorContexts(MethodSymbol method) {
-    return methodConditions.getOrDefault(method.getSubNameRange(), ExecutionContext.ALL);
+    return methodConditions.getOrDefault(method.getSubNameRange(),
+      ExecutionContext.forFileType(module.getOwner().getFileType()));
   }
 
   /**

@@ -55,18 +55,18 @@ class CompilationContextCacheScopeTest extends AbstractServerContextAwareTest {
       "Процедура Первый()\nКонецПроцедуры", first);
     var two = TestUtils.getDocumentContext(root.resolve("second/module.bsl").toUri(),
       "Процедура Второй()\nКонецПроцедуры", second);
-    var cache = application.getBean("compilationContextDeclarationsCache", Cache.class);
+    Cache<?, ?> cache = application.getBean("compilationContextDeclarationsCache", Cache.class);
     try (var scope = WorkspaceContextHolder.forUri(first.getWorkspaceUri())) {
       var declarations = resolver.declarations(one);
       assertThat(resolver.declarations(one)).isSameAs(declarations);
-      assertThat(cache.getIfPresent(one.getSymbolTree())).isSameAs(declarations);
+      assertThat(cache.asMap().get(one.getSymbolTree())).isSameAs(declarations);
     }
     try (var scope = WorkspaceContextHolder.forUri(second.getWorkspaceUri())) {
-      assertThat(cache.getIfPresent(one.getSymbolTree())).isNull();
+      assertThat(cache.asMap().get(one.getSymbolTree())).isNull();
       assertThat(resolver.declarations(two)).containsKey("Второй").doesNotContainKey("Первый");
     }
     try (var scope = WorkspaceContextHolder.forUri(first.getWorkspaceUri())) {
-      assertThat(cache.getIfPresent(two.getSymbolTree())).isNull();
+      assertThat(cache.asMap().get(two.getSymbolTree())).isNull();
       assertThat(resolver.declarations(one)).containsKey("Первый").doesNotContainKey("Второй");
     }
   }

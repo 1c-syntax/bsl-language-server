@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
+import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.EventHandlerClassifier;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SelfMemberClassifier;
@@ -148,6 +149,21 @@ class SymbolTreeComputerTest {
 
     when(properties.bareSelfPropertiesOf(document)).thenReturn(name -> false);
     assertThat(computer.isUpToDate(tree)).isFalse();
+  }
+
+  @Test
+  void unconditionalOneScriptMethodsDoNotNeedStoredConditions() {
+    var document = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI,
+      "Процедура Открыть()\nКонецПроцедуры");
+    var tree = document.getSymbolTree();
+    var variables = new RegionVariableSymbolComputer(document, tree.getModule(), tree.getMethods(),
+      (doc, name) -> false);
+
+    variables.compute();
+
+    assertThat(variables.getMethodConditions()).isEmpty();
+    var method = tree.getMethodSymbol("Открыть").orElseThrow();
+    assertThat(tree.getMethodPreprocessorContexts(method)).containsExactlyInAnyOrderElementsOf(ExecutionContext.OSCRIPT);
   }
 
   @Test
