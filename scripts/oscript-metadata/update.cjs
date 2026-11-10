@@ -33,6 +33,9 @@ const typeFields = (value, field = 'type') => !value ? {} : value.includes('|')
 const typeNotes = {
   'Консоль': 'Используйте глобальный объект Консоль: конструктор этого типа не предоставляется.'
 };
+const base64BufferConversions = new Set([
+  'GetBinaryDataBufferFromBase64BinaryDataBuffer', 'GetBinaryDataBufferFromBase64String'
+]);
 
 function typeDescription(context, previous) {
   const description = context.description || previous.description || '';
@@ -51,7 +54,10 @@ function parameterType(value, previous) {
 
 function methodDescription(method, previous) {
   const description = method.description || previous.description || '';
-  const returns = method.returnDescription;
+  // OneScript 2.2.0 documents BinaryData instead of BinaryDataBuffer for these conversions.
+  const returns = base64BufferConversions.has(method.name.En) && method.returnType === 'БуферДвоичныхДанных'
+    ? method.returnDescription?.replace(/^(Тип:\s*)?ДвоичныеДанные(?=[\s.,;:]|$)/, '$1БуферДвоичныхДанных')
+    : method.returnDescription;
   const normalize = value => value.replace(/\s+/g, ' ').trim();
   return returns && !normalize(description).includes(normalize(returns))
     ? `${description}\n\nВозвращаемое значение: ${returns}`.trim() : description;

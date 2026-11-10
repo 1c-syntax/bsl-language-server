@@ -117,6 +117,25 @@ test('return documentation retains result semantics for methods and global funct
     });
 });
 
+test('Base64 buffer conversions correct upstream return docs without changing BinaryData conversions', () => {
+  const conversions = [
+    method('ПолучитьБуферДвоичныхДанныхИзBase64БуфераДвоичныхДанных',
+      'GetBinaryDataBufferFromBase64BinaryDataBuffer'),
+    method('ПолучитьБуферДвоичныхДанныхИзBase64Строки', 'GetBinaryDataBufferFromBase64String')
+  ].map(value => ({...value, returnType: 'БуферДвоичныхДанных', returnDescription: 'Тип: ДвоичныеДанные.'}));
+  const binaryData = method('ПолучитьДвоичныеДанныеИзBase64Строки', 'GetBinaryDataFromBase64String', [],
+    {returnType: 'ДвоичныеДанные', returnDescription: 'Тип: ДвоичныеДанные.'});
+  regenerate([], globals(), [context('Глобальный', 'Global', {global: true,
+    methods: [...conversions, binaryData]})], (_types, result) => {
+    for (const value of conversions) {
+      const description = result.functions.find(member => member.nameEn === value.name.En).description;
+      assert.equal(description, 'Возвращаемое значение: Тип: БуферДвоичныхДанных.');
+    }
+    assert.equal(result.functions.find(member => member.nameEn === binaryData.name.En).description,
+      'Возвращаемое значение: Тип: ДвоичныеДанные.');
+  });
+});
+
 test('current source documentation refines an untyped enum argument without narrowing arbitrary objects', () => {
   const runtime = [context('Направление', 'Direction', {enumeration: true}),
     context('Объект', 'Object', {methods: [method('Проверить', 'Check', [
