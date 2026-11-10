@@ -735,7 +735,7 @@ public class ReferenceIndexFiller {
         return null;
       }
       var complexId = members.get(0).complexIdentifier();
-      if (complexId == null) {
+      if (complexId == null || !complexId.modifier().isEmpty()) {
         return null;
       }
       var newExpression = complexId.newExpression();
@@ -780,27 +780,17 @@ public class ReferenceIndexFiller {
       var variableName = ctx.IDENTIFIER().getText();
       var variableKey = variableName.toLowerCase(Locale.ENGLISH);
 
-      // Check if variable references a common module
-      var commonModuleMdoRef = variableToCommonModuleMap.get(variableKey);
-
-      if (commonModuleMdoRef != null) {
-        // Process method calls on the common module variable
-        // Check both modifiers and accessCall
-        if (!ctx.modifier().isEmpty()) {
-          processCommonModuleMethodCalls(ctx.modifier(), commonModuleMdoRef);
+      // Только первое звено обращается к исходному модулю: остальные — к результату обращения.
+      var modifiers = ctx.modifier();
+      var accessCall = modifiers.isEmpty() ? ctx.accessCall() : modifiers.getFirst().accessCall();
+      if (accessCall != null) {
+        var commonModuleMdoRef = variableToCommonModuleMap.get(variableKey);
+        if (commonModuleMdoRef != null) {
+          processCommonModuleAccessCall(accessCall, commonModuleMdoRef);
         }
-        if (ctx.accessCall() != null) {
-          processCommonModuleAccessCall(ctx.accessCall(), commonModuleMdoRef);
-        }
-      }
-
-      var libClassUri = variableToLibraryClassUriMap.get(variableKey);
-      if (libClassUri != null) {
-        if (!ctx.modifier().isEmpty()) {
-          processLibraryClassMethodCalls(ctx.modifier(), libClassUri);
-        }
-        if (ctx.accessCall() != null) {
-          processLibraryClassAccessCall(ctx.accessCall(), libClassUri);
+        var libClassUri = variableToLibraryClassUriMap.get(variableKey);
+        if (libClassUri != null) {
+          processLibraryClassAccessCall(accessCall, libClassUri);
         }
       }
 
@@ -939,8 +929,8 @@ public class ReferenceIndexFiller {
     }
 
     private void processCommonModuleMethodCalls(List<? extends BSLParser.ModifierContext> modifiers, String mdoRef) {
-      for (var modifier : modifiers) {
-        var accessCall = modifier.accessCall();
+      if (!modifiers.isEmpty()) {
+        var accessCall = modifiers.getFirst().accessCall();
         if (accessCall != null) {
           processCommonModuleAccessCall(accessCall, mdoRef);
         }
@@ -964,8 +954,8 @@ public class ReferenceIndexFiller {
     }
 
     private void processLibraryClassMethodCalls(List<? extends BSLParser.ModifierContext> modifiers, String libClassUri) {
-      for (var modifier : modifiers) {
-        var accessCall = modifier.accessCall();
+      if (!modifiers.isEmpty()) {
+        var accessCall = modifiers.getFirst().accessCall();
         if (accessCall != null) {
           processLibraryClassAccessCall(accessCall, libClassUri);
         }
