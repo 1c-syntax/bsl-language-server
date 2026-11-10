@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794279136812,
+  "lastUpdate": 1794308301646,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -124,6 +124,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 7.3426946817613645",
             "extra": "mean: 97.11398895581563 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6d428f83c114aeb3381466c00784b055cbdd01f8",
+          "message": "Merge pull request #4923 from 1c-syntax/fix/ambiguous-platform-type-keys-20261108\n\nfix: исключить неоднозначный ключ типов-омонимов",
+          "timestamp": "2026-11-10T11:46:36+01:00",
+          "tree_id": "cff1f91ed2a9852d4c693523189bbd801c2f31e9",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/6d428f83c114aeb3381466c00784b055cbdd01f8"
+        },
+        "date": 1794308280208,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 88.03513781229655,
+            "unit": "sec",
+            "range": "stddev: 0.7940654664614901",
+            "extra": "mean: 88.03513781229655 sec\nrounds: 3"
           }
         ]
       }
