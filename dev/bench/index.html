@@ -1,275 +1,985 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes" />
-    <style>
-      html {
-        font-family: BlinkMacSystemFont,-apple-system,"Segoe UI",Roboto,Oxygen,Ubuntu,Cantarell,"Fira Sans","Droid Sans","Helvetica Neue",Helvetica,Arial,sans-serif;
-        -webkit-font-smoothing: antialiased;
-        background-color: #fff;
-        font-size: 16px;
-      }
-      body {
-        color: #4a4a4a;
-        margin: 8px;
-        font-size: 1em;
-        font-weight: 400;
-      }
-      header {
-        margin-bottom: 8px;
-        display: flex;
-        flex-direction: column;
-      }
-      main {
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-      }
-      a {
-        color: #3273dc;
-        cursor: pointer;
-        text-decoration: none;
-      }
-      a:hover {
-        color: #000;
-      }
-      button {
-        color: #fff;
-        background-color: #3298dc;
-        border-color: transparent;
-        cursor: pointer;
-        text-align: center;
-      }
-      button:hover {
-        background-color: #2793da;
-        flex: none;
-      }
-      .spacer {
-        flex: auto;
-      }
-      .small {
-        font-size: 0.75rem;
-      }
-      footer {
-        margin-top: 16px;
-        display: flex;
-        align-items: center;
-      }
-      .header-label {
-        margin-right: 4px;
-      }
-      .benchmark-set {
-        margin: 8px 0;
-        width: 100%;
-        display: flex;
-        flex-direction: column;
-      }
-      .benchmark-title {
-        font-size: 3rem;
-        font-weight: 600;
-        word-break: break-word;
-        text-align: center;
-      }
-      .benchmark-graphs {
-        display: flex;
-        flex-direction: row;
-        justify-content: space-around;
-        align-items: center;
-        flex-wrap: wrap;
-        width: 100%;
-      }
-      .benchmark-chart {
-        max-width: 1000px;
-      }
-    </style>
-    <title>Benchmarks</title>
-  </head>
+<html lang="ru">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Замеры производительности · BSL Language Server</title>
+<style>
+  :root {
+    color-scheme: light;
+    --plane: #f9f9f7;
+    --surface: #fcfcfb;
+    --ink: #0b0b0b;
+    --ink-2: #52514e;
+    --muted: #898781;
+    --grid: #e1e0d9;
+    --axis: #c3c2b7;
+    --series: #2a78d6;
+    --series-soft: rgba(42, 120, 214, 0.14);
+    --hairline: rgba(11, 11, 11, 0.10);
+    --wash: rgba(11, 11, 11, 0.04);
+    --up: #d03b3b;
+    --down: #006300;
+    --sans: system-ui, -apple-system, "Segoe UI", sans-serif;
+    --mono: ui-monospace, "JetBrains Mono", "SFMono-Regular", Consolas, monospace;
+  }
 
-  <body>
-    <header id="header">
-      <div class="header-item">
-        <strong class="header-label">Last Update:</strong>
-        <span id="last-update"></span>
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --plane: #0d0d0d;
+      --surface: #1a1a19;
+      --ink: #ffffff;
+      --ink-2: #c3c2b7;
+      --muted: #898781;
+      --grid: #2c2c2a;
+      --axis: #383835;
+      --series: #3987e5;
+      --series-soft: rgba(57, 135, 229, 0.18);
+      --hairline: rgba(255, 255, 255, 0.10);
+      --wash: rgba(255, 255, 255, 0.06);
+      --down: #0ca30c;
+    }
+  }
+
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --plane: #0d0d0d;
+    --surface: #1a1a19;
+    --ink: #ffffff;
+    --ink-2: #c3c2b7;
+    --muted: #898781;
+    --grid: #2c2c2a;
+    --axis: #383835;
+    --series: #3987e5;
+    --series-soft: rgba(57, 135, 229, 0.18);
+    --hairline: rgba(255, 255, 255, 0.10);
+    --wash: rgba(255, 255, 255, 0.06);
+    --down: #0ca30c;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background: var(--plane);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .page {
+    max-width: 1120px;
+    margin: 0 auto;
+    padding: 40px 24px 72px;
+    display: flex;
+    flex-direction: column;
+    gap: 28px;
+  }
+
+  .masthead { display: flex; flex-direction: column; gap: 10px; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    align-items: center;
+  }
+
+  .eyebrow a { color: inherit; }
+
+  h1 {
+    margin: 0;
+    font-size: clamp(24px, 3.4vw, 34px);
+    font-weight: 600;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+
+  .lede { margin: 0; max-width: 68ch; color: var(--ink-2); }
+  .lede code { font-family: var(--mono); font-size: 12.5px; background: var(--wash); padding: 1px 5px; border-radius: 5px; }
+  a { color: var(--series); text-underline-offset: 2px; }
+
+  .filters {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px 8px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--hairline);
+  }
+
+  .filters-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-right: 4px;
+  }
+
+  .preset {
+    appearance: none;
+    border: 1px solid var(--hairline);
+    background: var(--surface);
+    color: var(--ink-2);
+    font: inherit;
+    font-size: 13.5px;
+    padding: 6px 13px;
+    border-radius: 999px;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+  }
+
+  .preset:hover { background: var(--wash); color: var(--ink); }
+  .preset:focus-visible { outline: 2px solid var(--series); outline-offset: 2px; }
+
+  .preset[aria-pressed="true"] {
+    color: var(--ink);
+    border-color: var(--series);
+    box-shadow: inset 0 0 0 1px var(--series);
+    font-weight: 500;
+  }
+
+  .preset .check { display: none; font-size: 16px; line-height: 1; color: var(--series); }
+  .preset[aria-pressed="true"] .check { display: inline; }
+
+  .custom {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: auto;
+    padding-left: 14px;
+    border-left: 1px solid var(--hairline);
+    color: var(--muted);
+    font-size: 13px;
+  }
+
+  .custom input, .suite-pick select {
+    font: inherit;
+    font-family: var(--mono);
+    font-size: 12.5px;
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: 7px;
+    padding: 5px 8px;
+  }
+
+  .custom input:focus-visible, .suite-pick select:focus-visible { outline: 2px solid var(--series); outline-offset: 1px; }
+  .suite-pick { display: none; align-items: center; gap: 8px; width: 100%; }
+  .suite-pick[data-show="true"] { display: flex; }
+
+  .tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(178px, 1fr));
+    gap: 1px;
+    background: var(--hairline);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    overflow: hidden;
+  }
+
+  .tile { background: var(--surface); padding: 16px 18px 18px; display: flex; flex-direction: column; gap: 3px; }
+  .tile-label { font-size: 12.5px; color: var(--muted); }
+  .tile-value { font-size: 27px; font-weight: 600; letter-spacing: -0.02em; line-height: 1.15; }
+  .tile-value .unit { font-size: 14px; font-weight: 400; color: var(--muted); letter-spacing: 0; }
+  .tile-note { font-size: 12.5px; color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .delta-up { color: var(--up); }
+  .delta-down { color: var(--down); }
+
+  .card { background: var(--surface); border: 1px solid var(--hairline); border-radius: 12px; padding: 20px 20px 12px; }
+
+  .card-head {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .card-title { font-size: 15px; font-weight: 600; }
+  .card-sub { font-size: 12.5px; color: var(--muted); font-variant-numeric: tabular-nums; }
+
+  .plot-wrap { position: relative; }
+  svg { display: block; width: 100%; height: auto; touch-action: pan-y; }
+  svg:focus-visible { outline: 2px solid var(--series); outline-offset: 3px; border-radius: 6px; }
+  .tick { font-family: var(--mono); font-size: 10.5px; fill: var(--muted); }
+  .point-label { font-family: var(--sans); font-size: 11px; font-weight: 600; }
+
+  .tooltip {
+    position: absolute;
+    z-index: 3;
+    min-width: 216px;
+    max-width: 320px;
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: 10px;
+    box-shadow: 0 6px 22px rgba(0, 0, 0, 0.13);
+    padding: 11px 13px 12px;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 90ms linear;
+  }
+
+  .tooltip[data-show="true"] { opacity: 1; }
+
+  .tt-value { display: flex; align-items: baseline; gap: 8px; font-size: 21px; font-weight: 600; letter-spacing: -0.015em; }
+  .tt-value .stroke { width: 14px; height: 2px; background: var(--series); border-radius: 1px; align-self: center; flex: none; }
+  .tt-value .unit { font-size: 13px; font-weight: 400; color: var(--muted); }
+  .tt-spread { font-size: 12px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .tt-date { font-size: 12.5px; color: var(--ink-2); margin-top: 5px; font-variant-numeric: tabular-nums; }
+
+  .tt-commit {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid var(--hairline);
+    font-size: 12.5px;
+    color: var(--ink-2);
+    overflow-wrap: anywhere;
+  }
+
+  .tt-sha { font-family: var(--mono); font-size: 11.5px; color: var(--muted); }
+
+  details { border: 1px solid var(--hairline); border-radius: 12px; background: var(--surface); overflow: hidden; }
+
+  summary {
+    cursor: pointer;
+    padding: 14px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    list-style: none;
+  }
+
+  summary::-webkit-details-marker { display: none; }
+  summary::before { content: "\203A"; color: var(--muted); font-size: 17px; line-height: 1; transition: transform 120ms ease; }
+  details[open] summary::before { transform: rotate(90deg); }
+  summary:focus-visible { outline: 2px solid var(--series); outline-offset: -2px; }
+  summary .count { color: var(--muted); font-weight: 400; font-variant-numeric: tabular-nums; }
+
+  .table-scroll { max-height: 460px; overflow: auto; border-top: 1px solid var(--hairline); }
+  table { border-collapse: collapse; width: 100%; font-size: 13px; }
+
+  th {
+    position: sticky;
+    top: 0;
+    background: var(--surface);
+    text-align: left;
+    font-weight: 500;
+    color: var(--muted);
+    font-size: 11.5px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--hairline);
+    white-space: nowrap;
+  }
+
+  td { padding: 8px 14px; border-bottom: 1px solid var(--hairline); vertical-align: top; }
+  tbody tr:last-child td { border-bottom: none; }
+  td.num { font-variant-numeric: tabular-nums; white-space: nowrap; }
+  td.sha { font-family: var(--mono); font-size: 11.5px; white-space: nowrap; }
+  td.msg { color: var(--ink-2); min-width: 260px; }
+
+  footer { color: var(--muted); font-size: 12.5px; }
+
+  .fallback {
+    padding: 22px;
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+    background: var(--surface);
+    color: var(--ink-2);
+  }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+  @media (max-width: 640px) {
+    .custom { margin-left: 0; padding-left: 0; border-left: none; width: 100%; }
+    .page { padding: 28px 16px 56px; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+  <header class="masthead">
+    <div class="eyebrow">
+      <span>bsl language server · непрерывный замер</span>
+      <span id="updated"></span>
+    </div>
+    <h1>Сколько длится анализ БСП 3.1</h1>
+    <p class="lede">
+      Каждый коммит в <code>develop</code> прогоняется через полный анализ конфигурации
+      «Библиотека стандартных подсистем 3.1»: три прогона, в графике их среднее,
+      полосой — разброс между прогонами.
+    </p>
+  </header>
+
+  <div id="app" hidden>
+    <div class="filters" role="group" aria-label="Период">
+      <span class="filters-label">Период</span>
+      <button class="preset" type="button" data-days="7"><span class="check">&#10003;</span>7 дней</button>
+      <button class="preset" type="button" data-days="30"><span class="check">&#10003;</span>30 дней</button>
+      <button class="preset" type="button" data-days="90"><span class="check">&#10003;</span>90 дней</button>
+      <button class="preset" type="button" data-days="365"><span class="check">&#10003;</span>Год</button>
+      <button class="preset" type="button" data-days="1095"><span class="check">&#10003;</span>Три года</button>
+      <button class="preset" type="button" data-days="all"><span class="check">&#10003;</span>Всё время</button>
+      <div class="custom">
+        <label for="from">с</label>
+        <input id="from" type="date" />
+        <label for="to">по</label>
+        <input id="to" type="date" />
       </div>
-      <div class="header-item">
-        <strong class="header-label">Repository:</strong>
-        <a id="repository-link" rel="noopener"></a>
+      <div class="suite-pick" id="suite-pick">
+        <label class="filters-label" for="suite">Замер</label>
+        <select id="suite"></select>
       </div>
-    </header>
-    <main id="main"></main>
-    <footer>
-      <button id="dl-button">Download data as JSON</button>
-      <div class="spacer"></div>
-      <div class="small">Powered by <a rel="noopener" href="https://github.com/marketplace/actions/continuous-benchmark">github-action-benchmark</a></div>
-    </footer>
+    </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@2.9.2/dist/Chart.min.js"></script>
-    <script src="data.js"></script>
-    <script id="main-script">
-      'use strict';
-      (function() {
-        // Colors from https://github.com/github/linguist/blob/master/lib/linguist/languages.yml
-        const toolColors = {
-          cargo: '#dea584',
-          go: '#00add8',
-          benchmarkjs: '#f1e05a',
-          pytest: '#3572a5',
-          googlecpp: '#f34b7d',
-          catch2: '#f34b7d',
-          _: '#333333'
-        };
+    <section class="tiles" id="tiles" aria-label="Сводка за период" style="margin-top: 28px;"></section>
 
-        function init() {
-          function collectBenchesPerTestCase(entries) {
-            const map = new Map();
-            for (const entry of entries) {
-              const {commit, date, tool, benches} = entry;
-              for (const bench of benches) {
-                const result = { commit, date, tool, bench };
-                const arr = map.get(bench.name);
-                if (arr === undefined) {
-                  map.set(bench.name, [result]);
-                } else {
-                  arr.push(result);
-                }
-              }
-            }
-            return map;
-          }
+    <section class="card" style="margin-top: 28px;">
+      <div class="card-head">
+        <span class="card-title" id="card-title"></span>
+        <span class="card-sub" id="range-label"></span>
+      </div>
+      <div class="plot-wrap">
+        <svg id="plot" viewBox="0 0 960 380" role="img" tabindex="0"
+             aria-label="График замеров по времени. Стрелками влево и вправо — переход по замерам."></svg>
+        <div class="tooltip" id="tooltip" role="status" aria-live="polite"></div>
+      </div>
+    </section>
 
-          const data = window.BENCHMARK_DATA;
+    <details style="margin-top: 28px;">
+      <summary>Замеры таблицей <span class="count" id="table-count"></span></summary>
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Дата</th>
+              <th scope="col">Значение</th>
+              <th scope="col">Разброс</th>
+              <th scope="col">Коммит</th>
+              <th scope="col">Что было в коммите</th>
+              <th scope="col">Автор</th>
+            </tr>
+          </thead>
+          <tbody id="table-body"></tbody>
+        </table>
+      </div>
+    </details>
+  </div>
 
-          // Render header
-          document.getElementById('last-update').textContent = new Date(data.lastUpdate).toString();
-          const repoLink = document.getElementById('repository-link');
-          repoLink.href = data.repoUrl;
-          repoLink.textContent = data.repoUrl;
+  <div class="fallback" id="fallback">Данные замеров не загрузились: рядом с этой страницей нет <code>data.js</code>.</div>
 
-          // Render footer
-          document.getElementById('dl-button').onclick = () => {
-            const dataUrl = 'data:,' + JSON.stringify(data, null, 2);
-            const a = document.createElement('a');
-            a.href = dataUrl;
-            a.download = 'benchmark_data.json';
-            a.click();
-          };
+  <footer>
+    Замер идёт на своём раннере, поэтому в числах есть шум от самой машины.
+    <a href="data.js">Скачать данные</a> ·
+    <a id="repo-link" href="https://github.com/1c-syntax/bsl-language-server">исходники проекта</a>
+  </footer>
+</div>
 
-          // Prepare data points for charts
-          return Object.keys(data.entries).map(name => ({
-            name,
-            dataSet: collectBenchesPerTestCase(data.entries[name]),
-          }));
-        }
+<script src="data.js"></script>
+<script>
+(function () {
+  "use strict";
 
-        function renderAllChars(dataSets) {
+  var BENCH = window.BENCHMARK_DATA;
+  if (!BENCH || !BENCH.entries) { return; }
 
-          function renderGraph(parent, name, dataset) {
-            const canvas = document.createElement('canvas');
-            canvas.className = 'benchmark-chart';
-            parent.appendChild(canvas);
+  document.getElementById("fallback").hidden = true;
+  document.getElementById("app").hidden = false;
 
-            const color = toolColors[dataset.length > 0 ? dataset[0].tool : '_'];
-            const data = {
-              labels: dataset.map(d => d.commit.id.slice(0, 7)),
-              datasets: [
-                {
-                  label: name,
-                  data: dataset.map(d => d.bench.value),
-                  borderColor: color,
-                  backgroundColor: color + '60', // Add alpha for #rrggbbaa
-                }
-              ],
-            };
-            const options = {
-              scales: {
-                xAxes: [
-                  {
-                    scaleLabel: {
-                      display: true,
-                      labelString: 'commit',
-                    },
-                  }
-                ],
-                yAxes: [
-                  {
-                    scaleLabel: {
-                      display: true,
-                      labelString: dataset.length > 0 ? dataset[0].bench.unit : '',
-                    },
-                    ticks: {
-                      beginAtZero: true,
-                    }
-                  }
-                ],
-              },
-              tooltips: {
-                callbacks: {
-                  afterTitle: items => {
-                    const {index} = items[0];
-                    const data = dataset[index];
-                    return '\n' + data.commit.message + '\n\n' + data.commit.timestamp + ' committed by @' + data.commit.committer.username + '\n';
-                  },
-                  label: item => {
-                    let label = item.value;
-                    const { range, unit } = dataset[item.index].bench;
-                    label += ' ' + unit;
-                    if (range) {
-                      label += ' (' + range + ')';
-                    }
-                    return label;
-                  },
-                  afterLabel: item => {
-                    const { extra } = dataset[item.index].bench;
-                    return extra ? '\n' + extra : '';
-                  }
-                }
-              },
-              onClick: (_mouseEvent, activeElems) => {
-                if (activeElems.length === 0) {
-                  return;
-                }
-                // XXX: Undocumented. How can we know the index?
-                const index = activeElems[0]._index;
-                const url = dataset[index].commit.url;
-                window.open(url, '_blank');
-              },
-            };
+  var REPO = BENCH.repoUrl || "https://github.com/1c-syntax/bsl-language-server";
+  document.getElementById("repo-link").href = REPO;
 
-            new Chart(canvas, {
-              type: 'line',
-              data,
-              options,
-            });
-          }
+  if (BENCH.lastUpdate) {
+    document.getElementById("updated").textContent =
+      "обновлено " + new Date(BENCH.lastUpdate).toLocaleDateString("ru-RU",
+        { day: "2-digit", month: "long", year: "numeric" });
+  }
 
-          function renderBenchSet(name, benchSet, main) {
-            const setElem = document.createElement('div');
-            setElem.className = 'benchmark-set';
-            main.appendChild(setElem);
+  var UNITS = { sec: "с", seconds: "с", ms: "мс", ns: "нс", "iter/sec": "итер/с", B: "Б" };
 
-            const nameElem = document.createElement('h1');
-            nameElem.className = 'benchmark-title';
-            nameElem.textContent = name;
-            setElem.appendChild(nameElem);
+  /* --- разложить сырые данные в серии «набор + показатель» --- */
+  var series = [];
+  Object.keys(BENCH.entries).forEach(function (suiteName) {
+    var runs = BENCH.entries[suiteName] || [];
+    var byBench = {};
+    runs.forEach(function (run) {
+      (run.benches || []).forEach(function (bench) {
+        var key = bench.name;
+        if (!byBench[key]) { byBench[key] = { suite: suiteName, bench: key, unit: bench.unit || "", points: [] }; }
+        var spread = 0;
+        var match = /stddev:\s*([0-9.eE+-]+)/.exec(bench.range || "");
+        if (match) { spread = parseFloat(match[1]) || 0; }
+        byBench[key].points.push({
+          t: run.date,
+          v: bench.value,
+          s: spread,
+          c: (run.commit && run.commit.id ? run.commit.id : "").slice(0, 7),
+          m: (run.commit && run.commit.message ? run.commit.message.split("\n")[0] : ""),
+          a: run.commit && run.commit.author ? (run.commit.author.username || run.commit.author.name || "") : "",
+          u: run.commit && run.commit.url ? run.commit.url : ""
+        });
+      });
+    });
+    Object.keys(byBench).forEach(function (key) {
+      byBench[key].points.sort(function (a, b) { return a.t - b.t; });
+      if (byBench[key].points.length) { series.push(byBench[key]); }
+    });
+  });
 
-            const graphsElem = document.createElement('div');
-            graphsElem.className = 'benchmark-graphs';
-            setElem.appendChild(graphsElem);
+  if (!series.length) { return; }
 
-            for (const [benchName, benches] of benchSet.entries()) {
-              renderGraph(graphsElem, benchName, benches)
-            }
-          }
+  var W = 960, H = 380;
+  var PAD = { top: 22, right: 58, bottom: 34, left: 52 };
+  var PW = W - PAD.left - PAD.right;
+  var PH = H - PAD.top - PAD.bottom;
+  var SVGNS = "http://www.w3.org/2000/svg";
 
-          const main = document.getElementById('main');
-          for (const {name, dataSet} of dataSets) {
-            renderBenchSet(name, dataSet, main);
-          }
-        }
+  var plot = document.getElementById("plot");
+  var tooltip = document.getElementById("tooltip");
+  var tilesBox = document.getElementById("tiles");
+  var tableBody = document.getElementById("table-body");
+  var tableCount = document.getElementById("table-count");
+  var rangeLabel = document.getElementById("range-label");
+  var cardTitle = document.getElementById("card-title");
+  var fromInput = document.getElementById("from");
+  var toInput = document.getElementById("to");
+  var suitePick = document.getElementById("suite-pick");
+  var suiteSelect = document.getElementById("suite");
+  var presets = Array.prototype.slice.call(document.querySelectorAll(".preset"));
 
-        renderAllChars(init()); // Start
-      })();
-    </script>
-  </body>
+  var current = series[0];
+  var data = current.points;
+  var last = data[data.length - 1].t;
+  var slice = [];
+  var xOf = null, yOf = null;
+  var hoverIndex = -1;
+  var tableRendered = false;
+
+  if (series.length > 1) {
+    suitePick.setAttribute("data-show", "true");
+    series.forEach(function (s, i) {
+      var option = document.createElement("option");
+      option.value = String(i);
+      option.textContent = s.suite + " · " + s.bench;
+      suiteSelect.appendChild(option);
+    });
+    suiteSelect.addEventListener("change", function () {
+      current = series[Number(suiteSelect.value)];
+      data = current.points;
+      last = data[data.length - 1].t;
+      bindRangeInputs();
+      selectPreset(activePreset() || presetFor("365"));
+    });
+  }
+
+  function unitLabel() { return UNITS[current.unit] || current.unit || ""; }
+
+  function el(name, attrs) {
+    var node = document.createElementNS(SVGNS, name);
+    for (var key in attrs) { node.setAttribute(key, attrs[key]); }
+    return node;
+  }
+
+  function fmtValue(v) { return Math.abs(v) >= 100 ? v.toFixed(0) : v.toFixed(1); }
+
+  function fmtDate(ms) {
+    return new Date(ms).toLocaleDateString("ru-RU", { day: "2-digit", month: "short", year: "numeric" });
+  }
+
+  function fmtDateShort(ms) {
+    return new Date(ms).toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit", year: "2-digit" });
+  }
+
+  /* Календарный день — местный, не UTC: даты в полях и на графике должны совпадать. */
+  function isoDay(ms) {
+    var d = new Date(ms);
+    var pad = function (n) { return (n < 10 ? "0" : "") + n; };
+    return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+  }
+
+  function startOfDay(ms) { return new Date(isoDay(ms) + "T00:00:00").getTime(); }
+  function endOfDay(ms) { return new Date(isoDay(ms) + "T23:59:59.999").getTime(); }
+
+  function median(sorted) {
+    if (!sorted.length) { return 0; }
+    var mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+  }
+
+  function niceTicks(min, max, count) {
+    var span = max - min;
+    if (span <= 0) { span = Math.abs(max) || 1; }
+    var raw = span / count;
+    var mag = Math.pow(10, Math.floor(Math.log(raw) / Math.LN10));
+    var norm = raw / mag;
+    var step = (norm >= 5 ? 10 : norm >= 2 ? 5 : norm >= 1 ? 2 : 1) * mag;
+    var ticks = [];
+    for (var v = Math.floor(min / step) * step; v <= max + step / 2; v += step) {
+      ticks.push(Math.round(v * 1000) / 1000);
+    }
+    return ticks;
+  }
+
+  /*
+   * Монотонная кубическая интерполяция (Фритч — Карлсон). Обычный сплайн между
+   * замерами «выстреливает» за их значения — на графике появлялись бы пики и
+   * провалы, которых не было в данных. Этот не выходит за отрезок между соседними
+   * точками: сглаживает форму, не выдумывая чисел.
+   */
+  function monotonePath(xs, ys) {
+    var n = xs.length;
+    var r = function (v) { return Math.round(v * 100) / 100; };
+    if (!n) { return ""; }
+    if (n === 1) { return "M" + r(xs[0]) + "," + r(ys[0]); }
+    if (n === 2) { return "M" + r(xs[0]) + "," + r(ys[0]) + "L" + r(xs[1]) + "," + r(ys[1]); }
+
+    var delta = [], m = [], i, dx;
+    for (i = 0; i < n - 1; i++) {
+      dx = xs[i + 1] - xs[i];
+      delta[i] = dx === 0 ? 0 : (ys[i + 1] - ys[i]) / dx;
+    }
+    m[0] = delta[0];
+    for (i = 1; i < n - 1; i++) {
+      m[i] = delta[i - 1] * delta[i] <= 0 ? 0 : (delta[i - 1] + delta[i]) / 2;
+    }
+    m[n - 1] = delta[n - 2];
+    for (i = 0; i < n - 1; i++) {
+      if (delta[i] === 0) { m[i] = 0; m[i + 1] = 0; continue; }
+      var a = m[i] / delta[i];
+      var b = m[i + 1] / delta[i];
+      var s = a * a + b * b;
+      if (s > 9) {
+        var tau = 3 / Math.sqrt(s);
+        m[i] = tau * a * delta[i];
+        m[i + 1] = tau * b * delta[i];
+      }
+    }
+
+    var d = "M" + r(xs[0]) + "," + r(ys[0]);
+    for (i = 0; i < n - 1; i++) {
+      var h = (xs[i + 1] - xs[i]) / 3;
+      d += "C" + r(xs[i] + h) + "," + r(ys[i] + m[i] * h) +
+        " " + r(xs[i + 1] - h) + "," + r(ys[i + 1] - m[i + 1] * h) +
+        " " + r(xs[i + 1]) + "," + r(ys[i + 1]);
+    }
+    return d;
+  }
+
+  function timeTicks(from, to) {
+    var days = (to - from) / 86400000;
+    var ticks = [];
+    var cursor = new Date(from);
+    var stepMonths = days > 1300 ? 12 : days > 500 ? 6 : days > 200 ? 2 : days > 70 ? 1 : 0;
+    if (stepMonths === 0) {
+      var stepDays = days > 20 ? 7 : days > 6 ? 2 : 1;
+      cursor.setHours(0, 0, 0, 0);
+      for (var t = cursor.getTime(); t <= to; t += stepDays * 86400000) {
+        if (t >= from) { ticks.push(t); }
+      }
+      return ticks;
+    }
+    cursor = new Date(cursor.getFullYear(), cursor.getMonth(), 1);
+    while (cursor.getTime() <= to) {
+      if (cursor.getTime() >= from) { ticks.push(cursor.getTime()); }
+      cursor.setMonth(cursor.getMonth() + stepMonths);
+    }
+    return ticks;
+  }
+
+  function tickLabel(ms, days) {
+    var d = new Date(ms);
+    if (days > 70) { return d.toLocaleDateString("ru-RU", { month: "short", year: "2-digit" }); }
+    return d.toLocaleDateString("ru-RU", { day: "2-digit", month: "2-digit" });
+  }
+
+  function renderTiles() {
+    tilesBox.textContent = "";
+    if (!slice.length) {
+      var empty = document.createElement("div");
+      empty.className = "tile";
+      empty.textContent = "В этом периоде замеров нет — выберите другой.";
+      tilesBox.appendChild(empty);
+      return;
+    }
+
+    var values = slice.map(function (p) { return p.v; }).slice().sort(function (a, b) { return a - b; });
+    var latest = slice[slice.length - 1];
+    var prev = slice.length > 1 ? slice[slice.length - 2] : null;
+    var min = slice.reduce(function (a, b) { return b.v < a.v ? b : a; });
+    var max = slice.reduce(function (a, b) { return b.v > a.v ? b : a; });
+
+    var note = "первый замер периода";
+    var noteClass = "";
+    if (prev) {
+      var diff = latest.v - prev.v;
+      var pct = prev.v ? (diff / prev.v) * 100 : 0;
+      noteClass = diff > 0 ? "delta-up" : diff < 0 ? "delta-down" : "";
+      note = (diff > 0 ? "↑ " : diff < 0 ? "↓ " : "= ") +
+        fmtValue(Math.abs(diff)) + " " + unitLabel() + " (" + Math.abs(pct).toFixed(1) + "%) к прошлому";
+    }
+
+    addTile("Последний замер", fmtValue(latest.v), unitLabel(), note, noteClass);
+    addTile("Медиана периода", fmtValue(median(values)), unitLabel(), slice.length + " замеров");
+    addTile("Быстрее всего", fmtValue(min.v), unitLabel(), fmtDate(min.t));
+    addTile("Медленнее всего", fmtValue(max.v), unitLabel(), fmtDate(max.t));
+  }
+
+  function addTile(label, value, unit, note, noteClass) {
+    var tile = document.createElement("div");
+    tile.className = "tile";
+
+    var labelEl = document.createElement("div");
+    labelEl.className = "tile-label";
+    labelEl.textContent = label;
+
+    var valueEl = document.createElement("div");
+    valueEl.className = "tile-value";
+    valueEl.appendChild(document.createTextNode(value + " "));
+    var unitEl = document.createElement("span");
+    unitEl.className = "unit";
+    unitEl.textContent = unit;
+    valueEl.appendChild(unitEl);
+
+    var noteEl = document.createElement("div");
+    noteEl.className = "tile-note " + (noteClass || "");
+    noteEl.textContent = note;
+
+    tile.appendChild(labelEl);
+    tile.appendChild(valueEl);
+    tile.appendChild(noteEl);
+    tilesBox.appendChild(tile);
+  }
+
+  function renderPlot() {
+    plot.textContent = "";
+    hideTooltip();
+    if (!slice.length) { return; }
+
+    var t0 = slice[0].t;
+    var t1 = slice[slice.length - 1].t;
+    if (t1 === t0) { t1 = t0 + 86400000; }
+
+    var lo = Infinity, hi = -Infinity;
+    slice.forEach(function (p) {
+      lo = Math.min(lo, p.v - (p.s || 0));
+      hi = Math.max(hi, p.v + (p.s || 0));
+    });
+    var pad = (hi - lo) * 0.12 || Math.max(Math.abs(hi) * 0.1, 1);
+    var yTicks = niceTicks(Math.max(0, lo - pad), hi + pad, 5);
+    var yLo = yTicks[0];
+    var yHi = yTicks[yTicks.length - 1];
+    if (yHi === yLo) { yHi = yLo + 1; }
+
+    xOf = function (t) { return PAD.left + ((t - t0) / (t1 - t0)) * PW; };
+    yOf = function (v) { return PAD.top + PH - ((v - yLo) / (yHi - yLo)) * PH; };
+
+    var days = (t1 - t0) / 86400000;
+
+    yTicks.forEach(function (v) {
+      var y = yOf(v);
+      plot.appendChild(el("line", {
+        x1: PAD.left, x2: PAD.left + PW, y1: y, y2: y, stroke: "var(--grid)", "stroke-width": 1
+      }));
+      var label = el("text", { x: PAD.left - 10, y: y + 3.5, "text-anchor": "end", class: "tick" });
+      label.textContent = String(v);
+      plot.appendChild(label);
+    });
+
+    timeTicks(t0, t1).forEach(function (t) {
+      var label = el("text", { x: xOf(t), y: PAD.top + PH + 20, "text-anchor": "middle", class: "tick" });
+      label.textContent = tickLabel(t, days);
+      plot.appendChild(label);
+    });
+
+    plot.appendChild(el("line", {
+      x1: PAD.left, x2: PAD.left + PW, y1: PAD.top + PH, y2: PAD.top + PH,
+      stroke: "var(--axis)", "stroke-width": 1
+    }));
+
+var xs = [], mid = [], up = [], down = [];
+    slice.forEach(function (p) {
+      xs.push(xOf(p.t));
+      mid.push(yOf(p.v));
+      up.push(yOf(p.v + (p.s || 0)));
+      down.push(yOf(Math.max(yLo, p.v - (p.s || 0))));
+    });
+
+    plot.appendChild(el("path", {
+      d: monotonePath(xs, up) + "L" +
+        monotonePath(xs.slice().reverse(), down.slice().reverse()).slice(1) + "Z",
+      fill: "var(--series-soft)", stroke: "none"
+    }));
+
+    plot.appendChild(el("path", {
+      d: monotonePath(xs, mid),
+      fill: "none", stroke: "var(--series)", "stroke-width": 2,
+      "stroke-linejoin": "round", "stroke-linecap": "round"
+    }));
+
+    var latest = slice[slice.length - 1];
+    var max = slice.reduce(function (a, b) { return b.v > a.v ? b : a; });
+    labelPoint(latest, true);
+    if (max !== latest && slice.length > 2) { labelPoint(max, false); }
+
+    plot.appendChild(el("line", {
+      id: "crosshair", y1: PAD.top, y2: PAD.top + PH, stroke: "var(--axis)", "stroke-width": 1, opacity: 0
+    }));
+    plot.appendChild(el("circle", {
+      id: "marker", r: 4.5, fill: "var(--series)", stroke: "var(--surface)", "stroke-width": 2, opacity: 0
+    }));
+    plot.appendChild(el("rect", { x: PAD.left, y: PAD.top, width: PW, height: PH, fill: "transparent" }));
+  }
+
+  function labelPoint(point, isLatest) {
+    var x = xOf(point.t);
+    var y = yOf(point.v);
+    plot.appendChild(el("circle", {
+      cx: x, cy: y, r: 4, fill: "var(--series)", stroke: "var(--surface)", "stroke-width": 2
+    }));
+    var anchor = x > PAD.left + PW - 70 ? "end" : "start";
+    var text = el("text", {
+      x: x + (anchor === "end" ? -9 : 9), y: y + (isLatest ? 4 : -10), "text-anchor": anchor,
+      class: "point-label", fill: isLatest ? "var(--ink)" : "var(--ink-2)"
+    });
+    text.textContent = fmtValue(point.v) + " " + unitLabel();
+    plot.appendChild(text);
+  }
+
+  function nearestIndex(clientX) {
+    var box = plot.getBoundingClientRect();
+    var svgX = ((clientX - box.left) / box.width) * W;
+    var lo = 0, hi = slice.length - 1;
+    while (lo < hi) {
+      var mid = (lo + hi) >> 1;
+      if (xOf(slice[mid].t) < svgX) { lo = mid + 1; } else { hi = mid; }
+    }
+    if (lo > 0 && Math.abs(xOf(slice[lo - 1].t) - svgX) < Math.abs(xOf(slice[lo].t) - svgX)) { lo -= 1; }
+    return lo;
+  }
+
+  function showAt(index) {
+    if (!slice.length) { return; }
+    hoverIndex = Math.max(0, Math.min(slice.length - 1, index));
+    var point = slice[hoverIndex];
+    var x = xOf(point.t);
+    var y = yOf(point.v);
+
+    var crosshair = plot.querySelector("#crosshair");
+    var marker = plot.querySelector("#marker");
+    if (!crosshair || !marker) { return; }
+    crosshair.setAttribute("x1", x);
+    crosshair.setAttribute("x2", x);
+    crosshair.setAttribute("opacity", 1);
+    marker.setAttribute("cx", x);
+    marker.setAttribute("cy", y);
+    marker.setAttribute("opacity", 1);
+
+    fillTooltip(point);
+
+    var box = plot.getBoundingClientRect();
+    var px = (x / W) * box.width;
+    var py = (y / H) * box.height;
+    var left = px + 18;
+    if (left + tooltip.offsetWidth > box.width) { left = px - tooltip.offsetWidth - 18; }
+    tooltip.style.left = Math.max(0, left) + "px";
+    tooltip.style.top = Math.max(0, Math.min(box.height - tooltip.offsetHeight, py - 40)) + "px";
+    tooltip.setAttribute("data-show", "true");
+  }
+
+  function fillTooltip(point) {
+    tooltip.textContent = "";
+
+    var value = document.createElement("div");
+    value.className = "tt-value";
+    var stroke = document.createElement("span");
+    stroke.className = "stroke";
+    value.appendChild(stroke);
+    value.appendChild(document.createTextNode(fmtValue(point.v)));
+    var unit = document.createElement("span");
+    unit.className = "unit";
+    unit.textContent = unitLabel();
+    value.appendChild(unit);
+    tooltip.appendChild(value);
+
+    if (point.s) {
+      var spread = document.createElement("div");
+      spread.className = "tt-spread";
+      spread.textContent = "разброс ±" + point.s.toFixed(1) + " " + unitLabel();
+      tooltip.appendChild(spread);
+    }
+
+    var date = document.createElement("div");
+    date.className = "tt-date";
+    date.textContent = fmtDate(point.t);
+    tooltip.appendChild(date);
+
+    var commit = document.createElement("div");
+    commit.className = "tt-commit";
+    var sha = document.createElement("span");
+    sha.className = "tt-sha";
+    sha.textContent = point.c + (point.a ? " · " + point.a : "");
+    commit.appendChild(sha);
+    if (point.m) {
+      commit.appendChild(document.createElement("br"));
+      commit.appendChild(document.createTextNode(point.m));
+    }
+    tooltip.appendChild(commit);
+  }
+
+  function hideTooltip() {
+    tooltip.setAttribute("data-show", "false");
+    var crosshair = plot.querySelector("#crosshair");
+    var marker = plot.querySelector("#marker");
+    if (crosshair) { crosshair.setAttribute("opacity", 0); }
+    if (marker) { marker.setAttribute("opacity", 0); }
+    hoverIndex = -1;
+  }
+
+  plot.addEventListener("pointermove", function (event) {
+    if (slice.length) { showAt(nearestIndex(event.clientX)); }
+  });
+  plot.addEventListener("pointerleave", hideTooltip);
+  plot.addEventListener("blur", hideTooltip);
+  plot.addEventListener("focus", function () {
+    if (slice.length && hoverIndex < 0) { showAt(slice.length - 1); }
+  });
+  plot.addEventListener("keydown", function (event) {
+    if (!slice.length) { return; }
+    var step = event.shiftKey ? 10 : 1;
+    if (event.key === "ArrowLeft") { showAt(hoverIndex < 0 ? slice.length - 1 : hoverIndex - step); }
+    else if (event.key === "ArrowRight") { showAt(hoverIndex < 0 ? 0 : hoverIndex + step); }
+    else if (event.key === "Home") { showAt(0); }
+    else if (event.key === "End") { showAt(slice.length - 1); }
+    else if (event.key === "Escape") { hideTooltip(); return; }
+    else { return; }
+    event.preventDefault();
+  });
+
+  function renderTable() {
+    tableCount.textContent = "· " + slice.length + " строк";
+    tableRendered = false;
+    var details = tableBody.closest("details");
+    if (details && details.open) { fillTable(); }
+  }
+
+  function fillTable() {
+    if (tableRendered) { return; }
+    tableRendered = true;
+    tableBody.textContent = "";
+    var fragment = document.createDocumentFragment();
+    slice.slice().reverse().forEach(function (point) {
+      var row = document.createElement("tr");
+      row.appendChild(cell(fmtDateShort(point.t), "num"));
+      row.appendChild(cell(fmtValue(point.v), "num"));
+      row.appendChild(cell(point.s ? "±" + point.s.toFixed(1) : "—", "num"));
+
+      var shaCell = document.createElement("td");
+      shaCell.className = "sha";
+      if (point.u) {
+        var link = document.createElement("a");
+        link.href = point.u;
+        link.rel = "noreferrer";
+        link.textContent = point.c;
+        shaCell.appendChild(link);
+      } else {
+        shaCell.textContent = point.c;
+      }
+      row.appendChild(shaCell);
+
+      row.appendChild(cell(point.m || "—", "msg"));
+      row.appendChild(cell(point.a || "—", ""));
+      fragment.appendChild(row);
+    });
+    tableBody.appendChild(fragment);
+  }
+
+  function cell(text, cls) {
+    var td = document.createElement("td");
+    if (cls) { td.className = cls; }
+    td.textContent = text;
+    return td;
+  }
+
+  tableBody.closest("details").addEventListener("toggle", function (event) {
+    if (event.target.open) { fillTable(); }
+  });
+
+  function apply(from, to) {
+    slice = data.filter(function (p) { return p.t >= from && p.t <= to; });
+    var name = series.length > 1 ? current.suite + " · " + current.bench : current.suite;
+    cardTitle.textContent = name + (unitLabel() ? ", " + unitLabel() : "");
+    rangeLabel.textContent = slice.length
+      ? fmtDate(slice[0].t) + " — " + fmtDate(slice[slice.length - 1].t)
+      : "нет замеров";
+    renderTiles();
+    renderPlot();
+    renderTable();
+  }
+
+  function activePreset() {
+    for (var i = 0; i < presets.length; i++) {
+      if (presets[i].getAttribute("aria-pressed") === "true") { return presets[i]; }
+    }
+    return null;
+  }
+
+  function presetFor(days) {
+    for (var i = 0; i < presets.length; i++) {
+      if (presets[i].getAttribute("data-days") === days) { return presets[i]; }
+    }
+    return presets[0];
+  }
+  function selectPreset(button) {
+    presets.forEach(function (other) { other.setAttribute("aria-pressed", String(other === button)); });
+    var days = button.getAttribute("data-days");
+    var raw = days === "all" ? data[0].t : last - Number(days) * 86400000;
+    var from = startOfDay(Math.max(raw, data[0].t));
+    var to = endOfDay(last);
+    fromInput.value = isoDay(from);
+    toInput.value = isoDay(to);
+    apply(from, to);
+  }
+
+  presets.forEach(function (button) {
+    button.addEventListener("click", function () { selectPreset(button); });
+  });
+
+  function applyCustom() {
+    presets.forEach(function (other) { other.setAttribute("aria-pressed", "false"); });
+    var from = fromInput.value ? new Date(fromInput.value + "T00:00:00").getTime() : data[0].t;
+    var to = toInput.value ? new Date(toInput.value + "T23:59:59.999").getTime() : endOfDay(last);
+    apply(from, to);
+  }
+
+  function bindRangeInputs() {
+    fromInput.min = isoDay(data[0].t);
+    fromInput.max = isoDay(last);
+    toInput.min = isoDay(data[0].t);
+    toInput.max = isoDay(last);
+  }
+
+  fromInput.addEventListener("change", applyCustom);
+  toInput.addEventListener("change", applyCustom);
+  window.addEventListener("resize", function () { if (hoverIndex >= 0) { showAt(hoverIndex); } });
+
+  bindRangeInputs();
+  selectPreset(presetFor("365"));
+})();
+</script>
+</body>
 </html>
