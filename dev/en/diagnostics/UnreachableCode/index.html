@@ -2246,7 +2246,7 @@
 <td style="text-align: center;"><code>Minor</code></td>
 <td style="text-align: center;"><code>Yes</code></td>
 <td style="text-align: center;"><code>10</code></td>
-<td style="text-align: center;"><code>design</code><br><code>suspicious</code></td>
+<td style="text-align: center;"><code>design</code><br><code>suspicious</code><br><code>unused</code></td>
 </tr>
 </tbody>
 </table>
@@ -2254,7 +2254,20 @@
 <h2 id="Description">Description<a class="headerlink" href="#Description" title="Permanent link">&para;</a></h2>
 <p>Code located after operators "Return", "GoTo", "Raise", "Break", "Continue" never will be executed.</p>
 <p>Errors of unreachable code can be caused by developer carelessness when editing another's code.</p>
+<p>The diagnostic also detects preprocessor branches that are impossible for every admissible combination of symbols. Enclosing conditions and preceding <code>#If / #ElsIf / #Else</code> alternatives are taken into account.</p>
+<p>For BSL, the module contexts and the method's compilation directive are also considered. By default, <code>#If Server</code> and <code>#If Server And Client</code> branches are unreachable inside a client method of a managed form. Enabling the shared <a href="../../features/ConfigurationFile/"><code>supportThickClientFileMode</code></a> setting includes the file-mode thick client, where both <code>Client</code> and <code>Server</code> can be true, including inside a client form method. Unknown metadata does not restrict availability beyond the modes supported by the project. Context-selection settings of other diagnostics do not affect this check.</p>
+<p>In BSL, assignments and returns excluded by compilation contexts do not contribute to inferred types. After a <code>#If Server And Not Server</code> branch assigning a number and an <code>#Else</code> branch assigning a string, the variable has only the <code>String</code> type. Repeating <code>#If Client</code> selects values from the earlier client branch, including values copied through intermediate variables.</p>
+<p>For OneScript, exactly one of <code>Windows</code>, <code>Linux</code>, and <code>MacOS</code> is active; <code>MONO</code> is an independent additional symbol. A <code>Linux</code> branch nested inside <code>Windows</code>, or a <code>Windows And Linux</code> condition, is unreachable. Host-defined symbols remain conservative: a branch is excluded only when its condition is provably impossible.</p>
+<p>The whole excluded branch is highlighted, including method declarations, comments, and nested regions. Overlapping findings are merged. Diagnostics carry the LSP <code>Unnecessary</code> tag so that editors can dim unreachable code.</p>
+<p>Incomplete or malformed preprocessor directives are not used to prove unreachability. A finding is emitted only when the condition has been proved impossible.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
+<p>The following branch is never compiled:</p>
+<div class="highlight"><pre><span></span><code><span class="cp">#If</span> <span class="kc">Server</span> <span class="cp">And</span> <span class="cp">Not</span> <span class="kc">Server</span> <span class="cp">Then</span>
+<span class="k">Procedure</span> <span class="nf">Unavailable</span><span class="p">()</span>
+    <span class="nb">Message</span><span class="p">(</span><span class="s">"This code is excluded"</span><span class="p">);</span>
+<span class="k">EndProcedure</span>
+<span class="cp">#EndIf</span>
+</code></pre></div>
 <div class="highlight"><pre><span></span><code><span class="k">Procedure</span> <span class="nf">Example</span><span class="p">()</span>
     <span class="k">Return</span><span class="p">;</span>
     <span class="c1">// Code below operator Return will never be executed</span>
