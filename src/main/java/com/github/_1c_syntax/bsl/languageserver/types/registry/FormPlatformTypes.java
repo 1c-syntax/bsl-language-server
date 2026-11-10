@@ -129,6 +129,7 @@ final class FormPlatformTypes {
   /** Свойство таблицы формы, отдающее текущую строку данных. */
   static final String CURRENT_DATA_RU = "ТекущиеДанные";
   static final String CURRENT_DATA_EN = "CurrentData";
+  static final BilingualString CURRENT_DATA = BilingualString.of(CURRENT_DATA_RU, CURRENT_DATA_EN);
 
   /**
    * Общая часть имени расширений управляемой формы. В bsl-context 0.9.x имена

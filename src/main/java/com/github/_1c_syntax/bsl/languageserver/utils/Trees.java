@@ -420,8 +420,9 @@ public final class Trees {
   }
 
   private static boolean tokenContainsPosition(Token token, Position position) {
-    var tokenRange = Ranges.create(token);
-    return Ranges.containsPosition(tokenRange, position);
+    var line = token.getLine() - 1;
+    var start = token.getCharPositionInLine();
+    return Ranges.containsPosition(line, start, line, start + token.getText().length(), position);
   }
 
   private static boolean positionIsBeforeOrOnToken(Position position, Token token) {

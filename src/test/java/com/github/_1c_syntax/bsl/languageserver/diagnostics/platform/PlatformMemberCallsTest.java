@@ -32,7 +32,6 @@ import com.github._1c_syntax.bsl.support.CompatibilityMode;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.mock;
@@ -76,12 +75,13 @@ class PlatformMemberCallsTest {
     var document = mock(DocumentContext.class);
     when(document.getAst()).thenReturn(new BSLTokenizer("Получатель.Версионный(Аргумент);\n").getAst());
     var service = mock(TypeService.class);
-    var target = mock(TypeService.TypedMember.class);
-    when(service.isVersionedMemberName(anyString())).thenReturn(true);
+    var member = mock(TypeService.TypedMember.class);
+    var target = new CompatibilityMode("8.2.16");
+    when(service.mayBeDeprecatedMemberName("Версионный", target)).thenReturn(true);
     when(service.membersAt(same(document), any(TerminalNode.class)))
       .thenThrow(new AssertionError("Version checks need target metadata, not argument inference"));
-    when(service.accessTargetsAt(same(document), any(TerminalNode.class), isNull())).thenReturn(List.of(target));
-    assertThat(PlatformMemberCalls.collect(document, service).members()).containsExactly(target);
+    when(service.accessTargetsAt(same(document), any(TerminalNode.class), isNull())).thenReturn(List.of(member));
+    assertThat(PlatformMemberCalls.collectDeprecated(document, service, target).members()).containsExactly(member);
   }
 
   @Test
