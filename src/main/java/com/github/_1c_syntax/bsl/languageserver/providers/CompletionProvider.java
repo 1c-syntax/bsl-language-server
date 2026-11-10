@@ -339,7 +339,7 @@ public final class CompletionProvider {
     var items = isDotCompletion(documentContext, position)
       ? dotCompletion(documentContext, position, ranking)
       : noDotCompletion(documentContext, position, ranking);
-    if (Boolean.TRUE.equals(configuration.getCompletionOptions().getHideUnavailableByContext())) {
+    if (configuration.getCompletionOptions().isHideUnavailableByContext()) {
       items = items.stream().filter(item -> !ranking.isUnavailable(item)).toList();
     }
     completionMethodHintRenderer.apply(ranking, items, labelDetailsSupport).forEach(this::attachContextDescription);
@@ -841,7 +841,7 @@ public final class CompletionProvider {
 
   private Set<String> collectLocalMethods(NoDotContext query, List<CompletionItem> items) {
     var declaredLocalNames = new HashSet<String>();
-    var hideUnavailable = Boolean.TRUE.equals(configuration.getCompletionOptions().getHideUnavailableByContext());
+    var hideUnavailable = configuration.getCompletionOptions().isHideUnavailableByContext();
     // Local methods of current document
     for (var method : query.document().getSymbolTree().getMethods()) {
       if (matches(method.getName(), query.prefix())) {
