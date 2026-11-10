@@ -200,9 +200,8 @@ public class NewExpressionReferenceFinder implements ReferenceFinder {
     if (start == null || stop == null) {
       return false;
     }
-    var range = Ranges.create(start.getLine() - 1, start.getCharPositionInLine(),
-      stop.getLine() - 1, stop.getCharPositionInLine() + stop.getText().length());
-    return Ranges.containsPosition(range, position);
+    return Ranges.containsPosition(start.getLine() - 1, start.getCharPositionInLine(),
+      stop.getLine() - 1, stop.getCharPositionInLine() + stop.getText().length(), position);
   }
 
   private static Range tokenRange(ParserRuleContext ctx) {
