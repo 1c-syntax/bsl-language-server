@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794310062829,
+  "lastUpdate": 1794311395659,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -46934,6 +46934,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.663950109918095",
             "extra": "mean: 88.3285231590271 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "565d0f62ca373500a78fa1fd5c13cd8d30646177",
+          "message": "Merge pull request #4687 from 1c-syntax/perf/types-body-at-without-ranges\n\nПоиск тела метода по позиции не создаёт диапазон на каждый метод модуля",
+          "timestamp": "2026-11-10T11:49:53+01:00",
+          "tree_id": "5ab10595c63aeae092cb438ee8716ef5d1d3eeaa",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/565d0f62ca373500a78fa1fd5c13cd8d30646177"
+        },
+        "date": 1794311363918,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 89.70976328849792,
+            "unit": "sec",
+            "range": "stddev: 2.156729388380896",
+            "extra": "mean: 89.70976328849792 sec\nrounds: 3"
           }
         ]
       }
