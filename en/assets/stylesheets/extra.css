@@ -1,0 +1,32 @@
+.md-content {
+    margin-right: 0;
+}
+
+.md-typeset__table {
+    padding: 0;
+}
+
+.md-typeset table:not([class]) {
+    font-size: .54rem;
+}
+
+
+[data-md-color-scheme="slate"] .md-logo img { 
+    filter: invert(100%);
+}
+
+[data-md-color-scheme="slate"] {
+    --md-primary-fg-color: #212121;
+}
+
+[data-md-color-scheme=slate][data-md-color-primary=black] {
+    --md-typeset-a-color: #02a6f2;
+}
+
+[data-md-color-primary=black] .md-header {
+    background-color: #212121;
+}
+
+[data-md-color-primary=black] .md-tabs {
+    background-color: #212121;
+}
