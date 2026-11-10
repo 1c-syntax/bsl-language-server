@@ -44,6 +44,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -177,7 +178,7 @@ public class GlobalScopeProvider {
    * @param fileType язык файла-потребителя.
    * @return член глобального контекста или {@link Optional#empty()}.
    */
-  public Optional<MemberDescriptor> globalMember(@org.jspecify.annotations.Nullable String name, FileType fileType) {
+  public Optional<MemberDescriptor> globalMember(@Nullable String name, FileType fileType) {
     if (name == null || name.isBlank()) {
       return Optional.empty();
     }
@@ -198,7 +199,7 @@ public class GlobalScopeProvider {
     }
     // Член берётся из набора, а не из индекса: в наборе символ-источник глобального свойства
     // освежается на месте (TypeRegistry.refreshGlobalPropertyDeclaration), а позиции те же.
-    var members = fileType == FileType.OS ? index.osMembers() : index.bslMembers();
+    var members = index.members().get(fileType);
     return Optional.of(members.get(position));
   }
 
@@ -218,7 +219,7 @@ public class GlobalScopeProvider {
       }
       var bslMembers = asList(bslSource);
       var osMembers = asList(osSource);
-      var rebuilt = new GlobalIndex(bslSource, osSource, bslMembers, osMembers, Map.of(
+      var rebuilt = new GlobalIndex(bslSource, osSource, Map.of(FileType.BSL, bslMembers, FileType.OS, osMembers), Map.of(
         FileType.BSL, globalNameIndex(bslMembers, index, FileType.BSL),
         FileType.OS, globalNameIndex(osMembers, index, FileType.OS)));
       globalIndexRef.set(rebuilt);
@@ -231,7 +232,7 @@ public class GlobalScopeProvider {
     return members instanceof List<MemberDescriptor> list ? list : List.copyOf(members);
   }
 
-  private static boolean isBuiltFrom(@org.jspecify.annotations.Nullable GlobalIndex index,
+  private static boolean isBuiltFrom(@Nullable GlobalIndex index,
                                      Collection<MemberDescriptor> bslSource,
                                      Collection<MemberDescriptor> osSource) {
     return index != null && index.bslSource() == bslSource && index.osSource() == osSource;
@@ -245,7 +246,7 @@ public class GlobalScopeProvider {
    * @param fileType язык файла-потребителя.
    * @return метод-член или {@link Optional#empty()}, если имя не глобальная функция.
    */
-  public Optional<MemberDescriptor> globalFunction(@org.jspecify.annotations.Nullable String name, FileType fileType) {
+  public Optional<MemberDescriptor> globalFunction(@Nullable String name, FileType fileType) {
     return globalMember(name, fileType).filter(member -> member.kind() == MemberKind.METHOD);
   }
 
@@ -258,7 +259,7 @@ public class GlobalScopeProvider {
    * @param fileType язык файла-потребителя.
    * @return свойство-член или {@link Optional#empty()}, если имя не глобальное свойство.
    */
-  public Optional<MemberDescriptor> globalProperty(@org.jspecify.annotations.Nullable String name, FileType fileType) {
+  public Optional<MemberDescriptor> globalProperty(@Nullable String name, FileType fileType) {
     return globalMember(name, fileType).filter(member -> member.kind() == MemberKind.PROPERTY);
   }
 
@@ -299,9 +300,9 @@ public class GlobalScopeProvider {
 
   /** Имена и позиции могут сохраниться при обновлении типов, символов и метаданных членов. */
   private static Map<String, Integer> globalNameIndex(List<MemberDescriptor> members,
-      @org.jspecify.annotations.Nullable GlobalIndex previous, FileType fileType) {
+      @Nullable GlobalIndex previous, FileType fileType) {
     if (previous != null) {
-      var oldMembers = fileType == FileType.OS ? previous.osMembers() : previous.bslMembers();
+      var oldMembers = previous.members().get(fileType);
       if (sameGlobalNames(members, oldMembers)) {
         return previous.byName().get(fileType);
       }
@@ -345,14 +346,12 @@ public class GlobalScopeProvider {
    *
    * @param bslSource  набор BSL, как его отдал реестр.
    * @param osSource   набор OneScript, как его отдал реестр.
-   * @param bslMembers набор BSL как список.
-   * @param osMembers  набор OneScript как список.
+   * @param members   наборы членов как списки, в разрезе языка.
    * @param byName     позиция члена по имени в нижнем регистре, в разрезе языка.
    */
   private record GlobalIndex(Collection<MemberDescriptor> bslSource,
                              Collection<MemberDescriptor> osSource,
-                             List<MemberDescriptor> bslMembers,
-                             List<MemberDescriptor> osMembers,
+                             Map<FileType, List<MemberDescriptor>> members,
                              Map<FileType, Map<String, Integer>> byName) {
   }
 
