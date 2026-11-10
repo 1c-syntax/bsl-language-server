@@ -83,6 +83,34 @@ class ServerContextTest extends AbstractServerContextAwareTest {
   private TypeRegistry typeRegistry;
 
   @Test
+  void commonModuleLookupMatchesTheLoadedDictionary() {
+    initServerContext(PATH_TO_METADATA);
+    var configuration = context.getConfiguration();
+    var names = configuration.getMergedConfiguration().getCommonModulesByName().keySet();
+    assertThat(names).isNotEmpty();
+    for (var name : names) {
+      assertThat(context.findCommonModuleForTypeName(name)).isEqualTo(configuration.findCommonModule(name));
+      var upper = name.toUpperCase(java.util.Locale.ROOT);
+      assertThat(context.findCommonModuleForTypeName(upper)).isEqualTo(configuration.findCommonModule(upper));
+    }
+    for (var name : List.of("СправочникМенеджер.Справочник1", "Unknown.Module", "Unknown")) {
+      assertThat(context.findCommonModuleForTypeName(name)).isEqualTo(configuration.findCommonModule(name));
+    }
+  }
+
+  @Test
+  void commonModuleLookupStillWorksAfterMetadataClear() {
+    initServerContext(PATH_TO_METADATA);
+    var name = context.getConfiguration().getMergedConfiguration().getCommonModulesByName().keySet()
+      .iterator().next();
+    assertThat(context.findCommonModuleForTypeName(name)).isPresent();
+    context.clear();
+    assertThat(context.findCommonModuleForTypeName(name)).isPresent();
+    assertThat(context.findCommonModuleForTypeName("Unknown.Module"))
+      .isEqualTo(context.getConfiguration().findCommonModule("Unknown.Module"));
+  }
+
+  @Test
   void scriptVariantLanguageFollowsTheConfiguration() {
     initServerContext(PATH_TO_METADATA);
 

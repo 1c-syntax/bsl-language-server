@@ -30,6 +30,7 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.Value;
 import lombok.experimental.NonFinal;
+import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 import org.jspecify.annotations.Nullable;
@@ -129,6 +130,11 @@ public class RegionSymbol implements SourceDefinedSymbol {
   @Override
   public Range getRange() {
     return Ranges.create(startLine, startCharacter, endLine, endCharacter);
+  }
+
+  @Override
+  public boolean containsPosition(Position position) {
+    return Ranges.containsPosition(startLine, startCharacter, endLine, endCharacter, position);
   }
 
   /**

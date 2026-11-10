@@ -41,10 +41,12 @@ import jakarta.annotation.PostConstruct;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.SneakyThrows;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.jspecify.annotations.Nullable;
@@ -125,6 +127,13 @@ public class LanguageServerConfiguration {
   private String siteRoot = "https://1c-syntax.github.io/bsl-language-server";
   private boolean useDevSite;
 
+  /**
+   * Учитывать толстый клиент в файловом варианте работы, включая совмещённые символы
+   * {@code Клиент} и {@code Сервер}. По умолчанию выключено. Настройка общая для
+   * диагностик, вывода типов и подсказок; файловое внешнее соединение от неё не зависит.
+   */
+  private boolean supportThickClientFileMode;
+
   @Nullable
   private Path configurationRoot;
 
@@ -166,6 +175,16 @@ public class LanguageServerConfiguration {
   @Setter(value = AccessLevel.NONE)
   @Nullable
   private LanguageServerConfiguration initialSnapshot;
+
+  /**
+   * Применить независимый снимок настроек ссылок.
+   *
+   * @param referencesOptions новые настройки ссылок.
+   */
+  @JsonProperty("references")
+  public void setReferencesOptions(ReferencesOptions referencesOptions) {
+    this.referencesOptions = new ReferencesOptions(referencesOptions.getCommonModuleAccessors());
+  }
 
   /**
    * Инициализация конфигурации при создании workspace-scoped бина.
@@ -316,9 +335,9 @@ public class LanguageServerConfiguration {
     PropertyUtils.copyProperties(this.diagnosticsOptions, configuration.diagnosticsOptions);
     PropertyUtils.copyProperties(this.documentLinkOptions, configuration.documentLinkOptions);
     PropertyUtils.copyProperties(this.formattingOptions, configuration.formattingOptions);
-    PropertyUtils.copyProperties(this.referencesOptions, configuration.referencesOptions);
     PropertyUtils.copyProperties(this.semanticTokensOptions, configuration.semanticTokensOptions);
     PropertyUtils.copyProperties(this.oscriptOptions, configuration.oscriptOptions);
     PropertyUtils.copyProperties(this.v8PlatformOptions, configuration.v8PlatformOptions);
   }
+
 }

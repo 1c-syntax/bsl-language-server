@@ -259,8 +259,6 @@ public class ReferenceIndexFiller {
 
     private final DocumentContext documentContext;
     private final BatchingSink sink;
-    private final ModuleReference.ParsedAccessors parsedAccessors =
-      ModuleReference.parseAccessors(configuration.getReferencesOptions().getCommonModuleAccessors());
     private Set<String> commonModuleMdoRefFromSubParams = Collections.emptySet();
 
     @Override
@@ -562,7 +560,8 @@ public class ReferenceIndexFiller {
       BSLParser.@Nullable AccessCallContext trailingCall
     ) {
       ModuleReference.extractMethodCallOnGetterModule(
-          baseIdentifier, baseGlobalCall, modifiers, trailingCall, parsedAccessors)
+          baseIdentifier, baseGlobalCall, modifiers, trailingCall,
+          configuration.getReferencesOptions().getModuleAccessors())
         .ifPresent(call -> documentContext.getServerContext()
           .findCommonModule(call.moduleName())
           .ifPresent(commonModule -> addMethodCall(
@@ -627,7 +626,6 @@ public class ReferenceIndexFiller {
 
     private final DocumentContext documentContext;
     private final BatchingSink sink;
-    private final ModuleReference.ParsedAccessors parsedAccessors;
     @SuppressWarnings("NullAway.Init")
     private @Nullable SourceDefinedSymbol currentScope;
     private final Map<String, String> variableToCommonModuleMap = new HashMap<>();
@@ -637,9 +635,6 @@ public class ReferenceIndexFiller {
     private VariableSymbolReferenceIndexFinder(DocumentContext documentContext, BatchingSink sink) {
       this.documentContext = documentContext;
       this.sink = sink;
-      this.parsedAccessors = ModuleReference.parseAccessors(
-        configuration.getReferencesOptions().getCommonModuleAccessors()
-      );
     }
 
     @Override
@@ -711,8 +706,10 @@ public class ReferenceIndexFiller {
         if (libClassUri != null) {
           variableToLibraryClassUriMap.put(variableKey, libClassUri);
           variableToCommonModuleMap.remove(variableKey);
-        } else if (ModuleReference.isCommonModuleExpression(expression, parsedAccessors)) {
-          var commonModuleOpt = ModuleReference.extractCommonModuleName(expression, parsedAccessors)
+        } else if (ModuleReference.isCommonModuleExpression(expression,
+          configuration.getReferencesOptions().getModuleAccessors())) {
+          var commonModuleOpt = ModuleReference.extractCommonModuleName(expression,
+              configuration.getReferencesOptions().getModuleAccessors())
             .flatMap(moduleName -> documentContext.getServerContext()
               .findCommonModule(moduleName));
           if (commonModuleOpt.isPresent()) {

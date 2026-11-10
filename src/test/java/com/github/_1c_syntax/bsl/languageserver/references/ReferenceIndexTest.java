@@ -71,6 +71,19 @@ class ReferenceIndexTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void directTargetsMatchIndexedFixtureReferences() {
+    var document = TestUtils.getDocumentContextFromFile(PATH_TO_FILE, context);
+    var references = referenceIndex.getReferencesFrom(document.getUri());
+    assertThat(references).isNotEmpty();
+    for (var reference : references) {
+      var position = reference.selectionRange().getStart();
+      assertThat(referenceIndex.getTargetSymbol(document.getUri(), position))
+        .as("indexed target at %s", position)
+        .isEqualTo(referenceIndex.getReference(document.getUri(), position).map(Reference::symbol));
+    }
+  }
+
+  @Test
   void getReferencesToLocalMethod() {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
