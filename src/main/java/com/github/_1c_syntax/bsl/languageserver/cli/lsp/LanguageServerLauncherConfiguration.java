@@ -39,12 +39,12 @@ public class LanguageServerLauncherConfiguration {
   @Bean
   public Launcher<LanguageClient> launcher(
     LanguageServer server,
-    FileAwarePrintWriter printWriter
+    TraceAwareLauncherBuilder builder
   ) {
     InputStream in = System.in;
     OutputStream out = System.out;
 
-    return new TraceAwareLauncherBuilder(printWriter)
+    return builder
       .setLocalService(server)
       .setRemoteInterface(LanguageClient.class)
       .setInput(in)

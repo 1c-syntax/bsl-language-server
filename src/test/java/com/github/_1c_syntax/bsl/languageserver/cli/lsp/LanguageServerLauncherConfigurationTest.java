@@ -35,6 +35,7 @@ import org.eclipse.lsp4j.DidChangeConfigurationParams;
 import org.eclipse.lsp4j.DidChangeWatchedFilesParams;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -54,6 +55,22 @@ class LanguageServerLauncherConfigurationTest {
   Path directory;
 
   @Test
+  void springCreatesAnIndependentBuilderForEachLauncher() {
+    // given
+    try (var context = new AnnotationConfigApplicationContext(
+      FileAwarePrintWriter.class, TraceAwareLauncherBuilder.class)) {
+      var builders = context.getBeanProvider(TraceAwareLauncherBuilder.class);
+
+      // when
+      var first = builders.getObject();
+      var second = builders.getObject();
+
+      // then
+      assertThat(second).isNotSameAs(first);
+    }
+  }
+
+  @Test
   void disabledTraceDoesNotSerializeNotificationTwice() {
     var server = new TestServer();
     var input = System.in;
@@ -63,7 +80,7 @@ class LanguageServerLauncherConfigurationTest {
          var writer = new FileAwarePrintWriter()) {
       System.setIn(new ByteArrayInputStream(new byte[0]));
       System.setOut(stream);
-      var launcher = new LanguageServerLauncherConfiguration().launcher(server, writer);
+      var launcher = new LanguageServerLauncherConfiguration().launcher(server, new TraceAwareLauncherBuilder(writer));
       var payload = new CountingMap();
       payload.put("key", "value");
       launcher.getRemoteEndpoint().notify("probe", payload);
@@ -85,7 +102,8 @@ class LanguageServerLauncherConfigurationTest {
          var writer = new FileAwarePrintWriter()) {
       System.setIn(new ByteArrayInputStream(new byte[0]));
       System.setOut(stream);
-      var launcher = new LanguageServerLauncherConfiguration().launcher(new TestServer(), writer);
+      var launcher = new LanguageServerLauncherConfiguration()
+        .launcher(new TestServer(), new TraceAwareLauncherBuilder(writer));
       var first = new CountingMap();
       first.put("key", "first");
       launcher.getRemoteEndpoint().notify("probe", first);

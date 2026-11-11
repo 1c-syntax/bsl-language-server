@@ -26,11 +26,16 @@ import org.eclipse.lsp4j.jsonrpc.json.MessageJsonHandler;
 import org.eclipse.lsp4j.launch.LSPLauncher;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Scope;
+import org.springframework.stereotype.Component;
 
 import java.time.Clock;
 import java.util.Objects;
 
 /** Подключает трассировку до валидации и дополнительных обёрток потребителя сообщений. */
+@Component
+@Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 final class TraceAwareLauncherBuilder extends LSPLauncher.Builder<LanguageClient> {
   private final FileAwarePrintWriter writer;
   private final TraceAwareMessageConsumer.RequestState requests = new TraceAwareMessageConsumer.RequestState();
