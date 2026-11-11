@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794406254760,
+  "lastUpdate": 1794409199655,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -47337,6 +47337,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.2238858992454644",
             "extra": "mean: 90.37289690971375 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Kirill Chernenko",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f3bbd0766a3dad75a6fb216d3624365da3ac837a",
+          "message": "Merge pull request #4875 from 1c-syntax/codex/20261028-08-metadata\n\nfix(completion): имена метаданных и выбор RU/EN",
+          "timestamp": "2026-11-11T11:44:53+01:00",
+          "tree_id": "4520f0da16269fd5b4eccb35598c2cd7d30679c5",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/f3bbd0766a3dad75a6fb216d3624365da3ac837a"
+        },
+        "date": 1794409167832,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 90.59883618354797,
+            "unit": "sec",
+            "range": "stddev: 0.6951934104106128",
+            "extra": "mean: 90.59883618354797 sec\nrounds: 3"
           }
         ]
       }
