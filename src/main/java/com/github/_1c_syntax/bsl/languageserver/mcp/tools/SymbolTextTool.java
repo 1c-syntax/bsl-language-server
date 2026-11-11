@@ -31,7 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.mcp.dto.RangeDto;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.SymbolTextDto;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.SymbolTextResultDto;
 import com.github._1c_syntax.bsl.languageserver.providers.DocumentSymbolProvider;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.parser.description.MethodDescription;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Position;
 import org.jspecify.annotations.Nullable;
@@ -197,14 +197,7 @@ public class SymbolTextTool {
     String description = null;
     if (symbol instanceof MethodSymbol methodSymbol) {
       description = methodSymbol.getDescription()
-        .map(methodDescription -> methodDescription.getRange())
-        .filter(descriptionRange -> !descriptionRange.isEmpty())
-        .map(descriptionRange -> documentContext.getText(Ranges.create(
-          descriptionRange.startLine(),
-          descriptionRange.startCharacter(),
-          descriptionRange.endLine(),
-          descriptionRange.endCharacter()
-        )))
+        .map(MethodDescription::getDescription)
         .orElse(null);
     }
     return new SymbolTextDto(

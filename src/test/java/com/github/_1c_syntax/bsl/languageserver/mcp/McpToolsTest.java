@@ -404,8 +404,10 @@ class McpToolsTest {
   void symbolTextReturnsDescriptionCommentOfMethod() {
     var result = symbolTextTool.symbolText(FILE, "ВтораяФункция", null, null, null);
 
-    assertThat(result.matches()).hasSize(1);
-    assertThat(result.matches().get(0).description()).contains("Устарела");
+    // Описание — строки комментария над объявлением, как их отдаёт MethodDescription.
+    assertThat(result.matches()).singleElement()
+      .extracting(SymbolTextDto::description)
+      .isEqualTo("// Устарела.\n//");
   }
 
   @Test
