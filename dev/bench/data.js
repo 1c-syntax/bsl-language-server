@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794332868282,
+  "lastUpdate": 1794381451297,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -47151,6 +47151,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.273700308774721",
             "extra": "mean: 87.22536245981853 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "32082417+sfaqer@users.noreply.github.com",
+            "name": "Kirill Chernenko",
+            "username": "sfaqer"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "aafb1a31e44980cd0771ca3a7e522f32f9d10a72",
+          "message": "Merge pull request #4928 from SanMisha/fix/workspace-symbol-index-folder-removal\n\nfix(index): снятие рабочей папки не стирает индекс символов остальных папок",
+          "timestamp": "2026-11-11T16:13:10+10:00",
+          "tree_id": "804d362ea7fdfbe212694fa875df3de908e367d0",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/aafb1a31e44980cd0771ca3a7e522f32f9d10a72"
+        },
+        "date": 1794381429392,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 89.87657046318054,
+            "unit": "sec",
+            "range": "stddev: 0.8403694502845046",
+            "extra": "mean: 89.87657046318054 sec\nrounds: 3"
           }
         ]
       }
