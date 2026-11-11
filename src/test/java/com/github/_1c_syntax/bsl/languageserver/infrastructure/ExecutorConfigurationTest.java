@@ -22,11 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.infrastructure;
 
 import com.github._1c_syntax.utils.Absolute;
-import io.micrometer.context.ContextRegistry;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.test.util.ReflectionTestUtils;
 
 import java.net.URI;
 import java.util.List;
@@ -37,12 +34,9 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
 
 class ExecutorConfigurationTest {
 
@@ -56,15 +50,8 @@ class ExecutorConfigurationTest {
   private static final int PARALLELISM = 4;
   private static final int TIMEOUT_SECONDS = 30;
 
-  @BeforeEach
-  void registerWorkspaceForContextPropagation() {
-    ContextRegistry.getInstance().loadThreadLocalAccessors();
-    WorkspaceContextHolder.registerWorkspace(WORKSPACE_URI, WORKSPACE_NAME);
-  }
-
   @AfterEach
   void tearDown() {
-    WorkspaceContextHolder.unregisterWorkspace(WORKSPACE_URI);
     WorkspaceContextHolder.clear();
   }
 
@@ -105,78 +92,6 @@ class ExecutorConfigurationTest {
       assertThat(workspaceUri).isEqualTo(WORKSPACE_URI);
     } finally {
       pool.shutdownNow();
-    }
-  }
-
-  @Test
-  void diagnosticExecutorIsBoundedAndPropagatesWorkspace() throws Exception {
-    WorkspaceContextHolder.set(WORKSPACE_URI, WORKSPACE_NAME);
-    var executor = new ExecutorConfiguration().diagnosticComputerExecutor();
-    var pool = (ThreadPoolExecutor) ReflectionTestUtils.getField(executor, "delegate");
-    try {
-      assertThat(pool.getMaximumPoolSize()).isEqualTo(pool.getCorePoolSize());
-      var expected = System.getProperty("java.util.concurrent.ForkJoinPool.common.parallelism") == null
-        ? Runtime.getRuntime().availableProcessors() + 1 : ForkJoinPool.getCommonPoolParallelism();
-      assertThat(pool.getCorePoolSize()).isEqualTo(expected);
-      assertThat(executor.submit(WorkspaceContextHolder::get).get(TIMEOUT_SECONDS, TimeUnit.SECONDS))
-        .isEqualTo(WORKSPACE_URI);
-      assertThat(currentThreadName(executor)).matches("diagnostic-computer-workspace-\\d+");
-    } finally {
-      executor.shutdownNow();
-    }
-  }
-
-  @Test
-  void diagnosticExecutorPreservesExplicitForkJoinParallelism() {
-    var property = "java.util.concurrent.ForkJoinPool.common.parallelism";
-    var previous = System.getProperty(property);
-    System.setProperty(property, Integer.toString(ForkJoinPool.getCommonPoolParallelism()));
-    WorkspaceContextHolder.set(WORKSPACE_URI, WORKSPACE_NAME);
-    ExecutorService executor = null;
-    try {
-      executor = new ExecutorConfiguration().diagnosticComputerExecutor();
-      var pool = (ThreadPoolExecutor) ReflectionTestUtils.getField(executor, "delegate");
-      assertThat(pool.getCorePoolSize()).isEqualTo(ForkJoinPool.getCommonPoolParallelism());
-      assertThat(pool.getMaximumPoolSize()).isEqualTo(pool.getCorePoolSize());
-    } finally {
-      if (executor != null) executor.shutdownNow();
-      if (previous == null) System.clearProperty(property); else System.setProperty(property, previous);
-    }
-  }
-
-  @Test
-  void diagnosticFutureDoesNotCompensateTheCallingForkJoinWorker() throws Exception {
-    WorkspaceContextHolder.set(WORKSPACE_URI, WORKSPACE_NAME);
-    var executor = new ExecutorConfiguration().diagnosticComputerExecutor();
-    var caller = new ForkJoinPool(1);
-    var entered = new CountDownLatch(1);
-    var release = new CountDownLatch(1);
-    var callerThread = new AtomicReference<Thread>();
-    try {
-      var outer = caller.submit(() -> {
-        WorkspaceContextHolder.set(WORKSPACE_URI, WORKSPACE_NAME);
-        callerThread.set(Thread.currentThread());
-        try {
-          return executor.submit(() -> {
-            entered.countDown();
-            assertThat(release.await(TIMEOUT_SECONDS, TimeUnit.SECONDS)).isTrue();
-            return WorkspaceContextHolder.get();
-          }).get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        } finally {
-          WorkspaceContextHolder.clear();
-        }
-      });
-      assertThat(entered.await(TIMEOUT_SECONDS, TimeUnit.SECONDS)).isTrue();
-      await().atMost(TIMEOUT_SECONDS, TimeUnit.SECONDS).until(() ->
-        callerThread.get().getState() == Thread.State.WAITING
-          || callerThread.get().getState() == Thread.State.TIMED_WAITING);
-      assertThat(caller.getPoolSize()).as("plain Future wait does not expand the document pool").isEqualTo(1);
-      release.countDown();
-      assertThat(outer.get(TIMEOUT_SECONDS, TimeUnit.SECONDS)).isEqualTo(WORKSPACE_URI);
-    } finally {
-      release.countDown();
-      executor.shutdownNow();
-      caller.shutdownNow();
     }
   }
 

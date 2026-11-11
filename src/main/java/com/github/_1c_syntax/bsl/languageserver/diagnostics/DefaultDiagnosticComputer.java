@@ -23,8 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.types.registry.MemberLookupSession;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.DiagnosticDeclarationSession;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.GitBlameComputer;
@@ -36,7 +34,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.ArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -55,6 +52,7 @@ import java.util.function.Predicate;
 @Slf4j
 @RequiredArgsConstructor
 public abstract class DefaultDiagnosticComputer implements DiagnosticComputer {
+
   private final LanguageServerConfiguration configuration;
 
   @Qualifier("diagnosticComputerExecutor")
@@ -72,40 +70,17 @@ public abstract class DefaultDiagnosticComputer implements DiagnosticComputer {
       ? GitBlameComputer.Data.empty()
       : new GitBlameComputer(documentContext.getUri(), ignoredAuthors).compute();
 
-    var futures = submitDiagnostics(documentContext);
+    var futures = diagnostics(documentContext).stream()
+      .map((BSLDiagnostic diagnostic) ->
+        executor.submit(() -> safeGetDiagnostics(diagnostic, documentContext)))
+      .toList();
 
-    try {
-      return futures.stream()
-        .map(DefaultDiagnosticComputer::getUninterruptibly)
-        .flatMap(List::stream)
-        .filter(Predicate.not(diagnosticIgnorance::diagnosticShouldBeIgnored))
-        .filter(Predicate.not(gitBlameIgnorance::diagnosticShouldBeIgnored))
-        .toList();
-    } catch (RuntimeException exception) {
-      futures.forEach(future -> future.cancel(true));
-      throw exception;
-    }
-  }
-
-  private List<Future<List<Diagnostic>>> submitDiagnostics(DocumentContext documentContext) {
-    var memberLookups = new MemberLookupSession();
-    var declarations = new DiagnosticDeclarationSession();
-    var enabled = diagnostics(documentContext);
-    List<Future<List<Diagnostic>>> futures = new ArrayList<>(enabled.size());
-    try {
-      for (var diagnostic : enabled) {
-        futures.add(executor.submit(() -> {
-          try (var scope = memberLookups.open(); var declarationScope = declarations.open()) {
-            return safeGetDiagnostics(diagnostic, documentContext);
-          }
-        }));
-      }
-    } catch (RuntimeException exception) {
-      futures.forEach(future -> future.cancel(true));
-      throw exception;
-    }
-
-    return futures;
+    return futures.stream()
+      .map(DefaultDiagnosticComputer::getUninterruptibly)
+      .flatMap(List::stream)
+      .filter(Predicate.not(diagnosticIgnorance::diagnosticShouldBeIgnored))
+      .filter(Predicate.not(gitBlameIgnorance::diagnosticShouldBeIgnored))
+      .toList();
   }
 
   private List<Diagnostic> safeGetDiagnostics(BSLDiagnostic diagnostic, DocumentContext documentContext) {
