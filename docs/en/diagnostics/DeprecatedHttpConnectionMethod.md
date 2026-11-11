@@ -5,7 +5,14 @@
 
 In platform 8.3.21, `HTTPConnection` object methods are deprecated in client context. Use their asynchronous equivalents with the `Async` suffix instead.
 
-Asynchronous methods are only available on the client. Therefore the diagnostic only fires in modules with a client context (forms, commands, ordinary/managed application, client common modules) and only inside methods that execute on the client (`&AtClient`, `&AtClientAtServer` or no directive in a client module). Methods with `&AtServer` and `&AtServerNoContext` directives, as well as server modules, are not reported — there are no asynchronous equivalents available there.
+Asynchronous methods are only available on the client. Therefore the diagnostic reports only calls that are guaranteed to execute on the client:
+
+* application modules (managed, ordinary and `ApplicationModule.bsl`) — all code;
+* client common modules — all code; a common module is considered client-side when at least one client flag is set and the `Server`, `External connection` and `Server call` flags are not set;
+* managed form and command modules — only methods with the `&AtClient` directive;
+* ordinary form modules — all code, because compilation directives are not used there.
+
+The diagnostic does not fire in server modules, in methods with the `&AtServer`, `&AtServerNoContext` directives and `&AtClientAtServer`/`&AtClientAtServerNoContext` directives (such methods are also compiled for the server), as well as in methods without a directive in managed forms and commands — the platform executes them on the server. Common modules with mixed client-server flags are not reported either: client-side execution cannot be guaranteed.
 
 ## Deprecated methods
 
