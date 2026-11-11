@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794395019416,
+  "lastUpdate": 1794396340431,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -47244,6 +47244,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.9609178488892312",
             "extra": "mean: 90.10555267333984 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3f3d827815d5711b1b2e688e9b61ca966c2ed01c",
+          "message": "Merge pull request #4918 from 1c-syntax/fix/workspace-registration-lifecycle-20261108\n\nfix(context): безопасная регистрация и удаление workspace",
+          "timestamp": "2026-11-11T11:40:32+01:00",
+          "tree_id": "4b07147b09708b17ca536e29d56cfca361720bc2",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/3f3d827815d5711b1b2e688e9b61ca966c2ed01c"
+        },
+        "date": 1794396310563,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 88.07685446739197,
+            "unit": "sec",
+            "range": "stddev: 1.9095408530016071",
+            "extra": "mean: 88.07685446739197 sec\nrounds: 3"
           }
         ]
       }
