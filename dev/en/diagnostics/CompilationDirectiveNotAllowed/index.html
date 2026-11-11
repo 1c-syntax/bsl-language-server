@@ -25,7 +25,7 @@
     
     
       
-        <title>Compilation directive is not available in this module type (CompilationDirectiveNotAllowed) - BSL Language Server Dev</title>
+        <title>Compilation directive is not available in this module (CompilationDirectiveNotAllowed) - BSL Language Server Dev</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#Compilation-directive-is-not-available-in-this-module-type-CompilationDirectiveNotAllowed" class="md-skip">
+        <a href="#Compilation-directive-is-not-available-in-this-module-CompilationDirectiveNotAllowed" class="md-skip">
           Skip to content
         </a>
       
@@ -111,7 +111,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Compilation directive is not available in this module type (CompilationDirectiveNotAllowed)
+              Compilation directive is not available in this module (CompilationDirectiveNotAllowed)
             
           </span>
         </div>
@@ -2227,7 +2227,7 @@
   
 
 
-<h1 id="Compilation-directive-is-not-available-in-this-module-type-CompilationDirectiveNotAllowed">Compilation directive is not available in this module type (CompilationDirectiveNotAllowed)<a class="headerlink" href="#Compilation-directive-is-not-available-in-this-module-type-CompilationDirectiveNotAllowed" title="Permanent link">&para;</a></h1>
+<h1 id="Compilation-directive-is-not-available-in-this-module-CompilationDirectiveNotAllowed">Compilation directive is not available in this module (CompilationDirectiveNotAllowed)<a class="headerlink" href="#Compilation-directive-is-not-available-in-this-module-CompilationDirectiveNotAllowed" title="Permanent link">&para;</a></h1>
 <table>
 <thead>
 <tr>
@@ -2255,12 +2255,26 @@
 <p>The set of compilation directives depends on the module type:</p>
 <ul>
 <li>a managed form module accepts <code>&amp;AtClient</code>, <code>&amp;AtServer</code>, <code>&amp;AtServerNoContext</code>, <code>&amp;AtClientAtServerNoContext</code>;</li>
-<li>a command module accepts <code>&amp;AtClient</code>, <code>&amp;AtServer</code>, <code>&amp;AtClientAtServer</code>.</li>
+<li>a command module accepts <code>&amp;AtClient</code>, <code>&amp;AtServer</code>, <code>&amp;AtClientAtServer</code>;</li>
+<li>in a common module, <code>&amp;AtClient</code> and <code>&amp;AtServer</code> further restrict the contexts enabled by the module flags.</li>
 </ul>
 <p>A directive from another module type's set is parsed without a syntax error but is not defined for this module.
 The most common case is <code>&amp;AtClientAtServer</code> in a form module instead of <code>&amp;AtClientAtServerNoContext</code>: the method
 becomes unavailable to some callers, and the behavior depends on the client type. For example, a call to such
 a method from a server procedure of the form does not compile, and the form does not open.</p>
+<p>For a common module, the diagnostic checks whether at least one possible compilation context remains after
+applying the directive. For example, <code>&amp;AtClient</code> excludes a method when only the External connection flag is enabled.
+<code>&amp;AtServerNoContext</code>, <code>&amp;AtClientAtServerNoContext</code>, and <code>&amp;AtClientAtServer</code> do not declare an available common-module
+method, even when both client and server flags are enabled.</p>
+<p>Enabling the shared <a href="../../features/ConfigurationFile/"><code>supportThickClientFileMode</code></a> setting also includes
+the file-mode thick client. In that case, a server common module without a client flag does not necessarily make
+<code>&amp;AtClient</code> an invalid declaration: its method can still exist in a file-mode thick client.
+By default, that deployment mode is excluded, so such a method is considered unavailable.
+<code>MemberAccessUnavailable</code> separately checks calls in contexts where the method does not exist.
+The declaration check does not depend on that diagnostic's selected contexts or the surrounding preprocessor branch.
+Missing common-module metadata does not imply incompatible flags.</p>
+<p>When a directive leaves no available contexts, <code>CompilationDirectiveNeedLess</code> does not add a duplicate recommendation.
+The recommendation remains for valid directives in common modules.</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
 <h4 id="Incorrect-form-module">Incorrect (form module):<a class="headerlink" href="#Incorrect-form-module" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><span class="nd">&amp;AtServer</span>
@@ -2282,6 +2296,7 @@ a method from a server procedure of the form does not compile, and the form does
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Syntax helper: "Built-in language" - "Compilation directives"</li>
+<li><a href="https://kb.1ci.com/1C_Enterprise_Platform/Guides/Developer_Guides/1C_Enterprise_Development_Standards/Code_conventions/Using_1C_Enterprise_language_structures/Compilation_directives_and_preprocessor_commands/">Compilation directives and preprocessor commands</a></li>
 <li>Platform bug: <a href="https://www.hostedredmine.com/issues/930235">&amp;AtClientAtServer in a managed form module (RU)</a></li>
 </ul>
 <h2 id="Snippets">Snippets<a class="headerlink" href="#Snippets" title="Permanent link">&para;</a></h2>

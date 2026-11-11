@@ -2296,11 +2296,11 @@
 <p>Some of diagnostics are disabled by default. Use <a href="../features/ConfigurationFile/">configuration file</a> to enable them.</p>
 <p>To escape individual sections of code or files from triggering diagnostics, you can use special comments of the form <code>// BSLLS:DiagnosticKey-off</code> . This functionality is described in more detail in <a href="../features/DiagnosticIgnorance/">Escaping sections of code</a> .</p>
 <h2 id="Implemented-diagnostics">Implemented diagnostics<a class="headerlink" href="#Implemented-diagnostics" title="Permanent link">&para;</a></h2>
-<p>Total: <strong>190</strong></p>
+<p>Total: <strong>191</strong></p>
 <ul>
 <li>Security Hotspot: <strong>8</strong></li>
 <li>Vulnerability: <strong>7</strong></li>
-<li>Error: <strong>63</strong></li>
+<li>Error: <strong>64</strong></li>
 <li>Code smell: <strong>112</strong></li>
 </ul>
 <table>
@@ -2557,7 +2557,7 @@
 </tr>
 <tr>
 <td><a href="CompilationDirectiveNotAllowed/">CompilationDirectiveNotAllowed</a></td>
-<td>Compilation directive is not available in this module type</td>
+<td>Compilation directive is not available in this module</td>
 <td style="text-align: center;">Yes</td>
 <td>Critical</td>
 <td>Error</td>
@@ -3050,6 +3050,14 @@
 <td>Minor</td>
 <td>Code smell</td>
 <td><code>badpractice</code></td>
+</tr>
+<tr>
+<td><a href="MemberAccessUnavailable/">MemberAccessUnavailable</a></td>
+<td>Member access unavailable in the current context</td>
+<td style="text-align: center;">Yes</td>
+<td>Critical</td>
+<td>Error</td>
+<td><code>error</code></td>
 </tr>
 <tr>
 <td><a href="MetadataObjectNameLength/">MetadataObjectNameLength</a></td>

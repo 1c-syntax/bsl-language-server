@@ -2257,7 +2257,12 @@
 <li><code>Receiver.Member</code> — the receiver type is inferred and concrete, but it has no member with that name;</li>
 <li>a bare <code>Name(...)</code> call — the name resolves neither to a global function/property of the platform or the configuration, nor to a method/variable of the current module.</li>
 </ul>
-<p>The diagnostic relies on type inference and member data from the 1C platform syntax assistant (via <code>bsl-context</code>) or the bundled reference. When the receiver type cannot be inferred or is arbitrary/undefined, the diagnostic stays silent to avoid false positives.</p>
+<p>Type names follow the project's script variant, while diagnostic text follows the server language.
+User-defined method and property names are preserved without translation.</p>
+<p>The diagnostic relies on type inference and member data from the 1C platform syntax assistant (via <code>bsl-context</code>) or the bundled reference. Each known receiver type is checked independently: a member present on one possible type does not hide its absence on another. Unresolved and arbitrary types do not prove an error and are skipped.</p>
+<p>When module metadata is available, receiver types are inferred separately for each compilation context, taking method directives and preprocessor branches into account. Checked contexts are selected automatically from the root configuration metadata, following the <code>auto</code> policy of <code>MemberAccessUnavailable</code>. Related information identifies the context in which the member is missing. Files without metadata retain ordinary checks of known types and names.</p>
+<p>Provably unreachable branches, such as <code>#If Server And Not Server</code>, are skipped. OneScript preprocessor symbols are independent of 1C platform contexts; logical contradictions such as <code>Windows And Not Windows</code> also exclude a branch.</p>
+<p>A declared method remains a known member even when calling it is prohibited. <code>MemberAccessUnavailable</code> checks that prohibition, so the same cause is not reported by both diagnostics. Different possible receivers on the same line can have different problems and produce a message from each diagnostic.</p>
 <p>Members of "open" data objects — <code>Структура</code>, a value table row and the like — are collected from the code itself: a key added by <code>Вставить("Name", …)</code> or listed in the constructor counts as a known member. The key name is known even when the type of its value cannot be inferred: these are different facts, and the absence of the latter does not cancel the former.</p>
 <p><strong>The diagnostic is disabled by default</strong> — it is heuristic and needs validation on real configurations (reference completeness, dynamic typing, etc.).</p>
 <h2 id="Examples">Examples<a class="headerlink" href="#Examples" title="Permanent link">&para;</a></h2>
@@ -2268,6 +2273,15 @@
 </code></pre></div>
 <p>Fix it by using an existing member:</p>
 <div class="highlight"><pre><span></span><code><span class="nv">Массив</span><span class="o">.</span><span class="nf">Добавить</span><span class="p">(</span><span class="m">1</span><span class="p">);</span>
+</code></pre></div>
+<p>A receiver from another preprocessor branch does not hide a missing member:</p>
+<div class="highlight"><pre><span></span><code><span class="cp">#If</span> <span class="kc">Server</span> <span class="cp">Then</span>
+    <span class="nv">Collection</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">Map</span><span class="p">;</span>
+<span class="cp">#Else</span>
+    <span class="nv">Collection</span> <span class="o">=</span> <span class="k">New</span> <span class="nv">Array</span><span class="p">;</span>
+<span class="cp">#EndIf</span>
+
+<span class="nv">Collection</span><span class="o">.</span><span class="nf">Add</span><span class="p">(</span><span class="m">1</span><span class="p">);</span> <span class="c1">// Map has no Add method in the server context.</span>
 </code></pre></div>
 <h2 id="Sources">Sources<a class="headerlink" href="#Sources" title="Permanent link">&para;</a></h2>
 <!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
