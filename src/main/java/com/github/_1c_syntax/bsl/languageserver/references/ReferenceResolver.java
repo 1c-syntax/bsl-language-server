@@ -21,9 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references;
 
-import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
@@ -56,26 +55,6 @@ public class ReferenceResolver {
       var reference = finder.findReference(uri, position);
       if (reference.isPresent()) {
         return reference;
-      }
-    }
-    return Optional.empty();
-  }
-
-  /**
-   * Найти символ исходного кода по позиции без обращения к тексту или AST документа.
-   * <p>
-   * Поисковики опрашиваются в том же порядке, что и при полном поиске ссылки. Участвуют только
-   * реализации {@link ReferenceFinder#findSourceDefinedSymbol(URI, Position)}.
-   *
-   * @param uri URI документа.
-   * @param position позиция курсора.
-   * @return первый найденный символ исходного кода либо пустое значение.
-   */
-  public Optional<SourceDefinedSymbol> findSourceDefinedSymbol(URI uri, Position position) {
-    for (var finder : finders) {
-      var symbol = finder.findSourceDefinedSymbol(uri, position);
-      if (symbol.isPresent()) {
-        return symbol;
       }
     }
     return Optional.empty();

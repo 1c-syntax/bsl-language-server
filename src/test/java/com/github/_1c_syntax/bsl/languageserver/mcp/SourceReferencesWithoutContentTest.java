@@ -25,12 +25,14 @@ import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwa
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContentUnavailableException;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextConfigurationBindingChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.lsp.BSLTextDocumentService;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.CallHierarchyTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.FindReferencesTool;
 import com.github._1c_syntax.bsl.languageserver.providers.CallHierarchyProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.ReferencesProvider;
+import com.github._1c_syntax.bsl.languageserver.references.AnnotationReferenceFinder;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -43,6 +45,7 @@ import org.eclipse.lsp4j.ReferenceParams;
 import org.eclipse.lsp4j.TextDocumentIdentifier;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -66,6 +69,8 @@ class SourceReferencesWithoutContentTest extends AbstractServerContextAwareTest 
 
   @Autowired
   private ReferenceResolver resolver;
+  @Autowired
+  private AnnotationReferenceFinder annotationFinder;
   @Autowired
   private ReferencesProvider references;
   @Autowired
@@ -117,17 +122,17 @@ class SourceReferencesWithoutContentTest extends AbstractServerContextAwareTest 
       """;
     var document = TestUtils.getDocumentContext(
       Path.of("src/test/resources/references/withoutContentAnnotations.os").toUri(), content, context);
-    assertThat(resolver.findSourceDefinedSymbol(document.getUri(), new Position(0, 2)))
+    assertThat(resolver.findReference(document.getUri(), new Position(0, 2)).flatMap(Reference::getSourceDefinedSymbol))
       .isPresent().get().extracting(SourceDefinedSymbol::getName).isEqualTo("ТестоваяАннотация");
-    assertThat(resolver.findSourceDefinedSymbol(document.getUri(), new Position(0, 23)))
+    assertThat(resolver.findReference(document.getUri(), new Position(0, 23)).flatMap(Reference::getSourceDefinedSymbol))
       .isPresent().get().extracting(SourceDefinedSymbol::getName).isEqualTo("ВторойПараметр");
 
     assertEveryPositionSurvivesRelease(document, content);
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"bsl", "os"})
-  void lspAndMcpReturnEmptyAtKeywordWithoutRebuildingContent(String extension) throws Exception {
+  @CsvSource({"bsl, lsp", "bsl, mcp", "os, lsp", "os, mcp"})
+  void protocolRequestsUseRetainedDataForEveryFileType(String extension, String protocol) throws Exception {
     initServerContext();
     var document = TestUtils.getDocumentContext(
       Path.of("src/test/resources/references/withoutContentProtocols." + extension).toUri(), """
@@ -139,13 +144,21 @@ class SourceReferencesWithoutContentTest extends AbstractServerContextAwareTest 
     var identifier = new TextDocumentIdentifier(document.getUri().toString());
     var params = referenceParams(document, new Position(0, 0));
 
-    assertThat(lsp.references(params).get()).isEmpty();
-    assertThat(lsp.prepareCallHierarchy(new CallHierarchyPrepareParams(identifier, new Position(0, 0))).get()).isNull();
-    var file = Path.of(document.getUri()).toString();
-    assertThat(mcpReferences.findReferences(file, 0, 0).references()).isEmpty();
-    assertThat(mcpHierarchy.callHierarchy(file, 0, 0).target()).isNull();
-    assertThat(mcpReferences.findReferences(file, 0, 11).references()).hasSize(2);
-    assertThat(mcpHierarchy.callHierarchy(file, 0, 11).target()).isNotNull();
+    if (protocol.equals("lsp")) {
+      assertThat(lsp.references(params).get()).isEmpty();
+      assertThat(lsp.prepareCallHierarchy(
+        new CallHierarchyPrepareParams(identifier, new Position(0, 0))).get()).isNull();
+      params.setPosition(new Position(0, 11));
+      assertThat(lsp.references(params).get()).hasSize(2);
+      assertThat(lsp.prepareCallHierarchy(
+        new CallHierarchyPrepareParams(identifier, new Position(0, 11))).get()).hasSize(1);
+    } else {
+      var file = Path.of(document.getUri()).toString();
+      assertThat(mcpReferences.findReferences(file, 0, 0).references()).isEmpty();
+      assertThat(mcpHierarchy.callHierarchy(file, 0, 0).target()).isNull();
+      assertThat(mcpReferences.findReferences(file, 0, 11).references()).hasSize(2);
+      assertThat(mcpHierarchy.callHierarchy(file, 0, 11).target()).isNotNull();
+    }
     assertReleased(document);
   }
 
@@ -169,7 +182,7 @@ class SourceReferencesWithoutContentTest extends AbstractServerContextAwareTest 
       Перем Значение;
       """, context);
     var position = new Position(0, 2);
-    var original = resolver.findSourceDefinedSymbol(usage.getUri(), position).orElseThrow();
+    var original = resolver.findReference(usage.getUri(), position).flatMap(Reference::getSourceDefinedSymbol).orElseThrow();
     release(usage);
 
     context.rebuildDocument(definition, """
@@ -178,13 +191,13 @@ class SourceReferencesWithoutContentTest extends AbstractServerContextAwareTest 
       КонецПроцедуры
       """, 1);
 
-    var updated = resolver.findSourceDefinedSymbol(usage.getUri(), position).orElseThrow();
+    var updated = resolver.findReference(usage.getUri(), position).flatMap(Reference::getSourceDefinedSymbol).orElseThrow();
     assertThat(updated.getSelectionRange().getStart().getLine()).isEqualTo(1);
     assertThat(updated.getSelectionRange()).isNotEqualTo(original.getSelectionRange());
     assertReleased(usage);
 
     context.removeDocument(definition.getUri());
-    assertThat(resolver.findSourceDefinedSymbol(usage.getUri(), position)).isEmpty();
+    assertThat(resolver.findReference(usage.getUri(), position).flatMap(Reference::getSourceDefinedSymbol)).isEmpty();
   }
 
   @Test
@@ -195,7 +208,7 @@ class SourceReferencesWithoutContentTest extends AbstractServerContextAwareTest 
       &ТестоваяАннотация
       Перем Значение;
       """, context);
-    assertThat(resolver.findSourceDefinedSymbol(usage.getUri(), new Position(0, 2))).isPresent();
+    assertThat(resolver.findReference(usage.getUri(), new Position(0, 2)).flatMap(Reference::getSourceDefinedSymbol)).isPresent();
 
     context.rebuildDocument(usage, """
       // Новая позиция
@@ -205,11 +218,11 @@ class SourceReferencesWithoutContentTest extends AbstractServerContextAwareTest 
       """, 1);
     release(usage);
 
-    assertThat(resolver.findSourceDefinedSymbol(usage.getUri(), new Position(0, 2))).isEmpty();
-    assertThat(resolver.findSourceDefinedSymbol(usage.getUri(), new Position(2, 2)))
+    assertThat(resolver.findReference(usage.getUri(), new Position(0, 2)).flatMap(Reference::getSourceDefinedSymbol)).isEmpty();
+    assertThat(resolver.findReference(usage.getUri(), new Position(2, 2)).flatMap(Reference::getSourceDefinedSymbol))
       .isPresent().get().extracting(SourceDefinedSymbol::getName).isEqualTo("ТестоваяАннотация2");
     context.removeDocument(usage.getUri());
-    assertThat(resolver.findSourceDefinedSymbol(usage.getUri(), new Position(2, 2))).isEmpty();
+    assertThat(resolver.findReference(usage.getUri(), new Position(2, 2)).flatMap(Reference::getSourceDefinedSymbol)).isEmpty();
   }
 
   @ParameterizedTest
@@ -242,11 +255,37 @@ class SourceReferencesWithoutContentTest extends AbstractServerContextAwareTest 
     assertReleased(document);
   }
 
+  @Test
+  void bindingEventAfterCleanupKeepsAnnotationReferencesWithoutReadingAst() {
+    initServerContext("src/test/resources/references/annotations");
+    var definition = context.getDocument(Path.of(
+      "src/test/resources/references/annotations/ТестоваяАннотация.os").toAbsolutePath().toUri());
+    var usage = TestUtils.getDocumentContext(
+      Path.of("src/test/resources/references/bindingAfterCleanup.os").toUri(), """
+      &ТестоваяАннотация("x")
+      Перем Значение;
+      """, context);
+    var position = new Position(0, 2);
+    var before = resolver.findReference(usage.getUri(), position).orElseThrow();
+    release(usage);
+    assertReleased(definition);
+
+    // Очистка успела пройти между перепривязкой и доставкой события слушателю.
+    annotationFinder.handleConfigurationBindingChanged(new DocumentContextConfigurationBindingChangedEvent(definition));
+    annotationFinder.handleConfigurationBindingChanged(new DocumentContextConfigurationBindingChangedEvent(usage));
+
+    assertThat(resolver.findReference(usage.getUri(), position)).contains(before);
+    assertReleased(definition);
+    assertReleased(usage);
+  }
+
   private void assertEveryPositionSurvivesRelease(DocumentContext document, String content) {
     var positions = positions(content);
-    var symbols = positions.stream()
-      .map(position -> resolver.findReference(document.getUri(), position).flatMap(Reference::getSourceDefinedSymbol))
+    var sourceReferences = positions.stream()
+      .map(position -> resolver.findReference(document.getUri(), position)
+        .filter(Reference::isSourceDefinedSymbolReference))
       .toList();
+    var symbols = sourceReferences.stream().map(reference -> reference.flatMap(Reference::getSourceDefinedSymbol)).toList();
     var locations = positions.stream()
       .map(position -> references.getReferences(document, referenceParams(document, position)))
       .toList();
@@ -259,8 +298,11 @@ class SourceReferencesWithoutContentTest extends AbstractServerContextAwareTest 
 
     for (var i = 0; i < positions.size(); i++) {
       var position = positions.get(i);
-      assertThat(resolver.findSourceDefinedSymbol(document.getUri(), position))
+      assertThat(resolver.findReference(document.getUri(), position).flatMap(Reference::getSourceDefinedSymbol))
         .as("symbol at %s", position).isEqualTo(symbols.get(i));
+      assertThat(resolver.findReference(document.getUri(), position)
+        .filter(Reference::isSourceDefinedSymbolReference))
+        .as("full source reference at %s", position).isEqualTo(sourceReferences.get(i));
       assertThat(references.getReferences(document, referenceParams(document, position))).as("references at %s", position)
         .containsExactlyElementsOf(locations.get(i));
       assertThat(hierarchy.prepareCallHierarchy(document,

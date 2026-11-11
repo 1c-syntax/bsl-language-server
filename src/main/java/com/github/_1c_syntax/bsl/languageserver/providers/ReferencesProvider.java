@@ -61,7 +61,8 @@ public class ReferencesProvider {
   public List<Location> getReferences(DocumentContext documentContext, ReferenceParams params) {
     var position = params.getPosition();
 
-    var maybeSymbol = referenceResolver.findSourceDefinedSymbol(documentContext.getUri(), position);
+    var maybeSymbol = referenceResolver.findReference(documentContext.getUri(), position)
+      .flatMap(Reference::getSourceDefinedSymbol);
 
     List<Location> locations = maybeSymbol.stream()
       .map(referenceIndex::getReferencesTo)

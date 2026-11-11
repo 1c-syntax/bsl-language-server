@@ -84,7 +84,8 @@ public class CallHierarchyProvider {
   ) {
     var position = params.getPosition();
 
-    return referenceResolver.findSourceDefinedSymbol(documentContext.getUri(), position)
+    return referenceResolver.findReference(documentContext.getUri(), position)
+      .flatMap(Reference::getSourceDefinedSymbol)
       .map(CallHierarchyProvider::getCallHierarchyItem)
       .map(Collections::singletonList)
       .orElse(Collections.emptyList());
@@ -168,7 +169,8 @@ public class CallHierarchyProvider {
     }
 
     var position = item.getSelectionRange().getStart();
-    return referenceResolver.findSourceDefinedSymbol(documentContext.getUri(), position);
+    return referenceResolver.findReference(documentContext.getUri(), position)
+      .flatMap(Reference::getSourceDefinedSymbol);
   }
 
   private static CallHierarchyItem getCallHierarchyItem(SourceDefinedSymbol sourceDefinedSymbol) {
