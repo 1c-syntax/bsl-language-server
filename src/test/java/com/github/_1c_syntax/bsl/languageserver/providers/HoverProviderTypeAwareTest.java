@@ -119,10 +119,10 @@ class HoverProviderTypeAwareTest extends AbstractServerContextAwareTest {
     var hoverOne = hoverProvider.getHover(documentContext, paramsOne);
     assertThat(hoverOne).isPresent();
     var textOne = hoverOne.get().getContents().getRight().getValue();
-    assertThat(textOne).contains("Разделить(separator)");
+    assertThat(textOne).contains("Разделить(Разделитель)");
     assertThat(textOne).contains("Все варианты вызова");
     // 1-парам вариант должен быть выделен **bold** как выбранный
-    assertThat(textOne).contains("**`Разделить(separator)`");
+    assertThat(textOne).contains("**`Разделить(Разделитель)`");
     assertThat(textOne).doesNotContain("Не найдено описание");
 
     // Hover на 2-арг варианте: Чтение.Разделить("|", "UTF-8");
@@ -138,7 +138,7 @@ class HoverProviderTypeAwareTest extends AbstractServerContextAwareTest {
     var hoverTwo = hoverProvider.getHover(documentContext, paramsTwo);
     assertThat(hoverTwo).isPresent();
     var textTwo = hoverTwo.get().getContents().getRight().getValue();
-    assertThat(textTwo).contains("Разделить(separator, encoding)");
+    assertThat(textTwo).contains("Разделить(Разделитель, Кодировка)");
     assertThat(textTwo).doesNotContain("Не найдено описание");
   }
 

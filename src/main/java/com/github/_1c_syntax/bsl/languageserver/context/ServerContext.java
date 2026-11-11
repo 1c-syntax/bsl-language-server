@@ -737,21 +737,27 @@ public class ServerContext {
    * метаданных и ссылку на него ({@link DocumentContext#rebindToConfiguration()}) — и
    * переложить документ в индексе по ссылке на объект метаданных.
    * <p>
-   * Блокировка документа на запись должна быть взята.
+   * Берёт блокировку документа на запись.
    *
    * @param documentContext документ.
    * @return {@code true}, если дерево символов документа построено заново; {@code false}, если
    *     документ уже снят с рабочей области или у него нет текста.
    */
-  boolean rebindDocument(DocumentContext documentContext) {
+  public boolean rebindDocument(DocumentContext documentContext) {
     var uri = documentContext.getUri();
-    if (documents.get(uri) != documentContext) {
-      return false;
+    var lock = getDocumentLock(uri);
+    lock.writeLock().lock();
+    try {
+      if (documents.get(uri) != documentContext) {
+        return false;
+      }
+      removeDocumentMdoRefByUri(uri);
+      var rebuilt = documentContext.rebindToConfiguration();
+      addMdoRefByUri(uri, documentContext);
+      return rebuilt;
+    } finally {
+      lock.writeLock().unlock();
     }
-    removeDocumentMdoRefByUri(uri);
-    var rebuilt = documentContext.rebindToConfiguration();
-    addMdoRefByUri(uri, documentContext);
-    return rebuilt;
   }
 
   private boolean isPreparing() {

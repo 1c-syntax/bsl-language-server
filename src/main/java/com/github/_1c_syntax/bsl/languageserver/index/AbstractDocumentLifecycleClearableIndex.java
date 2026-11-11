@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.index;
 
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextConfigurationBindingChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
@@ -94,23 +95,30 @@ public abstract class AbstractDocumentLifecycleClearableIndex {
 
   @EventListener
   public void handleDocumentRemoved(ServerContextDocumentRemovedEvent event) {
-    if (event.getSource().isClearing() && clearWholeIndex()) {
+    if (event.getSource().isClearing() && clearContext(event.getSource(), event.getUri())) {
       return;
     }
     clear(event.getUri());
   }
 
   /**
-   * Удалить все записи индекса, пока контекст очищается целиком: следом уйдут все его
-   * документы. Зовётся на удаление каждого из них, поэтому по уже пустому индексу должен
-   * отрабатывать дёшево.
+   * Удалить записи всех документов контекста, который очищается целиком: следом уйдут все его
+   * документы. Зовётся на удаление каждого из них, поэтому по контексту, записи которого уже
+   * сняты, должен отрабатывать дёшево.
+   * <p>
+   * Снимать нужно записи только этого контекста: индекс, общий на несколько контекстов, обязан
+   * сохранить записи документов остальных. Оставшиеся документы контекста —
+   * {@link ServerContext#getDocuments()}; удалённый к этому моменту из карты документ приходит
+   * отдельным параметром.
    * <p>
    * По умолчанию индекс чистится по документу. Переопределять стоит индексу, у которого
    * удаление записей одного документа стоит больше, чем поиск по его URI.
    *
-   * @return {@code true}, если индекс очищен целиком и записи документа удалять не нужно.
+   * @param serverContext очищаемый контекст.
+   * @param removedUri    URI документа, удалённого из контекста.
+   * @return {@code true}, если записи контекста сняты и записи документа удалять не нужно.
    */
-  protected boolean clearWholeIndex() {
+  protected boolean clearContext(ServerContext serverContext, URI removedUri) {
     return false;
   }
 }

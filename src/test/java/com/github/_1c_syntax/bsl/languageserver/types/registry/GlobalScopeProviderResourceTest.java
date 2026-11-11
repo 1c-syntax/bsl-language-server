@@ -25,15 +25,89 @@ import lombok.SneakyThrows;
 import org.junit.jupiter.api.Test;
 
 import java.lang.reflect.Method;
+import java.util.Locale;
+import java.util.Map;
+
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 /**
- * Edge-case покрытие приватного {@code GlobalScopeProvider.loadFromResource}
- * через рефлексию: legacy-поле {@code keywords: List<String>} в JSON и
- * IOException-fallback на отсутствующий ресурс.
+ * Проверки загрузки сигнатур и полных наборов возвращаемых типов глобальных функций
+ * через JSON-загрузчик и источник членов глобального контекста.
  */
 class GlobalScopeProviderResourceTest {
+
+  @Test
+  @SneakyThrows
+  @SuppressWarnings("unchecked")
+  void oneScriptGlobalFunctionsPreserveEveryDeclaredReturnType() {
+    // given
+    var loaded = invokeLoadFromResource(
+      "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-oscript-globals.json");
+    var accessor = loaded.getClass().getDeclaredMethod("functions");
+    accessor.setAccessible(true);
+    var functions = (Map<String, MemberDescriptor>) accessor.invoke(loaded);
+
+    for (var name : new String[]{"Мин", "Макс", "Min", "Max"}) {
+      // when
+      var function = functions.get(name.toLowerCase(Locale.ROOT));
+
+      // then
+      assertThat(function.returnTypes().refs()).extracting(TypeRef::qualifiedName)
+        .containsExactlyInAnyOrder("Строка", "Число", "Дата", "Булево");
+      assertThat(function.returnTypes().refs()).allSatisfy(ref ->
+        assertThat(ref.kind()).isEqualTo(TypeKind.PRIMITIVE));
+    }
+  }
+
+  @Test
+  void oneScriptGlobalContextMembersPreserveEveryDeclaredReturnType() {
+    // given
+    var members = GlobalScopeProvider.globalContextMembers(
+      "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-oscript-globals.json");
+
+    for (var name : new String[]{"Мин", "Макс", "Min", "Max"}) {
+      // when
+      var function = members.stream().filter(member -> member.matches(name)).findFirst().orElseThrow();
+
+      // then
+      assertThat(function.returnTypes().refs()).extracting(TypeRef::qualifiedName)
+        .containsExactlyInAnyOrder("Строка", "Число", "Дата", "Булево");
+      assertThat(function.returnTypes().refs()).allSatisfy(ref ->
+        assertThat(ref.kind()).isEqualTo(TypeKind.PRIMITIVE));
+    }
+  }
+
+  @Test
+  @SneakyThrows
+  @SuppressWarnings("unchecked")
+  void globalSignaturesPreservePrimitiveTypesAliasesDefaultsAndVariadicParameters() {
+    var loaded = invokeLoadFromResource("oscript-metadata/globals.json");
+    var accessor = loaded.getClass().getDeclaredMethod("functions");
+    accessor.setAccessible(true);
+    var functions = (Map<String, MemberDescriptor>) accessor.invoke(loaded);
+    var signature = functions.values().stream().filter(member -> member.matches("ТестФормат"))
+      .findFirst().orElseThrow().signatures().getFirst();
+
+    assertThat(signature.returnTypes().refs()).singleElement().satisfies(ref -> {
+      assertThat(ref.kind()).isEqualTo(TypeKind.PRIMITIVE);
+      assertThat(ref.qualifiedName()).isEqualTo("Строка");
+    });
+    var template = signature.parameters().getFirst();
+    assertThat(template.displayName(Language.RU)).isEqualTo("Шаблон");
+    assertThat(template.displayName(Language.EN)).isEqualTo("template");
+    assertThat(template.types().refs()).singleElement()
+      .satisfies(ref -> assertThat(ref.kind()).isEqualTo(TypeKind.PRIMITIVE));
+    var values = signature.parameters().getLast();
+    assertThat(values.variadic()).isTrue();
+    assertThat(values.optional()).isTrue();
+    assertThat(values.defaultValue()).isEqualTo("Неопределено");
+    assertThat(values.types().refs()).containsExactly(TypeRef.ANY);
+  }
 
   @Test
   void loadFromResourceMergesLegacyKeywordsField() {

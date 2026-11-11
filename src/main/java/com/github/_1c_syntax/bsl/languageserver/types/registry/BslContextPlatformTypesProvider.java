@@ -136,7 +136,10 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
       var kind = mapKind(context);
       if (kind != null && context.name() != null) {
         var ref = new TypeRef(kind, typeNames.apply(context));
-        typeRefs.put(safe(context.name().getName()).toLowerCase(Locale.ROOT), ref);
+        var primary = safe(context.name().getName());
+        if (primary.equals(typeNames.apply(context))) {
+          typeRefs.put(primary.toLowerCase(Locale.ROOT), ref);
+        }
         typeRefs.put(safe(context.name().getAlias()).toLowerCase(Locale.ROOT), ref);
       }
     }
