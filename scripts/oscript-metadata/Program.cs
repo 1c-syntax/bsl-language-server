@@ -30,6 +30,14 @@ using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 
+if (args.FirstOrDefault() == "update")
+{
+    if (args.Length != 4)
+        throw new ArgumentException("Usage: MetadataExporter update <runtime.json> <resource directory> <BasicMethods.json>");
+    MetadataUpdater.Update(args[1], args[2], args[3]);
+    return;
+}
+
 if (args.Length is < 2 or > 3)
     throw new ArgumentException("Usage: MetadataExporter <OneScript bin directory> <output.json> [source directory]");
 
