@@ -15,7 +15,7 @@ dotnet build/oscript-metadata/bin/MetadataExporter/debug/MetadataExporter.dll up
 
 The exporter reads attributes and signatures from the release assemblies. XML comments are parsed with the pinned Roslyn parser without compiling OneScript or running user scripts. The server's JSON schema is shared with the 1C fallback metadata: bilingual names, parameter types/defaults, unions and `variadic` tails.
 
-Resource updates require an export containing the compiler token metadata from the matching source release. The updater validates this before writing either resource.
+Resource updates require an export containing a nonempty compiler token list from the matching source release. The updater validates this before writing either resource.
 
 Parameter identifiers come from the runtime, and descriptions come from the matching source comments. Russian labels already recorded in the server JSON are retained for matching parameter names. A renamed parameter receives its current identifier and source description. Intrinsic compiler functions are identified by the matching `BasicMethods.json` and `LanguageDef.cs` token declarations. Their existing descriptions and overloads, collection traits, deprecation annotations and primitive declarations are retained. Regeneration must be idempotent.
 

@@ -65,9 +65,11 @@ internal sealed class MetadataUpdater
     internal static void Update(string input, string resourceDirectory, string basicMethodsFile)
     {
         var runtime = JsonNode.Parse(File.ReadAllText(input))!.AsArray();
-        if (!runtime.OfType<JsonObject>().Any(context => Text(context["name"]?["Ru"]) == "$compiler"
-            && context["intrinsicNames"] is JsonArray))
-            throw new InvalidOperationException("Runtime export lacks compiler metadata; rerun export with the matching OneScript source directory.");
+        var compiler = runtime.OfType<JsonObject>().FirstOrDefault(context => Text(context["name"]?["Ru"]) == "$compiler");
+        var compilerNames = compiler?["intrinsicNames"] as JsonArray;
+        if (compilerNames == null || !compilerNames.OfType<JsonValue>().Any(value =>
+            value.TryGetValue<string>(out var name) && !string.IsNullOrWhiteSpace(name)))
+            throw new InvalidOperationException("Runtime export lacks compiler names; rerun export with the matching OneScript source directory.");
         var typesFile = Path.Combine(resourceDirectory, "builtin-oscript-platform-types.json");
         var globalsFile = Path.Combine(resourceDirectory, "builtin-oscript-globals.json");
         var updater = new MetadataUpdater(runtime,

@@ -25,7 +25,22 @@ using Xunit;
 public sealed class MetadataUpdaterTests
 {
     [Fact]
-    public void SourceFreeExportIsRejectedWithoutChangingEitherResource()
+    public void SourceFreeExportIsRejectedWithoutChangingEitherResource() => AssertRejectedExport("[]");
+
+    [Theory]
+    [InlineData("[]")]
+    [InlineData("null")]
+    [InlineData("[null]")]
+    [InlineData("[\"\"]")]
+    [InlineData("[\" \"]")]
+    public void EmptyCompilerNamesAreRejectedWithoutChangingEitherResource(string names)
+    {
+        var compiler = JsonNode.Parse("""{"name":{"Ru":"$compiler","En":""},"global":true}""")!.AsObject();
+        compiler["intrinsicNames"] = JsonNode.Parse(names);
+        AssertRejectedExport(new JsonArray(compiler).ToJsonString());
+    }
+
+    private static void AssertRejectedExport(string runtime)
     {
         var directory = Directory.CreateTempSubdirectory("bsl-oscript-metadata-").FullName;
         var typesFile = Path.Combine(directory, "builtin-oscript-platform-types.json");
@@ -36,7 +51,7 @@ public sealed class MetadataUpdaterTests
         {
             File.WriteAllText(typesFile, "[]");
             File.WriteAllText(globalsFile, """{"functions":[{"name":"Intrinsic","signatures":[]}],"variables":[]}""");
-            File.WriteAllText(input, "[]");
+            File.WriteAllText(input, runtime);
             File.WriteAllText(basic, "{}");
             var beforeTypes = File.ReadAllBytes(typesFile);
             var beforeGlobals = File.ReadAllBytes(globalsFile);
@@ -360,7 +375,7 @@ public sealed class MetadataUpdaterTests
             File.WriteAllText(globalsFile, globals);
             var contexts = JsonNode.Parse(runtime)!.AsArray();
             if (!contexts.OfType<JsonObject>().Any(context => Text(context["name"]?["Ru"]) == "$compiler"))
-                contexts.Add(JsonNode.Parse("""{"name":{"Ru":"$compiler","En":""},"global":true,"intrinsicNames":[]}"""));
+                contexts.Add(JsonNode.Parse("""{"name":{"Ru":"$compiler","En":""},"global":true,"intrinsicNames":["Если","If"]}"""));
             File.WriteAllText(input, contexts.ToJsonString());
             File.WriteAllText(basic, "{}");
 
