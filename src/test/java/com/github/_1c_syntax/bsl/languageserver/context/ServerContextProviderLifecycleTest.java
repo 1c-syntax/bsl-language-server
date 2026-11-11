@@ -46,6 +46,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
@@ -60,6 +61,7 @@ class ServerContextProviderLifecycleTest {
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
   void removalRepointsFallbackBeforeWaitingForPreparation(boolean synthetic, @TempDir Path root) {
+    // given
     var removed = mock(ServerContext.class);
     var remaining = mock(ServerContext.class);
     var beans = new StaticListableBeanFactory();
@@ -88,8 +90,10 @@ class ServerContextProviderLifecycleTest {
         return null;
       }).when(removed).awaitPreparation();
 
+      // when
       provider.removeWorkspace(folder);
 
+      // then
       assertThat(provider.getAllContexts()).containsEntry(remainingUri, remaining).doesNotContainKey(removedUri);
       verify(removed).clear();
     } finally {
@@ -101,6 +105,7 @@ class ServerContextProviderLifecycleTest {
   /** Удаляемый последний контекст перестаёт принимать fallback-документы до очистки. */
   @Test
   void removingLastWorkspaceStopsFallbackBeforeWaitingForPreparation(@TempDir Path root) {
+    // given
     var context = mock(ServerContext.class);
     var beans = new StaticListableBeanFactory();
     beans.addBean("serverContext", context);
@@ -118,8 +123,10 @@ class ServerContextProviderLifecycleTest {
         return null;
       }).when(context).awaitPreparation();
 
+      // when
       provider.removeWorkspace(folder);
 
+      // then
       assertThat(provider.getAllContexts()).isEmpty();
     } finally {
       WorkspaceContextHolder.unregisterWorkspace(uri);
@@ -130,6 +137,7 @@ class ServerContextProviderLifecycleTest {
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
   void failedCleanupPreservesRegistrationErrorAndReleasesName(boolean linkageError) {
+    // given
     var uri = ServerContextProvider.DEFAULT_WORKSPACE_URI;
     var context = mock(ServerContext.class);
     var scope = mock(WorkspaceBeanScope.class);
@@ -142,8 +150,12 @@ class ServerContextProviderLifecycleTest {
     var provider = new ServerContextProvider(beans.getBeanProvider(ServerContext.class),
       mock(LanguageServerConfiguration.class), scope);
 
-    assertThatThrownBy(provider::registerDefaultWorkspace).isSameAs(failure)
-      .satisfies(thrown -> assertThat(thrown.getSuppressed()).containsExactly(cleanup));
+    // when
+    var thrown = catchThrowable(provider::registerDefaultWorkspace);
+
+    // then
+    assertThat(thrown).isSameAs(failure)
+      .satisfies(exception -> assertThat(exception.getSuppressed()).containsExactly(cleanup));
     assertThat(provider.getAllContexts()).isEmpty();
     assertThatThrownBy(() -> WorkspaceContextHolder.set(uri)).isInstanceOf(IllegalStateException.class);
     verify(scope).removeWorkspace(uri);
@@ -153,6 +165,7 @@ class ServerContextProviderLifecycleTest {
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
   void failedRegistrationRollsBackScopeAndNameBeforeRetry(boolean synthetic, @TempDir Path root) {
+    // given
     var uri = synthetic ? ServerContextProvider.DEFAULT_WORKSPACE_URI : Absolute.uri(root.toUri());
     var scope = new WorkspaceBeanScope();
     var context = mock(ServerContext.class);
@@ -182,19 +195,26 @@ class ServerContextProviderLifecycleTest {
     var provider = new ServerContextProvider(beans.getBeanProvider(ServerContext.class),
       mock(LanguageServerConfiguration.class), scope);
     try {
-      assertThatThrownBy(() -> {
+      // when
+      var failure = catchThrowable(() -> {
         if (synthetic) {
           provider.registerDefaultWorkspace();
         } else {
           provider.addWorkspace(uri);
         }
-      }).hasStackTraceContaining("broken context");
+      });
+
+      // then
+      assertThat(failure).hasStackTraceContaining("broken context");
       assertThat(provider.getAllContexts()).isEmpty();
       assertThat(scope.getRegisteredWorkspaceUris()).isEmpty();
       assertThat(destructions).hasValue(1);
       assertThatThrownBy(() -> WorkspaceContextHolder.set(uri)).isInstanceOf(IllegalStateException.class);
 
+      // when
       var retried = synthetic ? provider.registerDefaultWorkspace() : provider.addWorkspace(uri);
+
+      // then
       assertThat(retried).isSameAs(context);
       assertThat(retriedBean.get()).isNotSameAs(initialBean.get());
     } finally {
@@ -207,6 +227,7 @@ class ServerContextProviderLifecycleTest {
   /** Отложенный обработчик подготовки находит контекст и бины до начала их очистки. */
   @Test
   void removalKeepsWorkspaceAvailableUntilPreparationHandlerCompletes(@TempDir Path root) {
+    // given
     var context = mock(ServerContext.class);
     var scope = mock(WorkspaceBeanScope.class);
     var beans = new StaticListableBeanFactory();
@@ -227,8 +248,10 @@ class ServerContextProviderLifecycleTest {
         return null;
       }).when(context).awaitPreparation();
 
+      // when
       provider.removeWorkspace(folder);
 
+      // then
       assertThat(provider.getAllContexts()).doesNotContainKey(uri);
       var order = inOrder(context, scope);
       order.verify(context).awaitPreparation();
@@ -239,9 +262,11 @@ class ServerContextProviderLifecycleTest {
       WorkspaceContextHolder.unregisterWorkspace(uri);
     }
   }
+
   /** Новая регистрация того же URI ждёт окончания удаления прежнего scope. */
   @Test
   void registrationWaitsUntilPreviousWorkspaceScopeIsRemoved(@TempDir Path root) throws Exception {
+    // given
     var previous = mock(ServerContext.class);
     var replacement = mock(ServerContext.class);
     var scope = mock(WorkspaceBeanScope.class);
@@ -262,6 +287,8 @@ class ServerContextProviderLifecycleTest {
         assertThat(releaseCleanup.await(5, TimeUnit.SECONDS)).isTrue();
         return null;
       }).when(scope).removeWorkspace(uri);
+
+      // when
       var removal = executor.submit(() -> provider.removeWorkspace(folder));
       assertThat(cleanupStarted.await(5, TimeUnit.SECONDS)).isTrue();
       beans.addBean("serverContext", replacement);
@@ -272,9 +299,14 @@ class ServerContextProviderLifecycleTest {
       await().atMost(Duration.ofSeconds(5)).until(() ->
         addition.isDone() || isBlockedOnProvider(additionThread, provider));
 
+      // then
       assertThat(addition.isDone()).isFalse();
+
+      // when
       releaseCleanup.countDown();
       removal.get(5, TimeUnit.SECONDS);
+
+      // then
       assertThat(addition.get(5, TimeUnit.SECONDS)).isSameAs(replacement);
       assertThat(provider.getAllContexts()).containsEntry(uri, replacement);
       verify(replacement, never()).clear();
@@ -290,6 +322,7 @@ class ServerContextProviderLifecycleTest {
   /** Два одновременных удаления ожидают подготовку и очищают workspace ровно один раз. */
   @Test
   void concurrentRemovalsPrepareAndClearTheWorkspaceOnlyOnce(@TempDir Path root) throws Exception {
+    // given
     var context = mock(ServerContext.class);
     var scope = mock(WorkspaceBeanScope.class);
     var beans = new StaticListableBeanFactory();
@@ -311,6 +344,8 @@ class ServerContextProviderLifecycleTest {
         assertThat(releasePreparation.await(5, TimeUnit.SECONDS)).isTrue();
         return null;
       }).when(context).awaitPreparation();
+
+      // when
       var first = executor.submit(() -> provider.removeWorkspace(folder));
       assertThat(preparationStarted.await(5, TimeUnit.SECONDS)).isTrue();
       var second = executor.submit(() -> {
@@ -323,6 +358,7 @@ class ServerContextProviderLifecycleTest {
       first.get(5, TimeUnit.SECONDS);
       second.get(5, TimeUnit.SECONDS);
 
+      // then
       assertThat(provider.getAllContexts()).doesNotContainKey(uri);
       verify(context).awaitPreparation();
       verify(context).clear();
