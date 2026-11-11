@@ -222,7 +222,7 @@ class McpToolsTest {
     var match = result.matches().get(0);
     assertThat(match.name()).isEqualTo("ПерваяФункция");
     assertThat(match.kind()).isEqualTo("Method");
-    assertThat(match.scope()).isEqualTo("module");
+    assertThat(match.scope()).isEqualTo("$module");
     assertThat(match.range().startLine()).isEqualTo(DECLARATION_LINE);
     assertThat(match.text()).startsWith("Функция ПерваяФункция()").endsWith("КонецФункции");
     assertThat(match.description()).isNull();
@@ -246,13 +246,13 @@ class McpToolsTest {
 
   @Test
   void symbolTextByNameReturnsEveryDeclarationWithItsScope() {
-    // «Счетчик» объявлена через Перем в модуле и в каждой из двух процедур.
+    // «Счетчик» объявлена через Перем в модуле и в каждой из трёх процедур.
     workspaceBootstrap.index(Absolute.path("src/test/resources/mcp"));
 
     var result = symbolTextTool.symbolText(SCOPE_FILE, "Счетчик", null, null, null);
 
     assertThat(result.matches()).extracting(SymbolTextDto::scope)
-      .containsExactly("module", "Увеличить", "Сбросить");
+      .containsExactly("$module", "Увеличить", "Сбросить", "module");
   }
 
   @Test
@@ -260,14 +260,33 @@ class McpToolsTest {
     workspaceBootstrap.index(Absolute.path("src/test/resources/mcp"));
 
     var inMethod = symbolTextTool.symbolText(SCOPE_FILE, "Счетчик", "сбросить", null, null);
-    var inModule = symbolTextTool.symbolText(SCOPE_FILE, "Счетчик", "Module", null, null);
+    var inModule = symbolTextTool.symbolText(SCOPE_FILE, "Счетчик", "$Module", null, null);
 
     assertThat(inMethod.matches()).singleElement().satisfies(match -> {
       assertThat(match.scope()).isEqualTo("Сбросить");
       assertThat(match.range().startLine()).isEqualTo(8);
     });
     assertThat(inModule.matches()).singleElement().satisfies(match -> {
+      assertThat(match.scope()).isEqualTo("$module");
+      assertThat(match.range().startLine()).isZero();
+    });
+  }
+
+  @Test
+  void symbolTextScopeTellsMethodNamedModuleFromModuleLevel() {
+    // Метод «module» объявляет свою «Счетчик»: его имя в scope отбирает только её, а уровень модуля —
+    // только служебное значение $module.
+    workspaceBootstrap.index(Absolute.path("src/test/resources/mcp"));
+
+    var inMethodModule = symbolTextTool.symbolText(SCOPE_FILE, "Счетчик", "module", null, null);
+    var inModule = symbolTextTool.symbolText(SCOPE_FILE, "Счетчик", "$module", null, null);
+
+    assertThat(inMethodModule.matches()).singleElement().satisfies(match -> {
       assertThat(match.scope()).isEqualTo("module");
+      assertThat(match.range().startLine()).isEqualTo(13);
+    });
+    assertThat(inModule.matches()).singleElement().satisfies(match -> {
+      assertThat(match.scope()).isEqualTo("$module");
       assertThat(match.range().startLine()).isZero();
     });
   }
@@ -276,7 +295,7 @@ class McpToolsTest {
   void symbolTextScopeCoversRegionsAndMethods() {
     // В documentSymbol.bsl переменная «А» и область «А» объявлены на уровне модуля,
     // ВнутренняяОбласть1 лежит внутри метода СОбластью.
-    var moduleLevel = symbolTextTool.symbolText(REGIONS_FILE, "А", "module", null, null);
+    var moduleLevel = symbolTextTool.symbolText(REGIONS_FILE, "А", "$module", null, null);
     var regionInMethod = symbolTextTool.symbolText(REGIONS_FILE, "ВнутренняяОбласть1", null, null, null);
     var methodAsScope = symbolTextTool.symbolText(REGIONS_FILE, "ВнутренняяОбласть1", "СОбластью", null, null);
 
@@ -312,7 +331,7 @@ class McpToolsTest {
     assertThat(onName.matches()).singleElement().satisfies(match -> {
       assertThat(match.name()).isEqualTo("А");
       assertThat(match.kind()).isEqualTo("Variable");
-      assertThat(match.scope()).isEqualTo("module");
+      assertThat(match.scope()).isEqualTo("$module");
     });
     assertThat(lineStart.matches()).isEmpty();
   }

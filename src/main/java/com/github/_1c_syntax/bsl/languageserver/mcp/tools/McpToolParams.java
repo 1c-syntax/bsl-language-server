@@ -36,7 +36,7 @@ final class McpToolParams {
   static final String SYMBOL_NAME = "Name of a region, method or `Перем`-declared variable of the file, "
     + "case-insensitive. Pass either `name` or `line`; when both are given, `name` is used.";
   static final String SYMBOL_SCOPE = "Only with `name`: where the symbol is declared — the name of a method of "
-    + "the file, or `module` for the module level. Omit to get every symbol with that name.";
+    + "the file, or `$module` for the module level. Omit to get every symbol with that name.";
   static final String SYMBOL_LINE = "Zero-based line of a position in the file; the symbol at the position is "
     + "returned. Pass either `name` or `line`.";
   static final String SYMBOL_CHARACTER = "Zero-based character of the position within `line`. Default 0, the "

@@ -28,7 +28,7 @@ import org.jspecify.annotations.Nullable;
  *
  * @param name Имя символа.
  * @param kind Вид символа ({@link org.eclipse.lsp4j.SymbolKind}).
- * @param scope Где объявлен символ: имя метода или {@code module} для уровня модуля.
+ * @param scope Где объявлен символ: имя метода или {@code $module} для уровня модуля.
  * @param range Диапазон символа в файле.
  * @param text Текст диапазона символа.
  * @param description Текст комментария-описания над объявлением метода; {@code null}, если описания нет

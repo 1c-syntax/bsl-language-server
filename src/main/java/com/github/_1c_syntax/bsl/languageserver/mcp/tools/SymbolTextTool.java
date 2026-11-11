@@ -55,9 +55,10 @@ import java.util.function.Function;
 public class SymbolTextTool {
 
   /**
-   * Значение {@code scope} для символов уровня модуля.
+   * Значение {@code scope} для символов уровня модуля. Знак {@code $} в имени метода недопустим, поэтому
+   * значение не совпадает ни с одним методом файла.
    */
-  static final String MODULE_SCOPE = "module";
+  static final String MODULE_SCOPE = "$module";
 
   private final McpDocumentReader documentReader;
 
@@ -67,7 +68,7 @@ public class SymbolTextTool {
    * Символы те же, что в дереве {@code document_symbols}: области, методы и объявленные через
    * {@code Перем} переменные. По {@code name} возвращаются все такие символы с этим именем без учёта
    * регистра; {@code scope} оставляет из них объявленные в указанном методе или, при значении
-   * {@code module}, на уровне модуля. По позиции возвращается символ, на имени которого она стоит, иначе
+   * {@code $module}, на уровне модуля. По позиции возвращается символ, на имени которого она стоит, иначе
    * самый вложенный метод или переменная, содержащие её: области по позиции находятся только по имени.
    * У каждого символа указано, где он объявлен ({@code scope}), у метода дополнительно возвращается
    * текст комментария-описания над объявлением. Текст берётся из свежего разбора документа
@@ -76,7 +77,7 @@ public class SymbolTextTool {
    * @param file      Путь к файлу.
    * @param name      Имя символа; {@code null}, если поиск по позиции. Если переданы и имя, и позиция,
    *                  используется {@code name}.
-   * @param scope     Имя метода файла или {@code module}; {@code null} — без отбора. Учитывается только
+   * @param scope     Имя метода файла или {@code $module}; {@code null} — без отбора. Учитывается только
    *                  вместе с {@code name}.
    * @param line      Строка позиции, zero-based; {@code null}, если поиск по имени.
    * @param character Символ позиции в строке, zero-based; {@code null} равносильно 0.
@@ -89,9 +90,9 @@ public class SymbolTextTool {
     description = "Return the source text of a symbol of a 1C/OneScript file — a region, method or "
       + "`Перем`-declared variable, the symbols `document_symbols` shows. By `name` (case-insensitive): every "
       + "such symbol with that name; `scope` keeps the ones declared in the given method, or at the module "
-      + "level with `module`. By zero-based `line` and `character`: the symbol whose name is at the position, "
+      + "level with `$module`. By zero-based `line` and `character`: the symbol whose name is at the position, "
       + "otherwise the innermost method or variable containing it (regions only by their name). Each match "
-      + "carries `scope`: the method it is declared in, or `module`. For methods the description comment "
+      + "carries `scope`: the method it is declared in, or `$module`. For methods the description comment "
       + "above the declaration is returned too.",
     // Output schema disabled: Spring AI generates a non-nullable schema that rejects null DTO
     // fields (here — nullable description). Known upstream bug, open as of 2.0.0-M6:
@@ -145,7 +146,7 @@ public class SymbolTextTool {
     if (!scope.isEmpty() && !MODULE_SCOPE.equalsIgnoreCase(scope) && symbolTree.getMethodSymbol(scope).isEmpty()) {
       // Пустой ответ не отличил бы опечатку в имени метода от символа, которого в методе нет.
       throw new IllegalArgumentException("No method `" + scope + "` in the file: `scope` takes the name of a "
-        + "method of the file (see `document_symbols`) or `module`.");
+        + "method of the file (see `document_symbols`) or `" + MODULE_SCOPE + "`.");
     }
     return symbolTree.getChildrenFlat().stream()
       .filter(DocumentSymbolProvider::isSupported)
