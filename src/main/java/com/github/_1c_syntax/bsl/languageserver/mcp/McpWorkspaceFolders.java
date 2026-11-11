@@ -24,14 +24,17 @@ package com.github._1c_syntax.bsl.languageserver.mcp;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Адресация рабочих папок в MCP: приведение значения, присланного клиентом, к URI
- * зарегистрированной рабочей папки и общий текст подсказки о том, как папку зарегистрировать.
+ * Адресация рабочих папок и файлов в MCP: приведение значения, присланного клиентом, к URI
+ * зарегистрированной рабочей папки или документа и общий текст подсказки о том, как папку
+ * зарегистрировать.
  * <p>
  * Рабочая папка здесь — то же, что workspace folder в LSP: один корневой каталог проекта.
  * Множество зарегистрированных папок и составляет рабочую область (workspace), которую
@@ -70,20 +73,40 @@ public final class McpWorkspaceFolders {
    * @throws IllegalArgumentException Если значение не удаётся разобрать ни как URI, ни как путь.
    */
   public static URI toWorkspaceFolderUri(String rawFolder) {
-    var trimmed = normalizeWindowsFileUri(rawFolder.trim());
+    return toUri(rawFolder, path -> Absolute.path(path).toUri(),
+      "Unsupported workspace folder `" + rawFolder + "`: expected an absolute directory path or a file: URI.");
+  }
+
+  /**
+   * Привести файл, присланный клиентом, к URI документа в том же виде, в котором документы
+   * хранятся в {@code ServerContext}.
+   * <p>
+   * Принимается и путь файловой системы (абсолютный или относительно рабочего каталога процесса),
+   * и {@code file:}-URI — в том числе в том виде, в каком его отдают инструменты в полях {@code uri}
+   * (кириллица в нём закодирована: {@code %D0%9C...}).
+   *
+   * @param rawFile Файл в виде пути файловой системы либо URI.
+   * @return Нормализованный URI документа.
+   * @throws IllegalArgumentException Если значение не удаётся разобрать ни как URI, ни как путь.
+   */
+  public static URI toFileUri(String rawFile) {
+    return toUri(rawFile, path -> Absolute.uri(new File(path)),
+      "Unsupported file `" + rawFile + "`: expected a path to a .bsl/.os file or its file: URI.");
+  }
+
+  private static URI toUri(String raw, Function<String, URI> fromPath, String unsupportedMessage) {
+    var trimmed = normalizeWindowsFileUri(raw.trim());
     try {
       if (hasUriScheme(trimmed)) {
         return Absolute.uri(trimmed);
       }
-      return Absolute.path(trimmed).toUri();
+      return fromPath.apply(trimmed);
     } catch (Exception e) {
       // Ловится Exception, а не RuntimeException: приведение к каноническому виду обращается
       // к диску, и Absolute прокидывает оттуда IOException, не объявляя его. Поймать его отдельно
       // нельзя — компилятор такого перехвата не примет, — а без него клиент вместо
       // самодостаточного объяснения получил бы сырую ошибку ввода-вывода.
-      throw new IllegalArgumentException(
-        "Unsupported workspace folder `" + rawFolder
-          + "`: expected an absolute directory path or a file: URI.", e);
+      throw new IllegalArgumentException(unsupportedMessage, e);
     }
   }
 

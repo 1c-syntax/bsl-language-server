@@ -25,11 +25,9 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
-import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
 import java.net.URI;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.function.Function;
@@ -63,7 +61,7 @@ public class McpDocumentReader {
   /**
    * Прочитать вычисленные данные документа (дерево символов, ссылки) без повторного разбора AST.
    *
-   * @param path Путь к файлу (абсолютный или относительный).
+   * @param path Путь к файлу (абсолютный или относительный) либо его {@code file:}-URI.
    * @param action Действие над контекстом документа.
    * @param <T> Тип результата.
    * @return Результат действия.
@@ -79,7 +77,7 @@ public class McpDocumentReader {
    * Открытый в редакторе документ читается «живым» (как в LSP) — содержимое буфера может
    * отличаться от файла на диске.
    *
-   * @param path Путь к файлу (абсолютный или относительный).
+   * @param path Путь к файлу (абсолютный или относительный) либо его {@code file:}-URI.
    * @param action Действие над контекстом документа.
    * @param <T> Тип результата.
    * @return Результат действия.
@@ -89,7 +87,7 @@ public class McpDocumentReader {
   }
 
   private <T> T access(String path, Function<DocumentContext, T> action, boolean requireFreshAst) {
-    var uri = Absolute.uri(new File(path));
+    var uri = McpWorkspaceFolders.toFileUri(path);
     var serverContext = serverContextProvider.getServerContext(uri)
       .orElseThrow(() -> new IllegalArgumentException(
         "File is not part of any registered workspace folder: " + path + ". "
