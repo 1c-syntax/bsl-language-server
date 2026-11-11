@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.references;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.references.model.LocationRepository;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.references.model.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrence;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrenceRepository;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
@@ -31,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAn
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.types.ModuleType;
+import com.github._1c_syntax.utils.GenericInterner;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.SymbolKind;
@@ -60,6 +62,10 @@ class ReferenceIndexTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private OScriptLibraryIndex oScriptLibraryIndex;
+  @Autowired
+  private ReferenceIndexFiller filler;
+  @Autowired
+  private GenericInterner<Symbol> workspaceSymbols;
 
   private static final String PATH_TO_FILE = "./src/test/resources/references/ReferenceIndex.bsl";
 
@@ -98,6 +104,31 @@ class ReferenceIndexTest extends AbstractServerContextAwareTest {
       .isNotEmpty()
       .contains(Reference.of(method, method, location))
     ;
+  }
+
+  @Test
+  @DirtiesContext
+  void methodLocalKeysAreOwnedByTheDocumentBatch() {
+    // given
+    var uri = Path.of(PATH_TO_METADATA, "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl").toUri();
+    var document = TestUtils.getDocumentContext(uri, """
+      Procedure PrivateProbe()
+        PrivateProbeValue = 1;
+        Message(PrivateProbeValue);
+      EndProcedure
+      """, context);
+
+    // when
+    filler.fill(document);
+    var local = locationRepository.getSymbolOccurrencesByLocationUri(document.getUri())
+      .map(SymbolOccurrence::symbol)
+      .filter(symbol -> symbol.symbolName().equals("privateprobevalue"))
+      .findFirst().orElseThrow();
+    var independent = new Symbol(local.mdoRef(), local.moduleType(), local.scopeName(), local.symbolKind(),
+      local.symbolName());
+
+    // then
+    assertThat(workspaceSymbols.intern(independent)).isSameAs(independent);
   }
 
   @Test
@@ -463,7 +494,7 @@ class ReferenceIndexTest extends AbstractServerContextAwareTest {
       referenceIndex.replaceReferences(workspace1Uri, java.util.List.of(occurrence));
 
       // Build the same Symbol key used for both workspaces
-      var symbolDto = com.github._1c_syntax.bsl.languageserver.references.model.Symbol.builder()
+      var symbolDto = Symbol.builder()
         .mdoRef("CommonModule.TestModule")
         .moduleType(ModuleType.CommonModule)
         .scopeName("")
