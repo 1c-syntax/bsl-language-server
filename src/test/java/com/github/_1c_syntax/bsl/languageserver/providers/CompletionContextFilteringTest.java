@@ -285,7 +285,8 @@ class CompletionContextFilteringTest extends AbstractServerContextAwareTest {
     assertThat(complete(document, position)).filteredOn(item -> item.getLabel().equals("ClientMethod"))
       .singleElement().satisfies(item -> assertThat(item.getSortText()).startsWith("2_"));
     Files.writeString(file, "{\"completion\":{\"hideUnavailableByContext\":null}}");
-    assertThatThrownBy(() -> configuration.update(file.toFile())).isInstanceOf(MismatchedInputException.class);
+    var invalidConfiguration = file.toFile();
+    assertThatThrownBy(() -> configuration.update(invalidConfiguration)).isInstanceOf(MismatchedInputException.class);
     assertThat(configuration.getCompletionOptions().isHideUnavailableByContext()).isFalse();
     assertThat(complete(document, position)).extracting(CompletionItem::getLabel).contains("ClientMethod");
 
