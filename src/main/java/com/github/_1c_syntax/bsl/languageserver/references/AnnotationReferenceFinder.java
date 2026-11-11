@@ -22,32 +22,43 @@
 package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextConfigurationBindingChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationParamSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationParameterDefinition;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.AnnotationSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.references.model.AnnotationRepository;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.lang3.tuple.Pair;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.eclipse.lsp4j.Range;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -57,12 +68,16 @@ import java.util.Optional;
  * и находит ссылки на методы, указанные в них.
  */
 @Component
+@WorkspaceScope
 @Order(180)
 @RequiredArgsConstructor
 public class AnnotationReferenceFinder implements ReferenceFinder {
 
   private final ServerContextProvider serverContextProvider;
   private final AnnotationRepository annotationRepository;
+
+  /** Позиции обращений к аннотациям одного workspace; не содержат узлов AST или целевых символов. */
+  private final Map<URI, List<AnnotationPosition>> sourcePositions = new ConcurrentHashMap<>();
 
   @EventListener
   public void handleContextRefresh(ServerContextPopulatedEvent event) {
@@ -79,11 +94,93 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
 
     annotationRepository.removeByUri(documentContext.getUri());
     findAndRegisterAnnotation(documentContext);
+    if (event.isContentChanged() || !sourcePositions.containsKey(documentContext.getUri())) {
+      indexSourcePositions(documentContext);
+    }
   }
 
   @EventListener
   public void handleServerContextDocumentRemovedEvent(ServerContextDocumentRemovedEvent event) {
     annotationRepository.removeByUri(event.getUri());
+    sourcePositions.remove(event.getUri());
+  }
+
+  @EventListener
+  public void handleConfigurationBindingChanged(DocumentContextConfigurationBindingChangedEvent event) {
+    var document = event.getSource();
+    annotationRepository.removeByUri(document.getUri());
+    findAndRegisterAnnotation(document);
+    indexSourcePositions(document);
+  }
+
+  @Override
+  public Optional<SourceDefinedSymbol> findSourceDefinedSymbol(URI uri, Position position) {
+    return sourcePositions.getOrDefault(uri, List.of()).stream()
+      .filter(candidate -> Ranges.containsPosition(candidate.range(), position))
+      .findFirst()
+      .flatMap(this::resolveSourceSymbol);
+  }
+
+  private Optional<SourceDefinedSymbol> resolveSourceSymbol(AnnotationPosition position) {
+    var annotation = annotationRepository.findByName(position.annotationName());
+    var parameterName = position.parameterName();
+    if (parameterName == null) {
+      return annotation.map(SourceDefinedSymbol.class::cast);
+    }
+    return annotation.flatMap(AnnotationSymbol::getParent)
+      .filter(MethodSymbol.class::isInstance)
+      .map(MethodSymbol.class::cast)
+      .map(method -> AnnotationParamSymbol.from(parameterName, method));
+  }
+
+  private void indexSourcePositions(DocumentContext document) {
+    if (document.getFileType() != FileType.OS) {
+      return;
+    }
+    var positions = new ArrayList<AnnotationPosition>();
+    var annotationTokens = new BSLParserBaseVisitor<Void>() {
+      @Override
+      public Void visitTerminal(TerminalNode node) {
+        sourcePosition(node).ifPresent(positions::add);
+        return null;
+      }
+    };
+    new BSLParserBaseVisitor<Void>() {
+      @Override
+      public Void visitAnnotation(BSLParser.AnnotationContext annotation) {
+        annotationTokens.visit(annotation);
+        return null;
+      }
+    }.visit(document.getAst());
+    sourcePositions.put(document.getUri(), List.copyOf(positions));
+  }
+
+  private static Optional<AnnotationPosition> sourcePosition(TerminalNode terminal) {
+    if (!(terminal.getParent() instanceof ParserRuleContext parent)) {
+      return Optional.empty();
+    }
+    if (parent instanceof BSLParser.AnnotationNameContext name) {
+      return Optional.of(new AnnotationPosition(Ranges.create(terminal), name.getText(), null));
+    }
+    BSLParser.AnnotationParamContext parameter;
+    if (parent instanceof BSLParser.AnnotationParamNameContext name) {
+      parameter = (BSLParser.AnnotationParamContext) name.getParent();
+    } else {
+      var value = parent instanceof BSLParser.AnnotationParamValueContext context
+        ? context : Trees.<BSLParser.AnnotationParamValueContext>getAncestorByRuleIndex(
+        parent, BSLParser.RULE_annotationParamValue);
+      if (value == null) {
+        return Optional.empty();
+      }
+      parameter = (BSLParser.AnnotationParamContext) value.getParent();
+    }
+    var annotation = (BSLParser.AnnotationContext) parameter.getParent().getParent();
+    var name = parameter.annotationParamName();
+    return Optional.of(new AnnotationPosition(Ranges.create(terminal), annotation.annotationName().getText(),
+      name == null ? "Значение" : name.getText()));
+  }
+
+  private record AnnotationPosition(Range range, String annotationName, @Nullable String parameterName) {
   }
 
   private void findAndRegisterAnnotation(DocumentContext documentContext) {

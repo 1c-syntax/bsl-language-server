@@ -21,8 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references;
 
-import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.utils.Positions;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
@@ -46,6 +47,20 @@ public interface ReferenceFinder {
    * @return данные ссылки.
    */
   Optional<Reference> findReference(URI uri, Position position);
+
+  /**
+   * Найти символ исходного кода без обращения к тексту или AST документа.
+   * <p>
+   * По умолчанию поисковик не участвует в таком поиске. Реализация использует только данные,
+   * сохраняемые после освобождения содержимого документа.
+   *
+   * @param uri URI документа.
+   * @param position позиция курсора.
+   * @return символ исходного кода либо пустое значение.
+   */
+  default Optional<SourceDefinedSymbol> findSourceDefinedSymbol(URI uri, Position position) {
+    return Optional.empty();
+  }
 
   /**
    * Поиск символа по уже известному терминалу-идентификатору — без спуска по AST

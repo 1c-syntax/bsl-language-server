@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContentUnavailableException;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -40,6 +42,8 @@ import java.util.Optional;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.FAKE_DOCUMENT_URI;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -131,6 +135,50 @@ class ReferenceResolverTest {
 
     // а позиционный путь того же finder'а — пуст (override только терминальный)
     assertThat(resolver.findReference(uri, new Position(0, 0))).isEmpty();
+  }
+
+  @Test
+  void sourceResolutionSkipsAstOnlyFindersAndKeepsFinderOrder() {
+    var uri = FAKE_DOCUMENT_URI;
+    var position = new Position(0, 0);
+    ReferenceFinder astOnly = (ref, cursor) -> {
+      throw new AssertionError("Full reference lookup must not run");
+    };
+    var first = mock(ReferenceFinder.class);
+    var later = mock(ReferenceFinder.class);
+    var symbol = mock(SourceDefinedSymbol.class);
+    when(first.findSourceDefinedSymbol(uri, position)).thenReturn(Optional.of(symbol));
+    when(later.findSourceDefinedSymbol(uri, position)).thenThrow(new AssertionError("Already resolved"));
+
+    var resolver = new ReferenceResolver(List.of(astOnly, first, later));
+
+    assertThat(resolver.findSourceDefinedSymbol(uri, position)).contains(symbol);
+  }
+
+  @Test
+  void sourceResolutionDoesNotSwallowFinderFailures() {
+    var uri = FAKE_DOCUMENT_URI;
+    var position = new Position(0, 0);
+    var finder = mock(ReferenceFinder.class);
+    var failure = new IllegalStateException("Broken source index");
+    doThrow(failure).when(finder).findSourceDefinedSymbol(uri, position);
+    var resolver = new ReferenceResolver(List.of(finder));
+
+    assertThatThrownBy(() -> resolver.findSourceDefinedSymbol(uri, position)).isSameAs(failure);
+  }
+
+  @Test
+  void sourceResolutionPropagatesUnexpectedContentAccessIncludingOtherDocuments() {
+    var uri = FAKE_DOCUMENT_URI;
+    var position = new Position(0, 0);
+    var finder = mock(ReferenceFinder.class);
+    var resolver = new ReferenceResolver(List.of(finder));
+
+    for (var missing : List.of(uri, URI.create("file:///another-document.bsl"))) {
+      var failure = new DocumentContentUnavailableException(missing);
+      doThrow(failure).when(finder).findSourceDefinedSymbol(uri, position);
+      assertThatThrownBy(() -> resolver.findSourceDefinedSymbol(uri, position)).isSameAs(failure);
+    }
   }
 
   private static TerminalNode terminalAt(int line, int charPositionInLine) {

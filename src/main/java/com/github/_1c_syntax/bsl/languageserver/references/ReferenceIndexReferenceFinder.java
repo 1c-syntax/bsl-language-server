@@ -21,11 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references;
 
-import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.utils.Positions;
-import org.antlr.v4.runtime.tree.TerminalNode;
 import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
@@ -46,6 +47,13 @@ public class ReferenceIndexReferenceFinder implements ReferenceFinder {
   @Override
   public Optional<Reference> findReference(URI uri, Position position) {
     return referenceIndex.getReference(uri, position);
+  }
+
+  @Override
+  public Optional<SourceDefinedSymbol> findSourceDefinedSymbol(URI uri, Position position) {
+    return referenceIndex.getTargetSymbol(uri, position)
+      .filter(SourceDefinedSymbol.class::isInstance)
+      .map(SourceDefinedSymbol.class::cast);
   }
 
   @Override

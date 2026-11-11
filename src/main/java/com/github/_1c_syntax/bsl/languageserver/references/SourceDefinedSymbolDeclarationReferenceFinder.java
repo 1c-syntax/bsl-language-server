@@ -23,7 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import lombok.RequiredArgsConstructor;
@@ -46,21 +46,20 @@ public class SourceDefinedSymbolDeclarationReferenceFinder implements ReferenceF
 
   @Override
   public Optional<Reference> findReference(URI uri, Position position) {
-    // Горячий путь — без захвата RWLock на ServerContext.
-    var maybeDocument = serverContextProvider.getDocumentNoLock(uri);
-    if (maybeDocument.isEmpty()) {
-      return Optional.empty();
-    }
-
-    DocumentContext document = maybeDocument.get();
-    SymbolTree symbolTree = document.getSymbolTree();
-    return symbolTree.findSymbolBySelectionRange(position)
-      .map(sourceDefinedSymbol -> new Reference(
-        symbolTree.getModule(),
-        sourceDefinedSymbol,
+    return findSourceDefinedSymbol(uri, position)
+      .map(symbol -> new Reference(
+        symbol.getOwner().getSymbolTree().getModule(),
+        symbol,
         uri,
-        sourceDefinedSymbol.getSelectionRange(),
+        symbol.getSelectionRange(),
         OccurrenceType.DEFINITION)
       );
+  }
+
+  @Override
+  public Optional<SourceDefinedSymbol> findSourceDefinedSymbol(URI uri, Position position) {
+    return serverContextProvider.getDocumentNoLock(uri)
+      .map(DocumentContext::getSymbolTree)
+      .flatMap(tree -> tree.findSymbolBySelectionRange(position));
   }
 }
