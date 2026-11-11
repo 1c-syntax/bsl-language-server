@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -48,6 +50,22 @@ class MissingSuppressionCommentDiagnosticTest
       .hasRange(4, 0, 4, 33)   // // BSLLS:DeprecatedMethodCall-off
       .hasRange(8, 7, 8, 40)   // А = 1; // BSLLS:DeprecatedMethodCall-off
       .hasRange(12, 0, 12, 34); // // BSLLS:DeprecatedMethodCall-выкл
+  }
+
+  @Test
+  void testOneScript() {
+    var document = TestUtils.getDocumentContextFromFile(
+      "src/test/resources/diagnostics/MissingSuppressionCommentDiagnostic.os");
+
+    List<Diagnostic> diagnostics = getDiagnostics(document);
+
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true).hasRange(0, 0, 0, 12);
+  }
+
+  @Test
+  void appliesToAllDialects() {
+    assertThat(diagnosticInstance.getInfo().getScope()).isEqualTo(DiagnosticScope.ALL);
   }
 
   @Test

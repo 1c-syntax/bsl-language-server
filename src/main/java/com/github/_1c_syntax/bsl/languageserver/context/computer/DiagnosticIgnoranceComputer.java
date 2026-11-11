@@ -288,6 +288,11 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
     private final Map<DiagnosticCode, List<Range<Integer>>> diagnosticIgnorance;
     private final List<SuppressionComment> suppressionComments;
 
+    /**
+     * Распознанные в документе директивы подавления диагностик в порядке появления.
+     *
+     * @return список директив; пустой, если подавлений в документе нет
+     */
     public List<SuppressionComment> getSuppressionComments() {
       return suppressionComments;
     }

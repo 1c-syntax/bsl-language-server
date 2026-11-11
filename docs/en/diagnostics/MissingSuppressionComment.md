@@ -31,4 +31,5 @@ Message("Text"); // BSLLS:DeprecatedMethodCall-off — legacy, do not touch unti
 
 - Any non-empty text after the `-off`/`-выкл` directive is treated as an explanation; `-on`/`-вкл` comments are not checked.
 - Supports both Russian (`выкл`) and English (`off`) forms.
+- Covers both BSL and OneScript documents.
 - This diagnostic is **not suppressable**: its metadata declares `suppressible = false`, so `// BSLLS:MissingSuppressionComment-off` and `// BSLLS-off` comments do not hide its findings.

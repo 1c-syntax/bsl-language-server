@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
@@ -37,12 +36,12 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
  * не понимают, почему диагностика отключена и можно ли её вернуть.
  * <p>
  * Пояснением считается любой непустой текст после директивы подавления.
+ * Правило действует для документов BSL и OneScript.
  * Сама диагностика не подавляема ({@code suppressible = false}).
  */
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MAJOR,
-  scope = DiagnosticScope.BSL,
   minutesToFix = 1,
   suppressible = false,
   tags = {
@@ -52,6 +51,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 )
 public class MissingSuppressionCommentDiagnostic extends AbstractDiagnostic {
 
+  /**
+   * Добавляет замечание на каждую директиву подавления, после которой нет пояснения.
+   */
   @Override
   public void check() {
     documentContext.getDiagnosticIgnorance().getSuppressionComments().stream()
