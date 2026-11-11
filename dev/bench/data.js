@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794396340431,
+  "lastUpdate": 1794404596487,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -47275,6 +47275,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.9095408530016071",
             "extra": "mean: 88.07685446739197 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "e2c4b0afc9c9c2006e95c695fc7d36ff219c18b7",
+          "message": "Merge pull request #4690 from 1c-syntax/perf/types-common-module-reread-keeps-global-members\n\nОбщий модуль, перечитанный с тем же текстом, не пересобирает члены глобального контекста",
+          "timestamp": "2026-11-11T11:41:41+01:00",
+          "tree_id": "c548765fde9e7eda91e849d0ef92553d824a3ebc",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/e2c4b0afc9c9c2006e95c695fc7d36ff219c18b7"
+        },
+        "date": 1794404564301,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 89.30786053339641,
+            "unit": "sec",
+            "range": "stddev: 3.278785752015441",
+            "extra": "mean: 89.30786053339641 sec\nrounds: 3"
           }
         ]
       }
