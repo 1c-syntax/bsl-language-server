@@ -826,6 +826,9 @@ public class GlobalScopeProvider {
       returnTypes.isEmpty() ? TypeSet.of(TypeRef.UNKNOWN) : returnTypes);
     var member = withFirstAliasName(
       MemberDescriptor.method(name, description, signatures).withStandardLibrary(true), entry);
+    if (!returnTypes.isEmpty()) {
+      member = member.withReturnTypes(returnTypes);
+    }
     if (Boolean.TRUE.equals(entry.get("async"))) {
       member = member.withAsync(true);
     }
@@ -894,6 +897,9 @@ public class GlobalScopeProvider {
       );
       var descriptor = MemberDescriptor.method(name, description, signatures)
         .withStandardLibrary(true);
+      if (!returnTypes.isEmpty()) {
+        descriptor = descriptor.withReturnTypes(returnTypes);
+      }
       // Двуязычные имена: опциональные `nameRu` и `nameEn`. Если не заданы —
       // дескриптор остаётся с пустыми {@code nameRu}/{@code nameEn} (и
       // {@code displayName} падает на {@code name}).
