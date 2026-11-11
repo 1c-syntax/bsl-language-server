@@ -159,8 +159,8 @@ public class CompilationContextResolver {
    *
    * @param document документ с построенным символьным деревом.
    * @param node тело метода, модуля или узел внутри него.
-   * @return неизменяемые возможные контексты BSL, включая пустое множество для исключённого
-   *     объявления; пустой Optional при неизвестном условии объявления.
+   * @return всегда заполненный Optional с неизменяемыми возможными контекстами выбранного языка,
+   *     включая пустое множество для исключённого объявления.
    */
   public Optional<Set<ExecutionContext>> possibleContexts(DocumentContext document, ParseTree node) {
     var sub = CompilationContextIndex.enclosingMethod(node);

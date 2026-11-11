@@ -104,7 +104,7 @@ public class SymbolTree {
 
   /**
    * Переменные по области объявления: в каждой области упорядочены по имени без учёта
-   * регистра, из одноимённых — первая объявленная.
+   * регистра, из одноимённых — первая объявленная. Карта неизменяемая.
    */
   @Getter(value = AccessLevel.PRIVATE, lazy = true)
   Map<SourceDefinedSymbol, VariableSymbol[]> variablesByScope = createVariablesByScope();
@@ -218,7 +218,8 @@ public class SymbolTree {
    *     ветки или {@code null}, если условие нельзя вычислить.
    */
   public @Nullable Set<ExecutionContext> getMethodPreprocessorContexts(MethodSymbol method) {
-    return methodConditions.getOrDefault(method.getSubNameRange(), ExecutionContext.ALL);
+    return methodConditions.getOrDefault(method.getSubNameRange(),
+      ExecutionContext.forFileType(module.getOwner().getFileType()));
   }
 
   /**
@@ -526,7 +527,7 @@ public class SymbolTree {
     }
     Map<SourceDefinedSymbol, VariableSymbol[]> result = HashMap.newHashMap(byScope.size());
     byScope.forEach((scope, inScope) -> result.put(scope, sortedUniqueByName(inScope, new VariableSymbol[0])));
-    return result;
+    return Map.copyOf(result);
   }
 
   private MethodSymbol[] createMethodsByName() {

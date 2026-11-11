@@ -27,6 +27,8 @@ import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.nio.file.Path;
@@ -44,6 +46,58 @@ class MissedRequiredParameterDiagnosticTest extends AbstractDiagnosticTest<Misse
 
   MissedRequiredParameterDiagnosticTest() {
     super(MissedRequiredParameterDiagnostic.class);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "Результат = Карта.Получить(1).Получить();",
+    "Карта.Получить(1).Получить();",
+    "Сообщить(Карта.Получить(1).Получить());",
+    "Значение = Новый ChainMap().Получить(1);\nЗначение.Получить();",
+    "Значение = Новый ChainMap().Получить(1);\nРезультат = Значение.Получить();"
+  })
+  void chainedLibraryCallUsesTheReturnedObjectSignature(String call) {
+    initServerContext(Absolute.path("src/test/resources/oscript-libraries/chained-method-calls"), false);
+    oScriptLibraryIndex.reindex(context);
+    var document = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI,
+      "#Использовать chained-lib\nКарта = Новый ChainMap;\n" + call, context);
+
+    assertThat(getDiagnostics(document)).isEmpty();
+  }
+
+  @Test
+  void firstLibraryCallStillRequiresItsOwnParameter() {
+    initServerContext(Absolute.path("src/test/resources/oscript-libraries/chained-method-calls"), false);
+    oScriptLibraryIndex.reindex(context);
+    var document = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, """
+      #Использовать chained-lib
+      Карта = Новый ChainMap;
+      Результат = Карта.Получить().Получить();
+      """, context);
+
+    assertThat(getDiagnostics(document), true).hasSize(1)
+      .hasMessageOnRange("Укажите обязательный параметр 'Ключ'", 2, 18, 28);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "Результат = Модуль.Количество(1).Количество();",
+    "Модуль.Количество(1).Количество();",
+    "Сообщить(Модуль.Количество(1).Количество());"
+  })
+  void chainedCommonModuleCallDoesNotUseTheModuleSignature(String call) {
+    initServerContext(Absolute.path(PATH_TO_METADATA));
+    var moduleUri = Absolute.path(PATH_TO_METADATA)
+      .resolve("CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl").toUri();
+    TestUtils.getDocumentContext(moduleUri, """
+      Функция Количество(Ключ) Экспорт
+        Возврат Новый Массив;
+      КонецФункции
+      """, context);
+    var document = TestUtils.getDocumentContext(
+      "Модуль = ОбщегоНазначения.ОбщийМодуль(\"ПервыйОбщийМодуль\");\n" + call, context);
+
+    assertThat(getDiagnostics(document)).isEmpty();
   }
 
   @Test
