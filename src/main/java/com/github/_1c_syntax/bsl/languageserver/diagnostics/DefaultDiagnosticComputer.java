@@ -33,6 +33,7 @@ import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -70,17 +71,23 @@ public abstract class DefaultDiagnosticComputer implements DiagnosticComputer {
       ? GitBlameComputer.Data.empty()
       : new GitBlameComputer(documentContext.getUri(), ignoredAuthors).compute();
 
-    var futures = diagnostics(documentContext).stream()
-      .map((BSLDiagnostic diagnostic) ->
-        executor.submit(() -> safeGetDiagnostics(diagnostic, documentContext)))
-      .toList();
+    var enabled = diagnostics(documentContext);
+    var futures = new ArrayList<Future<List<Diagnostic>>>(enabled.size());
+    try {
+      for (var diagnostic : enabled) {
+        futures.add(executor.submit(() -> safeGetDiagnostics(diagnostic, documentContext)));
+      }
 
-    return futures.stream()
-      .map(DefaultDiagnosticComputer::getUninterruptibly)
-      .flatMap(List::stream)
-      .filter(Predicate.not(diagnosticIgnorance::diagnosticShouldBeIgnored))
-      .filter(Predicate.not(gitBlameIgnorance::diagnosticShouldBeIgnored))
-      .toList();
+      return futures.stream()
+        .map(DefaultDiagnosticComputer::getUninterruptibly)
+        .flatMap(List::stream)
+        .filter(Predicate.not(diagnosticIgnorance::diagnosticShouldBeIgnored))
+        .filter(Predicate.not(gitBlameIgnorance::diagnosticShouldBeIgnored))
+        .toList();
+    } catch (RuntimeException exception) {
+      futures.forEach(future -> future.cancel(true));
+      throw exception;
+    }
   }
 
   private List<Diagnostic> safeGetDiagnostics(BSLDiagnostic diagnostic, DocumentContext documentContext) {
