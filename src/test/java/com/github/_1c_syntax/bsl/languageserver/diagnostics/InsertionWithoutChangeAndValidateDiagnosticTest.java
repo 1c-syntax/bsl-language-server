@@ -46,8 +46,13 @@ class InsertionWithoutChangeAndValidateDiagnosticTest
     // БезАннотацииКонецВставки — покрывает директиву #КонецВставки без #Вставка
     assertThat(diagnostics).hasSize(3);
     assertThat(diagnostics, true)
-      .hasRange(9, 10, 9, 22) // БезИзменения
-      .hasRange(35, 10, 35, 34) // БезАннотацииКонецВставки
-      .hasRange(41, 10, 41, 36); // БезАннотацииВПрепроцессоре
+      .hasMessageOnRange(message("БезИзменения"), 9, 10, 9, 22)
+      .hasMessageOnRange(message("БезАннотацииКонецВставки"), 35, 10, 35, 34)
+      .hasMessageOnRange(message("БезАннотацииВПрепроцессоре"), 41, 10, 41, 36);
+  }
+
+  private static String message(String methodName) {
+    return "В методе \"" + methodName + "\" используется директива #Вставка / #КонецВставки"
+      + " без аннотации &ИзменениеИКонтроль";
   }
 }
