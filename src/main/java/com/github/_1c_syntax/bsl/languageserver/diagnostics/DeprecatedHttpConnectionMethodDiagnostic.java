@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
@@ -30,17 +30,42 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
-import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.bsl.mdo.CommonModule;
+import com.github._1c_syntax.bsl.mdo.Form;
+import com.github._1c_syntax.bsl.mdo.support.FormType;
+import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.util.EnumSet;
-import java.util.Set;
 import java.util.regex.Pattern;
 
+/**
+ * Диагностика устаревших методов объекта {@code HTTPСоединение} /
+ * {@code HTTPConnection}.
+ * <p>
+ * В платформе 8.3.21 синхронные методы HTTP-соединения объявлены устаревшими
+ * в клиентском контексте. Вместо них следует использовать асинхронные аналоги
+ * с суффиксом {@code Асинх} / {@code Async}. Асинхронные методы доступны только
+ * на клиенте, поэтому диагностика сообщает только о вызовах, которые
+ * гарантированно исполняются на клиенте.
+ * <p>
+ * Контекст исполнения определяется по типу модуля и директиве компиляции метода.
+ * В модулях приложения и клиентских общих модулях директив нет — весь код
+ * считается клиентским. В модулях управляемых форм и команд сообщаются только
+ * методы с директивой {@code &НаКлиенте}; методы без директивы, а также методы
+ * с директивами {@code &НаСервере}, {@code &НаСервереБезКонтекста} и
+ * {@code &НаКлиентеНаСервере} компилируются в том числе для сервера и не
+ * сообщаются. В обычных формах директивы не применяются, поэтому весь модуль
+ * считается клиентским.
+ * <p>
+ * Чтобы исключить ложные срабатывания, тип-владелец метода резолвится через
+ * {@link TypeService#memberAt}: диагностика срабатывает только если метод
+ * вызван на объекте типа {@code HTTPСоединение}.
+ *
+ * @see <a href="https://dl04.1c.ru/content/Platform/8_3_21_1140/1cv8upd_8_3_21_1140.htm">
+ *   Изменения платформы 8.3.21</a>
+ */
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MAJOR,
@@ -52,28 +77,6 @@ import java.util.regex.Pattern;
     DiagnosticTag.PERFORMANCE
   }
 )
-/**
- * Диагностика устаревших методов объекта {@code HTTPСоединение} /
- * {@code HTTPConnection}.
- * <p>
- * В платформе 8.3.21 синхронные методы HTTP-соединения объявлены
- * устаревшими в клиентском контексте. Вместо них следует использовать
- * асинхронные аналоги с суффиксом {@code Асинх} / {@code Async}.
- * <p>
- * Асинхронные методы доступны только на клиенте. Чтобы исключить ложные
- * срабатывания, диагностика работает только в модулях с клиентским
- * контекстом (формы, команды, обычное/управляемое приложение, клиентские
- * общие модули) и только внутри методов, выполняющихся на клиенте
- * (директивы {@code &НаКлиенте}, {@code &НаКлиентеНаСервере} и методы без
- * директивы в клиентском модуле).
- * <p>
- * Для исключения ложных срабатываний тип-владелец метода резолвится
- * через {@link TypeService#memberAt}: диагностика срабатывает только
- * если метод вызван на объекте типа {@code HTTPСоединение}.
- *
- * @see <a href="https://dl04.1c.ru/content/Platform/8_3_21_1140/1cv8upd_8_3_21_1140.htm">
- *   Изменения платформы 8.3.21</a>
- */
 @RequiredArgsConstructor
 public class DeprecatedHttpConnectionMethodDiagnostic extends AbstractVisitorDiagnostic {
 
@@ -91,51 +94,70 @@ public class DeprecatedHttpConnectionMethodDiagnostic extends AbstractVisitorDia
     "HTTPСоединение|HTTPConnection"
   );
 
-  private static final Set<CompilerDirectiveKind> SERVER_COMPILER_DIRECTIVES =
-    EnumSet.of(CompilerDirectiveKind.AT_SERVER, CompilerDirectiveKind.AT_SERVER_NO_CONTEXT);
-
   private final TypeService typeService;
+
+  /**
+   * Признак того, что вложенный узел дерева разбора исполняется на клиенте.
+   * Значение для тела модуля выставляется в {@link #visitFile}, для методов —
+   * в {@link #visitSub}.
+   */
+  private boolean clientContext;
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
-    if (isServerModule(documentContext)) {
+    if (!isClientCapableModule()) {
       return ctx;
     }
+    clientContext = isDirectiveLessClientModule();
     return super.visitFile(ctx);
   }
 
   @Override
   public ParseTree visitSub(BSLParser.SubContext ctx) {
-    var methodSymbol = documentContext.getSymbolTree().getMethodSymbol(ctx);
-    if (methodSymbol.isPresent()) {
-      var compilerDirective = methodSymbol.get().getCompilerDirectiveKind();
-      if (compilerDirective.isPresent()
-        && SERVER_COMPILER_DIRECTIVES.contains(compilerDirective.get())) {
+    var directive = documentContext.getSymbolTree()
+      .getMethodSymbol(ctx)
+      .flatMap(MethodSymbol::getCompilerDirectiveKind);
+
+    if (directive.isPresent()) {
+      if (directive.get() != CompilerDirectiveKind.AT_CLIENT) {
         return ctx;
       }
+    } else if (!isDirectiveLessClientModule()) {
+      return ctx;
     }
-    return super.visitSub(ctx);
+
+    var savedClientContext = clientContext;
+    clientContext = true;
+    try {
+      return super.visitSub(ctx);
+    } finally {
+      clientContext = savedClientContext;
+    }
   }
 
   @Override
   public ParseTree visitMethodCall(BSLParser.MethodCallContext ctx) {
+    if (!clientContext) {
+      return super.visitMethodCall(ctx);
+    }
+
     var methodName = ctx.methodName();
     if (methodName == null) {
-      return ctx;
+      return super.visitMethodCall(ctx);
     }
 
     if (!MESSAGE_PATTERN.matcher(methodName.getText()).matches()) {
-      return ctx;
+      return super.visitMethodCall(ctx);
     }
 
     var identifier = methodName.IDENTIFIER();
     if (identifier == null) {
-      return ctx;
+      return super.visitMethodCall(ctx);
     }
 
     var typedMember = typeService.memberAt(documentContext, identifier);
     if (typedMember.isEmpty()) {
-      return ctx;
+      return super.visitMethodCall(ctx);
     }
 
     var owner = typedMember.get().owner();
@@ -143,24 +165,51 @@ public class DeprecatedHttpConnectionMethodDiagnostic extends AbstractVisitorDia
       diagnosticStorage.addDiagnostic(methodName, info.getMessage(methodName.getText()));
     }
 
-    return ctx;
+    return super.visitMethodCall(ctx);
   }
 
-  private static boolean isServerModule(DocumentContext documentContext) {
+  private boolean isClientCapableModule() {
     return switch (documentContext.getModuleType()) {
-      case ApplicationModule, CommandModule, FormModule, ManagedApplicationModule -> false;
-      case CommonModule -> isServerCommonModule(documentContext);
-      default -> true; // Все прочие модули — строго серверные
+      case ApplicationModule, OrdinaryApplicationModule, ManagedApplicationModule,
+           FormModule, CommandModule -> true;
+      case CommonModule -> isClientOnlyCommonModule();
+      default -> false;
     };
   }
 
-  private static boolean isServerCommonModule(DocumentContext documentContext) {
+  private boolean isDirectiveLessClientModule() {
+    return switch (documentContext.getModuleType()) {
+      case ApplicationModule, OrdinaryApplicationModule, ManagedApplicationModule -> true;
+      case FormModule -> isOrdinaryForm();
+      case CommonModule -> isClientOnlyCommonModule();
+      default -> false;
+    };
+  }
+
+  private boolean isClientOnlyCommonModule() {
     var mdObject = documentContext.getMdObject();
 
-    return mdObject.map(CommonModule.class::cast)
-      .filter(commonModule -> !(commonModule.isClientManagedApplication()
-        || commonModule.isClientOrdinaryApplication()))
-      .isPresent();
+    if (mdObject.isEmpty()) {
+      // Метаданные недоступны: модуль не считаем строго серверным.
+      return true;
+    }
+
+    if (!(mdObject.get() instanceof CommonModule commonModule)) {
+      return false;
+    }
+
+    return (commonModule.isClientManagedApplication() || commonModule.isClientOrdinaryApplication())
+      && !commonModule.isServer()
+      && !commonModule.isExternalConnection()
+      && !commonModule.isServerCall();
+  }
+
+  private boolean isOrdinaryForm() {
+    return documentContext.getMdObject()
+      .filter(Form.class::isInstance)
+      .map(Form.class::cast)
+      .map(form -> form.getFormType() != FormType.MANAGED)
+      .orElse(false);
   }
 
 }
