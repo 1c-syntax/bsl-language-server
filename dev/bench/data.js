@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794412122171,
+  "lastUpdate": 1794413433891,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -47399,6 +47399,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.1288687852800026",
             "extra": "mean: 87.44992367426555 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "f3afe80b54746013db83bbd55fb8ba88969fbd6c",
+          "message": "Merge pull request #4397 from pravets/feat/new-diagnostic-insertion-without-change-and-validate\n\nfeat: new diagnostic InsertionWithoutChangeAndValidate",
+          "timestamp": "2026-11-11T14:28:11+01:00",
+          "tree_id": "e1442d0e383e65c9af5a910277b6bdd51b59ca08",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/f3afe80b54746013db83bbd55fb8ba88969fbd6c"
+        },
+        "date": 1794413406081,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 88.84145045280457,
+            "unit": "sec",
+            "range": "stddev: 2.500810461545623",
+            "extra": "mean: 88.84145045280457 sec\nrounds: 3"
           }
         ]
       }
