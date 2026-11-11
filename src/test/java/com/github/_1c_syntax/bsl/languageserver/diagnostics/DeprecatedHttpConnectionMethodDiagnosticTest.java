@@ -22,22 +22,29 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMessage;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.mdo.CommonModule;
+import com.github._1c_syntax.bsl.mdo.Form;
+import com.github._1c_syntax.bsl.mdo.support.FormType;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.List;
 import java.util.Optional;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
@@ -45,36 +52,165 @@ import static org.mockito.Mockito.when;
 class DeprecatedHttpConnectionMethodDiagnosticTest
   extends AbstractDiagnosticTest<DeprecatedHttpConnectionMethodDiagnostic> {
 
+  private static final String HTTP_CONNECTION = "HTTPСоединение";
+
+  private static final String CLIENT_METHOD_TEMPLATE = """
+    Процедура Тест()
+        Соединение = Новый HTTPСоединение("example.com");
+        Соединение.%s(Запрос, Ответ);
+    КонецПроцедуры
+    """;
+
   DeprecatedHttpConnectionMethodDiagnosticTest() {
     super(DeprecatedHttpConnectionMethodDiagnostic.class);
   }
 
   @Test
-  void testOnArrayDoesNotFire() {
-    initServerContext(TestUtils.PATH_TO_METADATA);
-    var documentContext = spy(getDocumentContext());
-    when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
-    List<Diagnostic> diagnostics = getDiagnostics(documentContext);
+  void reportsOnlyClientCodeInManagedForm() {
+    var documentContext = formDocumentContext(getText());
+    var diagnostics = diagnosticWithOwner(HTTP_CONNECTION).getDiagnostics(documentContext);
 
-    // Массив.Получить/Удалить совпадают по имени, но TypeService
-    // резолвит владельца как Массив (не HTTPСоединение) → 0 срабатываний.
+    // Фикстура: тело модуля, &НаСервере, &НаСервереБезКонтекста,
+    // &НаКлиентеНаСервере, &НаКлиентеНаСервереБезКонтекста и метод без директивы
+    // не срабатывают; срабатывает только метод с &НаКлиенте.
+    assertThat(diagnostics).hasSize(1);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "ВызватьHTTPМетод", "CallHTTPMethod",
+    "Записать", "Write",
+    "Изменить", "Change",
+    "ОтправитьДляОбработки", "SendForProcessing",
+    "Получить", "Get",
+    "ПолучитьЗаголовки", "GetHeaders",
+    "Удалить", "Delete"
+  })
+  void reportsClientCallOnHttpConnection(String methodName) {
+    var documentContext = formDocumentContext(
+      "&НаКлиенте\n" + CLIENT_METHOD_TEMPLATE.formatted(methodName));
+    var diagnostics = diagnosticWithOwner(HTTP_CONNECTION).getDiagnostics(documentContext);
+
+    assertThat(diagnostics).hasSize(1);
+    var diagnostic = diagnostics.get(0);
+    assertThat(DiagnosticMessage.getStringValue(diagnostic.getMessage())).contains(methodName);
+    assertThat(diagnostic.getRange())
+      .isEqualTo(Ranges.create(3, 15, 3, 15 + methodName.length()));
+  }
+
+  @Test
+  void reportsNestedCallInArguments() {
+    var documentContext = formDocumentContext(getText("DeprecatedHttpConnectionMethodNested"));
+    var diagnostics = diagnosticWithOwner(HTTP_CONNECTION).getDiagnostics(documentContext);
+
+    // Обход не должен обрываться на внешнем вызове: вложенный Получить виден.
+    assertThat(diagnostics).hasSize(1);
+  }
+
+  @Test
+  void doesNotFireForOtherOwner() {
+    var documentContext = formDocumentContext(getText("DeprecatedHttpConnectionMethodArray"));
+    var diagnostics = diagnosticWithOwner("Массив").getDiagnostics(documentContext);
+
+    // Массив.Получить/Удалить совпадают по имени, но владелец — не HTTPСоединение.
     assertThat(diagnostics).isEmpty();
   }
 
   @Test
-  void testServerModuleDoesNotFire() {
-    var documentContext = spy(getDocumentContext());
-    when(documentContext.getModuleType()).thenReturn(ModuleType.ObjectModule);
-    List<Diagnostic> diagnostics = getDiagnostics(documentContext);
+  void doesNotFireForServerDirectives() {
+    var documentContext = formDocumentContext(
+      "&НаСервере\n" + CLIENT_METHOD_TEMPLATE.formatted("Получить"));
+    var diagnostics = diagnosticWithOwner(HTTP_CONNECTION).getDiagnostics(documentContext);
 
-    // Серверный модуль — visitFile возвращает ctx без обхода → 0.
     assertThat(diagnostics).isEmpty();
   }
 
   @Test
-  void testServerDirectiveDoesNotFireButClientFires() {
+  void doesNotFireForMixedCompilerDirectives() {
+    var documentContext = formDocumentContext(
+      "&НаКлиентеНаСервере\n" + CLIENT_METHOD_TEMPLATE.formatted("Получить"));
+    var diagnostics = diagnosticWithOwner(HTTP_CONNECTION).getDiagnostics(documentContext);
+
+    // Метод компилируется и для сервера, где асинхронного аналога нет.
+    assertThat(diagnostics).isEmpty();
+  }
+
+  @Test
+  void doesNotFireForMethodWithoutDirectiveInManagedForm() {
+    var documentContext = formDocumentContext(CLIENT_METHOD_TEMPLATE.formatted("Получить"));
+    var diagnostics = diagnosticWithOwner(HTTP_CONNECTION).getDiagnostics(documentContext);
+
+    // В управляемой форме метод без директивы исполняется на сервере.
+    assertThat(diagnostics).isEmpty();
+  }
+
+  @Test
+  void doesNotFireInServerModule() {
+    var documentContext = spy(TestUtils.getDocumentContext(
+      CLIENT_METHOD_TEMPLATE.formatted("Получить"), context));
+    doReturn(ModuleType.ObjectModule).when(documentContext).getModuleType();
+
+    var diagnostics = diagnosticWithOwner(HTTP_CONNECTION).getDiagnostics(documentContext);
+
+    assertThat(diagnostics).isEmpty();
+  }
+
+  @Test
+  void reportsInOrdinaryFormWithoutDirectives() {
+    var documentContext = formDocumentContext(getText("DeprecatedHttpConnectionMethodOrdinaryForm"));
+    var form = mock(Form.class);
+    when(form.getFormType()).thenReturn(FormType.ORDINARY);
+    doReturn(Optional.of(form)).when(documentContext).getMdObject();
+
+    var diagnostics = diagnosticWithOwner(HTTP_CONNECTION).getDiagnostics(documentContext);
+
+    // В обычных формах директивы не применяются, весь модуль клиентский.
+    assertThat(diagnostics).hasSize(1);
+  }
+
+  @Test
+  void reportsInClientOnlyCommonModule() {
+    var documentContext = commonModuleDocumentContext(
+      CommonModule.builder().clientManagedApplication(true).build());
+
+    var diagnostics = diagnosticWithOwner(HTTP_CONNECTION).getDiagnostics(documentContext);
+
+    assertThat(diagnostics).hasSize(1);
+  }
+
+  @Test
+  void doesNotFireInMixedCommonModule() {
+    var documentContext = commonModuleDocumentContext(
+      CommonModule.builder().clientManagedApplication(true).server(true).build());
+
+    var diagnostics = diagnosticWithOwner(HTTP_CONNECTION).getDiagnostics(documentContext);
+
+    assertThat(diagnostics).isEmpty();
+  }
+
+  @Test
+  void doesNotFireInCommonModuleWithServerCall() {
+    var documentContext = commonModuleDocumentContext(
+      CommonModule.builder().clientManagedApplication(true).serverCall(true).build());
+
+    var diagnostics = diagnosticWithOwner(HTTP_CONNECTION).getDiagnostics(documentContext);
+
+    assertThat(diagnostics).isEmpty();
+  }
+
+  @Test
+  void treatsMissingCommonModuleMetadataAsClient() {
+    var documentContext = commonModuleDocumentContext(null);
+
+    var diagnostics = diagnosticWithOwner(HTTP_CONNECTION).getDiagnostics(documentContext);
+
+    // Модуль без метаданных не считается строго серверным.
+    assertThat(diagnostics).hasSize(1);
+  }
+
+  private DeprecatedHttpConnectionMethodDiagnostic diagnosticWithOwner(String qualifiedName) {
     var typeService = mock(TypeService.class);
-    var owner = new TypeRef(TypeKind.PLATFORM, "HTTPСоединение");
+    var owner = new TypeRef(TypeKind.PLATFORM, qualifiedName);
     var typedMember = new TypeService.TypedMember(
       owner,
       MemberDescriptor.method("Получить"),
@@ -86,14 +222,20 @@ class DeprecatedHttpConnectionMethodDiagnosticTest
 
     var diagnostic = new DeprecatedHttpConnectionMethodDiagnostic(typeService);
     diagnostic.setInfo(diagnosticInstance.getInfo());
+    return diagnostic;
+  }
 
-    var documentContext = spy(getDocumentContext());
-    when(documentContext.getModuleType()).thenReturn(ModuleType.FormModule);
+  private DocumentContext formDocumentContext(String text) {
+    var documentContext = spy(TestUtils.getDocumentContext(text, context));
+    doReturn(ModuleType.FormModule).when(documentContext).getModuleType();
+    return documentContext;
+  }
 
-    List<Diagnostic> diagnostics = diagnostic.getDiagnostics(documentContext);
-
-    // Фикстура: &НаКлиенте метод (срабатывает), &НаСервере и
-    // &НаСервереБезКонтекста (не срабатывают) → ровно 1 диагностика.
-    assertThat(diagnostics).hasSize(1);
+  private DocumentContext commonModuleDocumentContext(CommonModule mdObject) {
+    var documentContext = spy(TestUtils.getDocumentContext(
+      CLIENT_METHOD_TEMPLATE.formatted("Получить"), context));
+    doReturn(ModuleType.CommonModule).when(documentContext).getModuleType();
+    doReturn(Optional.ofNullable(mdObject)).when(documentContext).getMdObject();
+    return documentContext;
   }
 }
