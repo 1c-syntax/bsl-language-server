@@ -46,6 +46,7 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
   private final EventContractFormatter eventContractFormatter;
   private final EventContractsIndex eventContractsIndex;
   private final PlatformMetadataRenderer metadataRenderer;
+  private final MethodAvailabilityRenderer availabilityRenderer;
 
   @Override
   public MarkupContent getContent(Reference reference) {
@@ -128,6 +129,8 @@ public class MethodSymbolMarkupContentBuilder implements MarkupContentBuilder {
       metadataRenderer.append(eventMetadata, eventContract.get().metadata());
       descriptionFormatter.addSectionIfNotEmpty(markupBuilder, eventMetadata.toString().strip());
     }
+
+    descriptionFormatter.addSectionIfNotEmpty(markupBuilder, availabilityRenderer.render(symbol));
 
     var content = markupBuilder.toString();
 

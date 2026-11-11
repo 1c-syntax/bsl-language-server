@@ -41,10 +41,16 @@ jobs:
         pip install --upgrade pip
         pip install mkdocs mkdocs-material pygments-bsl
     
-    - name: Dowload latest GitHub Pages
+    - name: Download latest GitHub Pages
       run: |
-        wget https://github.com/${{ github.repository }}/archive/gh-pages.zip || true
-        unzip gh-pages.zip || true
+        wget --tries=3 --timeout=30 https://github.com/${{ github.repository }}/archive/gh-pages.zip
+        unzip gh-pages.zip
+        for page in index.html en/index.html dev/index.html dev/en/index.html dev/bench/index.html dev/bench/data.js; do
+          if [ ! -s "${GITHUB_REPOSITORY#*/}-gh-pages/$page" ]; then
+            echo "::error::Previous GitHub Pages is missing $page"
+            exit 1
+          fi
+        done
         mkdir tmp-bench
     
     - name: Save latest Develop
@@ -52,25 +58,27 @@ jobs:
       run: |
         mkdir public
         mkdir public/dev
-        cp -R ${GITHUB_REPOSITORY#*/}-gh-pages/dev/. public/dev || true
+        cp -R ${GITHUB_REPOSITORY#*/}-gh-pages/dev/. public/dev
         
     - name: Save latest Master
       if: github.ref == 'refs/heads/develop'
       run: |
         mkdir public
-        cp -R ${GITHUB_REPOSITORY#*/}-gh-pages/. public || true
-        rm -rf public/dev || true
+        cp -R ${GITHUB_REPOSITORY#*/}-gh-pages/. public
+        rm -rf public/dev
         mkdir public/dev
 
     - name: Backup benchmark (master)
       if: github.ref == 'refs/heads/master'
       run: |
-        cp -R ${GITHUB_REPOSITORY#*/}-gh-pages/bench/. tmp-bench || true
+        if [ -d "${GITHUB_REPOSITORY#*/}-gh-pages/bench" ]; then
+          cp -R ${GITHUB_REPOSITORY#*/}-gh-pages/bench/. tmp-bench
+        fi
 
     - name: Backup benchmark (develop)
       if: github.ref == 'refs/heads/develop'
       run: |
-        cp -R ${GITHUB_REPOSITORY#*/}-gh-pages/dev/bench/. tmp-bench || true
+        cp -R ${GITHUB_REPOSITORY#*/}-gh-pages/dev/bench/. tmp-bench
             
     - name: Patch Develop
       if: github.ref == 'refs/heads/develop'
@@ -146,6 +154,15 @@ jobs:
         mkdir public/dev/en
         cp -R temp/site/. public/dev/en
         
+    - name: Validate publication
+      run: |
+        for page in index.html en/index.html dev/index.html dev/en/index.html dev/bench/index.html dev/bench/data.js; do
+          if [ ! -s "public/$page" ]; then
+            echo "::error::GitHub Pages publication is missing $page"
+            exit 1
+          fi
+        done
+
     - name: Deploy
       uses: peaceiris/actions-gh-pages@v4.1.0
       with:

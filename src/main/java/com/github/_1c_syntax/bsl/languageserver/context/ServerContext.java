@@ -99,6 +99,7 @@ public class ServerContext {
    * регистра в {@code CaseInsensitiveMap} конфигурации. Сбрасывается в {@link #clear()}.
    */
   private final Cache<String, Optional<CommonModule>> commonModuleCache;
+  private volatile CommonModuleNameFilter commonModuleNameFilter = CommonModuleNameFilter.ALLOW_ALL;
 
   @Getter
   @Setter
@@ -463,6 +464,7 @@ public class ServerContext {
       documentsByMDORef.clear();
       mdoRefs.clear();
       documentLocks.clear();
+      commonModuleNameFilter = CommonModuleNameFilter.ALLOW_ALL;
       commonModuleCache.invalidateAll();
       configurationMetadata.clear();
     } finally {
@@ -695,6 +697,22 @@ public class ServerContext {
     return commonModuleCache.get(name, key -> getConfiguration().findCommonModule(key));
   }
 
+  /**
+   * Найти общий модуль по полному имени типа.
+   * <p>
+   * Составное имя отбрасывается только тогда, когда загруженный словарь гарантированно
+   * не содержит имён с точкой. Пока метаданные не прочитаны, действует обычный резолв.
+   *
+   * @param name полное имя типа.
+   * @return общий модуль с совпадающим именем либо пустой результат.
+   */
+  public Optional<CommonModule> findCommonModuleForTypeName(String name) {
+    if (configurationMetadata.isPresent() && !commonModuleNameFilter.mayContain(name)) {
+      return Optional.empty();
+    }
+    return findCommonModule(name);
+  }
+
   private DocumentContext createDocumentContext(URI uri) {
     var whilePreparing = isPreparing();
     var documentContext = documentContextProvider.getObject(uri, this);
@@ -719,21 +737,27 @@ public class ServerContext {
    * метаданных и ссылку на него ({@link DocumentContext#rebindToConfiguration()}) — и
    * переложить документ в индексе по ссылке на объект метаданных.
    * <p>
-   * Блокировка документа на запись должна быть взята.
+   * Берёт блокировку документа на запись.
    *
    * @param documentContext документ.
    * @return {@code true}, если дерево символов документа построено заново; {@code false}, если
    *     документ уже снят с рабочей области или у него нет текста.
    */
-  boolean rebindDocument(DocumentContext documentContext) {
+  public boolean rebindDocument(DocumentContext documentContext) {
     var uri = documentContext.getUri();
-    if (documents.get(uri) != documentContext) {
-      return false;
+    var lock = getDocumentLock(uri);
+    lock.writeLock().lock();
+    try {
+      if (documents.get(uri) != documentContext) {
+        return false;
+      }
+      removeDocumentMdoRefByUri(uri);
+      var rebuilt = documentContext.rebindToConfiguration();
+      addMdoRefByUri(uri, documentContext);
+      return rebuilt;
+    } finally {
+      lock.writeLock().unlock();
     }
-    removeDocumentMdoRefByUri(uri);
-    var rebuilt = documentContext.rebindToConfiguration();
-    addMdoRefByUri(uri, documentContext);
-    return rebuilt;
   }
 
   private boolean isPreparing() {
@@ -762,6 +786,8 @@ public class ServerContext {
       Thread.currentThread().interrupt();
     }
 
+    commonModuleNameFilter = CommonModuleNameFilter.fromNames(
+      configuration.getMergedConfiguration().getCommonModulesByName().keySet());
     progress.endProgress(getMessage("computeConfigurationMetadataDone"));
     LOGGER.info("Configuration metadata of {} read in {} ms", configurationRoot, millisSince(startedAt));
 

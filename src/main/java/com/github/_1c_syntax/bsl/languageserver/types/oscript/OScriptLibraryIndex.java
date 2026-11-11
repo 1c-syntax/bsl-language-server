@@ -425,6 +425,13 @@ public class OScriptLibraryIndex {
     // через события.
     try {
       var dc = serverContext.addDocument(uri);
+      // Документ могли открыть до обнаружения его роли в библиотеке. Тогда тип
+      // и индекс по mdoRef ещё описывают прежнюю привязку, даже после перечитывания файла.
+      var registeredType = oScriptModuleTypeResolver.resolve(uri).orElseThrow();
+      if (dc.getModuleType() != registeredType
+        || serverContext.getDocument(dc.getMdoRef(), dc.getModuleType()).orElse(null) != dc) {
+        serverContext.rebindDocument(dc);
+      }
       serverContext.rebuildDocument(dc);
       // Явный вызов: гарантирует регистрацию USER-типа в актуальном
       // workspace-scope (event-listener тоже сработает, но он не
