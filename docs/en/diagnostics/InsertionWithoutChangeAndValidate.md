@@ -7,6 +7,8 @@ The `#Insert` / `#EndInsert` directive is used inside a method (procedure or fun
 
 The `#Insert` and `#EndInsert` directives are intended for configuration extension code insertion. The platform only allows them in methods annotated with `&ChangeAndValidate`, which explicitly declare the intent to modify the code of the extended object.
 
+Insertion at the module level (outside methods) does not require the annotation and is not reported by this diagnostic.
+
 ## Examples
 
 ### Incorrect
