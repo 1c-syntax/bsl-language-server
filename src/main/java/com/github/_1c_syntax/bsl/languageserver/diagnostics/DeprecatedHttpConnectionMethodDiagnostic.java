@@ -82,11 +82,11 @@ public class DeprecatedHttpConnectionMethodDiagnostic extends AbstractVisitorDia
 
   private static final Pattern MESSAGE_PATTERN = CaseInsensitivePattern.compile(
     "(ВызватьHTTPМетод|CallHTTPMethod|"
-    + "Записать|Write|"
-    + "Изменить|Change|Modify|"
-    + "ОтправитьДляОбработки|SendForProcessing|"
+    + "Записать|Put|"
+    + "Изменить|Patch|"
+    + "ОтправитьДляОбработки|Post|"
     + "Получить|Get|"
-    + "ПолучитьЗаголовки|GetHeaders|"
+    + "ПолучитьЗаголовки|Head|"
     + "Удалить|Delete)"
   );
 

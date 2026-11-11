@@ -17,11 +17,11 @@ The diagnostic does not fire in server modules, in methods with the `&AtServer`,
 ## Deprecated methods
 
 - `CallHTTPMethod()` → `CallHTTPMethodAsync()`
-- `Write()` → `WriteAsync()`
-- `Change()` → `ChangeAsync()`
-- `SendForProcessing()` → `SendForProcessingAsync()`
+- `Put()` → `PutAsync()`
+- `Patch()` → `PatchAsync()`
+- `Post()` → `PostAsync()`
 - `Get()` → `GetAsync()`
-- `GetHeaders()` → `GetHeadersAsync()`
+- `Head()` → `HeadAsync()`
 - `Delete()` → `DeleteAsync()`
 
 ## Examples
