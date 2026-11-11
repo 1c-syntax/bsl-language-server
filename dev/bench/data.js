@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794381451297,
+  "lastUpdate": 1794383182145,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -47182,6 +47182,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.8403694502845046",
             "extra": "mean: 89.87657046318054 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "dbdfbc327c16d37a137d3e7431ca2eda9b614741",
+          "message": "Merge pull request #4925 from 1c-syntax/perf/lsp-trace-without-idle-serialization-20261108\n\nperf(lsp): не форматировать отключённый trace",
+          "timestamp": "2026-11-11T08:11:53+01:00",
+          "tree_id": "2684857c419ede05e62673b98efcb20d21970e65",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/dbdfbc327c16d37a137d3e7431ca2eda9b614741"
+        },
+        "date": 1794383154459,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 89.32762964566548,
+            "unit": "sec",
+            "range": "stddev: 2.714937069295792",
+            "extra": "mean: 89.32762964566548 sec\nrounds: 3"
           }
         ]
       }
