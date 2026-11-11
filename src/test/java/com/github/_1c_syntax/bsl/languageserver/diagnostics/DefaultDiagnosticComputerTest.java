@@ -33,11 +33,15 @@ import org.eclipse.lsp4j.Range;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.Executors;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -46,6 +50,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -121,7 +126,8 @@ class DefaultDiagnosticComputerTest {
 
 
   @Test
-  void availabilityRunsFirstWhileResultsKeepTheOriginalOrder() {
+  void respectsProvidedDiagnosticOrderForDifferentDiagnosticClasses() {
+    // given
     executor.shutdownNow();
     executor = Executors.newSingleThreadExecutor();
     var order = new java.util.ArrayList<String>();
@@ -144,8 +150,32 @@ class DefaultDiagnosticComputerTest {
       return List.of(lastResult);
     });
     var computer = computerWith(List.of(first, availability, last));
-    assertThat(computer.compute(documentContext)).containsExactly(firstResult, availabilityResult, lastResult);
-    assertThat(order).containsExactly("availability", "first", "last");
+
+    // when
+    var result = computer.compute(documentContext);
+
+    // then
+    assertThat(result).containsExactly(firstResult, availabilityResult, lastResult);
+    assertThat(order).containsExactly("first", "availability", "last");
+  }
+
+  @Test
+  void submissionFailureCancelsSubmittedDiagnosticsAndPreservesTheFailure() {
+    // given
+    executor.shutdownNow();
+    executor = mock(ExecutorService.class);
+    var submitted = new FutureTask<List<Diagnostic>>(List::of);
+    var failure = new RejectedExecutionException("executor stopped");
+    when(executor.submit(ArgumentMatchers.<Callable<List<Diagnostic>>>any()))
+      .thenReturn(submitted).thenThrow(failure);
+    var computer = computerWith(List.of(mock(BSLDiagnostic.class), mock(BSLDiagnostic.class)));
+
+    // when
+    var thrown = catchThrowable(() -> computer.compute(documentContext));
+
+    // then
+    assertThat(thrown).isSameAs(failure);
+    assertThat(submitted.isCancelled()).isTrue();
   }
 
   @Test

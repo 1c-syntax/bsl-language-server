@@ -37,7 +37,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -56,8 +55,6 @@ import java.util.function.Predicate;
 @Slf4j
 @RequiredArgsConstructor
 public abstract class DefaultDiagnosticComputer implements DiagnosticComputer {
-  private static final int DIAGNOSTIC_SUBMISSION_PASSES = 2;
-
   private final LanguageServerConfiguration configuration;
 
   @Qualifier("diagnosticComputerExecutor")
@@ -94,21 +91,18 @@ public abstract class DefaultDiagnosticComputer implements DiagnosticComputer {
     var memberLookups = new MemberLookupSession();
     var declarations = new DiagnosticDeclarationSession();
     var enabled = diagnostics(documentContext);
-    List<Future<List<Diagnostic>>> futures = new ArrayList<>(Collections.nCopies(enabled.size(), null));
-    // Проверка доступности использует вывод типов и часто завершает весь пакет.
-    // Запускаем её раньше, а результаты собираем в исходном порядке диагностик.
-    for (var pass = 0; pass < DIAGNOSTIC_SUBMISSION_PASSES; pass++) {
-      for (var index = 0; index < enabled.size(); index++) {
-        var diagnostic = enabled.get(index);
-        if ((diagnostic instanceof MemberAccessUnavailableDiagnostic) != (pass == 0)) {
-          continue;
-        }
-        futures.set(index, executor.submit(() -> {
+    List<Future<List<Diagnostic>>> futures = new ArrayList<>(enabled.size());
+    try {
+      for (var diagnostic : enabled) {
+        futures.add(executor.submit(() -> {
           try (var scope = memberLookups.open(); var declarationScope = declarations.open()) {
             return safeGetDiagnostics(diagnostic, documentContext);
           }
         }));
       }
+    } catch (RuntimeException exception) {
+      futures.forEach(future -> future.cancel(true));
+      throw exception;
     }
 
     return futures;
