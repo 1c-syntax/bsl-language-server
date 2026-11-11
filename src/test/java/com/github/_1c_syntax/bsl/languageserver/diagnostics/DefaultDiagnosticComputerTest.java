@@ -90,7 +90,8 @@ class DefaultDiagnosticComputerTest {
     var good = mockDiagnostic("Good", true, List.of(expected));
 
     var bad = mock(BSLDiagnostic.class);
-    when(bad.getInfo()).thenReturn(diagnosticInfoWithCode("Bad"));
+    var badInfo = diagnosticInfoWithCode("Bad");
+    when(bad.getInfo()).thenReturn(badInfo);
     when(bad.getDiagnostics(documentContext)).thenThrow(new RuntimeException("boom"));
 
     var computer = computerWith(List.of(good, bad));
@@ -103,7 +104,8 @@ class DefaultDiagnosticComputerTest {
   @Test
   void wrapsNonRuntimeFailureFromDiagnostic() {
     var bad = mock(BSLDiagnostic.class);
-    when(bad.getInfo()).thenReturn(diagnosticInfoWithCode("Bad"));
+    var badInfo = diagnosticInfoWithCode("Bad");
+    when(bad.getInfo()).thenReturn(badInfo);
     when(bad.getDiagnostics(documentContext)).thenThrow(new AssertionError("fatal"));
 
     var computer = computerWith(List.of(bad));
