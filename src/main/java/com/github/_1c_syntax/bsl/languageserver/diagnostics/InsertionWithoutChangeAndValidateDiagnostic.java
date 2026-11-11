@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
@@ -28,9 +29,11 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
+import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Position;
+
+import java.util.HashSet;
 
 /**
  * Директива {@code #Вставка} / {@code #КонецВставки} используется внутри метода
@@ -52,24 +55,44 @@ import org.eclipse.lsp4j.Position;
 public class InsertionWithoutChangeAndValidateDiagnostic extends AbstractDiagnostic {
 
   @Override
-  public void check() {
-    var tokens = documentContext.getTokens();
+  protected void check() {
+    var insertionDirectives = documentContext.getTokens().stream()
+      .filter(InsertionWithoutChangeAndValidateDiagnostic::isInsertionDirective)
+      .toList();
 
-    documentContext.getSymbolTree().getMethods()
-      .stream()
-      .filter(method -> method.getAnnotations().stream()
-        .map(Annotation::getKind)
-        .noneMatch(kind -> kind == AnnotationKind.CHANGEANDVALIDATE))
-      .filter(method -> tokens.stream()
-        .filter(token -> token.getType() == BSLLexer.PREPROC_INSERT
-          || token.getType() == BSLLexer.PREPROC_ENDINSERT)
-        .anyMatch(token -> {
-          var tokenPosition = new Position(token.getLine() - 1, 0);
-          return Ranges.containsPosition(method.getRange(), tokenPosition);
-        }))
-      .forEach(method ->
-        diagnosticStorage.addDiagnostic(method.getSubNameRange(),
-          info.getMessage(method.getName())));
+    if (insertionDirectives.isEmpty()) {
+      return;
+    }
+
+    var symbolTree = documentContext.getSymbolTree();
+    var reportedMethods = new HashSet<MethodSymbol>();
+
+    for (var directive : insertionDirectives) {
+      var directivePosition = new Position(directive.getLine() - 1, directive.getCharPositionInLine());
+
+      // Вставка на уровне модуля (вне методов) аннотации не требует.
+      if (!(symbolTree.getSymbolAtPosition(directivePosition) instanceof MethodSymbol method)) {
+        continue;
+      }
+
+      // Методу с несколькими директивами достаточно одной диагностики.
+      if (hasChangeAndValidate(method) || !reportedMethods.add(method)) {
+        continue;
+      }
+
+      diagnosticStorage.addDiagnostic(method.getSubNameRange(), info.getMessage(method.getName()));
+    }
+  }
+
+  private static boolean isInsertionDirective(Token token) {
+    return token.getType() == BSLLexer.PREPROC_INSERT
+      || token.getType() == BSLLexer.PREPROC_ENDINSERT;
+  }
+
+  private static boolean hasChangeAndValidate(MethodSymbol method) {
+    return method.getAnnotations().stream()
+      .map(Annotation::getKind)
+      .anyMatch(kind -> kind == AnnotationKind.CHANGEANDVALIDATE);
   }
 
 }
