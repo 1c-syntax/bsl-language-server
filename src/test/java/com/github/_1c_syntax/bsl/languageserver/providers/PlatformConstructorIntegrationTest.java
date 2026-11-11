@@ -82,8 +82,25 @@ class PlatformConstructorIntegrationTest extends AbstractServerContextAwareTest 
     assertThat(hover).isPresent();
     var value = hover.get().getContents().getRight().getValue();
     assertThat(value).contains("Новый Массив(");
-    // 2 аргумента не подходят ни под один вариант (0/1/1) — должен быть disclaimer
-    assertThat(value).contains("Не найдено описание");
+    // OneScript принимает любое число размеров массива.
+    assertThat(value).contains("Измерения...").doesNotContain("Не найдено описание");
+  }
+
+  @Test
+  void structureHoverShowsConstructorUnionAndVariadicValues() {
+    initServerContext();
+    var content = "А = Новый Структура(\"Первый,Второй\", 1, 2);\n";
+    var dc = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
+    var params = new HoverParams();
+    params.setPosition(new Position(0, content.indexOf("Структура") + 1));
+
+    var hover = hoverProvider.getHover(dc, params);
+
+    assertThat(hover).isPresent();
+    assertThat(hover.orElseThrow().getContents().getRight().getValue())
+      .contains("Новый Структура(КлючиИлиСтруктура, Параметры...)")
+      .contains("Строка", "ФиксированнаяСтруктура")
+      .doesNotContain("Параметрaram", "Не найдено описание");
   }
 
   @Test
