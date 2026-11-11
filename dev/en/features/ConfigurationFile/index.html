@@ -2205,6 +2205,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#Filtering-completion-suggestions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Filtering completion suggestions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#Global-and-Local-Configuration" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2347,6 +2358,11 @@ A function returning a number under <code>#If Server</code> and a string under <
 the union <code>String | Number</code>. These branches are not treated as unconditionally unreachable.</p>
 <p>The option does not apply to OneScript. Changing it recalculates context-dependent types and refreshes
 diagnostics and hints. Recalculation can take time in large projects.</p>
+<h2 id="Filtering-completion-suggestions">Filtering completion suggestions<a class="headerlink" href="#Filtering-completion-suggestions" title="Permanent link">&para;</a></h2>
+<p>The <code>completion.hideUnavailableByContext</code> setting defaults to <code>true</code>: suggestions known to be unavailable
+in every current compilation context are hidden. Set it to <code>false</code> to keep them at the end of the list.
+Partially available suggestions, unknown availability and permitted server calls remain available.
+See <a href="../../capabilities/completion/">code completion</a> for details.</p>
 <h2 id="Global-and-Local-Configuration">Global and Local Configuration<a class="headerlink" href="#Global-and-Local-Configuration" title="Permanent link">&para;</a></h2>
 <p>BSL Language Server uses a two-level configuration system:</p>
 <ul>

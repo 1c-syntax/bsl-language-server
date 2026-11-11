@@ -20,6 +20,7 @@ com.github._1c_syntax.bsl.languageserver.completion
 com.github._1c_syntax.bsl.languageserver.configuration
 com.github._1c_syntax.bsl.languageserver.configuration.capabilities
 com.github._1c_syntax.bsl.languageserver.configuration.codelens
+com.github._1c_syntax.bsl.languageserver.configuration.completion
 com.github._1c_syntax.bsl.languageserver.configuration.databind
 com.github._1c_syntax.bsl.languageserver.configuration.diagnostics
 com.github._1c_syntax.bsl.languageserver.configuration.documentlink

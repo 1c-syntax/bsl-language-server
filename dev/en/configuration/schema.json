@@ -720,6 +720,20 @@
         }
     },
     "properties": {
+        "completion": {
+            "$id": "#/properties/completion",
+            "type": "object",
+            "title": "Code completion configuration.",
+            "properties": {
+                "hideUnavailableByContext": {
+                    "$id": "#/properties/completion/hideUnavailableByContext",
+                    "type": "boolean",
+                    "default": true,
+                    "title": "Hide suggestions unavailable in the current compilation contexts.",
+                    "description": "Hide a suggestion only when it is known to be unavailable in every possible calling context and for every possible target. Keep partially available suggestions and suggestions with unknown availability. When disabled, unavailable suggestions remain at the end of the list."
+                }
+            }
+        },
         "supportThickClientFileMode": {
             "$id": "#/properties/supportThickClientFileMode",
             "type": "boolean",

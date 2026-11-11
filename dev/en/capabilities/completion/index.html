@@ -704,6 +704,28 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#Compilation-context-filtering-and-priority" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Compilation-context filtering and priority
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#Method-contexts-and-server-calls" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Method contexts and server calls
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#Global-functions-by-prefix" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2487,6 +2509,57 @@
 <p>Context-aware suggestions as you type: global functions, object methods and properties (with type inference), types after the <code>New</code> operator, keywords and local variables.</p>
 <p><strong>Shortcut:</strong> <code>Ctrl+Space</code></p>
 <p><a href="../">← All features</a></p>
+<h2 id="Compilation-context-filtering-and-priority">Compilation-context filtering and priority<a class="headerlink" href="#Compilation-context-filtering-and-priority" title="Permanent link">&para;</a></h2>
+<p>When metadata is known, suggestions are filtered and ordered using the current module, method directive and preprocessor branch. The project's automatically selected configuration modes and the shared <code>supportThickClientFileMode</code> setting are used. Known unavailable suggestions are hidden by default. Available suggestions come first, followed by suggestions available in only some possible contexts.</p>
+<p>Filtering is controlled in <code>.bsl-language-server.json</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="p">{</span>
+<span class="w">  </span><span class="nt">"completion"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+<span class="w">    </span><span class="nt">"hideUnavailableByContext"</span><span class="p">:</span><span class="w"> </span><span class="kc">true</span>
+<span class="w">  </span><span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
+<p>Set it to <code>false</code> to also show unavailable suggestions at the end of the list. Changes apply to the next completion request.
+A suggestion is hidden only when it is known to be unavailable in every current context and for every possible target.
+Partial availability and missing information do not cause suggestions to be removed.</p>
+<p>Ranking accounts for platform member and type availability, common-module visibility, application-method declaration conditions and permitted server transitions. A server method callable from the client therefore keeps its normal priority in client code.</p>
+<p>Application types inherit availability from their Syntax Assistant base type, such as <code>DocumentManager.&lt;Document name&gt;</code>.
+Common modules use their metadata flags even before their source file has been parsed. Global properties, including
+<code>Catalogs</code>, are ranked using their own availability and that of their value type.</p>
+<p>After a dot, receiver types are inferred in the current compilation contexts. When preprocessor branches assign different structures to a variable, repeating the condition selects the matching type: fields of the excluded type are not offered. The same context filter applies to members of the remaining type; when filtering is disabled, unavailable members stay in the list with a lower priority.</p>
+<p>Existing priorities for local names, fields, global functions and keywords, and the ordering of deprecated items, are preserved within each group. Missing availability information does not penalize a suggestion. OneScript, files without metadata and unknown compilation contexts retain the original ordering.</p>
+<h2 id="Method-contexts-and-server-calls">Method contexts and server calls<a class="headerlink" href="#Method-contexts-and-server-calls" title="Permanent link">&para;</a></h2>
+<p>Only a server-call marker appears to the right of the signature, before the return type, for example <code>→S · ValueTable</code>.
+The name, signature and inserted code are preserved. Labels follow the project's script variant, like platform
+method and type names; diagnostic messages separately follow the server's interface language.</p>
+<table>
+<thead>
+<tr>
+<th>Label</th>
+<th>Meaning</th>
+<th>In a Russian project</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>→S</code></td>
+<td>Calling from this position requires a transition to the server side</td>
+<td><code>→С</code></td>
+</tr>
+<tr>
+<td><code>→S?</code></td>
+<td>The transition depends on the mode or the selected call target</td>
+<td><code>→С?</code></td>
+</tr>
+</tbody>
+</table>
+<p>Compilation contexts and call explanations appear as plain text below the method documentation,
+including documentation loaded through completion resolve. They do not create a separate <code>detail</code> heading.
+The current directive and preprocessor branch determine the transition:
+a server method called from the server has no arrow. A local common-module call in file mode is not a server
+transition. A transition between form parts does not necessarily involve network communication.
+Platform method availability alone does not prove a server call. Unknown contexts and OneScript have no labels.
+Clients without structured label support receive the short label in the regular detail field after the signature
+and return type.</p>
 <h2 id="Global-functions-by-prefix">Global functions by prefix<a class="headerlink" href="#Global-functions-by-prefix" title="Permanent link">&para;</a></h2>
 <p>After typing <code>Сообщ</code> inside the procedure, prefix-based completion is triggered. The popup lists global functions starting with that string, including <code>Сообщить</code>.</p>
 <p><img alt="01-global-functions" src="https://github.com/user-attachments/assets/2b736119-f6b8-4b38-b17c-0d887e9f0718" /></p>
