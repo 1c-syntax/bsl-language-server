@@ -466,7 +466,11 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
       collectMultiWordMatches(fragments, documentFilter, bestScore, progress);
     }
 
-    var matches = new BestMatches(maxResults);
+    // Все совпадения помещаются в выдачу (в том числе без лимита) — хватает одной сортировки;
+    // иначе лучшие отбирает куча.
+    Matches matches = bestScore.size() <= maxResults
+      ? new AllMatches(bestScore.size())
+      : new BestMatches(maxResults);
     for (var scored : bestScore.entrySet()) {
       matches.offer(new Scored(scored.getValue(), scored.getKey()));
     }
@@ -532,7 +536,9 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
     var snapshot = snapshotEntries(documentFilter);
 
     var progress = new ScanProgress(cancelChecker);
-    var matches = new BestMatches(maxResults);
+    // Совпадений не больше, чем записей в снимке: если снимок помещается в выдачу (в том числе без
+    // лимита), хватает одной сортировки; иначе лучшие отбирает куча.
+    Matches matches = snapshot.size() <= maxResults ? new AllMatches() : new BestMatches(maxResults);
     for (var entry : snapshot) {
       progress.advance();
       var fuzzyScore = fuzzyTailScore(entry, lowerQuery, exclude);
@@ -986,13 +992,60 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
   }
 
   /**
+   * Накопитель кандидатов ранжированной выдачи.
+   */
+  private sealed interface Matches permits AllMatches, BestMatches {
+
+    /**
+     * Учесть кандидата.
+     *
+     * @param candidate кандидат со скором
+     */
+    void offer(Scored candidate);
+
+    /**
+     * Накопленные записи по убыванию релевантности.
+     *
+     * @return записи от лучшей к худшей
+     */
+    List<Entry> ranked();
+  }
+
+  /**
+   * Накопитель всех кандидатов: список и одна сортировка в конце. Подходит, когда все кандидаты
+   * заведомо помещаются в выдачу, в том числе для выдачи без лимита.
+   */
+  private static final class AllMatches implements Matches {
+    private final List<Scored> candidates;
+
+    private AllMatches() {
+      candidates = new ArrayList<>();
+    }
+
+    private AllMatches(int expectedSize) {
+      candidates = new ArrayList<>(expectedSize);
+    }
+
+    @Override
+    public void offer(Scored candidate) {
+      candidates.add(candidate);
+    }
+
+    @Override
+    public List<Entry> ranked() {
+      candidates.sort(Comparator.naturalOrder());
+      return candidates.stream().map(Scored::entry).toList();
+    }
+  }
+
+  /**
    * Накопитель лучших кандидатов: держит не больше {@code limit} кандидатов в куче, наверху которой
    * худший из них, поэтому отбор стоит {@code O(n log limit)} вместо сортировки всех совпадений.
    * <p>
    * Кандидат, равный худшему при заполненной куче, не вытесняет его. Порядок равных кандидатов, как и
    * при сортировке всех совпадений, не определён: они приходят из обхода карт по идентичности.
    */
-  private static final class BestMatches {
+  private static final class BestMatches implements Matches {
     private final int limit;
     private final PriorityQueue<Scored> worstFirst = new PriorityQueue<>(Comparator.reverseOrder());
 
@@ -1005,7 +1058,8 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
      *
      * @param candidate кандидат со скором
      */
-    private void offer(Scored candidate) {
+    @Override
+    public void offer(Scored candidate) {
       if (worstFirst.size() < limit) {
         worstFirst.add(candidate);
         return;
@@ -1017,12 +1071,8 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
       }
     }
 
-    /**
-     * Отобранные записи по убыванию релевантности.
-     *
-     * @return записи от лучшей к худшей
-     */
-    private List<Entry> ranked() {
+    @Override
+    public List<Entry> ranked() {
       var ranked = new ArrayList<>(worstFirst);
       ranked.sort(Comparator.naturalOrder());
       return ranked.stream().map(Scored::entry).toList();
