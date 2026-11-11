@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.Availability;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
+import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
@@ -307,7 +308,7 @@ class CompletionContextFilteringTest extends AbstractServerContextAwareTest {
     var source = """
       #If ThinClient Then
       &AtClient
-      Procedure Открыть()
+      Procedure Открыть(ThinOnlyParameter)
       EndProcedure
       #EndIf
       &AtClient
@@ -321,12 +322,14 @@ class CompletionContextFilteringTest extends AbstractServerContextAwareTest {
       source.replace("|", ""), context);
     var selfType = globals.moduleTypeRefByUri(document.getUri()).orElseThrow();
     registry.registerMemberOverride(selfType, () -> List.of(
-      MemberDescriptor.method("Открыть", "", List.of()).withMetadata(metadata(Set.of(Availability.WEB_CLIENT)))
+      MemberDescriptor.method("Открыть", "", List.of(SignatureDescriptor.EMPTY))
+        .withMetadata(metadata(Set.of(Availability.WEB_CLIENT)))
     ), FileType.BSL);
 
     var items = complete(document, position(source));
 
-    assertThat(items).filteredOn(item -> item.getLabel().equals("Открыть")).hasSize(1);
+    assertThat(items).filteredOn(item -> item.getLabel().equals("Открыть")).singleElement()
+      .satisfies(item -> assertThat(item.getInsertText()).isEqualTo("Открыть()"));
   }
 
   private List<CompletionItem> form(String source) {
