@@ -727,4 +727,107 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
     assertThatThrownBy(() -> index.search("Символ", cancelChecker))
       .isInstanceOf(CancellationException.class);
   }
+
+  @Test
+  void searchWithDocumentFilterAndLimitReturnsBestMatchesOfThatDocument() {
+    // given — точное совпадение есть в обоих документах, отбор оставляет первый
+    var requested = TestUtils.getDocumentContext(
+      Path.of("./src/test/resources/types/index/ОтборЗапрошенный.bsl").toUri(), """
+      Процедура НачалоДатаОтчёта()
+      КонецПроцедуры
+      Процедура ДатаНачала()
+      КонецПроцедуры
+      Процедура Дата()
+      КонецПроцедуры
+      """);
+    var other = TestUtils.getDocumentContext(
+      Path.of("./src/test/resources/types/index/ОтборДругой.bsl").toUri(), """
+      Процедура Дата()
+      КонецПроцедуры
+      """);
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(requested));
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(other));
+    var requestedUri = requested.getUri();
+
+    // when
+    var limited = index.search("Дата", uri -> uri.equals(requestedUri), 2, NO_CANCEL);
+
+    // then — два лучших совпадения запрошенного документа в том же порядке, что у полной выдачи
+    var fullOfRequested = index.search("Дата", NO_CANCEL).stream()
+      .filter(entry -> entry.uri().equals(requestedUri))
+      .limit(2)
+      .toList();
+    assertThat(limited)
+      .extracting(Entry::name)
+      .containsExactly("Дата", "ДатаНачала");
+    assertThat(limited).containsExactlyElementsOf(fullOfRequested);
+  }
+
+  @Test
+  void emptyQueryWithDocumentFilterAndLimitStopsAtLimit() {
+    // given
+    var requested = TestUtils.getDocumentContext(
+      Path.of("./src/test/resources/types/index/ОтборПустогоЗапроса.bsl").toUri(), """
+      Процедура Первая()
+      КонецПроцедуры
+      Процедура Вторая()
+      КонецПроцедуры
+      Процедура Третья()
+      КонецПроцедуры
+      """);
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(requested));
+    var requestedUri = requested.getUri();
+
+    // when
+    var limited = index.search("", uri -> uri.equals(requestedUri), 2, NO_CANCEL);
+
+    // then
+    assertThat(limited)
+      .hasSize(2)
+      .allMatch(entry -> entry.uri().equals(requestedUri));
+  }
+
+  @Test
+  void searchFuzzyTailWithDocumentFilterAndLimitKeepsBestOfThatDocument() {
+    // given — для «кумен» подстрочное совпадение ранжируется выше подпоследовательностного
+    var requested = TestUtils.getDocumentContext(
+      Path.of("./src/test/resources/types/index/ОтборХвостаЗапрошенный.bsl").toUri(), """
+      Процедура КрасныйУзелМаленький()
+      КонецПроцедуры
+      Процедура ПровестиДокумент()
+      КонецПроцедуры
+      """);
+    var other = TestUtils.getDocumentContext(
+      Path.of("./src/test/resources/types/index/ОтборХвостаДругой.bsl").toUri(), """
+      Процедура ПровестиДокумент()
+      КонецПроцедуры
+      """);
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(requested));
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(other));
+    var requestedUri = requested.getUri();
+
+    // when
+    var limited = index.searchFuzzyTail("кумен", emptyExclude(), uri -> uri.equals(requestedUri), 1, NO_CANCEL);
+
+    // then
+    assertThat(limited).singleElement().satisfies(entry -> {
+      assertThat(entry.name()).isEqualTo("ПровестиДокумент");
+      assertThat(entry.uri()).isEqualTo(requestedUri);
+    });
+  }
+
+  @Test
+  void searchWithZeroLimitReturnsNothing() {
+    // given
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ДатаНулевогоЛимита()
+      КонецПроцедуры
+      """);
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+
+    // when / then
+    assertThat(index.search("ДатаНулевогоЛимита", uri -> true, 0, NO_CANCEL)).isEmpty();
+    assertThat(index.search("", uri -> true, 0, NO_CANCEL)).isEmpty();
+    assertThat(index.searchFuzzyTail("нулевого", emptyExclude(), uri -> true, 0, NO_CANCEL)).isEmpty();
+  }
 }

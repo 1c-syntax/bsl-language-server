@@ -57,11 +57,13 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.PriorityQueue;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Predicate;
 
 /**
  * Инкрементальный индекс символов рабочей области для запросов {@code workspace/symbol}.
@@ -70,7 +72,8 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
  * собираются один раз на событии {@link DocumentContextContentChangedEvent} в лёгкие
  * неизменяемые записи {@link Entry} (имя, его lowercase-форма, {@link org.eclipse.lsp4j.SymbolKind}, диапазон,
  * URI, теги и готовое имя контейнера). Запрос обслуживается из индекса с ранжированием по
- * релевантности; выдача возвращается целиком, без усечения.
+ * релевантности; выдача возвращается целиком либо, с отбором документов и лимитом, только лучшие
+ * записи отобранных документов.
  * <p>
  * Хранилище — {@link PatriciaTrie}; значение — список записей под ключом (имена не уникальны).
  * Одна запись кладётся под НЕСКОЛЬКИМИ ключами: lowercase-суффиксы имени, начинающиеся с каждого
@@ -183,6 +186,11 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
   // Скоры подстрочного (FuzzyMatcher.SCORE_SUBSTRING = 5) и подпоследовательностного
   // (FuzzyMatcher.SCORE_SUBSEQUENCE = 6 + позиция) совпадений принадлежат fuzzy-хвосту и живут в
   // FuzzyMatcher; они ранжируются ниже всех древесных скоров (0..4) этого индекса.
+
+  /**
+   * Отбор без ограничений: записи всех документов.
+   */
+  private static final Predicate<URI> ALL_DOCUMENTS = uri -> true;
 
   private static final Set<VariableKind> SUPPORTED_VARIABLE_KINDS = EnumSet.of(
     VariableKind.MODULE,
@@ -381,6 +389,29 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
    * @return полный ранжированный список найденных записей
    */
   public List<Entry> search(String query, CancelChecker cancelChecker) {
+    return search(query, ALL_DOCUMENTS, Integer.MAX_VALUE, cancelChecker);
+  }
+
+  /**
+   * Найти лучшие записи документов, прошедших отбор, с тем же ранжированием, что у
+   * {@link #search(String, CancelChecker)}.
+   * <p>
+   * Отбор по URI документа применяется до ранжирования, поэтому записи остальных документов не занимают
+   * места в выдаче. Из совпадений отбираются {@code maxResults} лучших без сортировки всех совпадений.
+   * Пустой запрос отдаёт первые {@code maxResults} записей отобранных документов без ранжирования.
+   *
+   * @param query          строка запроса пользователя (пустая строка означает «вернуть всё»)
+   * @param documentFilter отбор по URI документа записи
+   * @param maxResults     максимум записей в выдаче
+   * @param cancelChecker  проверяющий отмену запроса
+   * @return не больше {@code maxResults} записей отобранных документов по убыванию релевантности
+   */
+  public List<Entry> search(
+    String query,
+    Predicate<URI> documentFilter,
+    int maxResults,
+    CancelChecker cancelChecker
+  ) {
     cancelChecker.checkCanceled();
 
     var lowerQuery = query.toLowerCase(Locale.ENGLISH);
@@ -388,9 +419,9 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
     lock.readLock().lock();
     try {
       if (lowerQuery.isEmpty()) {
-        return collectAll(cancelChecker);
+        return collectAll(documentFilter, maxResults, cancelChecker);
       }
-      return searchMatching(query, lowerQuery, cancelChecker);
+      return searchMatching(query, lowerQuery, documentFilter, maxResults, cancelChecker);
     } finally {
       lock.readLock().unlock();
     }
@@ -409,29 +440,37 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
    * <p>
    * Одна запись присутствует под несколькими ключами и может совпасть по нескольким из них, поэтому
    * результат дедуплицируется по идентичности записи с сохранением лучшего (наименьшего) скора.
+   * Записи документов, не прошедших отбор, в накопитель не попадают.
    *
-   * @param query         исходный запрос пользователя (с регистром, для CamelCase-разбиения)
-   * @param lowerQuery    lowercase-запрос (непустой)
-   * @param cancelChecker проверяющий отмену запроса
-   * @return ранжированный список совпадений без дублей
+   * @param query          исходный запрос пользователя (с регистром, для CamelCase-разбиения)
+   * @param lowerQuery     lowercase-запрос (непустой)
+   * @param documentFilter отбор по URI документа записи
+   * @param maxResults     максимум записей в выдаче
+   * @param cancelChecker  проверяющий отмену запроса
+   * @return не больше {@code maxResults} лучших совпадений без дублей по убыванию релевантности
    */
-  private List<Entry> searchMatching(String query, String lowerQuery, CancelChecker cancelChecker) {
+  private List<Entry> searchMatching(
+    String query,
+    String lowerQuery,
+    Predicate<URI> documentFilter,
+    int maxResults,
+    CancelChecker cancelChecker
+  ) {
     Map<Entry, Integer> bestScore = new IdentityHashMap<>();
     var progress = new ScanProgress(cancelChecker);
 
     var fragments = queryFragments(query);
 
-    collectPrefixMatches(lowerQuery, bestScore, progress);
+    collectPrefixMatches(lowerQuery, documentFilter, bestScore, progress);
     if (fragments.size() >= MIN_MULTI_WORD_FRAGMENTS) {
-      collectMultiWordMatches(fragments, bestScore, progress);
+      collectMultiWordMatches(fragments, documentFilter, bestScore, progress);
     }
 
-    var matches = new ArrayList<Scored>(bestScore.size());
+    var matches = new BestMatches(maxResults);
     for (var scored : bestScore.entrySet()) {
-      matches.add(new Scored(scored.getValue(), scored.getKey()));
+      matches.offer(new Scored(scored.getValue(), scored.getKey()));
     }
-    matches.sort(Comparator.naturalOrder());
-    return matches.stream().map(Scored::entry).toList();
+    return matches.ranked();
   }
 
   /**
@@ -458,6 +497,31 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
    * @return ранжированный список fuzzy-совпадений, не пересекающийся с {@code exclude}
    */
   public List<Entry> searchFuzzyTail(String query, Collection<Entry> exclude, CancelChecker cancelChecker) {
+    return searchFuzzyTail(query, exclude, ALL_DOCUMENTS, Integer.MAX_VALUE, cancelChecker);
+  }
+
+  /**
+   * Найти лучшие записи fuzzy-хвоста среди документов, прошедших отбор, с тем же ранжированием, что у
+   * {@link #searchFuzzyTail(String, Collection, CancelChecker)}.
+   * <p>
+   * В снимок для скана попадают только записи отобранных документов, а из совпадений отбираются
+   * {@code maxResults} лучших без сортировки всех совпадений.
+   *
+   * @param query          строка запроса пользователя; пустая строка даёт пустой результат
+   * @param exclude        записи, уже отданные быстрым путём, исключаемые из хвоста (по идентичности)
+   * @param documentFilter отбор по URI документа записи
+   * @param maxResults     максимум записей в выдаче
+   * @param cancelChecker  проверяющий отмену запроса
+   * @return не больше {@code maxResults} fuzzy-совпадений отобранных документов, не пересекающихся с
+   *         {@code exclude}, по убыванию релевантности
+   */
+  public List<Entry> searchFuzzyTail(
+    String query,
+    Collection<Entry> exclude,
+    Predicate<URI> documentFilter,
+    int maxResults,
+    CancelChecker cancelChecker
+  ) {
     cancelChecker.checkCanceled();
 
     var lowerQuery = query.toLowerCase(Locale.ENGLISH);
@@ -465,19 +529,18 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
       return List.of();
     }
 
-    var snapshot = snapshotEntries();
+    var snapshot = snapshotEntries(documentFilter);
 
     var progress = new ScanProgress(cancelChecker);
-    var matches = new ArrayList<Scored>();
+    var matches = new BestMatches(maxResults);
     for (var entry : snapshot) {
       progress.advance();
       var fuzzyScore = fuzzyTailScore(entry, lowerQuery, exclude);
       if (fuzzyScore >= 0) {
-        matches.add(new Scored(fuzzyScore, entry));
+        matches.offer(new Scored(fuzzyScore, entry));
       }
     }
-    matches.sort(Comparator.naturalOrder());
-    return matches.stream().map(Scored::entry).toList();
+    return matches.ranked();
   }
 
   /**
@@ -502,20 +565,23 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
   }
 
   /**
-   * Снять под read-lock снимок всех уникальных записей индекса, чтобы дальнейший скан шёл вне
-   * блокировки.
+   * Снять под read-lock снимок уникальных записей отобранных документов, чтобы дальнейший скан шёл
+   * вне блокировки.
    * <p>
    * Записи {@link Entry} неизменяемы, поэтому скоринг по снимку после отпускания блокировки
    * безопасен и не держит read-lock на всё время медленного линейного прохода.
    *
-   * @return новый список всех уникальных записей индекса на момент вызова
+   * @param documentFilter отбор по URI документа записей
+   * @return новый список уникальных записей отобранных документов на момент вызова
    */
-  private List<Entry> snapshotEntries() {
+  private List<Entry> snapshotEntries(Predicate<URI> documentFilter) {
     lock.readLock().lock();
     try {
       var snapshot = new ArrayList<Entry>();
-      for (var entries : indexedByUri.values()) {
-        snapshot.addAll(entries);
+      for (var documentEntries : indexedByUri.entrySet()) {
+        if (documentFilter.test(documentEntries.getKey())) {
+          snapshot.addAll(documentEntries.getValue());
+        }
       }
       return snapshot;
     } finally {
@@ -554,14 +620,18 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
    * дешёвым. Каждой выжившей записи назначается скор по порядку фрагментов
    * ({@link #SCORE_MULTI_WORD_IN_ORDER} либо {@link #SCORE_MULTI_WORD_UNORDERED}) и сливается в
    * накопитель через {@link Integer#min}, чтобы не понизить запись, уже найденную с лучшим скором
-   * (точное имя или префикс полного имени). Линейный скан в этом пути не выполняется.
+   * (точное имя или префикс полного имени). Линейный скан в этом пути не выполняется. Отбор по
+   * документу применяется к выжившим записям, а не к множествам фрагментов: так он проверяется
+   * для меньшего числа записей.
    *
-   * @param fragments lowercase-фрагменты запроса (≥2)
-   * @param bestScore накопитель лучшего скора на запись (по идентичности)
-   * @param progress  счётчик прогресса для периодической проверки отмены
+   * @param fragments      lowercase-фрагменты запроса (≥2)
+   * @param documentFilter отбор по URI документа записи
+   * @param bestScore      накопитель лучшего скора на запись (по идентичности)
+   * @param progress       счётчик прогресса для периодической проверки отмены
    */
   private void collectMultiWordMatches(
     List<String> fragments,
+    Predicate<URI> documentFilter,
     Map<Entry, Integer> bestScore,
     ScanProgress progress
   ) {
@@ -578,8 +648,10 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
     var intersection = intersect(perFragment, progress);
     for (var entry : intersection) {
       progress.advance();
-      var score = inOrder(entry, fragments) ? SCORE_MULTI_WORD_IN_ORDER : SCORE_MULTI_WORD_UNORDERED;
-      bestScore.merge(entry, score, Integer::min);
+      if (documentFilter.test(entry.uri())) {
+        var score = inOrder(entry, fragments) ? SCORE_MULTI_WORD_IN_ORDER : SCORE_MULTI_WORD_UNORDERED;
+        bestScore.merge(entry, score, Integer::min);
+      }
     }
   }
 
@@ -677,13 +749,16 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
    * совпавшему ключу: запрос == полное имя — {@link #SCORE_EXACT}; запрос — префикс полного имени —
    * {@link #SCORE_PREFIX}; запрос — префикс ключа начала слова (не полного имени) —
    * {@link #SCORE_WORD_PREFIX}. У записи берётся лучший (наименьший) скор по всем совпавшим ключам.
+   * Записи документов, не прошедших отбор, пропускаются.
    *
-   * @param lowerQuery lowercase-запрос (непустой)
-   * @param bestScore  накопитель лучшего скора на запись (по идентичности)
-   * @param progress   счётчик прогресса для периодической проверки отмены
+   * @param lowerQuery     lowercase-запрос (непустой)
+   * @param documentFilter отбор по URI документа записи
+   * @param bestScore      накопитель лучшего скора на запись (по идентичности)
+   * @param progress       счётчик прогресса для периодической проверки отмены
    */
   private void collectPrefixMatches(
     String lowerQuery,
+    Predicate<URI> documentFilter,
     Map<Entry, Integer> bestScore,
     ScanProgress progress
   ) {
@@ -691,8 +766,10 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
       var key = bucket.getKey();
       for (var entry : bucket.getValue()) {
         progress.advance();
-        var score = prefixScore(key, lowerQuery, entry);
-        bestScore.merge(entry, score, Integer::min);
+        if (documentFilter.test(entry.uri())) {
+          var score = prefixScore(key, lowerQuery, entry);
+          bestScore.merge(entry, score, Integer::min);
+        }
       }
     }
   }
@@ -714,21 +791,29 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
   }
 
   /**
-   * Собрать все записи индекса (для пустого запроса).
+   * Собрать записи отобранных документов (для пустого запроса), не больше {@code maxResults}.
    * <p>
    * Проход идёт по УНИКАЛЬНЫМ записям ({@link #indexedByUri}), а не по ключам дерева: запись лежит
-   * под несколькими ключами, и обход дерева вернул бы дубли и стоил бы кратно числу ключей.
+   * под несколькими ключами, и обход дерева вернул бы дубли и стоил бы кратно числу ключей. Отбор
+   * проверяется один раз на документ, проход останавливается на {@code maxResults} записях.
    *
-   * @param cancelChecker проверяющий отмену запроса
-   * @return все записи индекса
+   * @param documentFilter отбор по URI документа
+   * @param maxResults     максимум записей в выдаче
+   * @param cancelChecker  проверяющий отмену запроса
+   * @return не больше {@code maxResults} записей отобранных документов
    */
-  private List<Entry> collectAll(CancelChecker cancelChecker) {
+  private List<Entry> collectAll(Predicate<URI> documentFilter, int maxResults, CancelChecker cancelChecker) {
     var result = new ArrayList<Entry>();
     var progress = new ScanProgress(cancelChecker);
-    for (var entries : indexedByUri.values()) {
-      for (var entry : entries) {
-        progress.advance();
-        result.add(entry);
+    for (var documentEntries : indexedByUri.entrySet()) {
+      if (documentFilter.test(documentEntries.getKey())) {
+        for (var entry : documentEntries.getValue()) {
+          if (result.size() >= maxResults) {
+            return result;
+          }
+          progress.advance();
+          result.add(entry);
+        }
       }
     }
     return result;
@@ -897,6 +982,50 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
       if ((seen & (CANCEL_CHECK_INTERVAL - 1)) == 0) {
         cancelChecker.checkCanceled();
       }
+    }
+  }
+
+  /**
+   * Накопитель лучших кандидатов: держит не больше {@code limit} кандидатов в куче, наверху которой
+   * худший из них, поэтому отбор стоит {@code O(n log limit)} вместо сортировки всех совпадений.
+   * <p>
+   * Кандидат, равный худшему при заполненной куче, не вытесняет его. Порядок равных кандидатов, как и
+   * при сортировке всех совпадений, не определён: они приходят из обхода карт по идентичности.
+   */
+  private static final class BestMatches {
+    private final int limit;
+    private final PriorityQueue<Scored> worstFirst = new PriorityQueue<>(Comparator.reverseOrder());
+
+    private BestMatches(int limit) {
+      this.limit = limit;
+    }
+
+    /**
+     * Учесть кандидата: он попадает в накопитель, если тот не заполнен или кандидат лучше худшего.
+     *
+     * @param candidate кандидат со скором
+     */
+    private void offer(Scored candidate) {
+      if (worstFirst.size() < limit) {
+        worstFirst.add(candidate);
+        return;
+      }
+      var worst = worstFirst.peek();
+      if (worst != null && candidate.compareTo(worst) < 0) {
+        worstFirst.poll();
+        worstFirst.add(candidate);
+      }
+    }
+
+    /**
+     * Отобранные записи по убыванию релевантности.
+     *
+     * @return записи от лучшей к худшей
+     */
+    private List<Entry> ranked() {
+      var ranked = new ArrayList<>(worstFirst);
+      ranked.sort(Comparator.naturalOrder());
+      return ranked.stream().map(Scored::entry).toList();
     }
   }
 

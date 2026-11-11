@@ -34,12 +34,14 @@ import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.stereotype.Component;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 
 /**
  * Провайдер для поиска символов в рабочей области.
@@ -124,9 +126,20 @@ public class SymbolProvider {
       return List.of();
     }
 
-    // Клиент без потоковой выдачи: fuzzy-хвост дописывается в синхронный ответ только по настройке
-    // syncFuzzySearch (по умолчанию выключена — медленный fuzzy-скан не запускаем).
-    return collect(queryString, fast, globalConfiguration.getWorkspaceSymbol().isSyncFuzzySearch(), cancelChecker);
+    if (globalConfiguration.getWorkspaceSymbol().isSyncFuzzySearch()
+      && !queryString.isEmpty()) {
+      // Клиент без потоковой выдачи: блокирующий fuzzy-скан дописывается в синхронный ответ.
+      var tail = workspaceSymbolIndex.searchFuzzyTail(queryString, identitySetOf(fast), cancelChecker);
+      var result = new ArrayList<WorkspaceSymbol>(fast.size() + tail.size());
+      fast.forEach(entry -> result.add(createWorkspaceSymbol(entry)));
+      tail.forEach(entry -> result.add(createWorkspaceSymbol(entry)));
+      return result;
+    }
+
+    // syncFuzzySearch == false (по умолчанию): только древесная выдача, медленный fuzzy-скан не запускаем.
+    return fast.stream()
+      .map(SymbolProvider::createWorkspaceSymbol)
+      .toList();
   }
 
   /**
@@ -135,27 +148,37 @@ public class SymbolProvider {
    * <p>
    * Для клиентов без канала {@code $/progress}: настройка {@code workspaceSymbol.syncFuzzySearch} здесь
    * не участвует, нужен ли хвост, решает вызывающий.
+   * <p>
+   * В выдачу попадают только символы документов, прошедших {@code documentFilter}, и не больше
+   * {@code maxResults}. Отбор и лимит применяет индекс
+   * ({@link WorkspaceSymbolIndex#search(String, Predicate, int, CancelChecker)}), поэтому
+   * {@link WorkspaceSymbol} строится лишь для попавших в выдачу записей. Fuzzy-хвост добирает только
+   * недостающие до {@code maxResults} символы и не вычисляется, если быстрая выдача их уже набрала.
    *
    * @param query            Строка поиска.
+   * @param documentFilter   Отбор по URI документа, в котором объявлен символ.
    * @param includeFuzzyTail Дописывать ли fuzzy-хвост после быстрой выдачи.
+   * @param maxResults       Максимум символов в выдаче.
    * @param cancelChecker    Проверка отмены.
-   * @return Символы по убыванию релевантности.
+   * @return Не больше {@code maxResults} символов по убыванию релевантности.
    */
-  public List<WorkspaceSymbol> searchSymbols(String query, boolean includeFuzzyTail, CancelChecker cancelChecker) {
-    var fast = workspaceSymbolIndex.search(query, cancelChecker);
-    return collect(query, fast, includeFuzzyTail, cancelChecker);
-  }
-
-  private List<WorkspaceSymbol> collect(
+  public List<WorkspaceSymbol> searchSymbols(
     String query,
-    List<Entry> fast,
+    Predicate<URI> documentFilter,
     boolean includeFuzzyTail,
+    int maxResults,
     CancelChecker cancelChecker
   ) {
+    var fast = workspaceSymbolIndex.search(query, documentFilter, maxResults, cancelChecker);
     var result = new ArrayList<WorkspaceSymbol>(fast.size());
     fast.forEach(entry -> result.add(createWorkspaceSymbol(entry)));
-    if (includeFuzzyTail && !query.isEmpty()) {
-      var tail = workspaceSymbolIndex.searchFuzzyTail(query, identitySetOf(fast), cancelChecker);
+
+    var remaining = maxResults - fast.size();
+    if (includeFuzzyTail && !query.isEmpty() && remaining > 0) {
+      // Быстрая выдача не набрала лимит, значит, в ней все быстрые совпадения отобранных документов:
+      // их и исключает хвост.
+      var tail = workspaceSymbolIndex.searchFuzzyTail(
+        query, identitySetOf(fast), documentFilter, remaining, cancelChecker);
       tail.forEach(entry -> result.add(createWorkspaceSymbol(entry)));
     }
     return result;

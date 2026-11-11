@@ -29,7 +29,6 @@ import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspaceResolver;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.WorkspaceSymbolDto;
 import com.github._1c_syntax.bsl.languageserver.providers.SymbolProvider;
 import lombok.RequiredArgsConstructor;
-import org.eclipse.lsp4j.WorkspaceSymbol;
 import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 import org.jspecify.annotations.Nullable;
 import org.springframework.ai.mcp.annotation.McpTool;
@@ -130,10 +129,16 @@ public class WorkspaceFolderSymbolSearchTool {
       throw new IllegalArgumentException("Workspace folder `" + workspaceUri + "` is no longer registered. "
         + McpWorkspaceFolders.registrationHint(serverContextProvider.getAllContexts().keySet()));
     }
+    // Символ сверх лимита показывает, что найдено больше, чем вошло в ответ.
+    var requested = maxResults == Integer.MAX_VALUE ? maxResults : maxResults + 1;
     try (var ignored = WorkspaceContextHolder.forUri(workspaceUri)) {
-      var found = symbolProvider.searchSymbols(query.trim(), includeFuzzyTail, NEVER_CANCELLED).stream()
-        .filter(symbol -> belongsTo(serverContext, symbol))
-        .toList();
+      var found = symbolProvider.searchSymbols(
+        query.trim(),
+        documentUri -> belongsTo(serverContext, documentUri),
+        includeFuzzyTail,
+        requested,
+        NEVER_CANCELLED
+      );
       var symbols = found.stream()
         .limit(maxResults)
         .map(WorkspaceSymbolDto::from)
@@ -144,9 +149,7 @@ public class WorkspaceFolderSymbolSearchTool {
 
   // Членство проверяется по карте документов самой папки: у вложенных папок один документ входит
   // в оба контекста, а сопоставление по префиксу пути выбрало бы из них произвольный.
-  private static boolean belongsTo(ServerContext serverContext, WorkspaceSymbol symbol) {
-    var location = symbol.getLocation();
-    var documentUri = location.isLeft() ? location.getLeft().getUri() : location.getRight().getUri();
-    return serverContext.getDocumentNoLock(URI.create(documentUri)) != null;
+  private static boolean belongsTo(ServerContext serverContext, URI documentUri) {
+    return serverContext.getDocumentNoLock(documentUri) != null;
   }
 }
