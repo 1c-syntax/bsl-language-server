@@ -27,10 +27,12 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver;
 import com.github._1c_syntax.bsl.mdo.Form;
 import com.github._1c_syntax.bsl.mdo.support.FormType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.types.ModuleType;
+import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.EnumSet;
@@ -42,7 +44,8 @@ import java.util.Set;
   scope = DiagnosticScope.BSL,
   modules = {
     ModuleType.FormModule,
-    ModuleType.CommandModule
+    ModuleType.CommandModule,
+    ModuleType.CommonModule
   },
   minutesToFix = 1,
   tags = {
@@ -51,6 +54,7 @@ import java.util.Set;
   }
 
 )
+@RequiredArgsConstructor
 public class CompilationDirectiveNotAllowedDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final Set<CompilerDirectiveKind> FORM_MODULE_DIRECTIVES = EnumSet.of(
@@ -66,6 +70,8 @@ public class CompilationDirectiveNotAllowedDiagnostic extends AbstractVisitorDia
     CompilerDirectiveKind.AT_CLIENT_AT_SERVER
   );
 
+  private final CompilationContextResolver compilationContextResolver;
+
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
     if (documentContext.getModuleType() == ModuleType.FormModule) {
@@ -80,6 +86,13 @@ public class CompilationDirectiveNotAllowedDiagnostic extends AbstractVisitorDia
   @Override
   public ParseTree visitCompilerDirective(BSLParser.CompilerDirectiveContext ctx) {
     var moduleType = documentContext.getModuleType();
+    if (moduleType == ModuleType.CommonModule) {
+      compilationContextResolver.methodContext(documentContext, CompilerDirectiveKind.of(ctx.getStop().getType()))
+        .filter(profile -> profile.contexts().isEmpty())
+        .ifPresent(profile -> diagnosticStorage.addDiagnostic(ctx,
+          info.getResourceString("commonModuleMessage", ctx.getText())));
+      return ctx;
+    }
     if (moduleType != ModuleType.FormModule && moduleType != ModuleType.CommandModule) {
       return ctx;
     }

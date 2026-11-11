@@ -26,13 +26,19 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.types.MemberAccessChecker;
+import com.github._1c_syntax.bsl.languageserver.types.MemberAccessCheckKind;
+import com.github._1c_syntax.bsl.languageserver.types.MemberAccessChecker.UnknownMember;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
-import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver;
+import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -46,12 +52,12 @@ import java.util.stream.Collectors;
  *       текущего модуля.</li>
  * </ul>
  * <p>
- * Эвристика: при невыводимом или произвольном типе ресивера диагностика молчит,
- * чтобы не давать ложных срабатываний. Выключена по умолчанию — требует обкатки
- * на реальных конфигурациях.
+ * Проверяет каждый известный тип в автоматически выбранных режимах компиляции.
+ * Невыведенный и произвольный типы сами по себе не доказывают ошибку. Без сведений
+ * о контексте сохраняется обычная проверка имён, включая OneScript.
+ * Выключена по умолчанию — требует обкатки на реальных конфигурациях.
  *
- * @see TypeService#unknownMemberReceiverAt
- * @see TypeService#isUnknownGlobalAt
+ * @see MemberAccessChecker
  */
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -66,43 +72,29 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UnknownMemberDiagnostic extends AbstractVisitorDiagnostic {
 
+  private final MemberAccessChecker accessChecker;
+  private final CompilationContextResolver contextResolver;
   private final TypeService typeService;
 
   @Override
-  public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
-    var methodName = ctx.methodName();
-    if (methodName != null) {
-      var identifier = methodName.IDENTIFIER();
-      if (identifier != null && typeService.isUnknownGlobalAt(documentContext, identifier)) {
-        diagnosticStorage.addDiagnostic(methodName, info.getMessage(identifier.getText()));
+  public ParseTree visitFile(BSLParser.FileContext ctx) {
+    var contexts = contextResolver.automaticContexts(documentContext);
+    for (var problem : accessChecker.check(documentContext, contexts, Set.of(MemberAccessCheckKind.EXISTENCE))) {
+      var missing = (UnknownMember) problem;
+      var message = missing.receiverTypes().isEmpty() ? info.getMessage(missing.name())
+        : memberMessage(missing.name(), missing.receiverTypes());
+      if (missing.context().isEmpty()) {
+        diagnosticStorage.addDiagnostic(missing.range(), message);
+      } else {
+        var context = missing.context().orElseThrow();
+        var detail = info.getResourceString(context.isFileMode() ? "callContextFile" : "callContext",
+          info.getResourceString(context.optionContext().name()));
+        diagnosticStorage.addDiagnostic(missing.range(), message, List.of(
+          RelatedInformation.create(documentContext.getUri(), missing.range(), message),
+          RelatedInformation.create(documentContext.getUri(), missing.range(), detail)));
       }
     }
-    return super.visitGlobalMethodCall(ctx);
-  }
-
-  @Override
-  public ParseTree visitMethodCall(BSLParser.MethodCallContext ctx) {
-    var methodName = ctx.methodName();
-    if (methodName != null) {
-      var identifier = methodName.IDENTIFIER();
-      if (identifier != null) {
-        typeService.unknownMemberReceiverAt(documentContext, identifier)
-          .ifPresent(types ->
-            diagnosticStorage.addDiagnostic(methodName, memberMessage(identifier.getText(), types)));
-      }
-    }
-    return super.visitMethodCall(ctx);
-  }
-
-  @Override
-  public ParseTree visitAccessProperty(BSLParser.AccessPropertyContext ctx) {
-    var identifier = ctx.IDENTIFIER();
-    if (identifier != null) {
-      typeService.unknownMemberReceiverAt(documentContext, identifier)
-        .ifPresent(types ->
-          diagnosticStorage.addDiagnostic(identifier, memberMessage(identifier.getText(), types)));
-    }
-    return super.visitAccessProperty(ctx);
+    return ctx;
   }
 
   /**
@@ -111,10 +103,11 @@ public class UnknownMemberDiagnostic extends AbstractVisitorDiagnostic {
    * порядок типов в объединении зависит от того, в каком порядке их собрал вывод, и
    * от прогона к прогону может меняться, а текст замечания должен быть одним и тем же
    * (по нему замечания сопоставляют между анализами, например в SonarQube).
+   * Имена типов соответствуют варианту встроенного языка проекта, как имена в completion.
    */
   private String memberMessage(String memberName, TypeSet ownerTypes) {
     var typeNames = ownerTypes.refs().stream()
-      .map(TypeRef::qualifiedName)
+      .map(type -> typeService.displayName(type, documentContext.getScriptVariantLanguage()))
       .distinct()
       .sorted()
       .collect(Collectors.joining(", "));
