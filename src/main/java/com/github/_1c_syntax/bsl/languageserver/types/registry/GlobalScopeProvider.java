@@ -43,6 +43,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -82,6 +83,8 @@ public class GlobalScopeProvider {
 
   private static final String RETURN_TYPE_FIELD = "returnType";
   private static final String ALIASES_FIELD = "aliases";
+  /** Сколько написаний имени у члена глобального контекста: русское и английское. */
+  private static final int NAMES_PER_MEMBER = 2;
 
   private static final String RESOURCE_PATH =
     "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-globals.json";
@@ -174,7 +177,7 @@ public class GlobalScopeProvider {
    * @param fileType язык файла-потребителя.
    * @return член глобального контекста или {@link Optional#empty()}.
    */
-  public Optional<MemberDescriptor> globalMember(@org.jspecify.annotations.Nullable String name, FileType fileType) {
+  public Optional<MemberDescriptor> globalMember(@Nullable String name, FileType fileType) {
     if (name == null || name.isBlank()) {
       return Optional.empty();
     }
@@ -189,7 +192,14 @@ public class GlobalScopeProvider {
     if (!isBuiltFrom(index, bslSource, osSource)) {
       index = rebuildGlobalIndex();
     }
-    return Optional.ofNullable(index.byName().get(fileType).get(name.toLowerCase(Locale.ROOT)));
+    var position = index.byName().get(fileType).get(name.toLowerCase(Locale.ROOT));
+    if (position == null) {
+      return Optional.empty();
+    }
+    // Член берётся из набора, а не из индекса: в наборе символ-источник глобального свойства
+    // освежается на месте (TypeRegistry.refreshGlobalPropertyDeclaration), а позиции те же.
+    var members = index.members().get(fileType);
+    return Optional.of(members.get(position));
   }
 
   /**
@@ -206,15 +216,22 @@ public class GlobalScopeProvider {
       if (isBuiltFrom(index, bslSource, osSource)) {
         return index;
       }
-      var rebuilt = new GlobalIndex(bslSource, osSource, Map.of(
-        FileType.BSL, globalNameIndex(bslSource),
-        FileType.OS, globalNameIndex(osSource)));
+      var bslMembers = asList(bslSource);
+      var osMembers = asList(osSource);
+      var rebuilt = new GlobalIndex(bslSource, osSource, Map.of(FileType.BSL, bslMembers, FileType.OS, osMembers), Map.of(
+        FileType.BSL, globalNameIndex(bslMembers, index, FileType.BSL),
+        FileType.OS, globalNameIndex(osMembers, index, FileType.OS)));
       globalIndexRef.set(rebuilt);
       return rebuilt;
     }
   }
 
-  private static boolean isBuiltFrom(@org.jspecify.annotations.Nullable GlobalIndex index,
+  /** Тот же набор как список — без копии, если он уже список: освежённые на месте члены видны. */
+  private static List<MemberDescriptor> asList(Collection<MemberDescriptor> members) {
+    return members instanceof List<MemberDescriptor> list ? list : List.copyOf(members);
+  }
+
+  private static boolean isBuiltFrom(@Nullable GlobalIndex index,
                                      Collection<MemberDescriptor> bslSource,
                                      Collection<MemberDescriptor> osSource) {
     return index != null && index.bslSource() == bslSource && index.osSource() == osSource;
@@ -228,7 +245,7 @@ public class GlobalScopeProvider {
    * @param fileType язык файла-потребителя.
    * @return метод-член или {@link Optional#empty()}, если имя не глобальная функция.
    */
-  public Optional<MemberDescriptor> globalFunction(@org.jspecify.annotations.Nullable String name, FileType fileType) {
+  public Optional<MemberDescriptor> globalFunction(@Nullable String name, FileType fileType) {
     return globalMember(name, fileType).filter(member -> member.kind() == MemberKind.METHOD);
   }
 
@@ -241,7 +258,7 @@ public class GlobalScopeProvider {
    * @param fileType язык файла-потребителя.
    * @return свойство-член или {@link Optional#empty()}, если имя не глобальное свойство.
    */
-  public Optional<MemberDescriptor> globalProperty(@org.jspecify.annotations.Nullable String name, FileType fileType) {
+  public Optional<MemberDescriptor> globalProperty(@Nullable String name, FileType fileType) {
     return globalMember(name, fileType).filter(member -> member.kind() == MemberKind.PROPERTY);
   }
 
@@ -280,17 +297,42 @@ public class GlobalScopeProvider {
     return result;
   }
 
-  private Map<String, MemberDescriptor> globalNameIndex(Collection<MemberDescriptor> members) {
-    // до двух записей на член (ru и en) — задаём ёмкость сразу, чтобы не рехэшировать
-    var map = HashMap.<String, MemberDescriptor>newHashMap(members.size() * 2);
-    for (var member : members) {
+  /** Имена и позиции могут сохраниться при обновлении типов, символов и метаданных членов. */
+  private static Map<String, Integer> globalNameIndex(List<MemberDescriptor> members,
+      @Nullable GlobalIndex previous, FileType fileType) {
+    if (previous != null) {
+      var oldMembers = previous.members().get(fileType);
+      if (sameGlobalNames(members, oldMembers)) {
+        return previous.byName().get(fileType);
+      }
+    }
+    return globalNameIndex(members);
+  }
+
+  private static boolean sameGlobalNames(List<MemberDescriptor> members, List<MemberDescriptor> previous) {
+    if (members.size() != previous.size()) {
+      return false;
+    }
+    for (var index = 0; index < members.size(); index++) {
+      if (!members.get(index).bilingualName().equals(previous.get(index).bilingualName())) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private static Map<String, Integer> globalNameIndex(List<MemberDescriptor> members) {
+    // на член — запись на каждое написание (ru и en); ёмкость сразу, чтобы не рехэшировать
+    var map = HashMap.<String, Integer>newHashMap(members.size() * NAMES_PER_MEMBER);
+    for (var position = 0; position < members.size(); position++) {
+      var member = members.get(position);
       var ru = member.bilingualName().ru();
       var en = member.bilingualName().en();
       if (!ru.isBlank()) {
-        map.putIfAbsent(ru.toLowerCase(Locale.ROOT), member);
+        map.putIfAbsent(ru.toLowerCase(Locale.ROOT), position);
       }
       if (!en.isBlank()) {
-        map.putIfAbsent(en.toLowerCase(Locale.ROOT), member);
+        map.putIfAbsent(en.toLowerCase(Locale.ROOT), position);
       }
     }
     return map;
@@ -299,10 +341,17 @@ public class GlobalScopeProvider {
   /**
    * Индекс имён членов GLOBAL_CONTEXT в разрезе языка вместе с наборами-источниками,
    * из которых он собран: сверка их идентичности и есть критерий актуальности индекса.
+   * Индекс хранит позицию члена в наборе, а не сам член.
+   *
+   * @param bslSource  набор BSL, как его отдал реестр.
+   * @param osSource   набор OneScript, как его отдал реестр.
+   * @param members   наборы членов как списки, в разрезе языка.
+   * @param byName     позиция члена по имени в нижнем регистре, в разрезе языка.
    */
   private record GlobalIndex(Collection<MemberDescriptor> bslSource,
                              Collection<MemberDescriptor> osSource,
-                             Map<FileType, Map<String, MemberDescriptor>> byName) {
+                             Map<FileType, List<MemberDescriptor>> members,
+                             Map<FileType, Map<String, Integer>> byName) {
   }
 
   /**

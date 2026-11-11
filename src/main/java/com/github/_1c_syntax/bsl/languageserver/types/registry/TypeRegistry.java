@@ -55,9 +55,11 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -71,6 +73,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
@@ -231,7 +234,17 @@ public class TypeRegistry {
     }
   }
 
-  private record CachedMembers(long epoch, long generation, List<MemberDescriptor> members) {
+  /**
+   * Запомненные члены типа.
+   *
+   * @param epoch      эпоха, при которой они собраны.
+   * @param generation поколение типа, при котором они собраны.
+   * @param members    члены — неизменяемый вид.
+   * @param slots      атомарные ячейки тех же членов, обновляемые на месте только у
+   *                   {@link #GLOBAL_CONTEXT}; иначе {@code null}.
+   */
+  private record CachedMembers(long epoch, long generation, List<MemberDescriptor> members,
+                               @Nullable AtomicReferenceArray<MemberDescriptor> slots) {
   }
 
   /**
@@ -597,11 +610,33 @@ public class TypeRegistry {
     var key = new MembersKey(ref, fileType);
     var generation = membersGeneration.getOrDefault(key, 0L);
     var members = computeMembers(ref, fileType);
+    AtomicReferenceArray<MemberDescriptor> slots = null;
+    if (GLOBAL_CONTEXT.equals(ref)) {
+      // Символ-источник глобального свойства освежается на месте (см.
+      // refreshGlobalPropertyDeclaration). Атомарные ячейки публикуют замену читателям,
+      // которые обращаются к сохранённому виду списка без globalContextLock.
+      slots = new AtomicReferenceArray<>(members.toArray(MemberDescriptor[]::new));
+      members = globalMembersView(slots);
+    }
     // Штампуем поколением, снятым ДО вычисления: если во время computeMembers прошла
     // точечная инвалидация (bump поколения), запись окажется устаревшей и будет
     // отвергнута следующим чтением — гонка «публикация устаревшего результата» закрыта.
-    membersCache.put(key, new CachedMembers(epoch, generation, members));
+    membersCache.put(key, new CachedMembers(epoch, generation, members, slots));
     return members;
+  }
+
+  private static List<MemberDescriptor> globalMembersView(AtomicReferenceArray<MemberDescriptor> slots) {
+    return Collections.unmodifiableList(new AbstractList<>() {
+      @Override
+      public MemberDescriptor get(int index) {
+        return slots.get(index);
+      }
+
+      @Override
+      public int size() {
+        return slots.length();
+      }
+    });
   }
 
   /**
@@ -698,6 +733,46 @@ public class TypeRegistry {
     // глобальных имён пересобирались бы целиком, под общим замком.
     if ((previous == null || previous.get() != declaration) && populated) {
       globalContextEpoch.incrementAndGet();
+    }
+  }
+
+  /**
+   * Освежить символ-источник типа-глобального свойства, равный прежнему: объявивший тип
+   * документ перечитан с тем же текстом, и его символ из нового дерева.
+   * <p>
+   * Члены {@link #GLOBAL_CONTEXT} не пересобираются: член этого свойства подменяется на месте,
+   * в том же наборе, и прежний символ — а с ним и прежнее дерево документа — больше ничем не
+   * удерживается. Читатель, взявший набор раньше, увидит либо прежний символ, либо новый — они
+   * равны.
+   * <p>
+   * Подмена идёт под тем же замком, что и сборка этих членов: иначе сборка, прочитавшая прежний
+   * символ до подмены, опубликовала бы набор с ним уже после неё.
+   *
+   * @param ref         тип-глобальное свойство.
+   * @param declaration символ-источник из нового дерева, равный прежнему.
+   */
+  public void refreshGlobalPropertyDeclaration(TypeRef ref, SourceDefinedSymbol declaration) {
+    synchronized (globalContextLock) {
+      globalPropertySymbols.put(ref, new WeakReference<>(declaration));
+      for (var fileType : FILE_TYPES) {
+        var cached = membersCache.get(new MembersKey(GLOBAL_CONTEXT, fileType));
+        var slots = cached == null ? null : cached.slots();
+        if (slots != null) {
+          replaceDeclaration(slots, declaration);
+        }
+      }
+    }
+  }
+
+  private static void replaceDeclaration(AtomicReferenceArray<MemberDescriptor> slots, SourceDefinedSymbol declaration) {
+    for (var i = 0; i < slots.length(); i++) {
+      var member = slots.get(i);
+      // Документ сравнивается по ссылке — он у символа один и тот же, а полное равенство
+      // сравнивало бы адреса всех членов глобального контекста.
+      if (member.sourceSymbol() instanceof SourceDefinedSymbol source && source != declaration
+        && source.getOwner() == declaration.getOwner() && declaration.equals(source)) {
+        slots.set(i, member.withSourceSymbol(declaration));
+      }
     }
   }
 
