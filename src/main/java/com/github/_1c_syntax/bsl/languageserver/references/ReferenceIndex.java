@@ -376,8 +376,8 @@ public class ReferenceIndex {
                                                 String variableName,
                                                 Range range,
                                                 OccurrenceType occurrenceType) {
-    return variableOccurrence(uri, mdoRef, moduleType, methodName, variableName, range, occurrenceType,
-      referenceSymbolInterner);
+    var symbol = variableSymbol(mdoRef, moduleType, methodName, variableName);
+    return variableOccurrence(uri, symbol, range, occurrenceType, referenceSymbolInterner);
   }
 
   /**
@@ -396,22 +396,24 @@ public class ReferenceIndex {
     return symbols;
   }
 
-  /** Построить вхождение переменной с заданным интернером ключей. */
-  SymbolOccurrence variableOccurrence(URI uri, String mdoRef, ModuleType moduleType, String methodName,
-                                     String variableName, Range range, OccurrenceType occurrenceType,
-                                     GenericInterner<Symbol> symbols) {
+  /** Построить ключ переменной с каноническими именами метода и переменной. */
+  Symbol variableSymbol(String mdoRef, ModuleType moduleType, String methodName, String variableName) {
     var methodNameCanonical = stringInterner.intern(methodName.toLowerCase(Locale.ENGLISH));
     var variableNameCanonical = stringInterner.intern(variableName.toLowerCase(Locale.ENGLISH));
 
-    var symbol = symbols.intern(Symbol.builder()
+    return Symbol.builder()
       .mdoRef(mdoRef)
       .moduleType(moduleType)
       .scopeName(methodNameCanonical)
       .symbolKind(SymbolKind.Variable)
       .symbolName(variableNameCanonical)
-      .build());
+      .build();
+  }
 
-    return SymbolOccurrence.of(occurrenceType, symbol, uri, range);
+  /** Построить вхождение переменной с заданным интернером ключей. */
+  SymbolOccurrence variableOccurrence(URI uri, Symbol symbol, Range range, OccurrenceType occurrenceType,
+                                     GenericInterner<Symbol> symbols) {
+    return SymbolOccurrence.of(occurrenceType, symbols.intern(symbol), uri, range);
   }
 
   /**

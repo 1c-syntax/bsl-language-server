@@ -34,6 +34,7 @@ import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.LocationRepository;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrenceRepository;
+import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrence;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -90,7 +91,7 @@ class ReferenceIndexFillerTest extends AbstractServerContextAwareTest {
     var document = TestUtils.getDocumentContext(Absolute.uri(file), source, context);
     referenceIndexFiller.fill(document);
     var key = locations.getSymbolOccurrencesByLocationUri(document.getUri())
-      .map(occurrence -> occurrence.symbol())
+      .map(SymbolOccurrence::symbol)
       .filter(symbol -> symbol.symbolName().equals("localvalue"))
       .findFirst().orElseThrow();
 
