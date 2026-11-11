@@ -21,8 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
+import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -30,14 +29,13 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
-import com.github._1c_syntax.bsl.mdo.CommonModule;
-import com.github._1c_syntax.bsl.mdo.Form;
-import com.github._1c_syntax.bsl.mdo.support.FormType;
+import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 /**
@@ -47,21 +45,18 @@ import java.util.regex.Pattern;
  * В платформе 8.3.21 синхронные методы HTTP-соединения объявлены устаревшими
  * в клиентском контексте. Вместо них следует использовать асинхронные аналоги
  * с суффиксом {@code Асинх} / {@code Async}. Асинхронные методы доступны только
- * на клиенте, поэтому диагностика сообщает только о вызовах, которые
- * гарантированно исполняются на клиенте.
+ * на клиенте, поэтому диагностика сообщает только те вызовы, все возможные
+ * контексты компиляции которых клиентские: предложенная замена должна быть
+ * корректна в каждом из них.
  * <p>
- * Контекст исполнения определяется по типу модуля и директиве компиляции метода.
- * В модулях приложения и клиентских общих модулях директив нет — весь код
- * считается клиентским. В модулях управляемых форм и команд сообщаются только
- * методы с директивой {@code &НаКлиенте}; методы без директивы, а также методы
- * с директивами {@code &НаСервере}, {@code &НаСервереБезКонтекста} и
- * {@code &НаКлиентеНаСервере} компилируются в том числе для сервера и не
- * сообщаются. В обычных формах директивы не применяются, поэтому весь модуль
- * считается клиентским.
+ * Возможные контексты вызова определяет {@link CompilationContextResolver}:
+ * он учитывает вид модуля и его метаданные, директиву компиляции метода
+ * (включая серверную директиву по умолчанию для управляемых форм и команд),
+ * ветку препроцессора и режимы, поддерживаемые проектом.
  * <p>
  * Чтобы исключить ложные срабатывания, тип-владелец метода резолвится через
- * {@link TypeService#memberAt}: диагностика срабатывает только если метод
- * вызван на объекте типа {@code HTTPСоединение}.
+ * {@link TypeService#membersAt}: диагностика срабатывает, если хотя бы один
+ * из возможных типов-владельцев получателя — {@code HTTPСоединение}.
  *
  * @see <a href="https://dl04.1c.ru/content/Platform/8_3_21_1140/1cv8upd_8_3_21_1140.htm">
  *   Изменения платформы 8.3.21</a>
@@ -95,52 +90,10 @@ public class DeprecatedHttpConnectionMethodDiagnostic extends AbstractVisitorDia
   );
 
   private final TypeService typeService;
-
-  /**
-   * Признак того, что вложенный узел дерева разбора исполняется на клиенте.
-   * Значение для тела модуля выставляется в {@link #visitFile}, для методов —
-   * в {@link #visitSub}.
-   */
-  private boolean clientContext;
-
-  @Override
-  public ParseTree visitFile(BSLParser.FileContext ctx) {
-    if (!isClientCapableModule()) {
-      return ctx;
-    }
-    clientContext = isDirectiveLessClientModule();
-    return super.visitFile(ctx);
-  }
-
-  @Override
-  public ParseTree visitSub(BSLParser.SubContext ctx) {
-    var directive = documentContext.getSymbolTree()
-      .getMethodSymbol(ctx)
-      .flatMap(MethodSymbol::getCompilerDirectiveKind);
-
-    if (directive.isPresent()) {
-      if (directive.get() != CompilerDirectiveKind.AT_CLIENT) {
-        return ctx;
-      }
-    } else if (!isDirectiveLessClientModule()) {
-      return ctx;
-    }
-
-    var savedClientContext = clientContext;
-    clientContext = true;
-    try {
-      return super.visitSub(ctx);
-    } finally {
-      clientContext = savedClientContext;
-    }
-  }
+  private final CompilationContextResolver compilationContextResolver;
 
   @Override
   public ParseTree visitMethodCall(BSLParser.MethodCallContext ctx) {
-    if (!clientContext) {
-      return super.visitMethodCall(ctx);
-    }
-
     var methodName = ctx.methodName();
     if (methodName == null) {
       return super.visitMethodCall(ctx);
@@ -150,66 +103,38 @@ public class DeprecatedHttpConnectionMethodDiagnostic extends AbstractVisitorDia
       return super.visitMethodCall(ctx);
     }
 
+    if (!executesOnClientsOnly(ctx)) {
+      return super.visitMethodCall(ctx);
+    }
+
     var identifier = methodName.IDENTIFIER();
     if (identifier == null) {
       return super.visitMethodCall(ctx);
     }
 
-    var typedMember = typeService.memberAt(documentContext, identifier);
-    if (typedMember.isEmpty()) {
-      return super.visitMethodCall(ctx);
-    }
+    var isHttpConnection = typeService.membersAt(documentContext, identifier).stream()
+      .map(member -> member.owner())
+      .filter(Objects::nonNull)
+      .anyMatch(owner -> HTTP_CONNECTION_PATTERN.matcher(owner.qualifiedName()).matches());
 
-    var owner = typedMember.get().owner();
-    if (owner != null && HTTP_CONNECTION_PATTERN.matcher(owner.qualifiedName()).matches()) {
+    if (isHttpConnection) {
       diagnosticStorage.addDiagnostic(methodName, info.getMessage(methodName.getText()));
     }
 
     return super.visitMethodCall(ctx);
   }
 
-  private boolean isClientCapableModule() {
-    return switch (documentContext.getModuleType()) {
-      case ApplicationModule, OrdinaryApplicationModule, ManagedApplicationModule,
-           FormModule, CommandModule -> true;
-      case CommonModule -> isClientOnlyCommonModule();
-      default -> false;
-    };
-  }
-
-  private boolean isDirectiveLessClientModule() {
-    return switch (documentContext.getModuleType()) {
-      case ApplicationModule, OrdinaryApplicationModule, ManagedApplicationModule -> true;
-      case FormModule -> isOrdinaryForm();
-      case CommonModule -> isClientOnlyCommonModule();
-      default -> false;
-    };
-  }
-
-  private boolean isClientOnlyCommonModule() {
-    var mdObject = documentContext.getMdObject();
-
-    if (mdObject.isEmpty()) {
-      // Метаданные недоступны: модуль не считаем строго серверным.
-      return true;
-    }
-
-    if (!(mdObject.get() instanceof CommonModule commonModule)) {
-      return false;
-    }
-
-    return (commonModule.isClientManagedApplication() || commonModule.isClientOrdinaryApplication())
-      && !commonModule.isServer()
-      && !commonModule.isExternalConnection()
-      && !commonModule.isServerCall();
-  }
-
-  private boolean isOrdinaryForm() {
-    return documentContext.getMdObject()
-      .filter(Form.class::isInstance)
-      .map(Form.class::cast)
-      .map(form -> form.getFormType() != FormType.MANAGED)
-      .orElse(false);
+  /**
+   * Проверить, что вызов исполняется только на клиенте.
+   * <p>
+   * Асинхронные аналоги доступны только на клиенте, поэтому замена корректна,
+   * лишь когда клиентские все возможные контексты компиляции вызова. Пустое
+   * множество означает, что объявление исключено препроцессором.
+   */
+  private boolean executesOnClientsOnly(BSLParser.MethodCallContext ctx) {
+    var contexts = compilationContextResolver.possibleContexts(documentContext, ctx)
+      .orElse(ExecutionContext.forFileType(documentContext.getFileType()));
+    return !contexts.isEmpty() && ExecutionContext.CLIENTS.containsAll(contexts);
   }
 
 }
