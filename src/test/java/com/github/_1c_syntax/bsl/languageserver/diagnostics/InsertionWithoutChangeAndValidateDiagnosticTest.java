@@ -44,11 +44,13 @@ class InsertionWithoutChangeAndValidateDiagnosticTest
     // Вставка на уровне модуля — пропускается (вне методов аннотация не нужна)
     // БезИзменения содержит обе директивы, но даёт ровно одну диагностику
     // БезАннотацииКонецВставки — покрывает директиву #КонецВставки без #Вставка
-    assertThat(diagnostics).hasSize(3);
+    // БезАннотацииВОбласти — вставка внутри области, объявленной в теле метода
+    assertThat(diagnostics).hasSize(4);
     assertThat(diagnostics, true)
       .hasMessageOnRange(message("БезИзменения"), 9, 10, 9, 22)
       .hasMessageOnRange(message("БезАннотацииКонецВставки"), 35, 10, 35, 34)
-      .hasMessageOnRange(message("БезАннотацииВПрепроцессоре"), 41, 10, 41, 36);
+      .hasMessageOnRange(message("БезАннотацииВПрепроцессоре"), 41, 10, 41, 36)
+      .hasMessageOnRange(message("БезАннотацииВОбласти"), 49, 10, 49, 30);
   }
 
   private static String message(String methodName) {
