@@ -68,11 +68,9 @@ class BuiltinResourcesClassLoaderTest {
     assertThat(provider.getClasses(FileType.BSL))
       .as("классы BSL — из builtin-globals.json")
       .isNotEmpty();
-    // ключевых слов нет в builtin-globals.json — они догружаются
-    // KeywordMetadataLoader'ом из builtin-keywords.json
-    assertThat(provider.getKeywords(FileType.BSL))
-      .as("ключевые слова BSL — из builtin-keywords.json")
-      .isNotEmpty();
+    assertThat(provider.findKeywordSnippet("Если", FileType.BSL))
+      .as("шаблоны конструкций BSL — из builtin-keywords.json")
+      .isPresent();
   }
 
   @Test

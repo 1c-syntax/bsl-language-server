@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.completion.CompletionData;
 import com.github._1c_syntax.bsl.languageserver.completion.CompletionMemberKeys;
 import com.github._1c_syntax.bsl.languageserver.completion.CompletionContextRanker;
+import com.github._1c_syntax.bsl.languageserver.completion.KeywordCompletion;
 import com.github._1c_syntax.bsl.languageserver.completion.CompletionMethodHintRenderer;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
@@ -753,7 +754,8 @@ public final class CompletionProvider {
       collectEventHandlerStubs(documentContext, prefix, target, items);
     }
 
-    collectKeywords(query, items);
+    var wordStart = new Position(position.getLine(), lineInfo.cursor - lineInfo.prefix.length());
+    collectKeywords(query, items, wordStart);
     return items;
   }
 
@@ -899,10 +901,9 @@ public final class CompletionProvider {
     }
   }
 
-  private void collectKeywords(NoDotContext query, List<CompletionItem> items) {
-    // Keywords: ru/en-написания не дедупятся — общей идентичности у кейвордов нет
-    // (в отличие от имён типов), поэтому фильтр по языку к ним не применяется.
-    for (var keyword : globalScopeProvider.getKeywords(query.fileType())) {
+  private void collectKeywords(NoDotContext query, List<CompletionItem> items, Position wordStart) {
+    // Язык и допустимость ключевого слова определяются по позиции в документе.
+    for (var keyword : KeywordCompletion.suggest(query.document(), wordStart)) {
       if (matches(keyword, query.prefix())) {
         var item = new CompletionItem(keyword);
         item.setKind(CompletionItemKind.Keyword);
