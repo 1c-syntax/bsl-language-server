@@ -818,14 +818,17 @@ public class GlobalScopeProvider {
     }
   }
 
-  @SuppressWarnings("unchecked")
   private static MemberDescriptor functionMember(String name, Map<String, Object> entry) {
+    return withFirstAliasName(functionDescriptor(name, entry), entry);
+  }
+
+  @SuppressWarnings("unchecked")
+  private static MemberDescriptor functionDescriptor(String name, Map<String, Object> entry) {
     var description = (String) entry.getOrDefault("description", "");
     var returnTypes = BuiltinTypesJsonLoader.readTypeSet(entry, "returnTypes", RETURN_TYPE_FIELD);
     var signatures = readSignatures((List<Map<String, Object>>) entry.get("signatures"),
       returnTypes.isEmpty() ? TypeSet.of(TypeRef.UNKNOWN) : returnTypes);
-    var member = withFirstAliasName(
-      MemberDescriptor.method(name, description, signatures).withStandardLibrary(true), entry);
+    var member = MemberDescriptor.method(name, description, signatures).withStandardLibrary(true);
     if (!returnTypes.isEmpty()) {
       member = member.withReturnTypes(returnTypes);
     }
@@ -889,17 +892,7 @@ public class GlobalScopeProvider {
       if (name == null) {
         continue;
       }
-      var description = (String) entry.getOrDefault("description", "");
-      var returnTypes = BuiltinTypesJsonLoader.readTypeSet(entry, "returnTypes", RETURN_TYPE_FIELD);
-      var signatures = readSignatures(
-        (List<Map<String, Object>>) entry.get("signatures"),
-        returnTypes.isEmpty() ? TypeSet.of(TypeRef.UNKNOWN) : returnTypes
-      );
-      var descriptor = MemberDescriptor.method(name, description, signatures)
-        .withStandardLibrary(true);
-      if (!returnTypes.isEmpty()) {
-        descriptor = descriptor.withReturnTypes(returnTypes);
-      }
+      var descriptor = functionDescriptor(name, entry);
       // Двуязычные имена: опциональные `nameRu` и `nameEn`. Если не заданы —
       // дескриптор остаётся с пустыми {@code nameRu}/{@code nameEn} (и
       // {@code displayName} падает на {@code name}).
@@ -907,13 +900,6 @@ public class GlobalScopeProvider {
       var nameEn = stringEntry(entry, "nameEn");
       if (!nameRu.isEmpty() || !nameEn.isEmpty()) {
         descriptor = descriptor.withBilingualName(BilingualString.of(nameRu, nameEn));
-      }
-      if (Boolean.TRUE.equals(entry.get("async"))) {
-        descriptor = descriptor.withAsync(true);
-      }
-      var metadata = readGlobalMetadata(entry);
-      if (!metadata.isEmpty()) {
-        descriptor = descriptor.withMetadata(metadata);
       }
       result.put(name.toLowerCase(Locale.ROOT), descriptor);
       var aliases = (List<String>) entry.getOrDefault(ALIASES_FIELD, Collections.emptyList());
