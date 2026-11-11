@@ -715,6 +715,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#Keywords" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Keywords
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#Method-contexts-and-server-calls" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2527,6 +2538,21 @@ Common modules use their metadata flags even before their source file has been p
 <code>Catalogs</code>, are ranked using their own availability and that of their value type.</p>
 <p>After a dot, receiver types are inferred in the current compilation contexts. When preprocessor branches assign different structures to a variable, repeating the condition selects the matching type: fields of the excluded type are not offered. The same context filter applies to members of the remaining type; when filtering is disabled, unavailable members stay in the list with a lower priority.</p>
 <p>Existing priorities for local names, fields, global functions and keywords, and the ordering of deprecated items, are preserved within each group. Missing availability information does not penalize a suggestion. OneScript, files without metadata and unknown compilation contexts retain the original ordering.</p>
+<h2 id="Keywords">Keywords<a class="headerlink" href="#Keywords" title="Permanent link">&para;</a></h2>
+<p>Keywords follow the script language, like platform member names. The BSL/OneScript language vocabulary
+defines candidates and canonical spellings; Syntax Assistant supplies descriptions and templates.
+Syntax placeholders such as <code>Declarations</code>, <code>DefaultValue</code> and <code>DefVal</code> are excluded. English loop headers
+offer <code>To</code>, rather than the <code>By</code> spelling found in the help data.</p>
+<p>The surrounding construct is considered:</p>
+<ul>
+<li><code>Continue</code> and <code>Break</code> are offered in loop bodies, including nested blocks;</li>
+<li><code>Await</code> is offered inside asynchronous methods;</li>
+<li><code>Else</code>, <code>ElsIf</code>, <code>Except</code> and closing keywords require the corresponding open block;</li>
+<li><code>Then</code>, <code>Do</code>, <code>Each</code>, <code>In</code>, <code>To</code>, <code>Val</code> and <code>Export</code> are offered in the appropriate parts of declarations and headers.</li>
+</ul>
+<p>Unfinished blocks are supported. The prefix being completed is not treated as an already inserted keyword:
+for example, completing <code>EndDo</code> still sees the loop as open. Words in comments and strings do not create
+false blocks. Ordinary keywords are not offered inside strings, comments or directive headers.</p>
 <h2 id="Method-contexts-and-server-calls">Method contexts and server calls<a class="headerlink" href="#Method-contexts-and-server-calls" title="Permanent link">&para;</a></h2>
 <p>Only a server-call marker appears to the right of the signature, before the return type, for example <code>→S · ValueTable</code>.
 The name, signature and inserted code are preserved. Labels follow the project's script variant, like platform
