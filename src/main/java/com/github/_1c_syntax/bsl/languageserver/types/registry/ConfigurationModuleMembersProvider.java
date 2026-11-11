@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 import com.github._1c_syntax.bsl.context.api.ContextNames;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextConfigurationBindingChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
@@ -36,6 +37,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.mdo.Form;
 import com.github._1c_syntax.bsl.mdo.MD;
+import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -108,6 +110,38 @@ public class ConfigurationModuleMembersProvider {
   public void handleEvent(DocumentContextContentChangedEvent event) {
     var documentContext = event.getSource();
     register(documentContext);
+  }
+
+  // Привязка к метаданным определяет, членами какого типа становятся методы модуля, и
+  // порядок тот же, что у правки: индексатор ссылок и индекс типов идут следом.
+  @Order(100)
+  @EventListener
+  public void handleEvent(DocumentContextConfigurationBindingChangedEvent event) {
+    register(event.getSource());
+  }
+
+  /**
+   * Объявляет тип общего модуля, не дожидаясь разбора его файла.
+   * <p>
+   * Имя общего модуля известно из метаданных, а разбор нужен только его членам. Без этого
+   * объявления имя модуля до разбора его файла не разрешается ни во что: обращение
+   * {@code ОбщийМодуль.Метод()} из чужого документа не находит даже получателя, тип
+   * результата выходит пустым — и сообщить о пропуске некому, потому что и метода-то не
+   * нашлось. Документы разбираются параллельно, поэтому кому не повезло, решает порядок,
+   * разный от запуска к запуску.
+   * <p>
+   * Члены остаются за разбором: здесь объявляется только сам тип и его видимость как
+   * глобального имени. Символ-источник для навигации доложит {@link #register}, когда
+   * дойдёт очередь до файла модуля.
+   *
+   * @param mdObject объект метаданных общего модуля.
+   */
+  public void declareCommonModuleType(MD mdObject) {
+    var name = mdObject.getName();
+    if (name.isBlank()) {
+      return;
+    }
+    typeRegistry.registerGlobalPropertyType(typeRegistry.registerConfigurationType(name), FileType.BSL);
   }
 
   /**
@@ -202,7 +236,7 @@ public class ConfigurationModuleMembersProvider {
       return;
     }
 
-    typeRegistry.registerMemberSource(ref, () -> collectModuleMembers(documentContext), FileType.BSL);
+    typeRegistry.registerOwnMemberSource(ref, () -> collectModuleMembers(documentContext), FileType.BSL);
     LOGGER.debug("Registered module-as-member-source for {} -> {}", documentContext.getUri(), qualifiedRu);
   }
 
@@ -230,7 +264,7 @@ public class ConfigurationModuleMembersProvider {
       return;
     }
 
-    typeRegistry.registerMemberSource(ref, () -> collectModuleMembers(documentContext), FileType.BSL);
+    typeRegistry.registerOwnMemberSource(ref, () -> collectModuleMembers(documentContext), FileType.BSL);
     LOGGER.debug("Registered form module as member source for {} -> {}",
       documentContext.getUri(), ref.qualifiedName());
   }
@@ -266,8 +300,8 @@ public class ConfigurationModuleMembersProvider {
       return;
     }
 
-    typeRegistry.registerMemberSource(ref, () -> collectModuleMembers(documentContext), FileType.BSL);
-    typeRegistry.registerMemberSource(ref, () -> commonModulePlatformMembers(ref), FileType.BSL);
+    typeRegistry.registerOwnMemberSource(ref, () -> collectModuleMembers(documentContext), FileType.BSL);
+    typeRegistry.registerOwnMemberSource(ref, () -> commonModulePlatformMembers(ref), FileType.BSL);
     LOGGER.debug("Registered common module as global property {} -> {}", documentContext.getUri(), name);
   }
 

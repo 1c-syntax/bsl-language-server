@@ -69,6 +69,12 @@ import java.util.Set;
  * запросе, что бесплатно даёт hot-reload: правка {@code &Расширяет}/{@code &Реализует}
  * подхватывается без ре-регистрации (точечную инвалидацию индекса выполняют его
  * event-обработчики).
+ * <p>
+ * Документы по URI берутся без ожидания их блокировки
+ * ({@link ServerContext#getDocumentNoLock}): отношениям нужно лишь дерево символов, а у
+ * него своя блокировка внутри документа. Поэтому методы можно звать и под блокировкой
+ * записи другого документа — ожидание чужой блокировки там сводило бы два таких вызова
+ * во взаимоблокировку.
  */
 @Component
 @WorkspaceScope
@@ -172,7 +178,7 @@ public class TypeRelations {
       if (uri.equals(documentContext.getUri())) {
         continue;
       }
-      var candidate = serverContext.getDocument(uri);
+      var candidate = serverContext.getDocumentNoLock(uri);
       if (candidate != null && inheritableFromParent(candidate, documentContext)) {
         result.add(candidate);
       }
@@ -244,7 +250,7 @@ public class TypeRelations {
         names.add(name.toLowerCase(Locale.ROOT));
       }
       for (var uri : typeRelationIndex.directSubtypeUris(currentNames, serverContext)) {
-        var derived = serverContext.getDocument(uri);
+        var derived = serverContext.getDocumentNoLock(uri);
         if (derived != null && oScriptExtends.isInterface(derived)) {
           queue.add(derived);
         }
@@ -265,7 +271,7 @@ public class TypeRelations {
     var result = new LinkedHashMap<URI, DocumentContext>();
     var queue = new ArrayDeque<DocumentContext>();
     for (var uri : typeRelationIndex.directImplementorUris(interfaceNames, serverContext)) {
-      var implementor = serverContext.getDocument(uri);
+      var implementor = serverContext.getDocumentNoLock(uri);
       if (implementor != null) {
         queue.add(implementor);
       }
@@ -278,7 +284,7 @@ public class TypeRelations {
       }
       var names = oScriptLibraryIndex.classNames(current);
       for (var uri : typeRelationIndex.directSubtypeUris(names, serverContext)) {
-        var child = serverContext.getDocument(uri);
+        var child = serverContext.getDocumentNoLock(uri);
         if (child != null && inheritableFromParent(child, current)) {
           queue.add(child);
         }
@@ -359,7 +365,7 @@ public class TypeRelations {
     var libraryUri = oScriptLibraryIndex.findClassUri(name)
       .or(() -> oScriptLibraryIndex.findUri(name));
     if (libraryUri.isPresent()) {
-      var document = serverContext.getDocument(libraryUri.get());
+      var document = serverContext.getDocumentNoLock(libraryUri.get());
       if (document != null) {
         return Optional.of(document);
       }

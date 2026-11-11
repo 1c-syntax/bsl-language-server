@@ -50,7 +50,6 @@ import lombok.Locked;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.Token;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
@@ -61,19 +60,24 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
+import java.nio.file.Path;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.regex.Pattern;
 
-import static java.util.Objects.requireNonNull;
 import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
 
 /**
@@ -91,6 +95,7 @@ import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
 public class DocumentContext implements Comparable<DocumentContext> {
 
   private static final Pattern CONTENT_SPLIT_PATTERN = Pattern.compile("\r?\n|\r");
+  private static final int FINGERPRINT_CHUNK = 4096;
 
   @Getter
   @EqualsAndHashCode.Include
@@ -98,6 +103,21 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
   @Nullable
   private String content;
+
+  /**
+   * Отпечаток последнего разобранного содержимого; {@code null}, пока документ не
+   * разбирался ни разу. В отличие от самого содержимого переживает освобождение
+   * вторичных данных: по нему повторный разбор отличает перечитывание того же текста
+   * от настоящей правки.
+   */
+  private byte @Nullable [] contentFingerprint;
+
+  /**
+   * Отличалось ли содержимое, с которым документ разобран последний раз, от того,
+   * с которым он был разобран до этого. У документа, разбираемого впервые, — {@code true}.
+   */
+  @Getter
+  private boolean contentChangedOnLastRebuild = true;
 
   @Getter
   private int version;
@@ -129,8 +149,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
   @Nullable
   private BSLTokenizer tokenizer;
 
-  @Getter(onMethod_ = {@Locked("computeLock")})
-  private SymbolTree symbolTree = SymbolTreeComputer.empty(this);
+  private final AtomicReference<SymbolTree> symbolTree = new AtomicReference<>(SymbolTreeComputer.empty(this));
 
   @Getter
   private final FileType fileType;
@@ -144,9 +163,10 @@ public class DocumentContext implements Comparable<DocumentContext> {
   private final Lazy<String[]> contentList = new Lazy<>(this::computeContentList, computeLock);
   private final Lazy<ModuleType> moduleType = new Lazy<>(this::computeModuleType, computeLock);
   // MD-объект и mdoRef документа зависят только от его URI и конфигурации (не от содержимого),
-  // а конфигурация инвариантна на всё время жизни DocumentContext (её перезагрузка в
-  // ServerContext.clear() выбрасывает все документы). Поэтому намеренно НЕ сбрасываются в
-  // clearSecondaryData — считаются один раз на жизнь документа.
+  // а конфигурация после прочтения инвариантна на всё время жизни DocumentContext (её
+  // перезагрузка в ServerContext.clear() выбрасывает все документы). Поэтому намеренно НЕ
+  // сбрасываются в clearSecondaryData. Пересчитываются, только если документ заведён до
+  // прочтения конфигурации (rebindToConfiguration).
   private final Lazy<Optional<MD>> mdObject = new Lazy<>(this::computeMdObject, computeLock);
   private final Lazy<String> mdoRef = new Lazy<>(this::computeMdoRef, computeLock);
   private final Lazy<ComplexityData> cognitiveComplexityData
@@ -171,26 +191,69 @@ public class DocumentContext implements Comparable<DocumentContext> {
   }
 
   @Locked("computeLock")
+  public SymbolTree getSymbolTree() {
+    return symbolTree.get();
+  }
+
+  /**
+   * Дерево символов, не дожидаясь идущего перестроения документа: пока оно идёт, отдаётся
+   * дерево прежнего содержимого.
+   * <p>
+   * Дерево строится под блокировкой документа, поэтому ждать его из вычисления, которое
+   * держит блокировку другого документа, значит рисковать встречным ожиданием: два
+   * документа, перестраиваемые одновременно, будут ждать друг друга бесконечно.
+   *
+   * @return последнее построенное дерево символов.
+   */
+  public SymbolTree getSymbolTreeNoLock() {
+    return symbolTree.get();
+  }
+
+  /**
+   * Текст документа.
+   *
+   * @return текст документа.
+   * @throws DocumentContentUnavailableException если текста у документа нет.
+   */
+  @Locked("computeLock")
   public String getContent() {
-    requireNonNull(content);
+    if (content == null) {
+      throw new DocumentContentUnavailableException(uri);
+    }
     return content;
   }
 
+  /**
+   * Строки текста документа.
+   *
+   * @return строки текста документа.
+   * @throws DocumentContentUnavailableException если текста у документа нет.
+   */
   @Locked("computeLock")
   public String[] getContentList() {
     return contentList.getOrCompute();
   }
 
+  /**
+   * Дерево разбора документа.
+   *
+   * @return дерево разбора документа.
+   * @throws DocumentContentUnavailableException если текста у документа нет.
+   */
   @Locked("computeLock")
   public BSLParser.FileContext getAst() {
-    requireNonNull(tokenizer);
-    return tokenizer.getAst();
+    return requireTokenizer().getAst();
   }
 
+  /**
+   * Токены документа.
+   *
+   * @return токены документа.
+   * @throws DocumentContentUnavailableException если текста у документа нет.
+   */
   @Locked("computeLock")
   public List<Token> getTokens() {
-    requireNonNull(tokenizer);
-    return tokenizer.getTokens();
+    return requireTokenizer().getTokens();
   }
 
   public List<Token> getTokensFromDefaultChannel() {
@@ -335,14 +398,25 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
     try {
 
+      var fingerprint = contentFingerprint(content);
+      var contentChanged = !Arrays.equals(fingerprint, contentFingerprint);
+
       boolean versionMatches = version == this.version && version != 0;
 
       if (versionMatches && (this.content != null)) {
+        // Содержимое не применяется — дерево остаётся прежним. Значит и отпечаток обязан
+        // описывать его, а не то, что пришло: иначе следующий разбор того же текста счёл бы
+        // документ неизменившимся, и записи, построенные по прежнему дереву, остались бы жить.
+        contentChangedOnLastRebuild = false;
         clearDependantData();
         return;
       }
 
-      if (!isComputedDataFrozen) {
+      // Заморозка — политика («этот документ не редактируют, его вторичные данные держим»),
+      // а изменение содержимого — факт. Факт сильнее: замороженным остаётся документ, который
+      // после наполнения области перечитали из-за правки файла на диске, и его прежние
+      // диагностики с метриками посчитаны уже по другому тексту.
+      if (!isComputedDataFrozen || contentChanged) {
         clearSecondaryData();
       }
 
@@ -353,7 +427,18 @@ public class DocumentContext implements Comparable<DocumentContext> {
         tokenizer = new BSLTokenizer(content);
       }
       this.version = version;
-      symbolTree = computeSymbolTree();
+      // Перечитывание того же текста — документ освобождали, а теперь он снова нужен проходу
+      // доразрешения или пакетному анализу — дерева не меняет, пока оно годно: строить его
+      // заново значило бы повторить заметную долю всего разбора ради того же результата.
+      if (contentChanged || !isSymbolTreeUpToDate()) {
+        symbolTree.set(computeSymbolTree());
+      }
+
+      // Отпечаток запоминается последним, когда содержимое уже применено и дерево построено:
+      // сорвавшийся разбор не должен выглядеть состоявшимся, иначе повторная попытка сочтёт
+      // текст прежним и работу не переделает.
+      contentFingerprint = fingerprint;
+      contentChangedOnLastRebuild = contentChanged;
 
     } finally {
       releaseLocks();
@@ -361,12 +446,64 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
   }
 
-  protected void rebuildFromFileSystem() {
+  /**
+   * Отпечаток содержимого — криптографическая свёртка текста.
+   * <p>
+   * Разрядность здесь важна: по совпадению отпечатков документ считается неизменившимся
+   * и сохраняет посчитанные по нему записи. У {@code String.hashCode()} всего 32 бита, и
+   * совпадения у него не редкость, а конструируемое свойство — {@code "Aa"} и {@code "BB"}
+   * равны по нему при равной длине. Ошибка в эту сторону тихая: правку не заметят, и
+   * записи останутся от прежнего текста.
+   *
+   * @param content содержимое документа.
+   * @return отпечаток.
+   */
+  private static byte[] contentFingerprint(String content) {
+    MessageDigest digest;
     try {
-      var newContent = FileUtils.readFileToString(new File(uri), StandardCharsets.UTF_8);
+      digest = MessageDigest.getInstance("SHA-256");
+    } catch (NoSuchAlgorithmException e) {
+      // SHA-256 обязателен для любой реализации Java, поэтому сюда попасть нельзя.
+      throw new IllegalStateException(e);
+    }
+    // Свёртываются сами кодовые единицы UTF-16, кусками: перекодирование всего текста
+    // в UTF-8 обходилось дороже самой свёртки.
+    var chars = new char[FINGERPRINT_CHUNK];
+    var bytes = new byte[FINGERPRINT_CHUNK * Character.BYTES];
+    var length = content.length();
+    for (var from = 0; from < length; from += FINGERPRINT_CHUNK) {
+      var count = Math.min(FINGERPRINT_CHUNK, length - from);
+      content.getChars(from, from + count, chars, 0);
+      for (var i = 0; i < count; i++) {
+        bytes[Character.BYTES * i] = (byte) (chars[i] >> Byte.SIZE);
+        bytes[Character.BYTES * i + 1] = (byte) chars[i];
+      }
+      digest.update(bytes, 0, Character.BYTES * count);
+    }
+    return digest.digest();
+  }
+
+  /**
+   * Перестроить документ по содержимому его файла.
+   *
+   * @return {@code true}, если файл прочитан; {@code false}, если прочитать его не удалось
+   *     и документ не изменился.
+   */
+  protected boolean rebuildFromFileSystem() {
+    try {
+      // Не Files.readString: тот бросает на байтах, недопустимых в UTF-8, и модуль в другой
+      // кодировке не загрузился бы вовсе. Конструктор строки заменяет их символом-заменителем.
+      var newContent = new String(Files.readAllBytes(Path.of(uri)), StandardCharsets.UTF_8);
       rebuild(newContent, 0);
-    } catch (IOException e) {
+      return true;
+    } catch (NoSuchFileException e) {
+      // Файл удалили раньше, чем до него дошло чтение: временный файл, удалённый каталог.
+      // Это не сбой сервера — документ просто остаётся без текста.
+      LOGGER.debug("Can't rebuild content from uri, file is gone: {}", uri, e);
+      return false;
+    } catch (IOException | IllegalArgumentException e) {
       LOGGER.error("Can't rebuild content from uri", e);
+      return false;
     }
   }
 
@@ -388,6 +525,38 @@ public class DocumentContext implements Comparable<DocumentContext> {
         metrics.clear();
         diagnosticIgnoranceData.clear();
       }
+    } finally {
+      releaseLocks();
+    }
+  }
+
+  /**
+   * Пересчитать привязку документа к метаданным конфигурации — тип модуля, объект метаданных и
+   * ссылку на него — и то, что от неё зависит, не разбирая текст заново.
+   * <p>
+   * Дерево символов строится заново по уже разобранному тексту: от привязки зависят имя модуля
+   * и вид методов. Вместе с ним забываются диагностики и сложности, посчитанные по прежним
+   * символам. Если текста у документа нет, дерево не перестроить — тогда забывается отпечаток
+   * содержимого, и следующий разбор даже того же текста считается правкой.
+   *
+   * @return {@code true}, если дерево символов построено заново.
+   */
+  protected boolean rebindToConfiguration() {
+    acquireLocks();
+
+    try {
+      moduleType.clear();
+      mdObject.clear();
+      mdoRef.clear();
+      clearDependantData();
+      cognitiveComplexityData.clear();
+      cyclomaticComplexityData.clear();
+      if (tokenizer == null) {
+        contentFingerprint = null;
+        return false;
+      }
+      symbolTree.set(computeSymbolTree());
+      return true;
     } finally {
       releaseLocks();
     }
@@ -432,8 +601,19 @@ public class DocumentContext implements Comparable<DocumentContext> {
     return CONTENT_SPLIT_PATTERN.split(getContent(), -1);
   }
 
+  private BSLTokenizer requireTokenizer() {
+    if (tokenizer == null) {
+      throw new DocumentContentUnavailableException(uri);
+    }
+    return tokenizer;
+  }
+
   private SymbolTree computeSymbolTree() {
     return new SymbolTreeComputer(this, selfMemberClassifier, eventHandlerClassifier).compute();
+  }
+
+  private boolean isSymbolTreeUpToDate() {
+    return new SymbolTreeComputer(this, selfMemberClassifier, eventHandlerClassifier).isUpToDate(symbolTree.get());
   }
 
 
@@ -465,7 +645,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
   private MetricStorage computeMetrics() {
     var metricsTemp = new MetricStorage();
-    final List<MethodSymbol> methodsUnboxed = symbolTree.getMethods();
+    final List<MethodSymbol> methodsUnboxed = symbolTree.get().getMethods();
 
     metricsTemp.setFunctions(Math.toIntExact(methodsUnboxed.stream().filter(MethodSymbol::isFunction).count()));
     metricsTemp.setProcedures(methodsUnboxed.size() - metricsTemp.getFunctions());

@@ -36,11 +36,15 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 @SpringBootTest
@@ -180,9 +184,11 @@ class PermissionFilterBeforeSendCallbackTest {
     // when
     var filteredEvent = permissionFilter.execute(event, mock(Hint.class));
 
-    // then
-    assertThat(filteredEvent).isNotNull();
+    // then: событие, на котором спросили, уходит повторной отправкой после ответа
+    // (см. PermissionFilterSentryPipelineTest), а следующие — сразу.
+    assertThat(filteredEvent).isNull();
     assertThat(configuration.getSendErrors()).isEqualTo(SendErrorsMode.SEND);
+    assertThat(permissionFilter.execute(new SentryEvent(), mock(Hint.class))).isNotNull();
 
   }
 
@@ -238,9 +244,118 @@ class PermissionFilterBeforeSendCallbackTest {
     // when
     var filteredEvent = permissionFilter.execute(event, mock(Hint.class));
 
+    // then: разрешение на один раз ушло на отложенное событие, дальше снова спрашиваем.
+    assertThat(filteredEvent).isNull();
+    assertThat(configuration.getSendErrors()).isEqualTo(SendErrorsMode.ASK);
+  }
+
+  @Test
+  void dontWaitForAnswerAndApplyItToNextEvents() {
+
+    // given: клиент ещё не ответил на вопрос — как когда уведомление висит в редакторе.
+    configuration.setSendErrors(SendErrorsMode.ASK);
+
+    var languageClient = mock(LanguageClient.class);
+    var question = new CompletableFuture<MessageActionItem>();
+    when(languageClient.showMessageRequest(any())).thenReturn(question);
+
+    languageClientHolder.connect(languageClient);
+    clientCapabilitiesHolder.setCapabilities(mock(ClientCapabilities.class));
+
+    // when: ответа нет — событие решается сразу и не уходит.
+    var filteredEvent = assertTimeoutPreemptively(Duration.ofSeconds(2),
+      () -> permissionFilter.execute(new SentryEvent(), mock(Hint.class)));
+
+    // then
+    assertThat(filteredEvent).isNull();
+
+    // when: пользователь разрешил отправку позже.
+    var answerTitle = Resources.getResourceString(
+      configuration.getLanguage(),
+      PermissionFilterBeforeSendCallback.class,
+      "answer_send"
+    );
+    question.complete(new MessageActionItem(answerTitle));
+
+    // then: разрешение действует на следующие события.
+    assertThat(configuration.getSendErrors()).isEqualTo(SendErrorsMode.SEND);
+    assertThat(permissionFilter.execute(new SentryEvent(), mock(Hint.class))).isNotNull();
+  }
+
+  @Test
+  void askAgainIfQuestionFailed() {
+
+    // given
+    configuration.setSendErrors(SendErrorsMode.ASK);
+
+    var languageClient = mock(LanguageClient.class);
+    when(languageClient.showMessageRequest(any()))
+      .thenReturn(CompletableFuture.failedFuture(new IllegalStateException("клиент отключился")));
+
+    languageClientHolder.connect(languageClient);
+    clientCapabilitiesHolder.setCapabilities(mock(ClientCapabilities.class));
+
+    // when
+    var first = permissionFilter.execute(new SentryEvent(), mock(Hint.class));
+    var second = permissionFilter.execute(new SentryEvent(), mock(Hint.class));
+
+    // then: сорвавшийся вопрос не мешает задать следующий.
+    assertThat(first).isNull();
+    assertThat(second).isNull();
+    assertThat(configuration.getSendErrors()).isEqualTo(SendErrorsMode.ASK);
+    verify(languageClient, times(2)).showMessageRequest(any());
+  }
+
+  @Test
+  void permittedReplayIsDroppedIfSendingWasDisabled() {
+
+    // given: событие переотправляется с разрешением, а отправку тем временем запретили.
+    var hint = new Hint();
+    hint.set(PermissionFilterBeforeSendCallback.SEND_PERMITTED_HINT, Boolean.TRUE);
+    configuration.setSendErrors(SendErrorsMode.NEVER);
+
+    // when
+    var filteredEvent = permissionFilter.execute(new SentryEvent(), hint);
+
+    // then
+    assertThat(filteredEvent).isNull();
+  }
+
+  @Test
+  void permittedReplayPassesWhileModeIsAskAgain() {
+
+    // given: после «отправить один раз» режим снова «спрашивать», а пачка ещё уходит.
+    var hint = new Hint();
+    hint.set(PermissionFilterBeforeSendCallback.SEND_PERMITTED_HINT, Boolean.TRUE);
+    configuration.setSendErrors(SendErrorsMode.ASK);
+
+    // when
+    var filteredEvent = permissionFilter.execute(new SentryEvent(), hint);
+
     // then
     assertThat(filteredEvent).isNotNull();
-    assertThat(configuration.getSendErrors()).isEqualTo(SendErrorsMode.ASK);
+  }
+
+  @Test
+  void askAgainIfQuestionThrew() {
+
+    // given: клиент бросил исключение прямо на отправке вопроса.
+    configuration.setSendErrors(SendErrorsMode.ASK);
+
+    var languageClient = mock(LanguageClient.class);
+    when(languageClient.showMessageRequest(any())).thenThrow(new IllegalStateException("поток закрыт"));
+
+    languageClientHolder.connect(languageClient);
+    clientCapabilitiesHolder.setCapabilities(mock(ClientCapabilities.class));
+
+    // when
+    var first = permissionFilter.execute(new SentryEvent(), mock(Hint.class));
+    var second = permissionFilter.execute(new SentryEvent(), mock(Hint.class));
+
+    // then
+    assertThat(first).isNull();
+    assertThat(second).isNull();
+    verify(languageClient, times(2)).showMessageRequest(any());
   }
 
   @Test

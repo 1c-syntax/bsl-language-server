@@ -86,14 +86,14 @@ class TypeServiceDelegationTest {
   }
 
   @Test
-  void getDeclaredReturnTypesDelegatesToSymbolTypeIndex() {
+  void getReturnTypesDelegatesToSymbolTypeIndex() {
     // given
     var method = org.mockito.Mockito.mock(
       com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol.class);
-    when(symbolTypeIndex.getDeclaredReturnTypes(method)).thenReturn(TypeSet.of(NUMBER));
+    when(symbolTypeIndex.getReturnTypes(method)).thenReturn(TypeSet.of(NUMBER));
 
     // when / then
-    assertThat(typeService.getDeclaredReturnTypes(method).refs()).containsExactly(NUMBER);
+    assertThat(typeService.getReturnTypes(method).refs()).containsExactly(NUMBER);
   }
 
   @Test

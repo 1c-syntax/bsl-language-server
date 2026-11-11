@@ -21,8 +21,17 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.EventHandlerClassifier;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.EventMethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SelfMemberClassifier;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import lombok.SneakyThrows;
@@ -31,16 +40,22 @@ import org.antlr.v4.runtime.Token;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
@@ -59,6 +74,243 @@ class DocumentContextTest {
   }
 
   @Test
+  void rereadingSameContentIsNotAChange() {
+    // given
+    var documentContext = getDocumentContext();
+    var content = documentContext.getContent();
+
+    // when: тот же самый текст разобран заново — так бывает после освобождения
+    // вторичных данных, когда документ понадобился снова.
+    documentContext.rebuild(content, documentContext.getVersion() + 1);
+
+    // then
+    assertThat(documentContext.isContentChangedOnLastRebuild()).isFalse();
+  }
+
+  @Test
+  void rereadingSameContentKeepsSymbolTree() {
+    // given: документ освобождён — так бывает, когда он больше не нужен
+    var documentContext = getDocumentContext();
+    var content = documentContext.getContent();
+    var symbolTree = documentContext.getSymbolTree();
+    documentContext.clearSecondaryData();
+
+    // when: тот же текст понадобился снова
+    documentContext.rebuild(content, documentContext.getVersion() + 1);
+
+    // then: дерево то же самое, а текст снова разобран
+    assertThat(documentContext.getSymbolTree()).isSameAs(symbolTree);
+    assertThat(documentContext.getAst()).isNotNull();
+  }
+
+  @Test
+  void rebuildWithOtherContentBuildsNewSymbolTree() {
+    // given
+    var documentContext = getDocumentContext();
+    var symbolTree = documentContext.getSymbolTree();
+
+    // when
+    documentContext.rebuild(documentContext.getContent() + "\nПроцедура Ещё() КонецПроцедуры",
+      documentContext.getVersion() + 1);
+
+    // then
+    assertThat(documentContext.getSymbolTree()).isNotSameAs(symbolTree);
+    assertThat(documentContext.getSymbolTree().getMethodSymbol("Ещё")).isPresent();
+  }
+
+  @Test
+  void rereadingSameContentWhenMethodIsClassifiedOtherwiseRebuildsSymbolTree() throws IllegalAccessException {
+    // given: после построения дерева методы модуля стали обработчиками событий — например,
+    // у типа модуля зарегистрировали события
+    var documentContext = getDocumentContext();
+    var symbolTree = documentContext.getSymbolTree();
+    EventHandlerClassifier everyMethodIsHandler = (document, name) -> true;
+    FieldUtils.writeField(documentContext, "eventHandlerClassifier", everyMethodIsHandler, true);
+
+    // when
+    documentContext.rebuild(documentContext.getContent(), documentContext.getVersion() + 1);
+
+    // then
+    assertThat(documentContext.getSymbolTree()).isNotSameAs(symbolTree);
+    assertThat(documentContext.getSymbolTree().getMethods())
+      .isNotEmpty()
+      .allMatch(EventMethodSymbol.class::isInstance);
+  }
+
+  @Test
+  void rereadingSameContentWhenAssignmentBecomesSelfPropertyRebuildsSymbolTree() throws IllegalAccessException {
+    // given: голое присваивание «А = 0» завело переменную, а потом у своего типа модуля
+    // появился реквизит А
+    var documentContext = getDocumentContext();
+    var symbolTree = documentContext.getSymbolTree();
+    assertThat(symbolTree.getVariables()).extracting(VariableSymbol::getName).contains("А");
+    SelfMemberClassifier nameIsSelfProperty = (document, name) -> "А".equals(name);
+    FieldUtils.writeField(documentContext, "selfMemberClassifier", nameIsSelfProperty, true);
+
+    // when
+    documentContext.rebuild(documentContext.getContent(), documentContext.getVersion() + 1);
+
+    // then: присваивание обращается к реквизиту, переменной нет
+    assertThat(documentContext.getSymbolTree()).isNotSameAs(symbolTree);
+    assertThat(documentContext.getSymbolTree().getVariables())
+      .extracting(VariableSymbol::getName)
+      .doesNotContain("А");
+  }
+
+  @Test
+  void rereadingSameContentWhenNameIsNoLongerSelfPropertyRebuildsSymbolTree() throws IllegalAccessException {
+    // given: дерево построено, когда А было реквизитом своего типа, — переменной у него нет,
+    // и в самом дереве об этом имени ничего не сказано
+    var documentContext = getDocumentContext();
+    var content = documentContext.getContent() + "\n";
+    var selfMemberClassifier = FieldUtils.readField(documentContext, "selfMemberClassifier", true);
+    SelfMemberClassifier nameIsSelfProperty = (document, name) -> "А".equals(name);
+    FieldUtils.writeField(documentContext, "selfMemberClassifier", nameIsSelfProperty, true);
+    documentContext.rebuild(content, documentContext.getVersion() + 1);
+    var symbolTree = documentContext.getSymbolTree();
+    assertThat(symbolTree.getVariables()).extracting(VariableSymbol::getName).doesNotContain("А");
+    FieldUtils.writeField(documentContext, "selfMemberClassifier", selfMemberClassifier, true);
+
+    // when: реквизита больше нет
+    documentContext.rebuild(content, documentContext.getVersion() + 1);
+
+    // then
+    assertThat(documentContext.getSymbolTree()).isNotSameAs(symbolTree);
+    assertThat(documentContext.getSymbolTree().getVariables())
+      .extracting(VariableSymbol::getName)
+      .contains("А");
+  }
+
+  @Test
+  void rereadingSameContentUnderOtherBindingRebuildsSymbolTree() throws IllegalAccessException {
+    // given: дерево построено при другой привязке к метаданным — например, тип модуля стал
+    // известен уже после разбора файла
+    var documentContext = getDocumentContext();
+    var symbolTree = documentContext.getSymbolTree();
+    var basis = symbolTree.getBasis();
+    FieldUtils.writeField(symbolTree, "basis",
+      new SymbolTree.Basis(basis.moduleType(), "Другой.Объект", basis.bareSelfProperties()), true);
+
+    // when
+    documentContext.rebuild(documentContext.getContent(), documentContext.getVersion() + 1);
+
+    // then
+    assertThat(documentContext.getSymbolTree()).isNotSameAs(symbolTree);
+  }
+
+  @Test
+  void firstBuildCountsAsChange() {
+    // given, when
+    var documentContext = getDocumentContext();
+
+    // then: до первого разбора сравнивать не с чем, поэтому содержимое считается новым.
+    assertThat(documentContext.isContentChangedOnLastRebuild()).isTrue();
+  }
+
+  @Test
+  void rebuildWithOtherContentIsAChange() {
+    // given
+    var documentContext = getDocumentContext();
+
+    // when
+    documentContext.rebuild(documentContext.getContent() + "\nПроцедура Ещё() КонецПроцедуры",
+      documentContext.getVersion() + 1);
+
+    // then
+    assertThat(documentContext.isContentChangedOnLastRebuild()).isTrue();
+  }
+
+  @Test
+  void rebuildIsAChangeEvenWhenTextsCollideByLengthAndHash() {
+    // given: два разных текста одинаковой длины, у которых совпадает String.hashCode() —
+    // классическая пара "Aa" / "BB". Отпечаток, построенный на этом хэше, счёл бы правку
+    // перечитыванием и оставил бы записи от прежнего текста.
+    var documentContext = getDocumentContext();
+    var first = "Процедура Aa() КонецПроцедуры";
+    var second = "Процедура BB() КонецПроцедуры";
+    assertThat(second).hasSameSizeAs(first);
+    assertThat(second.hashCode()).isEqualTo(first.hashCode());
+    documentContext.rebuild(first, documentContext.getVersion() + 1);
+
+    // when
+    documentContext.rebuild(second, documentContext.getVersion() + 1);
+
+    // then
+    assertThat(documentContext.isContentChangedOnLastRebuild()).isTrue();
+  }
+
+  @Test
+  void rebuildIsAChangeWhenLongTextDiffersOnlyAtTheEnd() {
+    // given: длинный текст — отпечаток собирается из него по кускам, а правка стоит
+    // далеко за первым из них.
+    var documentContext = getDocumentContext();
+    var comment = "// " + "ж".repeat(10_000) + "\n";
+    documentContext.rebuild(comment + "Процедура А() КонецПроцедуры", documentContext.getVersion() + 1);
+    documentContext.rebuild(comment + "Процедура А() КонецПроцедуры", documentContext.getVersion() + 1);
+    assertThat(documentContext.isContentChangedOnLastRebuild()).isFalse();
+
+    // when
+    documentContext.rebuild(comment + "Процедура Б() КонецПроцедуры", documentContext.getVersion() + 1);
+
+    // then
+    assertThat(documentContext.isContentChangedOnLastRebuild()).isTrue();
+  }
+
+  @Test
+  void frozenDocumentDropsSecondaryDataWhenContentReallyChanged() throws IllegalAccessException {
+    // given: документ заморожен — так область поступает с файлом, который никто не открывал.
+    var documentContext = getDocumentContext();
+    documentContext.getDiagnostics();
+    documentContext.freezeComputedData();
+
+    // when: файл изменился на диске и перечитан.
+    documentContext.rebuild(documentContext.getContent() + "\nПроцедура Ещё() КонецПроцедуры",
+      documentContext.getVersion() + 1);
+
+    // then: посчитанное по прежнему тексту сброшено. Заморозка — политика хранения, а
+    // изменение содержимого — факт, и факт сильнее: иначе диагностики остались бы от
+    // текста, которого больше нет.
+    var diagnostics = FieldUtils.readField(documentContext, "diagnostics", true);
+    assertThat(FieldUtils.readField(diagnostics, "value", true)).isNull();
+  }
+
+  @Test
+  void frozenDocumentKeepsSecondaryDataOnRereadOfSameContent() throws IllegalAccessException {
+    // given
+    var documentContext = getDocumentContext();
+    documentContext.getDiagnostics();
+    documentContext.freezeComputedData();
+
+    // when: тот же самый текст перечитан заново.
+    documentContext.rebuild(documentContext.getContent(), documentContext.getVersion() + 1);
+
+    // then: пересчитывать нечего — ради этого заморозка и заведена.
+    var diagnostics = FieldUtils.readField(documentContext, "diagnostics", true);
+    assertThat(FieldUtils.readField(diagnostics, "value", true)).isNotNull();
+  }
+
+  @Test
+  void rebuildWithRepeatedVersionLeavesFingerprintOfLoadedTree() {
+    // given: разбор с тем же номером версии содержимое не применяет — дерево остаётся прежним.
+    var documentContext = getDocumentContext();
+    var first = "Процедура Первая() КонецПроцедуры";
+    var second = "Процедура Вторая() КонецПроцедуры\nПроцедура Третья() КонецПроцедуры";
+    documentContext.rebuild(first, 1);
+    documentContext.rebuild(second, 1);
+    assertThat(documentContext.isContentChangedOnLastRebuild())
+      .as("содержимое не применялось — значит и не менялось")
+      .isFalse();
+
+    // when: тот же текст приходит с новым номером версии и наконец применяется.
+    documentContext.rebuild(second, 2);
+
+    // then: разбор обязан считаться изменением. Если бы отпечаток записался в неприменённом
+    // разборе, здесь вышло бы «не менялось», и записи по прежнему дереву остались бы жить.
+    assertThat(documentContext.isContentChangedOnLastRebuild()).isTrue();
+    assertThat(documentContext.getSymbolTree().getMethods()).hasSize(2);
+  }
+
+  @Test
   void testClearASTData() throws IllegalAccessException {
     // given
     var documentContext = getDocumentContext();
@@ -69,6 +321,22 @@ class DocumentContextTest {
     // then
     final Object tokenizer = FieldUtils.readField(documentContext, "tokenizer", true);
     assertThat(tokenizer).isNull();
+  }
+
+  @Test
+  void documentWithoutContentReportsItsUri() {
+    // given
+    var documentContext = getDocumentContext();
+
+    // when
+    documentContext.clearSecondaryData();
+
+    // then
+    assertThatThrownBy(documentContext::getAst)
+      .isInstanceOfSatisfying(DocumentContentUnavailableException.class,
+        e -> assertThat(e.getUri()).isEqualTo(documentContext.getUri()));
+    assertThatThrownBy(documentContext::getTokens).isInstanceOf(DocumentContentUnavailableException.class);
+    assertThatThrownBy(documentContext::getContent).isInstanceOf(DocumentContentUnavailableException.class);
   }
 
   @Test
@@ -183,6 +451,71 @@ class DocumentContextTest {
 
     // then
     assertThat(documentContext.getFileType()).isEqualTo(FileType.BSL);
+  }
+
+  @Test
+  void rebuildFromFileSystemDoesNotThrowOnUriWithAuthority() {
+    // given: LSP-клиент на UNC отдаёт file://host/share/... — у URI есть authority.
+    // new File(uri) бросает IllegalArgumentException и рвёт populateContext.
+    var uri = URI.create("file://192.168.113.131/share/does-not-exist.bsl");
+    var documentContext = TestUtils.getDocumentContext(
+      uri,
+      "Процедура Тест() КонецПроцедуры",
+      TestUtils.getRegisteredServerContext()
+    );
+
+    // when-then: нет файла → IOException; на Unix Path.of(file://host/...) → IAE.
+    // Оба логируются, populate не рвётся.
+    assertThatCode(documentContext::rebuildFromFileSystem).doesNotThrowAnyException();
+  }
+
+  @Test
+  void rebuildFromFileSystemReadsFileWithBytesInvalidForUtf8(@TempDir Path tempDir) throws IOException {
+    // given: модуль сохранён не в UTF-8 — кириллица комментария в windows-1251 даёт байты,
+    // которых в UTF-8 быть не может.
+    var file = tempDir.resolve("Module.bsl");
+    Files.writeString(file, "// Комментарий\nProcedure Test()\nEndProcedure\n", Charset.forName("windows-1251"));
+    var documentContext = TestUtils.getDocumentContext(
+      file.toUri(),
+      "Procedure Previous()\nEndProcedure\n",
+      TestUtils.getRegisteredServerContext()
+    );
+
+    // when
+    documentContext.rebuildFromFileSystem();
+
+    // then: недопустимые байты заменены, а не сорвали чтение — документ разобран по файлу.
+    assertThat(documentContext.getContent()).contains("Procedure Test()");
+    assertThat(documentContext.getSymbolTree().getMethods())
+      .extracting(MethodSymbol::getName)
+      .containsExactly("Test");
+  }
+
+  @Test
+  void rebuildFromFileSystemDoesNotReportVanishedFileAsError(@TempDir Path tempDir) {
+    // given: файл удалили раньше, чем до него дошло чтение.
+    var documentContext = TestUtils.getDocumentContext(
+      tempDir.resolve("Module.bsl").toUri(),
+      "Procedure Previous()\nEndProcedure\n",
+      TestUtils.getRegisteredServerContext()
+    );
+    var logger = (Logger) LoggerFactory.getLogger(DocumentContext.class);
+    var appender = new ListAppender<ILoggingEvent>();
+    appender.start();
+    logger.addAppender(appender);
+
+    try {
+      // when
+      var read = documentContext.rebuildFromFileSystem();
+
+      // then: файл не прочитан и документ прежний, но ошибкой сервера это не считается.
+      assertThat(read).isFalse();
+      assertThat(documentContext.getContent()).contains("Procedure Previous()");
+      assertThat(appender.list)
+        .noneMatch(event -> event.getLevel().isGreaterOrEqual(Level.ERROR));
+    } finally {
+      logger.detachAppender(appender);
+    }
   }
 
   @SneakyThrows

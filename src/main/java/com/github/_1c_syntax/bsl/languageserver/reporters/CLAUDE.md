@@ -8,11 +8,23 @@
 
 ## Контракт
 
-- **`DiagnosticReporter`** — интерфейс: `key()` (уникальный ключ формата) + `report(AnalysisInfo, Path)`.
+Отчёт формируется **потоково**: результат каждого файла записывается сразу после его разбора и
+не удерживается в памяти (см. issue #4412). Накапливать `FileInfo` нельзя; если формату нужны
+сводные данные — копить надо агрегаты.
+
+- **`DiagnosticReporter`** — `key()` + жизненный цикл `beginReport(ReportContext, Path)` →
+  `accept(FileInfo)`×N → ровно один из `endReport()` / `abortReport()`.
+  Все вызовы последовательны и из одного потока, синхронизация не нужна.
+  Порядок файлов — порядок завершения разбора, недетерминирован.
 - **`AbstractDiagnosticReporter`** — база с доступом к `ServerContextProvider` и `DiagnosticInfos`.
+- **`ReportFile`** — файл отчёта «всё или ничего»: без `commit()` удаляется при закрытии.
+  Используй его вместо ручного `FileOutputStream`, иначе при сбое останется обрезанный отчёт.
+- **`ReportSession`** (создаётся `ReportersAggregator.beginReport()`) — раздаёт результаты активным
+  репортёрам. Запись идёт в отдельном потоке через `ReportWriteQueue`: анализ только ставит
+  задачу в очередь и не ждёт ввода-вывода.
 - Выбор форматов: CLI `analyze --reporter <key>` → бин `filteredReporters`
   (`cli/ReporterSelectionConfiguration`, зависит от `AnalyzeCommand`) фильтрует все бины
-  `DiagnosticReporter` по ключам → `ReportersAggregator.report()` вызывает каждый активный.
+  `DiagnosticReporter` по ключам.
 
 ## Форматы (ключ → файл)
 
@@ -23,8 +35,9 @@
 
 ## Модель данных
 
-- **`AnalysisInfo`** (record) — `date`, `fileinfos: List<FileInfo>`, `sourceDir`.
+- **`ReportContext`** (record) — `date`, `sourceDir`: «шапка» отчёта, всё, что известно до анализа.
 - **`FileInfo`** — путь файла, `mdoRef`, список диагностик, `MetricStorage`; строится из `DocumentContext`.
+- **`AnalysisInfo`** (record) — модель **чтения** формата `bsl-json.json`; в записи не участвует.
 - `data/` — записи модели; `databind/` — Jackson-хелперы сериализации (`AnalysisInfoJsonMapper`,
   сериализаторы `DiagnosticCode`/`DiagnosticMessage`, `DiagnosticMixIn`).
 
@@ -33,4 +46,9 @@
 - Новый формат отчёта = новый бин `DiagnosticReporter` со своим `key()` (наследуй
   `AbstractDiagnosticReporter`, если нужен доступ к контексту/инфо диагностик). Регистрировать
   вручную в аггрегаторе не нужно — он подхватывается по бину и ключу.
+- Пиши через `SequenceWriter` (`writerFor(Тип.class).writeValuesAsArray(...)`): для массива верхнего
+  уровня он заменяет генератор целиком, для вложенного — принимает уже открытый генератор и при
+  своём `close()` его не закрывает. XML (`junit`) — только `ToXmlGenerator`.
+- Формат файлов зафиксирован побайтово в `ReporterOutputFormatTest`. Если тест упал — вывод
+  изменился; это ломает интеграции, а не просто тест.
 - Имя ключа стабильно (используется в CLI и интеграциях) — не переименовывай без причины.

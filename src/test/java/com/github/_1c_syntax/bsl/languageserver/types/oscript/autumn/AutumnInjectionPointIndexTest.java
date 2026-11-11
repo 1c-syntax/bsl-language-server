@@ -235,8 +235,9 @@ class AutumnInjectionPointIndexTest {
     var symbolTree = mock(SymbolTree.class);
     var constructor = mock(ConstructorSymbol.class);
     when(serverContextProvider.getServerContext(uri)).thenReturn(Optional.of(serverContext));
-    when(serverContext.getDocument(uri)).thenReturn(document);
+    when(serverContext.getDocumentNoLock(uri)).thenReturn(document);
     when(document.getSymbolTree()).thenReturn(symbolTree);
+    when(document.getSymbolTreeNoLock()).thenReturn(symbolTree);
     lenient().when(constructor.getAnnotations()).thenReturn(List.of(constructorAnnotations));
     lenient().when(constructor.getParameters()).thenReturn(parameters);
     when(symbolTree.getConstructor()).thenReturn(Optional.of(constructor));

@@ -23,16 +23,20 @@ package com.github._1c_syntax.bsl.languageserver.cli;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import picocli.CommandLine;
 
 import java.io.File;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
@@ -165,4 +169,21 @@ class FormatCommandTest {
     // then
     assertThat(exitCode).isZero();
   }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void callFormatsWithoutActiveWorkspace(boolean singleFile) throws Exception {
+    var file = tempDir.resolve("Module.bsl");
+    Files.writeString(file, "Процедура Тест()\nСообщить(1);\nКонецПроцедуры\n");
+    WorkspaceContextHolder.clear();
+
+    var exitCode = new CommandLine(formatCommand).execute(
+      "-s", (singleFile ? file : tempDir).toString(), "-q"
+    );
+
+    assertThat(exitCode).isZero();
+    assertThat(Files.readString(file)).contains("\n\tСообщить(1);");
+    assertThat(WorkspaceContextHolder.get()).isNull();
+  }
+
 }

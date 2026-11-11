@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContentUnavailableException;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
@@ -203,7 +204,7 @@ public class ExpressionAtPosition {
   private static BSLParser.@Nullable FileContext safeGetAst(DocumentContext documentContext) {
     try {
       return documentContext.getAst();
-    } catch (NullPointerException e) {
+    } catch (DocumentContentUnavailableException e) {
       // tokenizer ещё не инициализирован (документ не открыт/не прочитан) —
       // вывод типов корректно ничего не возвращает.
       return null;
@@ -238,7 +239,7 @@ public class ExpressionAtPosition {
     var exprCtx = ExpressionAtPosition.<BSLParser.ExpressionContext>enclosingRule(
       terminal, BSLParser.RULE_expression);
     if (exprCtx.isPresent()) {
-      return exprCtx.map(ExpressionTreeBuildingVisitor::buildExpressionTree);
+      return exprCtx.map(DiagnosticDeclarationSession::expressionTree);
     }
     var complexIdent = ExpressionAtPosition.<BSLParser.ComplexIdentifierContext>enclosingRule(
       terminal, BSLParser.RULE_complexIdentifier);

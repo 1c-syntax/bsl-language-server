@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Positions;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
@@ -31,6 +32,10 @@ import java.util.Optional;
 
 /**
  * Интерфейс поискового движка.
+ * <p>
+ * URI документа — тот, под которым документ зарегистрирован в контексте
+ * ({@link com.github._1c_syntax.bsl.languageserver.context.DocumentContext#getUri()}): поиск его
+ * не нормализует.
  */
 public interface ReferenceFinder {
   /**
@@ -56,5 +61,17 @@ public interface ReferenceFinder {
    */
   default Optional<Reference> findReference(URI uri, TerminalNode terminal) {
     return findReference(uri, Positions.create(terminal));
+  }
+
+  /**
+   * Целевой символ по терминалу без обязательного построения полной ссылки.
+   * По умолчанию сохраняет терминальный путь конкретного поисковика.
+   *
+   * @param uri URI документа.
+   * @param terminal терминал обращения.
+   * @return доступная цель ссылки.
+   */
+  default Optional<Symbol> findTargetSymbol(URI uri, TerminalNode terminal) {
+    return findReference(uri, terminal).map(Reference::symbol);
   }
 }

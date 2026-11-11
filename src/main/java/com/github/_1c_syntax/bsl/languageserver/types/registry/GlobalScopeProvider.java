@@ -44,7 +44,6 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -110,6 +109,7 @@ public class GlobalScopeProvider {
   private final TypeRegistry typeRegistry;
   /** Name-индекс членов GLOBAL_CONTEXT, кэшированный по наборам-источникам (см. {@link #globalMember}). */
   private final AtomicReference<GlobalIndex> globalIndexRef = new AtomicReference<>();
+  private final Object globalIndexLock = new Object();
   /**
    * URI документа-модуля → его тип-значение (обратный индекс к name-keyed записям).
    * Заполняется провайдерами регистрации модулей ({@code ConfigurationModuleMembersProvider}
@@ -187,18 +187,38 @@ public class GlobalScopeProvider {
     var bslSource = typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, FileType.BSL);
     var osSource = typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, FileType.OS);
     var index = globalIndexRef.get();
-    if (index == null || index.bslSource() != bslSource || index.osSource() != osSource) {
+    if (!isBuiltFrom(index, bslSource, osSource)) {
+      index = rebuildGlobalIndex();
+    }
+    return Optional.ofNullable(index.byName().get(fileType).get(name.toLowerCase(Locale.ROOT)));
+  }
+
+  /**
+   * Пересобирает индекс по текущим наборам членов. Сброс видят разом все потоки, которым
+   * нужно глобальное имя, поэтому собирает один, а остальные ждут и берут его сборку.
+   * Наборы читаются заново под замком: индекс из них самый свежий, и опубликовать его поверх
+   * чужого можно, не боясь затереть более новый.
+   */
+  private GlobalIndex rebuildGlobalIndex() {
+    synchronized (globalIndexLock) {
+      var bslSource = typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, FileType.BSL);
+      var osSource = typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, FileType.OS);
+      var index = globalIndexRef.get();
+      if (isBuiltFrom(index, bslSource, osSource)) {
+        return index;
+      }
       var rebuilt = new GlobalIndex(bslSource, osSource, Map.of(
         FileType.BSL, globalNameIndex(bslSource),
         FileType.OS, globalNameIndex(osSource)));
-      // CAS, а не set: параллельный поток мог опубликовать индекс по более свежим наборам,
-      // и затирать его своим не нужно — иначе следующее чтение увидит рассинхрон и зря
-      // пересоберёт индекс. Собранный здесь экземпляр всё равно валиден для этого вызова:
-      // он построен ровно из тех наборов, которые мы прочитали выше.
-      globalIndexRef.compareAndSet(index, rebuilt);
-      index = rebuilt;
+      globalIndexRef.set(rebuilt);
+      return rebuilt;
     }
-    return Optional.ofNullable(index.byName().get(fileType).get(name.toLowerCase(Locale.ROOT)));
+  }
+
+  private static boolean isBuiltFrom(@org.jspecify.annotations.Nullable GlobalIndex index,
+                                     Collection<MemberDescriptor> bslSource,
+                                     Collection<MemberDescriptor> osSource) {
+    return index != null && index.bslSource() == bslSource && index.osSource() == osSource;
   }
 
   /**
@@ -491,6 +511,7 @@ public class GlobalScopeProvider {
 
   private static LanguageData buildBslFromContext(ContextProvider provider) {
     var globalContext = provider.getGlobalContext();
+    var typeNames = BslContextPlatformTypesProvider.typeNamesOf(provider);
     // Bilingual: если provider — Platform, тащим en-attachments для всех
     // глобальных функций (description, returnValueDescription, notes,
     // examples, seeAlso). MemberDescriptor станет bilingual.
@@ -502,7 +523,7 @@ public class GlobalScopeProvider {
     var functions = new LinkedHashMap<String, MemberDescriptor>();
     if (globalContext != null) {
       for (var method : globalContext.methods()) {
-        var descriptor = BslContextPlatformTypesProvider.toMemberDescriptor(method, enLookup);
+        var descriptor = BslContextPlatformTypesProvider.toMemberDescriptor(method, enLookup, typeNames);
         putFunction(functions, method.name().getName(), descriptor);
         putFunction(functions, method.name().getAlias(), descriptor);
       }
@@ -719,7 +740,7 @@ public class GlobalScopeProvider {
 
   private static LanguageData loadFromResource(String resourcePath) {
     var mapper = JsonMapper.builder().build();
-    try (var stream = new ClassPathResource(resourcePath).getInputStream()) {
+    try (var stream = BuiltinResources.open(resourcePath)) {
       @SuppressWarnings("unchecked")
       Map<String, Object> root = mapper.readValue(stream, Map.class);
       var functions = readFunctions(root);
@@ -776,7 +797,7 @@ public class GlobalScopeProvider {
   @SuppressWarnings("unchecked")
   static List<MemberDescriptor> globalContextMembers(String resourcePath) {
     var mapper = JsonMapper.builder().build();
-    try (var stream = new ClassPathResource(resourcePath).getInputStream()) {
+    try (var stream = BuiltinResources.open(resourcePath)) {
       Map<String, Object> root = mapper.readValue(stream, Map.class);
       var members = new ArrayList<MemberDescriptor>();
       for (var entry : (List<Map<String, Object>>) root.getOrDefault("functions", Collections.emptyList())) {

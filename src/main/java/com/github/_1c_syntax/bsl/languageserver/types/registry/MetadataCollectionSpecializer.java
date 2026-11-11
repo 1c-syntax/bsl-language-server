@@ -44,15 +44,18 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.UnaryOperator;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -310,6 +313,13 @@ public class MetadataCollectionSpecializer {
       BASE_COLLECTION_CHARACTERISTICS, "ОписаниеХарактеристик", ANY, md -> List.of())
   );
 
+  static {
+    // Коллекции владельца запоминаются битами long (registerOwnerCollections).
+    if (COLLECTIONS.size() > Long.SIZE) {
+      throw new IllegalStateException("Коллекций метаданных больше " + Long.SIZE + ": " + COLLECTIONS.size());
+    }
+  }
+
   private static final Map<String, CollectionSpec> COLLECTION_BY_NAME = buildCollectionIndex();
 
   private final TypeRegistry typeRegistry;
@@ -317,13 +327,29 @@ public class MetadataCollectionSpecializer {
   private final ServerContextProvider serverContextProvider;
 
   /**
-   * Уже обработанные per-owner synthetic-типы в рамках одного {@link #specialize()}.
-   * Обход дерева метаданных приходит к одному и тому же synthetic-типу многократно
-   * (общие имена табличных частей, общий element-type), а
-   * {@link TypeRegistry#registerMemberSource} добавляет источник без дедупликации.
-   * Защита гарантирует ровно одну регистрацию источников на тип.
+   * Владельцы, уже обработанные для каждого per-owner synthetic-типа в рамках одного
+   * {@link #specialize()}. Обход дерева метаданных приходит к одному и тому же типу
+   * многократно (общий element-type виден с нескольких видов объектов), а у типа без
+   * владельца — {@code ОбъектМетаданных: ТабличнаяЧасть.Товары} из коллекции общего
+   * описания — владельцев столько, сколько одноимённых табличных частей.
+   * {@link TypeRegistry#registerMemberSource} добавляет источник без дедупликации, поэтому
+   * защита гарантирует ровно одну регистрацию источников на пару «тип — владелец».
    */
-  private final Set<TypeRef> registeredOwners = new HashSet<>();
+  private final Map<TypeRef, Set<MD>> registeredOwners = new HashMap<>();
+
+  /**
+   * Типы коллекций и их элементов, найденные по имени в рамках одного {@link #specialize()}.
+   * Имена у коллекции одни на всех владельцев, а владельцев на большой конфигурации — десятки
+   * тысяч: искать их заново у каждого — заметная доля всей регистрации.
+   */
+  private final Map<String, Optional<TypeRef>> resolvedByName = new HashMap<>();
+
+  /**
+   * Коллекции, которые объявляет описание объекта, — маски по {@link #COLLECTIONS} (бит {@code i} —
+   * {@code COLLECTIONS.get(i)}) в рамках одного {@link #specialize()}. Видов описаний немного, а
+   * владельцев — сотни тысяч: реквизиты, табличные части, формы всех объектов конфигурации.
+   */
+  private final Map<TypeRef, Long> declaredCollections = new HashMap<>();
 
   private static Map<String, CollectionSpec> buildCollectionIndex() {
     var m = new HashMap<String, CollectionSpec>();
@@ -358,13 +384,19 @@ public class MetadataCollectionSpecializer {
       return;
     }
 
-    registeredOwners.clear();
     var mdosByGroup = collectMdosByGroup(configuration.getChildrenByMdoRef().values());
     var counters = new SpecializationCounters();
-    for (var context : providerOpt.get().getContexts()) {
-      if (context instanceof ContextType type) {
-        processOwnerContext(type, mdosByGroup, counters);
+    try {
+      for (var context : providerOpt.get().getContexts()) {
+        if (context instanceof ContextType type) {
+          processOwnerContext(type, mdosByGroup, counters);
+        }
       }
+    } finally {
+      // Нужны только на время обхода, а на большой конфигурации держат сотни тысяч владельцев.
+      registeredOwners.clear();
+      resolvedByName.clear();
+      declaredCollections.clear();
     }
     LOGGER.debug("MetadataCollectionSpecializer: top-level={} nested={}",
       counters.topLevel, counters.nested);
@@ -415,6 +447,7 @@ public class MetadataCollectionSpecializer {
     overrides.put(propertyName.toLowerCase(Locale.ROOT),
       buildOverrideProperty(property, specRef));
     if (isMetadataConfiguration(ownerName)) {
+      registerOwnMetadata(mdosForGroup, elementTypeRef);
       counters.topLevel++;
     } else {
       counters.nested++;
@@ -540,22 +573,103 @@ public class MetadataCollectionSpecializer {
    * {@code ОбъектМетаданных: ТабличнаяЧасть.Покупатели.Товары}). На нём навешан
    * override для known-коллекций; базовые members проксируются от общего
    * element-type'а из bsl-context.
+   * <p>
+   * У одноимённых владельцев коллекции сливаются: тип без владельца описывает любой из
+   * них, и колонки табличной части «Товары» берутся у всех табличных частей с этим именем.
+   * Выбрать одну значило бы отдать первую встреченную, а порядок обхода метаданных
+   * от запуска к запуску разный.
    */
   private TypeRef registerPerOwner(TypeRef elementTypeRef, String ownerSuffix, MD owner) {
     var perOwnerName = elementTypeRef.qualifiedName() + "." + ownerSuffix;
     var perOwnerRef = typeRegistry.intern(TypeKind.PLATFORM, perOwnerName);
-    if (!registeredOwners.add(perOwnerRef)) {
+    var owners = registeredOwners.computeIfAbsent(perOwnerRef,
+      key -> Collections.newSetFromMap(new IdentityHashMap<>()));
+    if (!owners.add(owner)) {
       return perOwnerRef;
     }
-    var overrides = buildPerOwnerOverrides(perOwnerName, owner);
-    var capturedElement = elementTypeRef;
-    typeRegistry.registerMemberSource(perOwnerRef,
-      () -> nonGenericMembers(typeRegistry.getMembers(capturedElement, FileType.BSL)),
-      FileType.BSL);
-    if (!overrides.isEmpty()) {
-      typeRegistry.registerMemberOverride(perOwnerRef, () -> overrides, FileType.BSL);
+    if (owners.size() == 1) {
+      var capturedElement = elementTypeRef;
+      typeRegistry.registerMemberSource(perOwnerRef,
+        () -> nonGenericMembers(typeRegistry.getMembers(capturedElement, FileType.BSL)),
+        FileType.BSL);
+    }
+    var overrides = registerOwnerCollections(perOwnerName, owner, declaredCollections(elementTypeRef));
+    if (overrides != null) {
+      typeRegistry.registerMemberOverride(perOwnerRef, overrides, FileType.BSL);
     }
     return perOwnerRef;
+  }
+
+  /**
+   * {@code Метаданные()} конкретного объекта ({@code ДокументОбъект.Покупатели},
+   * {@code ДокументСсылка.Покупатели}, {@code РегистрСведенийНаборЗаписей.Курсы}, …)
+   * отдаёт его собственное описание — {@code ОбъектМетаданных: Документ.Покупатели}.
+   * <p>
+   * Платформа объявляет метод у дженерика семейства, и подстановка имени объекта не
+   * трогает результат: он остаётся общим {@code ОбъектМетаданных: Документ}. А у общего
+   * описания не известен владелец — его коллекции ({@code ТабличныеЧасти},
+   * {@code Реквизиты}) не знают, чьи в них члены.
+   *
+   * @param mdos           объекты одной группы верхнего уровня (все одного вида).
+   * @param elementTypeRef общее описание объекта этого вида.
+   */
+  private void registerOwnMetadata(List<MD> mdos, TypeRef elementTypeRef) {
+    if (mdos.isEmpty()) {
+      return;
+    }
+    var familyCore = mdos.get(0).getMdoType().fullName().getRu();
+    var generics = typeRegistry.findAllGenericsByFamilyCore(familyCore).stream()
+      .filter(generic -> typeRegistry.getTypeParameters(generic).size() == 1)
+      .filter(generic -> typeRegistry.getMembers(generic, FileType.BSL).stream()
+        .anyMatch(member -> returns(member, elementTypeRef)))
+      .toList();
+    for (var mdo : mdos) {
+      var mdoName = mdo.getName();
+      var ownRef = typeRegistry.intern(TypeKind.PLATFORM, elementTypeRef.qualifiedName() + "." + mdoName);
+      for (var generic : generics) {
+        var parameter = typeRegistry.getTypeParameters(generic).get(0);
+        var specializedName = TypeRef.specialize(generic, Map.of(parameter, mdoName)).qualifiedName();
+        typeRegistry.resolve(specializedName)
+          .ifPresent(specialized -> typeRegistry.registerMemberOverride(specialized,
+            () -> ownMetadataMembers(typeRegistry.getMembers(generic, FileType.BSL), elementTypeRef, ownRef),
+            FileType.BSL));
+      }
+    }
+  }
+
+  /**
+   * Члены семейства, возвращающие общее описание объекта, — с его собственным описанием
+   * вместо общего. Прочие члены не возвращаются: остальное специализация даёт сама.
+   *
+   * @param familyMembers члены дженерика семейства.
+   * @param generalRef    общее описание ({@code ОбъектМетаданных: Документ}).
+   * @param ownRef        описание конкретного объекта ({@code ОбъектМетаданных: Документ.Покупатели}).
+   * @return члены с подменённым результатом.
+   */
+  static List<MemberDescriptor> ownMetadataMembers(Collection<MemberDescriptor> familyMembers,
+                                                   TypeRef generalRef, TypeRef ownRef) {
+    var replacements = Map.of(generalRef.qualifiedName(), ownRef);
+    UnaryOperator<TypeRef> own = ref -> replacements.getOrDefault(ref.qualifiedName(), ref);
+    var result = new ArrayList<MemberDescriptor>();
+    for (var member : familyMembers) {
+      if (member.generic() || !returns(member, generalRef)) {
+        continue;
+      }
+      var signatures = member.signatures().stream()
+        .map(sig -> new SignatureDescriptor(sig.parameters(), sig.returnTypes().mapRefs(own),
+          sig.bilingualDescription(), sig.metadata()))
+        .toList();
+      result.add(member.withReturnTypes(member.returnTypes().mapRefs(own)).withSignatures(signatures));
+    }
+    return result;
+  }
+
+  private static boolean returns(MemberDescriptor member, TypeRef typeRef) {
+    return member.returnTypes().refs().stream().anyMatch(ref -> sameType(ref, typeRef));
+  }
+
+  private static boolean sameType(TypeRef ref, TypeRef other) {
+    return ref.qualifiedName().equals(other.qualifiedName());
   }
 
   /**
@@ -576,45 +690,104 @@ public class MetadataCollectionSpecializer {
   }
 
   /**
-   * Override-members для коллекций конкретного owner'а: каждое property
-   * (Реквизиты/ТабличныеЧасти/Формы/…) указывает на per-owner/per-collection
-   * synthetic-тип, у которого generic-members развёрнуты в имена детей.
-   * Override регистрируется даже для коллекций с пустым списком детей — это
+   * Зарегистрировать коллекции конкретного owner'а и получить источник override-members
+   * для них: каждое property (Реквизиты/ТабличныеЧасти/Формы/…) указывает на
+   * per-owner/per-collection synthetic-тип, у которого generic-members развёрнуты в имена детей.
+   * Synthetic-типы регистрируются сразу, а сами members источник строит при обращении.
+   * Override есть даже для коллекций с пустым списком детей — это
    * специализирует returnType (Получить/Найти отдают конкретный element-type),
    * хотя имена детей не разворачиваются. Так пользователь видит, что
    * {@code Метаданные.Документы.Покупатели.Команды} — это
    * {@code КоллекцияОбъектовМетаданных.Команды.Покупатели}, а не общий
    * {@code КоллекцияОбъектовМетаданных}, даже если у документа нет команд.
+   * <p>
+   * Коллекции, которой нет в описании объекта такого вида, у владельца нет и подавно: у
+   * документа нет подсистем, у реквизита — ни одной коллекции.
+   *
+   * @param declared маска коллекций, объявленных описанием объекта (см. {@link #declaredCollections(TypeRef)}).
+   * @return источник override-members; {@code null}, если ни одной коллекции у owner'а нет.
    */
-  private List<MemberDescriptor> buildPerOwnerOverrides(String ownerQualifiedName, MD owner) {
-    var overrides = new ArrayList<MemberDescriptor>();
-    for (var spec : COLLECTIONS) {
-      processOwnerSpec(spec, owner, ownerQualifiedName, overrides);
+  private @Nullable MemberSource registerOwnerCollections(String ownerQualifiedName, MD owner, long declared) {
+    if (declared == 0L) {
+      return null;
     }
-    return overrides;
+    // Суффикс один на объект: его держат источники членов всех коллекций объекта, а на
+    // большой конфигурации это миллионы ссылок — копия на каждую стоила бы сотни мегабайт.
+    var ownerSuffix = suffixFor(ownerQualifiedName);
+    var applied = 0L;
+    for (var i = 0; i < COLLECTIONS.size(); i++) {
+      if ((declared & (1L << i)) != 0 && processOwnerSpec(COLLECTIONS.get(i), owner, ownerSuffix)) {
+        applied |= 1L << i;
+      }
+    }
+    if (applied == 0L) {
+      return null;
+    }
+    // Сами члены строятся по запросу: готовые списки на каждого владельца — это свой
+    // MemberDescriptor и TypeSet на каждую его коллекцию, на ERP — сотни мегабайт, а
+    // спрашивают члены у немногих владельцев.
+    var appliedSpecs = applied;
+    return () -> ownerCollectionMembers(appliedSpecs, ownerSuffix);
   }
 
-  private void processOwnerSpec(CollectionSpec spec, MD owner, String ownerQualifiedName,
-                                List<MemberDescriptor> overrides) {
-    if (!spec.appliesTo().test(owner)) {
-      return;
+  /**
+   * Члены-коллекции владельца: по свойству на каждую коллекцию из {@code appliedSpecs}, с
+   * типом коллекции этого владельца.
+   *
+   * @param appliedSpecs маска коллекций владельца: бит {@code i} — {@code COLLECTIONS.get(i)}.
+   * @param ownerSuffix  суффикс владельца в именах его синтетических типов.
+   * @return члены в порядке {@link #COLLECTIONS}.
+   */
+  private List<MemberDescriptor> ownerCollectionMembers(long appliedSpecs, String ownerSuffix) {
+    var members = new ArrayList<MemberDescriptor>(Long.bitCount(appliedSpecs));
+    for (var i = 0; i < COLLECTIONS.size(); i++) {
+      if ((appliedSpecs & (1L << i)) != 0) {
+        var spec = COLLECTIONS.get(i);
+        var perCollRef = typeRegistry.intern(TypeKind.PLATFORM, perCollectionName(spec, ownerSuffix));
+        members.add(new MemberDescriptor(
+          BilingualString.of(spec.ru(), spec.en()),
+          MemberKind.PROPERTY,
+          BilingualString.EMPTY,
+          TypeSet.of(perCollRef),
+          List.of(),
+          null,
+          false,
+          PlatformMetadata.EMPTY,
+          false
+        ));
+      }
     }
-    var baseRef = typeRegistry.resolve(spec.baseCollectionName()).orElse(null);
+    return members;
+  }
+
+  private static String perCollectionName(CollectionSpec spec, String ownerSuffix) {
+    return spec.baseCollectionName() + "." + spec.ru() + "." + ownerSuffix;
+  }
+
+  /**
+   * Зарегистрировать синтетический тип коллекции {@code spec} у владельца {@code owner}.
+   *
+   * @return {@code true}, если коллекция у владельца есть и тип зарегистрирован.
+   */
+  private boolean processOwnerSpec(CollectionSpec spec, MD owner, String ownerSuffix) {
+    if (!spec.appliesTo().test(owner)) {
+      return false;
+    }
+    var baseRef = resolveOnce(spec.baseCollectionName()).orElse(null);
     if (baseRef == null) {
-      return;
+      return false;
     }
     var children = spec.childExtractor().apply(owner);
-    var elementRef = typeRegistry.resolve(spec.elementTypeName())
+    var elementRef = resolveOnce(spec.elementTypeName())
       .orElseGet(() -> new TypeRef(TypeKind.PLATFORM, spec.elementTypeName()));
-    var ownerSuffix = suffixFor(ownerQualifiedName);
-    var perCollName = spec.baseCollectionName() + "." + spec.ru() + "." + ownerSuffix;
-    var perCollRef = typeRegistry.intern(TypeKind.PLATFORM, perCollName);
+    var perCollRef = typeRegistry.intern(TypeKind.PLATFORM, perCollectionName(spec, ownerSuffix));
     registerSubChildOwners(children, elementRef, ownerSuffix);
     // Коллекция остаётся коллекцией: обход `Для Каждого` и индексатор дают её элемент.
     // Для коллекций, где элементы вообще не адресуются по имени (характеристики,
     // дополнительные индексы, ввод на основании), это единственный способ до них
     // добраться — синтакс-помощник у них так и пишет: обход и обращение по индексу.
-    typeRegistry.registerDefaultElementTypes(perCollRef, List.of(elementRef));
+    typeRegistry.registerDefaultElementTypes(perCollRef,
+      List.copyOf(elementTypesOf(typeRegistry, children, elementRef, ownerSuffix).refs()));
     typeRegistry.inheritCollectionTraits(perCollRef, baseRef, FileType.BSL);
     var capturedBase = baseRef;
     var capturedElement = elementRef;
@@ -623,17 +796,41 @@ public class MetadataCollectionSpecializer {
       () -> buildPerOwnerCollectionMembers(typeRegistry, capturedBase, capturedElement,
         capturedChildren, ownerSuffix),
       FileType.BSL);
-    overrides.add(new MemberDescriptor(
-      BilingualString.of(spec.ru(), spec.en()),
-      MemberKind.PROPERTY,
-      BilingualString.EMPTY,
-      TypeSet.of(perCollRef),
-      List.of(),
-      null,
-      false,
-      PlatformMetadata.EMPTY,
-      false
-    ));
+    return true;
+  }
+
+  private Optional<TypeRef> resolveOnce(String name) {
+    return resolvedByName.computeIfAbsent(name, typeRegistry::resolve);
+  }
+
+  /**
+   * Коллекции, которые есть у описания объекта: свойство с именем коллекции на ru или en.
+   * Об описании без членов ничего не известно, и коллекции у его владельцев отбираются только
+   * по виду объекта ({@link CollectionSpec#appliesTo()}).
+   *
+   * @param elementTypeRef описание объекта ({@code ОбъектМетаданных: Документ}).
+   * @return маска по {@link #COLLECTIONS}: бит {@code i} — {@code COLLECTIONS.get(i)}.
+   */
+  private long declaredCollections(TypeRef elementTypeRef) {
+    return declaredCollections.computeIfAbsent(elementTypeRef, this::scanDeclaredCollections);
+  }
+
+  private long scanDeclaredCollections(TypeRef elementTypeRef) {
+    var members = typeRegistry.getMembers(elementTypeRef, FileType.BSL);
+    if (members.isEmpty()) {
+      return -1L;
+    }
+    var declared = 0L;
+    for (var i = 0; i < COLLECTIONS.size(); i++) {
+      var spec = COLLECTIONS.get(i);
+      for (var member : members) {
+        if (member.kind() == MemberKind.PROPERTY && (member.matches(spec.ru()) || member.matches(spec.en()))) {
+          declared |= 1L << i;
+          break;
+        }
+      }
+    }
+    return declared;
   }
 
   private void registerSubChildOwners(List<ChildName> children, TypeRef elementRef, String ownerSuffix) {
@@ -689,7 +886,7 @@ public class MetadataCollectionSpecializer {
             childReturnType(typeRegistry, child, elementRef, elementTypeSet, ownerSuffix)));
         }
       } else if (isElementReturningMethod(member)) {
-        result.add(withElementReturnType(member, elementTypeSet));
+        result.add(withElementReturnType(member, elementTypesOf(typeRegistry, children, elementRef, ownerSuffix)));
       } else {
         result.add(member);
       }
@@ -712,6 +909,25 @@ public class MetadataCollectionSpecializer {
       }
     }
     return result;
+  }
+
+  /**
+   * Элемент коллекции конкретного владельца — какой-то из её детей. Если дети названы
+   * конкретными типами ({@code Движения} — регистрами документа, {@code ТабличныеЧасти} —
+   * его табличными частями), элемент — их объединение: общий тип элемента
+   * ({@code ЗначениеСвойстваОбъектаМетаданных}) не несёт ни имени, ни прочих свойств
+   * описания. Дети без своего типа дают общий, как и пустая коллекция.
+   *
+   * @return типы элементов коллекции.
+   */
+  static TypeSet elementTypesOf(TypeRegistry typeRegistry, List<ChildName> children, TypeRef elementRef,
+                                String ownerSuffix) {
+    var defaultSet = TypeSet.of(elementRef);
+    var result = TypeSet.EMPTY;
+    for (var child : children) {
+      result = result.union(childReturnType(typeRegistry, child, elementRef, defaultSet, ownerSuffix));
+    }
+    return result.isEmpty() ? defaultSet : result;
   }
 
   static TypeSet childReturnType(TypeRegistry typeRegistry, ChildName child, TypeRef elementRef,

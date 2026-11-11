@@ -48,7 +48,6 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -228,8 +227,11 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
     // ключа: собственная ленивая ссылка поля (`Содержимое - см. Коробка`), либо —
     // для коллекций — ленивый элемент (`Массив из см. Узел`). Именно её имя нужно
     // показать при обрыве цикла, а не источники уровнем глубже.
+    // Цикл — когда на пути уже развёрнуты все источники поля. Если повторилась только часть,
+    // разворот ещё покажет новое; каждый уровень добавляет на путь хотя бы один источник,
+    // поэтому разворот конечен.
     var fieldSources = fieldExpansionSources(owner, key, fieldTypes);
-    var cyclic = !fieldSources.isEmpty() && !Collections.disjoint(fieldSources, expandedSources);
+    var cyclic = !fieldSources.isEmpty() && expandedSources.containsAll(fieldSources);
     var seeLabel = cyclic ? seeReferenceLabel(fieldSources, lang) : "";
     var typeLabel = seeLabel.isBlank() ? fieldTypeLabel(fieldTypes, lang) : seeLabel;
 
@@ -270,26 +272,47 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
   /**
    * Функции-источники см.-ссылки, разворот которой даёт вложенные поля ключа
    * {@code key} объекта {@code owner}. Это либо собственная ленивая ссылка поля
-   * (поле {@code owner.lazyFields[key]}), либо — если поле эагерное, но его тип —
+   * (поле {@code owner.lazyFields[key]}, у коллекции — поле типа её элемента),
+   * либо — если поле эагерное, но его тип —
    * коллекция с ленивым элементом — источник этого элемента. Возвращаемые ключи и
    * обнаруживают цикл, и дают имя для метки {@code См. Функция}.
    */
   private static Set<Object> fieldExpansionSources(TypeSet owner, String key, TypeSet fieldTypes) {
-    var ownSource = lazyFieldSource(owner, key);
-    if (ownSource != null) {
-      return Set.of(ownSource);
+    var ownSources = lazyFieldSources(owner, key);
+    if (ownSources != null) {
+      return ownSources;
     }
     var elementKeys = new HashSet<>();
-    fieldTypes.lazyElements().values().forEach(lazy -> elementKeys.add(lazy.key()));
+    fieldTypes.lazyElements().values().forEach(lazy -> elementKeys.addAll(lazy.keys()));
     return elementKeys;
   }
 
-  /** Ключ собственной ленивой см.-ссылки поля {@code name} в наборе типов, либо {@code null}. */
-  private static @Nullable Object lazyFieldSource(TypeSet owner, String name) {
+  /**
+   * Ключи собственной ленивой см.-ссылки поля {@code name}, либо {@code null}. Поле ищется
+   * там же, откуда его берёт {@link #collectFields}: у самого набора, а у коллекции без
+   * собственных полей — у типа её элемента.
+   */
+  private static @Nullable Set<Object> lazyFieldSources(TypeSet owner, String name) {
+    var sources = lazyFieldSourcesIn(owner, name);
+    if (sources != null) {
+      return sources;
+    }
+    for (var ref : owner.refs()) {
+      if (owner.getLocalFields(ref).isEmpty()) {
+        var elementSources = lazyFieldSourcesIn(owner.getElementTypes(ref), name);
+        if (elementSources != null) {
+          return elementSources;
+        }
+      }
+    }
+    return null;
+  }
+
+  private static @Nullable Set<Object> lazyFieldSourcesIn(TypeSet owner, String name) {
     for (var byName : owner.lazyFields().values()) {
       for (var entry : byName.entrySet()) {
         if (entry.getKey().equalsIgnoreCase(name)) {
-          return entry.getValue().types().key();
+          return entry.getValue().types().keys();
         }
       }
     }

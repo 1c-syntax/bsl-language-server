@@ -304,8 +304,18 @@ public class OScriptModuleMembersProvider {
     return List.of(raiseEvent, thisObject);
   }
 
+  /**
+   * Члены типа по дереву символов документа, не дожидаясь его перестроения.
+   * <p>
+   * Источник читают и изнутри построения дерева другого документа: там голое присваивание
+   * сверяется с членами self-типа, а у self-типа бывают чужие документы — родитель класса
+   * или одноимённый модуль (исходник библиотеки и её же копия в {@code oscript_modules}
+   * регистрируются одним типом). Ожидание здесь замкнулось бы на встречное: каждый из двух
+   * перестраиваемых документов ждал бы дерево другого. Прежнее дерево не залипает в памятке
+   * членов: перестроение документа сбрасывает члены его типов и наследников.
+   */
   private Collection<MemberDescriptor> collectMembers(DocumentContext documentContext) {
-    var symbolTree = documentContext.getSymbolTree();
+    var symbolTree = documentContext.getSymbolTreeNoLock();
     var constructor = symbolTree.getConstructor();
     var members = new ArrayList<MemberDescriptor>();
     for (var method : symbolTree.getMethods()) {
@@ -341,7 +351,8 @@ public class OScriptModuleMembersProvider {
   }
 
   private List<SignatureDescriptor> collectConstructors(DocumentContext documentContext, TypeRef classRef) {
-    var ctor = documentContext.getSymbolTree().getConstructor();
+    // Без ожидания по той же причине, что и в collectMembers.
+    var ctor = documentContext.getSymbolTreeNoLock().getConstructor();
     if (ctor.isEmpty()) {
       return List.of(new SignatureDescriptor(List.of(), classRef, ""));
     }

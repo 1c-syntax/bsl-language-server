@@ -24,8 +24,12 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.BSLTokenizer;
 import org.junit.jupiter.api.Test;
 
+import java.util.Collection;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -120,5 +124,30 @@ class OpenDataObjectInferenceTest {
 
     // then
     assertThat(fields).isEmpty();
+  }
+
+  @Test
+  void onlyInsertAndColumnsAddChangeComposition() {
+    // given: у переменной вызывают что угодно, но состав полей меняют только два вида
+    // вызовов — каждый оператор на своей строке.
+    var ast = new BSLTokenizer("""
+      Стр.Вставить("Ключ", 1);
+      ТЗ.Колонки.Добавить("Имя");
+      Лог.Отладка("Сообщение");
+      Стр.Удалить("Ключ");
+      Стр.Поле.Вставить("Ключ", 1);
+      ТЗ.Добавить();
+      """).getAst();
+    Collection<BSLParser.CallStatementContext> calls = Trees.findAllRuleNodes(ast, BSLParser.RULE_callStatement);
+
+    // when
+    var mutatorLines = calls.stream()
+      .filter(OpenDataObjectInference::isMutatorCall)
+      .map(call -> call.getStart().getLine())
+      .toList();
+
+    // then
+    assertThat(calls).hasSize(6);
+    assertThat(mutatorLines).containsExactly(1, 2);
   }
 }

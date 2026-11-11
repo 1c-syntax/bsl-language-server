@@ -72,6 +72,15 @@ class RegisterRecorderTypesTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void recorderIsNotTypedByDocumentNamedAsTheChartOfTheRegister() {
+    // У регистра бухгалтерии подставляются и регистраторы, и план счетов. Документ
+    // ПланСчетов1 регистратором не является, но назван как план, и тип
+    // ДокументСсылка.ПланСчетов1 существует — проверка существования его не отсеет.
+    assertThat(memberTypes("РегистрБухгалтерииЗапись.РегистрБухгалтерии1", RECORDER))
+      .doesNotContain("ДокументСсылка.ПланСчетов1");
+  }
+
+  @Test
   void recorderOfRecordKeyIsTypedTheSameWay() {
     assertThat(memberTypes("РегистрБухгалтерииКлючЗаписи.РегистрБухгалтерии1", RECORDER))
       .containsExactly("ДокументСсылка.Документ1");

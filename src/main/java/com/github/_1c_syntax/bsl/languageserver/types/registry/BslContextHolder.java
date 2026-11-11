@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.context.api.ContextProvider;
+import com.github._1c_syntax.bsl.context.api.QueryContextProvider;
 import com.github._1c_syntax.bsl.languageserver.configuration.platform.V8PlatformOptions;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.utils.Lazy;
@@ -51,7 +52,7 @@ import java.util.Optional;
 public class BslContextHolder {
 
   private final PlatformContextProviderFactory factory;
-  private final Lazy<Optional<ContextProvider>> cached;
+  private final Lazy<Optional<PlatformContextProviderFactory.PlatformContexts>> cached;
 
   public BslContextHolder(PlatformContextProviderFactory factory) {
     this.factory = factory;
@@ -64,10 +65,23 @@ public class BslContextHolder {
    * попыток не делает.
    */
   public Optional<ContextProvider> get() {
-    return cached.getOrCompute();
+    return cached.getOrCompute().map(PlatformContextProviderFactory.PlatformContexts::provider);
   }
 
-  private Optional<ContextProvider> load() {
+  /**
+   * Возвращает {@link QueryContextProvider} — контекст языка запросов. Читается
+   * тем же разбором справки, что и контекст встроенного языка, но держится
+   * отдельно: внутри текста запроса действует только он.
+   *
+   * @return провайдер; {@link Optional#empty()}, если источник недоступен либо
+   *   справка контекста языка запросов не дала.
+   */
+  public Optional<QueryContextProvider> getQueryProvider() {
+    return cached.getOrCompute()
+      .map(PlatformContextProviderFactory.PlatformContexts::queryProvider);
+  }
+
+  private Optional<PlatformContextProviderFactory.PlatformContexts> load() {
     try {
       return factory.create();
     } catch (Exception e) {

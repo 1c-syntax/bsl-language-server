@@ -50,8 +50,8 @@ import java.util.List;
  * платформенной метаинформацией; для свойств/перечислений — упрощённый дескриптор
  * с типом значения и описанием.
  * <p>
- * Резолв выполняется в workspace'е, указанном клиентом через обязательный параметр
- * {@code root}.
+ * Резолв выполняется в рабочей папке, указанной клиентом через обязательный параметр
+ * {@code workspaceFolder}.
  */
 @Component
 @Profile("mcp")
@@ -96,13 +96,14 @@ public class GlobalMemberInfoTool {
     String name,
     @McpToolParam(required = true, description = McpToolParams.FILE_TYPE)
     FileType fileType,
-    @McpToolParam(required = true, description = McpToolParams.ROOT)
-    String root,
+    @McpToolParam(required = true, description = McpToolParams.WORKSPACE_FOLDER)
+    String workspaceFolder,
     @McpToolParam(required = false, description = McpToolParams.LANGUAGE)
     @Nullable Language language
   ) {
     var effectiveLanguage = language == null ? Language.RU : language;
-    try (var ignored = WorkspaceContextHolder.forUri(workspaceResolver.resolveWorkspaceUri(root))) {
+    try (var ignored = WorkspaceContextHolder.forUri(
+      workspaceResolver.resolveWorkspaceFolderUri(workspaceFolder))) {
       var member = globalScopeProvider.globalMember(name, fileType);
       if (member.isPresent()) {
         var resolved = member.get();

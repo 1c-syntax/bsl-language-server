@@ -51,6 +51,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -82,20 +83,6 @@ public class EventHandlerResolver implements EventHandlerClassifier {
     ModuleType.ObjectModule, "Объект",
     ModuleType.RecordSetModule, "НаборЗаписей",
     ModuleType.ValueManagerModule, "МенеджерЗначения"
-  );
-
-  /**
-   * Модули, чей owner-тип — фиксированный платформенный тип, не зависящий
-   * от имени MDO (модуль команды, модуль HTTP/Web/Bot/Integration сервиса).
-   * Если такого типа в реестре HBK нет — события просто не найдутся,
-   * lookup отдаст {@link Optional#empty()}.
-   */
-  private static final Map<ModuleType, String> MODULE_TYPE_TO_FIXED_OWNER_RU = Map.of(
-    ModuleType.CommandModule, "Модуль команды",
-    ModuleType.HTTPServiceModule, "Модуль HTTP-сервиса",
-    ModuleType.WEBServiceModule, "Модуль Web-сервиса",
-    ModuleType.IntegrationServiceModule, "Модуль сервиса интеграции",
-    ModuleType.BotModule, "Модуль бота"
   );
 
   /**
@@ -215,6 +202,25 @@ public class EventHandlerResolver implements EventHandlerClassifier {
   @Override
   public boolean isEventHandler(DocumentContext documentContext, String methodName) {
     return lookupContract(documentContext, methodName).isPresent();
+  }
+
+  /**
+   * Тип-владелец модуля и его события находятся один раз на документ: у модуля объекта сотни
+   * методов, и на каждый из них заново собирать имя владельца и перебирать все его члены выходило
+   * дорого.
+   */
+  @Override
+  public Predicate<String> eventHandlersOf(DocumentContext documentContext) {
+    var moduleType = documentContext.getModuleType();
+    if (moduleType == ModuleType.OScriptClass || GLOBAL_HOST_MODULES.contains(moduleType)) {
+      return methodName -> isEventHandler(documentContext, methodName);
+    }
+    var events = resolveOwnerType(documentContext, moduleType)
+      .map(owner -> typeRegistry.getMembers(owner, documentContext.getFileType()).stream()
+        .filter(m -> m.kind() == MemberKind.EVENT)
+        .toList())
+      .orElse(List.of());
+    return methodName -> events.stream().anyMatch(event -> event.matches(methodName));
   }
 
   /**
@@ -343,8 +349,12 @@ public class EventHandlerResolver implements EventHandlerClassifier {
    * Owner-тип модуля: {@code ДокументОбъект.Покупатели},
    * {@code СправочникМенеджер.Контрагенты}, {@code РегистрСведенийНаборЗаписей.Курсы},
    * {@code КонстантаМенеджерЗначения.КодВалюты} — для MDO-specific обёрток.
-   * Для модулей с фиксированным типом (команды, HTTP/Web/Bot/Integration сервисы)
-   * — прямой qualifiedName типа из HBK без специализации по имени.
+   * <p>
+   * У модулей сервисов имя типа в HBK не параметризовано, поэтому спрашивается сначала
+   * тип этого сервиса ({@code Модуль Web-сервиса.Обмен}, заводит
+   * {@link ServiceModuleEventRegistrar}), и только если его нет — общий тип вида.
+   * Обработчики объявлены в конкретном сервисе, и контракт надо брать у него: у разных
+   * сервисов одноимённые операции сплошь и рядом принимают разные параметры.
    */
   private Optional<TypeRef> resolveOwnerType(DocumentContext documentContext, ModuleType moduleType) {
     if (moduleType == ModuleType.FormModule) {
@@ -352,9 +362,12 @@ public class EventHandlerResolver implements EventHandlerClassifier {
         .flatMap(md -> ConfigurationModuleMembersProvider.selfTypeQualifiedName(moduleType, md))
         .flatMap(typeRegistry::resolve);
     }
-    var fixed = MODULE_TYPE_TO_FIXED_OWNER_RU.get(moduleType);
-    if (fixed != null) {
-      return typeRegistry.resolve(fixed);
+    var family = ModulePlatformTypeNames.familyName(moduleType);
+    if (family != null) {
+      return documentContext.getMdObject()
+        .map(md -> family + "." + md.getName())
+        .flatMap(typeRegistry::resolve)
+        .or(() -> typeRegistry.resolve(family));
     }
     var wrapperRu = MODULE_TYPE_TO_WRAPPER_RU.get(moduleType);
     if (wrapperRu == null) {

@@ -42,6 +42,12 @@ import java.util.function.BiFunction;
  * {@code roots/list} (как требует MCP-спека) без какого-либо знания о
  * bootstrap-логике в самих tool-методах.
  * <p>
+ * Обёртка же гарантирует ответ на вызов, упавший с {@link VirtualMachineError} (например,
+ * {@link StackOverflowError}) или {@link LinkageError}: Spring AI превращает в результат-ошибку
+ * только исключения, а Reactor такие ошибки считает фатальными для JVM и пробрасывает мимо
+ * {@code onError} — запрос остаётся без ответа, и клиент ждёт его бесконечно. Вместо этого
+ * клиент получает результат с {@code isError}, а ошибка пишется в лог.
+ * <p>
  * Spring AI autoconfig публикует список как {@code @Bean public List<SyncToolSpecification> toolSpecs(...)}
  * в {@code McpServerSpecificationFactoryAutoConfiguration}; имя bean'а — {@code "toolSpecs"}.
  * Мы перехватываем post-init этого bean'а и подменяем его на список обёрток.
@@ -85,7 +91,15 @@ public class McpToolSpecificationsBootstrapWrapper implements BeanPostProcessor 
         // workspace'ов сами кинут понятное «No registered workspace».
         LOGGER.warn("Failed to bootstrap MCP roots before tool call", e);
       }
-      return original.apply(exchange, request);
+      try {
+        return original.apply(exchange, request);
+      } catch (VirtualMachineError | LinkageError e) {
+        LOGGER.error("MCP tool {} failed", request.name(), e);
+        return CallToolResult.builder()
+          .isError(true)
+          .addTextContent("Internal error in tool %s: %s".formatted(request.name(), e))
+          .build();
+      }
     };
   }
 }

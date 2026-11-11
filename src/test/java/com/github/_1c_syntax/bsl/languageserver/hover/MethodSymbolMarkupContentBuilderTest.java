@@ -112,6 +112,8 @@ class MethodSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTes
           * **Поле32**: `Структура` \s
       &nbsp;&nbsp;`Строка` - вернувшаяся строка
 
+      **Выведено по коду:** Неопределено
+
       """);
   }
 
@@ -130,6 +132,7 @@ class MethodSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTes
 
     var blocks = Arrays.asList(content.split("---\n?"));
 
+    // В этой фикстуре нет доступности типа менеджера из СП; контексты не предполагаются.
     assertThat(blocks).hasSize(2);
     assertThat(blocks.get(0)).isEqualTo("""
       ```bsl
@@ -138,6 +141,7 @@ class MethodSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTes
 
       """);
     assertThat(blocks.get(1)).matches("\\[Catalog.Справочник1]\\(.*Catalogs/.*/Ext/ManagerModule.bsl#\\d+\\)\n\n");
+    assertThat(content).doesNotContain("**Контексты компиляции:**");
   }
 
   @Test
@@ -154,7 +158,8 @@ class MethodSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTes
 
     var blocks = Arrays.asList(content.split("---\n?"));
 
-    assertThat(blocks).hasSize(4);
+    assertThat(blocks).hasSize(5);
+    assertThat(blocks.getLast()).contains("**Контексты компиляции:**");
     assertThat(blocks.get(0)).isEqualTo("""
       ```bsl
       Процедура УстаревшаяПроцедура() Экспорт
@@ -218,6 +223,69 @@ class MethodSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTes
     assertThat(content).doesNotContain("**Устарела.**");
   }
 
+
+  @Test
+  void testReturnedValueSectionIsInferredWhenNotDescribed() {
+    // given: описания у функции нет, а тело возвращает массив и число.
+    var documentContext = TestUtils.getDocumentContext("""
+      Функция РазныеТипы(Флаг) Экспорт
+      	Если Флаг Тогда
+      		Возврат Новый Массив;
+      	Иначе
+      		Возврат 10;
+      	КонецЕсли;
+      КонецФункции
+      """, context);
+    var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("РазныеТипы").orElseThrow();
+
+    // when
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, methodSymbol)).getValue();
+
+    // then: секция строится по рассчитанным типам.
+    assertThat(content).contains("**Возвращаемое значение:**");
+    assertThat(content).contains("Массив");
+    assertThat(content).contains("Число");
+  }
+
+  @Test
+  void testDescribedReturnedValueIsShownWithDivergence() {
+    // given: автор описал Булево, а тело возвращает массив.
+    var documentContext = TestUtils.getDocumentContext("""
+      // Возвращаемое значение:
+      //  Булево - признак
+      Функция Признак() Экспорт
+      	Возврат Новый Массив;
+      КонецФункции
+      """, context);
+    var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("Признак").orElseThrow();
+
+    // when
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, methodSymbol)).getValue();
+
+    // then: написанное автором остаётся вместе с его текстом, а расхождение видно припиской.
+    assertThat(content).contains("Булево");
+    assertThat(content).contains("признак");
+    assertThat(content).contains("**Выведено по коду:** Массив");
+  }
+
+  @Test
+  void testDescribedReturnedValueWithoutDivergenceHasNoNote() {
+    // given: описание совпадает с тем, что возвращает тело.
+    var documentContext = TestUtils.getDocumentContext("""
+      // Возвращаемое значение:
+      //  Массив - список
+      Функция Список() Экспорт
+      	Возврат Новый Массив;
+      КонецФункции
+      """, context);
+    var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("Список").orElseThrow();
+
+    // when
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, methodSymbol)).getValue();
+
+    // then
+    assertThat(content).doesNotContain("Выведено по коду");
+  }
 
   private static Reference referenceTo(DocumentContext documentContext, SourceDefinedSymbol symbol) {
     return Reference.of(documentContext.getSymbolTree().getModule(), symbol,

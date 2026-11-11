@@ -44,6 +44,11 @@ public class VirtualTableCallWithoutParametersDiagnostic extends AbstractSDBLVis
 
   @Override
   public ParseTree visitVirtualTable(SDBLParser.VirtualTableContext ctx) {
+    // Таблица субконто регистра бухгалтерии не имеет параметров.
+    if (ctx.EXT_DIMENSIONS_VT() != null) {
+      return super.visitVirtualTable(ctx);
+    }
+
     // для критерия отбора параметр обязателен и имеет иную семантику (значение отбора, а не параметр ВТ):
     // ошибкой считаем только отсутствие параметра
     if (ctx.type != null) {

@@ -66,78 +66,104 @@ public class ServiceModuleEventRegistrar {
 
   private final TypeRegistry typeRegistry;
 
-  /** Развернуть generic-события сервисных модулей для всех MD-объектов конфигурации. */
+  /**
+   * Развернуть generic-события сервисных модулей для всех MD-объектов конфигурации.
+   * <p>
+   * У модуля сервиса есть владелец — сам сервис, и обработчики каждого объявлены только в
+   * нём. Синтакс-помощник этого не выражает: у него один тип на все сервисы вида
+   * ({@code Модуль Web-сервиса}) с единственным членом-шаблоном {@code <Имя обработчика>},
+   * тогда как у справочников параметризовано само имя типа
+   * ({@code СправочникМенеджер.<Имя справочника>}). Поэтому специализация по владельцу
+   * заводится здесь: на каждый сервис — свой тип {@code <тип модуля>.<Имя сервиса>} с
+   * операциями только этого сервиса. Иначе одноимённые операции разных сервисов (а в
+   * типовых конфигурациях у версий одного сервиса они называются одинаково) складывались
+   * бы в один член, и чей контракт уцелеет, решал бы порядок обхода метаданных.
+   *
+   * @param children объекты метаданных конфигурации.
+   */
   public void register(Iterable<MD> children) {
-    var httpEvents = new ArrayList<HandlerSpec>();
-    var webEvents = new ArrayList<HandlerSpec>();
-    var integrationEvents = new ArrayList<HandlerSpec>();
     for (var md : children) {
-      collectHttpHandlers(md, httpEvents);
-      collectWebProcedures(md, webEvents);
-      collectIntegrationHandlers(md, integrationEvents);
+      registerServiceHandlerEvents("Модуль HTTP-сервиса", "Имя обработчика",
+        md, collectHttpHandlers(md));
+      registerServiceHandlerEvents("Модуль Web-сервиса", "Имя обработчика",
+        md, collectWebProcedures(md));
+      registerServiceHandlerEvents("Модуль сервиса интеграции",
+        "Имя обработчика полученного сообщения", md, collectIntegrationHandlers(md));
     }
-    registerServiceHandlerEvents("Модуль HTTP-сервиса", "Имя обработчика", httpEvents);
-    registerServiceHandlerEvents("Модуль Web-сервиса", "Имя обработчика", webEvents);
-    registerServiceHandlerEvents("Модуль сервиса интеграции",
-      "Имя обработчика полученного сообщения", integrationEvents);
   }
 
-  private void collectHttpHandlers(MD md, List<HandlerSpec> sink) {
+  private List<HandlerSpec> collectHttpHandlers(MD md) {
     if (!(md instanceof HTTPService http)) {
-      return;
+      return List.of();
     }
+    var sink = new ArrayList<HandlerSpec>();
     http.getUrlTemplates().forEach(tpl -> tpl.getMethods().forEach((HTTPServiceMethod m) -> {
       if (!m.getHandler().isBlank()) {
         sink.add(new HandlerSpec(m.getHandler(), httpServiceMethodSignature()));
       }
     }));
+    return sink;
   }
 
-  private static void collectWebProcedures(MD md, List<HandlerSpec> sink) {
+  private static List<HandlerSpec> collectWebProcedures(MD md) {
     if (!(md instanceof WebService web)) {
-      return;
+      return List.of();
     }
+    var sink = new ArrayList<HandlerSpec>();
     web.getOperations().forEach((WebServiceOperation op) -> {
       if (!op.getProcedureName().isBlank()) {
         sink.add(new HandlerSpec(op.getProcedureName(), webOperationSignature(op)));
       }
     });
+    return sink;
   }
 
-  private static void collectIntegrationHandlers(MD md, List<HandlerSpec> sink) {
+  private static List<HandlerSpec> collectIntegrationHandlers(MD md) {
     if (!(md instanceof IntegrationService isvc)) {
-      return;
+      return List.of();
     }
+    var sink = new ArrayList<HandlerSpec>();
     isvc.getIntegrationServiceChannels().forEach((IntegrationServiceChannel ch) -> {
       if (!ch.getReceiveMessageProcessing().isBlank()) {
         sink.add(new HandlerSpec(ch.getReceiveMessageProcessing(),
           integrationChannelSignature()));
       }
     });
+    return sink;
   }
 
   /**
-   * Материализует generic-event типа по placeholder'у и подменяет signatures
-   * на сигнатуру с реальными параметрами обработчика из mdclasses.
+   * Материализует generic-event типа модуля по placeholder'у и подменяет signatures
+   * на сигнатуры с реальными параметрами обработчиков этого сервиса из mdclasses.
    * <p>
    * Описание/двуязычие/sinceVersion event'а наследуются от HBK-шаблона: общий
    * для всего семейства источник правды.
+   * <p>
+   * Члены вешаются не на общий тип вида, а на тип этого сервиса
+   * ({@code Модуль Web-сервиса.Обмен}), зарегистрированный специализацией от общего.
+   *
+   * @param typeQualifiedName имя платформенного типа модуля этого вида сервиса.
+   * @param placeholder       имя параметра generic-члена в шаблоне HBK.
+   * @param service           объект метаданных сервиса — владелец модуля.
+   * @param specs             обработчики этого сервиса.
    */
   private void registerServiceHandlerEvents(String typeQualifiedName, String placeholder,
-                                            List<HandlerSpec> specs) {
+                                            MD service, List<HandlerSpec> specs) {
     if (specs.isEmpty()) {
       return;
     }
-    var typeRef = typeRegistry.resolve(typeQualifiedName).orElse(null);
-    if (typeRef == null) {
+    var genericRef = typeRegistry.resolve(typeQualifiedName).orElse(null);
+    if (genericRef == null || service.getName().isBlank()) {
       return;
     }
     var names = specs.stream().map(HandlerSpec::name).distinct().toList();
-    var templates = typeRegistry.expandedMembers(typeRef, Map.of(),
+    var templates = typeRegistry.expandedMembers(genericRef, Map.of(),
       Map.of(placeholder, names), FileType.BSL);
     if (templates.isEmpty()) {
       return;
     }
+    // Имена обработчиков в пределах одного сервиса уникальны: у операции ровно одна
+    // процедура, а двух операций с одним именем в сервисе не бывает.
     var sigByName = specs.stream()
       .collect(Collectors.toMap(HandlerSpec::name, HandlerSpec::signature, (a, b) -> a));
     var withSignatures = templates.stream()
@@ -146,7 +172,9 @@ public class ServiceModuleEventRegistrar {
         return sig == null ? m : m.withSignatures(List.of(sig));
       })
       .toList();
-    typeRegistry.registerMemberSource(typeRef, () -> withSignatures, FileType.BSL);
+    var serviceRef = typeRegistry.registerSpecialization(
+      typeQualifiedName + "." + service.getName(), genericRef, Map.of(), FileType.BSL);
+    typeRegistry.registerMemberSource(serviceRef, () -> withSignatures, FileType.BSL);
   }
 
   /** Сигнатура HTTP-обработчика: один параметр {@code Запрос} типа {@code HTTPСервисЗапрос}. */

@@ -22,9 +22,11 @@
 package com.github._1c_syntax.bsl.languageserver.types.index;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.types.registry.EventHandlerResolver;
+import com.github._1c_syntax.bsl.languageserver.util.EventHandlerResolverStubs;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import org.eclipse.lsp4j.SymbolKind;
@@ -38,12 +40,15 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.IdentityHashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -65,6 +70,7 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
 
   @BeforeEach
   void resetEventHandlerResolver() {
+    EventHandlerResolverStubs.delegateEventHandlersOfToIsEventHandler(eventHandlerResolver);
     when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
       .thenReturn(Optional.empty());
   }
@@ -89,6 +95,89 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
     var variables = index.search("МодульнаяПеременная", NO_CANCEL);
     assertThat(variables)
       .anyMatch(entry -> entry.name().equals("МодульнаяПеременная"));
+  }
+
+  @Test
+  void rereadOfSameContentKeepsEntries() {
+    // given: документ проиндексирован.
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Перечитанная()
+      КонецПроцедуры
+      """);
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    assertThat(index.search("Перечитанная", NO_CANCEL))
+      .as("записи собраны первым разбором")
+      .isNotEmpty();
+
+    // when: тот же самый текст разобран заново — записи переиндексировать незачем.
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext, false));
+
+    // then
+    assertThat(index.search("Перечитанная", NO_CANCEL))
+      .anyMatch(entry -> entry.name().equals("Перечитанная"));
+  }
+
+  @Test
+  void rereadOfSameContentIndexesAgainWhenEntriesAreGone() {
+    // given: документ проиндексирован, но записи по нему сняты — так поступает закрытие
+    // документа, унаследованным обработчиком.
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Забытая()
+      КонецПроцедуры
+      """);
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    assertThat(index.search("Забытая", NO_CANCEL))
+      .as("записи собраны первым разбором")
+      .isNotEmpty();
+    index.clear(documentContext.getUri());
+    assertThat(index.search("Забытая", NO_CANCEL)).isEmpty();
+
+    // when: тот же самый текст разобран заново.
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext, false));
+
+    // then: пропуск разрешён только когда записи на месте, иначе поиск по символам остался
+    // бы пустым до следующей правки файла.
+    assertThat(index.search("Забытая", NO_CANCEL))
+      .anyMatch(entry -> entry.name().equals("Забытая"));
+  }
+
+  @Test
+  void removalWhileContextIsClearedDropsEntriesOfAllDocumentsOfThatContext() {
+    // given: проиндексированы два документа очищаемого контекста и документ другого контекста
+    var first = TestUtils.getDocumentContext(
+      Path.of("./src/test/resources/types/index/ПерваяОчищаемая.bsl").toUri(), """
+      Процедура ПерваяОчищаемая()
+      КонецПроцедуры
+      """);
+    var second = TestUtils.getDocumentContext(
+      Path.of("./src/test/resources/types/index/ВтораяОчищаемая.bsl").toUri(), """
+      Процедура ВтораяОчищаемая()
+      КонецПроцедуры
+      """);
+    var foreign = TestUtils.getDocumentContext(
+      Path.of("./src/test/resources/types/index/ЧужаяОстающаяся.bsl").toUri(), """
+      Процедура ЧужаяОстающаяся()
+      КонецПроцедуры
+      """);
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(first));
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(second));
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(foreign));
+    assertThat(index.search("ВтораяОчищаемая", NO_CANCEL)).isNotEmpty();
+    assertThat(index.search("ЧужаяОстающаяся", NO_CANCEL)).isNotEmpty();
+    var clearing = mock(ServerContext.class);
+    when(clearing.isClearing()).thenReturn(true);
+    // первый документ из карты контекста уже удалён, второй ещё на месте
+    when(clearing.getDocuments()).thenReturn(Map.of(second.getUri(), second));
+
+    // when: контекст очищается целиком, и удалён первый документ
+    index.handleDocumentRemoved(new ServerContextDocumentRemovedEvent(clearing, first.getUri()));
+
+    // then: записи контекста сняты разом — записей второго документа в нём тоже нет
+    assertThat(index.search("ПерваяОчищаемая", NO_CANCEL)).isEmpty();
+    assertThat(index.search("ВтораяОчищаемая", NO_CANCEL)).isEmpty();
+    // then: записи документа другого контекста остались
+    assertThat(index.search("ЧужаяОстающаяся", NO_CANCEL))
+      .anyMatch(entry -> entry.name().equals("ЧужаяОстающаяся"));
   }
 
   @Test

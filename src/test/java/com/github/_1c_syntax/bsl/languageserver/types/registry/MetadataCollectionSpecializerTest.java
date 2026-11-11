@@ -26,12 +26,16 @@ import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwa
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.TestPropertySource;
 
+import java.nio.file.Path;
 import java.util.Collection;
 import java.util.List;
 
@@ -60,6 +64,9 @@ class MetadataCollectionSpecializerTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private TypeRegistry typeRegistry;
+
+  @Autowired
+  private TypeService typeService;
 
   @Test
   void topLevelGroupCollectionsAreSpecialized() {
@@ -139,6 +146,31 @@ class MetadataCollectionSpecializerTest extends AbstractServerContextAwareTest {
     assertThat(names)
       .as("На per-MDO Документ1 должны быть property для всех известных коллекций. Получено: %s", names)
       .contains("Реквизиты", "СтандартныеРеквизиты", "ТабличныеЧасти", "Формы", "Макеты", "Команды");
+  }
+
+  @Test
+  void perMdoTypeRefHasOnlyCollectionsOfItsDescription() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    provider.tryRegister();
+
+    // Подсистемы, кубы, операции и прочее есть только у своих видов объектов — у документа
+    // и у реквизита их нет, и обращение к ним по имени — ошибка, а не член.
+    var documentRef = typeRegistry.intern(TypeKind.PLATFORM, "ОбъектМетаданных: Документ.Документ1");
+    assertThat(memberNames(typeRegistry.getMembers(documentRef, FileType.BSL)))
+      .contains("Реквизиты", "ТабличныеЧасти")
+      .doesNotContain("Подсистемы", "Кубы", "Каналы", "Операции", "ШаблоныURL");
+
+    // Свой тип у реквизита — в коллекции реквизитов общего описания документа, где перечислены
+    // реквизиты всех документов: `Метаданные.Документы[Имя].Реквизиты.Реквизит1`.
+    var allAttributes = typeRegistry.intern(TypeKind.PLATFORM, "КоллекцияОбъектовМетаданных.Реквизиты");
+    var attribute = findMember(typeRegistry.getMembers(allAttributes, FileType.BSL), "Реквизит1");
+    assertThat(attribute).isNotNull();
+    assertThat(attribute.returnType().qualifiedName()).isEqualTo("ОбъектМетаданных: Реквизит.Реквизит1");
+    var attributeRef = typeRegistry.intern(TypeKind.PLATFORM, attribute.returnType().qualifiedName());
+    assertThat(memberNames(typeRegistry.getMembers(attributeRef, FileType.BSL)))
+      .contains("Тип")
+      .doesNotContain("Подсистемы", "Кубы", "Поля", "Характеристики", "ВводПоСтроке");
   }
 
   @Test
@@ -272,6 +304,51 @@ class MetadataCollectionSpecializerTest extends AbstractServerContextAwareTest {
     assertThat(names)
       .as("Стандартные реквизиты ТЧ: НомерСтроки и Ссылка")
       .contains("НомерСтроки", "Ссылка");
+  }
+
+  @Test
+  void ownMetadataOfObjectLeadsToItsTabularSectionColumns() {
+    // given: модуль объекта справочника обращается к описанию своей табличной части.
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    provider.tryRegister();
+    var module = TestUtils.getDocumentContext(
+      Path.of(PATH_TO_METADATA, "Catalogs", "Справочник1", "Ext", "ObjectModule.bsl").toUri(),
+      "Колонка = Метаданные().ТабличныеЧасти.ТабличнаяЧасть1.Реквизиты.Реквизит1;\n",
+      context);
+
+    // when
+    var columnsPosition = new Position(0, "Колонка = Метаданные().ТабличныеЧасти.ТабличнаяЧасть1.Реквизиты.".length() + 1);
+    var columns = typeService.receiverTypesAt(module, columnsPosition);
+
+    // then: `Метаданные()` — описание именно этого справочника, а не справочника вообще,
+    // поэтому колонки берутся у его табличной части, а не у одноимённой чужой.
+    assertThat(columns.refs()).extracting(TypeRef::qualifiedName)
+      .containsExactly("КоллекцияОбъектовМетаданных.Реквизиты.Справочник1.ТабличнаяЧасть1");
+  }
+
+  @Test
+  void movementOfOwnMetadataIsDescriptionOfRegister() {
+    // given: код обходит движения документа, описание которого получено от его ссылки.
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    provider.tryRegister();
+    var module = TestUtils.getDocumentContext(
+      Path.of(PATH_TO_METADATA, "Catalogs", "Справочник1", "Ext", "ObjectModule.bsl").toUri(),
+      """
+        Для Каждого МетаданныеРегистра Из Документы.Документ1.ПустаяСсылка().Метаданные().Движения Цикл
+          Имя = МетаданныеРегистра.Имя;
+        КонецЦикла;
+        """,
+      context);
+
+    // when
+    var registers = typeService.receiverTypesAt(module, new Position(1, "  Имя = МетаданныеРегистра.".length() + 1));
+
+    // then: элемент движений — описание одного из регистров документа, и у него есть имя.
+    assertThat(registers.refs()).extracting(TypeRef::qualifiedName).contains(
+      "ОбъектМетаданных: РегистрНакопления.РегистрНакопления1",
+      "ОбъектМетаданных: РегистрСведений.РегистрСведений2");
   }
 
   @Test

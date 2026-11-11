@@ -25,6 +25,10 @@ import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.AccessMode;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
+import com.github._1c_syntax.bsl.languageserver.types.PlatformMemberVersions;
+import com.github._1c_syntax.bsl.support.CompatibilityMode;
+import com.github._1c_syntax.utils.StringInterner;
 import org.springframework.stereotype.Component;
 
 import java.util.Locale;
@@ -50,6 +54,9 @@ public class MemberMetadataIndex {
   private final Map<TypeRef, Set<String>> readOnlyByType = new ConcurrentHashMap<>();
   private final Set<String> readOnlyNames = ConcurrentHashMap.newKeySet();
   private final Set<String> versionedNames = ConcurrentHashMap.newKeySet();
+  private final Map<String, Set<String>> deprecatedVersions = new ConcurrentHashMap<>();
+  private final Map<String, Set<String>> introducedVersions = new ConcurrentHashMap<>();
+  private final StringInterner names = new StringInterner();
 
   public void index(TypeRef ref, MemberDescriptor member) {
     var versioned = member.metadata().hasVersionInfo();
@@ -61,19 +68,27 @@ public class MemberMetadataIndex {
       ? readOnlyByType.computeIfAbsent(ref, k -> ConcurrentHashMap.newKeySet())
       : Set.<String>of();
     var bn = member.bilingualName();
-    indexLocale(bn.ru(), versioned, readOnly, readOnlyOfType);
-    indexLocale(bn.en(), versioned, readOnly, readOnlyOfType);
+    indexLocale(bn.ru(), versioned, readOnly, readOnlyOfType, member.metadata());
+    indexLocale(bn.en(), versioned, readOnly, readOnlyOfType, member.metadata());
   }
 
   /** Регистрирует одно из двух написаний имени (ru/en) во всех релевантных индексах. */
   private void indexLocale(String name, boolean versioned, boolean readOnly,
-                           Set<String> readOnlyOfType) {
+                           Set<String> readOnlyOfType, PlatformMetadata metadata) {
     if (name.isEmpty()) {
       return;
     }
-    var lc = name.toLowerCase(Locale.ROOT);
+    // Одни и те же имена (свойства формы и т.п.) попадают в наборы тысяч типов.
+    var lc = names.intern(name.toLowerCase(Locale.ROOT));
     if (versioned) {
       versionedNames.add(lc);
+      if (!metadata.deprecatedSinceVersion().isEmpty()) {
+        deprecatedVersions.computeIfAbsent(lc, ignored -> ConcurrentHashMap.newKeySet())
+          .add(metadata.deprecatedSinceVersion());
+      }
+      if (!metadata.sinceVersion().isEmpty()) {
+        introducedVersions.computeIfAbsent(lc, ignored -> ConcurrentHashMap.newKeySet()).add(metadata.sinceVersion());
+      }
     }
     if (readOnly) {
       readOnlyNames.add(lc);
@@ -96,5 +111,17 @@ public class MemberMetadataIndex {
 
   public boolean isVersionedName(String name) {
     return versionedNames.contains(name.toLowerCase(Locale.ROOT));
+  }
+
+  /** Хотя бы один одноимённый член может быть устаревшим в целевой платформе. */
+  public boolean mayBeDeprecated(String name, CompatibilityMode target) {
+    var versions = deprecatedVersions.get(name.toLowerCase(Locale.ROOT));
+    return versions != null && versions.stream().anyMatch(version -> PlatformMemberVersions.firesDeprecated(version, target));
+  }
+
+  /** Хотя бы один одноимённый член может ещё отсутствовать в целевой платформе. */
+  public boolean mayBeUnavailable(String name, CompatibilityMode target) {
+    var versions = introducedVersions.get(name.toLowerCase(Locale.ROOT));
+    return versions != null && versions.stream().anyMatch(version -> PlatformMemberVersions.firesUnavailable(version, target));
   }
 }

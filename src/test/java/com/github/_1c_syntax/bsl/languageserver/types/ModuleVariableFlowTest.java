@@ -43,6 +43,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 @CleanupContextBeforeClassAndAfterClass
 class ModuleVariableFlowTest extends AbstractServerContextAwareTest {
 
+  private static final String READ_BY_CALLED_FUNCTION =
+    "./src/test/resources/types/ModuleVariableReadByCalledFunction.bsl";
+
   @Autowired
   private TypeService typeService;
 
@@ -144,6 +147,37 @@ class ModuleVariableFlowTest extends AbstractServerContextAwareTest {
 
     // then: состояние от объявления наблюдать неоткуда.
     assertThat(qnames(types)).containsExactlyInAnyOrder("Массив", "Соответствие");
+  }
+
+  @Test
+  void calledFunctionSeesSettledValueOfModuleVariable() {
+    // given: `Данные` меняет только `Заполнить`, и оттуда же вызывается `Прочитать`. Значит,
+    // расчёт ячейки `Данные` считает тело `Прочитать` посреди кругов, пока ячейка ещё
+    // приближение. Первым спрашивается тип внутри `Прочитать` — с него круги и начинаются.
+    var documentContext = TestUtils.getDocumentContextFromFile(READ_BY_CALLED_FUNCTION);
+
+    // when
+    var types = typeService.expressionTypesAt(documentContext,
+      positionOf(documentContext, "НаВходе = Данные", "НаВходе = ".length() + 1));
+
+    // then: тип на входе — посчитанная ячейка, а не её приближение с первого круга.
+    assertThat(qnames(types)).containsExactlyInAnyOrder("Неопределено", "Структура");
+  }
+
+  @Test
+  void valueOfFunctionReadingModuleVariableIsSettled() {
+    // given: значение `Прочитать` первым спрашивает сам расчёт ячейки `Данные` — из тела
+    // `Заполнить`, пока круги ещё идут.
+    var documentContext = TestUtils.getDocumentContextFromFile(READ_BY_CALLED_FUNCTION);
+    typeService.expressionTypesAt(documentContext,
+      positionOf(documentContext, "НаВходе = Данные", "НаВходе = ".length() + 1));
+
+    // when
+    var types = typeService.expressionTypesAt(documentContext,
+      positionOf(documentContext, "Результат = Прочитать", "Результат = ".length() + 1));
+
+    // then
+    assertThat(qnames(types)).containsExactlyInAnyOrder("Неопределено", "Структура");
   }
 
   private TypeSet at(String marker, int offsetInMarker) {

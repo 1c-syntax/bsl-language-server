@@ -32,9 +32,13 @@ import com.github._1c_syntax.bsl.languageserver.mcp.tools.GlobalMemberCategory;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.GlobalMemberInfoTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.GlobalMemberSearchTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.HoverTool;
+import com.github._1c_syntax.bsl.languageserver.mcp.tools.ListWorkspaceFoldersTool;
+import com.github._1c_syntax.bsl.languageserver.mcp.tools.RegisterWorkspaceFolderTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.TypeAtPositionTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.TypeInfoTool;
+import com.github._1c_syntax.bsl.languageserver.mcp.tools.UnregisterWorkspaceFolderTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.TypeMemberDto;
+import com.github._1c_syntax.bsl.languageserver.mcp.dto.WorkspaceFolderDto;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
@@ -43,11 +47,14 @@ import io.modelcontextprotocol.spec.McpSchema.Root;
 import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledOnOs;
+import org.junit.jupiter.api.condition.OS;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.net.URI;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -72,7 +79,8 @@ class McpToolsTest {
 
   private static final String SRC_DIR = "src/test/resources/providers";
   private static final String FILE = SRC_DIR + "/callHierarchy.bsl";
-  private static final String WORKSPACE_ROOT = Absolute.path(SRC_DIR).toUri().toString();
+  private static final URI WORKSPACE_URI = Absolute.path(SRC_DIR).toUri();
+  private static final String WORKSPACE_FOLDER = WORKSPACE_URI.toString();
 
   // Объявление ПерваяФункция и место её вызова в callHierarchy.bsl.
   private static final int DECLARATION_LINE = 6;
@@ -102,6 +110,12 @@ class McpToolsTest {
   private GlobalMemberInfoTool globalMemberInfoTool;
   @Autowired
   private GlobalMemberSearchTool globalMemberSearchTool;
+  @Autowired
+  private ListWorkspaceFoldersTool listWorkspaceFoldersTool;
+  @Autowired
+  private RegisterWorkspaceFolderTool registerWorkspaceFolderTool;
+  @Autowired
+  private UnregisterWorkspaceFolderTool unregisterWorkspaceFolderTool;
   @Autowired
   private McpRootsChangeConsumer rootsChangeConsumer;
   @Autowired
@@ -219,7 +233,7 @@ class McpToolsTest {
 
   @Test
   void typeInfoReturnsMethodsAndPropertiesOfPlatformType() {
-    var result = typeInfoTool.typeInfo("Массив", FileType.BSL, WORKSPACE_ROOT, null);
+    var result = typeInfoTool.typeInfo("Массив", FileType.BSL, WORKSPACE_FOLDER, null);
 
     assertThat(result.name()).isEqualTo("Массив");
     assertThat(result.methods()).extracting(TypeMemberDto::name).contains("Добавить", "Количество");
@@ -227,7 +241,7 @@ class McpToolsTest {
 
   @Test
   void typeInfoReturnsMethodsAndPropertiesWithOsFileType() {
-    var result = typeInfoTool.typeInfo("Массив", FileType.OS, WORKSPACE_ROOT, null);
+    var result = typeInfoTool.typeInfo("Массив", FileType.OS, WORKSPACE_FOLDER, null);
 
     assertThat(result.name()).isEqualTo("Массив");
     assertThat(result.methods()).extracting(TypeMemberDto::name).contains("Добавить", "Количество");
@@ -235,13 +249,13 @@ class McpToolsTest {
 
   @Test
   void typeInfoThrowsForUnknownType() {
-    assertThatThrownBy(() -> typeInfoTool.typeInfo("НетТакогоТипа", FileType.BSL, WORKSPACE_ROOT, null))
+    assertThatThrownBy(() -> typeInfoTool.typeInfo("НетТакогоТипа", FileType.BSL, WORKSPACE_FOLDER, null))
       .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
   void typeInfoReturnsConstructorsForPlatformClass() {
-    var result = typeInfoTool.typeInfo("Массив", FileType.BSL, WORKSPACE_ROOT, null);
+    var result = typeInfoTool.typeInfo("Массив", FileType.BSL, WORKSPACE_FOLDER, null);
 
     assertThat(result.constructors()).isNotEmpty();
     assertThat(result.constructors().get(0).parameters()).isNotNull();
@@ -249,7 +263,7 @@ class McpToolsTest {
 
   @Test
   void typeInfoExposesEventsListEvenIfEmpty() {
-    var result = typeInfoTool.typeInfo("Массив", FileType.BSL, WORKSPACE_ROOT, null);
+    var result = typeInfoTool.typeInfo("Массив", FileType.BSL, WORKSPACE_FOLDER, null);
 
     assertThat(result.events()).isNotNull();
     // У стандартных коллекций событий нет — но поле всегда присутствует.
@@ -258,8 +272,8 @@ class McpToolsTest {
 
   @Test
   void typeInfoAcceptsExplicitLanguageParameter() {
-    var ru = typeInfoTool.typeInfo("Массив", FileType.BSL, WORKSPACE_ROOT, Language.RU);
-    var en = typeInfoTool.typeInfo("Массив", FileType.BSL, WORKSPACE_ROOT, Language.EN);
+    var ru = typeInfoTool.typeInfo("Массив", FileType.BSL, WORKSPACE_FOLDER, Language.RU);
+    var en = typeInfoTool.typeInfo("Массив", FileType.BSL, WORKSPACE_FOLDER, Language.EN);
 
     assertThat(ru.methods()).isNotEmpty();
     assertThat(en.methods()).isNotEmpty();
@@ -270,14 +284,14 @@ class McpToolsTest {
 
   @Test
   void typeInfoReturnsNullDefinedAtForPlatformType() {
-    var result = typeInfoTool.typeInfo("Массив", FileType.BSL, WORKSPACE_ROOT, null);
+    var result = typeInfoTool.typeInfo("Массив", FileType.BSL, WORKSPACE_FOLDER, null);
 
     assertThat(result.definedAt()).isNull();
   }
 
   @Test
   void globalMemberInfoResolvesPlatformFunction() {
-    var result = globalMemberInfoTool.globalMemberInfo("Сообщить", FileType.BSL, WORKSPACE_ROOT, null);
+    var result = globalMemberInfoTool.globalMemberInfo("Сообщить", FileType.BSL, WORKSPACE_FOLDER, null);
 
     assertThat(result.kind()).isEqualTo("FUNCTION");
     assertThat(result.member().kind()).isEqualTo("METHOD");
@@ -287,7 +301,7 @@ class McpToolsTest {
 
   @Test
   void globalMemberInfoResolvesByEnglishAlias() {
-    var result = globalMemberInfoTool.globalMemberInfo("Message", FileType.BSL, WORKSPACE_ROOT, null);
+    var result = globalMemberInfoTool.globalMemberInfo("Message", FileType.BSL, WORKSPACE_FOLDER, null);
 
     assertThat(result.kind()).isEqualTo("FUNCTION");
     assertThat(result.member().kind()).isEqualTo("METHOD");
@@ -295,20 +309,20 @@ class McpToolsTest {
 
   @Test
   void globalMemberInfoThrowsForUnknownName() {
-    assertThatThrownBy(() -> globalMemberInfoTool.globalMemberInfo("НетТакогоИмени", FileType.BSL, WORKSPACE_ROOT, null))
+    assertThatThrownBy(() -> globalMemberInfoTool.globalMemberInfo("НетТакогоИмени", FileType.BSL, WORKSPACE_FOLDER, null))
       .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
   void globalMemberInfoAcceptsOscriptFileType() {
-    var result = globalMemberInfoTool.globalMemberInfo("Сообщить", FileType.OS, WORKSPACE_ROOT, null);
+    var result = globalMemberInfoTool.globalMemberInfo("Сообщить", FileType.OS, WORKSPACE_FOLDER, null);
 
     assertThat(result.kind()).isEqualTo("FUNCTION");
   }
 
   @Test
   void globalMemberSearchListsAllCategoriesByDefault() {
-    var result = globalMemberSearchTool.globalMemberSearch(FileType.BSL, WORKSPACE_ROOT, null, null, null);
+    var result = globalMemberSearchTool.globalMemberSearch(FileType.BSL, WORKSPACE_FOLDER, null, null, null);
 
     assertThat(result.count())
       .isEqualTo(result.functions().size() + result.properties().size() + result.enums().size());
@@ -322,7 +336,7 @@ class McpToolsTest {
   @Test
   void globalMemberSearchRestrictsToRequestedCategories() {
     var result = globalMemberSearchTool.globalMemberSearch(
-      FileType.BSL, WORKSPACE_ROOT, null, List.of(GlobalMemberCategory.FUNCTION), null);
+      FileType.BSL, WORKSPACE_FOLDER, null, List.of(GlobalMemberCategory.FUNCTION), null);
 
     assertThat(result.functions()).isNotEmpty();
     assertThat(result.properties()).isEmpty();
@@ -333,7 +347,7 @@ class McpToolsTest {
   @Test
   void globalMemberSearchReturnsOnlyEnumsWhenRequested() {
     var result = globalMemberSearchTool.globalMemberSearch(
-      FileType.BSL, WORKSPACE_ROOT, null, List.of(GlobalMemberCategory.ENUM), null);
+      FileType.BSL, WORKSPACE_FOLDER, null, List.of(GlobalMemberCategory.ENUM), null);
 
     assertThat(result.enums()).isNotEmpty();
     assertThat(result.functions()).isEmpty();
@@ -342,7 +356,7 @@ class McpToolsTest {
 
   @Test
   void globalMemberSearchMatchesFuzzilyAcrossCategories() {
-    var result = globalMemberSearchTool.globalMemberSearch(FileType.BSL, WORKSPACE_ROOT, "Сообщ", null, null);
+    var result = globalMemberSearchTool.globalMemberSearch(FileType.BSL, WORKSPACE_FOLDER, "Сообщ", null, null);
 
     assertThat(result.functions()).extracting(TypeMemberDto::name).contains("Сообщить");
     assertThat(result.functions()).allSatisfy(member ->
@@ -354,7 +368,7 @@ class McpToolsTest {
     // Запрос совпадает как префикс с «Сообщить» и как подпоследовательность с другими именами —
     // более релевантное «Сообщить» должно быть выше в выдаче (ранжирование, как в автодополнении).
     var result = globalMemberSearchTool.globalMemberSearch(
-      FileType.BSL, WORKSPACE_ROOT, "Сообщить", List.of(GlobalMemberCategory.FUNCTION), null);
+      FileType.BSL, WORKSPACE_FOLDER, "Сообщить", List.of(GlobalMemberCategory.FUNCTION), null);
 
     assertThat(result.functions()).isNotEmpty();
     assertThat(result.functions().get(0).name()).isEqualTo("Сообщить");
@@ -363,7 +377,7 @@ class McpToolsTest {
   @Test
   void globalMemberSearchReturnsEmptyForUnmatchedQuery() {
     var result = globalMemberSearchTool.globalMemberSearch(
-      FileType.BSL, WORKSPACE_ROOT, "btzzzqqqxyz", null, null);
+      FileType.BSL, WORKSPACE_FOLDER, "btzzzqqqxyz", null, null);
 
     assertThat(result.count()).isZero();
     assertThat(result.functions()).isEmpty();
@@ -373,60 +387,60 @@ class McpToolsTest {
 
   @Test
   void globalMemberSearchAcceptsOscriptFileType() {
-    var result = globalMemberSearchTool.globalMemberSearch(FileType.OS, WORKSPACE_ROOT, null, null, null);
+    var result = globalMemberSearchTool.globalMemberSearch(FileType.OS, WORKSPACE_FOLDER, null, null, null);
 
     assertThat(result.functions()).isNotEmpty();
     assertThat(result.functions()).extracting(TypeMemberDto::name).contains("Сообщить");
   }
 
   @Test
-  void globalMemberSearchThrowsWhenRootIsUnknown() {
+  void globalMemberSearchThrowsWhenWorkspaceFolderIsUnknown() {
     var unknownRoot = Absolute.path("src/test/resources/diagnostics").toUri().toString();
 
     assertThatThrownBy(() ->
       globalMemberSearchTool.globalMemberSearch(FileType.BSL, unknownRoot, null, null, null))
       .isInstanceOf(IllegalArgumentException.class)
-      .hasMessageContaining("No registered workspace matches root");
+      .hasMessageContaining("No registered workspace folder matches");
   }
 
   @Test
-  void globalMemberSearchThrowsWhenRootIsMissing() {
+  void globalMemberSearchThrowsWhenWorkspaceFolderIsMissing() {
     assertThatThrownBy(() ->
       globalMemberSearchTool.globalMemberSearch(FileType.BSL, null, null, null, null))
       .isInstanceOf(IllegalArgumentException.class)
-      .hasMessageContaining("Workspace root is required");
+      .hasMessageContaining("Workspace folder is required");
   }
 
   @Test
-  void typeInfoThrowsWhenRootIsUnknown() {
+  void typeInfoThrowsWhenWorkspaceFolderIsUnknown() {
     var unknownRoot = Absolute.path("src/test/resources/diagnostics").toUri().toString();
 
     assertThatThrownBy(() -> typeInfoTool.typeInfo("Массив", FileType.BSL, unknownRoot, null))
       .isInstanceOf(IllegalArgumentException.class)
-      .hasMessageContaining("No registered workspace matches root");
+      .hasMessageContaining("No registered workspace folder matches");
   }
 
   @Test
-  void globalMemberInfoThrowsWhenRootIsUnknown() {
+  void globalMemberInfoThrowsWhenWorkspaceFolderIsUnknown() {
     var unknownRoot = Absolute.path("src/test/resources/diagnostics").toUri().toString();
 
     assertThatThrownBy(() -> globalMemberInfoTool.globalMemberInfo("Сообщить", FileType.BSL, unknownRoot, null))
       .isInstanceOf(IllegalArgumentException.class)
-      .hasMessageContaining("No registered workspace matches root");
+      .hasMessageContaining("No registered workspace folder matches");
   }
 
   @Test
-  void typeInfoThrowsWhenRootIsMissing() {
+  void typeInfoThrowsWhenWorkspaceFolderIsMissing() {
     assertThatThrownBy(() -> typeInfoTool.typeInfo("Массив", FileType.BSL, "  ", null))
       .isInstanceOf(IllegalArgumentException.class)
-      .hasMessageContaining("Workspace root is required");
+      .hasMessageContaining("Workspace folder is required");
   }
 
   @Test
-  void globalMemberInfoThrowsWhenRootIsMissing() {
+  void globalMemberInfoThrowsWhenWorkspaceFolderIsMissing() {
     assertThatThrownBy(() -> globalMemberInfoTool.globalMemberInfo("Сообщить", FileType.BSL, null, null))
       .isInstanceOf(IllegalArgumentException.class)
-      .hasMessageContaining("Workspace root is required");
+      .hasMessageContaining("Workspace folder is required");
   }
 
   @Test
@@ -439,6 +453,150 @@ class McpToolsTest {
 
     assertThat(result.types()).contains("Массив");
     assertThat(result.members()).extracting(TypeMemberDto::name).contains("Добавить");
+  }
+
+  @Test
+  void listWorkspacesReportsIndexedWorkspace() {
+    var result = listWorkspaceFoldersTool.listWorkspaceFolders();
+
+    assertThat(result.workspaceFolders()).extracting(WorkspaceFolderDto::uri).contains(WORKSPACE_URI);
+    assertThat(result.workspaceFolders())
+      .filteredOn(folder -> WORKSPACE_URI.equals(folder.uri()))
+      .singleElement()
+      .satisfies(folder ->
+        assertThat(folder.name()).isEqualTo(Absolute.path(SRC_DIR).getFileName().toString()));
+    assertThat(result.hint()).contains("Registered workspace folders", WORKSPACE_FOLDER);
+  }
+
+  @Test
+  void listWorkspacesTellsHowToRegisterWhenNothingIsIndexed() {
+    unregisterWorkspaceFolderTool.unregisterWorkspaceFolder(WORKSPACE_FOLDER);
+
+    var result = listWorkspaceFoldersTool.listWorkspaceFolders();
+
+    assertThat(result.workspaceFolders()).isEmpty();
+    assertThat(result.hint()).contains("No workspace folder is registered", "register_workspace_folder");
+  }
+
+  @Test
+  void registerWorkspaceIndexesDirectoryAndUnblocksTools() {
+    var cliDir = Absolute.path("src/test/resources/cli");
+
+    var result = registerWorkspaceFolderTool.registerWorkspaceFolder(cliDir.toString(), null);
+
+    assertThat(result.alreadyRegistered()).isFalse();
+    assertThat(result.workspaceFolder().uri()).isEqualTo(cliDir.toUri());
+    assertThat(result.workspaceFolder().name()).isEqualTo("cli");
+    assertThat(analyzeFileTool.analyzeFile("src/test/resources/cli/test.bsl").diagnostics()).isNotEmpty();
+  }
+
+  @Test
+  void registerWorkspaceAcceptsFileUri() {
+    var cliUri = Absolute.path("src/test/resources/cli").toUri();
+
+    var result = registerWorkspaceFolderTool.registerWorkspaceFolder(cliUri.toString(), null);
+
+    assertThat(result.workspaceFolder().uri()).isEqualTo(cliUri);
+  }
+
+  @Test
+  void registerWorkspaceKeepsNameGivenByClient() {
+    var cliDir = Absolute.path("src/test/resources/cli");
+
+    var result = registerWorkspaceFolderTool.registerWorkspaceFolder(cliDir.toString(), "Демо-конфигурация");
+
+    assertThat(result.workspaceFolder().name()).isEqualTo("Демо-конфигурация");
+    assertThat(listWorkspaceFoldersTool.listWorkspaceFolders().workspaceFolders())
+      .filteredOn(folder -> cliDir.toUri().equals(folder.uri()))
+      .singleElement()
+      .satisfies(folder -> assertThat(folder.name()).isEqualTo("Демо-конфигурация"));
+  }
+
+  @Test
+  void registerWorkspaceDoesNotReindexKnownDirectory() {
+    var result = registerWorkspaceFolderTool.registerWorkspaceFolder(Absolute.path(SRC_DIR).toString(), null);
+
+    assertThat(result.alreadyRegistered()).isTrue();
+    assertThat(result.workspaceFolder().uri()).isEqualTo(WORKSPACE_URI);
+  }
+
+  @Test
+  void registerWorkspaceRejectsFileInsteadOfDirectory() {
+    var file = Absolute.path(FILE).toString();
+
+    assertThatThrownBy(() -> registerWorkspaceFolderTool.registerWorkspaceFolder(file, null))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("is a file, not a directory");
+  }
+
+  @Test
+  @DisabledOnOs(OS.WINDOWS)
+  void registerWorkspaceExplainsPathThatCannotBeCanonicalized() {
+    // Канонизация пути падает необъявленным IOException («File name too long»); клиент должен
+    // получить объяснение, что передать, а не сырую ошибку ввода-вывода.
+    var tooLong = Absolute.path("src/test/resources").resolve("x".repeat(5000)).toString();
+
+    assertThatThrownBy(() -> registerWorkspaceFolderTool.registerWorkspaceFolder(tooLong, null))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("Unsupported workspace folder");
+  }
+
+  @Test
+  void registerWorkspaceRejectsMissingDirectory() {
+    var missing = Absolute.path("src/test/resources/there-is-no-such-directory").toString();
+
+    assertThatThrownBy(() -> registerWorkspaceFolderTool.registerWorkspaceFolder(missing, null))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("does not exist");
+  }
+
+  @Test
+  void unregisterWorkspaceRemovesItAndReportsTheRest() {
+    registerWorkspaceFolderTool.registerWorkspaceFolder(Absolute.path("src/test/resources/cli").toString(), null);
+
+    var result = unregisterWorkspaceFolderTool.unregisterWorkspaceFolder(WORKSPACE_FOLDER);
+
+    assertThat(result.workspaceFolder().uri()).isEqualTo(WORKSPACE_URI);
+    assertThat(result.stillDeclaredByRoots()).isFalse();
+    assertThat(result.remaining()).extracting(WorkspaceFolderDto::uri).doesNotContain(WORKSPACE_URI);
+    assertThat(result.remaining()).isNotEmpty();
+  }
+
+  @Test
+  void unregisterWorkspaceFolderThrowsWhenWorkspaceFolderIsUnknown() {
+    var unknownRoot = Absolute.path("src/test/resources/diagnostics").toUri().toString();
+
+    assertThatThrownBy(() -> unregisterWorkspaceFolderTool.unregisterWorkspaceFolder(unknownRoot))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("No registered workspace folder matches")
+      .hasMessageContaining(WORKSPACE_FOLDER);
+  }
+
+  @Test
+  void unknownWorkspaceFolderErrorPointsAtWorkspaceFolderTools() {
+    var unknownRoot = Absolute.path("src/test/resources/diagnostics").toUri().toString();
+
+    assertThatThrownBy(() -> typeInfoTool.typeInfo("Массив", FileType.BSL, unknownRoot, null))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining(WORKSPACE_FOLDER)
+      .hasMessageContaining("register_workspace_folder")
+      .hasMessageContaining("list_workspace_folders");
+  }
+
+  @Test
+  void missingWorkspaceFolderErrorPointsAtWorkspaceFolderTools() {
+    assertThatThrownBy(() -> typeInfoTool.typeInfo("Массив", FileType.BSL, null, null))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("Workspace folder is required")
+      .hasMessageContaining("list_workspace_folders");
+  }
+
+  @Test
+  void fileOutsideWorkspaceErrorPointsAtRegisterTool() {
+    assertThatThrownBy(() -> analyzeFileTool.analyzeFile("src/test/resources/cli/test.bsl"))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("File is not part of any registered workspace folder")
+      .hasMessageContaining("register_workspace_folder");
   }
 
   @Test
@@ -455,6 +613,24 @@ class McpToolsTest {
     // Root removed -> workspace is gone, the file is no longer part of a registered workspace.
     rootsChangeConsumer.accept(null, List.of());
 
+    assertThatThrownBy(() -> analyzeFileTool.analyzeFile("src/test/resources/cli/test.bsl"))
+      .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void mcpRootAndExplicitRegistrationDoNotEvictEachOther() {
+    var cliDir = Absolute.path("src/test/resources/cli");
+    var root = new Root(cliDir.toUri().toString(), "cli");
+    registerWorkspaceFolderTool.registerWorkspaceFolder(cliDir.toString(), null);
+    rootsChangeConsumer.accept(null, List.of(root));
+
+    // Папку держат оба владельца: снятие явной регистрации её не убирает.
+    var unregistered = unregisterWorkspaceFolderTool.unregisterWorkspaceFolder(cliDir.toUri().toString());
+    assertThat(unregistered.stillDeclaredByRoots()).isTrue();
+    assertThat(analyzeFileTool.analyzeFile("src/test/resources/cli/test.bsl").diagnostics()).isNotEmpty();
+
+    // Ушёл последний владелец — ушла и папка.
+    rootsChangeConsumer.accept(null, List.of());
     assertThatThrownBy(() -> analyzeFileTool.analyzeFile("src/test/resources/cli/test.bsl"))
       .isInstanceOf(IllegalArgumentException.class);
   }

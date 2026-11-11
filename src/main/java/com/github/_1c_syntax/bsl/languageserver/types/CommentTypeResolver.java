@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.OpenDataObjectInference;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.VariableTypeSource;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
@@ -32,6 +33,7 @@ import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.utils.DescriptionTypes;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.description.CollectionTypeDescription;
 import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import com.github._1c_syntax.bsl.parser.description.VariableDescription;
 import com.github._1c_syntax.bsl.parser.description.support.Hyperlink;
@@ -126,17 +128,86 @@ public class CommentTypeResolver implements VariableTypeSource {
    *     не распознаны.
    */
   public TypeSet ofAssignment(DocumentContext owner, BSLParser.AssignmentContext assignment) {
-    var trailingComment = Trees.getTrailingComment(owner.getTokens(), assignment.getStop());
-    if (trailingComment.isEmpty()) {
-      return TypeSet.EMPTY;
-    }
-    var trailing = VariableDescription.create(Collections.emptyList(), trailingComment)
-      .getTrailingDescription()
-      .orElse(null);
+    var trailing = trailingOf(owner, assignment);
     if (trailing == null) {
       return TypeSet.EMPTY;
     }
     return typesOfComment(trailing.getTypes(), trailing.getLinks(), owner, owner.getFileType());
+  }
+
+  /**
+   * Проверить готовность и получить типы из одного разбора комментария присваивания.
+   * Уведомление о неполноте выполняется до резолва типов, как при отдельных вызовах.
+   *
+   * @param owner документ с присваиванием.
+   * @param assignment оператор присваивания.
+   * @param onIncomplete уведомление о ссылке на ещё не разобранный модуль.
+   * @return объявленные типы либо пустой набор, если комментария нет.
+   */
+  public TypeSet ofAssignment(DocumentContext owner, BSLParser.AssignmentContext assignment,
+                              Runnable onIncomplete) {
+    var trailing = trailingOf(owner, assignment);
+    if (trailing == null) {
+      return TypeSet.EMPTY;
+    }
+    if (anyLinkAwaitsUnparsedModule(trailing.getLinks(), owner)) {
+      onIncomplete.run();
+    }
+    return typesOfComment(trailing.getTypes(), trailing.getLinks(), owner, owner.getFileType());
+  }
+
+  /**
+   * Может ли тип из висячего комментария в строке присваивания ещё пополниться: ссылка
+   * {@code см.} в нём ведёт в модуль, до разбора которого очередь ещё не дошла. Тогда ответ
+   * {@link #ofAssignment} неполон, хотя по нему этого не видно.
+   *
+   * @param owner      документ с присваиванием.
+   * @param assignment оператор присваивания.
+   * @return {@code true}, если комментарий ссылается на ещё не разобранный модуль.
+   */
+  public boolean assignmentAwaitsUnparsedModule(DocumentContext owner, BSLParser.AssignmentContext assignment) {
+    var trailing = trailingOf(owner, assignment);
+    return trailing != null && anyLinkAwaitsUnparsedModule(trailing.getLinks(), owner);
+  }
+
+  /**
+   * Может ли тип из комментария переменной ещё пополниться: ссылка {@code см.} в нём ведёт
+   * в модуль, до разбора которого очередь ещё не дошла.
+   *
+   * @param variable переменная.
+   * @return {@code true}, если комментарий ссылается на ещё не разобранный модуль.
+   */
+  @Override
+  public boolean isIncomplete(VariableSymbol variable) {
+    var description = variable.getDescription().orElse(null);
+    if (description == null) {
+      return false;
+    }
+    var owner = variable.getOwner();
+    var trailing = description.getTrailingDescription().orElse(null);
+    return (trailing != null && anyLinkAwaitsUnparsedModule(trailing.getLinks(), owner))
+      || anyLinkAwaitsUnparsedModule(description.getLinks(), owner);
+  }
+
+  private boolean anyLinkAwaitsUnparsedModule(List<Hyperlink> links, DocumentContext owner) {
+    return links.stream().anyMatch(link -> symbolTypeIndex.linkAwaitsUnparsedModule(link.link(), owner));
+  }
+
+  /**
+   * Висячий комментарий в строке присваивания, разобранный как описание переменной.
+   *
+   * @param owner      документ с присваиванием.
+   * @param assignment оператор присваивания.
+   * @return висячая часть описания; {@code null}, если комментария нет.
+   */
+  private static @Nullable VariableDescription trailingOf(DocumentContext owner, BSLParser.AssignmentContext assignment) {
+    var trailingComment = Trees.getTrailingComment(owner.getTokens(), assignment.getStop());
+    if (trailingComment.isEmpty()) {
+      return null;
+    }
+    return VariableDescription.create(Collections.emptyList(), trailingComment)
+      .getTrailingDescription()
+      .orElse(null);
   }
 
   /**
@@ -155,22 +226,68 @@ public class CommentTypeResolver implements VariableTypeSource {
     DocumentContext owner,
     FileType fileType
   ) {
-    var directRefs = new ArrayList<TypeRef>();
+    var direct = TypeSet.EMPTY;
     if (types != null) {
       for (var type : types) {
         var name = DescriptionTypes.resolveName(type);
-        if (!name.isBlank()) {
-          typeRegistry.resolve(name, fileType).ifPresent(directRefs::add);
+        if (name.isBlank()) {
+          continue;
+        }
+        var ref = typeRegistry.resolve(name, fileType).orElse(null);
+        if (ref != null) {
+          direct = direct.union(withElementTypes(ref, type, fileType));
         }
       }
     }
-    if (!directRefs.isEmpty()) {
-      return TypeSet.of(directRefs);
+    if (!direct.isEmpty()) {
+      return direct;
     }
     var result = TypeSet.EMPTY;
     for (var link : links) {
       result = result.union(symbolTypeIndex.resolveSeeReference(link.link(), owner, fileType));
     }
     return result;
+  }
+
+  /**
+   * Тип-голова вместе с типами элементов записи {@code Массив из Строка}.
+   * <p>
+   * Элементы навешиваются напрямую только там, где элемент коллекции сам по себе
+   * неизвестен ({@link TypeRegistry#getOwnElementTypes}): у {@code Массив} реестр не
+   * называет ничего, и объявленный тип занимает пустое место. Если же у коллекции элемент
+   * собственный — {@code КлючИЗначение} у {@code Соответствие},
+   * {@code ЭлементСпискаЗначений} у {@code СписокЗначений} — запись {@code из Строка}
+   * называет не элемент, а значение внутри него. Там, где известно, какое это свойство
+   * элемента ({@link OpenDataObjectInference#itemValueProperty}), объявленный тип ложится
+   * на него; иначе реестровый элемент точнее, и объявленный отбрасывается.
+   *
+   * @param headRef  разрешённый тип-голова записи.
+   * @param type     описание типа из комментария.
+   * @param fileType язык, на котором резолвятся имена элементов.
+   * @return набор из одного типа-головы, при наличии — с типами элементов.
+   */
+  private TypeSet withElementTypes(TypeRef headRef, TypeDescription type, FileType fileType) {
+    var head = TypeSet.of(headRef);
+    if (!(type instanceof CollectionTypeDescription collection)) {
+      return head;
+    }
+    var elements = new ArrayList<TypeRef>();
+    for (var valueType : collection.valueTypes()) {
+      var name = DescriptionTypes.resolveName(valueType);
+      if (!name.isBlank()) {
+        typeRegistry.resolve(name, fileType).ifPresent(elements::add);
+      }
+    }
+    if (elements.isEmpty()) {
+      return head;
+    }
+    var ownElement = typeRegistry.getOwnElementTypes(headRef).refs().stream().findFirst().orElse(null);
+    if (ownElement == null) {
+      return head.withElement(headRef, TypeSet.of(elements));
+    }
+    var itemValueProperty = OpenDataObjectInference.itemValueProperty(headRef.qualifiedName());
+    return itemValueProperty == null
+      ? head
+      : head.withElement(headRef, TypeSet.of(ownElement).withField(ownElement, itemValueProperty, TypeSet.of(elements)));
   }
 }

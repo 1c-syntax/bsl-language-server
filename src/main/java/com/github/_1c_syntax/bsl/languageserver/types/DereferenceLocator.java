@@ -53,7 +53,7 @@ import java.util.List;
  * неизвестным (диагностика).
  */
 @UtilityClass
-class DereferenceLocator {
+public class DereferenceLocator {
 
   /**
    * Узел dereference'а, членом которого является {@code terminal}.
@@ -62,7 +62,7 @@ class DereferenceLocator {
    * @return узел dereference'а; {@code null}, если выражение не строится или
    *     терминал не является членом.
    */
-  static @Nullable BinaryOperationNode locate(TerminalNode terminal) {
+  public static @Nullable BinaryOperationNode locate(TerminalNode terminal) {
     return ExpressionAtPosition.findExpressionTree(terminal)
       .map(expression -> locateIn(expression, terminal))
       .orElse(null);

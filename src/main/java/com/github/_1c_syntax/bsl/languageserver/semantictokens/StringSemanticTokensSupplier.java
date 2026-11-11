@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.semantictokens;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.semantictokens.ParsedStrTemplateMethods;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.strings.AstTokenInfo;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.strings.LambdaStringTokenizer;
 import com.github._1c_syntax.bsl.languageserver.semantictokens.strings.QueryContext;
@@ -77,7 +76,6 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
 
   private final SemanticTokensHelper helper;
   private final LanguageServerConfiguration configuration;
-  private final ServerContext serverContext;
   private final SemanticTokensLegend legend;
   private final ObjectProvider<List<SemanticTokensSupplier>> suppliersProvider;
 
@@ -101,7 +99,9 @@ public class StringSemanticTokensSupplier implements SemanticTokensSupplier {
     // Собираем информацию о контекстах строк
     var specialStringContexts = collectSpecialStringContexts(documentContext);
     var queryStringContexts = collectQueryStringContexts(documentContext);
-    var lambdaStringContexts = new LambdaStringTokenizer(serverContext, legend, allSuppliers)
+    // Тело лямбды разбирается временным документом, и живёт он в рабочей папке самого документа:
+    // у ServerContext область prototype, и внедрённый сюда экземпляр ни к какой папке не привязан.
+    var lambdaStringContexts = new LambdaStringTokenizer(documentContext.getServerContext(), legend, allSuppliers)
       .collect(documentContext, specialStringContexts);
 
     // Обрабатываем все строковые токены

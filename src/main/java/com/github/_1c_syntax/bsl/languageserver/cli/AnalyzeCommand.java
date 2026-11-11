@@ -26,13 +26,15 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
+import com.github._1c_syntax.bsl.languageserver.reporters.ReportContext;
+import com.github._1c_syntax.bsl.languageserver.reporters.ReportSession;
 import com.github._1c_syntax.bsl.languageserver.reporters.ReportersAggregator;
-import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.utils.BSLFiles;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import me.tongfei.progressbar.ProgressBar;
 import me.tongfei.progressbar.ProgressBarBuilder;
 import me.tongfei.progressbar.ProgressBarStyle;
@@ -41,6 +43,8 @@ import org.springframework.stereotype.Component;
 import picocli.CommandLine.Command;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -61,7 +65,8 @@ import static picocli.CommandLine.Option;
  * то анализ выполняется в текущем каталоге запуска.
  * -o, (--outputDir) &lt;arg&gt; -     Путь к каталогу размещения отчетов - результатов анализа.
  * Возможно указывать как в абсолютном, так и относительном виде. Если параметр опущен,
- * то файлы отчета будут сохранены в текущем каталоге запуска.
+ * то файлы отчета будут сохранены в текущем каталоге запуска. Если каталог не существует,
+ * он создаётся до начала анализа.
  * -w, (--workspaceDir) &lt;arg&gt; -  Путь к каталогу проекта, относительно которого располагаются исходные файлы.
  * Возможно указывать как в абсолютном, так и в относительном виде. Если параметр опущен,
  * то пути к исходным файлам будут указываться относительно текущего каталога запуска.
@@ -162,6 +167,14 @@ public class AnalyzeCommand implements Callable<Integer> {
       return 1;
     }
 
+    var outputDir = Absolute.path(outputDirOption).normalize();
+    try {
+      Files.createDirectories(outputDir);
+    } catch (IOException e) {
+      LOGGER.error("Can't create output dir `{}`: {}", outputDir, e.getMessage());
+      return 1;
+    }
+
     var configurationFile = new File(configurationOption);
 
     // Update global configuration
@@ -189,33 +202,14 @@ public class AnalyzeCommand implements Callable<Integer> {
       // активному репортеру они действительно нужны (см. ReportersAggregator).
       var metricCalculationRequired = aggregator.isMetricCalculationRequired();
 
-      List<FileInfo> fileInfos;
-      if (silentMode) {
-        fileInfos = cliExecutor.submit(() ->
-          files.parallelStream()
-            .map((File file) -> getFileInfoFromFile(workspaceDir, file, metricCalculationRequired))
-            .toList()
-        ).get();
-      } else {
-        try (ProgressBar pb = new ProgressBarBuilder()
-          .setTaskName("Analyzing files...")
-          .setInitialMax(files.size())
-          .setStyle(ProgressBarStyle.ASCII)
-          .build()) {
-          fileInfos = cliExecutor.submit(() ->
-            files.parallelStream()
-              .map((File file) -> {
-                pb.step();
-                return getFileInfoFromFile(workspaceDir, file, metricCalculationRequired);
-              })
-              .toList()
-          ).get();
-        }
-      }
+      var context = new ReportContext(LocalDateTime.now(), srcDir.toString());
 
-      var analysisInfo = new AnalysisInfo(LocalDateTime.now(), fileInfos, srcDir.toString());
-      var outputDir = Absolute.path(outputDirOption);
-      aggregator.report(analysisInfo, outputDir);
+      // Результаты передаются репортёрам по одному сразу после разбора файла и больше нигде не
+      // удерживаются: пик памяти не зависит от размера конфигурации (см. issue #4412).
+      try (var session = aggregator.beginReport(context, outputDir)) {
+        analyze(files, workspaceDir, metricCalculationRequired, session);
+        session.commit();
+      }
       return 0;
     } catch (ExecutionException e) {
       throw new IllegalStateException("Error analyzing files", e);
@@ -227,6 +221,45 @@ public class AnalyzeCommand implements Callable<Integer> {
 
   public String[] getReportersOptions() {
     return reportersOptions.clone();
+  }
+
+  private void analyze(
+    List<File> files,
+    Path workspaceDir,
+    boolean metricCalculationRequired,
+    ReportSession session
+  ) throws ExecutionException, InterruptedException {
+    if (silentMode) {
+      analyze(files, workspaceDir, metricCalculationRequired, session, null);
+      return;
+    }
+
+    try (var progressBar = new ProgressBarBuilder()
+      .setTaskName("Analyzing files...")
+      .setInitialMax(files.size())
+      .setStyle(ProgressBarStyle.ASCII)
+      .build()) {
+      analyze(files, workspaceDir, metricCalculationRequired, session, progressBar);
+    }
+  }
+
+  private void analyze(
+    List<File> files,
+    Path workspaceDir,
+    boolean metricCalculationRequired,
+    ReportSession session,
+    @Nullable ProgressBar progressBar
+  ) throws ExecutionException, InterruptedException {
+    cliExecutor.submit(() ->
+      files.parallelStream()
+        .map((File file) -> {
+          if (progressBar != null) {
+            progressBar.step();
+          }
+          return getFileInfoFromFile(workspaceDir, file, metricCalculationRequired);
+        })
+        .forEach(session::accept)
+    ).get();
   }
 
   private FileInfo getFileInfoFromFile(Path srcDir, File file, boolean metricCalculationRequired) {

@@ -38,7 +38,9 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +57,8 @@ class UnusedLocalMethodDiagnosticTest extends AbstractDiagnosticTest<UnusedLocal
   private static final String PATH_TO_MODULE_CONTENT = "src/test/resources/diagnostics/UnusedLocalMethodDiagnostic.bsl";
   private static final String MANAGED_FORM_MODULE =
     "Documents/Документ1/Forms/ФормаДокумента/Ext/Form/Module.bsl";
+  private static final String PATH_TO_DECORATION_EVENTS = "src/test/resources/metadata/formDecorationEvents";
+  private static final String DECORATION_FORM_MODULE = "DataProcessors/Обработка1/Forms/Форма/Ext/Form/Module.bsl";
 
   @Autowired
   private ReferenceIndex referenceIndex;
@@ -195,6 +199,21 @@ class UnusedLocalMethodDiagnosticTest extends AbstractDiagnosticTest<UnusedLocal
 
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics, true).hasRange(13, 10, 22);
+  }
+
+  @Test
+  void testDecorationEventHandlerIsNotFlagged() throws IOException {
+    // Обработчик нажатия на декорацию объявлен в Form.xml так же, как обработчики событий полей.
+    var path = Absolute.path(PATH_TO_DECORATION_EVENTS);
+    initServerContext(path);
+    var moduleFile = path.resolve(DECORATION_FORM_MODULE);
+    var formModule = context.addDocument(Absolute.uri(moduleFile.toFile()));
+    context.rebuildDocument(formModule, Files.readString(moduleFile), 1);
+
+    List<Diagnostic> diagnostics = getDiagnostics(formModule);
+
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true).hasRange(5, 10, 22);
   }
 
   @Test

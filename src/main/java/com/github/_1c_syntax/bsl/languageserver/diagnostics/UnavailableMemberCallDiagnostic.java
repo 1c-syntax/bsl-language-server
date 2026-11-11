@@ -72,7 +72,7 @@ public class UnavailableMemberCallDiagnostic extends AbstractDiagnostic {
   public void check() {
     var target = PlatformMemberVersions.targetCompatibilityMode(documentContext, configuration);
     // Оба вида мест — за один обход AST.
-    var callSites = PlatformMemberCalls.collect(documentContext, typeService);
+    var callSites = PlatformMemberCalls.collectUnavailable(documentContext, typeService, target);
     checkMembers(callSites.members(), target);
     checkConstructedTypes(callSites.constructedTypes(), target);
   }

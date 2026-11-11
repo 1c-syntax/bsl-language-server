@@ -21,11 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.index;
 
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextConfigurationBindingChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 
 import java.net.URI;
 
@@ -36,6 +40,8 @@ import java.net.URI;
  * Содержит общие {@code @EventListener}-обработчики, сбрасывающие индекс по URI на:
  * <ul>
  *   <li>изменение содержимого — {@link DocumentContextContentChangedEvent};</li>
+ *   <li>изменение привязки к метаданным конфигурации (дерево символов построено заново) —
+ *       {@link DocumentContextConfigurationBindingChangedEvent};</li>
  *   <li>освобождение вторичных данных (batch-анализ выбрасывает AST после каждого
  *       файла) — {@link ServerContextDocumentClearedEvent};</li>
  *   <li>закрытие документа — {@link ServerContextDocumentClosedEvent};</li>
@@ -59,6 +65,24 @@ public abstract class AbstractDocumentLifecycleClearableIndex {
     clear(event.getSource().getUri());
   }
 
+  /**
+   * Сбрасывает записи документа, привязка которого к конфигурации пересчитана.
+   * <p>
+   * Раньше всех остальных слушателей: дерево символов построено заново, а дерево разбора
+   * прежнее, и запись, найденная по его узлу, — раскладка расчёта по потоку, тип выражения —
+   * ссылается на символы прежнего дерева. Слушатели, которые по этому событию пересчитывают
+   * документ (ссылки, объявленные типы, типы возвращаемых значений), прочли бы её раньше, чем
+   * она сброшена. При правке текста порядок не важен: дерево разбора новое, и прежние записи
+   * по его узлам не находятся.
+   *
+   * @param event событие изменения привязки документа.
+   */
+  @EventListener
+  @Order(Ordered.HIGHEST_PRECEDENCE)
+  public void handleConfigurationBindingChanged(DocumentContextConfigurationBindingChangedEvent event) {
+    clear(event.getSource().getUri());
+  }
+
   @EventListener
   public void handleDataCleared(ServerContextDocumentClearedEvent event) {
     clear(event.getDocumentContext().getUri());
@@ -71,6 +95,30 @@ public abstract class AbstractDocumentLifecycleClearableIndex {
 
   @EventListener
   public void handleDocumentRemoved(ServerContextDocumentRemovedEvent event) {
+    if (event.getSource().isClearing() && clearContext(event.getSource(), event.getUri())) {
+      return;
+    }
     clear(event.getUri());
+  }
+
+  /**
+   * Удалить записи всех документов контекста, который очищается целиком: следом уйдут все его
+   * документы. Зовётся на удаление каждого из них, поэтому по контексту, записи которого уже
+   * сняты, должен отрабатывать дёшево.
+   * <p>
+   * Снимать нужно записи только этого контекста: индекс, общий на несколько контекстов, обязан
+   * сохранить записи документов остальных. Оставшиеся документы контекста —
+   * {@link ServerContext#getDocuments()}; удалённый к этому моменту из карты документ приходит
+   * отдельным параметром.
+   * <p>
+   * По умолчанию индекс чистится по документу. Переопределять стоит индексу, у которого
+   * удаление записей одного документа стоит больше, чем поиск по его URI.
+   *
+   * @param serverContext очищаемый контекст.
+   * @param removedUri    URI документа, удалённого из контекста.
+   * @return {@code true}, если записи контекста сняты и записи документа удалять не нужно.
+   */
+  protected boolean clearContext(ServerContext serverContext, URI removedUri) {
+    return false;
   }
 }

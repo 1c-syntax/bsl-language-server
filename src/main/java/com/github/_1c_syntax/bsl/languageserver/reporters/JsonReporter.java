@@ -22,18 +22,24 @@
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.databind.AnalysisInfoJsonMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
-import tools.jackson.core.JacksonException;
-import tools.jackson.databind.json.JsonMapper;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.SequenceWriter;
 
-import java.io.File;
 import java.nio.file.Path;
+import java.time.format.DateTimeFormatter;
 
 @Slf4j
 @Component
 public class JsonReporter implements DiagnosticReporter {
+
+  private ReportFile reportFile;
+  private JsonGenerator generator;
+  private SequenceWriter writer;
+  private String sourceDir;
 
   @Override
   public String key() {
@@ -46,15 +52,42 @@ public class JsonReporter implements DiagnosticReporter {
   }
 
   @Override
-  public void report(AnalysisInfo analysisInfo, Path outputDir) {
-    JsonMapper mapper = new AnalysisInfoJsonMapper();
+  public void beginReport(ReportContext context, Path outputDir) {
+    sourceDir = context.sourceDir();
 
-    try {
-      File reportFile = new File(outputDir.toFile(), "./bsl-json.json");
-      mapper.writeValue(reportFile, analysisInfo);
-      LOGGER.info("JSON report saved to {}", reportFile.getAbsolutePath());
-    } catch (JacksonException e) {
-      throw new RuntimeException(e);
+    var mapper = new AnalysisInfoJsonMapper();
+
+    reportFile = ReportFile.create(outputDir, "bsl-json.json");
+    generator = mapper.createGenerator(reportFile.stream());
+    generator.writeStartObject();
+    generator.writeName("date");
+    // формат совпадает с @JsonFormat на AnalysisInfo.date: аннотация компонента записи
+    // не применяется при потоковой записи поля, поэтому дату форматируем сами
+    generator.writeString(context.date().format(DateTimeFormatter.ofPattern(AnalysisInfo.DATE_PATTERN)));
+    generator.writeName("fileinfos");
+    writer = mapper.writerFor(FileInfo.class).writeValuesAsArray(generator);
+  }
+
+  @Override
+  public void accept(FileInfo fileInfo) {
+    writer.write(fileInfo);
+  }
+
+  @Override
+  public void endReport() {
+    writer.close();
+    generator.writeName("sourceDir");
+    generator.writeString(sourceDir);
+    generator.writeEndObject();
+    generator.close();
+    reportFile.commit();
+    LOGGER.info("JSON report saved to {}", reportFile.path().toAbsolutePath());
+  }
+
+  @Override
+  public void abortReport() {
+    if (reportFile != null) {
+      reportFile.close();
     }
   }
 }

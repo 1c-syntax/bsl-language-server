@@ -161,7 +161,9 @@ public class OScriptExtends {
    * @return аннотации конструктора либо пустой список, если конструктора нет
    */
   private static List<Annotation> constructorAnnotations(DocumentContext documentContext) {
-    for (var method : documentContext.getSymbolTree().getMethods()) {
+    // Без ожидания перестроения документа: родителя читают и из построения дерева другого
+    // документа (члены его self-типа), где ожидание замкнулось бы на встречное.
+    for (var method : documentContext.getSymbolTreeNoLock().getMethods()) {
       if (Methods.isOscriptClassConstructorName(method.getName())) {
         return method.getAnnotations();
       }

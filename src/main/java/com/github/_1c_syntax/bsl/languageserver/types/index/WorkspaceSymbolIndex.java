@@ -23,6 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.types.index;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextConfigurationBindingChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
@@ -35,6 +37,7 @@ import com.github._1c_syntax.bsl.languageserver.index.AbstractDocumentLifecycleC
 import com.github._1c_syntax.bsl.languageserver.utils.FuzzyMatcher;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.types.ScriptVariant;
+import com.github._1c_syntax.utils.StringInterner;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.trie.PatriciaTrie;
 import org.apache.commons.lang3.StringUtils;
@@ -213,6 +216,12 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
   /**
+   * Имена в нижнем регистре: одно и то же имя повторяется в тысячах модулей. Интернер общий для
+   * приложения — те же имена в нижнем регистре держат ключи индекса ссылок.
+   */
+  private final StringInterner lowerCaseNames;
+
+  /**
    * Пересобрать записи документа на изменении его содержимого.
    * <p>
    * В отличие от базового обработчика, который только сбрасывает записи документа, здесь после
@@ -226,6 +235,25 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
   @EventListener
   @Override
   public void handleContentChanged(DocumentContextContentChangedEvent event) {
+    var documentContext = event.getSource();
+    if (!event.isContentChanged() && indexedByUri.containsKey(documentContext.getUri())) {
+      // Тот же самый текст разобран заново, а записи по нему на месте: снимки автономны,
+      // и переиндексация дала бы ровно их же. Наличие записей проверяется отдельно —
+      // закрытие документа их убирает, и тогда перечитывание обязано наполнить индекс.
+      return;
+    }
+    index(documentContext);
+  }
+
+  /**
+   * Переиндексировать документ, у которого изменилась привязка к метаданным конфигурации: от неё
+   * зависят имя контейнера и вид символов.
+   *
+   * @param event событие изменения привязки документа
+   */
+  @EventListener
+  @Override
+  public void handleConfigurationBindingChanged(DocumentContextConfigurationBindingChangedEvent event) {
     index(event.getSource());
   }
 
@@ -281,7 +309,7 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
    * <p>
    * Каждая запись лежит под несколькими ключами (полное имя и начало каждого CamelCase-слова),
    * поэтому удаляется из ВСЕХ своих ключей: их множество детерминированно пересчитывается из имени
-   * записи методом {@link #keysOf(String)} (обратная карта не нужна). И {@link #indexedByUri}, и
+   * записи методом {@link #keysOf(String, String)} (обратная карта не нужна). И {@link #indexedByUri}, и
    * {@link #trie} меняются под одним write-lock, чтобы search (read-lock), читающий обе структуры,
    * не увидел запись удалённой из одной раньше другой; ключи, оставшиеся без записей, удаляются из
    * дерева, чтобы не копить пустые узлы.
@@ -298,11 +326,62 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
       }
       var keys = new HashSet<String>();
       for (var entry : removed) {
-        keys.addAll(keysOf(entry.name()));
+        keys.addAll(keysOf(entry.name(), entry.lowerName()));
       }
       for (var key : keys) {
         removeEntryFromKey(key, uri);
       }
+    } finally {
+      lock.writeLock().unlock();
+    }
+  }
+
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Запись документа удаляется фильтром всей корзины каждого своего ключа, а у ключей вроде
+   * общих префиксов имён в корзине записи тысяч документов — удаление всех по одному квадратично.
+   * Поэтому записи всех документов очищаемого контекста снимаются разом: каждая корзина
+   * фильтруется один раз по множеству их URI. Индекс общий на контексты всех рабочих папок, поэтому
+   * записи документов остальных контекстов остаются; если других записей нет, дерево очищается
+   * целиком.
+   * Повторные события того же контекста находят его URI уже снятым и ничего не делают.
+   */
+  @Override
+  protected boolean clearContext(ServerContext serverContext, URI removedUri) {
+    lock.writeLock().lock();
+    try {
+      if (!indexedByUri.containsKey(removedUri)) {
+        // Записи контекста уже сняты первым событием, либо документ не был проиндексирован.
+        return true;
+      }
+      var uris = new HashSet<URI>(serverContext.getDocuments().keySet());
+      uris.add(removedUri);
+
+      var keys = new HashSet<String>();
+      for (var uri : uris) {
+        var removed = indexedByUri.remove(uri);
+        if (removed != null) {
+          for (var entry : removed) {
+            keys.addAll(keysOf(entry.name(), entry.lowerName()));
+          }
+        }
+      }
+      if (indexedByUri.isEmpty()) {
+        trie.clear();
+        return true;
+      }
+      for (var key : keys) {
+        var bucket = trie.get(key);
+        if (bucket == null) {
+          continue;
+        }
+        bucket.removeIf(entry -> uris.contains(entry.uri()));
+        if (bucket.isEmpty()) {
+          trie.remove(key);
+        }
+      }
+      return true;
     } finally {
       lock.writeLock().unlock();
     }
@@ -723,7 +802,7 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
       // и не должен увидеть запись в одной из них раньше другой.
       indexedByUri.put(uri, snapshot);
       for (var entry : snapshot) {
-        for (var key : keysOf(entry.name())) {
+        for (var key : keysOf(entry.name(), entry.lowerName())) {
           var bucket = trie.get(key);
           if (bucket == null) {
             bucket = new ArrayList<>();
@@ -749,12 +828,12 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
    * {@code ПровестиДокументОтбора} находится по ключу {@code документотбора}). Ключи дедуплицируются
    * (имя из одного слова даёт единственный ключ).
    *
-   * @param name исходное имя символа (непустое)
+   * @param name      исходное имя символа (непустое)
+   * @param lowerName то же имя в нижнем регистре — первый ключ; дерево держит именно этот экземпляр
    * @return упорядоченное множество ключей дерева без дублей (как минимум полное lowercase-имя)
    */
-  private static Set<String> keysOf(String name) {
+  private static Set<String> keysOf(String name, String lowerName) {
     var keys = new LinkedHashSet<String>();
-    var lowerName = name.toLowerCase(Locale.ENGLISH);
     keys.add(lowerName);
     var offset = 0;
     for (var word : StringUtils.splitByCharacterTypeCamelCase(name)) {
@@ -785,13 +864,13 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
     }
   }
 
-  private static Entry toEntry(URI uri, SourceDefinedSymbol symbol, ScriptVariant scriptVariant) {
+  private Entry toEntry(URI uri, SourceDefinedSymbol symbol, ScriptVariant scriptVariant) {
     var name = symbol.getName();
     var containerName = getContainerName(symbol, scriptVariant).orElse("");
     return new Entry(
       uri,
       name,
-      name.toLowerCase(Locale.ENGLISH),
+      lowerCaseNames.intern(name.toLowerCase(Locale.ENGLISH)),
       symbol.getSymbolKind(),
       symbol.getRange(),
       List.copyOf(symbol.getTags()),
@@ -874,13 +953,11 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
       if (byLength != 0) {
         return byLength;
       }
-      var start = entry.range().getStart();
-      var otherStart = other.entry.range().getStart();
-      var byLine = Integer.compare(start.getLine(), otherStart.getLine());
+      var byLine = Integer.compare(entry.startLine(), other.entry.startLine());
       if (byLine != 0) {
         return byLine;
       }
-      return Integer.compare(start.getCharacter(), otherStart.getCharacter());
+      return Integer.compare(entry.startCharacter(), other.entry.startCharacter());
     }
   }
 }

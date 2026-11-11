@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.cli;
 import com.github._1c_syntax.bsl.languageserver.reporters.DiagnosticReporter;
 import com.github._1c_syntax.bsl.languageserver.reporters.JsonReporter;
 import com.github._1c_syntax.bsl.languageserver.reporters.ReportersAggregator;
-import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
+import com.github._1c_syntax.bsl.languageserver.reporters.ReportContext;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -35,6 +35,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -84,6 +85,48 @@ class AnalyzeCommandTest {
     ReflectionTestUtils.setField(analyzeCommand, "srcDirOption", METADATA_PATH);
     ReflectionTestUtils.setField(analyzeCommand, "workspaceDirOption", nonexistentWorkspace);
     ReflectionTestUtils.setField(analyzeCommand, "outputDirOption", tempDir.toString());
+    ReflectionTestUtils.setField(analyzeCommand, "configurationOption", CONFIG_PATH);
+    ReflectionTestUtils.setField(analyzeCommand, "silentMode", true);
+
+    // when
+    var exitCode = analyzeCommand.call();
+
+    // then
+    assertThat(exitCode).isOne();
+  }
+
+  /** Несуществующий outputDir создаётся до анализа, отчёт пишется в него. */
+  @Test
+  void callCreatesMissingOutputDirectoryAndWritesReport() {
+    // given
+    var missingOutputDir = tempDir.resolve("отчёты");
+    assertThat(missingOutputDir).doesNotExist();
+
+    ReflectionTestUtils.setField(analyzeCommand, "srcDirOption", METADATA_PATH);
+    ReflectionTestUtils.setField(analyzeCommand, "workspaceDirOption", METADATA_PATH);
+    ReflectionTestUtils.setField(analyzeCommand, "outputDirOption", missingOutputDir.toString());
+    ReflectionTestUtils.setField(analyzeCommand, "configurationOption", CONFIG_PATH);
+    ReflectionTestUtils.setField(analyzeCommand, "silentMode", true);
+    ReflectionTestUtils.setField(aggregator, "filteredReporters", List.of(new JsonReporter()));
+
+    // when
+    var exitCode = analyzeCommand.call();
+
+    // then
+    assertThat(exitCode).isZero();
+    assertThat(missingOutputDir.resolve("bsl-json.json")).exists();
+  }
+
+  /** outputDir указывает на файл, а не каталог — команда возвращает код 1 до анализа. */
+  @Test
+  void callReturnsOneWhenOutputDirIsAFile() throws Exception {
+    // given
+    var outputFile = tempDir.resolve("not-a-directory");
+    Files.writeString(outputFile, "это файл");
+
+    ReflectionTestUtils.setField(analyzeCommand, "srcDirOption", METADATA_PATH);
+    ReflectionTestUtils.setField(analyzeCommand, "workspaceDirOption", METADATA_PATH);
+    ReflectionTestUtils.setField(analyzeCommand, "outputDirOption", outputFile.toString());
     ReflectionTestUtils.setField(analyzeCommand, "configurationOption", CONFIG_PATH);
     ReflectionTestUtils.setField(analyzeCommand, "silentMode", true);
 
@@ -186,9 +229,18 @@ class AnalyzeCommandTest {
     }
 
     @Override
-    public void report(AnalysisInfo analysisInfo, Path outputDir) {
+    public void beginReport(ReportContext context, Path outputDir) {
       captured.clear();
-      captured.addAll(analysisInfo.fileinfos());
+    }
+
+    @Override
+    public void accept(FileInfo fileInfo) {
+      captured.add(fileInfo);
+    }
+
+    @Override
+    public void endReport() {
+      // накопленного достаточно, файл не пишется
     }
 
     List<FileInfo> captured() {

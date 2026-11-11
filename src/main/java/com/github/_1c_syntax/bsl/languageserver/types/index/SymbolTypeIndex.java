@@ -23,7 +23,9 @@ package com.github._1c_syntax.bsl.languageserver.types.index;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextConfigurationBindingChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
@@ -36,6 +38,8 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.FormByNameResolver;
+import com.github._1c_syntax.bsl.languageserver.types.registry.TemplateByNameResolver;
+import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.parser.description.CollectionTypeDescription;
 import com.github._1c_syntax.bsl.parser.description.MethodDescription;
@@ -44,6 +48,7 @@ import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -54,6 +59,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Индекс декларативных типов символов.
@@ -101,16 +107,143 @@ public class SymbolTypeIndex {
 
   private final TypeRegistry typeRegistry;
   private final FormByNameResolver formByNameResolver;
+  private final TemplateByNameResolver templateByNameResolver;
+  private final GlobalScopeProvider globalScopeProvider;
 
   private final Map<MethodSymbol, TypeSet> declaredReturnTypes = new ConcurrentHashMap<>();
   private final Map<URI, List<MethodSymbol>> indexedByUri = new ConcurrentHashMap<>();
 
+  /**
+   * Документы, объявленные типы которых пересобраны идущей сейчас пересборкой после наполнения;
+   * {@code null}, когда пересборки нет. У остальных запомненное значение ещё с наполнения.
+   */
+  private final AtomicReference<@Nullable Set<URI>> rebuiltAfterPopulation = new AtomicReference<>();
+
+  /**
+   * Типы возвращаемого значения, выведенные по телу метода. Пишет их
+   * {@code MethodReturnTypeIndexer}; сюда они складываются, чтобы ответ на вопрос
+   * «что возвращает метод» был один и тот же у всех потребителей.
+   */
+  private final Map<MethodSymbol, TypeSet> inferredReturnTypes = new ConcurrentHashMap<>();
+
+  /**
+   * Методы документа, у которых есть выведенное значение, — по ним запись стирается вместе
+   * с документом. Набор, а не список: значение метода пересчитывается многократно (разбор,
+   * доразрешение, разнос по потребителям), и список копил бы один и тот же метод при каждом
+   * пересчёте.
+   */
+  private final Map<URI, Set<MethodSymbol>> inferredByUri = new ConcurrentHashMap<>();
+
+  /**
+   * Значение метода, соединённое из описания и вывода по телу, вместе с источниками, из
+   * которых оно посчитано.
+   * <p>
+   * Соединение спрашивают на каждом разрешении вызова, а стоит оно копии карты полей — у
+   * метода с сотней ключей это заметно даже при одном обращении. Поэтому запоминается;
+   * годность проверяется сравнением источников по ссылке, поэтому отдельного сброса при
+   * записи не нужно и гонки между записью и чтением тоже нет.
+   */
+  private final Map<MethodSymbol, CombinedReturnTypes> combinedReturnTypes = new ConcurrentHashMap<>();
+
+  // Раньше MethodReturnTypeIndexer (@Order 300): он кладёт сюда выведенные по телу типы,
+  // а здесь записи документа сначала стираются. Без явного порядка слушатель без
+  // аннотации идёт последним и стёр бы только что записанное.
+  @Order(200)
   @EventListener
   public void handleEvent(DocumentContextContentChangedEvent event) {
+    if (!event.isContentChanged()) {
+      // Тот же самый текст перечитан заново: записи по нему остаются верными. Символы из
+      // построенного заново дерева равны прежним (имя, документ, позиция имени), поэтому
+      // находятся по старым записям. Снести и собрать их заново означало бы оставить окно,
+      // в котором чужой поток не находит типов уже посчитанного метода.
+      return;
+    }
     var documentContext = event.getSource();
+    clear(documentContext.getUri());
+    reindexDeclared(documentContext);
+  }
+
+  // Символы документа построены заново, а методы нового дерева не равны прежним, если сменился
+  // их вид, — по старым записям их уже не найти. Порядок тот же, что у правки.
+  @Order(200)
+  @EventListener
+  public void handleEvent(DocumentContextConfigurationBindingChangedEvent event) {
+    var documentContext = event.getSource();
+    clear(documentContext.getUri());
+    reindexDeclared(documentContext);
+  }
+
+  /**
+   * Пересобирает объявленные типы возвращаемых значений по всей рабочей области.
+   * <p>
+   * Имя типа в описании метода разрешается в момент разбора его документа, а до части
+   * модулей области очередь тогда ещё не дошла: такое имя никуда не ведёт, и объявленный
+   * тип выходит беднее написанного. Кому не повезло — решает порядок обхода файлов, то
+   * есть без пересборки результат от него и зависит. Теперь область наполнена, и все имена
+   * разрешаются одинаково.
+   * <p>
+   * Разбор документов для этого не нужен: объявленные типы читаются по дереву символов,
+   * которое переживает освобождение вторичных данных.
+   * <p>
+   * Ссылка {@code см.} на функцию разворачивается через запомненное значение цели, а у
+   * документа, до которого пересборка ещё не дошла, оно с наполнения — и могло посчитаться,
+   * пока не был разобран модуль, на который ссылается уже сама цель. Взять такое значение —
+   * снова поставить итог в зависимость от порядка, теперь от порядка обхода. Поэтому, пока
+   * идёт пересборка, запомненным пользуются только у пересобранных документов, а цель в
+   * остальных разворачивается из описания заново.
+   * <p>
+   * Пересборки идут по одной: отметка пересобранных у индекса одна, и пересборка, закончившая
+   * раньше, сняла бы её посреди чужой — та дальше брала бы значения, оставшиеся с наполнения.
+   *
+   * @param event событие наполнения рабочей области.
+   */
+  // Раньше MethodReturnTypeIndexer: расчёт типов по телу читает объявленные типы вызванных
+  // методов, поэтому пересобрать их надо до него.
+  @Order(100)
+  @EventListener
+  public synchronized void handleServerContextPopulated(ServerContextPopulatedEvent event) {
+    Set<URI> rebuilt = ConcurrentHashMap.newKeySet();
+    rebuiltAfterPopulation.set(rebuilt);
+    try {
+      event.getSource().getDocuments().values().forEach((DocumentContext documentContext) -> {
+        // Отметка до пересборки: она первым делом стирает прежние записи документа, и всё,
+        // что потом окажется в запомненном у его методов, уже свежее.
+        rebuilt.add(documentContext.getUri());
+        reindexDeclared(documentContext);
+      });
+    } finally {
+      rebuiltAfterPopulation.set(null);
+    }
+  }
+
+  /**
+   * Можно ли развернуть ссылку на функцию через её запомненное объявленное значение.
+   *
+   * @param function функция-цель ссылки.
+   * @return {@code false}, если идёт пересборка после наполнения, а документ функции ещё не
+   *     пересобран.
+   */
+  private boolean isDeclaredUpToDate(MethodSymbol function) {
+    var rebuilt = rebuiltAfterPopulation.get();
+    return rebuilt == null || rebuilt.contains(function.getOwner().getUri());
+  }
+
+  /**
+   * Пересобирает объявленные типы возвращаемых значений методов документа, стирая прежние.
+   * Выведенные по телу значения не трогает.
+   * <p>
+   * Работает по дереву символов, поэтому разбор документа для этого не нужен.
+   *
+   * @param documentContext документ.
+   */
+  public void reindexDeclared(DocumentContext documentContext) {
     var uri = documentContext.getUri();
 
-    clear(uri);
+    var previous = indexedByUri.remove(uri);
+    if (previous != null) {
+      previous.forEach(declaredReturnTypes::remove);
+      previous.forEach(combinedReturnTypes::remove);
+    }
 
     var collected = new ArrayList<MethodSymbol>();
     indexMethodsRecursive(documentContext.getSymbolTree().getModule(), collected);
@@ -122,6 +255,115 @@ public class SymbolTypeIndex {
    */
   public TypeSet getDeclaredReturnTypes(MethodSymbol method) {
     return declaredReturnTypes.getOrDefault(method, TypeSet.EMPTY);
+  }
+
+  /**
+   * Соединить тип из документирующего комментария с переданным результатом вывода.
+   * <p>
+   * Применяет те же правила, что {@link #getReturnTypes(MethodSymbol)}: для совпавшего
+   * типа сохраняется уточнение из комментария, а известные поля дополняются из вывода.
+   * Общий индекс и его кеш объединений не изменяются, поэтому метод подходит для результата,
+   * посчитанного только в одном контексте компиляции.
+   *
+   * @param method метод, чей документирующий комментарий нужно учесть.
+   * @param inferred отдельный результат вывода по телу, в том числе пустой.
+   * @return объединённый тип; пустой набор, если оба источника пусты.
+   */
+  public TypeSet getReturnTypes(MethodSymbol method, TypeSet inferred) {
+    return combine(getDeclaredReturnTypes(method), inferred);
+  }
+
+  /**
+   * Типы возвращаемого значения метода: объявленные в документирующем комментарии вместе
+   * с рассчитанными по телу.
+   * <p>
+   * По общим типам верим описанию: у {@code Массив из Число} из комментария состав
+   * элементов точнее, чем у того же {@code Массив}, собранного по телу.
+   *
+   * @param method метод.
+   * @return типы возвращаемого значения; {@link TypeSet#EMPTY}, если ни один источник
+   *     ничего не дал.
+   */
+  public TypeSet getReturnTypes(MethodSymbol method) {
+    var inferred = inferredReturnTypes.get(method);
+    var declared = getDeclaredReturnTypes(method);
+    if (inferred == null || inferred.isEmpty()) {
+      return declared;
+    }
+    // Запомненное годится, только если посчитано из тех же самых источников. Сравнение по
+    // ссылке, а не по равенству: наборы неизменяемы, запись кладёт новый объект, и этого
+    // достаточно. Так запись и чтение могут идти одновременно: запись, случившаяся между
+    // взятием источников и укладыванием результата, обесценит его сама — следующее чтение
+    // увидит другие источники и посчитает заново.
+    var remembered = combinedReturnTypes.get(method);
+    if (remembered != null && remembered.declared() == declared && remembered.inferred() == inferred) {
+      return remembered.value();
+    }
+    var value = combine(declared, inferred);
+    combinedReturnTypes.put(method, new CombinedReturnTypes(declared, inferred, value));
+    return value;
+  }
+
+  /**
+   * Соединяет объявленное описанием значение с выведенным по телу.
+   * <p>
+   * За описанием остаётся состав элементов: у {@code Массив из Число} из комментария он
+   * точнее собранного по телу, — поэтому названный в описании тип вычитается из
+   * выведенного. Но вычитание уносит ссылку со всеми её декорациями, включая поля, а их
+   * описание перечисляет редко: у функции с описанием «Структура» состав ключей, собранный
+   * из {@code Вставить}, пропадал целиком. Поля возвращаются — и жадные, и ленивые.
+   *
+   * @param declared объявленное в описании метода.
+   * @param inferred выведенное по телу.
+   * @return значение метода.
+   */
+  private static TypeSet combine(TypeSet declared, TypeSet inferred) {
+    var extra = inferred;
+    for (var ref : declared.refs()) {
+      extra = extra.without(ref);
+    }
+    var result = declared.union(extra);
+    for (var ref : declared.refs()) {
+      // Карта берётся сырой. getLocalFields склеил бы её с ленивыми полями, а склейка их
+      // форсирует: у рекурсивных и `см.`-типов источник ведёт обратно сюда же, и разворот
+      // пошёл бы вглубь на ровном месте.
+      var eager = inferred.localFields().get(ref);
+      if (eager != null && !eager.isEmpty()) {
+        result = result.withFields(ref, eager);
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Запомнить типы возвращаемого значения, выведенные по телу метода.
+   *
+   * @param method метод.
+   * @param types  выведенные типы; пустой набор стирает прежнюю запись.
+   */
+  public void putReturnTypes(MethodSymbol method, TypeSet types) {
+    // Обе карты меняются под одним замком — по ключу документа. Иначе расчёт по запросу,
+    // идущий вне событий жизненного цикла, мог бы вклиниться в сброс между снятием набора
+    // и обходом, и значение осталось бы в карте типов без ссылки из карты по документам —
+    // то есть недостижимым для следующего сброса.
+    // Запомненное соединение здесь не снимается: его годность проверяется сравнением
+    // источников по ссылке, и запись обесценит его сама. Снятие тут ничего бы не
+    // гарантировало — читатель, взявший источники до него, всё равно уложил бы результат
+    // после.
+    inferredByUri.compute(method.getOwner().getUri(), (uri, methods) -> {
+      if (types.isEmpty()) {
+        inferredReturnTypes.remove(method);
+        if (methods == null) {
+          return null;
+        }
+        methods.remove(method);
+        return methods.isEmpty() ? null : methods;
+      }
+      inferredReturnTypes.put(method, types);
+      var target = methods == null ? ConcurrentHashMap.<MethodSymbol>newKeySet() : methods;
+      target.add(method);
+      return target;
+    });
   }
 
   /**
@@ -142,32 +384,255 @@ public class SymbolTypeIndex {
   }
 
   /**
+   * Ведёт ли какая-нибудь ссылка {@code См.} в описании возвращаемого значения метода в модуль,
+   * до разбора которого очередь ещё не дошла. Смотрятся и вложенные ссылки (элементы
+   * коллекций, поля), и описания функций своего модуля, на которые ссылка ведёт.
+   * <p>
+   * Объявленные типы возвращаемого значения разворачиваются при разборе документа метода и
+   * пересобираются, когда рабочая область наполнена. До этого ссылка в неразобранный модуль
+   * не разрешается ни во что, и значение метода неполно, хотя ничем не отличается от честного.
+   *
+   * @param method метод.
+   * @return {@code true}, если описание возвращаемого значения ссылается на ещё не
+   *     разобранный модуль.
+   */
+  public boolean returnAwaitsUnparsedModule(MethodSymbol method) {
+    return returnAwaitsUnparsedModule(method, new HashSet<>());
+  }
+
+  private boolean returnAwaitsUnparsedModule(MethodSymbol method, Set<MethodSymbol> visited) {
+    if (!visited.add(method)) {
+      return false;
+    }
+    var owner = method.getOwner();
+    return method.getDescription()
+      .map(description -> anyAwaitsUnparsedModule(description.getReturnedValue(), owner, visited))
+      .orElse(false);
+  }
+
+  /**
+   * Ведёт ли какая-нибудь ссылка {@code См.} в описании параметра в модуль, до разбора
+   * которого очередь ещё не дошла. Смотрятся и вложенные ссылки, и описания функций своего
+   * модуля, на которые ссылка ведёт.
+   * <p>
+   * Тип модуля объявлен заранее, а члены приносит разбор его документа. Пока рабочая
+   * область наполняется, ссылка в такой модуль не разрешается ни во что, и ответ
+   * {@link #getDeclaredParameterTypes} неполон, хотя ничем не отличается от честного.
+   *
+   * @param parameter параметр.
+   * @param owner     документ-владелец метода — для поиска функций своего модуля.
+   * @return {@code true}, если описание ссылается на ещё не разобранный модуль.
+   */
+  public boolean awaitsUnparsedModule(ParameterDefinition parameter, DocumentContext owner) {
+    return parameter.getDescription()
+      .map(description -> anyAwaitsUnparsedModule(description.types(), owner, new HashSet<>()))
+      .orElse(false);
+  }
+
+  /**
+   * Ведёт ли ссылка вида {@code Модуль.Метод} либо {@code Модуль.Метод.Параметр} в модуль,
+   * до разбора которого очередь ещё не дошла: голова ссылки — тип модуля без документа, и
+   * следующего за ней члена у него нет.
+   *
+   * @param link     текст ссылки.
+   * @param fileType язык, на котором резолвятся имена.
+   * @return {@code true}, если ссылка ведёт в ещё не разобранный модуль.
+   */
+  public boolean awaitsUnparsedModule(@Nullable String link, FileType fileType) {
+    if (link == null || !link.contains(".")) {
+      return false;
+    }
+    var parts = link.split("\\.");
+    for (int prefixLen = parts.length - 1; prefixLen >= 1; prefixLen--) {
+      var head = typeRegistry.resolve(String.join(".", List.of(parts).subList(0, prefixLen)), fileType)
+        .orElse(null);
+      if (head != null) {
+        return isUnparsedModule(head, fileType) && findMember(head, parts[prefixLen], fileType) == null;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Тип конфигурации, документ которого ещё не разобран. Разбор связывает тип модуля с его
+   * документом ({@link GlobalScopeProvider#uriByModuleTypeRef}) и приносит члены из самого
+   * модуля. Пустой модуль разобран и без членов, а платформенные члены (у общего модуля это
+   * {@code ЭтотОбъект}) о разборе ничего не говорят — поэтому нужны оба признака сразу.
+   */
+  private boolean isUnparsedModule(TypeRef ref, FileType fileType) {
+    return ref.kind() == TypeKind.CONFIGURATION
+      && globalScopeProvider.uriByModuleTypeRef(ref).isEmpty()
+      && typeRegistry.getMembers(ref, fileType).stream().allMatch(MemberDescriptor::standardLibrary);
+  }
+
+  /**
+   * Ведёт ли в ещё не разобранный модуль хоть одна ссылка среди описаний типов — на верхнем
+   * уровне, в элементах коллекций, в полях и в описаниях функций своего модуля.
+   */
+  private boolean anyAwaitsUnparsedModule(@Nullable List<? extends TypeDescription> types, DocumentContext owner,
+                                          Set<MethodSymbol> visited) {
+    return types != null && types.stream().anyMatch(type -> awaitsUnparsedModule(type, owner, visited));
+  }
+
+  /** Ведёт ли в ещё не разобранный модуль ссылка одного описания типа, его элементов или полей. */
+  private boolean awaitsUnparsedModule(TypeDescription type, DocumentContext owner, Set<MethodSymbol> visited) {
+    return linkAwaitsUnparsedModule(linkOf(type), owner, visited)
+      || (type instanceof CollectionTypeDescription collection
+      && anyAwaitsUnparsedModule(collection.valueTypes(), owner, visited))
+      || anyFieldAwaitsUnparsedModule(type.fields(), owner, visited);
+  }
+
+  /**
+   * Ведёт ли ссылка {@code См.} в модуль, до разбора которого очередь ещё не дошла, — сама
+   * либо через описание функции, на которую указывает.
+   * <p>
+   * Пока рабочая область наполняется, такая ссылка не разрешается ни во что, и
+   * {@link #resolveSeeReference} отвечает пустотой, ничем не отличимой от честной.
+   *
+   * @param link  текст ссылки; ссылка без точки ведёт на функцию своего модуля.
+   * @param owner документ, в котором стоит ссылка.
+   * @return {@code true}, если ссылка ведёт в ещё не разобранный модуль.
+   */
+  public boolean linkAwaitsUnparsedModule(@Nullable String link, DocumentContext owner) {
+    return linkAwaitsUnparsedModule(link, owner, new HashSet<>());
+  }
+
+  /**
+   * Ссылка с точкой ведёт в другой модуль; без точки — на функцию своего модуля. В обоих
+   * случаях смотрится и описание функции, на которую она ведёт: {@link #resolveSeeReference}
+   * разворачивает его целиком, с полями и элементами, и ссылка оттуда в неразобранный модуль
+   * обедняет итог так же, как ссылка верхнего уровня — даже когда модуль самой цели разобран.
+   */
+  private boolean linkAwaitsUnparsedModule(@Nullable String link, DocumentContext owner, Set<MethodSymbol> visited) {
+    if (link == null || link.isBlank()) {
+      return false;
+    }
+    if (link.contains(".")) {
+      return awaitsUnparsedModule(link, owner.getFileType())
+        || referencedFunctionAwaitsUnparsedModule(link, owner.getFileType(), visited);
+    }
+    var localFunction = findLocalFunction(owner, link);
+    return localFunction != null && returnAwaitsUnparsedModule(localFunction, visited);
+  }
+
+  /**
+   * Ведёт ли в ещё не разобранный модуль описание функции, на которую указывает ссылка
+   * {@code Модуль.Метод}.
+   *
+   * @param link     текст ссылки.
+   * @param fileType язык, на котором резолвятся имена.
+   * @param visited  уже посещённые функции — защита от закольцованных ссылок.
+   * @return {@code true}, если описание цели ссылается на ещё не разобранный модуль.
+   */
+  private boolean referencedFunctionAwaitsUnparsedModule(String link, FileType fileType, Set<MethodSymbol> visited) {
+    return resolveReferenceSymbol(link, fileType)
+      .filter(MethodSymbol.class::isInstance)
+      .map(MethodSymbol.class::cast)
+      .map(function -> returnAwaitsUnparsedModule(function, visited))
+      .orElse(false);
+  }
+
+  /**
+   * Ссылка {@code См.} описания типа: само описание-ссылка либо ссылка, уточняющая простой тип
+   * ({@code СтрокаТабличнойЧасти: См. …}).
+   */
+  private static @Nullable String linkOf(TypeDescription type) {
+    if (type.variant() == TypeDescription.Variant.HYPERLINK) {
+      return type.name();
+    }
+    var hyperlink = type.hyperlink();
+    return hyperlink == null ? null : hyperlink.link();
+  }
+
+  private boolean anyFieldAwaitsUnparsedModule(@Nullable List<ParameterDescription> fields, DocumentContext owner,
+                                               Set<MethodSymbol> visited) {
+    return fields != null
+      && fields.stream().anyMatch(field -> anyAwaitsUnparsedModule(field.types(), owner, visited));
+  }
+
+  /**
    * Развернуть hyperlink-ссылку {@code Модуль.Метод} / {@code Модуль.Метод.Параметр}
    * в тип. Проход по цепочке членов ({@link #resolveChain}) от самого длинного
    * префикса к короткому; берётся тип возврата последнего члена (или типы
    * параметра для записи {@code …Метод.Параметр}).
    *
-   * @return {@link TypeSet} c одним элементом или {@link TypeSet#EMPTY}.
+   * <p>
+   * Если член объявлен в модуле конфигурации, тип берётся из его описания целиком — вместе
+   * с колонками таблицы, полями структуры и элементами коллекций. Дескриптор члена в реестре
+   * несёт только имена типов, и через него описанное терялось бы.
+   *
+   * @return {@link TypeSet} по ссылке или {@link TypeSet#EMPTY}.
    */
   public TypeSet resolveHyperlink(String link, FileType fileType) {
+    return resolveHyperlink(link, fileType, new HashSet<>());
+  }
+
+  private TypeSet resolveHyperlink(@Nullable String link, FileType fileType, Set<MethodSymbol> visited) {
     if (link == null || link.isBlank()) {
       return TypeSet.EMPTY;
     }
     var parts = link.split("\\.");
     for (int prefixLen = parts.length - 1; prefixLen >= 1; prefixLen--) {
-      var chain = resolveChain(parts, prefixLen, fileType);
+      var chain = resolveChain(parts, prefixLen, fileType, visited);
       if (chain == null) {
         continue;
       }
-      if (chain.member() == null) {
+      var member = chain.member();
+      if (member == null) {
         return chain.parameterTypes();
       }
-      var returnType = chain.member().returnType();
+      var described = describedReturnTypes(member, visited);
+      if (!described.isEmpty()) {
+        return described;
+      }
+      var returnType = member.returnType();
       if (returnType.kind() != TypeKind.UNKNOWN) {
         return TypeSet.of(returnType);
       }
     }
     return TypeSet.EMPTY;
+  }
+
+  /**
+   * Типы возвращаемого значения из описания функции, стоящей за членом.
+   *
+   * @param member  член из реестра.
+   * @param visited уже посещённые функции — защита от закольцованных ссылок.
+   * @return типы из описания; {@link TypeSet#EMPTY}, если за членом нет функции из исходников.
+   */
+  private TypeSet describedReturnTypes(MemberDescriptor member, Set<MethodSymbol> visited) {
+    if (!(member.getSourceSymbol().orElse(null) instanceof MethodSymbol function) || !function.isFunction()) {
+      return TypeSet.EMPTY;
+    }
+    var owner = function.getOwner();
+    return resolveLocalFunctionTypes(function, owner, owner.getFileType(), visited);
+  }
+
+  /**
+   * Типы параметра из описания метода, стоящего за членом.
+   *
+   * @param member        член из реестра.
+   * @param parameterName имя параметра.
+   * @param visited       уже посещённые методы — защита от закольцованных ссылок.
+   * @return типы из описания; {@link TypeSet#EMPTY}, если за членом нет метода из исходников
+   *     либо у него нет такого параметра.
+   */
+  private TypeSet describedParameterTypes(MemberDescriptor member, String parameterName, Set<MethodSymbol> visited) {
+    if (!(member.getSourceSymbol().orElse(null) instanceof MethodSymbol method) || !visited.add(method)) {
+      return TypeSet.EMPTY;
+    }
+    try {
+      var owner = method.getOwner();
+      return method.getParameters().stream()
+        .filter(parameter -> parameter.getName().equalsIgnoreCase(parameterName))
+        .findFirst()
+        .flatMap(ParameterDefinition::getDescription)
+        .map(description -> resolveTypes(description.types(),
+          new ResolutionContext(owner, owner.getFileType(), visited)))
+        .orElse(TypeSet.EMPTY);
+    } finally {
+      visited.remove(method);
+    }
   }
 
   /**
@@ -191,7 +656,7 @@ public class SymbolTypeIndex {
       return Optional.empty();
     }
     for (int prefixLen = parts.length - 1; prefixLen >= 1; prefixLen--) {
-      var chain = resolveChain(parts, prefixLen, fileType);
+      var chain = resolveChain(parts, prefixLen, fileType, new HashSet<>());
       if (chain != null && chain.member() != null
         && chain.member().getSourceSymbol().orElse(null) instanceof SourceDefinedSymbol target) {
         return Optional.of(target);
@@ -218,7 +683,7 @@ public class SymbolTypeIndex {
    *         не резолвятся (вызывающий пробует более короткий префикс).
    */
   @Nullable
-  private MemberChain resolveChain(String[] parts, int prefixLen, FileType fileType) {
+  private MemberChain resolveChain(String[] parts, int prefixLen, FileType fileType, Set<MethodSymbol> visited) {
     var head = String.join(".", List.of(parts).subList(0, prefixLen));
     var current = typeRegistry.resolve(head, fileType).orElse(null);
     if (current == null) {
@@ -230,7 +695,7 @@ public class SymbolTypeIndex {
       var member = findMember(current, parts[i], fileType);
       if (member == null) {
         // Модуль.Метод.Параметр: последний сегмент — имя параметра пред. метода.
-        return i == lastIndex ? parameterChain(lastMethod, parts[i]) : null;
+        return parameterTail(lastMethod, parts, i, visited);
       }
       if (i == lastIndex) {
         return new MemberChain(member, TypeSet.EMPTY);
@@ -241,7 +706,7 @@ public class SymbolTypeIndex {
         // Спускаться в неизвестный тип возврата некуда (у процедур и
         // недокументированных функций он всегда UNKNOWN), но следующий и
         // последний сегмент ещё может быть именем параметра этого метода.
-        return i == lastIndex - 1 ? parameterChain(lastMethod, parts[i + 1]) : null;
+        return parameterTail(lastMethod, parts, i + 1, visited);
       }
       current = next;
     }
@@ -249,16 +714,29 @@ public class SymbolTypeIndex {
   }
 
   /**
-   * Цепочка для записи {@code …Метод.Параметр}: типы параметра {@code parameterName}
-   * метода {@code method}. {@code null}, если метод не задан (предыдущий сегмент — не
-   * метод) или у него нет такого параметра.
+   * Цепочка для хвоста ссылки, если сегмент {@code index} — последний: он тогда может быть
+   * именем параметра метода {@code method}. Иначе ссылка не разрешается — {@code null}.
    */
   @Nullable
-  private static MemberChain parameterChain(@Nullable MemberDescriptor method, String parameterName) {
+  private MemberChain parameterTail(@Nullable MemberDescriptor method, String[] parts, int index,
+                                    Set<MethodSymbol> visited) {
+    return index == parts.length - 1 ? parameterChain(method, parts[index], visited) : null;
+  }
+
+  /**
+   * Цепочка для записи {@code …Метод.Параметр}: типы параметра {@code parameterName}
+   * метода {@code method} — из описания метода в исходниках, а если его нет, из дескриптора.
+   * {@code null}, если метод не задан (предыдущий сегмент — не метод) или у него нет такого
+   * параметра.
+   */
+  @Nullable
+  private MemberChain parameterChain(@Nullable MemberDescriptor method, String parameterName,
+                                     Set<MethodSymbol> visited) {
     if (method == null) {
       return null;
     }
-    var parameterTypes = parameterFromMember(method, parameterName);
+    var described = describedParameterTypes(method, parameterName, visited);
+    var parameterTypes = described.isEmpty() ? parameterFromMember(method, parameterName) : described;
     return parameterTypes != null && !parameterTypes.isEmpty()
       ? new MemberChain(null, parameterTypes)
       : null;
@@ -294,13 +772,32 @@ public class SymbolTypeIndex {
    * Очистить записи, относящиеся к данному URI.
    */
   public void clear(URI uri) {
+    // Снятие набора и удаление значений — под тем же замком по ключу документа, что и запись
+    // (см. putReturnTypes): иначе параллельная запись осталась бы в карте типов навсегда.
+    inferredByUri.compute(uri, (key, methods) -> {
+      if (methods != null) {
+        methods.forEach(inferredReturnTypes::remove);
+        methods.forEach(combinedReturnTypes::remove);
+      }
+      return null;
+    });
     var methods = indexedByUri.remove(uri);
     if (methods == null) {
       return;
     }
     for (var m : methods) {
       declaredReturnTypes.remove(m);
+      combinedReturnTypes.remove(m);
     }
+  }
+
+  /** Сбросить результаты расчёта по телам при смене режимов, сохранив типы из описаний. */
+  public void clearInferredReturnTypes() {
+    inferredByUri.keySet().forEach(uri -> inferredByUri.computeIfPresent(uri, (key, methods) -> {
+      methods.forEach(inferredReturnTypes::remove);
+      return null;
+    }));
+    combinedReturnTypes.clear();
   }
 
   private void indexMethodsRecursive(SourceDefinedSymbol parent, List<MethodSymbol> collected) {
@@ -339,6 +836,8 @@ public class SymbolTypeIndex {
    *       и его продолжение по членам) — через {@link #resolveMetadataPath};</li>
    *   <li>полное имя формы ({@code Справочник.Товары.Форма.ФормаЭлемента}) — через
    *       {@link FormByNameResolver};</li>
+   *   <li>полное имя макета ({@code Справочник.Товары.Макет.ПечатнаяФорма}) — тип его
+   *       значения через {@link TemplateByNameResolver};</li>
    *   <li>неквалифицированная ссылка на функцию того же модуля — её возвращаемый
    *       тип: сначала из уже проиндексированных типов
    *       ({@link #getDeclaredReturnTypes(MethodSymbol)}, поэтому разворачиваются
@@ -382,7 +881,7 @@ public class SymbolTypeIndex {
       return TypeSet.EMPTY;
     }
     if (link.contains(".")) {
-      var qualifiedTypes = resolveQualifiedLink(link, owner, fileType);
+      var qualifiedTypes = resolveQualifiedLink(link, owner, fileType, visited);
       if (!qualifiedTypes.isEmpty()) {
         return qualifiedTypes;
       }
@@ -400,18 +899,20 @@ public class SymbolTypeIndex {
   /**
    * Тип по ссылке с точкой: сначала как цепочка членов ({@code Модуль.Метод},
    * {@code Тип.Член}), затем как путь в нотации конфигуратора, затем как имя формы
-   * с путём внутрь неё.
+   * с путём внутрь неё, затем как имя макета.
    * <p>
    * Виды перебираются по очереди: какой из них перед нами, из самой строки не видно —
-   * все три записываются одинаково, через точку.
+   * все они записываются одинаково, через точку.
    *
    * @param link     ссылка целиком.
-   * @param owner    документ-владелец — нужен резолверу форм.
+   * @param owner    документ-владелец — нужен резолверам форм и макетов.
    * @param fileType язык, на котором резолвятся имена.
+   * @param visited  уже посещённые методы — защита от закольцованных ссылок.
    * @return тип по ссылке; {@link TypeSet#EMPTY}, если ни один вид не подошёл.
    */
-  private TypeSet resolveQualifiedLink(String link, DocumentContext owner, FileType fileType) {
-    var hyperlinkTypes = resolveHyperlink(link, fileType);
+  private TypeSet resolveQualifiedLink(String link, DocumentContext owner, FileType fileType,
+                                       Set<MethodSymbol> visited) {
+    var hyperlinkTypes = resolveHyperlink(link, fileType, visited);
     if (!hyperlinkTypes.isEmpty()) {
       return hyperlinkTypes;
     }
@@ -419,7 +920,11 @@ public class SymbolTypeIndex {
     if (!metadataTypes.isEmpty()) {
       return metadataTypes;
     }
-    return resolveFormPath(link, owner, fileType);
+    var formTypes = resolveFormPath(link, owner, fileType);
+    if (!formTypes.isEmpty()) {
+      return formTypes;
+    }
+    return templateByNameResolver.resolve(owner, link).map(TypeSet::of).orElse(TypeSet.EMPTY);
   }
 
   /**
@@ -535,14 +1040,15 @@ public class SymbolTypeIndex {
    * Возвращаемый тип локальной функции, на которую указывает {@code см.}-ссылка.
    * <p>
    * Предпочитаем уже проиндексированный тип (в т.ч. с раскрытыми цепочками см.);
-   * если цель ещё не проиндексирована (вызов из самой индексации) — резолвим
+   * если цель ещё не проиндексирована (вызов из самой индексации) либо её значение
+   * осталось с наполнения, а пересборка до неё ещё не дошла, — резолвим
    * напрямую из описания. {@code visited} скоупится на текущий путь обхода:
    * после возврата из ветки функция убирается, иначе вторая (нециклическая)
    * ссылка на неё из соседнего поля/элемента ложно считалась бы циклом.
    */
   private TypeSet resolveLocalFunctionTypes(MethodSymbol localFunction, DocumentContext owner,
                                             FileType fileType, Set<MethodSymbol> visited) {
-    var cached = getDeclaredReturnTypes(localFunction);
+    var cached = isDeclaredUpToDate(localFunction) ? getDeclaredReturnTypes(localFunction) : TypeSet.EMPTY;
     if (!cached.isEmpty()) {
       return cached;
     }
@@ -620,7 +1126,7 @@ public class SymbolTypeIndex {
         || types.lazyElements().containsKey(ref)) {
         continue;
       }
-      var defaults = typeRegistry.getDefaultElementTypes(ref);
+      var defaults = typeRegistry.getOwnElementTypes(ref);
       if (!defaults.isEmpty()) {
         result = result.withElement(ref, defaults);
       }
@@ -655,6 +1161,17 @@ public class SymbolTypeIndex {
     var headRef = resolveOne(td.collectionName()).orElse(null);
     if (headRef == null) {
       return TypeSet.EMPTY;
+    }
+    var itemValueProperty = OpenDataObjectInference.itemValueProperty(headRef.qualifiedName());
+    if (itemValueProperty != null) {
+      // `СписокЗначений из T` — то же, что `СписокЗначений:` с полем `* Значение - T`: тип
+      // значения ложится полем на элемент, как колонки таблицы значений — на её строку.
+      var fields = new ArrayList<ParameterDescription>();
+      fields.add(new ParameterDescription(itemValueProperty, td.element(), td.valueTypes()));
+      fields.addAll(td.fields());
+      var asFields = CollectionTypeDescription.create(
+        td.collectionName(), td.element(), td.description(), List.of(), fields);
+      return applyFields(TypeSet.of(headRef), asFields, context);
     }
     var result = TypeSet.of(headRef);
     for (var valueType : td.valueTypes()) {
@@ -697,16 +1214,23 @@ public class SymbolTypeIndex {
     var result = elementRef == null ? base : TypeSet.of(elementRef);
     for (var field : fields) {
       var eager = TypeSet.EMPTY;
+      var lazy = false;
       for (var fieldType : field.types()) {
         var localFunction = localFunctionSeeRef(fieldType, context);
         if (localFunction != null) {
           result = result.withLazyField(fieldsRef, field.name(),
             lazyReturnTypes(localFunction), fieldDescription(field));
+          lazy = true;
         } else {
           eager = eager.union(resolveTypes(List.of(fieldType), context));
         }
       }
-      if (!eager.isEmpty()) {
+      // Поле объявлено — значит, оно есть, даже если написанный у него тип сейчас никуда
+      // не ведёт: ссылка в модуль, до которого очередь ещё не дошла, не разрешается ни во
+      // что. Выбросить поле вместе с именем значило бы превратить «тип неизвестен» в
+      // «члена не существует», а разрешится ссылка или нет, решает порядок разбора,
+      // разный от запуска к запуску.
+      if (!eager.isEmpty() || !lazy) {
         result = result.withField(fieldsRef, field.name(), eager, fieldDescription(field));
       }
     }
@@ -875,5 +1399,19 @@ public class SymbolTypeIndex {
     return byName.isEmpty()
       ? resolveOne(name).map(TypeSet::of).orElse(TypeSet.EMPTY)
       : byName;
+  }
+
+  /**
+   * Соединённое значение метода вместе с источниками, из которых оно посчитано.
+   * <p>
+   * Источники хранятся ради проверки годности: наборы неизменяемы, поэтому запись любого
+   * из них кладёт другой объект, и сравнения по ссылке достаточно, чтобы отличить
+   * посчитанное по нынешнему состоянию от посчитанного по прежнему.
+   *
+   * @param declared объявленное в описании метода на момент расчёта.
+   * @param inferred выведенное по телу на момент расчёта.
+   * @param value    соединение того и другого.
+   */
+  private record CombinedReturnTypes(TypeSet declared, TypeSet inferred, TypeSet value) {
   }
 }

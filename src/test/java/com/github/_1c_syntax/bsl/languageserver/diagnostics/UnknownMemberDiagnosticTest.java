@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMessage;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -52,7 +53,7 @@ class UnknownMemberDiagnosticTest extends AbstractDiagnosticTest<UnknownMemberDi
     var messages = diagnostics.stream()
       .map(d -> DiagnosticMessage.getStringValue(d.getMessage()))
       .toList();
-    org.assertj.core.api.Assertions.assertThat(messages)
+    assertThat(messages)
       // У типа "Массив" нет метода или свойства "Добвить" — подставлено имя
       // типа ресивера в сообщение (отдельный memberMessage от глобального).
       .anyMatch(m -> m.contains("Добвить") && m.contains("Массив"))
@@ -63,5 +64,28 @@ class UnknownMemberDiagnosticTest extends AbstractDiagnosticTest<UnknownMemberDi
       .noneMatch(m -> m.contains("ИмяОбъекта") || m.contains("Успешно"))
       // Негатив (fix ложных срабатываний): нетипизированный ресивер в сравнении.
       .noneMatch(m -> m.contains("НекийМетод") || m.contains("НекоеСвойство"));
+  }
+
+  @Test
+  void typesOfUnionReceiverAreListedAlphabetically() {
+    // Порядок типов в объединении задаёт вывод (здесь — порядок веток), а в тексте
+    // замечания он должен быть один при любом порядке вывода.
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Тест(Условие)
+        Если Условие Тогда
+          Значение = Новый Массив;
+        Иначе
+          Значение = Новый Структура;
+        КонецЕсли;
+        Значение.НетТакогоЧлена();
+      КонецПроцедуры
+      """);
+
+    var messages = getDiagnostics(documentContext).stream()
+      .map(d -> DiagnosticMessage.getStringValue(d.getMessage()))
+      .toList();
+
+    assertThat(messages)
+      .containsExactly("У типа \"Массив, Структура\" нет метода или свойства \"НетТакогоЧлена\"");
   }
 }

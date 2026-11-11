@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.semantictokens;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.context.Modules;
@@ -63,8 +64,11 @@ public class MethodCallSemanticTokensSupplier implements SemanticTokensSupplier 
       }
 
       reference.getSourceDefinedSymbol().ifPresent(symbol -> {
-        if (!(symbol instanceof MethodSymbol method)) {
-          helper.addRange(entries, reference.selectionRange(), SemanticTokenTypes.Method);
+        // Вхождения вида Method резолвятся в MethodSymbol; сужение типа нужно ради isAsync().
+        // Ссылки на конструктор пропускаются: ссылка из `Новый Тип(...)` стоит на имени типа,
+        // которое уже размечено NewExpressionSemanticTokensSupplier как Type. Пропуск
+        // касается и явного вызова ПриСозданииОбъекта() по имени — он остаётся без токена.
+        if (!(symbol instanceof MethodSymbol method) || method instanceof ConstructorSymbol) {
           return;
         }
         // Метод объявлен в «статическом» модуле (CommonModule/ManagerModule/OScript-модуль)?

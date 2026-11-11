@@ -44,10 +44,8 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfos;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.info.DiagnosticInfo;
-import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.utils.Absolute;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
@@ -55,11 +53,10 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.ServerInfo;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.SequenceWriter;
 import tools.jackson.databind.json.JsonMapper;
 
-import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileOutputStream;
 import java.net.URI;
 import java.nio.file.Path;
 import java.util.Collection;
@@ -97,6 +94,10 @@ public class SarifReporter extends AbstractDiagnosticReporter {
   private final ServerInfo serverInfo;
   private final LanguageServerConfiguration configuration;
 
+  private ReportFile reportFile;
+  private JsonGenerator generator;
+  private SequenceWriter writer;
+
   public SarifReporter(
     ServerContextProvider serverContextProvider,
     DiagnosticInfos diagnosticInfos,
@@ -114,62 +115,70 @@ public class SarifReporter extends AbstractDiagnosticReporter {
   }
 
   @Override
-  @SneakyThrows
-  public void report(AnalysisInfo analysisInfo, Path outputDir) {
-    var reportFile = new File(outputDir.toFile(), "./bsl-ls.sarif");
-
-    // Отчёт формируется потоково через JsonGenerator: результаты (по одному на диагностику,
-    // на крупной конфигурации — миллионы) сериализуются по мере обхода и не удерживаются в
-    // памяти целиком. Так исключается построение второго полного графа Result/Location/Region
-    // поверх уже вычисленных диагностик — главный источник пикового потребления памяти при
-    // генерации SARIF (см. issue #4248). Отступы (INDENT_OUTPUT) сохранены: файл на миллионы
-    // результатов иначе — одна строка на сотни МБ, которую не открыть в редакторе.
+  public void beginReport(ReportContext context, Path outputDir) {
+    // Результаты (по одному на диагностику, на крупной конфигурации — миллионы) сериализуются
+    // по мере поступления и не удерживаются в памяти. Так исключается построение второго полного
+    // графа Result/Location/Region поверх уже вычисленных диагностик — главный источник пикового
+    // потребления памяти при генерации SARIF (см. issue #4248). Отступы (INDENT_OUTPUT) сохранены:
+    // файл на миллионы результатов иначе — одна строка на сотни МБ, которую не открыть в редакторе.
     var mapper = JsonMapper.builder()
       .enable(SerializationFeature.INDENT_OUTPUT)
       .build();
 
-    try (
-      var out = new BufferedOutputStream(new FileOutputStream(reportFile));
-      var gen = mapper.createGenerator(out)
-    ) {
-      gen.writeStartObject();
-      gen.writeName("$schema");
-      gen.writeString("https://json.schemastore.org/sarif-2.1.0.json");
-      gen.writeName("version");
-      gen.writePOJO(SarifSchema210.Version._2_1_0);
-      gen.writeName("runs");
-      gen.writeStartArray();
-      writeRun(gen, analysisInfo);
-      gen.writeEndArray();
-      gen.writeEndObject();
-    }
+    reportFile = ReportFile.create(outputDir, "bsl-ls.sarif");
+    generator = mapper.createGenerator(reportFile.stream());
 
-    LOGGER.info("SARIF report saved to {}", reportFile.getAbsolutePath());
+    generator.writeStartObject();
+    generator.writeName("$schema");
+    generator.writeString("https://json.schemastore.org/sarif-2.1.0.json");
+    generator.writeName("version");
+    generator.writePOJO(SarifSchema210.Version._2_1_0);
+    generator.writeName("runs");
+    generator.writeStartArray();
+
+    generator.writeStartObject();
+    generator.writeName("tool");
+    generator.writePOJO(createTool(configuration));
+    generator.writeName("invocations");
+    generator.writePOJO(List.of(createInvocation(configuration)));
+    generator.writeName("language");
+    generator.writeString(configuration.getLanguage().getLanguageCode());
+    generator.writeName("defaultEncoding");
+    generator.writeString("UTF-8");
+    generator.writeName("defaultSourceLanguage");
+    generator.writeString("BSL");
+    generator.writeName("results");
+    writer = mapper.writerFor(Result.class).writeValuesAsArray(generator);
   }
 
-  private void writeRun(JsonGenerator gen, AnalysisInfo analysisInfo) {
-    gen.writeStartObject();
-    gen.writeName("tool");
-    gen.writePOJO(createTool(configuration));
-    gen.writeName("invocations");
-    gen.writePOJO(List.of(createInvocation(configuration)));
-    gen.writeName("language");
-    gen.writeString(configuration.getLanguage().getLanguageCode());
-    gen.writeName("defaultEncoding");
-    gen.writeString("UTF-8");
-    gen.writeName("defaultSourceLanguage");
-    gen.writeString("BSL");
-    gen.writeName("results");
-    gen.writeStartArray();
-    for (FileInfo fileInfo : analysisInfo.fileinfos()) {
-      // uri вычисляется один раз на файл, а не на каждую диагностику
-      var uri = Absolute.uri(fileInfo.getPath().toUri()).toString();
-      for (Diagnostic diagnostic : fileInfo.getDiagnostics()) {
-        gen.writePOJO(createResult(uri, diagnostic));
-      }
+  @Override
+  public void accept(FileInfo fileInfo) {
+    // uri вычисляется один раз на файл, а не на каждую диагностику
+    var uri = Absolute.uri(fileInfo.getPath().toUri()).toString();
+
+    var results = fileInfo.getDiagnostics().stream()
+      .map(diagnostic -> createResult(uri, diagnostic))
+      .toList();
+
+    writer.writeAll(results);
+  }
+
+  @Override
+  public void endReport() {
+    writer.close();
+    generator.writeEndObject();
+    generator.writeEndArray();
+    generator.writeEndObject();
+    generator.close();
+    reportFile.commit();
+    LOGGER.info("SARIF report saved to {}", reportFile.path().toAbsolutePath());
+  }
+
+  @Override
+  public void abortReport() {
+    if (reportFile != null) {
+      reportFile.close();
     }
-    gen.writeEndArray();
-    gen.writeEndObject();
   }
 
   private static Invocation createInvocation(LanguageServerConfiguration configuration) {

@@ -2,7 +2,7 @@
 
 BSL Language Server can act as a [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server — exposing 1C (BSL) and OneScript code analysis to AI agents and tools that support MCP.
 
-MCP tools run on top of the same engine as the LSP mode: the same parsing, the same providers. Workspaces are provided through [MCP roots](https://modelcontextprotocol.io/docs/concepts/roots) — the direct analog of LSP workspace folders.
+MCP tools run on top of the same engine as the LSP mode: the same parsing, the same providers. Workspace folders are registered with the `register_workspace_folder`/`list_workspace_folders` tools — see the "Workspace folders" section below.
 
 !!! warning "Experimental feature"
     The MCP mode is built on Spring AI 2.0 (a milestone version at the time of writing). The API and behavior may change.
@@ -51,14 +51,35 @@ LSP over websocket and MCP over Streamable HTTP on the same web server:
 java -jar bsl-language-server.jar websocket --mcp --server.port=8080
 ```
 
-## Workspaces (MCP roots)
+## Workspace folders
 
-Source directories are provided by the client through MCP roots — just like an LSP client sends workspace folders. The server indexes the declared roots into the shared context and re-syncs them on change (`roots/list_changed`). In the combined modes (`lsp --mcp`, `websocket --mcp`) workspaces come from both the LSP client (workspace folders) and the MCP client (roots) into one shared context.
+The terminology is LSP's: a **workspace folder** is a single project root directory, and the set of registered folders makes up the **workspace** this server serves. What gets registered and passed to the tools is a folder.
+
+Every analysis tool answers only inside a registered workspace folder — a 1C configuration or OneScript project whose sources are indexed. A file outside every registered folder is not analysed, and the tools that are not bound to a file (`type_info`, `global_member_info`, `global_member_search`) require an explicit `workspaceFolder` argument.
+
+The client workflow:
+
+1. `list_workspace_folders` — see what is already registered and get the `uri` values.
+2. `register_workspace_folder` with the project directory — if the project is not in the list yet. Pass the folder root: the directory an editor opens and an LSP client sends as a workspace folder, not a sources subfolder. It holds the sources (`src/cf` of a configuration, the OneScript sources) and, when present, the [configuration file](ConfigurationFile.md) `.bsl-language-server.json`, which is only read from the folder root. The tool indexes the sources and returns the folder's `uri`; registering an already registered directory does not re-index it.
+3. `unregister_workspace_folder` — release the index when the project is no longer needed. Only folders registered over MCP can be removed: a folder that came from the LSP client is the editor's workspace folder and is left alone, because the client cannot get it back. A folder the client additionally declares as a root (see MCP roots below) stays indexed, which the result reports as `stillDeclaredByRoots`: the folder goes away once the last source releases it.
+
+The error messages are self-contained: for an unknown or missing `workspaceFolder` the server lists the registered folders and names the tool that registers a new one, so an agent can recover without asking a human.
+
+Additional sources of workspace folders:
+
+- **LSP.** In the combined modes (`lsp --mcp`, `websocket --mcp`) workspace folders come from the LSP client into the same shared context — there is no need to register them over MCP, they show up in `list_workspace_folders` right away.
+- **MCP roots.** Roots declared by the client through [MCP roots](https://modelcontextprotocol.io/docs/concepts/roots) are still indexed automatically, including re-sync on `notifications/roots/list_changed`. This works as long as the server speaks the `2025-11-25` revision of the protocol — the one implemented by the MCP SDK it is built on — where roots are still active.
+
+!!! warning "MCP roots are deprecated"
+    In the [2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/changelog) revision of the specification the roots feature (together with sampling and logging) is marked deprecated, and the `notifications/roots/list_changed` notification is removed from the protocol. The suggested migration is to pass directories through tool parameters and server configuration — which is exactly what `register_workspace_folder`/`list_workspace_folders` do. Roots support is kept for compatibility with older clients; under the MCP feature lifecycle policy it cannot be removed earlier than twelve months after that revision, and this server will drop it when it moves to the new revision.
 
 ## Available tools
 
 | Tool | Purpose |
 | --- | --- |
+| `list_workspace_folders` | Registered workspace folders: the `uri` for the other tools and the name |
+| `register_workspace_folder` | Register a project directory as a workspace folder and index its sources; the name can be given explicitly, otherwise the directory name is used |
+| `unregister_workspace_folder` | Remove a workspace folder and release its index |
 | `analyze_file` | Diagnostics for a file |
 | `document_symbols` | Symbol tree of a file (methods, regions, variables) |
 | `find_references` | All references to the symbol at a position |
@@ -71,6 +92,8 @@ Source directories are provided by the client through MCP roots — just like an
 | `type_at_position` | Inferred type of the expression under the cursor and its available methods and properties |
 
 Positions (`line`, `character`) are zero-based, as in LSP.
+
+No tool modifies files on disk. The analysis tools are marked read-only (`readOnlyHint`), so a client should not ask for confirmation on every call. The workspace-folder management tools change server state and are therefore not read-only; `unregister_workspace_folder` is additionally marked destructive (`destructiveHint`) because it throws away the index that was built, so a client may reasonably ask for confirmation on that one.
 
 ## Launch options
 

@@ -1,0 +1,129 @@
+/*
+ * This file is a part of BSL Language Server.
+ *
+ * Copyright (c) 2018-2026
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ *
+ * BSL Language Server is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3.0 of the License, or (at your option) any later version.
+ *
+ * BSL Language Server is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BSL Language Server.
+ */
+package com.github._1c_syntax.bsl.languageserver.types.registry;
+
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
+import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.mdo.storage.form.FormDynamicListField;
+import com.github._1c_syntax.bsl.mdo.support.DynamicListFieldKind;
+import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.ObjectProvider;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Поля, которые динамический список объявил сам — записи состава полей.
+ * <p>
+ * Спрашивается первым: объявление списка точнее любого вывода по таблице.
+ * Тип у записи состава указывают редко (в разобранных выгрузках — 42 записи из
+ * 18 087), поэтому чаще всего запись даёт только имя, а тип поле получает от
+ * следующего источника.
+ * <p>
+ * Колонками строки становятся только сами поля: вложенный набор данных — это
+ * группа, под которой лежат поля с составным путём ({@code Планы.ЦФО}), а не
+ * колонка, и папка — тоже не колонка. Поля со сгруппированным путём колонкой не
+ * становятся по той же причине: обратиться к ним можно только через владельца
+ * группы.
+ */
+@Component
+@WorkspaceScope
+@Order(DynamicListCompositionSource.ORDER)
+@RequiredArgsConstructor
+class DynamicListCompositionSource implements QueryTableFieldSource {
+
+  static final int ORDER = 10;
+
+  private final TypeRegistry typeRegistry;
+
+  /**
+   * Резолвер спрашивается лениво: он же и владеет этим источником, а внедрение
+   * напрямую замкнуло бы бины друг на друга.
+   */
+  private final ObjectProvider<QueryTableResolver> resolverProvider;
+
+  @Override
+  public List<MemberDescriptor> fields(QueryTableRequest request) {
+    var list = request.list();
+    if (list == null || list.getFields().isEmpty()) {
+      return List.of();
+    }
+    var result = new ArrayList<MemberDescriptor>(list.getFields().size());
+    for (var field : list.getFields()) {
+      var member = member(field, request);
+      if (member != null) {
+        result.add(member);
+      }
+    }
+    return List.copyOf(result);
+  }
+
+  private @Nullable MemberDescriptor member(FormDynamicListField field, QueryTableRequest request) {
+    if (field.getKind() != DynamicListFieldKind.FIELD) {
+      return null;
+    }
+    var name = columnName(field);
+    if (name.isEmpty()) {
+      return null;
+    }
+    return MdoMemberFactory.property(BilingualString.of(name), types(field, request));
+  }
+
+  /**
+   * Имя колонки — имя поля набора данных, и только оно: путь к данным именем не
+   * распоряжается. Поле внутри папки состава названо путём
+   * ({@code СубконтоДт.СубконтоДт1}), а колонкой становится под своим именем
+   * ({@code СубконтоДт1}).
+   * <p>
+   * Если и имя записано путём (так названы члены вложенного набора данных),
+   * колонки из него не выходит — к такому полю обращаются через владельца пути.
+   *
+   * @return имя колонки; пусто, если колонки у поля нет.
+   */
+  private static String columnName(FormDynamicListField field) {
+    var name = field.getName();
+    return name.isBlank() || name.contains(".") ? "" : name;
+  }
+
+  /**
+   * Тип колонки: объявленный записью состава, а если его нет — тип поля, на
+   * которое указывает путь к данным. Путь бывает вглубь ({@code Контрагент.ИНН}),
+   * и тогда тип берётся у последнего звена.
+   */
+  private TypeSet types(FormDynamicListField field, QueryTableRequest request) {
+    if (!field.getValueType().isEmpty()) {
+      return ValueTypes.resolve(typeRegistry, field.getValueType());
+    }
+    var dataPath = field.getDataPath();
+    if (dataPath.isBlank() || request.tableName().isBlank()) {
+      return TypeSet.EMPTY;
+    }
+    return QueryFieldChain.types(typeRegistry,
+      resolverProvider.getObject().fields(request.tableName()),
+      List.of(dataPath.split("\\.", -1)));
+  }
+}

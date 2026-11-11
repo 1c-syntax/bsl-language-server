@@ -21,8 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.mcp;
 
+import io.modelcontextprotocol.json.McpJsonMapper;
 import io.modelcontextprotocol.json.jackson3.JacksonMcpJsonMapper;
 import io.modelcontextprotocol.server.transport.StdioServerTransportProvider;
+import io.modelcontextprotocol.spec.McpServerSession;
 import io.modelcontextprotocol.spec.McpServerTransportProviderBase;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,6 +34,7 @@ import tools.jackson.databind.json.JsonMapper;
 import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
 
 /**
  * Конфигурация stdio-транспорта MCP-сервера для профиля {@code mcp}.
@@ -40,7 +43,8 @@ import java.io.InputStream;
  * (её бин помечен {@code @ConditionalOnMissingBean}), чтобы:
  * <ul>
  *   <li>использовать штатный Jackson 3 {@link JsonMapper} приложения;</li>
- *   <li>отслеживать закрытие входного потока (EOF) и корректно завершать процесс.</li>
+ *   <li>отслеживать закрытие входного потока (EOF) и корректно завершать процесс;</li>
+ *   <li>не терять сообщения, отправленные одновременно (см. {@link ConcurrentSendTransportProvider}).</li>
  * </ul>
  */
 @Configuration
@@ -56,7 +60,30 @@ public class McpStdioConfiguration {
   public McpServerTransportProviderBase stdioServerTransport(JsonMapper jsonMapper, McpShutdownSignal shutdownSignal) {
     var mcpJsonMapper = new JacksonMcpJsonMapper(jsonMapper);
     var stdin = new EofSignalingInputStream(System.in, shutdownSignal);
-    return new StdioServerTransportProvider(mcpJsonMapper, stdin, System.out);
+    return new ConcurrentSendTransportProvider(mcpJsonMapper, stdin, System.out);
+  }
+
+  // TODO: убрать вместе с McpEnqueueRetryingTransport, когда выйдет MCP Java SDK с исправлением
+  //  одновременной отправки в stdio-транспорте: https://github.com/modelcontextprotocol/java-sdk/issues/686
+  //  (исправлено в main SDK коммитом 2bb1481; в релизах по 2.0.1 включительно его нет).
+  /**
+   * Stdio-транспорт, сессия которого переносит одновременную отправку сообщений.
+   * <p>
+   * Транспорт SDK кладёт исходящее сообщение в приёмник, не допускающий одновременной записи:
+   * из двух одновременных отправок одна получает отказ. Отказ не только теряет сообщение —
+   * он обрывает обработку входящих сообщений, и сессия больше не отвечает ни на один запрос.
+   * Поэтому транспорт сессии обёрнут в {@link McpEnqueueRetryingTransport}.
+   */
+  static final class ConcurrentSendTransportProvider extends StdioServerTransportProvider {
+
+    ConcurrentSendTransportProvider(McpJsonMapper jsonMapper, InputStream inputStream, OutputStream outputStream) {
+      super(jsonMapper, inputStream, outputStream);
+    }
+
+    @Override
+    public void setSessionFactory(McpServerSession.Factory sessionFactory) {
+      super.setSessionFactory(transport -> sessionFactory.create(new McpEnqueueRetryingTransport(transport)));
+    }
   }
 
   /**

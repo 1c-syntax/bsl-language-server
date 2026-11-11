@@ -31,6 +31,8 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -97,6 +99,24 @@ class TypeRegistryRegistrationTest {
     // then
     assertThat(typeRegistry.resolve("МойOSКласс", FileType.OS)).contains(ref);
     assertThat(typeRegistry.resolve("МойOSКласс", FileType.BSL)).isEmpty();
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"Строка", "Число", "Дата", "Булево", "Неопределено", "Null"})
+  void primitiveTypesAreVisibleInBothLanguages(String name) {
+    // given — примитивы объявлены только BSL-паком: ни встроенный OneScript-пак,
+    // ни OneScript-провайдеры их не содержат. При регистрации видимости строго по языку
+    // пака isVisibleIn признавал бы примитив «зарегистрированным в чужом языке».
+
+    // when
+    var bsl = typeRegistry.resolve(name, FileType.BSL);
+
+    // then — в OneScript примитив резолвится в тот же самый (интернированный) TypeRef,
+    // а не в равный ему: реестр обязан отдавать канонический ref обоим языкам.
+    assertThat(bsl).isNotEmpty();
+    assertThat(typeRegistry.resolve(name, FileType.OS).orElseThrow())
+      .as("примитив «%s» должен резолвиться в OneScript-файле", name)
+      .isSameAs(bsl.orElseThrow());
   }
 
   @Test
@@ -193,6 +213,22 @@ class TypeRegistryRegistrationTest {
     // when / then
     assertThat(typeRegistry.resolveGenericByPrefix(null)).isEmpty();
     assertThat(typeRegistry.resolveGenericByPrefix("")).isEmpty();
+  }
+
+  @Test
+  void resolveGenericByPrefixFindsGenericsDeclaredByPlatformProvider() {
+    // given — дженериком тип объявляет провайдер платформенных типов (параметры типа)
+    var generic = typeRegistry.resolve("СправочникСсылка.<Имя справочника>").orElseThrow();
+
+    // then — находится по семейству в любом регистре, а не по началу имени
+    assertThat(typeRegistry.resolveGenericByPrefix("справочникссылка")).contains(generic);
+    assertThat(typeRegistry.resolveGenericByPrefix("СправочникСсыл")).isEmpty();
+
+    // when — плейсхолдер в имени пользовательского типа дженериком его не делает
+    typeRegistry.registerUserType("МоёСемейство.<Имя>", declaration, FileType.BSL);
+
+    // then
+    assertThat(typeRegistry.resolveGenericByPrefix("МоёСемейство")).isEmpty();
   }
 
   @Test

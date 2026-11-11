@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContentUnavailableException;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.KeywordSymbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
@@ -76,7 +77,7 @@ public class KeywordReferenceFinder implements ReferenceFinder {
     BSLParser.FileContext ast;
     try {
       ast = documentContext.getAst();
-    } catch (NullPointerException e) {
+    } catch (DocumentContentUnavailableException e) {
       return Optional.empty();
     }
     return Trees.findTerminalNodeContainsPosition(ast, position)

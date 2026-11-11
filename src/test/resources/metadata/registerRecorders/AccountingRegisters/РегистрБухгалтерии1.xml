@@ -33,7 +33,7 @@
 			<Comment/>
 			<UseStandardCommands>true</UseStandardCommands>
 			<IncludeHelpInContents>false</IncludeHelpInContents>
-			<ChartOfAccounts/>
+			<ChartOfAccounts>ChartOfAccounts.ПланСчетов1</ChartOfAccounts>
 			<Correspondence>false</Correspondence>
 			<PeriodAdjustmentLength>0</PeriodAdjustmentLength>
 			<DefaultListForm/>

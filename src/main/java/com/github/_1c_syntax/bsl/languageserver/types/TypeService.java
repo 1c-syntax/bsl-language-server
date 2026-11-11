@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
@@ -36,6 +37,7 @@ import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionAtPosition;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
@@ -49,6 +51,7 @@ import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOperationNode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -64,6 +67,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * Единая точка для consumer'ов (hover, completion, signature help) для
@@ -91,10 +97,21 @@ public class TypeService implements SelfMemberClassifier {
    * @return набор типов значения ссылки; {@link TypeSet#EMPTY}, если тип не определяется.
    */
   public TypeSet typesAt(Reference reference) {
+    return typesAt(reference, null);
+  }
+
+  /**
+   * Получить тип значения ссылки с учётом режима компиляции.
+   *
+   * @param reference разрешённая ссылка с позицией обращения.
+   * @param context режим для вывода типа переменной либо {@code null} для возможных режимов в позиции ссылки.
+   * @return известные типы значения; пустой набор, если тип не определяется.
+   */
+  public TypeSet typesAt(Reference reference, @Nullable ExecutionContext context) {
     if (reference.getSourceDefinedSymbol().isPresent()) {
       // Ссылка позиционна, поэтому и ответ позиционный: тип переменной берётся в точке
       // ссылки — с учётом присваиваний и вставок, случившихся на путях к ней.
-      return inferencer.inferVariableAt(reference);
+      return inferencer.inferVariableAt(reference, context);
     }
     if (reference.symbol() instanceof PlatformMemberSymbol platformMember) {
       var returnTypes = platformMember.getDescriptor().returnTypes();
@@ -128,6 +145,29 @@ public class TypeService implements SelfMemberClassifier {
   @Override
   public boolean isBareSelfProperty(DocumentContext documentContext, String name) {
     return findSelfMember(documentContext, name, MemberKind.PROPERTY).isPresent();
+  }
+
+  /**
+   * {@inheritDoc}
+   * <p>
+   * Self-тип модуля и его свойства находятся один раз на документ; имя сравнивается только со
+   * свойствами, без перебора методов и событий self-типа.
+   */
+  @Override
+  public Predicate<String> bareSelfPropertiesOf(DocumentContext documentContext) {
+    var properties = selfTypeRef(documentContext)
+      .map(ref -> typeRegistry.getMembers(ref, documentContext.getFileType()).stream()
+        .filter(member -> member.kind() == MemberKind.PROPERTY)
+        .toList())
+      .orElse(List.of());
+    return name -> {
+      for (var property : properties) {
+        if (property.matches(name)) {
+          return true;
+        }
+      }
+      return false;
+    };
   }
 
   /**
@@ -183,8 +223,21 @@ public class TypeService implements SelfMemberClassifier {
    * @return тип охватывающего выражения; {@link TypeSet#EMPTY}, если не выводится.
    */
   public TypeSet expressionTypesAt(DocumentContext documentContext, Position position) {
+    return expressionTypesAt(documentContext, position, null);
+  }
+
+  /**
+   * Вывести тип охватывающего выражения в выбранном контексте компиляции.
+   *
+   * @param documentContext документ с выражением.
+   * @param position позиция внутри выражения.
+   * @param context режим либо {@code null} для возможных режимов в позиции выражения.
+   * @return выведенные типы; пустой набор при отсутствии выражения или сведений о типе.
+   */
+  public TypeSet expressionTypesAt(DocumentContext documentContext, Position position,
+                                   @Nullable ExecutionContext context) {
     return ExpressionAtPosition.findExpressionTree(documentContext, position)
-      .map(expression -> inferencer.infer(expression, documentContext))
+      .map(expression -> inferencer.infer(expression, documentContext, context))
       .orElse(TypeSet.EMPTY);
   }
 
@@ -202,13 +255,29 @@ public class TypeService implements SelfMemberClassifier {
    }
 
   /**
-   * Объявленный тип возвращаемого значения метода — для signature help/hover.
+   * Типы возвращаемого значения метода — объявленные в документирующем комментарии вместе
+   * с рассчитанными по телу.
    *
    * @param method метод.
-   * @return набор типов возвращаемого значения; {@link TypeSet#EMPTY}, если не объявлен.
+   * @return набор типов возвращаемого значения; {@link TypeSet#EMPTY}, если ни один
+   *     источник ничего не дал.
    */
-  public TypeSet getDeclaredReturnTypes(MethodSymbol method) {
-    return symbolTypeIndex.getDeclaredReturnTypes(method);
+  public TypeSet getReturnTypes(MethodSymbol method) {
+    return symbolTypeIndex.getReturnTypes(method);
+  }
+
+  /**
+   * Типы возвращаемого значения с расчётом тела метода при первом обращении.
+   * <p>
+   * Используется для локальных методов, чьи документы доступны потребителю: неэкспортные
+   * функции не рассчитываются при наполнении рабочей области. Повторные обращения
+   * используют индекс, сохраняя порядок объявленных и выведенных типов.
+   *
+   * @param method метод в доступном документе.
+   * @return известные типы возвращаемого значения, либо пустой набор.
+   */
+  public TypeSet inferReturnTypes(MethodSymbol method) {
+    return inferencer.inferReturnTypes(method);
   }
 
   /**
@@ -249,8 +318,8 @@ public class TypeService implements SelfMemberClassifier {
    * если у него нет написания в запрошенной локали
    * ({@link MemberDescriptor#appliesTo(Language)}). Так из ru-автодополнения
    * уходят, например, англоязычные {@code [DeprecatedName]}-алиасы OneScript
-   * без русской пары ({@code HTTPЗапрос.GetBodyAsBinary}). Отбор зависит только
-   * от имени члена — никаких проверок устаревания и прочих свойств. Резолв
+   * без русской пары ({@code HTTPЗапрос.GetBodyAsBinary}). Имена пользовательских
+   * символов сохраняются в обоих языках. Проверок устаревания здесь нет. Резолв
    * таких имён для диагностик сохраняется: {@link #getMembers(TypeRef, FileType)}
    * по-прежнему отдаёт их.
    *
@@ -490,6 +559,19 @@ public class TypeService implements SelfMemberClassifier {
   }
 
   /**
+   * Типы, подмешанные в тип расширением, в порядке регистрации. Синтетические типы
+   * форм ({@code ТаблицаФормы.<mdoRef>.<имя элемента>}) наследуют состав базового
+   * вида данных через расширение — по нему можно отличить, что именно отображает
+   * таблица формы.
+   *
+   * @param ref тип.
+   * @return расширения; пустой список, если их нет.
+   */
+  public List<TypeRef> extensionsOf(TypeRef ref) {
+    return typeRegistry.extensionsOf(ref);
+  }
+
+  /**
    * Является ли тип перечислением (системным либо конфигурационным enum'ом)
    * в данном языке файла.
    *
@@ -511,6 +593,14 @@ public class TypeService implements SelfMemberClassifier {
    */
   public boolean isVersionedMemberName(String name) {
     return typeRegistry.isVersionedMemberName(name);
+  }
+
+  public boolean mayBeDeprecatedMemberName(String name, com.github._1c_syntax.bsl.support.CompatibilityMode target) {
+    return typeRegistry.mayBeDeprecatedMemberName(name, target);
+  }
+
+  public boolean mayBeUnavailableMemberName(String name, com.github._1c_syntax.bsl.support.CompatibilityMode target) {
+    return typeRegistry.mayBeUnavailableMemberName(name, target);
   }
 
   /**
@@ -607,11 +697,28 @@ public class TypeService implements SelfMemberClassifier {
    * @return все члены-кандидаты в позиции; пустой список, если члена нет.
    */
   public List<TypedMember> membersAt(DocumentContext documentContext, Position position) {
+    return membersAt(documentContext, position, null);
+  }
+
+  /**
+   * Разрешить обращение в позиции с учётом контекста компиляции.
+   * <p>
+   * Для квалифицированного обращения контекст сужает вывод типов получателя и аргументов
+   * по веткам препроцессора. Доступность найденных методов в этом контексте проверяется отдельно.
+   *
+   * @param documentContext документ с доступным AST.
+   * @param position позиция имени в документе.
+   * @param context выбранный режим или {@code null} для объединения веток всех режимов.
+   * @return все члены-кандидаты; пустой список, если идентификатор или его цель не найдены.
+   * @see #membersAt(DocumentContext, TerminalNode, ExecutionContext)
+   */
+  public List<TypedMember> membersAt(DocumentContext documentContext, Position position,
+                                    @Nullable ExecutionContext context) {
     var terminal = identifierTerminalAt(documentContext, position).orElse(null);
     if (terminal == null) {
       return List.of();
     }
-    return membersAt(documentContext, terminal);
+    return membersAt(documentContext, terminal, context);
   }
 
   /**
@@ -626,6 +733,29 @@ public class TypeService implements SelfMemberClassifier {
    * @return все члены-кандидаты для терминала; пустой список, если члена нет.
    */
   public List<TypedMember> membersAt(DocumentContext documentContext, TerminalNode terminal) {
+    return membersAt(documentContext, terminal, null);
+  }
+
+  /**
+   * Разрешить обращение по известному терминалу без повторного поиска по AST.
+   * <p>
+   * Контекст передаётся в вывод типов получателя и аргументов квалифицированного обращения.
+   * Голые имена разрешаются напрямую как глобальные или собственные члены модуля.
+   * Результат перечисляет кандидатов, но не подтверждает доступность каждого в выбранном режиме.
+   *
+   * @param documentContext документ, которому принадлежит терминал.
+   * @param terminal терминал имени члена; для другого вида токена результат пуст.
+   * @param context выбранный режим или {@code null} для вывода без ограничения контекста.
+   * @return все найденные члены-кандидаты, в том числе из разных альтернатив типа получателя.
+   */
+  public List<TypedMember> membersAt(DocumentContext documentContext, TerminalNode terminal,
+                                    @Nullable ExecutionContext context) {
+    return resolveMembersAt(documentContext, terminal, context, true);
+  }
+
+  /** Общий поиск целей; проверка существования и доступности не требует вывода типов аргументов. */
+  private List<TypedMember> resolveMembersAt(DocumentContext documentContext, TerminalNode terminal,
+                                             @Nullable ExecutionContext context, boolean inferArguments) {
     if (terminal.getSymbol().getType() != BSLParser.IDENTIFIER) {
       return List.of();
     }
@@ -637,7 +767,8 @@ public class TypeService implements SelfMemberClassifier {
         return List.of(bare.get());
       }
     }
-    return dereferenceMatcher.matchAt(terminal, documentContext);
+    return inferArguments ? dereferenceMatcher.matchAt(terminal, documentContext, context)
+      : dereferenceMatcher.matchWithReceiverAt(terminal, documentContext, context).members();
   }
 
   /**
@@ -650,14 +781,33 @@ public class TypeService implements SelfMemberClassifier {
   }
 
   /**
+   * Найти известные цели обращения без вывода типов аргументов.
+   * <p>
+   * Сохраняются методы и свойства платформы и исходников, включая глобальный контекст,
+   * а также все известные альтернативы типа получателя. Доступность этим запросом не проверяется.
+   *
+   * @param documentContext документ, которому принадлежит терминал.
+   * @param terminal терминал имени члена.
+   * @param context режим для вывода типа получателя или {@code null} для объединения веток.
+   * @return члены с владельцами и метаданными; пустой список, если известные цели отсутствуют.
+   */
+  public List<TypedMember> accessTargetsAt(DocumentContext documentContext, TerminalNode terminal,
+                                          @Nullable ExecutionContext context) {
+    return resolveMembersAt(documentContext, terminal, context, false);
+  }
+
+  /**
    * Резолв голого имени (не аксессора): глобальная функция (владелец = null),
    * глобальное свойство / library-модуль, либо неквалифицированный self-член
    * текущего модуля. Empty, если имя так не резолвится.
    */
   private Optional<TypedMember> resolveBareName(TerminalNode terminal, DocumentContext documentContext) {
     var bareName = terminal.getText();
-    var fileType = documentContext.getFileType();
+    if (!isGlobalMethodCallName(terminal) && isShadowedByLocalVariable(terminal, documentContext, bareName)) {
+      return Optional.empty();
+    }
     // Глобальная функция.
+    var fileType = documentContext.getFileType();
     var globalFn = globalScopeProvider.globalFunction(bareName, fileType);
     if (globalFn.isPresent()) {
       return Optional.of(new TypedMember(null, globalFn.get(), Ranges.create(terminal), -1));
@@ -666,21 +816,27 @@ public class TypeService implements SelfMemberClassifier {
     // Глобальное свойство (перечисление/менеджер коллекции/модуль); имена типов
     // для `Новый` (TYPE_NAME) глобальными свойствами не являются.
     var globalProp = globalScopeProvider.globalProperty(bareName, fileType)
-      .map(member -> member.returnTypes().refs().stream()
-        .filter(r -> !r.equals(TypeRef.UNKNOWN)).findFirst().orElse(TypeRef.UNKNOWN))
-      .filter(ref -> !ref.equals(TypeRef.UNKNOWN))
-      .map((TypeRef ref) -> {
-        var desc = typeRegistry.getDescription(ref, fileType);
-        // owner == null: глобальное свойство, а не член ресивера (контракт TypedMember).
-        return new TypedMember(null,
-          MemberDescriptor.property(ref.qualifiedName(), ref, desc),
-          Ranges.create(terminal));
-      });
+      .map(member -> new TypedMember(null, describeGlobalProperty(member, fileType), Ranges.create(terminal)));
     if (globalProp.isPresent()) {
       return globalProp;
     }
 
     return resolveSelfMember(terminal, bareName, documentContext);
+  }
+
+  /** Сохранить описание типа для глобальных значений без собственного описания, включая перечисления. */
+  private MemberDescriptor describeGlobalProperty(MemberDescriptor member, FileType fileType) {
+    if (!member.bilingualDescription().isEmpty()) {
+      return member;
+    }
+    for (var type : member.returnTypes().refs()) {
+      var description = BilingualString.of(typeRegistry.getDescription(type, Language.RU, fileType),
+        typeRegistry.getDescription(type, Language.EN, fileType));
+      if (!description.isEmpty()) {
+        return member.withBilingualDescription(description);
+      }
+    }
+    return member;
   }
 
   /**
@@ -735,25 +891,33 @@ public class TypeService implements SelfMemberClassifier {
 
   /**
    * Обращение к члену ({@code ресивер.член}), у которого тип ресивера выведен и
-   * конкретен, но члена с таким именем нет ни на одном из типов-владельцев —
-   * вероятная опечатка/несуществующий член. Возвращает {@code TypeSet}
-   * ресивера (для подстановки имени типа в сообщение), либо empty, если в
-   * позиции член найден, либо тип ресивера не выведен / содержит UNKNOWN/ANY.
+   * конкретен, но у некоторых известных типов нет такого члена.
+   * Возвращает эти типы для сообщения. UNKNOWN/ANY не доказывают отсутствие члена
+   * и пропускаются; наличие члена у другого конкретного типа не скрывает ошибку.
    * <p>
    * Предполагает, что позиция указывает на аксессор члена — это контракт
    * вызывающего ({@code visitAccessProperty} / {@code visitMethodCall}).
    *
    * @param documentContext контекст документа.
    * @param position позиция аксессора члена.
-   * @return типы ресивера (для имени типа в сообщении), либо empty, если член найден
-   *     или тип ресивера не выведен / содержит UNKNOWN/ANY.
+   * @return известные типы без этого члена, либо empty, если таких типов не найдено.
    */
   public Optional<TypeSet> unknownMemberReceiverAt(DocumentContext documentContext, Position position) {
-    if (!membersAt(documentContext, position).isEmpty()) {
-      return Optional.empty();
-    }
-    var receiver = receiverTypesAt(documentContext, position);
-    return allConcrete(receiver) ? Optional.of(receiver) : Optional.empty();
+    return unknownMemberReceiverAt(documentContext, position, null);
+  }
+
+  /**
+   * Проверить существование члена в позиции с уточнением типов по режиму компиляции.
+   *
+   * @param documentContext документ обращения.
+   * @param position позиция имени члена.
+   * @param context режим вывода типов либо {@code null} для объединения веток.
+   * @return известные типы без этого члена; доступность найденных объявлений не проверяется.
+   */
+  public Optional<TypeSet> unknownMemberReceiverAt(DocumentContext documentContext, Position position,
+                                                   @Nullable ExecutionContext context) {
+    return identifierTerminalAt(documentContext, position)
+      .flatMap(terminal -> unknownMemberReceiverAt(documentContext, terminal, context));
   }
 
   /**
@@ -771,18 +935,39 @@ public class TypeService implements SelfMemberClassifier {
    * ({@code Ресивер.|}) в completion, но не для диагностики с завершённым членом.
    */
   public Optional<TypeSet> unknownMemberReceiverAt(DocumentContext documentContext, TerminalNode terminal) {
-    var match = dereferenceMatcher.matchWithReceiverAt(terminal, documentContext);
-    if (!match.members().isEmpty()) {
-      return Optional.empty();
-    }
-    var receiver = match.receiverTypes();
-    if (receiver.isEmpty()) {
-      receiver = receiverEndIdentifier(terminal)
+    return unknownMemberReceiverAt(documentContext, terminal, null);
+  }
+
+  /**
+   * Проверить существование члена по известному терминалу в выбранном режиме.
+   * <p>
+   * Типы из основного вывода и из индекса ссылок вычисляются в одном режиме.
+   * Найденные объявления сохраняются даже при недоступности вызова. Наличие члена
+   * и допустимость обращения в контексте проверяются отдельно.
+   *
+   * @param documentContext документ обращения.
+   * @param terminal терминал имени метода или свойства.
+   * @param context режим вывода типов либо {@code null} для объединения веток.
+   * @return известные типы без этого члена; пусто при отсутствии доказанной ошибки.
+   */
+  public Optional<TypeSet> unknownMemberReceiverAt(DocumentContext documentContext, TerminalNode terminal,
+                                                   @Nullable ExecutionContext context) {
+    var match = dereferenceMatcher.matchWithReceiverAt(terminal, documentContext, context);
+    if (match.receiverTypes().isEmpty()) {
+      var receiver = receiverEndIdentifier(terminal)
         .flatMap(receiverEnd -> referenceResolver.findReference(documentContext.getUri(), receiverEnd))
-        .map(this::typesAt)
+        .map(reference -> typesAt(reference, context))
         .orElse(TypeSet.EMPTY);
+      if (receiver.isEmpty()) {
+        return Optional.empty();
+      }
+      match = dereferenceMatcher.matchReceiverAt(terminal, documentContext, receiver);
     }
-    return allConcrete(receiver) ? Optional.of(receiver) : Optional.empty();
+    var ownersWithMember = match.members().stream().map(TypedMember::owner).collect(Collectors.toSet());
+    var missing = match.receiverTypes().refs().stream()
+      .filter(ref -> !ref.equals(TypeRef.ANY) && !ref.equals(TypeRef.UNKNOWN) && !ownersWithMember.contains(ref))
+      .toList();
+    return missing.isEmpty() ? Optional.empty() : Optional.of(TypeSet.of(missing));
   }
 
   /**
@@ -842,6 +1027,36 @@ public class TypeService implements SelfMemberClassifier {
   }
 
   /**
+   * Подготовить синтаксис получателя для нескольких режимов одного запроса completion.
+   * Типы по-прежнему выводятся отдельно при каждом обращении; старый AST после сброса не используется.
+   *
+   * @param documentContext документ запроса.
+   * @param position положение члена или висячей точки.
+   * @return запрос, связанный с копией позиции и текущим AST; правка возвращает его к обычному пути.
+   */
+  public Function<@Nullable ExecutionContext, TypeSet> receiverTypesQuery(DocumentContext documentContext,
+                                                                         Position position) {
+    var cursor = new Position(position.getLine(), position.getCharacter());
+    var ast = documentContext.getAst();
+    var version = documentContext.getVersion();
+    var receiver = Trees.findTerminalNodeContainsPosition(ast, cursor)
+      .filter(terminal -> terminal.getSymbol().getType() == BSLParser.IDENTIFIER)
+      .map(DereferenceLocator::locate).map(BinaryOperationNode::getLeft);
+    return (@Nullable ExecutionContext context) -> {
+      if (documentContext.getVersion() != version || documentContext.getAst() != ast) {
+        return receiverTypesAt(documentContext, cursor, context);
+      }
+      var viaMember = receiver.map(expression -> inferencer.infer(expression, documentContext, context))
+        .orElse(TypeSet.EMPTY);
+      if (!viaMember.isEmpty()) {
+        return viaMember;
+      }
+      return receiverEndBeforeDot(documentContext, cursor)
+        .map(receiverEnd -> receiverSegmentTypes(documentContext, receiverEnd, context)).orElse(TypeSet.EMPTY);
+    };
+  }
+
+  /**
    * Тип ресивера доступа к члену в позиции — самодостаточная верхнеуровневая
    * точка входа. Пустой {@link TypeSet}, если в позиции нет доступа к члену.
    * <p>
@@ -859,14 +1074,27 @@ public class TypeService implements SelfMemberClassifier {
    * @return типы ресивера; {@link TypeSet#EMPTY}, если в позиции нет доступа к члену.
    */
   public TypeSet receiverTypesAt(DocumentContext documentContext, Position position) {
+    return receiverTypesAt(documentContext, position, null);
+  }
+
+  /**
+   * Вывести тип получателя в позиции completion с учётом контекста компиляции.
+   *
+   * @param documentContext документ обращения.
+   * @param position позиция члена или висячей точки.
+   * @param context режим либо {@code null} для объединения веток.
+   * @return типы получателя, включая локальные поля открытых объектов данных.
+   */
+  public TypeSet receiverTypesAt(DocumentContext documentContext, Position position,
+                                @Nullable ExecutionContext context) {
     var viaMember = identifierTerminalAt(documentContext, position)
-      .flatMap(terminal -> dereferenceMatcher.receiverTypesAt(documentContext, terminal))
+      .flatMap(terminal -> dereferenceMatcher.receiverTypesAt(documentContext, terminal, context))
       .orElse(TypeSet.EMPTY);
     if (!viaMember.isEmpty()) {
       return viaMember;
     }
     return receiverEndBeforeDot(documentContext, position)
-      .map(receiverEnd -> receiverSegmentTypes(documentContext, receiverEnd))
+      .map(receiverEnd -> receiverSegmentTypes(documentContext, receiverEnd, context))
       .orElse(TypeSet.EMPTY);
   }
 
@@ -878,15 +1106,16 @@ public class TypeService implements SelfMemberClassifier {
    * ресивера-результата вызова {@code Ф().|} и т.п.). Прямой {@code expressionTypesAt}
    * здесь нельзя: он накрыл бы незавершённое {@code Ресивер.Член} и не разрешил член.
    */
-  private TypeSet receiverSegmentTypes(DocumentContext documentContext, Position receiverEnd) {
+  private TypeSet receiverSegmentTypes(DocumentContext documentContext, Position receiverEnd,
+                                      @Nullable ExecutionContext context) {
     var reference = referenceResolver.findReference(documentContext.getUri(), receiverEnd).orElse(null);
-    var fromIndex = reference == null ? TypeSet.EMPTY : typesAt(reference);
+    var fromIndex = reference == null ? TypeSet.EMPTY : typesAt(reference, context);
     // Ссылка на переменную уже дала позиционный ответ — сравнивать не с чем, а расчёт
     // выражения в той же точке был бы вторым таким же проходом по методу.
     if (!fromIndex.isEmpty() && isVariableReference(reference)) {
       return fromIndex;
     }
-    var fromExpression = expressionTypesAt(documentContext, receiverEnd);
+    var fromExpression = expressionTypesAt(documentContext, receiverEnd, context);
     if (fromIndex.isEmpty()) {
       return fromExpression;
     }
@@ -958,8 +1187,7 @@ public class TypeService implements SelfMemberClassifier {
       return Optional.empty();
     }
     var line = lines[position.getLine()];
-    var col = Math.clamp(position.getCharacter(), 0, line.length());
-    var i = col;
+    var i = Math.clamp(position.getCharacter(), 0, line.length());
     while (i > 0 && isIdentChar(line.charAt(i - 1))) {
       i--;
     }
@@ -975,13 +1203,6 @@ public class TypeService implements SelfMemberClassifier {
 
   private static boolean isIdentChar(char c) {
     return Character.isLetterOrDigit(c) || c == '_';
-  }
-
-  /** Все типы из набора конкретны (без {@link TypeRef#ANY} / {@link TypeRef#UNKNOWN}). */
-  private static boolean allConcrete(TypeSet types) {
-    var refs = types.refs();
-    return !refs.isEmpty()
-      && refs.stream().noneMatch(ref -> ref.equals(TypeRef.ANY) || ref.equals(TypeRef.UNKNOWN));
   }
 
   private static boolean isAccessorIdentifier(TerminalNode terminal) {

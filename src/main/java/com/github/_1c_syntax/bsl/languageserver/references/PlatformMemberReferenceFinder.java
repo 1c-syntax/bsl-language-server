@@ -61,7 +61,7 @@ public class PlatformMemberReferenceFinder implements ReferenceFinder {
   @Override
   public Optional<Reference> findReference(URI uri, Position position) {
     // Горячий путь inferencer/hover — без захвата per-document RWLock.
-    return serverContextProvider.getDocumentUnsafeNoLock(uri)
+    return serverContextProvider.getDocumentNoLock(uri)
       .flatMap(document -> typeService.memberAt(document, position)
         .map(member -> toReference(document, uri, member)));
   }
@@ -74,7 +74,7 @@ public class PlatformMemberReferenceFinder implements ReferenceFinder {
    */
   @Override
   public Optional<Reference> findReference(URI uri, TerminalNode terminal) {
-    return serverContextProvider.getDocumentUnsafeNoLock(uri)
+    return serverContextProvider.getDocumentNoLock(uri)
       .flatMap(document -> typeService.memberAt(document, terminal)
         .map(member -> toReference(document, uri, member)));
   }

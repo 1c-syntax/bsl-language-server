@@ -197,11 +197,12 @@
 			<SynchronousPlatformExtensionAndAddInCallUseMode>DontUse</SynchronousPlatformExtensionAndAddInCallUseMode>
 			<InterfaceCompatibilityMode>Taxi</InterfaceCompatibilityMode>
 			<CompatibilityMode>Version8_3_18</CompatibilityMode>
-			<DefaultConstantsForm/>
+			<DefaultConstantsForm>CommonForm.ФормаКонстант</DefaultConstantsForm>
 		</Properties>
 		<ChildObjects>
 			<Language>Русский</Language>
 			<CommonModule>Модуль1</CommonModule>
+			<CommonForm>ФормаКонстант</CommonForm>
 			<Catalog>Справочник1</Catalog>
 			<Catalog>Справочник2</Catalog>
 			<InformationRegister>РегистрСведений1</InformationRegister>

@@ -80,7 +80,7 @@ class TSLintReporterTest {
     TSLintReporter reporter = new TSLintReporter();
 
     // when
-    reporter.report(analysisInfo, Path.of(sourceDir));
+    ReporterTestDriver.report(reporter, analysisInfo, Path.of(sourceDir));
 
     // then
     var mapper = new JsonMapper();

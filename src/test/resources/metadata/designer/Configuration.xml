@@ -187,6 +187,7 @@
 			<Role>Роль1</Role>
 			<Role>Роль2</Role>
 			<Role>ПолныеПрава</Role>
+			<CommonTemplate>ДанныеПечатиРегистрСимволов</CommonTemplate>
 			<CommonModule>ПервыйОбщийМодуль</CommonModule>
 			<CommonModule>КлиентскийОбщийМодуль</CommonModule>
 			<CommonModule>ГлобальныйСерверныйМодуль</CommonModule>

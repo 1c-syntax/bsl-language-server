@@ -185,6 +185,16 @@ class FlowSensitiveVariableTypeTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void typesAfterBrokenCountedLoopAreNotLost() {
+    // given: «Для Х Из Коллекция» без «Каждого» разбирается как счётный цикл без границ.
+    // when
+    var types = at("ПослеСломанногоЦикла = Значение", "ПослеСломанногоЦикла = ".length());
+
+    // then
+    assertThat(qnames(types)).containsExactly("Число");
+  }
+
+  @Test
   void labelMergesTypesFromAllJumps() {
     // given: к метке ведут два пути — переход из ветки и обычное продолжение.
     // when

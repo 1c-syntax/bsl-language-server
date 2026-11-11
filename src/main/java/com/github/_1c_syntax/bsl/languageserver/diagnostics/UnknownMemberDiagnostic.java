@@ -107,12 +107,16 @@ public class UnknownMemberDiagnostic extends AbstractVisitorDiagnostic {
 
   /**
    * Сообщение с именем(-ами) типа ресивера для подсказки, на каком типе члена
-   * не нашлось. Несколько кандидатов union'а склеиваются через запятую.
+   * не нашлось. Несколько кандидатов union'а склеиваются через запятую — по алфавиту:
+   * порядок типов в объединении зависит от того, в каком порядке их собрал вывод, и
+   * от прогона к прогону может меняться, а текст замечания должен быть одним и тем же
+   * (по нему замечания сопоставляют между анализами, например в SonarQube).
    */
   private String memberMessage(String memberName, TypeSet ownerTypes) {
     var typeNames = ownerTypes.refs().stream()
       .map(TypeRef::qualifiedName)
       .distinct()
+      .sorted()
       .collect(Collectors.joining(", "));
     return info.getResourceString("memberMessage", memberName, typeNames);
   }

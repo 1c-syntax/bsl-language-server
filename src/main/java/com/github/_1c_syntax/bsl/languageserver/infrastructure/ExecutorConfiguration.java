@@ -29,6 +29,7 @@ import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.core.task.TaskDecorator;
 import org.springframework.core.task.support.ContextPropagatingTaskDecorator;
+import org.springframework.scheduling.annotation.EnableAsync;
 
 import java.net.URI;
 import java.util.Optional;
@@ -56,8 +57,13 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Остальные исполнители — короткоживущие обработчики запросов LSP без {@code parallelStream()}
  * внутри — реализуются через {@link SimpleAsyncTaskExecutor} в режиме виртуальных потоков
  * ({@code setVirtualThreads(true)}) с {@link TaskDecorator} для прокидывания контекста.
+ * <p>
+ * Методы с {@code @Async} исполняются на исполнителе, названном в аннотации. Исполнитель по
+ * умолчанию не настроен: {@code @Async} без имени ушёл бы на исполнитель, который Spring
+ * выберет сам, и без контекста workspace.
  */
 @Configuration
+@EnableAsync(proxyTargetClass = true)
 public class ExecutorConfiguration {
 
   @Bean
@@ -101,6 +107,12 @@ public class ExecutorConfiguration {
     return createVirtualThreadExecutor(compositeTaskDecorator, "sentry-");
   }
 
+  // Асинхронные обработчики событий: @Async("asyncEventListenerExecutor").
+  @Bean
+  public AsyncTaskExecutor asyncEventListenerExecutor(TaskDecorator compositeTaskDecorator) {
+    return createVirtualThreadExecutor(compositeTaskDecorator, "async-event-listener-");
+  }
+
   // --- ForkJoinPool beans (parallelStream runs inside) ---
   // Per-workspace: worker threads set workspace URI in onStart(),
   // so parallelStream forks always have correct ThreadLocal context.
@@ -109,6 +121,15 @@ public class ExecutorConfiguration {
   @WorkspaceScope(proxyMode = ScopedProxyMode.INTERFACES)
   public ExecutorService populateContextExecutor() {
     return createWorkspaceForkJoinPool("populate-context-");
+  }
+
+  // resolveReturnTypesExecutor — отдельный от populateContextExecutor: проход доразрешения
+  // запускается слушателем события наполнения, то есть изнутри задачи того пула, и класть
+  // в него же собственные задачи означало бы занимать пул, который сейчас занят.
+  @Bean(destroyMethod = "shutdown")
+  @WorkspaceScope(proxyMode = ScopedProxyMode.INTERFACES)
+  public ExecutorService resolveReturnTypesExecutor() {
+    return createWorkspaceForkJoinPool("resolve-return-types-");
   }
 
   // computeConfigurationExecutor — singleton, вызывает MDClasses (не использует ThreadLocal BSL LS)

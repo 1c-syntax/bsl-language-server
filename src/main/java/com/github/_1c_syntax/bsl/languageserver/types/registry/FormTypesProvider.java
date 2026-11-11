@@ -36,6 +36,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.FormKind;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TableDataKind;
 import com.github._1c_syntax.bsl.context.api.Placeholder;
+import com.github._1c_syntax.bsl.mdclasses.CF;
 import com.github._1c_syntax.bsl.mdo.Catalog;
 import com.github._1c_syntax.bsl.mdo.CommonForm;
 import com.github._1c_syntax.bsl.mdo.Document;
@@ -152,6 +153,15 @@ public class FormTypesProvider {
 
   /** Первый параметр обработчика события элемента — сам элемент. */
   private static final BilingualString ELEMENT_PARAMETER = BilingualString.of("Элемент", "Item");
+  private static final BilingualString ELEMENT_PARAMETER_DESCRIPTION = BilingualString.of(
+    "Элемент формы, событие которого обрабатывается.", "The form item whose event is being handled.");
+
+  private static final BilingualString PARAMETERS_PROPERTY =
+    BilingualString.of(FormPlatformTypes.PARAMETERS_PROPERTY_RU, FormPlatformTypes.PARAMETERS_PROPERTY_EN);
+  private static final BilingualString COMMANDS_PROPERTY =
+    BilingualString.of(FormPlatformTypes.COMMANDS_PROPERTY_RU, FormPlatformTypes.COMMANDS_PROPERTY_EN);
+  private static final BilingualString THIS_OBJECT = BilingualString.of(THIS_OBJECT_RU, THIS_OBJECT_EN);
+  private static final BilingualString THIS_FORM = BilingualString.of(THIS_FORM_RU, THIS_FORM_EN);
 
   private final TypeRegistry typeRegistry;
   private final FormParametersResolver formParametersResolver;
@@ -166,6 +176,12 @@ public class FormTypesProvider {
 
   /** Уже обработанные формы — защита от повторной регистрации источников. */
   private final Set<TypeRef> registeredForms = new HashSet<>();
+
+  /**
+   * Корень конфигурации, чьи формы регистрируются. Нужен только на регистрации —
+   * узнать, назначена ли общая форма основной формой самой конфигурации.
+   */
+  private @Nullable CF configuration;
 
   /** Тип на вид элемента формы: база + расширение вида (см. {@link #registerItemKindTypes}). */
 
@@ -186,12 +202,15 @@ public class FormTypesProvider {
    * Регистрирует типы всех форм конфигурации: общих ({@link CommonForm}) и
    * подчинённых объектам ({@link FormOwner#getForms()}).
    *
+   * @param configuration   корень конфигурации — источник ролей общих форм,
+   *                        назначенных основными формами самой конфигурации.
    * @param children        объекты метаданных конфигурации.
    * @param projectLanguage язык исходников проекта — на нём платформа заполняет то,
    *                        что зависит от варианта встроенного языка
    *                        (см. {@link com.github._1c_syntax.bsl.languageserver.context.ServerContext#getScriptVariantLanguage()}).
    */
-  public void register(Iterable<MD> children, Language projectLanguage) {
+  public void register(CF configuration, Iterable<MD> children, Language projectLanguage) {
+    this.configuration = configuration;
     formItemTypes.registerItemKindTypes();
     // Раньше самих форм: правка ложится на типы-расширения, а формы разбирают их
     // контракты событий уже готовыми.
@@ -361,28 +380,26 @@ public class FormTypesProvider {
                                                          @Nullable TypeRef injectedRef) {
     var members = new ArrayList<MemberDescriptor>();
     members.add(FormPlatformTypes.platformProperty(
-      BilingualString.of(kind.itemsPropertyRu(), kind.itemsPropertyEn()), itemsRef, BilingualString.EMPTY));
+      kind.itemsProperty(), itemsRef, BilingualString.EMPTY));
     if (parametersRef != null) {
       members.add(FormPlatformTypes.platformProperty(
-        BilingualString.of(FormPlatformTypes.PARAMETERS_PROPERTY_RU, FormPlatformTypes.PARAMETERS_PROPERTY_EN),
-        parametersRef, BilingualString.EMPTY));
+        PARAMETERS_PROPERTY, parametersRef, BilingualString.EMPTY));
     }
     if (commandsRef != null) {
       members.add(FormPlatformTypes.platformProperty(
-        BilingualString.of(FormPlatformTypes.COMMANDS_PROPERTY_RU, FormPlatformTypes.COMMANDS_PROPERTY_EN),
-        commandsRef, BilingualString.EMPTY));
+        COMMANDS_PROPERTY, commandsRef, BilingualString.EMPTY));
     }
     // У обычной формы `ЭтотОбъект` не существует вовсе: он появляется только в модуле
     // формы объекта — и ведёт на сам объект, чей контекст туда инжечен
     // (см. registerModuleType). У управляемой формы это сама форма.
     if (kind == FormKind.MANAGED || injectedRef != null) {
-      members.add(FormPlatformTypes.platformProperty(BilingualString.of(THIS_OBJECT_RU, THIS_OBJECT_EN),
+      members.add(FormPlatformTypes.platformProperty(THIS_OBJECT,
         injectedRef == null ? formRef : injectedRef, BilingualString.EMPTY));
     }
     // `ЭтаФорма` платформа отдаёт в модуле формы обоих видов: у обычной это штатное
     // имя, у управляемой — устаревший синоним `ЭтотОбъект` (см. UsingThisFormDiagnostic).
     members.add(FormPlatformTypes.platformProperty(
-      BilingualString.of(THIS_FORM_RU, THIS_FORM_EN), formRef, THIS_FORM_DESCRIPTION));
+      THIS_FORM, formRef, THIS_FORM_DESCRIPTION));
     return List.copyOf(members);
   }
 
@@ -550,8 +567,7 @@ public class FormTypesProvider {
    */
   private static MemberDescriptor withElementParameter(MemberDescriptor contract, List<TypeRef> elementTypes) {
     var element = new ParameterDescriptor(ELEMENT_PARAMETER, TypeSet.of(elementTypes), false,
-      BilingualString.of("Элемент формы, событие которого обрабатывается.",
-        "The form item whose event is being handled."), "");
+      ELEMENT_PARAMETER_DESCRIPTION, "");
     if (contract.signatures().isEmpty()) {
       return contract.withSignatures(List.of(
         new SignatureDescriptor(List.of(element), TypeSet.EMPTY, BilingualString.EMPTY)));
@@ -621,7 +637,38 @@ public class FormTypesProvider {
       .map(typeRegistry::resolve)
       .flatMap(Optional::stream)
       .findFirst()
-      .orElse(null);
+      // Общая форма основной реквизит объявляет не всегда: у формы констант его нет
+      // вовсе. Тогда остаётся роль у корня конфигурации.
+      .orElseGet(() -> resolveConfigurationExtension(form, kind));
+  }
+
+  /**
+   * Тип-расширение общей формы по её роли у <b>корня конфигурации</b>: форма,
+   * назначенная основной формой констант, и есть форма констант.
+   * <p>
+   * Роли объекта тут мало: часть основных форм задаётся не у объекта метаданных, а у
+   * самой конфигурации ({@code DefaultConstantsForm} и родственные), и общая форма,
+   * назначенная такой, ничем не отличается от любой другой общей формы — кроме этой
+   * записи в корне.
+   *
+   * @return расширение; {@code null}, если форма ничем не назначена, для её роли
+   *   расширения нет либо самого типа нет в реестре.
+   */
+  private @Nullable TypeRef resolveConfigurationExtension(Form form, FormKind kind) {
+    if (configuration == null) {
+      return null;
+    }
+    var formRef = form.getMdoReference();
+    for (var entry : configuration.getDefaultFormMap().entrySet()) {
+      if (!entry.getValue().equals(formRef)) {
+        continue;
+      }
+      var name = FormPlatformTypes.configurationExtensionTypeName(entry.getKey(), kind);
+      if (name != null) {
+        return typeRegistry.resolve(name).orElse(null);
+      }
+    }
+    return null;
   }
 
   /**
@@ -637,7 +684,8 @@ public class FormTypesProvider {
    */
   private @Nullable TypeRef resolveOrdinaryExtension(Form form, @Nullable MD owner) {
     if (!(owner instanceof FormOwner formOwner)) {
-      return null;
+      // Общая форма объекту не подчинена: назначить её основной может только корень.
+      return resolveConfigurationExtension(form, FormKind.ORDINARY);
     }
     var formRef = form.getMdoReference();
     for (var entry : formOwner.getDefaultFormMap().entrySet()) {
@@ -655,7 +703,8 @@ public class FormTypesProvider {
   /**
    * Прикладной тип, контекст которого платформа инжектит в модуль обычной формы:
    * для формы объекта — сам объект, для формы записи регистра — запись, для формы
-   * набора записей — набор.
+   * набора записей — набор, для основной и дополнительной формы отчёта и обработки —
+   * сам отчёт или обработка.
    * <p>
    * Имя типа собирается из mdoRef владельца ({@code Документ.Документ1} →
    * {@code ДокументОбъект.Документ1}) и проверяется по реестру: какой суффикс

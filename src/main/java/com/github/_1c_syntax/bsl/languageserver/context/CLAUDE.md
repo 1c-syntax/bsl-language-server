@@ -13,6 +13,14 @@
 - **`ServerContext`** — одна рабочая область: карта `URI → DocumentContext`, жизненный цикл
   документов (add/remove/rebuild/clear), кэш метаданных конфигурации 1С (`CF` через `Lazy`,
   Caffeine-кэш общих модулей). Мутации публикуют Spring-события (через AOP).
+  **Подготовка рабочей области идёт в фоне.** Типы конфигурации регистрирует `@Async`-обработчик
+  `WorkspaceAddedEvent` (`ConfigurationTypesProvider`, исполнитель `asyncEventListenerExecutor`).
+  Раньше него `ServerContextProvider` отмечает начало подготовки (`beginPreparation`), а сам
+  обработчик заканчивает её (`finishPreparation`) при любом исходе регистрации. До тех пор `getConfiguration()` при непрочитанных
+  метаданных отвечает пустой конфигурацией, а не ждёт чтения (настоящие — `awaitConfiguration()`),
+  документы, заведённые за это время, потом перепривязываются, `populateContext` ждёт конца
+  подготовки (`awaitPreparation()`). Кто читает типы или метаданные сразу после `addWorkspace`
+  без наполнения (CLI `format`, MCP, тесты), сам зовёт `awaitPreparation()`.
   **`getScriptVariantLanguage()`** — язык исходников проекта (ScriptVariant конфигурации,
   фолбэк на язык сервера). Единственное место этого расчёта: его спрашивают и там, где
   документа нет (регистрация типов), а `DocumentContext` делегирует сюда, добавляя одну
@@ -22,7 +30,10 @@
   - *первичные* (зависят от контента): AST `BSLParser.FileContext`, токены, `SymbolTree`;
   - *вторичные* (кэшируются, сбрасываются при изменении файла): диагностики, метрики,
     `ComplexityData`, данные подавления диагностик, SDBL-запросы;
-  - *инвариантные*: `ModuleType`, MD-объект, `mdoRef`.
+  - *привязка к конфигурации*: `ModuleType`, MD-объект, `mdoRef` — от содержимого не зависят и
+    при изменении файла не сбрасываются. Пересчитываются только у документа, заведённого, пока
+    метаданные ещё читались (`rebindToConfiguration`): дерево символов строится заново по тому
+    же AST, текст заново не разбирается.
   - `freezeComputedData()` / `unfreeze…` управляют сбросом вторичных данных (открытый
     документ — «разморожен» для редактирования; закрытый — «заморожен» ради экономии памяти).
 - **`DocumentChangeExecutor`** — применяет инкрементальные `textDocument/didChange`:
@@ -64,12 +75,30 @@
 ## События — `events/`
 
 Spring `ApplicationEvent`: `ServerContextDocumentAdded/Removed/Closed/ClearedEvent`,
-`DocumentContextContentChangedEvent`, `ServerContextPopulatedEvent`,
-`ConfigurationTypesRegisteredEvent`. Используются downstream-индексами (`references/`, `types/`)
+`DocumentContextContentChangedEvent`, `DocumentContextConfigurationBindingChangedEvent`,
+`ServerContextPopulatedEvent`, `ConfigurationTypesRegisteredEvent`. Используются downstream-индексами (`references/`, `types/`)
 для инвалидации кэшей. События жизненного цикла workspace (`Workspace(Before)Added/RemovedEvent`)
 вынесены в корневой пакет `events` и «похудели» до URI (контекст в payload не носят), чтобы от них
 мог зависеть `configuration`, не образуя цикл `configuration↔context`; подписчики резолвят контекст
 сами через `ServerContextProvider`.
+
+**Разбор документа ≠ правка.** Тот же самый текст перечитывается заново после освобождения
+вторичных данных (в пакетном анализе — у каждого файла). `DocumentContext` держит отпечаток
+разобранного содержимого, переживающий освобождение, и выставляет
+`isContentChangedOnLastRebuild()`; признак уходит в `DocumentContextContentChangedEvent`
+(`isContentChanged()`). Слушатель, чьи записи привязаны к **символам**, по перечитыванию не
+делает ничего: символы построенного заново дерева равны прежним (имя, документ, позиция имени),
+поэтому находятся по старым записям, а снос и сборка заново оставили бы окно, в котором чужой
+поток не находит уже посчитанного (см. ишью 4429). Сбрасываться по перечитыванию обязаны только
+те, чьи ключи — узлы AST: у них ключи после разбора другие.
+
+**Перепривязка — третий вид изменения.** Документ, заведённый до прочтения конфигурации, после
+него перепривязывается (`ServerContext.rebindDocument`): AST тот же, дерево символов построено
+заново, публикуется `DocumentContextConfigurationBindingChangedEvent`. Здесь символы прежним
+**не равны**, если сменился их вид: класс символа входит в `equals`, а обычный метод мог стать
+обработчиком события или конструктором. Поэтому слушатели, чьи записи привязаны к символам или к
+привязке документа, на это событие пересчитывают документ — в том же порядке, что и на правку.
+Индексы на `AbstractDocumentLifecycleClearableIndex` сбрасывают по нему записи документа.
 
 **Эти события публикуются не вручную, а через AOP** — аспект `aop/EventPublisherAspect`
 (AspectJ compile-time weaving) перехватывает вызовы методов-мутаторов `ServerContext`/

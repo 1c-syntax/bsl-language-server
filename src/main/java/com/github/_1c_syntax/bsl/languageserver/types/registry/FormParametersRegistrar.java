@@ -38,6 +38,7 @@ import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormAttribute;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormCommand;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormParameter;
+import com.github._1c_syntax.utils.StringInterner;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
@@ -77,11 +78,19 @@ class FormParametersRegistrar {
   /** Параметр формы записи регистра сведений: ключ записи, открытой на изменение. */
   private static final String SOURCE_RECORD_KEY = "ИсходныйКлючЗаписи";
 
+  /** Параметр обработчика команды — сама команда. */
+  private static final BilingualString COMMAND_PARAMETER = BilingualString.of("Команда", "Command");
+  private static final BilingualString COMMAND_PARAMETER_DESCRIPTION = BilingualString.of(
+    "Команда формы, которой вызван обработчик.", "The form command the handler was invoked by.");
+
   private final TypeRegistry typeRegistry;
   private final FormParametersResolver formParametersResolver;
   private final FormDataTypesRegistrar formDataTypes;
   private final FormTypeFactory typeFactory;
   private final RecorderIndex recorderIndex;
+
+  /** Одни и те же команды есть в тысячах форм, а описание обработчика собирается заново на каждую. */
+  private final StringInterner handlerDescriptions = new StringInterner();
 
   /**
    * Что подставлять в плейсхолдеры параметров обычной формы.
@@ -339,8 +348,8 @@ class FormParametersRegistrar {
         MemberDescriptor.event(action, "", signatures)
           .withBilingualName(FormPlatformTypes.neutral(action))
           .withBilingualDescription(BilingualString.of(
-            "Обработчик команды формы «" + command.getName() + "».",
-            "Handler of the form command \"" + command.getName() + "\".")));
+            handlerDescriptions.intern("Обработчик команды формы «" + command.getName() + "»."),
+            handlerDescriptions.intern("Handler of the form command \"" + command.getName() + "\"."))));
     }
     return List.copyOf(byName.values());
   }
@@ -355,10 +364,7 @@ class FormParametersRegistrar {
       .orElse(TypeSet.EMPTY);
     return new SignatureDescriptor(
       List.of(new ParameterDescriptor(
-        BilingualString.of("Команда", "Command"), commandTypes, false,
-        BilingualString.of("Команда формы, которой вызван обработчик.",
-          "The form command the handler was invoked by."),
-        "")),
+        COMMAND_PARAMETER, commandTypes, false, COMMAND_PARAMETER_DESCRIPTION, "")),
       TypeSet.EMPTY, BilingualString.EMPTY);
   }
 
