@@ -77,6 +77,7 @@ class DiagnosticMetadataMapDeserializerTest {
       "minutesToFix",   // int - primitive
       "activatedByDefault", // boolean - primitive
       "canLocateOnProject", // boolean - primitive
+      "suppressible",   // boolean - primitive, intentionally not overridable
       "extraMinForComplexity" // double - primitive
     );
     

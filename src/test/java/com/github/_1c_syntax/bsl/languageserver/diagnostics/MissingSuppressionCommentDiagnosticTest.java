@@ -39,11 +39,19 @@ class MissingSuppressionCommentDiagnosticTest
   void test() {
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    // Срабатывает на голых подавлениях без пояснения
-    // Не срабатывает на подавлениях с пояснением
-    assertThat(diagnostics).hasSize(2);
+    // Срабатывает на голых подавлениях без пояснения: отдельностоящих и висячих,
+    // в английской и русской формах. Не срабатывает на пояснённых, на -on
+    // и на директивах внутри строковых литералов.
+    assertThat(diagnostics).hasSize(4);
     assertThat(diagnostics, true)
-      .hasRange(0, 0, 0, 12)  // BSLLS-off
-      .hasRange(4, 0, 4, 33); // BSLLS:DeprecatedMethodCall-off
+      .hasRange(0, 0, 0, 12)   // // BSLLS-off
+      .hasRange(4, 0, 4, 33)   // // BSLLS:DeprecatedMethodCall-off
+      .hasRange(8, 7, 8, 40)   // А = 1; // BSLLS:DeprecatedMethodCall-off
+      .hasRange(12, 0, 12, 34); // // BSLLS:DeprecatedMethodCall-выкл
+  }
+
+  @Test
+  void isNotSuppressible() {
+    assertThat(diagnosticInstance.getInfo().isSuppressible()).isFalse();
   }
 }

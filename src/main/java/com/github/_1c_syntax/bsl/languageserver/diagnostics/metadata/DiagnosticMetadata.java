@@ -96,6 +96,15 @@ public @interface DiagnosticMetadata {
   boolean canLocateOnProject() default false;
 
   /**
+   * Признак возможности подавить замечания диагностики комментариями подавления
+   * ({@code // BSLLS:Ключ-off}, {@code // BSLLS-off}).
+   * <p>
+   * Значение {@code false} делает диагностику неподавляемой. Задается только в коде
+   * и не переопределяется через конфигурацию.
+   */
+  boolean suppressible() default true;
+
+  /**
    * Надбавка ко времени исправления замечания за повышенную сложность
    */
   double extraMinForComplexity() default 0;
