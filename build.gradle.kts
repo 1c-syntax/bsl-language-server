@@ -19,7 +19,7 @@ plugins {
     id("io.freefair.aspectj.post-compile-weaving") version "9.8.3"
     id("io.freefair.maven-central.validate-poms") version "9.8.3"
     id("com.github.ben-manes.versions") version "0.67.0"
-    id("org.springframework.boot") version "4.1.0"
+    id("org.springframework.boot") version "4.1.2"
     id("io.spring.dependency-management") version "1.1.7"
     id("io.sentry.jvm.gradle") version "6.26.0"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.2"

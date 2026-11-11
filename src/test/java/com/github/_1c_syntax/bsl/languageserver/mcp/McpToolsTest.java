@@ -34,10 +34,12 @@ import com.github._1c_syntax.bsl.languageserver.mcp.tools.GlobalMemberSearchTool
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.HoverTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.ListWorkspaceFoldersTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.RegisterWorkspaceFolderTool;
+import com.github._1c_syntax.bsl.languageserver.mcp.tools.SymbolTextTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.TypeAtPositionTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.TypeInfoTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.UnregisterWorkspaceFolderTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.TypeMemberDto;
+import com.github._1c_syntax.bsl.languageserver.mcp.dto.SymbolTextDto;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.WorkspaceFolderDto;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -79,6 +81,10 @@ class McpToolsTest {
 
   private static final String SRC_DIR = "src/test/resources/providers";
   private static final String FILE = SRC_DIR + "/callHierarchy.bsl";
+  // Модуль с переменными модуля, вложенными областями и методами в областях.
+  private static final String REGIONS_FILE = SRC_DIR + "/documentSymbol.bsl";
+  // Одноимённая переменная, объявленная через Перем в модуле и в двух процедурах.
+  private static final String SCOPE_FILE = "src/test/resources/mcp/symbolTextScope.bsl";
   private static final URI WORKSPACE_URI = Absolute.path(SRC_DIR).toUri();
   private static final String WORKSPACE_FOLDER = WORKSPACE_URI.toString();
 
@@ -116,6 +122,8 @@ class McpToolsTest {
   private RegisterWorkspaceFolderTool registerWorkspaceFolderTool;
   @Autowired
   private UnregisterWorkspaceFolderTool unregisterWorkspaceFolderTool;
+  @Autowired
+  private SymbolTextTool symbolTextTool;
   @Autowired
   private McpRootsChangeConsumer rootsChangeConsumer;
   @Autowired
@@ -204,6 +212,216 @@ class McpToolsTest {
     assertThat(result.target().name()).isEqualTo("ПерваяФункция");
     assertThat(result.incoming()).isNotEmpty();
     assertThat(result.outgoing()).isNotEmpty();
+  }
+
+  @Test
+  void symbolTextReturnsMethodByName() {
+    var result = symbolTextTool.symbolText(FILE, "перваяфункция", null, null, null);
+
+    assertThat(result.matchesCount()).isEqualTo(1);
+    var match = result.matches().get(0);
+    assertThat(match.name()).isEqualTo("ПерваяФункция");
+    assertThat(match.kind()).isEqualTo("Method");
+    assertThat(match.scope()).isEqualTo("$module");
+    assertThat(match.range().startLine()).isEqualTo(DECLARATION_LINE);
+    assertThat(match.text()).startsWith("Функция ПерваяФункция()").endsWith("КонецФункции");
+    assertThat(match.description()).isNull();
+  }
+
+  @Test
+  void symbolTextByNameReturnsOnlyDeclaredVariables() {
+    // «А» объявлена через Перем в ПерваяФункция (строка 7) и появляется присваиванием в двух
+    // процедурах, «Б» — только присваиванием. Как и в document_symbols, по имени отдаются только
+    // объявления.
+    var declared = symbolTextTool.symbolText(FILE, "А", null, null, null);
+    var assignedOnly = symbolTextTool.symbolText(FILE, "Б", null, null, null);
+
+    assertThat(declared.matches()).singleElement().satisfies(match -> {
+      assertThat(match.kind()).isEqualTo("Variable");
+      assertThat(match.scope()).isEqualTo("ПерваяФункция");
+      assertThat(match.range().startLine()).isEqualTo(7);
+    });
+    assertThat(assignedOnly.matches()).isEmpty();
+  }
+
+  @Test
+  void symbolTextByNameReturnsEveryDeclarationWithItsScope() {
+    // «Счетчик» объявлена через Перем в модуле и в каждой из трёх процедур.
+    workspaceBootstrap.index(Absolute.path("src/test/resources/mcp"));
+
+    var result = symbolTextTool.symbolText(SCOPE_FILE, "Счетчик", null, null, null);
+
+    assertThat(result.matches()).extracting(SymbolTextDto::scope)
+      .containsExactly("$module", "Увеличить", "Сбросить", "module");
+  }
+
+  @Test
+  void symbolTextByNameAndScopeKeepsDeclarationsOfThatScope() {
+    workspaceBootstrap.index(Absolute.path("src/test/resources/mcp"));
+
+    var inMethod = symbolTextTool.symbolText(SCOPE_FILE, "Счетчик", "сбросить", null, null);
+    var inModule = symbolTextTool.symbolText(SCOPE_FILE, "Счетчик", "$Module", null, null);
+
+    assertThat(inMethod.matches()).singleElement().satisfies(match -> {
+      assertThat(match.scope()).isEqualTo("Сбросить");
+      assertThat(match.range().startLine()).isEqualTo(8);
+    });
+    assertThat(inModule.matches()).singleElement().satisfies(match -> {
+      assertThat(match.scope()).isEqualTo("$module");
+      assertThat(match.range().startLine()).isZero();
+    });
+  }
+
+  @Test
+  void symbolTextScopeTellsMethodNamedModuleFromModuleLevel() {
+    // Метод «module» объявляет свою «Счетчик»: его имя в scope отбирает только её, а уровень модуля —
+    // только служебное значение $module.
+    workspaceBootstrap.index(Absolute.path("src/test/resources/mcp"));
+
+    var inMethodModule = symbolTextTool.symbolText(SCOPE_FILE, "Счетчик", "module", null, null);
+    var inModule = symbolTextTool.symbolText(SCOPE_FILE, "Счетчик", "$module", null, null);
+
+    assertThat(inMethodModule.matches()).singleElement().satisfies(match -> {
+      assertThat(match.scope()).isEqualTo("module");
+      assertThat(match.range().startLine()).isEqualTo(13);
+    });
+    assertThat(inModule.matches()).singleElement().satisfies(match -> {
+      assertThat(match.scope()).isEqualTo("$module");
+      assertThat(match.range().startLine()).isZero();
+    });
+  }
+
+  @Test
+  void symbolTextScopeCoversRegionsAndMethods() {
+    // В documentSymbol.bsl переменная «А» и область «А» объявлены на уровне модуля,
+    // ВнутренняяОбласть1 лежит внутри метода СОбластью.
+    var moduleLevel = symbolTextTool.symbolText(REGIONS_FILE, "А", "$module", null, null);
+    var regionInMethod = symbolTextTool.symbolText(REGIONS_FILE, "ВнутренняяОбласть1", null, null, null);
+    var methodAsScope = symbolTextTool.symbolText(REGIONS_FILE, "ВнутренняяОбласть1", "СОбластью", null, null);
+
+    assertThat(moduleLevel.matches()).extracting(SymbolTextDto::kind).containsExactly("Variable", "Namespace");
+    assertThat(regionInMethod.matches()).extracting(SymbolTextDto::scope).containsExactly("СОбластью");
+    assertThat(methodAsScope.matches()).hasSize(1);
+  }
+
+  @Test
+  void symbolTextRejectsScopeThatIsNotAMethodOfTheFile() {
+    assertThatThrownBy(() -> symbolTextTool.symbolText(REGIONS_FILE, "Г", "НетТакогоМетода", null, null))
+      .isInstanceOf(IllegalArgumentException.class)
+      .hasMessageContaining("No method `НетТакогоМетода`");
+  }
+
+  @Test
+  void symbolTextByPositionReturnsMethodContainingIt() {
+    // Строка 8 (zero-based) — «Б = 1;» внутри ПерваяФункция: и начало строки, и имя переменной,
+    // появившейся присваиванием, относятся к телу метода.
+    var lineStart = symbolTextTool.symbolText(FILE, null, null, 8, null);
+    var assignedVariable = symbolTextTool.symbolText(FILE, null, null, 8, 4);
+
+    assertThat(lineStart.matches()).extracting(SymbolTextDto::name).containsExactly("ПерваяФункция");
+    assertThat(assignedVariable.matches()).extracting(SymbolTextDto::name).containsExactly("ПерваяФункция");
+  }
+
+  @Test
+  void symbolTextByPositionReturnsVariableOnlyOnItsName() {
+    // Строка 0 — «Перем А;» на уровне модуля: диапазон переменной начинается с имени.
+    var onName = symbolTextTool.symbolText(REGIONS_FILE, null, null, 0, 6);
+    var lineStart = symbolTextTool.symbolText(REGIONS_FILE, null, null, 0, null);
+
+    assertThat(onName.matches()).singleElement().satisfies(match -> {
+      assertThat(match.name()).isEqualTo("А");
+      assertThat(match.kind()).isEqualTo("Variable");
+      assertThat(match.scope()).isEqualTo("$module");
+    });
+    assertThat(lineStart.matches()).isEmpty();
+  }
+
+  @Test
+  void symbolTextByPositionReturnsRegionOnlyOnItsName() {
+    // Строка 15 — «#Область А», строка 20 — пустая строка внутри области «А» вне её методов.
+    var onName = symbolTextTool.symbolText(REGIONS_FILE, null, null, 15, 9);
+    var inside = symbolTextTool.symbolText(REGIONS_FILE, null, null, 20, 0);
+
+    assertThat(onName.matches()).singleElement().satisfies(match -> {
+      assertThat(match.name()).isEqualTo("А");
+      assertThat(match.kind()).isEqualTo("Namespace");
+      assertThat(match.range().startLine()).isEqualTo(15);
+      // Диапазон области в дереве символов начинается после «#», как и в document_symbols.
+      assertThat(match.text()).startsWith("Область А").endsWith("#КонецОбласти");
+    });
+    assertThat(inside.matches()).isEmpty();
+  }
+
+  @Test
+  void symbolTextByPositionReturnsMostNestedSymbol() {
+    // Строка 23 — объявление ВложеннаяВБ внутри области «Б», вложенной в область «А».
+    var method = symbolTextTool.symbolText(REGIONS_FILE, null, null, 23, null);
+    // Строка 38 — «#Область ВнутренняяОбласть2» внутри ВнутренняяОбласть1 внутри метода СОбластью.
+    var regionName = symbolTextTool.symbolText(REGIONS_FILE, null, null, 38, 18);
+    var regionLineStart = symbolTextTool.symbolText(REGIONS_FILE, null, null, 38, 0);
+    // Строка 11 — «Перем Г;» внутри метода СПерем.
+    var variable = symbolTextTool.symbolText(REGIONS_FILE, null, null, 11, 10);
+    var variableLineStart = symbolTextTool.symbolText(REGIONS_FILE, null, null, 11, 0);
+
+    assertThat(method.matches()).extracting(SymbolTextDto::name).containsExactly("ВложеннаяВБ");
+    assertThat(regionName.matches()).extracting(SymbolTextDto::name).containsExactly("ВнутренняяОбласть2");
+    assertThat(regionLineStart.matches()).extracting(SymbolTextDto::name).containsExactly("СОбластью");
+    assertThat(variable.matches()).extracting(SymbolTextDto::name).containsExactly("Г");
+    assertThat(variable.matches()).extracting(SymbolTextDto::scope).containsExactly("СПерем");
+    assertThat(variableLineStart.matches()).extracting(SymbolTextDto::name).containsExactly("СПерем");
+  }
+
+  @Test
+  void symbolTextByPositionDistinguishesVariablesOfOneDeclaration() {
+    // Строка 2 — «Перем Б, В;», строка 12 — «Перем Д,Е;» внутри СПерем.
+    var first = symbolTextTool.symbolText(REGIONS_FILE, null, null, 2, 6);
+    var second = symbolTextTool.symbolText(REGIONS_FILE, null, null, 2, 9);
+    var local = symbolTextTool.symbolText(REGIONS_FILE, null, null, 12, 12);
+
+    assertThat(first.matches()).extracting(SymbolTextDto::name).containsExactly("Б");
+    assertThat(second.matches()).extracting(SymbolTextDto::name).containsExactly("В");
+    assertThat(local.matches()).extracting(SymbolTextDto::name).containsExactly("Е");
+  }
+
+  @Test
+  void symbolTextReturnsNoMatchesForPositionOutsideSymbols() {
+    // Строка 50 — «А = 0;» в теле модуля вне областей и методов.
+    var result = symbolTextTool.symbolText(REGIONS_FILE, null, null, 50, 0);
+
+    assertThat(result.matchesCount()).isZero();
+    assertThat(result.matches()).isEmpty();
+  }
+
+  @Test
+  void symbolTextRejectsNegativePosition() {
+    assertThatThrownBy(() -> symbolTextTool.symbolText(FILE, null, null, -1, null))
+      .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> symbolTextTool.symbolText(FILE, null, null, 0, -1))
+      .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void symbolTextReturnsDescriptionCommentOfMethod() {
+    var result = symbolTextTool.symbolText(FILE, "ВтораяФункция", null, null, null);
+
+    // Описание — строки комментария над объявлением, как их отдаёт MethodDescription.
+    assertThat(result.matches()).singleElement()
+      .extracting(SymbolTextDto::description)
+      .isEqualTo("// Устарела.\n//");
+  }
+
+  @Test
+  void symbolTextReturnsNoMatchesForUnknownName() {
+    var result = symbolTextTool.symbolText(FILE, "НетТакогоМетода", null, null, null);
+
+    assertThat(result.matchesCount()).isZero();
+    assertThat(result.matches()).isEmpty();
+  }
+
+  @Test
+  void symbolTextRequiresNameOrLine() {
+    assertThatThrownBy(() -> symbolTextTool.symbolText(FILE, null, null, null, null))
+      .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
