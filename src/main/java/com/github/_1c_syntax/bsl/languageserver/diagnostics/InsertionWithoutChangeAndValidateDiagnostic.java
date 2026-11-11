@@ -80,6 +80,11 @@ public class InsertionWithoutChangeAndValidateDiagnostic extends AbstractDiagnos
 
       var methodSymbol = method.get();
 
+      // Директива между аннотациями и объявлением метода стоит до его тела.
+      if (directive.getLine() - 1 <= methodSymbol.getSubNameRange().getEnd().getLine()) {
+        continue;
+      }
+
       // Методу с несколькими директивами достаточно одной диагностики.
       if (hasChangeAndValidate(methodSymbol) || !reportedMethods.add(methodSymbol)) {
         continue;
