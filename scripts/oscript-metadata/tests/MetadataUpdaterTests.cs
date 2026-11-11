@@ -25,6 +25,38 @@ using Xunit;
 public sealed class MetadataUpdaterTests
 {
     [Fact]
+    public void SourceFreeExportIsRejectedWithoutChangingEitherResource()
+    {
+        var directory = Directory.CreateTempSubdirectory("bsl-oscript-metadata-").FullName;
+        var typesFile = Path.Combine(directory, "builtin-oscript-platform-types.json");
+        var globalsFile = Path.Combine(directory, "builtin-oscript-globals.json");
+        var input = Path.Combine(directory, "runtime.json");
+        var basic = Path.Combine(directory, "basic.json");
+        try
+        {
+            File.WriteAllText(typesFile, "[]");
+            File.WriteAllText(globalsFile, """{"functions":[{"name":"Intrinsic","signatures":[]}],"variables":[]}""");
+            File.WriteAllText(input, "[]");
+            File.WriteAllText(basic, "{}");
+            var beforeTypes = File.ReadAllBytes(typesFile);
+            var beforeGlobals = File.ReadAllBytes(globalsFile);
+
+            var error = Assert.Throws<InvalidOperationException>(() => MetadataUpdater.Update(input, directory, basic));
+
+            Assert.Contains("matching OneScript source directory", error.Message);
+            Assert.Equal(beforeTypes, File.ReadAllBytes(typesFile));
+            Assert.Equal(beforeGlobals, File.ReadAllBytes(globalsFile));
+        }
+        finally
+        {
+            Assert.Equal(Path.GetFullPath(Path.GetTempPath()).TrimEnd(Path.DirectorySeparatorChar),
+                Path.GetDirectoryName(Path.GetFullPath(directory)));
+            Assert.StartsWith("bsl-oscript-metadata-", Path.GetFileName(directory));
+            Directory.Delete(directory, true);
+        }
+    }
+
+    [Fact]
     public void EnumNamesKeepCuratedDescriptionsAndCorrectEnglishPairs()
     {
         Regenerate("""
@@ -326,7 +358,10 @@ public sealed class MetadataUpdaterTests
         {
             File.WriteAllText(typesFile, types);
             File.WriteAllText(globalsFile, globals);
-            File.WriteAllText(input, runtime);
+            var contexts = JsonNode.Parse(runtime)!.AsArray();
+            if (!contexts.OfType<JsonObject>().Any(context => Text(context["name"]?["Ru"]) == "$compiler"))
+                contexts.Add(JsonNode.Parse("""{"name":{"Ru":"$compiler","En":""},"global":true,"intrinsicNames":[]}"""));
+            File.WriteAllText(input, contexts.ToJsonString());
             File.WriteAllText(basic, "{}");
 
             MetadataUpdater.Update(input, directory, basic);
