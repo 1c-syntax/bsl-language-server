@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794409199655,
+  "lastUpdate": 1794412122171,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -47368,6 +47368,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.6951934104106128",
             "extra": "mean: 90.59883618354797 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Kirill Chernenko",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "5759d3fdf6fba7f52e1769f6b59d5a1fa0d1c4ac",
+          "message": "Merge pull request #4876 from 1c-syntax/codex/20261028-09-keywords\n\nfix(completion): канонические ключевые слова по языку и позиции",
+          "timestamp": "2026-11-11T11:45:35+01:00",
+          "tree_id": "73497754bfc6e10a8f58f36969d4309bd001a291",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/5759d3fdf6fba7f52e1769f6b59d5a1fa0d1c4ac"
+        },
+        "date": 1794412090557,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 87.44992367426555,
+            "unit": "sec",
+            "range": "stddev: 2.1288687852800026",
+            "extra": "mean: 87.44992367426555 sec\nrounds: 3"
           }
         ]
       }
