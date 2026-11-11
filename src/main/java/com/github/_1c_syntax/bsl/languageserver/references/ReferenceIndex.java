@@ -376,10 +376,34 @@ public class ReferenceIndex {
                                                 String variableName,
                                                 Range range,
                                                 OccurrenceType occurrenceType) {
+    return variableOccurrence(uri, mdoRef, moduleType, methodName, variableName, range, occurrenceType,
+      referenceSymbolInterner);
+  }
+
+  /**
+   * Временный интернер локальных ключей документа, сохраняющий их экземпляры при переиндексации.
+   *
+   * @param uri документ, чьи текущие вхождения задают канонические ключи.
+   * @return интернер для одного построения набора вхождений документа.
+   */
+  GenericInterner<Symbol> localVariableInterner(URI uri) {
+    var symbols = new GenericInterner<Symbol>();
+    locationRepository.getSymbolOccurrencesByLocationUri(uri)
+      .map(SymbolOccurrence::symbol)
+      .filter(symbol -> symbol.symbolKind() == SymbolKind.Variable && !symbol.scopeName().isEmpty()
+        && !SELF_MEMBER_SCOPE.equals(symbol.scopeName()))
+      .forEach(symbols::intern);
+    return symbols;
+  }
+
+  /** Построить вхождение переменной с заданным интернером ключей. */
+  SymbolOccurrence variableOccurrence(URI uri, String mdoRef, ModuleType moduleType, String methodName,
+                                     String variableName, Range range, OccurrenceType occurrenceType,
+                                     GenericInterner<Symbol> symbols) {
     var methodNameCanonical = stringInterner.intern(methodName.toLowerCase(Locale.ENGLISH));
     var variableNameCanonical = stringInterner.intern(variableName.toLowerCase(Locale.ENGLISH));
 
-    var symbol = referenceSymbolInterner.intern(Symbol.builder()
+    var symbol = symbols.intern(Symbol.builder()
       .mdoRef(mdoRef)
       .moduleType(moduleType)
       .scopeName(methodNameCanonical)

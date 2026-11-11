@@ -31,7 +31,9 @@ import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocu
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
+import com.github._1c_syntax.bsl.languageserver.references.model.LocationRepository;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrenceRepository;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -68,6 +70,42 @@ class ReferenceIndexFillerTest extends AbstractServerContextAwareTest {
   private ApplicationEventPublisher eventPublisher;
   @Autowired
   private GlobalScopeProvider globalScopeProvider;
+  @Autowired
+  private LocationRepository locations;
+  @Autowired
+  private SymbolOccurrenceRepository occurrences;
+
+  @Test
+  void changedTextKeepsCanonicalLocalKeysInBothRepositories() {
+    // given
+    initServerContext(PATH_TO_METADATA);
+    var file = new File(PATH_TO_METADATA, "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
+    var source = """
+      Procedure Local()
+        LocalValue = 1;
+        Message(LocalValue);
+        Message(LocalValue);
+      EndProcedure
+      """;
+    var document = TestUtils.getDocumentContext(Absolute.uri(file), source, context);
+    referenceIndexFiller.fill(document);
+    var key = locations.getSymbolOccurrencesByLocationUri(document.getUri())
+      .map(occurrence -> occurrence.symbol())
+      .filter(symbol -> symbol.symbolName().equals("localvalue"))
+      .findFirst().orElseThrow();
+
+    // when
+    context.rebuildDocument(document, "\n" + source, 1);
+    referenceIndexFiller.fill(document);
+
+    // then
+    var replacements = locations.getSymbolOccurrencesByLocationUri(document.getUri())
+      .filter(occurrence -> occurrence.symbol().equals(key)).toList();
+    assertThat(replacements).hasSize(2)
+      .allSatisfy(occurrence -> assertThat(occurrence.symbol()).isSameAs(key));
+    assertThat(occurrences.getAllBySymbol(key)).containsExactlyInAnyOrderElementsOf(replacements)
+      .allSatisfy(occurrence -> assertThat(occurrence.symbol()).isSameAs(key));
+  }
 
   @Test
   void configurationTypesRegisteredAfterDocumentIsReleasedDoesNotReadIt() {

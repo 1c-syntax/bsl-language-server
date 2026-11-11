@@ -34,6 +34,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymb
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
+import com.github._1c_syntax.bsl.languageserver.references.model.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrence;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
@@ -50,6 +51,7 @@ import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.types.ModuleType;
+import com.github._1c_syntax.utils.GenericInterner;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
@@ -227,6 +229,7 @@ public class ReferenceIndexFiller {
   private final class BatchingSink {
 
     private final List<SymbolOccurrence> batch;
+    private @Nullable GenericInterner<Symbol> localVariables;
 
     void addMethodCall(URI uri, String mdoRef, ModuleType moduleType, String symbolName, Range range) {
       batch.add(index.methodCallOccurrence(uri, mdoRef, moduleType, symbolName, range));
@@ -238,7 +241,17 @@ public class ReferenceIndexFiller {
 
     void addVariableUsage(URI uri, String mdoRef, ModuleType moduleType, String methodName,
                           String variableName, Range range, OccurrenceType occurrenceType) {
-      batch.add(index.variableOccurrence(uri, mdoRef, moduleType, methodName, variableName, range, occurrenceType));
+      if (methodName.isEmpty()) {
+        batch.add(index.variableOccurrence(uri, mdoRef, moduleType, methodName, variableName, range, occurrenceType));
+        return;
+      }
+      var symbols = localVariables;
+      if (symbols == null) {
+        symbols = index.localVariableInterner(uri);
+        localVariables = symbols;
+      }
+      batch.add(index.variableOccurrence(uri, mdoRef, moduleType, methodName, variableName, range, occurrenceType,
+        symbols));
     }
 
     void addSelfMemberUsage(URI uri, String mdoRef, ModuleType moduleType, SymbolKind symbolKind,
