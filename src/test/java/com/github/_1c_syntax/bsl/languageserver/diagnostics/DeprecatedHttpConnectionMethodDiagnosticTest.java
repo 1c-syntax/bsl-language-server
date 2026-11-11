@@ -79,11 +79,11 @@ class DeprecatedHttpConnectionMethodDiagnosticTest
   @ParameterizedTest
   @ValueSource(strings = {
     "ВызватьHTTPМетод", "CallHTTPMethod",
-    "Записать", "Write",
-    "Изменить", "Change",
-    "ОтправитьДляОбработки", "SendForProcessing",
+    "Записать", "Put",
+    "Изменить", "Patch",
+    "ОтправитьДляОбработки", "Post",
     "Получить", "Get",
-    "ПолучитьЗаголовки", "GetHeaders",
+    "ПолучитьЗаголовки", "Head",
     "Удалить", "Delete"
   })
   void reportsClientCallOnHttpConnection(String methodName) {
