@@ -70,8 +70,9 @@ public class SymbolTextTool {
    * регистра; {@code scope} оставляет из них объявленные в указанном методе или, при значении
    * {@code $module}, на уровне модуля. По позиции возвращается символ, на имени которого она стоит, иначе
    * самый вложенный метод или переменная, содержащие её: области по позиции находятся только по имени.
-   * У каждого символа указано, где он объявлен ({@code scope}), у метода дополнительно возвращается
-   * текст комментария-описания над объявлением. Текст берётся из свежего разбора документа
+   * У каждого символа указано, где он объявлен ({@code scope}), и диапазон его имени
+   * ({@code selectionRange}), у метода дополнительно возвращается текст комментария-описания над
+   * объявлением. Текст берётся из свежего разбора документа
    * ({@link McpDocumentReader#analyze}).
    *
    * @param file      Путь к файлу.
@@ -92,8 +93,8 @@ public class SymbolTextTool {
       + "such symbol with that name; `scope` keeps the ones declared in the given method, or at the module "
       + "level with `$module`. By zero-based `line` and `character`: the symbol whose name is at the position, "
       + "otherwise the innermost method or variable containing it (regions only by their name). Each match "
-      + "carries `scope`: the method it is declared in, or `$module`. For methods the description comment "
-      + "above the declaration is returned too.",
+      + "carries `scope`: the method it is declared in, or `$module`, and the `selectionRange` of its name. For "
+      + "methods the description comment above the declaration is returned too.",
     // Output schema disabled: Spring AI generates a non-nullable schema that rejects null DTO
     // fields (here — nullable description). Known upstream bug, open as of 2.0.0-M6:
     // https://github.com/spring-projects/spring-ai/issues/4825
@@ -205,6 +206,7 @@ public class SymbolTextTool {
       symbol.getSymbolKind().name(),
       scopeOf(symbol),
       RangeDto.from(range),
+      RangeDto.from(symbol.getSelectionRange()),
       documentContext.getText(range),
       description
     );

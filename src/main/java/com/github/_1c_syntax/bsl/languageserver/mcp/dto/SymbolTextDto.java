@@ -30,6 +30,7 @@ import org.jspecify.annotations.Nullable;
  * @param kind Вид символа ({@link org.eclipse.lsp4j.SymbolKind}).
  * @param scope Где объявлен символ: имя метода или {@code $module} для уровня модуля.
  * @param range Диапазон символа в файле.
+ * @param selectionRange Диапазон имени в объявлении.
  * @param text Текст диапазона символа.
  * @param description Текст комментария-описания над объявлением метода; {@code null}, если описания нет
  *   или символ не метод.
@@ -39,6 +40,7 @@ public record SymbolTextDto(
   String kind,
   String scope,
   RangeDto range,
+  RangeDto selectionRange,
   String text,
   @Nullable String description
 ) {
