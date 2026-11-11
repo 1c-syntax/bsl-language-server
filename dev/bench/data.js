@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794383182145,
+  "lastUpdate": 1794395019416,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -47213,6 +47213,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.714937069295792",
             "extra": "mean: 89.32762964566548 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "fe83a6bb0e3794cec088fe0c57c6ae7b12d2185c",
+          "message": "Merge pull request #4917 from 1c-syntax/fix/oscript-builtin-metadata-20261108\n\nfix(oscript): актуальные типы, алиасы и вариадические сигнатуры",
+          "timestamp": "2026-11-11T11:15:01+01:00",
+          "tree_id": "b7901ecf996f886860c8da70a7a702621fc9e9d3",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/fe83a6bb0e3794cec088fe0c57c6ae7b12d2185c"
+        },
+        "date": 1794394987645,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 90.10555267333984,
+            "unit": "sec",
+            "range": "stddev: 1.9609178488892312",
+            "extra": "mean: 90.10555267333984 sec\nrounds: 3"
           }
         ]
       }
