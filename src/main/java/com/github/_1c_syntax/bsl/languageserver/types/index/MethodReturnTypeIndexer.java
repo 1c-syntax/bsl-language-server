@@ -187,12 +187,35 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * Используется обычный проход индекса с ограничением числа одновременно загруженных документов.
    * Смена настроек ждёт завершения активного прохода: его финальная очистка очереди
    * не должна стереть новый план пересчёта. Рабочие задачи прохода этот монитор не берут.
+   * Допуск фоновой работы берётся до монитора индекса: проход наполнения уже держит
+   * такой допуск, когда входит в индекс, и остановка не должна замыкать порядок блокировок.
    *
    * @param event новые настройки рабочей области.
    */
   @Order(Ordered.HIGHEST_PRECEDENCE + 100)
   @EventListener
-  public synchronized void handleConfigurationChanged(LanguageServerConfigurationChangedEvent event) {
+  public void handleConfigurationChanged(LanguageServerConfigurationChangedEvent event) {
+    var workspace = WorkspaceContextHolder.get();
+    var context = workspace == null ? null : serverContextProvider.getAllContexts().get(workspace);
+    if (context == null) {
+      applyCompilationSettings(event, null);
+    } else {
+      context.runBackgroundWork(() -> applyCompilationSettings(event, context));
+    }
+  }
+
+  /**
+   * Обновить настройки и план пересчёта под монитором индекса.
+   *
+   * @param event новые настройки.
+   * @param context рабочая область с уже полученным допуском фоновой работы; {@code null} вне области.
+   */
+  private synchronized void applyCompilationSettings(
+    LanguageServerConfigurationChangedEvent event, @Nullable ServerContext context
+  ) {
+    if (context != null && context.isBackgroundWorkStopped()) {
+      return;
+    }
     var enabled = event.getSource().isSupportThickClientFileMode();
     if (enabled == supportThickClientFileMode) {
       return;
@@ -204,8 +227,6 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     computedAt.clear();
     changedAt.clear();
     symbolTypeIndex.clearInferredReturnTypes();
-    var workspace = WorkspaceContextHolder.get();
-    var context = workspace == null ? null : serverContextProvider.getAllContexts().get(workspace);
     if (context != null && !context.isClearing() && !maintenance && !pending.isEmpty()) {
       handleServerContextPopulated(new ServerContextPopulatedEvent(context));
     }
@@ -361,11 +382,13 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     } finally {
       maintenance = false;
       pending.clear();
-      progressReporter.endProgress(getMessage("resolveReturnTypesDone"));
+      progressReporter.endProgress(serverContext.isBackgroundWorkStopped() ? "" : getMessage("resolveReturnTypesDone"));
     }
-    LOGGER.info(
-      "Return types resolved in {} ms: {} deferred methods, {} document parse attempts of {} documents",
-      (System.nanoTime() - startedAt) / 1_000_000, deferred, rebuilds.total(), rebuilds.distinct());
+    if (!serverContext.isBackgroundWorkStopped()) {
+      LOGGER.info(
+        "Return types resolved in {} ms: {} deferred methods, {} document parse attempts of {} documents",
+        (System.nanoTime() - startedAt) / 1_000_000, deferred, rebuilds.total(), rebuilds.distinct());
+    }
   }
 
   /**
@@ -1396,6 +1419,9 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       var lock = serverContext.getDocumentLock(documentContext.getUri()).writeLock();
       lock.lock();
       try {
+        if (serverContext.isBackgroundWorkStopped()) {
+          return false;
+        }
         if (isReadable(documentContext)) {
           return false;
         }
@@ -1523,6 +1549,9 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     }
     lock.writeLock().lock();
     try {
+      if (serverContext.isBackgroundWorkStopped()) {
+        return false;
+      }
       // Пока ждали блокировку, документ мог догрузить другой поток: тогда разбирать его
       // заново не надо, а освобождать — тем более, он сейчас кому-то нужен.
       if (isReadable(documentContext)) {

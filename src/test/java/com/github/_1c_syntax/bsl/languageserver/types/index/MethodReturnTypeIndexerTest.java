@@ -41,6 +41,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.utils.Absolute;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,6 +49,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
+import org.springframework.beans.factory.support.StaticListableBeanFactory;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -61,6 +63,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.List;
 import java.util.Set;
@@ -77,10 +80,12 @@ import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -103,6 +108,7 @@ class MethodReturnTypeIndexerTest {
   private ExecutorService resolveExecutor;
   private LanguageServerConfiguration languageConfiguration;
   private ServerContextProvider serverContextProvider;
+  private WorkDoneProgressHelper.WorkDoneProgressReporter progressReporter;
 
   private DocumentContext source;
   private DocumentContext consumer;
@@ -121,10 +127,13 @@ class MethodReturnTypeIndexerTest {
     resolveExecutor = Executors.newSingleThreadExecutor();
     languageConfiguration = new LanguageServerConfiguration();
     serverContextProvider = mock(ServerContextProvider.class);
+    var progressHelper = mock(WorkDoneProgressHelper.class);
+    progressReporter = mock(WorkDoneProgressHelper.WorkDoneProgressReporter.class);
+    when(progressHelper.createProgress(anyInt(), anyString())).thenReturn(progressReporter);
     indexer = new MethodReturnTypeIndexer(
       inferencer,
       symbolTypeIndex,
-      mock(WorkDoneProgressHelper.class, RETURNS_DEEP_STUBS),
+      progressHelper,
       configuration,
       languageConfiguration, serverContextProvider,
       resolveExecutor
@@ -159,6 +168,10 @@ class MethodReturnTypeIndexerTest {
     indexer.captureCompilationSettings();
     indexer.computeIfAbsent(sourceMethod, () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.of(), true));
     var serverContext = serverContextOf(source);
+    doAnswer(invocation -> {
+      invocation.<Runnable>getArgument(0).run();
+      return true;
+    }).when(serverContext).runBackgroundWork(any());
     var workspace = URI.create("file:///settings-workspace");
     when(serverContextProvider.getAllContexts()).thenReturn(Map.of(workspace, serverContext));
     var started = new CountDownLatch(1);
@@ -201,6 +214,102 @@ class MethodReturnTypeIndexerTest {
     verify(symbolTypeIndex).clearInferredReturnTypes();
     verify(inferencer, times(2)).computeReturnTypes(sourceMethod);
     assertThat(symbolTypeIndex.getReturnTypes(sourceMethod)).isEqualTo(NUMBER);
+  }
+
+  @Test
+  void configurationTriggeredPassHoldsBackgroundWorkUntilItEnds() throws Exception {
+    var serverContext = contextWithBackgroundWork();
+    var workspace = URI.create("file:///configuration-background-work");
+    serverContext.setWorkspaceUri(workspace);
+    when(serverContextProvider.getAllContexts()).thenReturn(Map.of(workspace, serverContext));
+    indexer.captureCompilationSettings();
+    indexer.computeIfAbsent(sourceMethod, () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.of(), true));
+    var entered = new CountDownLatch(1);
+    var release = new CountDownLatch(1);
+    when(inferencer.computeReturnTypes(sourceMethod)).thenAnswer(invocation -> {
+      entered.countDown();
+      assertThat(release.await(10, SECONDS)).isTrue();
+      return new ComputedReturnTypes(NUMBER, Set.of(), false);
+    });
+
+    try (var controls = Executors.newFixedThreadPool(2)) {
+      var change = controls.submit(() -> {
+        try (var scope = WorkspaceContextHolder.forUri(workspace, "configuration-background-work")) {
+          languageConfiguration.setSupportThickClientFileMode(!languageConfiguration.isSupportThickClientFileMode());
+          indexer.handleConfigurationChanged(new LanguageServerConfigurationChangedEvent(languageConfiguration));
+        }
+      });
+      var stoppingThread = new AtomicReference<Thread>();
+      try {
+        assertThat(entered.await(10, SECONDS)).isTrue();
+        var stopping = controls.submit(() -> {
+          stoppingThread.set(Thread.currentThread());
+          serverContext.stopBackgroundWork();
+        });
+        await().atMost(10, SECONDS).until(serverContext::isBackgroundWorkStopped);
+        await().atMost(10, SECONDS).until(() ->
+          stopping.isDone() || stoppingThread.get().getState() == Thread.State.WAITING);
+        assertThat(stopping.isDone()).as("остановка ждёт активного прохода настроек").isFalse();
+        release.countDown();
+        change.get(10, SECONDS);
+        stopping.get(10, SECONDS);
+      } finally {
+        release.countDown();
+      }
+    }
+
+    verify(progressReporter).endProgress("");
+  }
+
+  @Test
+  void settingsChangeDoesNotHoldIndexerMonitorWhileWaitingForWorkspaceLease() throws Exception {
+    var serverContext = contextWithBackgroundWork();
+    var workspace = URI.create("file:///configuration-lock-order");
+    serverContext.setWorkspaceUri(workspace);
+    when(serverContextProvider.getAllContexts()).thenReturn(Map.of(workspace, serverContext));
+    indexer.captureCompilationSettings();
+    indexer.computeIfAbsent(sourceMethod, () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.of(), true));
+    var entered = new CountDownLatch(1);
+    var release = new CountDownLatch(1);
+    var controls = Executors.newFixedThreadPool(3, Thread.ofPlatform().daemon().factory());
+    try {
+      var background = controls.submit(() -> serverContext.runBackgroundWork(() -> {
+        entered.countDown();
+        try {
+          assertThat(release.await(10, SECONDS)).isTrue();
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+          throw new IllegalStateException(e);
+        }
+        indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+      }));
+      assertThat(entered.await(10, SECONDS)).isTrue();
+      var stoppingThread = new AtomicReference<Thread>();
+      var stopping = controls.submit(() -> {
+        stoppingThread.set(Thread.currentThread());
+        serverContext.stopBackgroundWork();
+      });
+      await().atMost(10, SECONDS).until(serverContext::isBackgroundWorkStopped);
+      await().atMost(10, SECONDS).until(() -> stoppingThread.get().getState() == Thread.State.WAITING);
+      var changingThread = new AtomicReference<Thread>();
+      var change = controls.submit(() -> {
+        changingThread.set(Thread.currentThread());
+        try (var scope = WorkspaceContextHolder.forUri(workspace, "configuration-lock-order")) {
+          languageConfiguration.setSupportThickClientFileMode(!languageConfiguration.isSupportThickClientFileMode());
+          indexer.handleConfigurationChanged(new LanguageServerConfigurationChangedEvent(languageConfiguration));
+        }
+      });
+      await().atMost(10, SECONDS).until(() ->
+        change.isDone() || changingThread.get() != null && changingThread.get().getState() == Thread.State.WAITING);
+      release.countDown();
+
+      background.get(10, SECONDS);
+      stopping.get(10, SECONDS);
+      change.get(10, SECONDS);
+    } finally {
+      release.countDown();
+      controls.shutdownNow();
+    }
   }
 
   @Test
@@ -866,6 +975,57 @@ class MethodReturnTypeIndexerTest {
     verify(inferencer, times(1)).computeReturnTypes(any());
     assertThat(loading.loaded()).isEmpty();
     assertThat(loading.peak().get()).isLessThanOrEqualTo(DOCUMENTS_IN_MEMORY);
+    verify(progressReporter).endProgress("");
+  }
+
+  @Test
+  void stoppingWhilePreloadWaitsForWriteLockSkipsReload() throws Exception {
+    var ring = ring("lockedPreload", 9);
+    var serverContext = serverContextOf(ring.documents());
+    var loading = trackLoading(serverContext, ring.documents());
+    var stopped = new AtomicBoolean();
+    when(serverContext.isBackgroundWorkStopped()).thenAnswer(invocation -> stopped.get());
+    var locks = Arrays.stream(ring.documents())
+      .map(document -> (ReentrantReadWriteLock) serverContext.getDocumentLock(document.getUri()))
+      .toList();
+    locks.forEach(lock -> lock.writeLock().lock());
+    try (var controls = Executors.newSingleThreadExecutor()) {
+      var pass = controls.submit(() -> indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext)));
+      try {
+        await().atMost(10, SECONDS).until(() -> locks.stream().anyMatch(ReentrantReadWriteLock::hasQueuedThreads));
+        stopped.set(true);
+      } finally {
+        locks.forEach(lock -> lock.writeLock().unlock());
+      }
+      pass.get(10, SECONDS);
+    }
+
+    assertThat(loading.peak()).hasValue(0);
+    assertThat(loading.loaded()).isEmpty();
+  }
+
+  @Test
+  void stoppingWhileRecomputeWaitsForWriteLockSkipsReload() throws Exception {
+    var serverContext = serverContextOf(source);
+    var loading = trackLoading(serverContext, source);
+    var stopped = new AtomicBoolean();
+    when(serverContext.isBackgroundWorkStopped()).thenAnswer(invocation -> stopped.get());
+    indexer.computeIfAbsent(sourceMethod, () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.of(), true));
+    var lock = (ReentrantReadWriteLock) serverContext.getDocumentLock(source.getUri());
+    lock.readLock().lock();
+    try (var controls = Executors.newSingleThreadExecutor()) {
+      var pass = controls.submit(() -> indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext)));
+      try {
+        await().atMost(10, SECONDS).until(lock::hasQueuedThreads);
+        stopped.set(true);
+      } finally {
+        lock.readLock().unlock();
+      }
+      pass.get(10, SECONDS);
+    }
+
+    assertThat(loading.peak()).hasValue(0);
+    assertThat(loading.loaded()).isEmpty();
   }
 
   @Test
@@ -955,6 +1115,22 @@ class MethodReturnTypeIndexerTest {
       }
       return null;
     }
+  }
+
+  /**
+   * Рабочая область с настоящим допуском фоновой работы и одним читаемым документом.
+   *
+   * @return рабочая область, остановка которой ждёт активного прохода.
+   */
+  private ServerContext contextWithBackgroundWork() {
+    var serverContext = spy(new ServerContext(
+      new StaticListableBeanFactory().getBeanProvider(DocumentContext.class),
+      mock(WorkDoneProgressHelper.class), mock(GlobalLanguageServerConfiguration.class),
+      resolveExecutor, resolveExecutor, Caffeine.newBuilder().build()));
+    doReturn(Map.of(source.getUri(), source)).when(serverContext).getDocuments();
+    doReturn(DocumentState.WITH_CONTENT).when(serverContext).getDocumentState(source);
+    when(source.getServerContext()).thenReturn(serverContext);
+    return serverContext;
   }
 
   /**

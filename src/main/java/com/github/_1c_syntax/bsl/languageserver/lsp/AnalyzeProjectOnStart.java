@@ -88,6 +88,9 @@ public class AnalyzeProjectOnStart {
           var lock = serverContext.getDocumentLock(documentContext.getUri());
           lock.writeLock().lock();
           try {
+            if (serverContext.isBackgroundWorkStopped()) {
+              return;
+            }
             serverContext.rebuildDocument(documentContext);
             diagnosticProvider.computeAndPublishDiagnostics(documentContext);
 
@@ -98,7 +101,7 @@ public class AnalyzeProjectOnStart {
         })
       ).get();
 
-      progress.endProgress(getMessage("projectAnalyzed"));
+      progress.endProgress(serverContext.isBackgroundWorkStopped() ? "" : getMessage("projectAnalyzed"));
     } catch (ExecutionException e) {
       throw new IllegalStateException("Can't analyze project on start", e);
     } catch (InterruptedException e) {
