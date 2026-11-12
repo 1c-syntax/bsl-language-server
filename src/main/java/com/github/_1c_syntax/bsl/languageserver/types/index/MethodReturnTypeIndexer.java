@@ -1558,27 +1558,24 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     }
     lock.writeLock().lock();
     try {
-      if (serverContext.isBackgroundWorkStopped()) {
-        return false;
-      }
       // Пока ждали блокировку, документ мог догрузить другой поток: тогда разбирать его
       // заново не надо, а освобождать — тем более, он сейчас кому-то нужен.
-      if (isReadable(documentContext)) {
-        return recomputeEach(methods);
+      if (!serverContext.isBackgroundWorkStopped() && !isReadable(documentContext)) {
+        rebuilds.recordReload(documentContext.getUri());
+        // Разбор сам пересчитает экспортные методы документа по событию, а неэкспортные,
+        // до которых дошла очередь, пересчитываются явно.
+        serverContext.rebuildDocument(documentContext);
+        if (!isReadable(documentContext)) {
+          // Файл не прочитался: тел нет, и расчёт затёр бы посчитанное пустым. Прежние значения
+          // остаются, а документ пересчитается, когда разберётся, — повтор в этом же проходе
+          // файла не вернёт, только повторит ошибку чтения.
+          return false;
+        }
+        var changed = recomputeEach(methods);
+        serverContext.tryClearDocument(documentContext);
+        return changed;
       }
-      rebuilds.recordReload(documentContext.getUri());
-      // Разбор сам пересчитает экспортные методы документа по событию, а неэкспортные,
-      // до которых дошла очередь, пересчитываются явно.
-      serverContext.rebuildDocument(documentContext);
-      if (!isReadable(documentContext)) {
-        // Файл не прочитался: тел нет, и расчёт затёр бы посчитанное пустым. Прежние значения
-        // остаются, а документ пересчитается, когда разберётся, — повтор в этом же проходе
-        // файла не вернёт, только повторит ошибку чтения.
-        return false;
-      }
-      var changed = recomputeEach(methods);
-      serverContext.tryClearDocument(documentContext);
-      return changed;
+      return !serverContext.isBackgroundWorkStopped() && recomputeEach(methods);
     } finally {
       lock.writeLock().unlock();
     }
