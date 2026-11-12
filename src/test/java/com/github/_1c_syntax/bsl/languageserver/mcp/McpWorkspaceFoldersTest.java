@@ -109,15 +109,18 @@ class McpWorkspaceFoldersTest {
 
   @Test
   void fileGivenAsPathOrUriBecomesTheSameDocumentUri() {
-    // Инструменты отдают uri документа с закодированной кириллицей: клиент передаёт его обратно как есть.
+    // Клиент передаёт uri из ответа инструмента обратно как есть. Кириллица в нём закодирована
+    // на macOS и Linux, а на Windows остаётся как есть; закодированную форму клиент может прислать везде.
     var path = "src/test/resources/metadata/designer/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
     var expected = Absolute.uri(new File(path));
+    var encoded = expected.toASCIIString();
 
-    assertThat(expected.toString()).contains("%D0%");
+    assertThat(encoded).contains("%D0%");
     assertThat(McpWorkspaceFolders.toFileUri(path)).isEqualTo(expected);
     assertThat(McpWorkspaceFolders.toFileUri("  " + path + "  ")).isEqualTo(expected);
     assertThat(McpWorkspaceFolders.toFileUri(Absolute.path(path).toString())).isEqualTo(expected);
     assertThat(McpWorkspaceFolders.toFileUri(expected.toString())).isEqualTo(expected);
+    assertThat(McpWorkspaceFolders.toFileUri(encoded)).isEqualTo(expected);
   }
 
   @Test

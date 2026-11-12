@@ -453,13 +453,15 @@ class McpToolsTest {
 
   @Test
   void fileAcceptsUriWithEncodedCyrillic() {
-    // Так uri документа приходит в ответах инструментов: кириллица пути закодирована.
+    // Так uri документа приходит в ответах инструментов на macOS и Linux: кириллица пути закодирована.
+    // На Windows инструменты отдают её как есть, но клиент может прислать и закодированную форму.
     var designerDir = "src/test/resources/metadata/designer";
     registerWorkspaceFolderTool.registerWorkspaceFolder(Absolute.path(designerDir).toString(), null);
-    var moduleUri = Absolute.uri(new File(designerDir, "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl"));
-    assertThat(moduleUri.toString()).contains("%D0%");
+    var moduleUri = Absolute.uri(new File(designerDir, "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl"))
+      .toASCIIString();
+    assertThat(moduleUri).contains("%D0%");
 
-    var symbols = documentSymbolsTool.documentSymbols(moduleUri.toString());
+    var symbols = documentSymbolsTool.documentSymbols(moduleUri);
 
     assertThat(symbols.symbols()).extracting(symbol -> symbol.name()).contains("НеУстаревшаяПроцедура");
   }
