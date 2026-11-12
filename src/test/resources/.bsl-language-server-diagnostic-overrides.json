@@ -9,6 +9,11 @@
       "LineLength": {
         "minutesToFix": 10,
         "lspSeverity": "Error"
+      },
+      "CompilationDirectiveNeedLess": {
+        "type": "CODE_SMELL",
+        "severity": "CRITICAL",
+        "lspSeverity": "Error"
       }
     },
     "parameters": {

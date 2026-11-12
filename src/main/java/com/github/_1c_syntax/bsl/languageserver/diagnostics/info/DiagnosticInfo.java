@@ -51,8 +51,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static java.util.function.Predicate.not;
-
 /**
  * Метаинформация о диагностике.
  * <p>
@@ -76,7 +74,10 @@ public class DiagnosticInfo {
   private final DiagnosticMetadata diagnosticMetadata;
   private final List<DiagnosticParameterInfo> diagnosticParameters;
 
-  private Optional<DiagnosticMetadata> metadataOverride;
+  /**
+   * Метаданные диагностики с наложенными переопределениями из конфигурации.
+   */
+  private DiagnosticMetadata metadata;
   private org.eclipse.lsp4j.DiagnosticSeverity lspSeverity;
   private String cachedCodeDescriptionHref;
   private Language cachedLanguage;
@@ -95,14 +96,13 @@ public class DiagnosticInfo {
     diagnosticMetadata = diagnosticClass.getAnnotation(DiagnosticMetadata.class);
     diagnosticParameters = DiagnosticParameterInfo.createDiagnosticParameters(this);
     
-    // Get metadata override from configuration if exists
-    metadataOverride = computeMetadataOverride();
+    metadata = computeMetadata();
     lspSeverity = computeLSPSeverity();
     cachedCodeDescriptionHref = computeCodeDescriptionHref();
   }
 
   public void refresh() {
-    metadataOverride = computeMetadataOverride();
+    metadata = computeMetadata();
     lspSeverity = computeLSPSeverity();
     cachedLanguage = configuration.getLanguage();
     cachedCodeDescriptionHref = computeCodeDescriptionHref();
@@ -173,15 +173,11 @@ public class DiagnosticInfo {
   }
 
   public DiagnosticType getType() {
-    return metadataOverride
-      .map(DiagnosticMetadata::type)
-      .orElseGet(diagnosticMetadata::type);
+    return metadata.type();
   }
 
   public DiagnosticSeverity getSeverity() {
-    return metadataOverride
-      .map(DiagnosticMetadata::severity)
-      .orElseGet(diagnosticMetadata::severity);
+    return metadata.severity();
   }
 
   public org.eclipse.lsp4j.DiagnosticSeverity getLSPSeverity() {
@@ -189,23 +185,12 @@ public class DiagnosticInfo {
   }
   
   private org.eclipse.lsp4j.DiagnosticSeverity computeLSPSeverity() {
-    org.eclipse.lsp4j.DiagnosticSeverity result = null;
-    
-    // First check if lspSeverity is explicitly set in metadata override from config
-    var lspSeverityFromOverride = metadataOverride
-      .map(DiagnosticMetadata::lspSeverity)
-      .filter(not(String::isEmpty));
-    
-    if (lspSeverityFromOverride.isPresent()) {
-      result = parseLspSeverity(lspSeverityFromOverride.get());
-    }
-    
-    // If not set in config, check if lspSeverity is explicitly set in annotation
+    // First check if lspSeverity is explicitly set in metadata (config override or annotation)
+    var result = parseLspSeverity(metadata.lspSeverity());
+
+    // If config override value is empty or invalid, fall back to the annotation value
     if (result == null) {
-      var lspSeverityFromAnnotation = diagnosticMetadata.lspSeverity();
-      if (lspSeverityFromAnnotation != null && !lspSeverityFromAnnotation.isEmpty()) {
-        result = parseLspSeverity(lspSeverityFromAnnotation);
-      }
+      result = parseLspSeverity(diagnosticMetadata.lspSeverity());
     }
     
     // If still null, calculate based on type and severity
@@ -230,39 +215,27 @@ public class DiagnosticInfo {
   }
 
   public DiagnosticCompatibilityMode getCompatibilityMode() {
-    return metadataOverride
-      .map(DiagnosticMetadata::compatibilityMode)
-      .orElseGet(diagnosticMetadata::compatibilityMode);
+    return metadata.compatibilityMode();
   }
 
   public DiagnosticScope getScope() {
-    return metadataOverride
-      .map(DiagnosticMetadata::scope)
-      .orElseGet(diagnosticMetadata::scope);
+    return metadata.scope();
   }
 
   public ModuleType[] getModules() {
-    return metadataOverride
-      .map(DiagnosticMetadata::modules)
-      .orElseGet(diagnosticMetadata::modules);
+    return metadata.modules();
   }
 
   public int getMinutesToFix() {
-    return metadataOverride
-      .map(DiagnosticMetadata::minutesToFix)
-      .orElseGet(diagnosticMetadata::minutesToFix);
+    return metadata.minutesToFix();
   }
 
   public boolean isActivatedByDefault() {
-    return metadataOverride
-      .map(DiagnosticMetadata::activatedByDefault)
-      .orElseGet(diagnosticMetadata::activatedByDefault);
+    return metadata.activatedByDefault();
   }
 
   public List<DiagnosticTag> getTags() {
-    return metadataOverride
-      .map(metadata -> new ArrayList<>(Arrays.asList(metadata.tags())))
-      .orElseGet(() -> new ArrayList<>(Arrays.asList(diagnosticMetadata.tags())));
+    return new ArrayList<>(Arrays.asList(metadata.tags()));
   }
 
   public List<org.eclipse.lsp4j.DiagnosticTag> getLSPTags() {
@@ -281,15 +254,11 @@ public class DiagnosticInfo {
   }
 
   public boolean canLocateOnProject() {
-    return metadataOverride
-      .map(DiagnosticMetadata::canLocateOnProject)
-      .orElseGet(diagnosticMetadata::canLocateOnProject);
+    return metadata.canLocateOnProject();
   }
 
   public double getExtraMinForComplexity() {
-    return metadataOverride
-      .map(DiagnosticMetadata::extraMinForComplexity)
-      .orElseGet(diagnosticMetadata::extraMinForComplexity);
+    return metadata.extraMinForComplexity();
   }
 
   public Map<String, Object> getDefaultConfiguration() {
@@ -306,11 +275,14 @@ public class DiagnosticInfo {
     return new DiagnosticCode(stringInterner.intern(simpleName));
   }
 
-  private Optional<DiagnosticMetadata> computeMetadataOverride() {
-    var diagnosticsOptions = configuration.getDiagnosticsOptions();
-    var metadataFromConfig = diagnosticsOptions.getMetadata().get(diagnosticCode.getStringValue());
+  private DiagnosticMetadata computeMetadata() {
+    var metadataOverride = configuration.getDiagnosticsOptions().getMetadata()
+      .get(diagnosticCode.getStringValue());
 
-    return Optional.ofNullable(metadataFromConfig);
+    if (metadataOverride == null) {
+      return diagnosticMetadata;
+    }
+    return metadataOverride.applyTo(diagnosticMetadata);
   }
 
 

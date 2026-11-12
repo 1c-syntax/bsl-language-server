@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration.databind;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticMetadataOverride;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -28,7 +29,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import io.leangen.geantyref.TypeFactory;
 import lombok.extern.slf4j.Slf4j;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.JsonParser;
@@ -42,24 +42,25 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Custom deserializer for Map&lt;String, DiagnosticMetadata&gt;.
- * Converts JSON objects into DiagnosticMetadata annotation instances using geantyref's TypeFactory.
+ * Custom deserializer for Map&lt;String, DiagnosticMetadataOverride&gt;.
+ * Converts JSON objects into partial {@link DiagnosticMetadata} overrides
+ * that keep track of explicitly specified attributes.
  */
 @Slf4j
-public class DiagnosticMetadataMapDeserializer extends ValueDeserializer<Map<String, DiagnosticMetadata>> {
+public class DiagnosticMetadataMapDeserializer extends ValueDeserializer<Map<String, DiagnosticMetadataOverride>> {
 
   @Override
-  public Map<String, DiagnosticMetadata> deserialize(
+  public Map<String, DiagnosticMetadataOverride> deserialize(
     JsonParser p,
     DeserializationContext context
   ) throws JacksonException {
-    
+
     JsonNode node = context.readTree(p);
     if (node == null || node.isNull() || !node.isObject()) {
       return new HashMap<>();
     }
 
-    Map<String, DiagnosticMetadata> result = new HashMap<>();
+    Map<String, DiagnosticMetadataOverride> result = new HashMap<>();
 
     for (var entry : node.properties()) {
       String diagnosticCode = entry.getKey();
@@ -81,9 +82,7 @@ public class DiagnosticMetadataMapDeserializer extends ValueDeserializer<Map<Str
           convertStringArrayToEnumArray(annotationParams, "tags", DiagnosticTag.class);
           convertStringArrayToEnumArray(annotationParams, "modules", ModuleType.class);
 
-          // Create DiagnosticMetadata instance using TypeFactory
-          DiagnosticMetadata metadata = TypeFactory.annotation(DiagnosticMetadata.class, annotationParams);
-          result.put(diagnosticCode, metadata);
+          result.put(diagnosticCode, new DiagnosticMetadataOverride(annotationParams));
         } catch (Exception e) {
           LOGGER.warn("Failed to deserialize metadata for diagnostic: {}", diagnosticCode, e);
         }

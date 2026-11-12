@@ -27,7 +27,6 @@ import com.fasterxml.jackson.annotation.JsonSetter;
 import tools.jackson.databind.annotation.JsonDeserialize;
 import com.github._1c_syntax.bsl.languageserver.configuration.databind.DiagnosticMetadataMapDeserializer;
 import com.github._1c_syntax.bsl.languageserver.configuration.databind.ParametersDeserializer;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -70,7 +69,7 @@ public class DiagnosticsOptions {
   private DiagnosticSeverity overrideMinimumLSPDiagnosticLevel;
 
   @JsonDeserialize(using = DiagnosticMetadataMapDeserializer.class)
-  private Map<String, DiagnosticMetadata> metadata = new HashMap<>();
+  private Map<String, DiagnosticMetadataOverride> metadata = new HashMap<>();
 
   @Setter(AccessLevel.NONE)
   private Set<String> ignoredAuthors = new HashSet<>();
