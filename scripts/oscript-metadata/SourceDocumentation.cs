@@ -34,9 +34,16 @@ internal sealed class SourceDocumentation
     internal int Count => entries.Count;
     internal string[] IntrinsicNames { get; private set; } = Array.Empty<string>();
 
+    /// <summary>Returns indexed member XML, or null when the member is absent or its XML could not be parsed.</summary>
     internal XElement? Get(string key) => entries.GetValueOrDefault(key);
+
+    /// <summary>Returns source-declared bilingual enum values, or an empty array when none were found.</summary>
     internal MetadataName[] EnumValues(string type) => enums.GetValueOrDefault(type, Array.Empty<MetadataName>());
 
+    /// <summary>Indexes source comments, literal enum values and compiler spellings from one matching release.</summary>
+    /// <param name="directory">OneScript source root containing src/OneScript.Language/LanguageDef.cs.</param>
+    /// <returns>An index keyed by CLR type and member identities.</returns>
+    /// <exception cref="FileNotFoundException">The compiler token declarations are absent.</exception>
     internal static SourceDocumentation Read(string directory)
     {
         var result = new SourceDocumentation();
@@ -52,11 +59,14 @@ internal sealed class SourceDocumentation
         return result;
     }
 
+    /// <summary>Builds the shared lookup key from the declaring CLR type, method name and ordered parameter names.</summary>
     internal static string MethodKey(string type, string name, IEnumerable<string> parameters) =>
         type + "." + name + "(" + string.Join(",", parameters) + ")";
 
+    /// <summary>Flattens XML text into a trimmed, whitespace-normalized description; missing elements yield empty text.</summary>
     internal static string Text(XElement? element) => element == null ? "" : Regex.Replace(element.Value, @"\s+", " ").Trim();
 
+    /// <summary>Indexes supported member comments while isolating malformed XML to the affected member.</summary>
     private void ReadComments(SyntaxNode root)
     {
         foreach (var node in root.DescendantNodes().OfType<MemberDeclarationSyntax>())
@@ -88,6 +98,9 @@ internal sealed class SourceDocumentation
         }
     }
 
+    /// <summary>
+    /// Extracts literal WrapClrValue and MakeValue name pairs without executing constructors or guessing translated aliases.
+    /// </summary>
     private void ReadEnumValues(SyntaxNode root)
     {
         foreach (var declaration in root.DescendantNodes().OfType<ClassDeclarationSyntax>())
@@ -112,6 +125,7 @@ internal sealed class SourceDocumentation
         }
     }
 
+    /// <summary>Records distinct literal spellings following the token argument of AddToken declarations.</summary>
     private void ReadCompilerNames(SyntaxNode root)
     {
         IntrinsicNames = root.DescendantNodes().OfType<InvocationExpressionSyntax>()
@@ -121,6 +135,7 @@ internal sealed class SourceDocumentation
             .Select(argument => ((LiteralExpressionSyntax)argument.Expression).Token.ValueText).Distinct().ToArray();
     }
 
+    /// <summary>Builds the CLR container name with dotted namespaces and plus-separated nested types.</summary>
     private static string ContainingType(MemberDeclarationSyntax declaration)
     {
         var namespaces = declaration.Ancestors().OfType<BaseNamespaceDeclarationSyntax>().Reverse()

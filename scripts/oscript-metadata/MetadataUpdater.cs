@@ -37,6 +37,7 @@ internal sealed class MetadataUpdater
     private int russianCount;
     private int variadicCount;
 
+    /// <summary>Indexes compiler identities and documented enums for one merge of reflected and curated metadata.</summary>
     private MetadataUpdater(JsonArray runtime, JsonArray previousTypes, JsonObject previousGlobals,
         JsonObject basicMethods)
     {
@@ -61,7 +62,11 @@ internal sealed class MetadataUpdater
                 documentedEnums[name] = Text(context["name"]?["Ru"]);
     }
 
-    /// <summary>Updates both checked-in resources using a runtime export and the matching compiler metadata.</summary>
+    /// <summary>Validates compiler identities before rebuilding the embedded type and global resources.</summary>
+    /// <param name="input">Runtime export containing a nonempty compiler-name record.</param>
+    /// <param name="resourceDirectory">Directory containing the existing OneScript type and global JSON files.</param>
+    /// <param name="basicMethodsFile">Matching compiler intrinsic declarations used to retain curated functions.</param>
+    /// <exception cref="InvalidOperationException">The runtime export lacks compiler token names.</exception>
     internal static void Update(string input, string resourceDirectory, string basicMethodsFile)
     {
         var runtime = JsonNode.Parse(File.ReadAllText(input))!.AsArray();
@@ -96,6 +101,9 @@ internal sealed class MetadataUpdater
         }, options));
     }
 
+    /// <summary>
+    /// Rebuilds sorted types and globals while retaining primitive declarations, known compiler intrinsics and keywords.
+    /// </summary>
     private (JsonArray Types, JsonObject Globals) Build()
     {
         var types = runtime.OfType<JsonObject>().Where(context => !Flag(context["global"]))
@@ -156,6 +164,7 @@ internal sealed class MetadataUpdater
         });
     }
 
+    /// <summary>Combines a reflected type with matching collection traits, descriptions and constructor annotations.</summary>
     private JsonObject BuildType(JsonObject context)
     {
         var name = Text(context["name"]?["Ru"]);
@@ -184,6 +193,10 @@ internal sealed class MetadataUpdater
         return result;
     }
 
+    /// <summary>
+    /// Merges properties, overloads and enum values; deprecated names remain separate members with their own annotations.
+    /// </summary>
+    /// <returns>New member nodes in ordinal name order.</returns>
     private IEnumerable<JsonObject> Members(JsonObject context, IEnumerable<JsonObject> previousMembers)
     {
         var previous = previousMembers.ToArray();
@@ -254,6 +267,9 @@ internal sealed class MetadataUpdater
         return result.OrderBy(member => Text(member["name"]), StringComparer.Ordinal);
     }
 
+    /// <summary>
+    /// Matches a unique previous overload by parameter names, falling back only when arity has a single candidate.
+    /// </summary>
     private JsonObject Signature(JsonObject method, JsonObject previous, string? constructorType = null)
     {
         var parameters = Array(method["parameters"]).OfType<JsonObject>().ToArray();
@@ -276,6 +292,10 @@ internal sealed class MetadataUpdater
     }
 
     /// <summary>Retains a curated label only when the reflected parameter still has the same name.</summary>
+    /// <param name="parameter">Reflected parameter name, type, default and variadic flags.</param>
+    /// <param name="previous">Existing annotations, discarded when their CLR parameter identity no longer matches.</param>
+    /// <param name="constructorType">Constructed script type, used for the documented structure-constructor union.</param>
+    /// <returns>A new parameter node with bilingual names and the applicable type refinement.</returns>
     private JsonObject Parameter(JsonObject parameter, JsonObject? previous, string? constructorType)
     {
         previous ??= new JsonObject();
@@ -303,6 +323,9 @@ internal sealed class MetadataUpdater
         return result;
     }
 
+    /// <summary>
+    /// Refines arbitrary scalar arguments to documented enums without narrowing variadic or already concrete types.
+    /// </summary>
     private string ParameterType(JsonObject parameter, JsonObject previous, string type)
     {
         if (type != "Произвольный" || Flag(parameter["variadic"])) return type;
@@ -313,6 +336,9 @@ internal sealed class MetadataUpdater
             ? documented : type;
     }
 
+    /// <summary>
+    /// Preserves return-value semantics alongside the summary, correcting the known BinaryDataBuffer description mismatch.
+    /// </summary>
     private static string MethodDescription(JsonObject method, JsonObject previous)
     {
         var description = First(Text(method["description"]), Text(previous["description"]));
@@ -326,6 +352,7 @@ internal sealed class MetadataUpdater
             ? (description + "\n\nВозвращаемое значение: " + returns).Trim() : description;
     }
 
+    /// <summary>Clones a curated intrinsic and moves a legacy ellipsis marker onto its final variadic parameter.</summary>
     private static JsonObject Intrinsic(JsonObject previous)
     {
         var result = previous.DeepClone().AsObject();
@@ -365,6 +392,7 @@ internal sealed class MetadataUpdater
         return result;
     }
 
+    /// <summary>Replaces a pipe-delimited scalar field with the corresponding union-array field.</summary>
     private static void NormalizeUnion(JsonObject target, string field)
     {
         var value = Text(target[field]);
@@ -373,6 +401,7 @@ internal sealed class MetadataUpdater
         AddType(target, value, field);
     }
 
+    /// <summary>Writes a scalar type or its schema-specific union array; an empty value leaves the target unchanged.</summary>
     private static void AddType(JsonObject target, string value, string field = "type")
     {
         if (value.Length == 0) return;
@@ -380,42 +409,65 @@ internal sealed class MetadataUpdater
         else target[field] = value;
     }
 
+    /// <summary>Retains a curated return refinement only when reflection reports the arbitrary-value type.</summary>
     private static string RefinedReturnType(JsonNode? value, JsonObject previous) =>
         Text(value) == "Произвольный" ? First(Text(previous["returnType"]), Text(value)) : Text(value);
 
+    /// <summary>Matches the current CLR name against the previous English identity, falling back to its display name.</summary>
     private static bool SameParameter(JsonObject previous, JsonObject current) =>
         string.Equals(First(Text(previous["nameEn"]), Text(previous["name"])), Text(current["name"]),
             StringComparison.OrdinalIgnoreCase);
 
+    /// <summary>Creates server-schema name fields from the runtime record without inventing missing aliases.</summary>
     private static JsonObject Named(JsonObject name) => new()
     {
         ["name"] = Text(name["Ru"]), ["nameRu"] = Text(name["Ru"]), ["nameEn"] = Text(name["En"])
     };
 
+    /// <summary>Enumerates nonempty primary names, language variants and aliases for identity matching.</summary>
     private static IEnumerable<string> Names(JsonObject value) =>
         new[] { Text(value["name"]), Text(value["nameRu"]), Text(value["nameEn"]) }
             .Concat(Array(value["aliases"]).Select(Text)).Where(name => name.Length > 0);
 
+    /// <summary>Matches a nonempty lookup name against every declared spelling without regard to case.</summary>
     private static bool Matches(JsonObject value, string name) =>
         name.Length > 0 && Names(value).Contains(name, StringComparer.OrdinalIgnoreCase);
 
+    /// <summary>Returns the first member whose primary name or alias matches the lookup name.</summary>
     private static JsonObject? Find(IEnumerable<JsonObject> values, string name) =>
         values.FirstOrDefault(value => Matches(value, name));
 
+    /// <summary>Transfers detached result objects into an array sorted by ordinal primary name.</summary>
     private static JsonArray Sorted(IEnumerable<JsonObject> values) =>
         Objects(values.OrderBy(value => Text(value["name"]), StringComparer.Ordinal));
 
+    /// <summary>Copies fields through deep clones so source nodes can keep their existing JSON parents.</summary>
     private static void Copy(JsonObject target, JsonObject source)
     {
         foreach (var entry in source) target[entry.Key] = entry.Value?.DeepClone();
     }
 
+    /// <summary>Transfers detached objects into a new JSON array without cloning them.</summary>
     private static JsonArray Objects(IEnumerable<JsonObject> values) => new(values.Cast<JsonNode?>().ToArray());
+
+    /// <summary>Creates new JSON string nodes so the result owns each array element.</summary>
     private static JsonArray Strings(IEnumerable<string> values) => new(values.Select(value => (JsonNode?)JsonValue.Create(value)).ToArray());
+
+    /// <summary>Views an array node or supplies a detached empty array for a missing or incompatible value.</summary>
     private static JsonArray Array(JsonNode? value) => value as JsonArray ?? new JsonArray();
+
+    /// <summary>Views an object node or supplies a detached empty object for a missing or incompatible value.</summary>
     private static JsonObject Object(JsonNode? value) => value as JsonObject ?? new JsonObject();
+
+    /// <summary>Reads a string value, using an empty string for an absent or null entry.</summary>
     private static string Text(JsonNode? value) => value?.GetValue<string>() ?? "";
+
+    /// <summary>Reads a Boolean flag, treating an absent or null entry as false.</summary>
     private static bool Flag(JsonNode? value) => value?.GetValue<bool>() == true;
+
+    /// <summary>Detects Russian Cyrillic letters when separating legacy English and Russian enum annotations.</summary>
     private static bool Cyrillic(string value) => Regex.IsMatch(value, "[А-Яа-яЁё]");
+
+    /// <summary>Uses the fallback only for an empty string, preserving nonempty descriptions and identifiers verbatim.</summary>
     private static string First(string value, string fallback) => value.Length > 0 ? value : fallback;
 }

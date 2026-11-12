@@ -29,6 +29,7 @@ internal sealed class RuntimeMetadataExporter
     private readonly SourceDocumentation documentation;
     private readonly Dictionary<Type, MetadataName> names;
 
+    /// <summary>Indexes script-visible type names before resolving member and parameter types.</summary>
     private RuntimeMetadataExporter(IEnumerable<Type> types, SourceDocumentation documentation)
     {
         this.documentation = documentation;
@@ -40,7 +41,12 @@ internal sealed class RuntimeMetadataExporter
         }
     }
 
-    /// <summary>Loads a distribution in its own assembly context and returns serializable API records.</summary>
+    /// <summary>Reads a distribution in an isolated, collectible assembly context.</summary>
+    /// <param name="directory">Directory containing the matching OneScript distribution DLLs.</param>
+    /// <param name="documentation">XML comments, enum literals and compiler names from the matching source release.</param>
+    /// <param name="includeCompiler">Whether to append the compiler-name record required by resource updates.</param>
+    /// <returns>Serializable context records that do not retain reflected CLR types.</returns>
+    /// <remarks>Requests assembly-context unloading after export or when reflection fails.</remarks>
     internal static IReadOnlyList<object> Export(string directory, SourceDocumentation documentation, bool includeCompiler)
     {
         var context = new DistributionLoadContext(Path.GetFullPath(directory));
@@ -69,9 +75,13 @@ internal sealed class RuntimeMetadataExporter
         }
     }
 
+    /// <summary>Includes named script types and unnamed classes explicitly marked as global contexts.</summary>
     private bool IsScriptContext(Type type) =>
         names.ContainsKey(type) || Attribute(type, "GlobalContextAttribute") != null;
 
+    /// <summary>
+    /// Exports script members and constructors, using source enum literals when no attributed fields expose the values.
+    /// </summary>
     private RuntimeContext ExportContext(Type type)
     {
         var enumeration = Attribute(type, "SystemEnumAttribute", "EnumerationTypeAttribute") != null;
@@ -101,6 +111,9 @@ internal sealed class RuntimeMetadataExporter
             constructors.ToArray(), values);
     }
 
+    /// <summary>
+    /// Combines reflected names and signatures with XML comments, omitting injected process/activation arguments.
+    /// </summary>
     private RuntimeMethod ExportMethod(MethodInfo method, CustomAttributeData attribute, bool constructor)
     {
         var parameters = method.GetParameters();
@@ -116,6 +129,9 @@ internal sealed class RuntimeMetadataExporter
             doc?.ToString(), method.ReturnType == typeof(void) ? null : TypeName(method.ReturnType), exported);
     }
 
+    /// <summary>
+    /// Exports defaults and element types; constructor arrays and params arrays become optional variadic arguments.
+    /// </summary>
     private RuntimeParameter ExportParameter(ParameterInfo parameter, bool constructor, System.Xml.Linq.XElement? doc)
     {
         var variadic = constructor && parameter.ParameterType.IsArray
@@ -128,6 +144,7 @@ internal sealed class RuntimeMetadataExporter
             parameter.HasDefaultValue ? DefaultValue(parameter.DefaultValue) : null);
     }
 
+    /// <summary>Combines public accessor visibility with explicit script read/write permissions.</summary>
     private RuntimeProperty ExportProperty(PropertyInfo property, CustomAttributeData attribute)
     {
         var doc = documentation.Get(property.DeclaringType!.FullName + "." + property.Name);
@@ -137,6 +154,7 @@ internal sealed class RuntimeMetadataExporter
             property.SetMethod?.IsPublic == true && AttributeBoolean(attribute, "CanWrite", true));
     }
 
+    /// <summary>Resolves nullable CLR types to script names, falling back to the arbitrary-value type.</summary>
     private string TypeName(Type type)
     {
         type = Nullable.GetUnderlyingType(type) ?? type;
@@ -149,9 +167,11 @@ internal sealed class RuntimeMetadataExporter
         return type.Name is "TypeDescriptor" or "BslTypeValue" ? "Тип" : "Произвольный";
     }
 
+    /// <summary>Matches attribute names without requiring attribute types from the isolated load context.</summary>
     private static CustomAttributeData? Attribute(MemberInfo member, params string[] candidates) =>
         member.GetCustomAttributesData().FirstOrDefault(attribute => candidates.Contains(attribute.AttributeType.Name));
 
+    /// <summary>Reads the declared bilingual name, retaining an empty English alias when none is supplied.</summary>
     private static MetadataName AttributeName(CustomAttributeData attribute, string fallback)
     {
         var strings = attribute.ConstructorArguments.Where(argument => argument.ArgumentType == typeof(string))
@@ -160,9 +180,11 @@ internal sealed class RuntimeMetadataExporter
         return new MetadataName(strings.FirstOrDefault() ?? named ?? fallback, strings.Skip(1).FirstOrDefault() ?? "");
     }
 
+    /// <summary>Reads a named Boolean argument, using the fallback for an absent or non-Boolean value.</summary>
     private static bool AttributeBoolean(CustomAttributeData attribute, string name, bool fallback) =>
         attribute.NamedArguments.FirstOrDefault(argument => argument.MemberName == name).TypedValue.Value is bool value ? value : fallback;
 
+    /// <summary>Formats metadata defaults invariantly; missing CLR defaults remain absent rather than undefined.</summary>
     private static string? DefaultValue(object? value) => value switch
     {
         null => "Неопределено",
@@ -173,6 +195,7 @@ internal sealed class RuntimeMetadataExporter
         _ => value.ToString()
     };
 
+    /// <summary>Limits reflection to OneScript, ScriptEngine and oscript assemblies from the chosen distribution.</summary>
     private static bool IsRuntimeAssembly(string file)
     {
         var name = Path.GetFileName(file);
@@ -181,6 +204,7 @@ internal sealed class RuntimeMetadataExporter
             || name.Equals("oscript.dll", StringComparison.OrdinalIgnoreCase);
     }
 
+    /// <summary>Rejects native DLLs before reflection loading; other file-access failures propagate to the caller.</summary>
     private static bool IsManaged(string file)
     {
         try
@@ -199,6 +223,7 @@ internal sealed class RuntimeMetadataExporter
     {
         internal string Directory { get; } = directory;
 
+        /// <summary>Loads a dependency from the distribution directory, returning null for normal resolver fallback.</summary>
         protected override Assembly? Load(AssemblyName name)
         {
             var file = Path.Combine(Directory, name.Name + ".dll");
