@@ -54,6 +54,7 @@ import org.springframework.beans.factory.support.StaticListableBeanFactory;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -1025,6 +1026,70 @@ class MethodReturnTypeIndexerTest {
     }
 
     assertThat(loading.peak()).hasValue(0);
+    assertThat(loading.loaded()).isEmpty();
+  }
+
+  @Test
+  void stoppingWhileSmallComponentWaitsForWriteLockSkipsReloadsAndUnlocksDocuments() throws Exception {
+    var ring = ring("lockedSmallComponent", 3);
+    var serverContext = serverContextOf(ring.documents());
+    var loading = trackLoading(serverContext, ring.documents());
+    var stopped = new AtomicBoolean();
+    when(serverContext.isBackgroundWorkStopped()).thenAnswer(invocation -> stopped.get());
+    var locks = Arrays.stream(ring.documents())
+      .sorted(Comparator.comparing(document -> document.getUri().toString()))
+      .map(document -> (ReentrantReadWriteLock) serverContext.getDocumentLock(document.getUri()))
+      .toList();
+    var held = locks.get(0).writeLock();
+    held.lock();
+    try (var controls = Executors.newSingleThreadExecutor()) {
+      var pass = controls.submit(() -> indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext)));
+      try {
+        await().atMost(10, SECONDS).until(locks.get(0)::hasQueuedThreads);
+        stopped.set(true);
+      } finally {
+        held.unlock();
+      }
+      pass.get(10, SECONDS);
+    }
+
+    assertThat(loading.peak()).hasValue(0);
+    assertThat(loading.loaded()).isEmpty();
+    for (var lock : locks) {
+      assertThat(lock.writeLock().tryLock()).as("замок освобождён после отмены").isTrue();
+      lock.writeLock().unlock();
+    }
+  }
+
+  @Test
+  void stoppingDuringSmallComponentLoadDoesNotWaitForNextDocument() throws Exception {
+    var ring = ring("stoppedSmallComponent", 3);
+    var serverContext = serverContextOf(ring.documents());
+    var loading = trackLoading(serverContext, ring.documents());
+    var stopped = new AtomicBoolean();
+    when(serverContext.isBackgroundWorkStopped()).thenAnswer(invocation -> stopped.get());
+    doAnswer(invocation -> {
+      var result = loading.load(invocation.getArgument(0));
+      stopped.set(true);
+      return result;
+    }).when(serverContext).rebuildDocument(any(DocumentContext.class));
+    var documents = Arrays.stream(ring.documents())
+      .sorted(Comparator.comparing(document -> document.getUri().toString()))
+      .toList();
+    var nextLock = (ReentrantReadWriteLock) serverContext.getDocumentLock(documents.get(1).getUri());
+    nextLock.writeLock().lock();
+    try (var controls = Executors.newSingleThreadExecutor()) {
+      var pass = controls.submit(() -> indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext)));
+      try {
+        await().atMost(10, SECONDS).until(() -> pass.isDone() || nextLock.hasQueuedThreads());
+        assertThat(pass.isDone()).as("после остановки следующий документ не ждём").isTrue();
+      } finally {
+        nextLock.writeLock().unlock();
+      }
+      pass.get(10, SECONDS);
+    }
+
+    assertThat(loading.peak()).hasValue(1);
     assertThat(loading.loaded()).isEmpty();
   }
 

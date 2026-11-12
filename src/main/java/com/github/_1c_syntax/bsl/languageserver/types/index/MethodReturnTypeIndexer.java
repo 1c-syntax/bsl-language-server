@@ -1482,6 +1482,9 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   /**
    * Выполняет работу, держа документы компоненты разобранными, и возвращает их в прежнее
    * состояние после неё.
+   * <p>
+   * Остановка проверяется до ожидания каждого замка и после получения. При отмене уже
+   * взятые замки и временно загруженные данные освобождаются.
    *
    * @param serverContext рабочая область.
    * @param component     документы компоненты.
@@ -1495,12 +1498,18 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     var ordered = component.stream().sorted(Comparator.comparing(URI::toString)).toList();
     try {
       for (var uri : ordered) {
+        if (serverContext.isBackgroundWorkStopped()) {
+          return;
+        }
         var documentContext = serverContext.getDocuments().get(uri);
         if (documentContext == null) {
           continue;
         }
         serverContext.getDocumentLock(uri).writeLock().lock();
         locked.add(uri);
+        if (serverContext.isBackgroundWorkStopped()) {
+          return;
+        }
         if (!isReadable(documentContext)) {
           rebuilds.recordReload(uri);
           serverContext.rebuildDocument(documentContext);
