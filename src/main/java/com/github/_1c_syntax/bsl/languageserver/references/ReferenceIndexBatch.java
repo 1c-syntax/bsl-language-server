@@ -49,6 +49,21 @@ public final class ReferenceIndexBatch {
     occurrences.add(index.moduleReferenceOccurrence(uri, mdoRef, moduleType, range));
   }
 
+  /**
+   * Добавляет в пакет вхождение переменной одного документа.
+   * <p>
+   * Ключи переменных модуля канонизируются интернером рабочей области индекса. Для локальных
+   * переменных методов лениво создаётся интернер этого пакета, сохраняющий экземпляры существующих
+   * локальных ключей документа. Все вхождения пакета должны принадлежать одному документу.
+   *
+   * @param uri URI документа пакета
+   * @param mdoRef идентификатор объекта метаданных модуля
+   * @param moduleType вид модуля
+   * @param methodName имя метода либо пустая строка для переменной модуля
+   * @param variableName имя переменной
+   * @param range диапазон имени переменной в документе
+   * @param occurrenceType вид вхождения
+   */
   void addVariableUsage(URI uri, String mdoRef, ModuleType moduleType, String methodName,
                         String variableName, Range range, OccurrenceType occurrenceType) {
     if (methodName.isEmpty()) {
