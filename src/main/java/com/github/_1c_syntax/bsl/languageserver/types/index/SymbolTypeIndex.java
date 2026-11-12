@@ -194,6 +194,9 @@ public class SymbolTypeIndex {
    * <p>
    * Пересборки идут по одной: отметка пересобранных у индекса одна, и пересборка, закончившая
    * раньше, сняла бы её посреди чужой — та дальше брала бы значения, оставшиеся с наполнения.
+   * <p>
+   * При остановке рабочей области обход заканчивается после текущего документа.
+   * Объявления остальных документов сохраняются до очистки области.
    *
    * @param event событие наполнения рабочей области.
    */
@@ -202,15 +205,24 @@ public class SymbolTypeIndex {
   @Order(100)
   @EventListener
   public synchronized void handleServerContextPopulated(ServerContextPopulatedEvent event) {
+    var serverContext = event.getSource();
+    if (serverContext.isBackgroundWorkStopped()) {
+      return;
+    }
+
     Set<URI> rebuilt = ConcurrentHashMap.newKeySet();
     rebuiltAfterPopulation.set(rebuilt);
     try {
-      event.getSource().getDocuments().values().forEach((DocumentContext documentContext) -> {
+      for (var documentContext : serverContext.getDocuments().values()) {
+        if (serverContext.isBackgroundWorkStopped()) {
+          break;
+        }
+
         // Отметка до пересборки: она первым делом стирает прежние записи документа, и всё,
         // что потом окажется в запомненном у его методов, уже свежее.
         rebuilt.add(documentContext.getUri());
         reindexDeclared(documentContext);
-      });
+      }
     } finally {
       rebuiltAfterPopulation.set(null);
     }

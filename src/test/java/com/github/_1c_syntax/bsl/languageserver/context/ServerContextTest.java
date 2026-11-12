@@ -561,7 +561,7 @@ class ServerContextTest extends AbstractServerContextAwareTest {
     serverContextProvider.clear();
     var finishReading = new CountDownLatch(1);
     doAnswer(invocation -> {
-      awaitUninterruptibly(finishReading);
+      awaitConfigurationReadRelease(finishReading);
       return invocation.callRealMethod();
     }).when(computeConfigurationExecutor).submit(ArgumentMatchers.<Callable<Object>>any());
     context = serverContextProvider.addWorkspace(Absolute.uri(Absolute.path(PATH_TO_METADATA).toUri()));
@@ -569,9 +569,11 @@ class ServerContextTest extends AbstractServerContextAwareTest {
     return finishReading;
   }
 
-  private static void awaitUninterruptibly(CountDownLatch latch) {
+  private static void awaitConfigurationReadRelease(CountDownLatch latch) {
     try {
-      latch.await();
+      if (!latch.await(30, TimeUnit.SECONDS)) {
+        throw new IllegalStateException("Metadata read was not released by the test");
+      }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       throw new IllegalStateException(e);
