@@ -59,6 +59,18 @@ public abstract class DefaultDiagnosticComputer implements DiagnosticComputer {
   @Qualifier("diagnosticComputerExecutor")
   private final ExecutorService executor;
 
+  /**
+   * Параллельно вычисляет диагностики документа с учётом подавления замечаний и игнорируемых авторов.
+   * <p>
+   * Ошибка отдельного анализатора журналируется и даёт пустой результат этого анализатора.
+   * При ошибке отправки задач или сбое сбора результатов запрашивает отмену всех уже отправленных
+   * задач с прерыванием и передаёт исключение вызывающему коду. Если ожидание результата прервано,
+   * сохраняет флаг прерывания текущего потока.
+   *
+   * @param documentContext контекст анализируемого документа
+   * @return отфильтрованный список найденных замечаний
+   * @throws RuntimeException если не удалось отправить задачу или собрать результаты
+   */
   @Override
   public List<Diagnostic> compute(DocumentContext documentContext) {
     // Сбор через Future.get() обычного пула, а не parallelStream() на ForkJoinPool с блокирующим
