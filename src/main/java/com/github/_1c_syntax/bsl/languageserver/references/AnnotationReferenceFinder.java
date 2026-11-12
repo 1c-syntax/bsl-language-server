@@ -175,7 +175,6 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
       }
       parameter = (BSLParser.AnnotationParamContext) value.getParent();
     }
-    var annotation = (BSLParser.AnnotationContext) parameter.getParent().getParent();
     var name = parameter.annotationParamName();
     var selection = name == null ? parameter.annotationParamValue() : name;
     if (selection == null) {
@@ -183,6 +182,7 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
     }
 
     var selectionRange = Ranges.create(selection);
+    var annotation = (BSLParser.AnnotationContext) parameter.getParent().getParent();
     return Optional.of(new AnnotationPosition(Ranges.create(terminal), selectionRange,
       annotation.annotationName().getText(), name == null ? "Значение" : name.getText()));
   }
