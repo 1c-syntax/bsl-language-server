@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration.databind;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticMetadataOverride;
+import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticMetadataOverrides;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -166,12 +166,12 @@ class DiagnosticMetadataMapDeserializerTest {
       """;
 
     // when
-    Map<String, DiagnosticMetadataOverride> result = deserializeMetadata(json);
+    Map<String, DiagnosticMetadata> result = deserializeMetadata(json);
 
     // then
     assertThat(result).containsKey("EmptyCodeBlock");
-
-    DiagnosticMetadata metadata = result.get("EmptyCodeBlock").applyTo(baseMetadata());
+    
+    DiagnosticMetadata metadata = result.get("EmptyCodeBlock");
     assertThat(metadata.type()).isEqualTo(DiagnosticType.ERROR);
     assertThat(metadata.severity()).isEqualTo(DiagnosticSeverity.BLOCKER);
     assertThat(metadata.scope()).isEqualTo(DiagnosticScope.BSL);
@@ -203,14 +203,14 @@ class DiagnosticMetadataMapDeserializerTest {
       """;
 
     // when
-    Map<String, DiagnosticMetadataOverride> result = deserializeMetadata(json);
+    Map<String, DiagnosticMetadata> result = deserializeMetadata(json);
 
     // then
     assertThat(result).containsKey("TestDiagnostic");
-
-    DiagnosticMetadata metadata = result.get("TestDiagnostic").applyTo(baseMetadata());
-
-    // Explicitly specified empty arrays should override base values
+    
+    DiagnosticMetadata metadata = result.get("TestDiagnostic");
+    
+    // Empty arrays should be preserved (not null)
     assertThat(metadata.tags()).isEmpty();
     assertThat(metadata.modules()).isEmpty();
   }
@@ -230,38 +230,32 @@ class DiagnosticMetadataMapDeserializerTest {
       """;
 
     // when
-    Map<String, DiagnosticMetadataOverride> result = deserializeMetadata(json);
+    Map<String, DiagnosticMetadata> result = deserializeMetadata(json);
 
     // then
     assertThat(result).containsKey("TestDiagnostic");
-    assertThat(result.get("TestDiagnostic").getOverriddenAttributes()).containsExactly("tags");
-
-    DiagnosticMetadata metadata = result.get("TestDiagnostic").applyTo(baseMetadata());
-
+    
+    DiagnosticMetadata metadata = result.get("TestDiagnostic");
+    
     // tags should be set
     assertThat(metadata.tags())
       .hasSize(2)
       .containsExactlyInAnyOrder(DiagnosticTag.DESIGN, DiagnosticTag.UNPREDICTABLE);
 
-    // not specified attributes should keep base values
-    assertThat(metadata.modules()).containsExactly(ModuleType.CommonModule);
-    assertThat(metadata.severity()).isEqualTo(DiagnosticSeverity.MAJOR);
-    assertThat(metadata.minutesToFix()).isEqualTo(3);
-  }
-
-  /**
-   * Base metadata with non-default values to apply overrides to.
-   */
-  private static DiagnosticMetadata baseMetadata() throws Exception {
-    return TypeFactory.annotation(DiagnosticMetadata.class, Map.of(
+    // when applied to diagnostic metadata, not specified attributes keep diagnostic values
+    DiagnosticMetadata base = TypeFactory.annotation(DiagnosticMetadata.class, Map.of(
       "severity", DiagnosticSeverity.MAJOR,
-      "minutesToFix", 3,
-      "tags", new DiagnosticTag[]{DiagnosticTag.STANDARD},
       "modules", new ModuleType[]{ModuleType.CommonModule}
     ));
+    DiagnosticMetadata merged = DiagnosticMetadataOverrides.applyTo(base, metadata);
+
+    assertThat(merged.tags())
+      .containsExactlyInAnyOrder(DiagnosticTag.DESIGN, DiagnosticTag.UNPREDICTABLE);
+    assertThat(merged.modules()).containsExactly(ModuleType.CommonModule);
+    assertThat(merged.severity()).isEqualTo(DiagnosticSeverity.MAJOR);
   }
 
-  private Map<String, DiagnosticMetadataOverride> deserializeMetadata(String json) throws Exception {
+  private Map<String, DiagnosticMetadata> deserializeMetadata(String json) throws Exception {
     var mapper = new JsonMapper();
 
     String wrappedJson = "{\"metadata\": " + json + "}";
@@ -275,6 +269,6 @@ class DiagnosticMetadataMapDeserializerTest {
    */
   private static class TestWrapper {
     @JsonDeserialize(using = DiagnosticMetadataMapDeserializer.class)
-    public Map<String, DiagnosticMetadataOverride> metadata;
+    public Map<String, DiagnosticMetadata> metadata;
   }
 }

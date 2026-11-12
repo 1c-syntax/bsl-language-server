@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration.databind;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticMetadataOverride;
+import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticMetadataOverrides;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -42,15 +42,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Custom deserializer for Map&lt;String, DiagnosticMetadataOverride&gt;.
- * Converts JSON objects into partial {@link DiagnosticMetadata} overrides
- * that keep track of explicitly specified attributes.
+ * Custom deserializer for Map&lt;String, DiagnosticMetadata&gt;.
+ * Converts JSON objects into DiagnosticMetadata annotation instances
+ * that keep track of explicitly specified attributes (see {@link DiagnosticMetadataOverrides}).
  */
 @Slf4j
-public class DiagnosticMetadataMapDeserializer extends ValueDeserializer<Map<String, DiagnosticMetadataOverride>> {
+public class DiagnosticMetadataMapDeserializer extends ValueDeserializer<Map<String, DiagnosticMetadata>> {
 
   @Override
-  public Map<String, DiagnosticMetadataOverride> deserialize(
+  public Map<String, DiagnosticMetadata> deserialize(
     JsonParser p,
     DeserializationContext context
   ) throws JacksonException {
@@ -60,7 +60,7 @@ public class DiagnosticMetadataMapDeserializer extends ValueDeserializer<Map<Str
       return new HashMap<>();
     }
 
-    Map<String, DiagnosticMetadataOverride> result = new HashMap<>();
+    Map<String, DiagnosticMetadata> result = new HashMap<>();
 
     for (var entry : node.properties()) {
       String diagnosticCode = entry.getKey();
@@ -82,7 +82,9 @@ public class DiagnosticMetadataMapDeserializer extends ValueDeserializer<Map<Str
           convertStringArrayToEnumArray(annotationParams, "tags", DiagnosticTag.class);
           convertStringArrayToEnumArray(annotationParams, "modules", ModuleType.class);
 
-          result.put(diagnosticCode, new DiagnosticMetadataOverride(annotationParams));
+          // Create DiagnosticMetadata instance that remembers explicitly specified attributes
+          DiagnosticMetadata metadata = DiagnosticMetadataOverrides.create(annotationParams);
+          result.put(diagnosticCode, metadata);
         } catch (Exception e) {
           LOGGER.warn("Failed to deserialize metadata for diagnostic: {}", diagnosticCode, e);
         }
