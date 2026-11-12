@@ -25,12 +25,16 @@ import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwa
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.io.IOException;
@@ -104,6 +108,58 @@ class ImplicitLibraryClassNewExpressionReferenceTest extends AbstractServerConte
   }
 
   // --- Желаемое поведение: typeName c явным конструктором → ConstructorSymbol ---
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void classDocumentCreatedBeforeLibraryDiscoveryResolvesToConstructor(boolean parsed) {
+    initServerContext();
+    context.setConfigurationRoot(Path.of(FIXTURE_DIR).toAbsolutePath());
+    var classUri = Path.of(FIXTURE_DIR,
+      "oscript_modules/internal-classes-lib/src/internal/Классы/InternalEntity.os").toAbsolutePath().toUri();
+    var classDocument = context.addDocument(classUri);
+    if (parsed) {
+      context.rebuildDocument(classDocument);
+    }
+    index.reindex(context);
+
+    var content = """
+      #Использовать internal-classes-lib
+      Х = Новый InternalEntity();
+      """;
+    var document = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
+    var position = positionInsideIdentifier(content, "InternalEntity");
+
+    var reference = referenceResolver.findReference(document.getUri(), position).orElseThrow();
+
+    assertConstructorReference(reference);
+    assertThat(context.getDocument(classDocument.getMdoRef(), ModuleType.OScriptClass))
+      .containsSame(classDocument);
+    assertThat(context.getDocument(classDocument.getMdoRef(), ModuleType.UNKNOWN)).isEmpty();
+  }
+
+  @Test
+  void libraryDiscoveryPreservesUnsavedClassContent() {
+    initServerContext();
+    context.setConfigurationRoot(Path.of(FIXTURE_DIR).toAbsolutePath());
+    var classUri = Path.of(FIXTURE_DIR,
+      "oscript_modules/internal-classes-lib/src/internal/Классы/InternalEntity.os").toAbsolutePath().toUri();
+    var classDocument = context.addDocument(classUri);
+    var unsavedContent = """
+      Процедура ПриСозданииОбъекта(НесохраненныйПараметр)
+      КонецПроцедуры
+      """;
+    context.openDocument(classDocument, unsavedContent, 1);
+
+    index.reindex(context);
+    index.reindex(context);
+
+    assertThat(classDocument.getContent()).isEqualTo(unsavedContent);
+    assertThat(classDocument.getSymbolTree().getConstructor()).isPresent();
+    assertThat(classDocument.getSymbolTree().getConstructor().orElseThrow().getParameters())
+      .extracting(ParameterDefinition::getName).containsExactly("НесохраненныйПараметр");
+    assertThat(context.getDocument(classDocument.getMdoRef(), ModuleType.OScriptClass))
+      .containsSame(classDocument);
+  }
 
   @Test
   void newExpressionOnManifestClassWithCtorResolvesToConstructor() {

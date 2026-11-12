@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.Availability;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.mdo.CommonModule;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Position;
 import org.jspecify.annotations.Nullable;
@@ -159,8 +160,8 @@ public class CompilationContextResolver {
    *
    * @param document документ с построенным символьным деревом.
    * @param node тело метода, модуля или узел внутри него.
-   * @return неизменяемые возможные контексты BSL, включая пустое множество для исключённого
-   *     объявления; пустой Optional при неизвестном условии объявления.
+   * @return всегда заполненный Optional с неизменяемыми возможными контекстами выбранного языка,
+   *     включая пустое множество для исключённого объявления.
    */
   public Optional<Set<ExecutionContext>> possibleContexts(DocumentContext document, ParseTree node) {
     var sub = CompilationContextIndex.enclosingMethod(node);
@@ -323,14 +324,17 @@ public class CompilationContextResolver {
    *
    * @param document документ — владелец метода.
    * @param directive исходная директива метода; пустой {@link Optional}, если её нет.
-   * @return профиль с неизменяемым множеством, в том числе пустым при известном исключении
-   *     всех контекстов; {@link Optional#empty()}, если контексты модуля неизвестны
-   *     или сочетание вида модуля и директивы не поддерживается. Ветки препроцессора
-   *     из {@link Declaration#branch()} вызывающий код пересекает с результатом отдельно.
+   * @return профиль с неизменяемым множеством, в том числе пустым для заведомо недопустимой
+   *     директивы; {@link Optional#empty()}, если для определения профиля недостаточно данных.
+   *     Ветки препроцессора из {@link Declaration#branch()} учитываются отдельно.
    */
   public Optional<MethodContext> methodContext(DocumentContext document, Optional<CompilerDirectiveKind> directive) {
     if (document.getFileType() == FileType.OS) {
       return Optional.of(new MethodContext(Optional.empty(), ExecutionContext.OSCRIPT));
+    }
+    if (document.getModuleType() == ModuleType.CommonModule && directive.isPresent()
+      && !MethodCompilationContexts.supportsCommonDirective(directive.orElseThrow())) {
+      return Optional.of(new MethodContext(directive, Set.of()));
     }
     var contexts = ExecutionContext.copyOf(moduleContexts(document));
     if (contexts.isEmpty()) {
@@ -339,10 +343,9 @@ public class CompilationContextResolver {
     if (usesFormDirectives(document)) {
       return MethodCompilationContexts.formMethodContext(document, directive.orElse(CompilerDirectiveKind.AT_SERVER), contexts);
     }
-    if (directive.isEmpty()) {
-      return Optional.of(new MethodContext(directive, Set.copyOf(contexts)));
-    }
-    return MethodCompilationContexts.commonMethodContext(document, directive.orElseThrow(), contexts);
+    return directive.isEmpty()
+      ? Optional.of(new MethodContext(directive, Set.copyOf(contexts)))
+      : MethodCompilationContexts.commonMethodContext(document, directive.orElseThrow(), contexts);
   }
 
   /**

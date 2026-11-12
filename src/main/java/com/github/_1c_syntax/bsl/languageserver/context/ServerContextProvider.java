@@ -132,7 +132,7 @@ public class ServerContextProvider {
    * @param workspaceName имя workspace (если null — извлекается из URI)
    * @return созданный контекст сервера
    */
-  public ServerContext addWorkspace(URI workspaceUri, @Nullable String workspaceName) {
+  public synchronized ServerContext addWorkspace(URI workspaceUri, @Nullable String workspaceName) {
 
     if (contexts.containsKey(workspaceUri)) {
       LOGGER.debug("Workspace {} already exists", workspaceUri);
@@ -145,7 +145,8 @@ public class ServerContextProvider {
     WorkspaceContextHolder.registerWorkspace(workspaceUri, name);
 
     // Set workspace context for scoped bean resolution
-    try (var ctx = WorkspaceContextHolder.forUri(workspaceUri)) {
+    try (var registration = new WorkspaceRegistration(workspaceUri);
+         var ctx = WorkspaceContextHolder.forUri(workspaceUri)) {
       // Get new ServerContext instance from Spring (prototype scope)
       var serverContext = serverContextObjectProvider.getObject();
 
@@ -164,7 +165,7 @@ public class ServerContextProvider {
       contexts.put(workspaceUri, serverContext);
       workspaceRoots.put(workspaceUri, rootPath);
       promoteToPrimary(workspaceUri);
-
+      registration.commit();
       return serverContext;
     }
   }
@@ -184,7 +185,7 @@ public class ServerContextProvider {
    *
    * @return дефолтный контекст сервера (идемпотентно: повторные вызовы возвращают существующий)
    */
-  public ServerContext registerDefaultWorkspace() {
+  public synchronized ServerContext registerDefaultWorkspace() {
     var existing = contexts.get(DEFAULT_WORKSPACE_URI);
     if (existing != null) {
       return existing;
@@ -192,7 +193,8 @@ public class ServerContextProvider {
 
     WorkspaceContextHolder.registerWorkspace(DEFAULT_WORKSPACE_URI, DEFAULT_WORKSPACE_NAME);
 
-    try (var ctx = WorkspaceContextHolder.forUri(DEFAULT_WORKSPACE_URI)) {
+    try (var registration = new WorkspaceRegistration(DEFAULT_WORKSPACE_URI);
+         var ctx = WorkspaceContextHolder.forUri(DEFAULT_WORKSPACE_URI)) {
       var serverContext = serverContextObjectProvider.getObject();
 
       serverContext.setWorkspaceUri(DEFAULT_WORKSPACE_URI);
@@ -201,7 +203,7 @@ public class ServerContextProvider {
 
       contexts.put(DEFAULT_WORKSPACE_URI, serverContext);
       markPrimaryIfAbsent(DEFAULT_WORKSPACE_URI);
-
+      registration.commit();
       return serverContext;
     }
   }
@@ -215,7 +217,7 @@ public class ServerContextProvider {
    *
    * @param workspaceFolder информация о workspace folder
    */
-  public void removeWorkspace(WorkspaceFolder workspaceFolder) {
+  public synchronized void removeWorkspace(WorkspaceFolder workspaceFolder) {
     var uri = Absolute.uri(workspaceFolder.getUri());
     var removed = contexts.get(uri);
     if (removed != null) {
@@ -223,14 +225,14 @@ public class ServerContextProvider {
       removed.stopBackgroundWork();
     }
     var preparing = contexts.get(uri);
-    if (preparing != null) {
-      // Обработчик подготовки ищет контекст в этой карте, чтобы завершить её.
-      // Сохраняем контекст и его бины до конца подготовки, даже если обработчик ещё не запущен.
-      preparing.awaitPreparation();
+    if (preparing == null) {
+      return;
     }
-    // Переставляем главный контекст на другой ДО удаления из карты, чтобы primary никогда не
-    // указывал на уже удалённый контекст (иначе getPrimaryContext упал бы в гонке с маршрутизацией).
+    // Новые untitled-буферы и внешние файлы не должны попасть в контекст, который скоро очистится.
     repointPrimaryBeforeRemoval(uri);
+    // Обработчик подготовки ищет контекст в этой карте, чтобы завершить её.
+    // Сохраняем контекст и его бины до конца подготовки, даже если обработчик ещё не запущен.
+    preparing.awaitPreparation();
     var serverContext = contexts.remove(uri);
     workspaceRoots.remove(uri);
 
@@ -418,7 +420,7 @@ public class ServerContextProvider {
   /**
    * Очистить все workspaces.
    */
-  public void clear() {
+  public synchronized void clear() {
     new ArrayList<>(contexts.keySet()).forEach(uri ->
       removeWorkspace(new WorkspaceFolder(uri.toString(), uri.toString()))
     );
@@ -514,6 +516,43 @@ public class ServerContextProvider {
           ? DEFAULT_WORKSPACE_URI : null
       );
     primaryWorkspaceUri.set(next);
+  }
+
+  /** Незавершённая регистрация откатывается при закрытии, подтверждённая сохраняется. */
+  private final class WorkspaceRegistration implements AutoCloseable {
+    private final URI uri;
+    private boolean committed;
+
+    /**
+     * Связать операцию с URI регистрации.
+     *
+     * @param uri URI рабочей области.
+     */
+    private WorkspaceRegistration(URI uri) {
+      this.uri = uri;
+    }
+
+    /** Подтвердить регистрацию и отменить её автоматический откат. */
+    private void commit() {
+      committed = true;
+    }
+
+    /** Откатить неподтверждённую регистрацию; ошибку очистки передать вызывающей стороне. */
+    @Override
+    public void close() {
+      if (committed) {
+        return;
+      }
+      repointPrimaryBeforeRemoval(uri);
+      contexts.remove(uri);
+      workspaceRoots.remove(uri);
+      try (var ctx = WorkspaceContextHolder.forUri(uri)) {
+        workspaceScope.removeWorkspace(uri);
+      } finally {
+        WorkspaceContextHolder.unregisterWorkspace(uri);
+      }
+    }
+
   }
 
   private static String extractWorkspaceName(URI workspaceUri) {

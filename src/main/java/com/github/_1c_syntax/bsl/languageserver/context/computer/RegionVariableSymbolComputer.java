@@ -124,7 +124,7 @@ public final class RegionVariableSymbolComputer extends VariableSymbolComputer {
   @Override
   public ParseTree visitSubName(BSLParser.SubNameContext ctx) {
     var active = preprocessor.active();
-    if (active == null || !active.equals(ExecutionContext.ALL)) {
+    if (active == null || !active.equals(ExecutionContext.forFileType(documentContext.getFileType()))) {
       methodConditions.put(Ranges.create(ctx), active == null ? null : Set.copyOf(active));
     }
     return ctx;
