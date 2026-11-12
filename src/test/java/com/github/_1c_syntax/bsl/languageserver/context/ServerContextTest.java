@@ -240,6 +240,14 @@ class ServerContextTest extends AbstractServerContextAwareTest {
         .isSameAs(configuration.getModuleByUri(documentContext.getUri()).orElseThrow().getUri()));
   }
 
+  /**
+   * Проверяет сохранение экземпляра URI у нового файла без модуля метаданных после наполнения
+   * контекста и повторного добавления документа, включая OneScript и внешний BSL.
+   *
+   * @param fileName имя проверяемого файла BSL или OneScript
+   * @param directory изолированный каталог рабочей области
+   * @throws IOException если не удалось записать исходный файл
+   */
   @ParameterizedTest
   @ValueSource(strings = {"Скрипт.os", "Внешний модуль.bsl"})
   void filesWithoutMetadataKeepTheirUri(String fileName, @TempDir Path directory) throws IOException {
