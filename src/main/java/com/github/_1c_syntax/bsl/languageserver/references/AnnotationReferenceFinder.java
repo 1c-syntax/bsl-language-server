@@ -158,8 +158,9 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
     if (!(terminal.getParent() instanceof ParserRuleContext parent)) {
       return Optional.empty();
     }
-    if (parent instanceof BSLParser.AnnotationNameContext name) {
-      return Optional.of(new AnnotationPosition(Ranges.create(terminal), Ranges.create(name.getParent()),
+    if (parent instanceof BSLParser.AnnotationNameContext name
+      && name.getParent() instanceof BSLParser.AnnotationContext annotation) {
+      return Optional.of(new AnnotationPosition(Ranges.create(terminal), Ranges.create(annotation),
         name.getText(), null));
     }
     BSLParser.AnnotationParamContext parameter;
@@ -176,7 +177,12 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
     }
     var annotation = (BSLParser.AnnotationContext) parameter.getParent().getParent();
     var name = parameter.annotationParamName();
-    var selectionRange = Ranges.create(name == null ? parameter.annotationParamValue() : name);
+    var selection = name == null ? parameter.annotationParamValue() : name;
+    if (selection == null) {
+      return Optional.empty();
+    }
+
+    var selectionRange = Ranges.create(selection);
     return Optional.of(new AnnotationPosition(Ranges.create(terminal), selectionRange,
       annotation.annotationName().getText(), name == null ? "Значение" : name.getText()));
   }
