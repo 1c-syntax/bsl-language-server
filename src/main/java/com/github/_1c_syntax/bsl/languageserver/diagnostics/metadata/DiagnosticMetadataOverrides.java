@@ -63,11 +63,11 @@ public class DiagnosticMetadataOverrides {
    */
   public static DiagnosticMetadata create(Map<String, Object> attributes) {
     var specifiedAttributes = new HashMap<String, Object>();
-    attributes.forEach((name, value) -> {
-      if (ATTRIBUTE_NAMES.contains(name)) {
-        specifiedAttributes.put(name, value);
+    for (var entry : attributes.entrySet()) {
+      if (ATTRIBUTE_NAMES.contains(entry.getKey())) {
+        specifiedAttributes.put(entry.getKey(), entry.getValue());
       }
-    });
+    }
 
     var values = createMetadata(specifiedAttributes);
     var handler = new PartialMetadataHandler(values, Set.copyOf(specifiedAttributes.keySet()));
@@ -143,15 +143,8 @@ public class DiagnosticMetadataOverrides {
         return specifiedAttributes;
       }
 
-      if ("equals".equals(method.getName()) && method.getParameterCount() == 1) {
-        var other = args[0];
-        if (other instanceof PartialMetadata otherPartial
-          && !specifiedAttributes.equals(otherPartial.specifiedAttributes())) {
-          return false;
-        }
-        return values.equals(other);
-      }
-
+      // equals/hashCode/toString/annotationType and attributes are delegated as is,
+      // so equality is based only on attribute values, as required by the Annotation contract
       try {
         return method.invoke(values, args);
       } catch (InvocationTargetException e) {

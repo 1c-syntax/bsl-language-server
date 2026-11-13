@@ -83,7 +83,7 @@ public class DiagnosticMetadataMapDeserializer extends ValueDeserializer<Map<Str
           convertStringArrayToEnumArray(annotationParams, "modules", ModuleType.class);
 
           // Create DiagnosticMetadata instance that remembers explicitly specified attributes
-          DiagnosticMetadata metadata = DiagnosticMetadataOverrides.create(annotationParams);
+          var metadata = DiagnosticMetadataOverrides.create(annotationParams);
           result.put(diagnosticCode, metadata);
         } catch (Exception e) {
           LOGGER.warn("Failed to deserialize metadata for diagnostic: {}", diagnosticCode, e);

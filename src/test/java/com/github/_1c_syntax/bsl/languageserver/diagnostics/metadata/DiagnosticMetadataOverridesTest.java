@@ -133,20 +133,35 @@ class DiagnosticMetadataOverridesTest {
   }
 
   @Test
-  void testOverridesWithDifferentSpecifiedAttributesAreNotEqual() {
+  void testEqualityIsBasedOnlyOnAttributeValues() throws Exception {
     // given - same attribute values, but severity is specified only in the first one
     var withSeverity = DiagnosticMetadataOverrides.create(Map.of(
       "severity", DiagnosticSeverity.MINOR
     ));
     var empty = DiagnosticMetadataOverrides.create(Map.of());
+    var plainAnnotation = TypeFactory.annotation(DiagnosticMetadata.class, Map.of());
 
-    // then
-    assertThat(withSeverity).isNotEqualTo(empty);
+    // then - symmetric
+    assertThat(withSeverity).isEqualTo(plainAnnotation);
+    assertThat(plainAnnotation).isEqualTo(withSeverity);
+    assertThat(empty).isEqualTo(plainAnnotation);
+    assertThat(plainAnnotation).isEqualTo(empty);
+
+    // and - transitive
+    assertThat(withSeverity).isEqualTo(empty);
+    assertThat(empty).isEqualTo(withSeverity);
+
+    // and - equal objects have equal hash codes
+    assertThat(withSeverity)
+      .hasSameHashCodeAs(empty)
+      .hasSameHashCodeAs(plainAnnotation);
   }
 
   @Test
   void testCreateWithInvalidValueThrows() {
-    assertThatThrownBy(() -> DiagnosticMetadataOverrides.create(Map.of("severity", "CRITICAL")))
+    Map<String, Object> attributes = Map.of("severity", "CRITICAL");
+
+    assertThatThrownBy(() -> DiagnosticMetadataOverrides.create(attributes))
       .isInstanceOf(IllegalArgumentException.class);
   }
 }
