@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794580028558,
+  "lastUpdate": 1794598202338,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -47554,6 +47554,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.5114509873639468",
             "extra": "mean: 88.60129515329997 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "8304ed0b30659654f29784a526e69872d1e01139",
+          "message": "Merge pull request #4950 from 1c-syntax/claude/bold-knuth-qd3rbk\n\nfix(diagnostics): keep not overridden metadata attributes from annotation",
+          "timestamp": "2026-11-13T19:39:54+01:00",
+          "tree_id": "290f9598f3541aceb2abe3d7d227cc9193039da3",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/8304ed0b30659654f29784a526e69872d1e01139"
+        },
+        "date": 1794598169955,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 89.97001528739929,
+            "unit": "sec",
+            "range": "stddev: 1.8643881655765893",
+            "extra": "mean: 89.97001528739929 sec\nrounds: 3"
           }
         ]
       }
