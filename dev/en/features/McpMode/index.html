@@ -2414,11 +2414,11 @@
 </tr>
 <tr>
 <td><code>document_symbols</code></td>
-<td>Symbol tree of a file (methods, regions, variables)</td>
+<td>Symbol tree of a file (methods, regions, variables). Each symbol has its whole range and the <code>selectionRange</code> of its name — a position for <code>definition</code>, <code>find_references</code> and <code>call_hierarchy</code></td>
 </tr>
 <tr>
 <td><code>symbol_text</code></td>
-<td>Source text of a symbol of a file — a region, method or <code>Перем</code>-declared variable, as in <code>document_symbols</code>: by name (case-insensitive), optionally narrowed by <code>scope</code> — a method name or <code>$module</code> for the module level, or by position (the symbol whose name is there, otherwise the innermost method or variable containing it). Each match tells its <code>scope</code>, where it is declared; for methods the description comment above the declaration is included</td>
+<td>Source text of a symbol of a file — a region, method or <code>Перем</code>-declared variable, as in <code>document_symbols</code>: by name (case-insensitive), optionally narrowed by <code>scope</code> — a method name or <code>$module</code> for the module level, or by position (the symbol whose name is there, otherwise the innermost method or variable containing it). Each match tells its <code>scope</code>, where it is declared, and the <code>selectionRange</code> of its name; for methods the description comment above the declaration is included</td>
 </tr>
 <tr>
 <td><code>find_references</code></td>
