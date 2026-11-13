@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MetaDataObject xmlns="http://v8.1c.ru/8.3/MDClasses" version="2.11">
+  <Configuration uuid="b928a908-8e75-4248-8bdf-6ce7754ef4ef">
+    <Properties>
+      <ObjectBelonging>Adopted</ObjectBelonging>
+      <Name>Расширение1</Name>
+      <ConfigurationExtensionPurpose>Customization</ConfigurationExtensionPurpose>
+      <NamePrefix>Расш1_</NamePrefix>
+      <ConfigurationExtensionCompatibilityMode>Version8_3_24</ConfigurationExtensionCompatibilityMode>
+      <DefaultRunMode>ManagedApplication</DefaultRunMode>
+      <ScriptVariant>Russian</ScriptVariant>
+      <CompatibilityMode>Version8_3_24</CompatibilityMode>
+    </Properties>
+    <ChildObjects>
+      <Document>Документ1</Document>
+    </ChildObjects>
+  </Configuration>
+</MetaDataObject>

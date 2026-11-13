@@ -1287,7 +1287,9 @@ public class SymbolTypeIndex {
 
   @Nullable
   private static MethodSymbol findLocalFunction(DocumentContext owner, String name) {
-    return owner.getSymbolTree().getMethods().stream()
+    // Без ожидания перестроения документа: ссылку разворачивают и из построения дерева другого
+    // документа (тип экспортной переменной в членах его self-типа) — ожидание замкнулось бы на встречное.
+    return owner.getSymbolTreeNoLock().getMethods().stream()
       .filter(candidate -> candidate.isFunction() && candidate.getName().equalsIgnoreCase(name))
       .findFirst()
       .orElse(null);

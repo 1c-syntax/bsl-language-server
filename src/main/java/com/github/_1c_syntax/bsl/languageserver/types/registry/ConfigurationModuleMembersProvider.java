@@ -379,12 +379,17 @@ public class ConfigurationModuleMembersProvider {
    * становятся свойствами соответствующего типа ({@code СправочникОбъект.X}),
    * тип свойства выводится из висячего комментария декларации через общий
    * {@link CommentTypeResolver}.
+   * <p>
+   * Дерево модуля читается без ожидания его перестроения ({@link DocumentContext#getSymbolTreeNoLock()}):
+   * у типа бывают модули и основной конфигурации, и расширения, а члены типа спрашивают изнутри
+   * перестроения одного из них — ожидание замкнулось бы на встречное.
    */
   private List<MemberDescriptor> collectModuleMembers(DocumentContext documentContext) {
-    var methodMembers = documentContext.getSymbolTree().getMethods().stream()
+    var symbolTree = documentContext.getSymbolTreeNoLock();
+    var methodMembers = symbolTree.getMethods().stream()
       .filter(MethodSymbol::isExport)
       .map(this::toMethodMember);
-    var variableMembers = documentContext.getSymbolTree().getVariables().stream()
+    var variableMembers = symbolTree.getVariables().stream()
       .filter(VariableSymbol::isExport)
       .map(this::toVariableMember);
     return Stream.concat(methodMembers, variableMembers).toList();
