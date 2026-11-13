@@ -19,12 +19,8 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.configuration.diagnostics;
+package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import io.leangen.geantyref.TypeFactory;
 import org.junit.jupiter.api.Test;
