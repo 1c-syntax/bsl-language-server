@@ -57,7 +57,9 @@ public class DocumentSymbolsTool {
 
   @McpTool(
     name = "document_symbols",
-    description = "Return the symbol tree (regions, methods, variables) of a 1C/OneScript file.",
+    description = "Return the symbol tree (regions, methods, variables) of a 1C/OneScript file. Each symbol has "
+      + "its whole `range` and the `selectionRange` of its name: a position to pass to `definition`, "
+      + "`find_references` or `call_hierarchy`.",
     // Output schema disabled: Spring AI generates a non-nullable schema that rejects null DTO
     // fields (here — nullable symbol detail). Known upstream bug, open as of 2.0.0-M6:
     // https://github.com/spring-projects/spring-ai/issues/4825

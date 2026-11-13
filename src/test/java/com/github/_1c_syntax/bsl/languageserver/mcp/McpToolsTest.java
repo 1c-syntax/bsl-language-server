@@ -40,6 +40,7 @@ import com.github._1c_syntax.bsl.languageserver.mcp.tools.TypeInfoTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.UnregisterWorkspaceFolderTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.TypeMemberDto;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.SymbolTextDto;
+import com.github._1c_syntax.bsl.languageserver.mcp.dto.RangeDto;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.WorkspaceFolderDto;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -197,6 +198,20 @@ class McpToolsTest {
   }
 
   @Test
+  void documentSymbolsSelectionRangeIsPositionForNavigationTools() {
+    // Строка 6 — «Функция ПерваяФункция()»: имя занимает символы 8–21.
+    var method = documentSymbolsTool.documentSymbols(FILE).symbols().stream()
+      .filter(symbol -> symbol.name().equals("ПерваяФункция"))
+      .findFirst()
+      .orElseThrow();
+
+    assertThat(method.selectionRange()).isEqualTo(new RangeDto(DECLARATION_LINE, 8, DECLARATION_LINE, 21));
+    var references = findReferencesTool.findReferences(
+      FILE, method.selectionRange().startLine(), method.selectionRange().startCharacter());
+    assertThat(references.referencesCount()).isPositive();
+  }
+
+  @Test
   void findReferencesResolvesMethodUsages() {
     var result = findReferencesTool.findReferences(FILE, DECLARATION_LINE, DECLARATION_CHARACTER);
 
@@ -224,6 +239,7 @@ class McpToolsTest {
     assertThat(match.kind()).isEqualTo("Method");
     assertThat(match.scope()).isEqualTo("$module");
     assertThat(match.range().startLine()).isEqualTo(DECLARATION_LINE);
+    assertThat(match.selectionRange()).isEqualTo(new RangeDto(DECLARATION_LINE, 8, DECLARATION_LINE, 21));
     assertThat(match.text()).startsWith("Функция ПерваяФункция()").endsWith("КонецФункции");
     assertThat(match.description()).isNull();
   }
@@ -346,6 +362,7 @@ class McpToolsTest {
       assertThat(match.name()).isEqualTo("А");
       assertThat(match.kind()).isEqualTo("Namespace");
       assertThat(match.range().startLine()).isEqualTo(15);
+      assertThat(match.selectionRange()).isEqualTo(new RangeDto(15, 9, 15, 10));
       // Диапазон области в дереве символов начинается после «#», как и в document_symbols.
       assertThat(match.text()).startsWith("Область А").endsWith("#КонецОбласти");
     });
