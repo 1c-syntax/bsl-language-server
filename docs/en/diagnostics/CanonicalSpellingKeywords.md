@@ -81,6 +81,15 @@ A built-in language constructs, keywords must be written canonically.
 | НаКлиентеНаСервереБезКонтекста | AtClientAtServerNoContext |
 | НаКлиентеНаСервере             | AtClientAtServer          |
 
+### Extension annotations
+
+| RU                             | EN                        |
+|--------------------------------|---------------------------|
+| Перед                          | Before                    |
+| После                          | After                     |
+| Вместо                         | Around                    |
+| ИзменениеИКонтроль             | ChangeAndValidate         |
+
 ## Sources
 
 + [Standard: General requirements (RU)](https://its.1c.ru/db/v8std#content:441:hdoc)
