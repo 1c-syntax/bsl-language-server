@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794437624533,
+  "lastUpdate": 1794580028558,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -47523,6 +47523,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.6745610889593932",
             "extra": "mean: 90.55279262860616 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "3753303859019f83d45688318491daf917c0d968",
+          "message": "Merge pull request #4948 from SanMisha/feat/mcp-symbol-selection-range\n\nfeat(mcp): selectionRange в ответах document_symbols и symbol_text",
+          "timestamp": "2026-11-13T14:51:57+01:00",
+          "tree_id": "bdff773cd070d2ce8a39b0111ad76d8dd9d721a3",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/3753303859019f83d45688318491daf917c0d968"
+        },
+        "date": 1794579999469,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 88.60129515329997,
+            "unit": "sec",
+            "range": "stddev: 0.5114509873639468",
+            "extra": "mean: 88.60129515329997 sec\nrounds: 3"
           }
         ]
       }
