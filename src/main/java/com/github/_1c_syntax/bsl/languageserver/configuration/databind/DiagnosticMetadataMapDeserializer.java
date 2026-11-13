@@ -23,12 +23,12 @@ package com.github._1c_syntax.bsl.languageserver.configuration.databind;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadataOverrides;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import io.leangen.geantyref.TypeFactory;
 import lombok.extern.slf4j.Slf4j;
 import tools.jackson.core.JacksonException;
 import tools.jackson.core.JsonParser;
@@ -43,7 +43,8 @@ import java.util.Map;
 
 /**
  * Custom deserializer for Map&lt;String, DiagnosticMetadata&gt;.
- * Converts JSON objects into DiagnosticMetadata annotation instances using geantyref's TypeFactory.
+ * Converts JSON objects into DiagnosticMetadata annotation instances
+ * that keep track of explicitly specified attributes (see {@link DiagnosticMetadataOverrides}).
  */
 @Slf4j
 public class DiagnosticMetadataMapDeserializer extends ValueDeserializer<Map<String, DiagnosticMetadata>> {
@@ -53,7 +54,7 @@ public class DiagnosticMetadataMapDeserializer extends ValueDeserializer<Map<Str
     JsonParser p,
     DeserializationContext context
   ) throws JacksonException {
-    
+
     JsonNode node = context.readTree(p);
     if (node == null || node.isNull() || !node.isObject()) {
       return new HashMap<>();
@@ -81,8 +82,8 @@ public class DiagnosticMetadataMapDeserializer extends ValueDeserializer<Map<Str
           convertStringArrayToEnumArray(annotationParams, "tags", DiagnosticTag.class);
           convertStringArrayToEnumArray(annotationParams, "modules", ModuleType.class);
 
-          // Create DiagnosticMetadata instance using TypeFactory
-          DiagnosticMetadata metadata = TypeFactory.annotation(DiagnosticMetadata.class, annotationParams);
+          // Create DiagnosticMetadata instance that remembers explicitly specified attributes
+          var metadata = DiagnosticMetadataOverrides.create(annotationParams);
           result.put(diagnosticCode, metadata);
         } catch (Exception e) {
           LOGGER.warn("Failed to deserialize metadata for diagnostic: {}", diagnosticCode, e);
