@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics.info;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.CompilationDirectiveNeedLessDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.EmptyCodeBlockDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.LineLengthDiagnostic;
@@ -196,5 +197,43 @@ class DiagnosticInfoOverrideTest extends AbstractServerContextAwareTest {
     // then - Should use the explicit lspSeverity from config (Error)
     // This overrides both the default calculation and overrideMinimumLSPDiagnosticLevel
     assertThat(diagnosticInfo.getLSPSeverity()).isEqualTo(org.eclipse.lsp4j.DiagnosticSeverity.Error);
+  }
+
+  @Test
+  void testAnnotationLspSeverityIsUsedWhenNotOverridden() {
+    // given - Default configuration without overrides
+    configuration.reset();
+
+    // when
+    var diagnosticInfo = new DiagnosticInfo(AnnotatedLspSeverityDiagnostic.class, configuration, stringInterner);
+
+    // then - lspSeverity from the annotation is used
+    assertThat(diagnosticInfo.getLSPSeverity()).isEqualTo(org.eclipse.lsp4j.DiagnosticSeverity.Error);
+  }
+
+  @Test
+  void testMetadataOverrideEmptyLspSeverityClearsAnnotationValue() {
+    // given - config explicitly sets lspSeverity to "" for a diagnostic with lspSeverity = "Error" in annotation
+    File configurationFile = new File(PATH_TO_CONFIGURATION_FILE);
+    configuration.update(configurationFile);
+
+    // when
+    var diagnosticInfo = new DiagnosticInfo(AnnotatedLspSeverityDiagnostic.class, configuration, stringInterner);
+
+    // then - lspSeverity is calculated from type and severity (CODE_SMELL + INFO = Hint),
+    // then raised by overrideMinimumLSPDiagnosticLevel (Warning)
+    assertThat(diagnosticInfo.getLSPSeverity()).isEqualTo(org.eclipse.lsp4j.DiagnosticSeverity.Warning);
+  }
+
+  /**
+   * Тестовая диагностика с LSP-уровнем серьезности, заданным в аннотации.
+   * Абстрактная, чтобы не регистрироваться как бин при сканировании компонентов.
+   */
+  @DiagnosticMetadata(
+    type = DiagnosticType.CODE_SMELL,
+    severity = DiagnosticSeverity.INFO,
+    lspSeverity = "Error"
+  )
+  abstract static class AnnotatedLspSeverityDiagnostic implements BSLDiagnostic {
   }
 }

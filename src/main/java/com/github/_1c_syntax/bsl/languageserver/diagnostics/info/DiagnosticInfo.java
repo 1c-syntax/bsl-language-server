@@ -189,12 +189,7 @@ public class DiagnosticInfo {
     // First check if lspSeverity is explicitly set in metadata (config override or annotation)
     var result = parseLspSeverity(metadata.lspSeverity());
 
-    // If config override value is empty or invalid, fall back to the annotation value
-    if (result == null) {
-      result = parseLspSeverity(diagnosticMetadata.lspSeverity());
-    }
-    
-    // If still null, calculate based on type and severity
+    // If not set (or invalid), calculate based on type and severity
     if (result == null) {
       var type = getType();
       if (type == DiagnosticType.CODE_SMELL) {
