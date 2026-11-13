@@ -46,16 +46,15 @@ Roots объявлены deprecated в спеке MCP 2026-07-28 (`roots/list_ch
 свойством обладает `Absolute.uri`, а `ServerContextProvider.removeWorkspace` прогоняет URI через него
 ещё раз — поэтому папку с уже удалённым каталогом адресовать для удаления нельзя: `remove` проверяет
 результат и честно падает, вместо того чтобы отчитаться об успехе и утечь контекстом.
-**Нормализацию значения от клиента делай только через `McpWorkspaceFolders.toWorkspaceFolderUri`**
-(рабочая папка) **и `toFileUri`** (файл: путь или `file:`-URI из ответов инструментов) — там же
-живёт `normalizeWindowsFileUri` (windows-патология `file://D:/repo`, у которой `Absolute.uri`
+**Нормализацию значения от клиента делай только через `McpWorkspaceFolders.toWorkspaceFolderUri`** —
+там же живёт `normalizeWindowsFileUri` (windows-патология `file://D:/repo`, у которой `Absolute.uri`
 иначе съедает двоеточие); свой разбор мимо неё разъедется с путём roots.
 `Absolute.path`/`Absolute.uri` канонизируют путь через `getCanonicalFile()` и прокидывают
 **необъявленный `IOException`** — вокруг них ловится `Exception`, а не `RuntimeException`.
 
 Инфраструктура: `McpServerInfoConfigurer` (имя/версия из бина `ServerInfo`),
 `McpWorkspaceBootstrap` (регистрация + индексация каталога, владение папками), `McpWorkspaceResolver`
-(`workspaceFolder` → рабочая папка), `McpWorkspaceFolders` (нормализация `workspaceFolder` и `file`: URI или
+(`workspaceFolder` → рабочая папка), `McpWorkspaceFolders` (нормализация `workspaceFolder`: URI или
 путь; общий текст подсказки о регистрации),
 `McpRootsBootstrapper`/`McpRootsChangeConsumer` (запрос/синхронизация `roots/list`),
 `McpDocumentReader` (единый доступ к документу: `read()` — из кэша, `analyze()` — свежий AST +

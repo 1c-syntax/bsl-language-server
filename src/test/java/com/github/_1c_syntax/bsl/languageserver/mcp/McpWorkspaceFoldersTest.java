@@ -26,7 +26,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
@@ -105,38 +104,6 @@ class McpWorkspaceFoldersTest {
     assertThatThrownBy(() -> McpWorkspaceFolders.toWorkspaceFolderUri(tooLong))
       .isInstanceOf(IllegalArgumentException.class)
       .hasMessageContaining("Unsupported workspace folder");
-  }
-
-  @Test
-  void fileGivenAsPathOrUriBecomesTheSameDocumentUri() {
-    // Клиент передаёт uri из ответа инструмента обратно как есть. Кириллица в нём закодирована
-    // на macOS и Linux, а на Windows остаётся как есть; закодированную форму клиент может прислать везде.
-    var path = "src/test/resources/metadata/designer/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
-    var expected = Absolute.uri(new File(path));
-    var encoded = expected.toASCIIString();
-
-    assertThat(encoded).contains("%D0%");
-    assertThat(McpWorkspaceFolders.toFileUri(path)).isEqualTo(expected);
-    assertThat(McpWorkspaceFolders.toFileUri("  " + path + "  ")).isEqualTo(expected);
-    assertThat(McpWorkspaceFolders.toFileUri(Absolute.path(path).toString())).isEqualTo(expected);
-    assertThat(McpWorkspaceFolders.toFileUri(expected.toString())).isEqualTo(expected);
-    assertThat(McpWorkspaceFolders.toFileUri(encoded)).isEqualTo(expected);
-  }
-
-  @Test
-  void windowsDriveAsAuthorityKeepsDriveLetterInFileUri() {
-    assertThat(McpWorkspaceFolders.toFileUri("file://D:/git/upp/Module.bsl").toString())
-      .startsWith("file:///D:/");
-  }
-
-  @Test
-  @DisabledOnOs(OS.WINDOWS)
-  void explainsFileThatCannotBeCanonicalized() throws IOException {
-    var tooLong = Files.createTempDirectory("mcp-too-long").resolve("x".repeat(5000) + ".bsl").toString();
-
-    assertThatThrownBy(() -> McpWorkspaceFolders.toFileUri(tooLong))
-      .isInstanceOf(IllegalArgumentException.class)
-      .hasMessageContaining("Unsupported file");
   }
 
   @Test

@@ -25,9 +25,11 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
+import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
 import java.net.URI;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.function.Function;
@@ -87,7 +89,7 @@ public class McpDocumentReader {
   }
 
   private <T> T access(String path, Function<DocumentContext, T> action, boolean requireFreshAst) {
-    var uri = McpWorkspaceFolders.toFileUri(path);
+    var uri = path.startsWith("file:") ? Absolute.uri(path) : Absolute.uri(new File(path));
     var serverContext = serverContextProvider.getServerContext(uri)
       .orElseThrow(() -> new IllegalArgumentException(
         "File is not part of any registered workspace folder: " + path + ". "
