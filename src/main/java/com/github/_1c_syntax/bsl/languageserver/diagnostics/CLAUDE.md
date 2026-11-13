@@ -46,10 +46,7 @@
 Энумы: `DiagnosticType` (ERROR/CODE_SMELL/VULNERABILITY/SECURITY_HOTSPOT),
 `DiagnosticSeverity` (INFO…BLOCKER), `DiagnosticScope` (ALL/BSL/OS), `DiagnosticTag`,
 `DiagnosticCompatibilityMode`. `DiagnosticCode` — код = имя класса без суффикса `Diagnostic`.
-Подпакет `metadata/` — описание метаданных диагностики: их словарь и правила частичного
-переопределения из конфигурации (заданные атрибуты заменяют значения из кода, остальные
-сохраняются). Это лист без зависимостей от других пакетов проекта, поэтому от него может
-зависеть и `configuration`.
+Подпакет `metadata/` — метаданные диагностик и их переопределение из конфигурации.
 
 ## Рантайм-дескрипторы — `info/`
 
