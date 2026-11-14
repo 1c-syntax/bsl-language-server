@@ -37,6 +37,7 @@ import org.springframework.ai.mcp.annotation.McpToolParam;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
+import java.net.URI;
 import java.util.List;
 
 /**
@@ -104,13 +105,19 @@ public class CallHierarchyTool {
       }
 
       var item = items.get(0);
+      // Вызовы считаются по документу, где объявлен элемент, как в LSP-запросах callHierarchy/*Calls:
+      // по позиции на месте вызова элемент может оказаться методом другого модуля.
+      var itemDocument = documentContext.getServerContext().getDocument(URI.create(item.getUri()));
+      if (itemDocument == null) {
+        return new Result(CallHierarchyItemDto.from(item), List.of(), List.of());
+      }
 
       var incoming = callHierarchyProvider
-        .incomingCalls(documentContext, new CallHierarchyIncomingCallsParams(item))
+        .incomingCalls(itemDocument, new CallHierarchyIncomingCallsParams(item))
         .stream().map(CallDto::incoming).toList();
 
       var outgoing = callHierarchyProvider
-        .outgoingCalls(documentContext, new CallHierarchyOutgoingCallsParams(item))
+        .outgoingCalls(itemDocument, new CallHierarchyOutgoingCallsParams(item))
         .stream().map(CallDto::outgoing).toList();
 
       return new Result(CallHierarchyItemDto.from(item), incoming, outgoing);
