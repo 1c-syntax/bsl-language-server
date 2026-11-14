@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -45,6 +46,44 @@ import java.util.regex.Pattern;
   }
 )
 public class UsingObjectNotAvailableUnixDiagnostic extends AbstractVisitorDiagnostic {
+
+  private final TypeService typeService;
+
+  public UsingObjectNotAvailableUnixDiagnostic(TypeService typeService) {
+    this.typeService = typeService;
+  }
+
+  @Override
+  public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
+    var name = ctx.methodName().getStart().getText();
+    if (isGetCOMObject(name) && documentContext.getSymbolTree().getMethodSymbol(name).isEmpty()
+      && typeService.accessTargetsAt(documentContext, ctx.methodName().IDENTIFIER(), null).stream()
+        .allMatch(member -> member.descriptor().standardLibrary())) {
+      if (!isFindIfBranchWithLinuxCondition(ctx)) {
+        diagnosticStorage.addDiagnostic(ctx, info.getMessage(name));
+      }
+    }
+    return super.visitGlobalMethodCall(ctx);
+  }
+
+  @Override
+  public ParseTree visitMethodCall(BSLParser.MethodCallContext ctx) {
+    var name = ctx.methodName().getStart().getText();
+    if (isGetCOMObject(name)) {
+      boolean htmlShellCall = typeService.accessTargetsAt(documentContext, ctx.methodName().IDENTIFIER(), null).stream()
+        .anyMatch(member -> member.descriptor().standardLibrary() && member.owner() != null
+          && ("ОболочкаHTMLДокумента".equalsIgnoreCase(member.owner().qualifiedName())
+          || "HTMLDocumentShell".equalsIgnoreCase(member.owner().qualifiedName())));
+      if (htmlShellCall && !isFindIfBranchWithLinuxCondition(ctx)) {
+        diagnosticStorage.addDiagnostic(ctx, info.getMessage(name));
+      }
+    }
+    return super.visitMethodCall(ctx);
+  }
+
+  private static boolean isGetCOMObject(String name) {
+    return "ПолучитьCOMОбъект".equalsIgnoreCase(name) || "GetCOMObject".equalsIgnoreCase(name);
+  }
 
   private static final Pattern patternNewExpression = CaseInsensitivePattern.compile(
     "^(COMОбъект|COMObject|Почта|Mail)"

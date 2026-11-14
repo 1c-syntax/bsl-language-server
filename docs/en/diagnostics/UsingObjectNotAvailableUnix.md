@@ -20,6 +20,9 @@ When found unavailable in Linux objects, the method is checked to include condit
 * `Windows`
 * `MacOs`
 
+The check also covers the global `GetCOMObject` function and `HTMLDocumentShell.GetCOMObject`. Member calls require a resolved platform receiver type. Local methods with the same name are excluded.
+
+
 ## Examples
 
 ```bsl

@@ -22,7 +22,16 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.eclipse.lsp4j.Diagnostic;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 
 import java.util.List;
 
@@ -32,6 +41,63 @@ import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertTha
 class UsingObjectNotAvailableUnixDiagnosticTest extends AbstractDiagnosticTest<UsingObjectNotAvailableUnixDiagnostic> {
   UsingObjectNotAvailableUnixDiagnosticTest() {
     super(UsingObjectNotAvailableUnixDiagnostic.class);
+  }
+
+  @Autowired
+  private TypeRegistry registry;
+
+  @Test
+  void htmlShellReceiverMustBeResolved() {
+    initServerContext();
+    // The minimal test platform package does not include HTMLDocumentShell.
+    var shell = registry.registerConfigurationType("ОболочкаHTMLДокумента");
+    var method = new MemberDescriptor(new BilingualString("ПолучитьCOMОбъект", "GetCOMObject"),
+      MemberKind.METHOD, BilingualString.EMPTY, TypeSet.EMPTY, List.of(), null, false,
+      PlatformMetadata.EMPTY, false, true);
+    registry.registerMemberOverride(shell, () -> List.of(method), FileType.BSL);
+    var document = TestUtils.getDocumentContext("""
+      // Параметры:
+      //  Оболочка - ОболочкаHTMLДокумента - оболочка документа.
+      Процедура Проверка(Оболочка, Неизвестный)
+        COM = Оболочка.ПолучитьCOMОбъект();
+        COM = Оболочка.GetCOMObject();
+        COM = Неизвестный.GetCOMObject();
+        Пользовательский = Новый Структура("GetCOMObject", 1);
+        COM = Пользовательский.GetCOMObject();
+        Если ЭтоWindowsКлиент() Тогда
+          COM = Оболочка.GetCOMObject();
+        КонецЕсли;
+      КонецПроцедуры
+      """, context);
+    assertThat(getDiagnostics(document)).hasSize(2);
+  }
+
+  @Test
+  void globalCOMCallsAndPlatformGuards() {
+    initServerContext();
+    var document = TestUtils.getDocumentContext("""
+      Процедура Проверка()
+        COM = ПолучитьCOMОбъект("", "Excel.Application");
+        COM = getcomobject("", "Excel.Application");
+        Если ЭтоWindowsКлиент() Тогда
+          COM = ПолучитьCOMОбъект("", "Excel.Application");
+        КонецЕсли;
+        Неизвестный.ПолучитьCOMОбъект();
+      КонецПроцедуры
+      """, context);
+    assertThat(getDiagnostics(document)).hasSize(2);
+  }
+
+  @Test
+  void localMethodShadowsGlobalCOMFunction() {
+    initServerContext();
+    var document = TestUtils.getDocumentContext("""
+      Функция ПолучитьCOMОбъект()
+        Возврат Неопределено;
+      КонецФункции
+      Результат = ПолучитьCOMОбъект();
+      """, context);
+    assertThat(getDiagnostics(document)).isEmpty();
   }
 
   @Test
