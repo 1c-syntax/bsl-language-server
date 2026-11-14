@@ -34,12 +34,14 @@ import org.eclipse.lsp4j.jsonrpc.CancelChecker;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.stereotype.Component;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 
 /**
  * Провайдер для поиска символов в рабочей области.
@@ -138,6 +140,48 @@ public class SymbolProvider {
     return fast.stream()
       .map(SymbolProvider::createWorkspaceSymbol)
       .toList();
+  }
+
+  /**
+   * Поиск символов рабочей области одним синхронным списком: быстрая древесная выдача и, при
+   * {@code includeFuzzyTail}, блокирующий fuzzy-хвост (подстрока внутри слова, подпоследовательность).
+   * <p>
+   * Для клиентов без канала {@code $/progress}: настройка {@code workspaceSymbol.syncFuzzySearch} здесь
+   * не участвует, нужен ли хвост, решает вызывающий.
+   * <p>
+   * В выдачу попадают только символы документов, прошедших {@code documentFilter}, и не больше
+   * {@code maxResults}. Отбор и лимит применяет индекс
+   * ({@link WorkspaceSymbolIndex#search(String, Predicate, int, CancelChecker)}), поэтому
+   * {@link WorkspaceSymbol} строится лишь для попавших в выдачу записей. Fuzzy-хвост добирает только
+   * недостающие до {@code maxResults} символы и не вычисляется, если быстрая выдача их уже набрала.
+   *
+   * @param query            Строка поиска.
+   * @param documentFilter   Отбор по URI документа, в котором объявлен символ.
+   * @param includeFuzzyTail Дописывать ли fuzzy-хвост после быстрой выдачи.
+   * @param maxResults       Максимум символов в выдаче.
+   * @param cancelChecker    Проверка отмены.
+   * @return Не больше {@code maxResults} символов по убыванию релевантности.
+   */
+  public List<WorkspaceSymbol> searchSymbols(
+    String query,
+    Predicate<URI> documentFilter,
+    boolean includeFuzzyTail,
+    int maxResults,
+    CancelChecker cancelChecker
+  ) {
+    var fast = workspaceSymbolIndex.search(query, documentFilter, maxResults, cancelChecker);
+    var result = new ArrayList<WorkspaceSymbol>(fast.size());
+    fast.forEach(entry -> result.add(createWorkspaceSymbol(entry)));
+
+    var remaining = maxResults - fast.size();
+    if (includeFuzzyTail && !query.isEmpty() && remaining > 0) {
+      // Быстрая выдача не набрала лимит, значит, в ней все быстрые совпадения отобранных документов:
+      // их и исключает хвост.
+      var tail = workspaceSymbolIndex.searchFuzzyTail(
+        query, identitySetOf(fast), documentFilter, remaining, cancelChecker);
+      tail.forEach(entry -> result.add(createWorkspaceSymbol(entry)));
+    }
+    return result;
   }
 
   /**

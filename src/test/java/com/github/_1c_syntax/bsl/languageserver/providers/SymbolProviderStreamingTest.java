@@ -37,18 +37,22 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -250,6 +254,44 @@ class SymbolProviderStreamingTest {
       .containsExactly("ПровестиДокумент");
     verify(index, never()).searchFuzzyTail(any(), anySet(), any());
     verify(client, never()).notifyProgress(any());
+  }
+
+  @Test
+  void searchSymbolsSkipsFuzzyTailWhenFastSetFillsLimit() {
+
+    // given — индекс отдал столько записей отобранных документов, сколько разрешает лимит
+    Predicate<URI> documentFilter = uri -> uri.equals(fastEntry.uri());
+    when(index.search(eq("док"), same(documentFilter), eq(1), any())).thenReturn(List.of(fastEntry));
+
+    // when
+    var result = provider.searchSymbols("док", documentFilter, true, 1, NO_CANCEL);
+
+    // then — лимит набран быстрой выдачей, fuzzy-хвост не считается
+    assertThat(result)
+      .extracting(WorkspaceSymbol::getName)
+      .containsExactly("ПровестиДокумент");
+    verify(index, never()).searchFuzzyTail(any(), anySet(), any(), anyInt(), any());
+  }
+
+  @Test
+  void searchSymbolsAsksFuzzyTailForRemainingSymbolsOfSameDocuments() {
+
+    // given — быстрой выдачи на лимит не хватает
+    Predicate<URI> documentFilter = uri -> uri.equals(fastEntry.uri());
+    when(index.search(eq("док"), same(documentFilter), eq(3), any())).thenReturn(List.of(fastEntry));
+    when(index.searchFuzzyTail(eq("док"), anySet(), same(documentFilter), eq(2), any()))
+      .thenReturn(List.of(tailEntry));
+
+    // when
+    var result = provider.searchSymbols("док", documentFilter, true, 3, NO_CANCEL);
+
+    // then — хвост запрошен с тем же отбором и на оставшиеся до лимита места, быстрая выдача исключена
+    assertThat(result)
+      .extracting(WorkspaceSymbol::getName)
+      .containsExactly("ПровестиДокумент", "КонецМенюДокумент");
+    var excluded = ArgumentCaptor.forClass(Set.class);
+    verify(index).searchFuzzyTail(eq("док"), excluded.capture(), same(documentFilter), eq(2), any());
+    assertThat(excluded.getValue()).containsExactly(fastEntry);
   }
 
   @SuppressWarnings("unchecked")
