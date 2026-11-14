@@ -56,9 +56,14 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Поставщик платформенных типов на основе синтакс-помощника установленной
@@ -124,10 +129,23 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
       return List.of();
     }
     var enLookup = enLookupOf(provider);
+    var typeNames = typeNamesOf(provider);
     var contexts = provider.getContexts();
+    Map<String, TypeRef> typeRefs = new HashMap<>();
+    for (var context : contexts) {
+      var kind = mapKind(context);
+      if (kind != null && context.name() != null) {
+        var ref = new TypeRef(kind, typeNames.apply(context));
+        var primary = safe(context.name().getName());
+        if (primary.equals(typeNames.apply(context))) {
+          typeRefs.put(primary.toLowerCase(Locale.ROOT), ref);
+        }
+        typeRefs.put(safe(context.name().getAlias()).toLowerCase(Locale.ROOT), ref);
+      }
+    }
     var result = new ArrayList<TypeDecl>(contexts.size());
     for (var context : contexts) {
-      var decl = toTypeDecl(context, enLookup);
+      var decl = toTypeDecl(context, enLookup, typeNames, typeRefs);
       if (decl != null) {
         result.add(decl);
       }
@@ -148,19 +166,45 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     return ctx -> EnAttachments.EMPTY;
   }
 
+  /** Различает омонимы HBK по английскому имени, сохраняя привычные ключи остальных типов. */
+  static Function<Context, String> typeNamesOf(ContextProvider provider) {
+    Map<String, Set<String>> aliases = new HashMap<>();
+    for (var context : provider.getContexts()) {
+      if (mapKind(context) == null || context.name() == null) {
+        continue;
+      }
+      var name = context.name();
+      aliases.computeIfAbsent(safe(name.getName()).toLowerCase(Locale.ROOT), key -> new HashSet<>())
+        .add(safe(name.getAlias()).toLowerCase(Locale.ROOT));
+    }
+    var ambiguous = aliases.entrySet().stream().filter(entry -> entry.getValue().size() > 1)
+      .map(Map.Entry::getKey).collect(Collectors.toSet());
+    return (Context context) -> {
+      var name = context.name();
+      var primary = safe(name.getName());
+      var alias = safe(name.getAlias());
+      return ambiguous.contains(primary.toLowerCase(Locale.ROOT)) && !alias.isEmpty() ? alias : primary;
+    };
+  }
+
+  private static String primaryTypeName(Context context) {
+    return context.name().getName();
+  }
+
   @Nullable
-  private static TypeDecl toTypeDecl(Context context, Function<Object, EnAttachments> enLookup) {
+  private static TypeDecl toTypeDecl(Context context, Function<Object, EnAttachments> enLookup,
+                                     Function<Context, String> typeNames, Map<String, TypeRef> typeRefs) {
     var kind = mapKind(context);
     if (kind == null) {
       return null;
     }
     var name = bilingualName(context.name());
-    var members = collectMembers(context, enLookup);
+    var members = collectMembers(context, enLookup, typeNames, typeRefs);
     var en = enLookup.apply(context);
     var description = BilingualString.of(safe(descriptionOf(context)), safe(en.description()));
-    var classRef = new TypeRef(kind, name.primary());
-    var constructors = constructorsOf(context, classRef, enLookup);
-    var defaultElementTypes = collectionElementTypes(context);
+    var classRef = new TypeRef(kind, typeNames.apply(context));
+    var constructors = constructorsOf(context, classRef, enLookup, typeNames);
+    var defaultElementTypes = collectionElementTypes(context, typeNames);
     var supportsForEach = context instanceof ContextCollection coll && coll.supportsForEach();
     var supportsIndexAccess = context instanceof ContextCollection coll && coll.supportsIndexAccess();
     var forEachRu = context instanceof ContextCollection coll ? coll.forEachDescription() : "";
@@ -173,7 +217,7 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
       description, constructors,
       defaultElementTypes, supportsForEach, supportsIndexAccess,
       forEachDescription, indexAccessDescription, typeParameters, isEnum,
-      metadataOf(context, en));
+      metadataOf(context, en), typeNames.apply(context));
   }
 
   /**
@@ -183,7 +227,7 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
    * Конкретные {@link TypeKind} элементов берутся через {@link #mapRefKind(Context)} —
    * это устраняет риск рассинхронизации с маппингом, применяемым к самим типам.
    */
-  private static List<TypeRef> collectionElementTypes(Context context) {
+  private static List<TypeRef> collectionElementTypes(Context context, Function<Context, String> typeNames) {
     if (!(context instanceof ContextCollection collection)) {
       return List.of();
     }
@@ -193,7 +237,7 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     }
     var refs = new ArrayList<TypeRef>(elements.size());
     for (var element : elements) {
-      refs.add(new TypeRef(mapRefKind(element), element.name().getName()));
+      refs.add(new TypeRef(mapRefKind(element), typeNames.apply(element)));
     }
     return List.copyOf(refs);
   }
@@ -237,7 +281,8 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
    * как у обычных методов.
    */
   private static List<SignatureDescriptor> constructorsOf(Context context, TypeRef classRef,
-                                                          Function<Object, EnAttachments> enLookup) {
+                                                         Function<Object, EnAttachments> enLookup,
+                                                         Function<Context, String> typeNames) {
     if (!(context instanceof ContextType type)) {
       return List.of();
     }
@@ -249,7 +294,7 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     for (var ctor : ctors) {
       var parameters = new ArrayList<ParameterDescriptor>(ctor.parameters().size());
       for (var parameter : ctor.parameters()) {
-        parameters.add(toParameterDescriptor(parameter, enLookup));
+        parameters.add(toParameterDescriptor(parameter, enLookup, typeNames));
       }
       var ctorDescBilingual = BilingualString.of(
         safe(ctor.description()), safe(enLookup.apply(ctor).description()));
@@ -278,25 +323,34 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
   }
 
   private static List<MemberDescriptor> collectMembers(Context context,
-                                                       Function<Object, EnAttachments> enLookup) {
+                                                       Function<Object, EnAttachments> enLookup,
+                                                       Function<Context, String> typeNames,
+                                                       Map<String, TypeRef> typeRefs) {
     if (context instanceof ContextType type) {
       var members = new ArrayList<MemberDescriptor>(
         type.methods().size() + type.properties().size() + type.events().size());
       for (var property : type.properties()) {
-        members.add(toMemberDescriptor(property, enLookup));
+        var member = toMemberDescriptor(property, enLookup, typeNames);
+        // Сырая ссылка «ЭлементыФормы» в HBK неоднозначна. Подчинённые элементы
+        // управляемой группы/таблицы относятся к FormItems, а не к обычным Controls.
+        var preciseType = formCollectionPropertyType(context, property, typeRefs);
+        if (preciseType != null) {
+          member = member.withReturnTypes(TypeSet.of(preciseType));
+        }
+        members.add(member);
       }
       for (var method : type.methods()) {
-        members.add(toMemberDescriptor(method, enLookup));
+        members.add(toMemberDescriptor(method, enLookup, typeNames));
       }
       for (var event : type.events()) {
-        members.add(toMemberDescriptor(event, enLookup));
+        members.add(toMemberDescriptor(event, enLookup, typeNames));
       }
       return List.copyOf(members);
     }
     if (context instanceof ContextEnum enumeration) {
       var values = enumeration.values();
       var members = new ArrayList<MemberDescriptor>(values.size());
-      var enumRef = new TypeRef(TypeKind.PLATFORM, context.name().getName());
+      var enumRef = new TypeRef(TypeKind.PLATFORM, typeNames.apply(context));
       // Тип элементов набора берётся из bsl-context (страница enum: значения
       // имеют такой-то тип). Если общий тип задан (как у библиотек картинок,
       // стилей, цветов), значения возвращают его; иначе сам enumRef.
@@ -311,9 +365,31 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     return Collections.emptyList();
   }
 
+  private static boolean matchesName(ContextName name, String value) {
+    return value.equalsIgnoreCase(name.getName()) || value.equalsIgnoreCase(name.getAlias());
+  }
+
+  private static @Nullable TypeRef formCollectionPropertyType(Context owner, ContextProperty property,
+                                                              Map<String, TypeRef> typeRefs) {
+    if ((matchesName(owner.name(), "FormGroup") || matchesName(owner.name(), "FormTable"))
+        && matchesName(property.name(), "ChildItems")) {
+      return typeRefs.get("formitems");
+    }
+    if (matchesName(owner.name(), "Form") && matchesName(property.name(), "Controls")) {
+      return typeRefs.get("controls");
+    }
+    return null;
+  }
+
   static MemberDescriptor toMemberDescriptor(ContextProperty property,
                                              Function<Object, EnAttachments> enLookup) {
-    var returnTypes = typeSet(property.types());
+    return toMemberDescriptor(property, enLookup, BslContextPlatformTypesProvider::primaryTypeName);
+  }
+
+  static MemberDescriptor toMemberDescriptor(ContextProperty property,
+                                             Function<Object, EnAttachments> enLookup,
+                                             Function<Context, String> typeNames) {
+    var returnTypes = typeSet(property.types(), typeNames);
     // Имя для primary берём ru-сторону — bilingualName ниже всё равно покрывает обе локали.
     var name = property.name().getName();
     MemberDescriptor descriptor;
@@ -341,9 +417,15 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
 
   static MemberDescriptor toMemberDescriptor(ContextMethod method,
                                              Function<Object, EnAttachments> enLookup) {
-    var returnTypes = typeSet(method.returnValues());
+    return toMemberDescriptor(method, enLookup, BslContextPlatformTypesProvider::primaryTypeName);
+  }
+
+  static MemberDescriptor toMemberDescriptor(ContextMethod method,
+                                             Function<Object, EnAttachments> enLookup,
+                                             Function<Context, String> typeNames) {
+    var returnTypes = typeSet(method.returnValues(), typeNames);
     var primaryReturnType = returnTypes.refs().stream().findFirst().orElse(TypeRef.UNKNOWN);
-    var signatures = toSignatures(method.signatures(), primaryReturnType, enLookup);
+    var signatures = toSignatures(method.signatures(), primaryReturnType, enLookup, typeNames);
     return new MemberDescriptor(
       bilingualName(method.name()),
       MemberKind.METHOD,
@@ -376,7 +458,13 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
    */
   static MemberDescriptor toMemberDescriptor(ContextEvent event,
                                              Function<Object, EnAttachments> enLookup) {
-    var signatures = toSignatures(event.signatures(), TypeRef.UNKNOWN, enLookup);
+    return toMemberDescriptor(event, enLookup, BslContextPlatformTypesProvider::primaryTypeName);
+  }
+
+  static MemberDescriptor toMemberDescriptor(ContextEvent event,
+                                             Function<Object, EnAttachments> enLookup,
+                                             Function<Context, String> typeNames) {
+    var signatures = toSignatures(event.signatures(), TypeRef.UNKNOWN, enLookup, typeNames);
     return new MemberDescriptor(
       bilingualName(event.name()),
       MemberKind.EVENT,
@@ -403,8 +491,14 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
    */
   static MemberDescriptor toMemberDescriptor(ContextFormParameter parameter,
                                              Function<Object, EnAttachments> enLookup) {
+    return toMemberDescriptor(parameter, enLookup, BslContextPlatformTypesProvider::primaryTypeName);
+  }
+
+  static MemberDescriptor toMemberDescriptor(ContextFormParameter parameter,
+                                             Function<Object, EnAttachments> enLookup,
+                                             Function<Context, String> typeNames) {
     var en = enLookup.apply(parameter);
-    return MemberDescriptor.property(parameter.name().getName(), typeSet(parameter.types()), "")
+    return MemberDescriptor.property(parameter.name().getName(), typeSet(parameter.types(), typeNames), "")
       .withBilingualName(bilingualName(parameter.name()))
       .withBilingualDescription(BilingualString.of(
         keyMarked(safe(parameter.description()), parameter.isKey(), KEY_PARAMETER_MARKER.ru()),
@@ -573,6 +667,15 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     TypeRef returnType,
     Function<Object, EnAttachments> enLookup
   ) {
+    return toSignatures(signatures, returnType, enLookup, BslContextPlatformTypesProvider::primaryTypeName);
+  }
+
+  private static List<SignatureDescriptor> toSignatures(
+    List<ContextMethodSignature> signatures,
+    TypeRef returnType,
+    Function<Object, EnAttachments> enLookup,
+    Function<Context, String> typeNames
+  ) {
     if (signatures.isEmpty()) {
       return List.of();
     }
@@ -580,7 +683,7 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     for (var signature : signatures) {
       var parameters = new ArrayList<ParameterDescriptor>(signature.parameters().size());
       for (var parameter : signature.parameters()) {
-        parameters.add(toParameterDescriptor(parameter, enLookup));
+        parameters.add(toParameterDescriptor(parameter, enLookup, typeNames));
       }
       var sigDescBilingual = BilingualString.of(
         safe(signature.description()), safe(enLookup.apply(signature).description()));
@@ -590,10 +693,11 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
   }
 
   private static ParameterDescriptor toParameterDescriptor(ContextSignatureParameter parameter,
-                                                           Function<Object, EnAttachments> enLookup) {
+                                                           Function<Object, EnAttachments> enLookup,
+                                                           Function<Context, String> typeNames) {
     return new ParameterDescriptor(
       bilingualName(parameter.name()),
-      typeSet(parameter.types()),
+      typeSet(parameter.types(), typeNames),
       !parameter.isRequired(),
       BilingualString.of(safe(parameter.description()), safe(enLookup.apply(parameter).description())),
       safe(parameter.defaultValue()),
@@ -609,12 +713,16 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
    * @return набор типов; {@link TypeSet#EMPTY}, если контекстов нет.
    */
   static TypeSet typeSet(List<Context> contexts) {
+    return typeSet(contexts, BslContextPlatformTypesProvider::primaryTypeName);
+  }
+
+  private static TypeSet typeSet(List<Context> contexts, Function<Context, String> typeNames) {
     if (contexts.isEmpty()) {
       return TypeSet.EMPTY;
     }
     var refs = new ArrayList<TypeRef>(contexts.size());
     for (var c : contexts) {
-      refs.add(new TypeRef(mapRefKind(c), c.name().getName()));
+      refs.add(new TypeRef(mapRefKind(c), typeNames.apply(c)));
     }
     return TypeSet.of(refs);
   }

@@ -23,6 +23,9 @@
                 "$ref": "#/definitions/parameter"
             },
             "properties": {
+                "MemberAccessUnavailable": {
+                    "$ref": "parameters-schema.json#/definitions/MemberAccessUnavailable"
+                },
                 "AllFunctionPathMustHaveReturn": {
                     "$ref": "parameters-schema.json#/definitions/AllFunctionPathMustHaveReturn"
                 },
@@ -720,6 +723,27 @@
         }
     },
     "properties": {
+        "completion": {
+            "$id": "#/properties/completion",
+            "type": "object",
+            "title": "Code completion configuration.",
+            "properties": {
+                "hideUnavailableByContext": {
+                    "$id": "#/properties/completion/hideUnavailableByContext",
+                    "type": "boolean",
+                    "default": true,
+                    "title": "Hide suggestions unavailable in the current compilation contexts.",
+                    "description": "Hide a suggestion only when it is known to be unavailable in every possible calling context and for every possible target. Keep partially available suggestions and suggestions with unknown availability. When disabled, unavailable suggestions remain at the end of the list."
+                }
+            }
+        },
+        "supportThickClientFileMode": {
+            "$id": "#/properties/supportThickClientFileMode",
+            "type": "boolean",
+            "default": false,
+            "title": "Support the thick client in file mode.",
+            "description": "Include file-mode thick client contexts in diagnostics, type inference and editor hints. Client and Server preprocessor symbols can both be true in these contexts. Does not disable client/server thick clients or file-mode external connections."
+        },
         "language": {
             "$id": "#/properties/language",
             "type": "string",

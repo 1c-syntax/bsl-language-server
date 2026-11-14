@@ -102,20 +102,15 @@ public record TypeSet(
   }
 
   /**
-   * Компактное неизменяемое представление набора ссылок: одно- и пустые наборы
-   * (подавляющее большинство) обходятся без {@link LinkedHashSet}/обёртки, что
-   * экономит память на каждый {@code TypeSet}. Для наборов из двух и более ссылок
-   * сохраняется порядок вставки через {@link LinkedHashSet}.
+   * Компактное неизменяемое представление набора ссылок с порядком вставки (см.
+   * {@link SmallCollections}): пустые и одноэлементные наборы — подавляющее большинство, —
+   * а также малые объединения обходятся без {@link LinkedHashSet} и обёртки.
    *
    * @param refs исходный набор ссылок на типы
-   * @return неизменяемый набор тех же ссылок, компактный для размеров 0 и 1
+   * @return неизменяемый набор тех же ссылок в том же порядке
    */
   private static Set<TypeRef> compactRefs(Set<TypeRef> refs) {
-    return switch (refs.size()) {
-      case 0 -> Collections.emptySet();
-      case 1 -> Set.of(refs.iterator().next());
-      default -> Collections.unmodifiableSet(new LinkedHashSet<>(refs));
-    };
+    return SmallCollections.orderedSet(refs);
   }
 
   public boolean isEmpty() {

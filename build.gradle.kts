@@ -19,9 +19,9 @@ plugins {
     id("io.freefair.aspectj.post-compile-weaving") version "9.8.3"
     id("io.freefair.maven-central.validate-poms") version "9.8.3"
     id("com.github.ben-manes.versions") version "0.67.0"
-    id("org.springframework.boot") version "4.1.0"
+    id("org.springframework.boot") version "4.1.2"
     id("io.spring.dependency-management") version "1.1.7"
-    id("io.sentry.jvm.gradle") version "6.25.0"
+    id("io.sentry.jvm.gradle") version "6.26.0"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.2"
     id("ru.vyarus.pom") version "3.0.0"
     id("org.jreleaser") version "1.27.0"
@@ -126,7 +126,7 @@ dependencies {
     }
 
     // AOP
-    implementation("org.aspectj:aspectjrt:1.9.26")
+    implementation("org.aspectj:aspectjrt:1.9.27")
 
     // commons utils
     implementation("commons-io:commons-io:2.22.0")
@@ -139,7 +139,7 @@ dependencies {
     implementation("org.apache.commons:commons-exec:1.6.0")
 
     // JGit
-    implementation("org.eclipse.jgit:org.eclipse.jgit:7.8.0.202609011348-r")
+    implementation("org.eclipse.jgit:org.eclipse.jgit:7.8.1.202611041320-r")
 
     // progress bar
     implementation("me.tongfei:progressbar:0.10.2")

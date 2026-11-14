@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.languageserver.types.registry.MemberLookupSession;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.MethodCallNode;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
@@ -146,7 +147,8 @@ class TableCollectionInference {
   private MemberDescriptor resolveMember(TypeSet receiver, String memberName, MemberKind kind,
                                          FileType fileType) {
     for (var ref : receiver.refs()) {
-      for (var member : typeRegistry.getMembers(ref, fileType)) {
+      var members = typeRegistry.getMembers(ref, fileType);
+      for (var member : MemberLookupSession.candidates(members, kind, memberName)) {
         if (member.kind() == kind && member.matches(memberName)) {
           return member;
         }

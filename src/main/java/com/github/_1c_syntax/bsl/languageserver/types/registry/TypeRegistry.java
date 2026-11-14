@@ -55,9 +55,11 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -71,6 +73,7 @@ import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
@@ -128,14 +131,42 @@ public class TypeRegistry {
 
   /** Интернер TypeRef: канонический инстанс на пару (kind, qualifiedName). */
   private final GenericInterner<TypeRef> refInterner = new GenericInterner<>();
-  /** Алиасы (включая Ru/En) → канонический TypeRef. Ключ — lowercased имя. */
-  private final Map<String, TypeRef> aliasIndex = new ConcurrentHashMap<>();
+  /** Алиасы (включая Ru/En) → канонический TypeRef. Ключ — имя без учёта регистра. */
+  private final Map<NameKey, TypeRef> aliasIndex = new ConcurrentHashMap<>();
+
+  /**
+   * Имя типа как ключ без учёта регистра. Ключ держит само имя, а не его копию в нижнем
+   * регистре: имён в реестре большой конфигурации сотни тысяч, и копии стоили десятки мегабайт.
+   *
+   * @param name имя в исходном написании.
+   */
+  private record NameKey(String name) implements Comparable<NameKey> {
+
+    @Override
+    public int compareTo(NameKey other) {
+      return name.compareToIgnoreCase(other.name);
+    }
+
+    @Override
+    public boolean equals(Object other) {
+      return other instanceof NameKey(var otherName) && name.equalsIgnoreCase(otherName);
+    }
+
+    @Override
+    public int hashCode() {
+      var hash = 0;
+      for (var i = 0; i < name.length(); i++) {
+        hash = 31 * hash + Character.toLowerCase(Character.toUpperCase(name.charAt(i)));
+      }
+      return hash;
+    }
+  }
 
   /**
    * Generic-типы по семейству: часть имени до плейсхолдера ({@code "документссылка"} у
    * {@code "документссылка.<имя документа>"}) → имена типов семейства с их ссылками.
-   * Ведётся вместе с {@link #aliasIndex}, поэтому {@link #resolveGenericByPrefix(String)}
-   * не перебирает индекс имён.
+   * Ведётся вместе с {@link #typeParameters} — дженериком тип объявляет его провайдер, — поэтому
+   * {@link #resolveGenericByPrefix(String)} не перебирает индекс имён.
    */
   private final Map<String, ConcurrentSkipListMap<String, TypeRef>> genericsByFamily = new ConcurrentHashMap<>();
   /** Тип ↔ объект Type (hydrated). */
@@ -203,7 +234,17 @@ public class TypeRegistry {
     }
   }
 
-  private record CachedMembers(long epoch, long generation, List<MemberDescriptor> members) {
+  /**
+   * Запомненные члены типа.
+   *
+   * @param epoch      эпоха, при которой они собраны.
+   * @param generation поколение типа, при котором они собраны.
+   * @param members    члены — неизменяемый вид.
+   * @param slots      атомарные ячейки тех же членов, обновляемые на месте только у
+   *                   {@link #GLOBAL_CONTEXT}; иначе {@code null}.
+   */
+  private record CachedMembers(long epoch, long generation, List<MemberDescriptor> members,
+                               @Nullable AtomicReferenceArray<MemberDescriptor> slots) {
   }
 
   /**
@@ -329,8 +370,8 @@ public class TypeRegistry {
     // «Произвольный»/«Arbitrary» — вершина решётки типов. Канонизируем имя в
     // TypeRef.ANY, чтобы по всему движку универсальный тип распознавался
     // сравнением с ANY (без проверки имени). Отображается как «Произвольный».
-    aliasIndex.put("произвольный", TypeRef.ANY);
-    aliasIndex.put("arbitrary", TypeRef.ANY);
+    aliasIndex.put(new NameKey("Произвольный"), TypeRef.ANY);
+    aliasIndex.put(new NameKey("Arbitrary"), TypeRef.ANY);
     registerDisplayName(TypeRef.ANY, BilingualString.of("Произвольный", "Arbitrary"));
   }
 
@@ -349,7 +390,7 @@ public class TypeRegistry {
     if (name == null || name.isEmpty()) {
       return Optional.empty();
     }
-    return Optional.ofNullable(aliasIndex.get(name.toLowerCase(Locale.ROOT)));
+    return Optional.ofNullable(aliasIndex.get(new NameKey(name)));
   }
 
   /**
@@ -394,8 +435,9 @@ public class TypeRegistry {
    * Платформа 1С регистрирует обобщённые типы вида
    * {@code "ДокументСсылка.<Имя документа>"}, {@code "СправочникОбъект.<Имя справочника>"}
    * и т.п. — конкретное имя плейсхолдера в угловых скобках различается для каждого
-   * MDOType. Этот метод выбирает тип, чьё qualifiedName начинается с
-   * {@code prefix + ".<"} (плейсхолдер) — обычно он один на семейство; если их несколько,
+   * MDOType. Этот метод выбирает дженерик (тип, которому провайдер объявил параметры, — см.
+   * {@link #getTypeParameters(TypeRef)}), чьё имя в одном из написаний начинается с
+   * {@code prefix + ".<"} (плейсхолдер), — обычно он один на семейство; если их несколько,
    * первый по имени.
    *
    * @param prefix начальная часть qualifiedName до точки-плейсхолдера
@@ -568,11 +610,33 @@ public class TypeRegistry {
     var key = new MembersKey(ref, fileType);
     var generation = membersGeneration.getOrDefault(key, 0L);
     var members = computeMembers(ref, fileType);
+    AtomicReferenceArray<MemberDescriptor> slots = null;
+    if (GLOBAL_CONTEXT.equals(ref)) {
+      // Символ-источник глобального свойства освежается на месте (см.
+      // refreshGlobalPropertyDeclaration). Атомарные ячейки публикуют замену читателям,
+      // которые обращаются к сохранённому виду списка без globalContextLock.
+      slots = new AtomicReferenceArray<>(members.toArray(MemberDescriptor[]::new));
+      members = globalMembersView(slots);
+    }
     // Штампуем поколением, снятым ДО вычисления: если во время computeMembers прошла
     // точечная инвалидация (bump поколения), запись окажется устаревшей и будет
     // отвергнута следующим чтением — гонка «публикация устаревшего результата» закрыта.
-    membersCache.put(key, new CachedMembers(epoch, generation, members));
+    membersCache.put(key, new CachedMembers(epoch, generation, members, slots));
     return members;
+  }
+
+  private static List<MemberDescriptor> globalMembersView(AtomicReferenceArray<MemberDescriptor> slots) {
+    return Collections.unmodifiableList(new AbstractList<>() {
+      @Override
+      public MemberDescriptor get(int index) {
+        return slots.get(index);
+      }
+
+      @Override
+      public int size() {
+        return slots.length();
+      }
+    });
   }
 
   /**
@@ -589,9 +653,7 @@ public class TypeRegistry {
    * @return найденный член; empty, если такого нет.
    */
   public Optional<MemberDescriptor> findMember(TypeRef ref, MemberKind kind, String name, FileType fileType) {
-    return getMembers(ref, fileType).stream()
-      .filter(member -> member.kind() == kind && member.matches(name))
-      .findFirst();
+    return MemberLookupSession.first(getMembers(ref, fileType), kind, name);
   }
 
   /** Типы-перечисления (источник пометил {@code isEnum}), в разрезе языка. */
@@ -675,6 +737,46 @@ public class TypeRegistry {
   }
 
   /**
+   * Освежить символ-источник типа-глобального свойства, равный прежнему: объявивший тип
+   * документ перечитан с тем же текстом, и его символ из нового дерева.
+   * <p>
+   * Члены {@link #GLOBAL_CONTEXT} не пересобираются: член этого свойства подменяется на месте,
+   * в том же наборе, и прежний символ — а с ним и прежнее дерево документа — больше ничем не
+   * удерживается. Читатель, взявший набор раньше, увидит либо прежний символ, либо новый — они
+   * равны.
+   * <p>
+   * Подмена идёт под тем же замком, что и сборка этих членов: иначе сборка, прочитавшая прежний
+   * символ до подмены, опубликовала бы набор с ним уже после неё.
+   *
+   * @param ref         тип-глобальное свойство.
+   * @param declaration символ-источник из нового дерева, равный прежнему.
+   */
+  public void refreshGlobalPropertyDeclaration(TypeRef ref, SourceDefinedSymbol declaration) {
+    synchronized (globalContextLock) {
+      globalPropertySymbols.put(ref, new WeakReference<>(declaration));
+      for (var fileType : FILE_TYPES) {
+        var cached = membersCache.get(new MembersKey(GLOBAL_CONTEXT, fileType));
+        var slots = cached == null ? null : cached.slots();
+        if (slots != null) {
+          replaceDeclaration(slots, declaration);
+        }
+      }
+    }
+  }
+
+  private static void replaceDeclaration(AtomicReferenceArray<MemberDescriptor> slots, SourceDefinedSymbol declaration) {
+    for (var i = 0; i < slots.length(); i++) {
+      var member = slots.get(i);
+      // Документ сравнивается по ссылке — он у символа один и тот же, а полное равенство
+      // сравнивало бы адреса всех членов глобального контекста.
+      if (member.sourceSymbol() instanceof SourceDefinedSymbol source && source != declaration
+        && source.getOwner() == declaration.getOwner() && declaration.equals(source)) {
+        slots.set(i, member.withSourceSymbol(declaration));
+      }
+    }
+  }
+
+  /**
    * Снять пометку глобального свойства с типа.
    *
    * @param ref      тип.
@@ -750,8 +852,14 @@ public class TypeRegistry {
         if (isSuppressed(member, suppressed)) {
           continue;
         }
-        byNameAndKind.putIfAbsent(
-          new MemberKey(member.kind(), member.name().toLowerCase(Locale.ROOT)), member);
+        var memberKey = new MemberKey(member.kind(), member.name().toLowerCase(Locale.ROOT));
+        var previous = byNameAndKind.putIfAbsent(memberKey, member);
+        // Конфигурация уточняет тип глобального значения (например, Справочники),
+        // сохраняя ограничения исходного свойства СП, в том числе доступность и режим чтения.
+        if (previous != null && GLOBAL_CONTEXT.equals(ref) && member.kind() == MemberKind.PROPERTY
+            && previous.metadata().isEmpty() && !member.metadata().isEmpty()) {
+          byNameAndKind.put(memberKey, previous.withMetadata(member.metadata()));
+        }
       }
     }
     // Неизменяемый список: память шарится между вызовами, случайная мутация
@@ -824,7 +932,7 @@ public class TypeRegistry {
 
   /** Канонический ref по имени; {@code null}, если он же и передан либо алиаса нет. */
   private @Nullable TypeRef canonicalOf(TypeRef ref) {
-    var canonical = aliasIndex.get(ref.qualifiedName().toLowerCase(Locale.ROOT));
+    var canonical = aliasIndex.get(new NameKey(ref.qualifiedName()));
     return canonical != null && !canonical.equals(ref) ? canonical : null;
   }
 
@@ -1473,10 +1581,17 @@ public class TypeRegistry {
    *
    * @param ref      ссылка на тип.
    * @param fileType язык файла-потребителя.
-   * @return метаданные либо {@link PlatformMetadata#EMPTY}, если источник их не дал.
+   * @return собственные метаданные либо метаданные исходного generic-типа специализации;
+   *     {@link PlatformMetadata#EMPTY}, если источник их не дал.
    */
   public PlatformMetadata getTypeMetadata(TypeRef ref, FileType fileType) {
-    return typeMetadata.get(fileType).getOrDefault(ref, PlatformMetadata.EMPTY);
+    var metadata = typeMetadata.get(fileType);
+    var direct = metadata.get(ref);
+    if (direct != null) {
+      return direct;
+    }
+    return genericOf(ref).map(generic -> metadata.getOrDefault(generic, PlatformMetadata.EMPTY))
+      .orElse(PlatformMetadata.EMPTY);
   }
 
   /**
@@ -1586,14 +1701,7 @@ public class TypeRegistry {
       globalContextEpoch.incrementAndGet();
     }
     visibleTypes.values().forEach(typed -> typed.remove(ref));
-    var key = qualifiedName.toLowerCase(Locale.ROOT);
-    aliasIndex.remove(key);
-    forEachGenericFamily(key, (String family) -> {
-      var generics = genericsByFamily.get(family);
-      if (generics != null) {
-        generics.remove(key);
-      }
-    });
+    aliasIndex.remove(new NameKey(qualifiedName));
     collectionTraits.remove(ref);
   }
 
@@ -1665,12 +1773,27 @@ public class TypeRegistry {
     }
   }
 
-  /** Generic-параметры пака: имена плейсхолдеров в qualifiedName типа. */
+  /**
+   * Generic-параметры пака: имена плейсхолдеров в qualifiedName типа. Дженерик заносится и в
+   * {@link #genericsByFamily} — под всеми своими написаниями.
+   */
   private void registerPackTypeParameters(TypePackProvider.TypeDecl decl, TypeRef ref) {
-    if (!decl.typeParameters().isEmpty()) {
-      typeParameters.put(ref, List.copyOf(decl.typeParameters()));
-      genericsByFamilyCore.set(new ConcurrentHashMap<>());
+    if (decl.typeParameters().isEmpty()) {
+      return;
     }
+    typeParameters.put(ref, List.copyOf(decl.typeParameters()));
+    genericsByFamilyCore.set(new ConcurrentHashMap<>());
+    addGenericFamilies(decl.qualifiedName(), ref);
+    if (!decl.name().isEmpty()) {
+      addGenericFamilies(decl.name().ru(), ref);
+      addGenericFamilies(decl.name().en(), ref);
+    }
+  }
+
+  private void addGenericFamilies(String name, TypeRef ref) {
+    var key = name.toLowerCase(Locale.ROOT);
+    forEachGenericFamily(key, (String family) ->
+      genericsByFamily.computeIfAbsent(family, k -> new ConcurrentSkipListMap<>()).put(key, ref));
   }
 
   /**
@@ -1681,7 +1804,7 @@ public class TypeRegistry {
   public String displayName(TypeRef ref, Language language) {
     var bn = displayNames.get(ref);
     if (bn == null) {
-      var canonical = aliasIndex.get(ref.qualifiedName().toLowerCase(Locale.ROOT));
+      var canonical = aliasIndex.get(new NameKey(ref.qualifiedName()));
       if (canonical != null) {
         bn = displayNames.get(canonical);
       }
@@ -1908,6 +2031,14 @@ public class TypeRegistry {
     return name != null && memberMetadataIndex.isVersionedName(name);
   }
 
+  public boolean mayBeDeprecatedMemberName(@Nullable String name, com.github._1c_syntax.bsl.support.CompatibilityMode target) {
+    return name != null && memberMetadataIndex.mayBeDeprecated(name, target);
+  }
+
+  public boolean mayBeUnavailableMemberName(@Nullable String name, com.github._1c_syntax.bsl.support.CompatibilityMode target) {
+    return name != null && memberMetadataIndex.mayBeUnavailable(name, target);
+  }
+
   /**
    * Дешёвая проверка имени присваиваемого свойства: входит ли оно в число
    * имён, у которых ХОТЯ БЫ НА ОДНОМ платформенном типе режим доступа =
@@ -1939,10 +2070,7 @@ public class TypeRegistry {
   }
 
   private void addAlias(String name, TypeRef ref) {
-    var key = name.toLowerCase(Locale.ROOT);
-    aliasIndex.put(key, ref);
-    forEachGenericFamily(key, (String family) ->
-      genericsByFamily.computeIfAbsent(family, k -> new ConcurrentSkipListMap<>()).put(key, ref));
+    aliasIndex.put(new NameKey(name), ref);
   }
 
   /**

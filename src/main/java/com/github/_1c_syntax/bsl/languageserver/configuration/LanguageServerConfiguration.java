@@ -26,6 +26,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.github._1c_syntax.bsl.languageserver.configuration.codelens.CodeLensOptions;
+import com.github._1c_syntax.bsl.languageserver.configuration.completion.CompletionOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.DiagnosticsOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.documentlink.DocumentLinkOptions;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
@@ -41,10 +42,12 @@ import jakarta.annotation.PostConstruct;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.SneakyThrows;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.jspecify.annotations.Nullable;
@@ -94,6 +97,10 @@ public class LanguageServerConfiguration {
   @Setter(value = AccessLevel.NONE)
   private CodeLensOptions codeLensOptions = new CodeLensOptions();
 
+  @JsonProperty("completion")
+  @Setter(value = AccessLevel.NONE)
+  private CompletionOptions completionOptions = new CompletionOptions();
+
   @JsonProperty("documentLink")
   @Setter(value = AccessLevel.NONE)
   private DocumentLinkOptions documentLinkOptions = new DocumentLinkOptions();
@@ -124,6 +131,13 @@ public class LanguageServerConfiguration {
 
   private String siteRoot = "https://1c-syntax.github.io/bsl-language-server";
   private boolean useDevSite;
+
+  /**
+   * Учитывать толстый клиент в файловом варианте работы, включая совмещённые символы
+   * {@code Клиент} и {@code Сервер}. По умолчанию выключено. Настройка общая для
+   * диагностик, вывода типов и подсказок; файловое внешнее соединение от неё не зависит.
+   */
+  private boolean supportThickClientFileMode;
 
   @Nullable
   private Path configurationRoot;
@@ -166,6 +180,16 @@ public class LanguageServerConfiguration {
   @Setter(value = AccessLevel.NONE)
   @Nullable
   private LanguageServerConfiguration initialSnapshot;
+
+  /**
+   * Применить независимый снимок настроек ссылок.
+   *
+   * @param referencesOptions новые настройки ссылок.
+   */
+  @JsonProperty("references")
+  public void setReferencesOptions(ReferencesOptions referencesOptions) {
+    this.referencesOptions = new ReferencesOptions(referencesOptions.getCommonModuleAccessors());
+  }
 
   /**
    * Инициализация конфигурации при создании workspace-scoped бина.
@@ -313,12 +337,13 @@ public class LanguageServerConfiguration {
     PropertyUtils.copyProperties(this, configuration);
     PropertyUtils.copyProperties(this.inlayHintOptions, configuration.inlayHintOptions);
     PropertyUtils.copyProperties(this.codeLensOptions, configuration.codeLensOptions);
+    PropertyUtils.copyProperties(this.completionOptions, configuration.completionOptions);
     PropertyUtils.copyProperties(this.diagnosticsOptions, configuration.diagnosticsOptions);
     PropertyUtils.copyProperties(this.documentLinkOptions, configuration.documentLinkOptions);
     PropertyUtils.copyProperties(this.formattingOptions, configuration.formattingOptions);
-    PropertyUtils.copyProperties(this.referencesOptions, configuration.referencesOptions);
     PropertyUtils.copyProperties(this.semanticTokensOptions, configuration.semanticTokensOptions);
     PropertyUtils.copyProperties(this.oscriptOptions, configuration.oscriptOptions);
     PropertyUtils.copyProperties(this.v8PlatformOptions, configuration.v8PlatformOptions);
   }
+
 }

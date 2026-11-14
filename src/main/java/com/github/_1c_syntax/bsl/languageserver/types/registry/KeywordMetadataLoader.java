@@ -31,7 +31,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Predicate;
 
 /**
  * JSON-fallback парсер встроенных языковых конструкций ({@code builtin-keywords.json}
@@ -43,12 +42,9 @@ import java.util.function.Predicate;
  * {@code category}, {@code description}, {@code descriptionEn},
  * {@code snippet.ru/en}, {@code descriptionByParent.<parent>.{ru,en}}.
  * <p>
- * В плоский список keywords (для no-dot completion) попадают только те, чья
- * категория проходит фильтр {@code includeInCompletion} (по соглашению с
- * bsl-context — LITERAL/STATEMENT/OPERATOR/DECLARATION). PRAGMA/ANNOTATION/
- * PREPROCESSOR_INSTRUCTION не дают completion-кандидата, но их сниппеты и
- * описания всё равно индексируются — нужны hover'у в соответствующих
- * синтаксических контекстах.
+ * Все категории индексируются для hover и шаблонов. Список предлагаемых ключевых
+ * слов задаёт словарь языка; обозначения из синтаксических схем не становятся
+ * кандидатами completion из-за наличия описания в справке.
  */
 @Slf4j
 final class KeywordMetadataLoader {
@@ -65,15 +61,12 @@ final class KeywordMetadataLoader {
    * {@link KeywordMetadata}. При отсутствии/ошибке ресурса — {@link KeywordMetadata#EMPTY}.
    *
    * @param resourcePath          путь к JSON-ресурсу на classpath
-   * @param includeInCompletion   фильтр категорий, которые попадают в плоский список
-   *                              (для no-dot completion)
    */
-  static KeywordMetadata load(String resourcePath,
-                              Predicate<String> includeInCompletion) {
+  static KeywordMetadata load(String resourcePath) {
     var mapper = JsonMapper.builder().build();
     try (var stream = BuiltinResources.open(resourcePath)) {
       var root = mapper.readValue(stream, ROOT_TYPE);
-      var builder = new KeywordMetadataBuilder(includeInCompletion);
+      var builder = new KeywordMetadataBuilder();
       for (var entry : keywordEntries(root)) {
         builder.add(entry);
       }

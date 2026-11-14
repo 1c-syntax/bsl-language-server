@@ -1,0 +1,19 @@
+{
+  "functions": [
+    {
+      "name": "ТестФормат",
+      "aliases": ["TestFormat"],
+      "returnType": "Строка",
+      "signatures": [
+        {
+          "returnType": "String",
+          "parameters": [
+            {"name": "template", "nameRu": "Шаблон", "nameEn": "template", "type": "String"},
+            {"name": "values", "nameRu": "Значения", "nameEn": "values", "type": "Arbitrary",
+              "optional": true, "variadic": true, "defaultValue": "Неопределено"}
+          ]
+        }
+      ]
+    }
+  ]
+}

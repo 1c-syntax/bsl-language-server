@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types.index;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextConfigurationBindingChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
@@ -223,9 +224,10 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
   private final ReadWriteLock lock = new ReentrantReadWriteLock();
 
   /**
-   * Имена в нижнем регистре: одно и то же имя повторяется в тысячах модулей.
+   * Имена в нижнем регистре: одно и то же имя повторяется в тысячах модулей. Интернер общий для
+   * приложения — те же имена в нижнем регистре держат ключи индекса ссылок.
    */
-  private final StringInterner lowerCaseNames = new StringInterner();
+  private final StringInterner lowerCaseNames;
 
   /**
    * Пересобрать записи документа на изменении его содержимого.
@@ -315,7 +317,7 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
    * <p>
    * Каждая запись лежит под несколькими ключами (полное имя и начало каждого CamelCase-слова),
    * поэтому удаляется из ВСЕХ своих ключей: их множество детерминированно пересчитывается из имени
-   * записи методом {@link #keysOf(String)} (обратная карта не нужна). И {@link #indexedByUri}, и
+   * записи методом {@link #keysOf(String, String)} (обратная карта не нужна). И {@link #indexedByUri}, и
    * {@link #trie} меняются под одним write-lock, чтобы search (read-lock), читающий обе структуры,
    * не увидел запись удалённой из одной раньше другой; ключи, оставшиеся без записей, удаляются из
    * дерева, чтобы не копить пустые узлы.
@@ -332,7 +334,7 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
       }
       var keys = new HashSet<String>();
       for (var entry : removed) {
-        keys.addAll(keysOf(entry.name()));
+        keys.addAll(keysOf(entry.name(), entry.lowerName()));
       }
       for (var key : keys) {
         removeEntryFromKey(key, uri);
@@ -347,14 +349,45 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
    * <p>
    * Запись документа удаляется фильтром всей корзины каждого своего ключа, а у ключей вроде
    * общих префиксов имён в корзине записи тысяч документов — удаление всех по одному квадратично.
+   * Поэтому записи всех документов очищаемого контекста снимаются разом: каждая корзина
+   * фильтруется один раз по множеству их URI. Индекс общий на контексты всех рабочих папок, поэтому
+   * записи документов остальных контекстов остаются; если других записей нет, дерево очищается
+   * целиком.
+   * Повторные события того же контекста находят его URI уже снятым и ничего не делают.
    */
   @Override
-  protected boolean clearWholeIndex() {
+  protected boolean clearContext(ServerContext serverContext, URI removedUri) {
     lock.writeLock().lock();
     try {
-      if (!indexedByUri.isEmpty()) {
-        indexedByUri.clear();
+      if (!indexedByUri.containsKey(removedUri)) {
+        // Записи контекста уже сняты первым событием, либо документ не был проиндексирован.
+        return true;
+      }
+      var uris = new HashSet<URI>(serverContext.getDocuments().keySet());
+      uris.add(removedUri);
+
+      var keys = new HashSet<String>();
+      for (var uri : uris) {
+        var removed = indexedByUri.remove(uri);
+        if (removed != null) {
+          for (var entry : removed) {
+            keys.addAll(keysOf(entry.name(), entry.lowerName()));
+          }
+        }
+      }
+      if (indexedByUri.isEmpty()) {
         trie.clear();
+        return true;
+      }
+      for (var key : keys) {
+        var bucket = trie.get(key);
+        if (bucket == null) {
+          continue;
+        }
+        bucket.removeIf(entry -> uris.contains(entry.uri()));
+        if (bucket.isEmpty()) {
+          trie.remove(key);
+        }
       }
       return true;
     } finally {
@@ -860,7 +893,7 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
       // и не должен увидеть запись в одной из них раньше другой.
       indexedByUri.put(uri, snapshot);
       for (var entry : snapshot) {
-        for (var key : keysOf(entry.name())) {
+        for (var key : keysOf(entry.name(), entry.lowerName())) {
           var bucket = trie.get(key);
           if (bucket == null) {
             bucket = new ArrayList<>();
@@ -886,12 +919,12 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
    * {@code ПровестиДокументОтбора} находится по ключу {@code документотбора}). Ключи дедуплицируются
    * (имя из одного слова даёт единственный ключ).
    *
-   * @param name исходное имя символа (непустое)
+   * @param name      исходное имя символа (непустое)
+   * @param lowerName то же имя в нижнем регистре — первый ключ; дерево держит именно этот экземпляр
    * @return упорядоченное множество ключей дерева без дублей (как минимум полное lowercase-имя)
    */
-  private static Set<String> keysOf(String name) {
+  private static Set<String> keysOf(String name, String lowerName) {
     var keys = new LinkedHashSet<String>();
-    var lowerName = name.toLowerCase(Locale.ENGLISH);
     keys.add(lowerName);
     var offset = 0;
     for (var word : StringUtils.splitByCharacterTypeCamelCase(name)) {

@@ -2,6 +2,36 @@
 
 BSL Language Server provides the ability to change settings using a configuration file in JSON format.
 
+## Thick client support in file mode
+
+The workspace-wide `supportThickClientFileMode` option controls file-mode thick client contexts
+in diagnostics, type inference, hover, completion, and inlay hints. It is disabled by default:
+
+```json
+{
+  "supportThickClientFileMode": false
+}
+```
+
+With `false`, analysis keeps client and server contexts separate and excludes file-mode thick clients.
+Client/server thick clients and file-mode external connections remain supported.
+
+Set the option to `true` when the configuration supports a thick client connected to a file infobase.
+Both `Client` and `Server` can then be true, including inside a managed form's client method.
+This does not imply a server call: method directives and side transitions are checked separately.
+A function returning a number under `#If Server` and a string under `#Else` may give a client caller
+the union `String | Number`. These branches are not treated as unconditionally unreachable.
+
+The option does not apply to OneScript. Changing it recalculates context-dependent types and refreshes
+diagnostics and hints. Recalculation can take time in large projects.
+
+## Filtering completion suggestions
+
+The `completion.hideUnavailableByContext` setting defaults to `true`: suggestions known to be unavailable
+in every current compilation context are hidden. Set it to `false` to keep them at the end of the list.
+Partially available suggestions, unknown availability and permitted server calls remain available.
+See [code completion](../capabilities/completion.md) for details.
+
 ## Global and Local Configuration
 
 BSL Language Server uses a two-level configuration system:
@@ -64,7 +94,7 @@ BSL Language Server automatically tracks configuration file changes:
 | ⤷&nbsp;&nbsp;&nbsp;`parameters`                                |       `JSON-Object`        | Parameter is a collection of diagnostics parameters. Collection items are json-objects with the following structure:<br/>* *object key* - string, is diagnostic key<br/>* *object value* - if is boolean, then interpreted as diagnostic off-switch (`false`) or on-switch with default parameters (`true`), if is type `json-object`, collection of diagnostic parameters.<br/><br/>Key, if set to ON by default and all allowed parameters and examples are given on the diagnostic page. |
 | ⤷&nbsp;&nbsp;&nbsp;`minimumLSPDiagnosticLevel`                 |          `String`          | This parameter allows setting a minimum LSP severity level for running diagnostics. Diagnostics with severity level lower than specified will not run. Possible values:<br/>* `Error` - error<br/>* `Warning` - warning<br/>* `Information` - information<br/>* `Hint` - hint<br/><br/>By default, the parameter is not set and all diagnostics run according to other settings.                                                                                                                                                        |
 | ⤷&nbsp;&nbsp;&nbsp;`overrideMinimumLSPDiagnosticLevel`         |          `String`          | This parameter allows setting a minimum severity level for LSP diagnostics. If the diagnostic severity is lower than specified, it will be raised to the specified level. Possible values:<br/>* `Error` - error<br/>* `Warning` - warning<br/>* `Information` - information<br/>* `Hint` - hint<br/><br/>By default, the parameter is not set and diagnostic levels are used according to their definition.                                                                                                                                                        |
-| ⤷&nbsp;&nbsp;&nbsp;`metadata`                                  |       `JSON-Object`        | Parameter is a collection of diagnostic metadata overrides. Collection items are json-objects with the following structure:<br/>* *object key* - string, is diagnostic key<br/>* *object value* - json-object with diagnostic parameters to override. You can override: `type`, `severity`, `scope`, `modules`, `minutesToFix`, `activatedByDefault`, `compatibilityMode`, `tags`, `canLocateOnProject`, `extraMinForComplexity`, `lspSeverity`.<br/><br/>Values from configuration file override those defined in source code. The `lspSeverity` parameter allows explicitly setting LSP severity level (`Error`, `Warning`, `Information`, `Hint`), if not specified - calculated automatically.                                          |
+| ⤷&nbsp;&nbsp;&nbsp;`metadata`                                  |       `JSON-Object`        | Parameter is a collection of diagnostic metadata overrides. Collection items are json-objects with the following structure:<br/>* *object key* - string, is diagnostic key<br/>* *object value* - json-object with diagnostic parameters to override. You can override: `type`, `severity`, `scope`, `modules`, `minutesToFix`, `activatedByDefault`, `compatibilityMode`, `tags`, `canLocateOnProject`, `extraMinForComplexity`, `lspSeverity`.<br/><br/>Values from configuration file override those defined in source code: parameters not specified in the override keep their values from the diagnostic source code. The `lspSeverity` parameter allows explicitly setting LSP severity level (`Error`, `Warning`, `Information`, `Hint`), if not specified - calculated automatically.                                          |
 | ⤷&nbsp;&nbsp;&nbsp;`subsystemsFilter`                          |       `JSON-Object`        | Filter by configuration subsystems                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | ⤷&nbsp;&nbsp;&nbsp;`analyzeOnStart`                            |          `Boolean`          | Starting the analysis of the entire project at server startup. If enabled, after the context is built on the client, information about diagnostics in all project files will be sent.                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | ⤷&nbsp;&nbsp;&nbsp;`ignoredAuthors`                            |     `Array` `String`       | List of author email addresses whose lines of code are excluded from analysis based on `git blame` data. If the list is empty (default), filtering by authorship is not performed.                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
