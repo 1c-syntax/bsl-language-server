@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.index;
 
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
@@ -35,10 +36,14 @@ import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.net.URI;
+import java.nio.file.Path;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -52,8 +57,7 @@ import static org.mockito.Mockito.when;
  * разрешается не полностью. Проверяется, что такие типы пересобираются заново, как только
  * рабочая область наполнена.
  */
-@SpringBootTest
-class SymbolTypeIndexDeclaredTypesTest {
+class SymbolTypeIndexDeclaredTypesTest extends AbstractServerContextAwareTest {
 
   private static final String MODULE = """
     // Возвращаемое значение:
@@ -71,7 +75,8 @@ class SymbolTypeIndexDeclaredTypesTest {
   private DocumentContext documentContext;
 
   @BeforeEach
-  void prepare() {
+  void prepare(@TempDir Path workspace) {
+    initServerContext(workspace);
     typeRegistry = mock(TypeRegistry.class);
     // Незнакомое реестру имя остаётся пользовательским типом — так же, как в бою.
     when(typeRegistry.intern(TypeKind.USER, "Массив"))
@@ -80,7 +85,7 @@ class SymbolTypeIndexDeclaredTypesTest {
     when(typeRegistry.getOwnElementTypes(any())).thenReturn(TypeSet.EMPTY);
     index = new SymbolTypeIndex(typeRegistry, mock(FormByNameResolver.class), mock(TemplateByNameResolver.class),
       mock(GlobalScopeProvider.class));
-    documentContext = TestUtils.getDocumentContext(MODULE);
+    documentContext = TestUtils.getDocumentContext(URI.create("fake://declarations/first.bsl"), MODULE, context);
   }
 
   @Test
@@ -113,6 +118,52 @@ class SymbolTypeIndexDeclaredTypesTest {
 
     // then: объявленный тип пересобран по нынешнему состоянию реестра.
     assertThat(declaredTypeOfFirstMethod().refs()).containsExactly(PLATFORM_ARRAY);
+  }
+
+  @Test
+  void stoppedWorkspaceKeepsExistingDeclarations() {
+    // given
+    knownToRegistry(false);
+    index.handleEvent(new DocumentContextContentChangedEvent(documentContext));
+    var serverContext = serverContextWithDocument();
+    when(serverContext.isBackgroundWorkStopped()).thenReturn(true);
+    knownToRegistry(true);
+
+    // when
+    index.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+    // then
+    assertThat(declaredTypeOfFirstMethod().refs()).containsExactly(new TypeRef(TypeKind.USER, "Массив"));
+  }
+
+  @Test
+  void stoppingDuringReindexLeavesRemainingDocumentsUntouched() {
+    // given
+    var second = TestUtils.getDocumentContext(URI.create("fake://stopping/second.bsl"), MODULE, context);
+    knownToRegistry(false);
+    index.handleEvent(new DocumentContextContentChangedEvent(documentContext));
+    index.handleEvent(new DocumentContextContentChangedEvent(second));
+    var documents = new LinkedHashMap<URI, DocumentContext>();
+    documents.put(documentContext.getUri(), documentContext);
+    documents.put(second.getUri(), second);
+    var serverContext = mock(ServerContext.class);
+    when(serverContext.getDocuments()).thenReturn(documents);
+
+    var stopped = new AtomicBoolean();
+    when(serverContext.isBackgroundWorkStopped()).thenAnswer(invocation -> stopped.get());
+    when(typeRegistry.resolve("Массив")).thenAnswer(invocation -> {
+      stopped.set(true);
+      return Optional.of(PLATFORM_ARRAY);
+    });
+
+    // when
+    index.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+    // then
+    assertThat(declaredTypeOfFirstMethod().refs()).containsExactly(PLATFORM_ARRAY);
+    var secondMethod = second.getSymbolTree().getMethods().get(0);
+    assertThat(index.getDeclaredReturnTypes(secondMethod).refs())
+      .containsExactly(new TypeRef(TypeKind.USER, "Массив"));
   }
 
   @Test

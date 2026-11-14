@@ -187,12 +187,35 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * Используется обычный проход индекса с ограничением числа одновременно загруженных документов.
    * Смена настроек ждёт завершения активного прохода: его финальная очистка очереди
    * не должна стереть новый план пересчёта. Рабочие задачи прохода этот монитор не берут.
+   * Допуск фоновой работы берётся до монитора индекса: проход наполнения уже держит
+   * такой допуск, когда входит в индекс, и остановка не должна замыкать порядок блокировок.
    *
    * @param event новые настройки рабочей области.
    */
   @Order(Ordered.HIGHEST_PRECEDENCE + 100)
   @EventListener
-  public synchronized void handleConfigurationChanged(LanguageServerConfigurationChangedEvent event) {
+  public void handleConfigurationChanged(LanguageServerConfigurationChangedEvent event) {
+    var workspace = WorkspaceContextHolder.get();
+    var context = workspace == null ? null : serverContextProvider.getAllContexts().get(workspace);
+    if (context == null) {
+      applyCompilationSettings(event, null);
+    } else {
+      context.runBackgroundWork(() -> applyCompilationSettings(event, context));
+    }
+  }
+
+  /**
+   * Обновить настройки и план пересчёта под монитором индекса.
+   *
+   * @param event новые настройки.
+   * @param context рабочая область с уже полученным допуском фоновой работы; {@code null} вне области.
+   */
+  private synchronized void applyCompilationSettings(
+    LanguageServerConfigurationChangedEvent event, @Nullable ServerContext context
+  ) {
+    if (context != null && context.isBackgroundWorkStopped()) {
+      return;
+    }
     var enabled = event.getSource().isSupportThickClientFileMode();
     if (enabled == supportThickClientFileMode) {
       return;
@@ -204,8 +227,6 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     computedAt.clear();
     changedAt.clear();
     symbolTypeIndex.clearInferredReturnTypes();
-    var workspace = WorkspaceContextHolder.get();
-    var context = workspace == null ? null : serverContextProvider.getAllContexts().get(workspace);
     if (context != null && !context.isClearing() && !maintenance && !pending.isEmpty()) {
       handleServerContextPopulated(new ServerContextPopulatedEvent(context));
     }
@@ -361,11 +382,13 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     } finally {
       maintenance = false;
       pending.clear();
-      progressReporter.endProgress(getMessage("resolveReturnTypesDone"));
+      progressReporter.endProgress(serverContext.isBackgroundWorkStopped() ? "" : getMessage("resolveReturnTypesDone"));
     }
-    LOGGER.info(
-      "Return types resolved in {} ms: {} deferred methods, {} document parse attempts of {} documents",
-      (System.nanoTime() - startedAt) / 1_000_000, deferred, rebuilds.total(), rebuilds.distinct());
+    if (!serverContext.isBackgroundWorkStopped()) {
+      LOGGER.info(
+        "Return types resolved in {} ms: {} deferred methods, {} document parse attempts of {} documents",
+        (System.nanoTime() - startedAt) / 1_000_000, deferred, rebuilds.total(), rebuilds.distinct());
+    }
   }
 
   /**
@@ -638,7 +661,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * @param progress      ход работы.
    */
   private void drainPending(ServerContext serverContext, ResolveProgress progress) {
-    for (var pass = 0; pass < MAX_PASSES && !pending.isEmpty(); pass++) {
+    for (var pass = 0; pass < MAX_PASSES && !pending.isEmpty() && !serverContext.isBackgroundWorkStopped(); pass++) {
       var roots = List.copyOf(pending);
       pending.clear();
       progress.plan(documentsOf(roots));
@@ -778,12 +801,16 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     Map<URI, List<MethodSymbol>> byDocument,
     List<MethodSymbol> methods
   ) {
+    if (serverContext.isBackgroundWorkStopped()) {
+      // Рабочую область закрывают и ждут, пока проход закончится.
+      return;
+    }
     if (component.size() == 1) {
       recomputeLoading(serverContext, byDocument.get(component.get(0)));
       return;
     }
     withDocumentsLoaded(serverContext, component, () -> {
-      for (var pass = 0; pass < MAX_PASSES; pass++) {
+      for (var pass = 0; pass < MAX_PASSES && !serverContext.isBackgroundWorkStopped(); pass++) {
         var changed = false;
         for (var method : methods) {
           changed |= recompute(method);
@@ -840,7 +867,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     ResolveProgress progress,
     int pass
   ) {
-    if (pass >= MAX_PASSES || changedLastPass.isEmpty()) {
+    if (pass >= MAX_PASSES || changedLastPass.isEmpty() || serverContext.isBackgroundWorkStopped()) {
       return CompletableFuture.completedFuture(null);
     }
     var dispatch = new PassDispatch(serverContext, component, byDocument, changedLastPass, progress, pass == 0);
@@ -1195,7 +1222,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
 
     @Override
     boolean isNeeded(int item) {
-      return true;
+      return !serverContext.isBackgroundWorkStopped();
     }
 
     @Override
@@ -1272,6 +1299,10 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
 
     @Override
     boolean isNeeded(int item) {
+      if (serverContext.isBackgroundWorkStopped()) {
+        // Такой цикл считается секундами: остановка не ждёт его конца.
+        return false;
+      }
       var uri = component.get(item);
       var needed = changedLastPass.contains(uri) || isOutdated(uri, byDocument.get(uri));
       if (needed && !planned) {
@@ -1329,6 +1360,9 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
      */
     @Override
     void spare() {
+      if (serverContext.isBackgroundWorkStopped()) {
+        return;
+      }
       while (preloads.size() < MAX_DOCUMENTS_IN_MEMORY - 1 && nextCertain < certain.size()) {
         int item = certain.get(nextCertain);
         if (!isPending(item)) {
@@ -1363,7 +1397,8 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     private CompletableFuture<Boolean> preload(DocumentContext documentContext) {
       try {
         return CompletableFuture
-          .supplyAsync(() -> loadIfReleased(documentContext), resolveReturnTypesExecutor)
+           .supplyAsync(() -> !serverContext.isBackgroundWorkStopped() && loadIfReleased(documentContext),
+             resolveReturnTypesExecutor)
           .exceptionally((Throwable e) -> {
             // Не разобрался впереди — разберётся на месте, как без этого разбора.
             LOGGER.warn("Can't preload document {}", documentContext.getUri(), e);
@@ -1384,6 +1419,9 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       var lock = serverContext.getDocumentLock(documentContext.getUri()).writeLock();
       lock.lock();
       try {
+        if (serverContext.isBackgroundWorkStopped()) {
+          return false;
+        }
         if (isReadable(documentContext)) {
           return false;
         }
@@ -1444,6 +1482,9 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   /**
    * Выполняет работу, держа документы компоненты разобранными, и возвращает их в прежнее
    * состояние после неё.
+   * <p>
+   * Остановка проверяется до ожидания каждого замка и после получения. При отмене уже
+   * взятые замки и временно загруженные данные освобождаются.
    *
    * @param serverContext рабочая область.
    * @param component     документы компоненты.
@@ -1457,12 +1498,18 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     var ordered = component.stream().sorted(Comparator.comparing(URI::toString)).toList();
     try {
       for (var uri : ordered) {
+        if (serverContext.isBackgroundWorkStopped()) {
+          return;
+        }
         var documentContext = serverContext.getDocuments().get(uri);
         if (documentContext == null) {
           continue;
         }
         serverContext.getDocumentLock(uri).writeLock().lock();
         locked.add(uri);
+        if (serverContext.isBackgroundWorkStopped()) {
+          return;
+        }
         if (!isReadable(documentContext)) {
           rebuilds.recordReload(uri);
           serverContext.rebuildDocument(documentContext);
@@ -1496,6 +1543,9 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * @return {@code true}, если хоть у одного метода набор типов изменился.
    */
   private boolean recomputeLoading(ServerContext serverContext, List<MethodSymbol> methods) {
+    if (serverContext.isBackgroundWorkStopped()) {
+      return false;
+    }
     var documentContext = methods.get(0).getOwner();
     var lock = serverContext.getDocumentLock(documentContext.getUri());
     lock.readLock().lock();
@@ -1510,22 +1560,22 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     try {
       // Пока ждали блокировку, документ мог догрузить другой поток: тогда разбирать его
       // заново не надо, а освобождать — тем более, он сейчас кому-то нужен.
-      if (isReadable(documentContext)) {
-        return recomputeEach(methods);
+      if (!serverContext.isBackgroundWorkStopped() && !isReadable(documentContext)) {
+        rebuilds.recordReload(documentContext.getUri());
+        // Разбор сам пересчитает экспортные методы документа по событию, а неэкспортные,
+        // до которых дошла очередь, пересчитываются явно.
+        serverContext.rebuildDocument(documentContext);
+        if (!isReadable(documentContext)) {
+          // Файл не прочитался: тел нет, и расчёт затёр бы посчитанное пустым. Прежние значения
+          // остаются, а документ пересчитается, когда разберётся, — повтор в этом же проходе
+          // файла не вернёт, только повторит ошибку чтения.
+          return false;
+        }
+        var changed = recomputeEach(methods);
+        serverContext.tryClearDocument(documentContext);
+        return changed;
       }
-      rebuilds.recordReload(documentContext.getUri());
-      // Разбор сам пересчитает экспортные методы документа по событию, а неэкспортные,
-      // до которых дошла очередь, пересчитываются явно.
-      serverContext.rebuildDocument(documentContext);
-      if (!isReadable(documentContext)) {
-        // Файл не прочитался: тел нет, и расчёт затёр бы посчитанное пустым. Прежние значения
-        // остаются, а документ пересчитается, когда разберётся, — повтор в этом же проходе
-        // файла не вернёт, только повторит ошибку чтения.
-        return false;
-      }
-      var changed = recomputeEach(methods);
-      serverContext.tryClearDocument(documentContext);
-      return changed;
+      return !serverContext.isBackgroundWorkStopped() && recomputeEach(methods);
     } finally {
       lock.writeLock().unlock();
     }
@@ -1546,7 +1596,12 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   private boolean recomputeEach(List<MethodSymbol> methods) {
     var before = methods.stream().map(symbolTypeIndex::getReturnTypes).toList();
     provisional.addAll(methods);
+    var serverContext = methods.get(0).getOwner().getServerContext();
     for (var method : methods) {
+      if (serverContext.isBackgroundWorkStopped()) {
+        // В большом общем модуле функций сотни: остановка не ждёт конца документа.
+        break;
+      }
       // Пометка «посчитан» не снимается: пересчёт и так идёт напрямую, а без пометки
       // соседний метод, читающий этот прямо сейчас, счёл бы его непосчитанным и снова
       // ушёл бы в отложенные — очередь не сходилась бы.

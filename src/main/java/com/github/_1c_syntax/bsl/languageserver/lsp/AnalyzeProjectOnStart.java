@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.lsp;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.client.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.client.WorkDoneProgressHelper;
@@ -62,7 +63,12 @@ public class AnalyzeProjectOnStart {
     }
 
     var serverContext = event.getSource();
+    // Анализ — фоновая работа над рабочей областью: её остановка дожидается анализа, даже
+    // если слушатель отработал в своём потоке.
+    serverContext.runBackgroundWork(() -> analyze(serverContext));
+  }
 
+  private void analyze(ServerContext serverContext) {
     var documentContexts = serverContext.getDocuments().values();
     var progress = workDoneProgressHelper.createProgress(documentContexts.size(), getMessage("filesSuffix"));
     progress.beginProgress(getMessage("analyzeProject"));
@@ -70,6 +76,9 @@ public class AnalyzeProjectOnStart {
     try {
       executor.submit(() ->
         documentContexts.parallelStream().forEach((DocumentContext documentContext) -> {
+          if (serverContext.isBackgroundWorkStopped()) {
+            return;
+          }
           progress.tick();
 
           // Работа с документом — под его верхнеуровневым локом, как в остальных
@@ -79,6 +88,9 @@ public class AnalyzeProjectOnStart {
           var lock = serverContext.getDocumentLock(documentContext.getUri());
           lock.writeLock().lock();
           try {
+            if (serverContext.isBackgroundWorkStopped()) {
+              return;
+            }
             serverContext.rebuildDocument(documentContext);
             diagnosticProvider.computeAndPublishDiagnostics(documentContext);
 
@@ -89,7 +101,7 @@ public class AnalyzeProjectOnStart {
         })
       ).get();
 
-      progress.endProgress(getMessage("projectAnalyzed"));
+      progress.endProgress(serverContext.isBackgroundWorkStopped() ? "" : getMessage("projectAnalyzed"));
     } catch (ExecutionException e) {
       throw new IllegalStateException("Can't analyze project on start", e);
     } catch (InterruptedException e) {

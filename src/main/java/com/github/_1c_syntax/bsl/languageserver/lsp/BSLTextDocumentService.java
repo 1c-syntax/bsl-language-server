@@ -971,10 +971,6 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     );
   }
 
-  public void reset() {
-    serverContextProvider.clear();
-  }
-
   /**
    * Обработчик события {@link LanguageServerInitializedEvent}.
    * <p>
