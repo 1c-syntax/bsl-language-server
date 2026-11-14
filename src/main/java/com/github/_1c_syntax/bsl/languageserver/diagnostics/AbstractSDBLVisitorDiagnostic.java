@@ -32,8 +32,39 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Diagnostic;
 
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public abstract class AbstractSDBLVisitorDiagnostic extends SDBLParserBaseVisitor<ParseTree> implements BSLDiagnostic {
+  /**
+   * Виртуальные таблицы, которые есть у объектов каждого вида.
+   */
+  private static final Map<Integer, Set<Integer>> VIRTUAL_TABLES_BY_MDO_TYPE = Map.of(
+    SDBLParser.INFORMATION_REGISTER_TYPE, Set.of(
+      SDBLParser.SLICELAST_VT,
+      SDBLParser.SLICEFIRST_VT
+    ),
+    SDBLParser.ACCUMULATION_REGISTER_TYPE, Set.of(
+      SDBLParser.BALANCE_VT,
+      SDBLParser.TURNOVERS_VT,
+      SDBLParser.BALANCE_AND_TURNOVERS_VT
+    ),
+    SDBLParser.ACCOUNTING_REGISTER_TYPE, Set.of(
+      SDBLParser.BALANCE_VT,
+      SDBLParser.TURNOVERS_VT,
+      SDBLParser.BALANCE_AND_TURNOVERS_VT,
+      SDBLParser.EXT_DIMENSIONS_VT,
+      SDBLParser.RECORDS_WITH_EXT_DIMENSIONS_VT,
+      SDBLParser.DR_CR_TURNOVERS_VT
+    ),
+    SDBLParser.CALCULATION_REGISTER_TYPE, Set.of(
+      SDBLParser.ACTUAL_ACTION_PERIOD_VT,
+      SDBLParser.SCHEDULE_DATA_VT
+    ),
+    SDBLParser.SEQUENCE_TYPE, Set.of(SDBLParser.BOUNDARIES_VT),
+    SDBLParser.TASK_TYPE, Set.of(SDBLParser.TASK_BY_PERFORMER_VT)
+  );
+
   @Getter
   @Setter
   protected DiagnosticInfo info;
@@ -58,6 +89,29 @@ public abstract class AbstractSDBLVisitorDiagnostic extends SDBLParserBaseVisito
       return ctx;
     }
     return super.visitQueryPackage(ctx);
+  }
+
+  /**
+   * Проверяет, что источник, разобранный грамматикой как виртуальная таблица, действительно ею является.
+   * <p>
+   * Грамматика принимает за виртуальную таблицу любое обращение вида {@code <Вид>.<Имя>.<ИмяВиртуальнойТаблицы>},
+   * поэтому табличная часть, названная как виртуальная таблица регистра ({@code Справочник.Партии.Остатки}),
+   * тоже попадает в это правило. Виртуальной таблицей считается только сочетание вида объекта и таблицы,
+   * которое есть у платформы. Критерий отбора виртуальной таблицей считается всегда.
+   *
+   * @param ctx узел виртуальной таблицы
+   * @return {@code true}, если у объекта такого вида есть виртуальная таблица с таким именем
+   */
+  protected static boolean isVirtualTable(SDBLParser.VirtualTableContext ctx) {
+    if (ctx.type != null) {
+      return true;
+    }
+    if (ctx.mdo() == null || ctx.mdo().type == null || ctx.virtualTableName == null) {
+      return false;
+    }
+    return VIRTUAL_TABLES_BY_MDO_TYPE
+      .getOrDefault(ctx.mdo().type.getType(), Set.of())
+      .contains(ctx.virtualTableName.getType());
   }
 
 }

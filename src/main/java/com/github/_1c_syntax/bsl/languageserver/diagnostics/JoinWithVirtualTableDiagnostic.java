@@ -47,6 +47,7 @@ public class JoinWithVirtualTableDiagnostic extends AbstractSDBLVisitorDiagnosti
     ctx.dataSource().stream()
       .filter(dataSourceContext -> !dataSourceContext.joinPart().isEmpty())
       .filter(dataSourceContext -> dataSourceContext.virtualTable() != null)
+      .filter(dataSourceContext -> isVirtualTable(dataSourceContext.virtualTable()))
       .forEach(dataSourceContext -> diagnosticStorage.addDiagnostic(dataSourceContext.virtualTable()));
 
     return super.visitDataSources(ctx);
@@ -54,7 +55,9 @@ public class JoinWithVirtualTableDiagnostic extends AbstractSDBLVisitorDiagnosti
 
   @Override
   public ParseTree visitJoinPart(SDBLParser.JoinPartContext ctx) {
-    if (ctx.dataSource() != null && ctx.dataSource().virtualTable() != null) {
+    if (ctx.dataSource() != null
+      && ctx.dataSource().virtualTable() != null
+      && isVirtualTable(ctx.dataSource().virtualTable())) {
       diagnosticStorage.addDiagnostic(ctx.dataSource().virtualTable());
     }
     return super.visitJoinPart(ctx);
