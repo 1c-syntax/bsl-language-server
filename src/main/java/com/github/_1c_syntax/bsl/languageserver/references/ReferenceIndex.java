@@ -35,6 +35,7 @@ import com.github._1c_syntax.bsl.languageserver.references.model.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrence;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrenceRepository;
 import com.github._1c_syntax.bsl.types.ModuleType;
+import com.github._1c_syntax.utils.GenericInterner;
 import com.github._1c_syntax.utils.StringInterner;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Position;
@@ -74,6 +75,7 @@ public class ReferenceIndex {
 
   private final ServerContextProvider serverContextProvider;
   private final StringInterner stringInterner;
+  private final GenericInterner<Symbol> referenceSymbolInterner;
   private final LocationRepository locationRepository;
   private final SymbolOccurrenceRepository symbolOccurrenceRepository;
   private final SelfMemberResolver selfMemberResolver;
@@ -215,6 +217,7 @@ public class ReferenceIndex {
   public void clear() {
     symbolOccurrenceRepository.clear();
     locationRepository.clear();
+    referenceSymbolInterner.clear();
   }
 
   /**
@@ -313,14 +316,13 @@ public class ReferenceIndex {
                                                   String symbolName, Range range) {
     var symbolNameCanonical = stringInterner.intern(symbolName.toLowerCase(Locale.ENGLISH));
 
-    var symbol = Symbol.builder()
+    var symbol = referenceSymbolInterner.intern(Symbol.builder()
       .mdoRef(mdoRef)
       .moduleType(moduleType)
       .scopeName("")
       .symbolKind(SymbolKind.Method)
       .symbolName(symbolNameCanonical)
-      .build()
-      .intern();
+      .build());
 
     return SymbolOccurrence.of(OccurrenceType.REFERENCE, symbol, uri, range);
   }
@@ -343,14 +345,13 @@ public class ReferenceIndex {
       ModuleSymbol.nameOf(mdoRef, moduleType).toLowerCase(Locale.ENGLISH)
     );
 
-    var symbol = Symbol.builder()
+    var symbol = referenceSymbolInterner.intern(Symbol.builder()
       .mdoRef(mdoRef)
       .moduleType(moduleType)
       .scopeName("")
       .symbolKind(SymbolKind.Module)
       .symbolName(symbolName)
-      .build()
-      .intern();
+      .build());
 
     return SymbolOccurrence.of(OccurrenceType.REFERENCE, symbol, uri, range);
   }
@@ -375,19 +376,44 @@ public class ReferenceIndex {
                                                 String variableName,
                                                 Range range,
                                                 OccurrenceType occurrenceType) {
+    var symbol = variableSymbol(mdoRef, moduleType, methodName, variableName);
+    return variableOccurrence(uri, symbol, range, occurrenceType, referenceSymbolInterner);
+  }
+
+  /**
+   * Временный интернер локальных ключей документа, сохраняющий их экземпляры при переиндексации.
+   *
+   * @param uri документ, чьи текущие вхождения задают канонические ключи.
+   * @return интернер для одного построения набора вхождений документа.
+   */
+  GenericInterner<Symbol> localVariableInterner(URI uri) {
+    var symbols = new GenericInterner<Symbol>();
+    locationRepository.getSymbolOccurrencesByLocationUri(uri)
+      .map(SymbolOccurrence::symbol)
+      .filter(symbol -> symbol.symbolKind() == SymbolKind.Variable && !symbol.scopeName().isEmpty()
+        && !SELF_MEMBER_SCOPE.equals(symbol.scopeName()))
+      .forEach(symbols::intern);
+    return symbols;
+  }
+
+  /** Построить ключ переменной с каноническими именами метода и переменной. */
+  Symbol variableSymbol(String mdoRef, ModuleType moduleType, String methodName, String variableName) {
     var methodNameCanonical = stringInterner.intern(methodName.toLowerCase(Locale.ENGLISH));
     var variableNameCanonical = stringInterner.intern(variableName.toLowerCase(Locale.ENGLISH));
 
-    var symbol = Symbol.builder()
+    return Symbol.builder()
       .mdoRef(mdoRef)
       .moduleType(moduleType)
       .scopeName(methodNameCanonical)
       .symbolKind(SymbolKind.Variable)
       .symbolName(variableNameCanonical)
-      .build()
-      .intern();
+      .build();
+  }
 
-    return SymbolOccurrence.of(occurrenceType, symbol, uri, range);
+  /** Построить вхождение переменной с заданным интернером ключей. */
+  SymbolOccurrence variableOccurrence(URI uri, Symbol symbol, Range range, OccurrenceType occurrenceType,
+                                     GenericInterner<Symbol> symbols) {
+    return SymbolOccurrence.of(occurrenceType, symbols.intern(symbol), uri, range);
   }
 
   /**
@@ -410,14 +436,13 @@ public class ReferenceIndex {
                                                   OccurrenceType occurrenceType) {
     var nameCanonical = stringInterner.intern(name.toLowerCase(Locale.ENGLISH));
 
-    var symbol = Symbol.builder()
+    var symbol = referenceSymbolInterner.intern(Symbol.builder()
       .mdoRef(mdoRef)
       .moduleType(moduleType)
       .scopeName(SELF_MEMBER_SCOPE)
       .symbolKind(symbolKind)
       .symbolName(nameCanonical)
-      .build()
-      .intern();
+      .build());
 
     return SymbolOccurrence.of(occurrenceType, symbol, uri, range);
   }
