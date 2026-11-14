@@ -33,15 +33,24 @@ import org.eclipse.lsp4j.Range;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.FutureTask;
+import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -113,6 +122,92 @@ class DefaultDiagnosticComputerTest {
 
     assertThatThrownBy(() -> computer.compute(documentContext))
       .isInstanceOf(IllegalStateException.class);
+  }
+
+  @Test
+  void submissionFailureCancelsSubmittedTasksAndPreservesTheFailure() {
+    // given
+    executor.shutdownNow();
+    executor = mock(ExecutorService.class);
+    var submitted = new FutureTask<List<Diagnostic>>(List::of);
+    var failure = new RejectedExecutionException("executor stopped");
+    when(executor.submit(ArgumentMatchers.<Callable<List<Diagnostic>>>any()))
+      .thenReturn(submitted).thenThrow(failure);
+    var computer = computerWith(List.of(mock(BSLDiagnostic.class), mock(BSLDiagnostic.class)));
+
+    // when
+    var thrown = catchThrowable(() -> computer.compute(documentContext));
+
+    // then
+    assertThat(thrown).isSameAs(failure);
+    assertThat(submitted.isCancelled()).isTrue();
+  }
+
+  @Test
+  void interruptedCollectionCancelsRunningAndQueuedTasks() throws Exception {
+    // given
+    executor.shutdownNow();
+    executor = Executors.newSingleThreadExecutor();
+    var running = new CountDownLatch(1);
+    var release = new CountDownLatch(1);
+    var interrupted = new CountDownLatch(1);
+    var finished = new CountDownLatch(1);
+    var queuedStarted = new AtomicBoolean();
+    var interruptPreserved = new AtomicBoolean();
+    var failure = new AtomicReference<RuntimeException>();
+    var first = mock(BSLDiagnostic.class);
+    when(first.getDiagnostics(documentContext)).thenAnswer(ignored -> {
+      running.countDown();
+      try {
+        if (!release.await(10, TimeUnit.SECONDS)) {
+          throw new AssertionError("Diagnostic was not released");
+        }
+      } catch (InterruptedException exception) {
+        interrupted.countDown();
+        if (!release.await(5, TimeUnit.SECONDS)) {
+          throw new AssertionError("Cancelled diagnostic was not released");
+        }
+        Thread.currentThread().interrupt();
+      }
+      return List.of();
+    });
+    var queued = mock(BSLDiagnostic.class);
+    when(queued.getDiagnostics(documentContext)).thenAnswer(ignored -> {
+      queuedStarted.set(true);
+      return List.of();
+    });
+    var computer = computerWith(List.of(first, queued));
+
+    // when
+    var caller = Thread.ofPlatform().start(() -> {
+      try {
+        computer.compute(documentContext);
+      } catch (RuntimeException exception) {
+        failure.set(exception);
+        interruptPreserved.set(Thread.currentThread().isInterrupted());
+      } finally {
+        finished.countDown();
+      }
+    });
+    try {
+      assertThat(running.await(5, TimeUnit.SECONDS)).isTrue();
+      caller.interrupt();
+
+      // then
+      assertThat(finished.await(5, TimeUnit.SECONDS)).isTrue();
+      assertThat(failure.get()).isInstanceOf(IllegalStateException.class)
+        .hasCauseInstanceOf(InterruptedException.class);
+      assertThat(interruptPreserved).isTrue();
+      assertThat(interrupted.await(5, TimeUnit.SECONDS)).isTrue();
+      release.countDown();
+      executor.submit(() -> { }).get(5, TimeUnit.SECONDS);
+      assertThat(queuedStarted).isFalse();
+    } finally {
+      release.countDown();
+      caller.interrupt();
+      caller.join(5000);
+      assertThat(caller.isAlive()).isFalse();
+    }
   }
 
   private DefaultDiagnosticComputer computerWith(List<BSLDiagnostic> diagnostics) {
