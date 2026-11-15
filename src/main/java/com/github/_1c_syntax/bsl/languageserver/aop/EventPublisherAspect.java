@@ -157,6 +157,18 @@ public class EventPublisherAspect {
     }
   }
 
+  @AfterReturning(
+    pointcut = "Pointcuts.isServerContext() && Pointcuts.isRefreshSymbolTreeCall() && args(documentContext)",
+    returning = "symbolTreeRebuilt"
+  )
+  public void documentContextSymbolTreeRefreshed(DocumentContext documentContext, boolean symbolTreeRebuilt) {
+    // Дерево построено заново по тому же тексту: символы не равны прежним, и для посчитанного
+    // по ним это такое же изменение, как правка.
+    if (symbolTreeRebuilt) {
+      publishEvent(new DocumentContextContentChangedEvent(documentContext, true));
+    }
+  }
+
   @AfterReturning("Pointcuts.isServerContext() && Pointcuts.isPopulateContextCall() && args(files)")
   public void serverContextPopulated(JoinPoint joinPoint, Collection<File> files) {
     publishEvent(new ServerContextPopulatedEvent((ServerContext) joinPoint.getThis()));

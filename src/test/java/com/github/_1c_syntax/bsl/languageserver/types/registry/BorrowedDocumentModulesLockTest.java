@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
@@ -37,12 +38,14 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 /**
  * Модули заимствованного документа из основной конфигурации и из расширения строятся, не
@@ -163,9 +166,12 @@ class BorrowedDocumentModulesLockTest extends AbstractServerContextAwareTest {
     context.rebuildDocument(extension, extensionContent, 2);
 
     // then: присваивание признано реквизитом типа — по дереву модуля основной конфигурации,
-    // достроенному после первого построения расширения, — и индекс ссылок собран по новому дереву.
+    // достроенному после первого построения расширения, — и индекс ссылок собран по новому
+    // дереву. Дерево могла перестроить и перепроверка, начатая правкой основного модуля:
+    // тогда индекс заполняет её поток, и результат дожидается.
     assertThat(extension.getSymbolTree().getBasis().bareSelfProperties()).contains(LATE_VARIABLE);
-    assertLateVariableIsNotLocalReference(extension, extensionContent);
+    await().pollInSameThread().atMost(Duration.ofSeconds(30)).untilAsserted(() ->
+      assertLateVariableIsNotLocalReference(extension, extensionContent));
   }
 
   @Test
@@ -182,9 +188,37 @@ class BorrowedDocumentModulesLockTest extends AbstractServerContextAwareTest {
     buildExtensionWhileMainModuleRebuildsDeclaringLateVariable(main, extension, extensionContent);
 
     // then: дерево модуля расширения не осталось построенным по прежнему дереву основного:
-    // присваивание признано реквизитом типа, и индекс ссылок собран по новому дереву.
-    assertThat(extension.getSymbolTree().getBasis().bareSelfProperties()).contains(LATE_VARIABLE);
-    assertLateVariableIsNotLocalReference(extension, extensionContent);
+    // присваивание признано реквизитом типа, и индекс ссылок собран по новому дереву. Дерево
+    // перепроверяется не на потоке правки, поэтому результат дожидается.
+    await().pollInSameThread().atMost(Duration.ofSeconds(30)).untilAsserted(() -> {
+      assertThat(extension.getSymbolTree().getBasis().bareSelfProperties()).contains(LATE_VARIABLE);
+      assertLateVariableIsNotLocalReference(extension, extensionContent);
+    });
+  }
+
+  @Test
+  void releasedExtensionTreeIsCorrectedWhenMainModuleDeclaresVariable() throws Exception {
+    // given: модуль расширения разобран при наполнении и освобождён, а модуль основной
+    // конфигурации ещё не объявляет переменную, которой расширение присваивает.
+    initServerContext(FIXTURE);
+    var main = document(MAIN_OBJECT_MODULE);
+    var extension = document(EXTENSION_OBJECT_MODULE);
+    var extensionContent = Files.readString(FIXTURE.resolve(EXTENSION_OBJECT_MODULE));
+    assertThat(extension.getSymbolTree().getBasis().bareSelfProperties()).doesNotContain(LATE_VARIABLE);
+    assertThat(context.getDocumentState(extension)).isEqualTo(DocumentState.WITHOUT_CONTENT);
+
+    // when: в модуле основной конфигурации объявили экспортную переменную, а файл модуля
+    // расширения никто не открывал.
+    var mainContent = "Перем " + LATE_VARIABLE + " Экспорт;\n"
+      + Files.readString(FIXTURE.resolve(MAIN_OBJECT_MODULE));
+    context.rebuildDocument(main, mainContent, 1);
+
+    // then: дерево модуля расширения построено заново по его файлу, присваивание признано
+    // реквизитом типа, и индекс ссылок собран по новому дереву.
+    await().pollInSameThread().atMost(Duration.ofSeconds(30)).untilAsserted(() -> {
+      assertThat(extension.getSymbolTree().getBasis().bareSelfProperties()).contains(LATE_VARIABLE);
+      assertLateVariableIsNotLocalReference(extension, extensionContent);
+    });
   }
 
   @Test

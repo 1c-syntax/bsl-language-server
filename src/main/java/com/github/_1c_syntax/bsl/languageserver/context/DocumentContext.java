@@ -113,8 +113,9 @@ public class DocumentContext implements Comparable<DocumentContext> {
   private byte @Nullable [] contentFingerprint;
 
   /**
-   * Отличалось ли содержимое, с которым документ разобран последний раз, от того,
-   * с которым он был разобран до этого. У документа, разбираемого впервые, — {@code true}.
+   * Изменилось ли при последнем разборе то, что построено по документу: содержимое
+   * отличалось от разобранного до этого либо дерево символов по тому же тексту построено
+   * заново, потому что прежнее устарело. У документа, разбираемого впервые, — {@code true}.
    */
   @Getter
   private boolean contentChangedOnLastRebuild = true;
@@ -430,7 +431,8 @@ public class DocumentContext implements Comparable<DocumentContext> {
       // Перечитывание того же текста — документ освобождали, а теперь он снова нужен проходу
       // доразрешения или пакетному анализу — дерева не меняет, пока оно годно: строить его
       // заново значило бы повторить заметную долю всего разбора ради того же результата.
-      if (contentChanged || !isSymbolTreeUpToDate()) {
+      var symbolTreeRebuilt = contentChanged || !isSymbolTreeUpToDate();
+      if (symbolTreeRebuilt) {
         symbolTree.set(computeSymbolTree());
       }
 
@@ -438,7 +440,9 @@ public class DocumentContext implements Comparable<DocumentContext> {
       // сорвавшийся разбор не должен выглядеть состоявшимся, иначе повторная попытка сочтёт
       // текст прежним и работу не переделает.
       contentFingerprint = fingerprint;
-      contentChangedOnLastRebuild = contentChanged;
+      // Дерево, построенное заново по тому же тексту, отличается от прежнего видом символов,
+      // поэтому для посчитанного по символам это такое же изменение, как правка текста.
+      contentChangedOnLastRebuild = symbolTreeRebuilt;
 
     } finally {
       releaseLocks();
@@ -560,6 +564,42 @@ public class DocumentContext implements Comparable<DocumentContext> {
     } finally {
       releaseLocks();
     }
+  }
+
+  /**
+   * Построить дерево символов заново по уже разобранному тексту, если прежнее устарело:
+   * классификаторы отвечают о методах и голых присваиваниях документа иначе, чем при его
+   * построении, — их ответы держатся на членах чужих модулей. Вместе с деревом забываются
+   * диагностики, посчитанные по прежним символам.
+   *
+   * @return {@code true}, если дерево построено заново; {@code false}, если оно годно или
+   *     текста у документа нет — тогда перестроить его не по чему.
+   */
+  protected boolean refreshSymbolTree() {
+    acquireLocks();
+
+    try {
+      if (tokenizer == null || isSymbolTreeUpToDate()) {
+        return false;
+      }
+      clearDependantData();
+      symbolTree.set(computeSymbolTree());
+      contentChangedOnLastRebuild = true;
+      return true;
+    } finally {
+      releaseLocks();
+    }
+  }
+
+  /**
+   * Устарело ли построенное дерево символов: построение заново по тому же тексту дало бы
+   * другое дерево. Дерево, которое ещё не строилось, устаревшим не считается.
+   *
+   * @return {@code true}, если дерево построено и устарело.
+   */
+  @Locked("computeLock")
+  protected boolean isSymbolTreeStale() {
+    return symbolTree.get().getBasis() != SymbolTree.Basis.NONE && !isSymbolTreeUpToDate();
   }
 
   /**

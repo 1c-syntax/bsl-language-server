@@ -760,6 +760,45 @@ public class ServerContext {
     }
   }
 
+  /**
+   * Построить дерево символов документа заново, если оно устарело без правки его текста:
+   * классификаторы отвечают о методах и голых присваиваниях документа иначе, чем при
+   * построении дерева ({@link DocumentContext#refreshSymbolTree()}).
+   * <p>
+   * У документа с текстом дерево строится по уже разобранному тексту. Документ, текст
+   * которого освобождён, перечитывается из файла — разбор сам построит устаревшее дерево
+   * заново. Освобождать его снова здесь нельзя: документ может разбирать и читать без этой
+   * блокировки чужой поток (пакетный анализ), и освобождение отняло бы у него текст посреди
+   * расчёта. Дерево, которое ещё не строилось, не трогается.
+   * <p>
+   * Берёт блокировку документа на запись, поэтому вызывающий поток не должен держать
+   * блокировку какого-либо документа.
+   *
+   * @param documentContext документ.
+   * @return {@code true}, если дерево построено заново по уже разобранному тексту;
+   *     {@code false}, если оно годно, документ снят с рабочей области или перечитан из
+   *     файла — о перечитанном оповещает сам разбор.
+   */
+  public boolean refreshSymbolTree(DocumentContext documentContext) {
+    var uri = documentContext.getUri();
+    var lock = getDocumentLock(uri);
+    lock.writeLock().lock();
+    try {
+      if (documents.get(uri) != documentContext) {
+        return false;
+      }
+      if (states.get(documentContext) == DocumentState.WITH_CONTENT) {
+        return documentContext.refreshSymbolTree();
+      }
+      if (documentContext.isSymbolTreeStale()) {
+        rebuildDocument(documentContext);
+      }
+      return false;
+    } finally {
+      lock.writeLock().unlock();
+    }
+  }
+
   private boolean isPreparing() {
     return !preparation.get().isDone();
   }
