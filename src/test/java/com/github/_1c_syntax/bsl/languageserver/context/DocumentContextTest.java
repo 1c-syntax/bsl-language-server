@@ -158,6 +158,49 @@ class DocumentContextTest {
   }
 
   @Test
+  void refreshedSymbolTreeGetsComplexityOfItsOwnMethods() throws IllegalAccessException {
+    // given: сложность посчитана по дереву, а потом методы модуля стали обработчиками событий
+    var documentContext = getDocumentContext();
+    documentContext.getCognitiveComplexityData();
+    documentContext.getCyclomaticComplexityData();
+    EventHandlerClassifier everyMethodIsHandler = (document, name) -> true;
+    FieldUtils.writeField(documentContext, "eventHandlerClassifier", everyMethodIsHandler, true);
+
+    // when: дерево перепроверено и построено заново по тому же тексту
+    assertThat(documentContext.refreshSymbolTree()).isTrue();
+
+    // then: сложность есть у методов нового дерева
+    assertComplexityCoversMethodsOf(documentContext);
+  }
+
+  @Test
+  void frozenDocumentRereadThatRebuildsSymbolTreeGetsComplexityOfItsOwnMethods() throws IllegalAccessException {
+    // given: у замороженного документа посчитана сложность, а потом методы модуля стали
+    // обработчиками событий
+    var documentContext = getDocumentContext();
+    documentContext.getCognitiveComplexityData();
+    documentContext.getCyclomaticComplexityData();
+    documentContext.freezeComputedData();
+    EventHandlerClassifier everyMethodIsHandler = (document, name) -> true;
+    FieldUtils.writeField(documentContext, "eventHandlerClassifier", everyMethodIsHandler, true);
+
+    // when: тот же текст перечитан, и дерево построено заново
+    documentContext.rebuild(documentContext.getContent(), documentContext.getVersion() + 1);
+
+    // then: сложность есть у методов нового дерева
+    assertComplexityCoversMethodsOf(documentContext);
+  }
+
+  private static void assertComplexityCoversMethodsOf(DocumentContext documentContext) {
+    var methods = documentContext.getSymbolTree().getMethods();
+    assertThat(methods).isNotEmpty().allMatch(EventMethodSymbol.class::isInstance);
+    assertThat(documentContext.getCognitiveComplexityData().methodsComplexity().keySet())
+      .containsAll(methods);
+    assertThat(documentContext.getCyclomaticComplexityData().methodsComplexity().keySet())
+      .containsAll(methods);
+  }
+
+  @Test
   void rereadingSameContentThatRebuildsSymbolTreeIsAChange() throws IllegalAccessException {
     // given: голое присваивание «А = 0» завело переменную, а потом у своего типа модуля
     // появился реквизит А
@@ -286,6 +329,24 @@ class DocumentContextTest {
     // then: посчитанное по прежнему тексту сброшено. Заморозка — политика хранения, а
     // изменение содержимого — факт, и факт сильнее: иначе диагностики остались бы от
     // текста, которого больше нет.
+    var diagnostics = FieldUtils.readField(documentContext, "diagnostics", true);
+    assertThat(FieldUtils.readField(diagnostics, "value", true)).isNull();
+  }
+
+  @Test
+  void frozenDocumentDropsDiagnosticsWhenRereadRebuildsSymbolTree() throws IllegalAccessException {
+    // given: у замороженного документа посчитаны диагностики, а потом методы модуля стали
+    // обработчиками событий
+    var documentContext = getDocumentContext();
+    documentContext.getDiagnostics();
+    documentContext.freezeComputedData();
+    EventHandlerClassifier everyMethodIsHandler = (document, name) -> true;
+    FieldUtils.writeField(documentContext, "eventHandlerClassifier", everyMethodIsHandler, true);
+
+    // when: тот же текст перечитан, и дерево построено заново
+    documentContext.rebuild(documentContext.getContent(), documentContext.getVersion() + 1);
+
+    // then: диагностики, посчитанные по прежним символам, сброшены
     var diagnostics = FieldUtils.readField(documentContext, "diagnostics", true);
     assertThat(FieldUtils.readField(diagnostics, "value", true)).isNull();
   }

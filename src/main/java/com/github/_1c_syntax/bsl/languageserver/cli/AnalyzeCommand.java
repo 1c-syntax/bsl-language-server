@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.cli;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
@@ -264,9 +265,22 @@ public class AnalyzeCommand implements Callable<Integer> {
 
   private FileInfo getFileInfoFromFile(Path srcDir, File file, boolean metricCalculationRequired) {
     var documentContext = serverContext.addDocument(Absolute.uri(file));
+    // Работа с документом — под его блокировкой на запись, как у остальных писателей: кто
+    // сам разбирает документ и освобождает его после работы, иначе отнял бы у анализа текст
+    // посреди расчёта.
+    var lock = serverContext.getDocumentLock(documentContext.getUri()).writeLock();
+    lock.lock();
+    try {
+      return analyzeDocument(srcDir, documentContext, metricCalculationRequired);
+    } finally {
+      lock.unlock();
+    }
+  }
+
+  private FileInfo analyzeDocument(Path srcDir, DocumentContext documentContext, boolean metricCalculationRequired) {
     serverContext.rebuildDocument(documentContext);
 
-    var filePath = srcDir.relativize(Absolute.path(file));
+    var filePath = srcDir.relativize(Absolute.path(documentContext.getUri()));
     var diagnostics = documentContext.getDiagnostics();
     var metrics = metricCalculationRequired ? documentContext.getMetrics() : null;
     var mdoRef = documentContext.getMdoRef();

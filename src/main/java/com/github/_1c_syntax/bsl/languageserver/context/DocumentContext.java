@@ -433,7 +433,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
       // заново значило бы повторить заметную долю всего разбора ради того же результата.
       var symbolTreeRebuilt = contentChanged || !isSymbolTreeUpToDate();
       if (symbolTreeRebuilt) {
-        symbolTree.set(computeSymbolTree());
+        replaceSymbolTree();
       }
 
       // Отпечаток запоминается последним, когда содержимое уже применено и дерево построено:
@@ -570,7 +570,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
    * Построить дерево символов заново по уже разобранному тексту, если прежнее устарело:
    * классификаторы отвечают о методах и голых присваиваниях документа иначе, чем при его
    * построении, — их ответы держатся на членах чужих модулей. Вместе с деревом забываются
-   * диагностики, посчитанные по прежним символам.
+   * диагностики и сложность, посчитанные по прежним символам.
    *
    * @return {@code true}, если дерево построено заново; {@code false}, если оно годно или
    *     текста у документа нет — тогда перестроить его не по чему.
@@ -582,8 +582,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
       if (tokenizer == null || isSymbolTreeUpToDate()) {
         return false;
       }
-      clearDependantData();
-      symbolTree.set(computeSymbolTree());
+      replaceSymbolTree();
       contentChangedOnLastRebuild = true;
       return true;
     } finally {
@@ -600,6 +599,21 @@ public class DocumentContext implements Comparable<DocumentContext> {
   @Locked("computeLock")
   protected boolean isSymbolTreeStale() {
     return symbolTree.get().getBasis() != SymbolTree.Basis.NONE && !isSymbolTreeUpToDate();
+  }
+
+  /**
+   * Строит дерево символов заново и забывает посчитанное по символам прежнего: диагностики и
+   * сложность методов. Сложность хранится по символам, а вид символа входит в его равенство,
+   * поэтому у метода, ставшего обработчиком события, посчитанная сложность не нашлась бы.
+   * Замороженный документ, перечитанный с тем же текстом, иначе этого не сбрасывает.
+   * <p>
+   * Убедитесь, что локи установлены корректно перед вызовом метода.
+   */
+  private void replaceSymbolTree() {
+    symbolTree.set(computeSymbolTree());
+    clearDependantData();
+    cognitiveComplexityData.clear();
+    cyclomaticComplexityData.clear();
   }
 
   /**

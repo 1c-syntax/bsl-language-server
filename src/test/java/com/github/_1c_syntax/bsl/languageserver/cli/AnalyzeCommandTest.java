@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli;
 
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
 import com.github._1c_syntax.bsl.languageserver.reporters.DiagnosticReporter;
 import com.github._1c_syntax.bsl.languageserver.reporters.JsonReporter;
 import com.github._1c_syntax.bsl.languageserver.reporters.ReportersAggregator;
@@ -28,10 +30,14 @@ import com.github._1c_syntax.bsl.languageserver.reporters.ReportContext;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.net.URISyntaxException;
@@ -40,6 +46,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -55,6 +62,9 @@ class AnalyzeCommandTest {
 
   @Autowired
   private ReportersAggregator aggregator;
+
+  @Autowired
+  private ConfigurableApplicationContext applicationContext;
 
   @TempDir
   Path tempDir;
@@ -207,6 +217,59 @@ class AnalyzeCommandTest {
       .allSatisfy(fileInfo -> assertThat(fileInfo.getMetrics()).isNull());
   }
 
+  /**
+   * Документ разбирается, анализируется и освобождается под его блокировкой, как у остальных
+   * писателей: иначе писатель, который сам разбирает и освобождает документ, отнял бы у
+   * анализа текст посреди расчёта.
+   */
+  @Test
+  void documentIsAnalyzedUnderItsLock() throws Exception {
+    // given: модуль, разбор и освобождение которого во время анализа отслеживаются
+    var srcDir = Files.createDirectories(tempDir.resolve("src"));
+    var module = srcDir.resolve("Module.bsl");
+    Files.writeString(module, "Процедура Один()\nКонецПроцедуры\n");
+    var moduleUri = Absolute.uri(module.toUri());
+    var reporter = new CapturingReporter();
+    ReflectionTestUtils.setField(analyzeCommand, "srcDirOption", srcDir.toString());
+    ReflectionTestUtils.setField(analyzeCommand, "workspaceDirOption", srcDir.toString());
+    ReflectionTestUtils.setField(analyzeCommand, "outputDirOption", tempDir.resolve("out").toString());
+    ReflectionTestUtils.setField(analyzeCommand, "silentMode", true);
+    ReflectionTestUtils.setField(aggregator, "filteredReporters", List.of(reporter));
+
+    // Признак «держит ли поток блокировку документа» снимается в момент разбора и в момент
+    // освобождения: оба события публикуются на потоке, который работает с документом.
+    var lockHeld = new CopyOnWriteArrayList<Boolean>();
+    ApplicationListener<ApplicationEvent> listener = event -> {
+      if (!reporter.begun) {
+        return; // наполнение рабочей области, а не анализ
+      }
+      var document = switch (event) {
+        case DocumentContextContentChangedEvent changed -> changed.getSource();
+        case ServerContextDocumentClearedEvent cleared -> cleared.getDocumentContext();
+        default -> null;
+      };
+      if (document != null && document.getUri().equals(moduleUri)) {
+        var lock = (ReentrantReadWriteLock) document.getServerContext().getDocumentLock(moduleUri);
+        lockHeld.add(lock.isWriteLockedByCurrentThread());
+      }
+    };
+    applicationContext.addApplicationListener(listener);
+
+    // when
+    int exitCode;
+    try {
+      exitCode = analyzeCommand.call();
+    } finally {
+      applicationContext.removeApplicationListener(listener);
+    }
+
+    // then: документ разобран и освобождён под его блокировкой на запись — другой писатель не
+    // отнимет у анализа текст посреди расчёта
+    assertThat(exitCode).isZero();
+    assertThat(reporter.captured()).hasSize(1);
+    assertThat(lockHeld).hasSize(2).containsOnly(true);
+  }
+
   private void prepareAnalysis(DiagnosticReporter... activeReporters) {
     ReflectionTestUtils.setField(analyzeCommand, "srcDirOption", METADATA_PATH);
     ReflectionTestUtils.setField(analyzeCommand, "workspaceDirOption", METADATA_PATH);
@@ -222,6 +285,7 @@ class AnalyzeCommandTest {
   private static class CapturingReporter implements DiagnosticReporter {
 
     private final List<FileInfo> captured = new CopyOnWriteArrayList<>();
+    private volatile boolean begun;
 
     @Override
     public String key() {
@@ -231,6 +295,7 @@ class AnalyzeCommandTest {
     @Override
     public void beginReport(ReportContext context, Path outputDir) {
       captured.clear();
+      begun = true;
     }
 
     @Override

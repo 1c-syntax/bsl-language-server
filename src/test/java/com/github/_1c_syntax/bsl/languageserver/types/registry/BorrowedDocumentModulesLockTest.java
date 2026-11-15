@@ -28,8 +28,10 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.utils.Absolute;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,7 +41,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
-import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
@@ -171,7 +172,7 @@ class BorrowedDocumentModulesLockTest extends AbstractServerContextAwareTest {
     // тогда индекс заполняет её поток, и результат дожидается.
     assertThat(extension.getSymbolTree().getBasis().bareSelfProperties()).contains(LATE_VARIABLE);
     await().pollInSameThread().atMost(Duration.ofSeconds(30)).untilAsserted(() ->
-      assertLateVariableIsNotLocalReference(extension, extensionContent));
+      assertLateVariableRefersToMainModule(extension, extensionContent));
   }
 
   @Test
@@ -192,7 +193,7 @@ class BorrowedDocumentModulesLockTest extends AbstractServerContextAwareTest {
     // перепроверяется не на потоке правки, поэтому результат дожидается.
     await().pollInSameThread().atMost(Duration.ofSeconds(30)).untilAsserted(() -> {
       assertThat(extension.getSymbolTree().getBasis().bareSelfProperties()).contains(LATE_VARIABLE);
-      assertLateVariableIsNotLocalReference(extension, extensionContent);
+      assertLateVariableRefersToMainModule(extension, extensionContent);
     });
   }
 
@@ -214,10 +215,12 @@ class BorrowedDocumentModulesLockTest extends AbstractServerContextAwareTest {
     context.rebuildDocument(main, mainContent, 1);
 
     // then: дерево модуля расширения построено заново по его файлу, присваивание признано
-    // реквизитом типа, и индекс ссылок собран по новому дереву.
+    // реквизитом типа, индекс ссылок собран по новому дереву, а сам модуль снова освобождён:
+    // иначе каждый такой модуль держал бы текст до конца сессии.
     await().pollInSameThread().atMost(Duration.ofSeconds(30)).untilAsserted(() -> {
       assertThat(extension.getSymbolTree().getBasis().bareSelfProperties()).contains(LATE_VARIABLE);
-      assertLateVariableIsNotLocalReference(extension, extensionContent);
+      assertLateVariableRefersToMainModule(extension, extensionContent);
+      assertThat(context.getDocumentState(extension)).isEqualTo(DocumentState.WITHOUT_CONTENT);
     });
   }
 
@@ -286,20 +289,26 @@ class BorrowedDocumentModulesLockTest extends AbstractServerContextAwareTest {
   }
 
   /**
-   * Обращение к {@link #LATE_VARIABLE} в модуле расширения проиндексировано и ведёт не на
-   * переменную самого модуля, которую завело бы дерево, построенное по прежнему дереву
-   * основного модуля.
+   * Обращение к {@link #LATE_VARIABLE} в модуле расширения проиндексировано и ведёт на
+   * экспортную переменную модуля основной конфигурации, а не на переменную самого модуля,
+   * которую завело бы дерево, построенное по прежнему дереву основного модуля.
    */
-  private void assertLateVariableIsNotLocalReference(DocumentContext extension, String extensionContent) {
+  private void assertLateVariableRefersToMainModule(DocumentContext extension, String extensionContent) {
     var lines = extensionContent.split("\n", -1);
     var line = 0;
     while (!lines[line].startsWith("\t" + LATE_VARIABLE)) {
       line++;
     }
+    var main = document(MAIN_OBJECT_MODULE);
     var reference = referenceIndex.getReference(extension.getUri(), new Position(line, 2));
+    // Обращение к реквизиту self-типа ведёт на член типа; объявление — его символ-источник.
     assertThat(reference).hasValueSatisfying(found ->
-      assertThat(found.getSourceDefinedSymbol().map(SourceDefinedSymbol::getOwner))
-        .isNotEqualTo(Optional.of(extension)));
+      assertThat(found.symbol())
+        .asInstanceOf(InstanceOfAssertFactories.type(PlatformMemberSymbol.class))
+        .extracting(member -> member.getDescriptor().sourceSymbol())
+        .asInstanceOf(InstanceOfAssertFactories.type(SourceDefinedSymbol.class))
+        .extracting(SourceDefinedSymbol::getOwner)
+        .isSameAs(main));
   }
 
   private DocumentContext document(String path) {
