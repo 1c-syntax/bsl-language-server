@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794598202338,
+  "lastUpdate": 1794775484565,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -47585,6 +47585,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.8643881655765893",
             "extra": "mean: 89.97001528739929 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "9dd6973e0293acfc9a9a1665eeae96d9b7e6d63e",
+          "message": "Merge pull request #4958 from SanMisha/fix/typo-default-dictionary\n\nfix(diagnostics): Typo учитывает словарь исключений без объекта параметров",
+          "timestamp": "2026-11-15T21:23:03+01:00",
+          "tree_id": "c4259c6daf62ccce1a8df57b9f05076117eb8ddf",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/9dd6973e0293acfc9a9a1665eeae96d9b7e6d63e"
+        },
+        "date": 1794775454119,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 87.93454138437907,
+            "unit": "sec",
+            "range": "stddev: 0.6689772715881269",
+            "extra": "mean: 87.93454138437907 sec\nrounds: 3"
           }
         ]
       }
