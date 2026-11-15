@@ -142,6 +142,47 @@ class BorrowedDocumentModulesLockTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void extensionTreeBuiltOverStaleMainModuleIsCorrectedOnReread() throws Exception {
+    // given: блокировку модуля основной конфигурации держит тестовый поток.
+    initServerContext(FIXTURE);
+    var main = document(MAIN_OBJECT_MODULE);
+    var extension = document(EXTENSION_OBJECT_MODULE);
+    var objectType = typeRegistry.resolve("ДокументОбъект.Документ1", FileType.BSL).orElseThrow();
+    typeRegistry.invalidateMembers(objectType);
+    var extensionContent = Files.readString(FIXTURE.resolve(EXTENSION_OBJECT_MODULE))
+      + "\nПроцедура Расш1_Сбросить()\n\tПоздний = Неопределено;\nКонецПроцедуры\n";
+    var mainLock = computeLock(main);
+    mainLock.lock();
+    try {
+      // when: модуль расширения построен, пока модуль основной конфигурации занят, — по его
+      // прежнему дереву, где переменной «Поздний» нет.
+      executor.submit(() -> context.rebuildDocument(extension, extensionContent, 1))
+        .get(30, TimeUnit.SECONDS);
+
+      // then: присваивание признано локальной переменной.
+      assertThat(extension.getSymbolTree().getBasis().bareSelfProperties()).doesNotContain("Поздний");
+
+      // when: перестроение модуля основной конфигурации закончилось, в нём объявлена
+      // экспортная переменная «Поздний».
+      var mainContent = "Перем Поздний Экспорт;\n" + Files.readString(FIXTURE.resolve(MAIN_OBJECT_MODULE));
+      context.rebuildDocument(main, mainContent, 1);
+    } finally {
+      mainLock.unlock();
+    }
+    assertThat(typeRegistry.getMembers(objectType, FileType.BSL))
+      .extracting(MemberDescriptor::name)
+      .contains("Поздний");
+
+    // when: модуль расширения отпущен и перечитан с тем же текстом, как во втором проходе
+    // analyze (чтение с диска идёт с версией 0).
+    context.tryClearDocument(extension);
+    context.rebuildDocument(extension, extensionContent, 0);
+
+    // then: дерево построено заново, присваивание признано реквизитом типа.
+    assertThat(extension.getSymbolTree().getBasis().bareSelfProperties()).contains("Поздний");
+  }
+
+  @Test
   void managerModuleEditDoesNotWaitForExtensionModule() throws Exception {
     // given: модули менеджера — источники членов типа ДокументМенеджер.Документ1, блокировку
     // модуля расширения держит тестовый поток.
