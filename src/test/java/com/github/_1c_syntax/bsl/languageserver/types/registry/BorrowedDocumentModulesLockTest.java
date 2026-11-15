@@ -24,9 +24,12 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.utils.Absolute;
+import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -34,6 +37,7 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
@@ -61,9 +65,13 @@ class BorrowedDocumentModulesLockTest extends AbstractServerContextAwareTest {
   private static final String EXTENSION_OBJECT_MODULE = "cfe/Documents/Документ1/Ext/ObjectModule.bsl";
   private static final String MAIN_MANAGER_MODULE = "cf/Documents/Документ1/Ext/ManagerModule.bsl";
   private static final String EXTENSION_MANAGER_MODULE = "cfe/Documents/Документ1/Ext/ManagerModule.bsl";
+  private static final String LATE_VARIABLE = "Поздний";
 
   @Autowired
   private TypeRegistry typeRegistry;
+
+  @Autowired
+  private ReferenceIndex referenceIndex;
 
   @Autowired
   @Qualifier("diagnosticComputerExecutor")
@@ -142,6 +150,44 @@ class BorrowedDocumentModulesLockTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void extensionTreeBuiltOverRebuildingMainModuleIsCorrectedOnReread() throws Exception {
+    // given: модуль расширения построен, пока модуль основной конфигурации перестраивался и
+    // ещё не объявил экспортную переменную, которой расширение присваивает.
+    initServerContext(FIXTURE);
+    var main = document(MAIN_OBJECT_MODULE);
+    var extension = document(EXTENSION_OBJECT_MODULE);
+    var extensionContent = extensionAssigningLateVariable();
+    buildExtensionWhileMainModuleRebuildsDeclaringLateVariable(main, extension, extensionContent);
+
+    // when: модуль расширения перечитан с тем же текстом, как во втором проходе analyze.
+    context.rebuildDocument(extension, extensionContent, 2);
+
+    // then: присваивание признано реквизитом типа — по дереву модуля основной конфигурации,
+    // достроенному после первого построения расширения, — и индекс ссылок собран по новому дереву.
+    assertThat(extension.getSymbolTree().getBasis().bareSelfProperties()).contains(LATE_VARIABLE);
+    assertLateVariableIsNotLocalReference(extension, extensionContent);
+  }
+
+  @Test
+  void extensionTreeBuiltOverRebuildingMainModuleIsCorrectedWithoutReread() throws Exception {
+    // given: модуль расширения построен, пока модуль основной конфигурации перестраивался и
+    // ещё не объявил экспортную переменную, которой расширение присваивает.
+    initServerContext(FIXTURE);
+    var main = document(MAIN_OBJECT_MODULE);
+    var extension = document(EXTENSION_OBJECT_MODULE);
+    var extensionContent = extensionAssigningLateVariable();
+
+    // when: перестроение модуля основной конфигурации закончилось, а модуль расширения после
+    // этого никто не перечитывает — в редакторе правили только основной модуль.
+    buildExtensionWhileMainModuleRebuildsDeclaringLateVariable(main, extension, extensionContent);
+
+    // then: дерево модуля расширения не осталось построенным по прежнему дереву основного:
+    // присваивание признано реквизитом типа, и индекс ссылок собран по новому дереву.
+    assertThat(extension.getSymbolTree().getBasis().bareSelfProperties()).contains(LATE_VARIABLE);
+    assertLateVariableIsNotLocalReference(extension, extensionContent);
+  }
+
+  @Test
   void managerModuleEditDoesNotWaitForExtensionModule() throws Exception {
     // given: модули менеджера — источники членов типа ДокументМенеджер.Документ1, блокировку
     // модуля расширения держит тестовый поток.
@@ -166,6 +212,60 @@ class BorrowedDocumentModulesLockTest extends AbstractServerContextAwareTest {
     } finally {
       extensionLock.unlock();
     }
+  }
+
+  private static String extensionAssigningLateVariable() throws Exception {
+    return Files.readString(FIXTURE.resolve(EXTENSION_OBJECT_MODULE))
+      + "\nПроцедура Расш1_Сбросить()\n\t" + LATE_VARIABLE + " = Неопределено;\nКонецПроцедуры\n";
+  }
+
+  /**
+   * Строит модуль расширения на другом потоке, пока блокировку модуля основной конфигурации
+   * держит тестовый поток, как держал бы её поток, перестраивающий этот модуль. Затем
+   * перестроение основного модуля заканчивается: в нём появляется экспортная переменная
+   * {@link #LATE_VARIABLE}.
+   */
+  private void buildExtensionWhileMainModuleRebuildsDeclaringLateVariable(
+    DocumentContext main,
+    DocumentContext extension,
+    String extensionContent
+  ) throws Exception {
+    var objectType = typeRegistry.resolve("ДокументОбъект.Документ1", FileType.BSL).orElseThrow();
+    typeRegistry.invalidateMembers(objectType);
+    var mainContent = "Перем " + LATE_VARIABLE + " Экспорт;\n"
+      + Files.readString(FIXTURE.resolve(MAIN_OBJECT_MODULE));
+    var mainLock = computeLock(main);
+    mainLock.lock();
+    try {
+      executor.submit(() -> context.rebuildDocument(extension, extensionContent, 1))
+        .get(30, TimeUnit.SECONDS);
+      // Расширение видит прежнее дерево основного модуля, где переменной ещё нет.
+      assertThat(extension.getSymbolTree().getBasis().bareSelfProperties()).doesNotContain(LATE_VARIABLE);
+
+      context.rebuildDocument(main, mainContent, 1);
+    } finally {
+      mainLock.unlock();
+    }
+    assertThat(typeRegistry.getMembers(objectType, FileType.BSL))
+      .extracting(MemberDescriptor::name)
+      .contains(LATE_VARIABLE);
+  }
+
+  /**
+   * Обращение к {@link #LATE_VARIABLE} в модуле расширения проиндексировано и ведёт не на
+   * переменную самого модуля, которую завело бы дерево, построенное по прежнему дереву
+   * основного модуля.
+   */
+  private void assertLateVariableIsNotLocalReference(DocumentContext extension, String extensionContent) {
+    var lines = extensionContent.split("\n", -1);
+    var line = 0;
+    while (!lines[line].startsWith("\t" + LATE_VARIABLE)) {
+      line++;
+    }
+    var reference = referenceIndex.getReference(extension.getUri(), new Position(line, 2));
+    assertThat(reference).hasValueSatisfying(found ->
+      assertThat(found.getSourceDefinedSymbol().map(SourceDefinedSymbol::getOwner))
+        .isNotEqualTo(Optional.of(extension)));
   }
 
   private DocumentContext document(String path) {

@@ -158,6 +158,22 @@ class DocumentContextTest {
   }
 
   @Test
+  void rereadingSameContentThatRebuildsSymbolTreeIsAChange() throws IllegalAccessException {
+    // given: голое присваивание «А = 0» завело переменную, а потом у своего типа модуля
+    // появился реквизит А
+    var documentContext = getDocumentContext();
+    SelfMemberClassifier nameIsSelfProperty = (document, name) -> "А".equals(name);
+    FieldUtils.writeField(documentContext, "selfMemberClassifier", nameIsSelfProperty, true);
+
+    // when: тот же текст перечитан, и дерево построено заново
+    documentContext.rebuild(documentContext.getContent(), documentContext.getVersion() + 1);
+
+    // then: символы уже не те, что были, — посчитанное по прежним надо пересчитать, как
+    // после правки
+    assertThat(documentContext.isContentChangedOnLastRebuild()).isTrue();
+  }
+
+  @Test
   void rereadingSameContentWhenNameIsNoLongerSelfPropertyRebuildsSymbolTree() throws IllegalAccessException {
     // given: дерево построено, когда А было реквизитом своего типа, — переменной у него нет,
     // и в самом дереве об этом имени ничего не сказано
