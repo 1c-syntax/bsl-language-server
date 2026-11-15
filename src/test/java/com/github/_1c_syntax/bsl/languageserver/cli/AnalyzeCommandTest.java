@@ -233,6 +233,8 @@ class AnalyzeCommandTest {
     ReflectionTestUtils.setField(analyzeCommand, "srcDirOption", srcDir.toString());
     ReflectionTestUtils.setField(analyzeCommand, "workspaceDirOption", srcDir.toString());
     ReflectionTestUtils.setField(analyzeCommand, "outputDirOption", tempDir.resolve("out").toString());
+    // Значение по умолчанию picocli подставляет только при разборе аргументов.
+    ReflectionTestUtils.setField(analyzeCommand, "configurationOption", "");
     ReflectionTestUtils.setField(analyzeCommand, "silentMode", true);
     ReflectionTestUtils.setField(aggregator, "filteredReporters", List.of(reporter));
 
