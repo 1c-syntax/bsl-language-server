@@ -376,44 +376,18 @@ public class ReferenceIndex {
                                                 String variableName,
                                                 Range range,
                                                 OccurrenceType occurrenceType) {
-    var symbol = variableSymbol(mdoRef, moduleType, methodName, variableName);
-    return variableOccurrence(uri, symbol, range, occurrenceType, referenceSymbolInterner);
-  }
-
-  /**
-   * Временный интернер локальных ключей документа, сохраняющий их экземпляры при переиндексации.
-   *
-   * @param uri документ, чьи текущие вхождения задают канонические ключи.
-   * @return интернер для одного построения набора вхождений документа.
-   */
-  GenericInterner<Symbol> localVariableInterner(URI uri) {
-    var symbols = new GenericInterner<Symbol>();
-    locationRepository.getSymbolOccurrencesByLocationUri(uri)
-      .map(SymbolOccurrence::symbol)
-      .filter(symbol -> symbol.symbolKind() == SymbolKind.Variable && !symbol.scopeName().isEmpty()
-        && !SELF_MEMBER_SCOPE.equals(symbol.scopeName()))
-      .forEach(symbols::intern);
-    return symbols;
-  }
-
-  /** Построить ключ переменной с каноническими именами метода и переменной. */
-  Symbol variableSymbol(String mdoRef, ModuleType moduleType, String methodName, String variableName) {
     var methodNameCanonical = stringInterner.intern(methodName.toLowerCase(Locale.ENGLISH));
     var variableNameCanonical = stringInterner.intern(variableName.toLowerCase(Locale.ENGLISH));
 
-    return Symbol.builder()
+    var symbol = referenceSymbolInterner.intern(Symbol.builder()
       .mdoRef(mdoRef)
       .moduleType(moduleType)
       .scopeName(methodNameCanonical)
       .symbolKind(SymbolKind.Variable)
       .symbolName(variableNameCanonical)
-      .build();
-  }
+      .build());
 
-  /** Построить вхождение переменной с заданным интернером ключей. */
-  SymbolOccurrence variableOccurrence(URI uri, Symbol symbol, Range range, OccurrenceType occurrenceType,
-                                     GenericInterner<Symbol> symbols) {
-    return SymbolOccurrence.of(occurrenceType, symbols.intern(symbol), uri, range);
+    return SymbolOccurrence.of(occurrenceType, symbol, uri, range);
   }
 
   /**
