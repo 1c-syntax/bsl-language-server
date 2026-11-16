@@ -2378,6 +2378,7 @@
 <li><code>unregister_workspace_folder</code> — release the index when the project is no longer needed. Only folders registered over MCP can be removed: a folder that came from the LSP client is the editor's workspace folder and is left alone, because the client cannot get it back. A folder the client additionally declares as a root (see MCP roots below) stays indexed, which the result reports as <code>stillDeclaredByRoots</code>: the folder goes away once the last source releases it.</li>
 </ol>
 <p>The error messages are self-contained: for an unknown or missing <code>workspaceFolder</code> the server lists the registered folders and names the tool that registers a new one, so an agent can recover without asking a human.</p>
+<p>The <code>file</code> argument takes a path to the file (absolute or relative to the server process working directory) or a <code>file:</code> URI exactly as other tools return it in <code>uri</code> fields — for example, from a <code>definition</code> or <code>find_references</code> answer.</p>
 <p>Additional sources of workspace folders:</p>
 <ul>
 <li><strong>LSP.</strong> In the combined modes (<code>lsp --mcp</code>, <code>websocket --mcp</code>) workspace folders come from the LSP client into the same shared context — there is no need to register them over MCP, they show up in <code>list_workspace_folders</code> right away.</li>
