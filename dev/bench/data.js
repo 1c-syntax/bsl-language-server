@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794830663786,
+  "lastUpdate": 1794845659462,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -47647,6 +47647,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.4975343204137896",
             "extra": "mean: 94.27349058787028 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "92d6d7f08ccddce5c042bcdd5709f665a595c160",
+          "message": "Merge pull request #4956 from SanMisha/fix/mcp-call-hierarchy-cross-module\n\nfix(mcp): call_hierarchy считает вызовы по документу элемента",
+          "timestamp": "2026-11-16T16:49:56+01:00",
+          "tree_id": "0515e63d99458b614830e8c6978377154bf426ae",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/92d6d7f08ccddce5c042bcdd5709f665a595c160"
+        },
+        "date": 1794845640229,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 93.0693491299947,
+            "unit": "sec",
+            "range": "stddev: 2.2356314897384384",
+            "extra": "mean: 93.0693491299947 sec\nrounds: 3"
           }
         ]
       }
