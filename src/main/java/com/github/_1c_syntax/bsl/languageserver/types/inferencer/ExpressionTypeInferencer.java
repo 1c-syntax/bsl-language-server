@@ -1143,6 +1143,41 @@ public class ExpressionTypeInferencer {
   }
 
   /**
+   * Вывести контекстный тип, сохраняя содержимое чужого документа на время расчёта.
+   * <p>
+   * Блокировка чужого документа берётся без ожидания: текущий расчёт уже может держать
+   * блокировку своего документа, а встречный вызов не должен замкнуть цикл ожидания.
+   * Занятый документ отвечает собранными типами, но такой ответ помечается неполным,
+   * чтобы временное приближение не закрепилось в кэше вместо контекстного результата.
+   *
+   * @param method вызываемый метод.
+   * @param ctx состояние текущего запроса вывода.
+   * @param context режим в точке вызова.
+   * @return контекстные типы либо собранные типы занятого или уже выгруженного документа.
+   */
+  private TypeSet contextualReturnTypes(MethodSymbol method, InferenceContext ctx, ExecutionContext context) {
+    var owner = method.getOwner();
+    if (owner == ctx.documentContext) {
+      return inferContextualReturnTypes(method, ctx, context);
+    }
+
+    var serverContext = owner.getServerContext();
+    var lock = serverContext.getDocumentLock(owner.getUri()).readLock();
+    if (!lock.tryLock()) {
+      ctx.sawMissing = true;
+      return symbolTypeIndex.getReturnTypes(method);
+    }
+    try {
+      if (serverContext.getDocumentState(owner) != DocumentState.WITH_CONTENT) {
+        return symbolTypeIndex.getReturnTypes(method);
+      }
+      return inferContextualReturnTypes(method, ctx, context);
+    } finally {
+      lock.unlock();
+    }
+  }
+
+  /**
    * Вывести возвращаемый тип по доступному телу функции в контексте назначения вызова.
    * <p>
    * Известное отсутствие объявления в целевом режиме даёт пустой тип. Иначе результат тела
@@ -1156,7 +1191,7 @@ public class ExpressionTypeInferencer {
    * @param context режим в точке вызова до перехода в целевой метод.
    * @return тип с учётом достижимых возвратов и документирующего комментария.
    */
-  private TypeSet contextualReturnTypes(MethodSymbol method, InferenceContext ctx, ExecutionContext context) {
+  private TypeSet inferContextualReturnTypes(MethodSymbol method, InferenceContext ctx, ExecutionContext context) {
     var owner = method.getOwner();
     var profile = ctx.compilation.methodContext(owner, method.getCompilerDirectiveKind(), compilationContextResolver);
     var target = profile.map(value -> compilationContextResolver.targetContext(
