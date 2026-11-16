@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794848508755,
+  "lastUpdate": 1794850186581,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -47740,6 +47740,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.360648950870032",
             "extra": "mean: 90.30488975842793 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "2c3ac05e7d40f1778dd0935ef605c45f717b5a28",
+          "message": "Merge pull request #4947 from SanMisha/feat/mcp-file-accepts-uri\n\nfeat(mcp): параметр file принимает file:-URI из ответов инструментов",
+          "timestamp": "2026-11-16T18:07:08+01:00",
+          "tree_id": "5de231077583170684b1d6b57f765885f8baa909",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/2c3ac05e7d40f1778dd0935ef605c45f717b5a28"
+        },
+        "date": 1794850153293,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 89.56540242830913,
+            "unit": "sec",
+            "range": "stddev: 1.1048501962524926",
+            "extra": "mean: 89.56540242830913 sec\nrounds: 3"
           }
         ]
       }
