@@ -171,6 +171,38 @@ class SignatureHelpProviderTest {
   }
 
   @Test
+  void oscriptVariadicArrayConstructorSupportsMoreThanOneDimension() {
+    var content = "М = Новый Массив(2, 3, 4);\n";
+    var document = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content);
+    var params = new SignatureHelpParams(new TextDocumentIdentifier(document.getUri().toString()),
+      new Position(0, content.lastIndexOf('4')));
+
+    var help = signatureHelpProvider.getSignatureHelp(document, params);
+
+    assertThat(help.getSignatures()).isNotEmpty();
+    var selected = help.getSignatures().get(help.getActiveSignature());
+    assertThat(selected.getLabel()).contains("Измерения1", "Измерения2", "Измерения3");
+    assertThat(selected.getParameters()).hasSizeGreaterThanOrEqualTo(3);
+    assertThat(help.getActiveParameter()).isEqualTo(2);
+  }
+
+  @Test
+  void oscriptVariadicGlobalSignatureDoesNotExposeEllipsisAsAParameter() {
+    var content = "Значение = Мин(1, 2, 3, 4);\n";
+    var document = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content);
+    var params = new SignatureHelpParams(new TextDocumentIdentifier(document.getUri().toString()),
+      new Position(0, content.lastIndexOf('4')));
+
+    var help = signatureHelpProvider.getSignatureHelp(document, params);
+
+    assertThat(help.getSignatures()).isNotEmpty();
+    // Сохраняется дополнительная позиция для следующего аргумента.
+    assertThat(help.getSignatures().getFirst().getParameters()).hasSize(5);
+    assertThat(help.getActiveParameter()).isEqualTo(3);
+    assertThat(help.getSignatures().getFirst().getLabel()).contains("Значения").doesNotContain("...");
+  }
+
+  @Test
   void signatureHelpRendersInConfiguredLanguageEn() {
     // Signature help — элемент интерфейса: при language=EN имя метода и
     // параметр показываются по-английски (Add(Value)), хотя в исходнике

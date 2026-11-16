@@ -53,6 +53,17 @@ class TypoDiagnosticTest extends AbstractDiagnosticTest<TypoDiagnostic> {
   }
 
   @Test
+  void testDiagnosticExceptionsWithoutConfigure() {
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    assertThat(diagnostics).hasSize(3);
+    assertThat(diagnostics, true)
+      .hasRange(1, 13, 1, 21)
+      .hasRange(5, 8, 5, 22)
+      .hasRange(8, 13, 8, 18);
+  }
+
+  @Test
   void testConfigureWordLength() {
     // given
     Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();

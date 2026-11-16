@@ -46,7 +46,7 @@ import java.util.Objects;
 @Slf4j
 public class FileAwarePrintWriter extends PrintWriter {
 
-  private boolean isEmpty = true;
+  private volatile boolean isEmpty = true;
   @Nullable
   private File file;
 
@@ -93,6 +93,17 @@ public class FileAwarePrintWriter extends PrintWriter {
     this.lock = this.out;
     this.isEmpty = false;
 
+  }
+
+  /** Включён ли вывод трассировки в открытый файл. */
+  public boolean isEnabled() {
+    return !isEmpty;
+  }
+
+  @Override
+  public void close() {
+    super.close();
+    isEmpty = true;
   }
 
   @Override

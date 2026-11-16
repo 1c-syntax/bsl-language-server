@@ -301,7 +301,8 @@ class ArchitectureTest {
     .whereLayer("CodeLenses").mayOnlyAccessLayers(
       "Client", "Commands", "Configuration", "Context", "Databind", "Events", "Types")
     .whereLayer("Commands").mayOnlyAccessLayers("Databind", "InlayHints")
-    .whereLayer("Completion").mayOnlyAccessLayers("Configuration", "Context", "Types")
+    // Utils содержит общий канонический словарь ключевых слов.
+    .whereLayer("Completion").mayOnlyAccessLayers("Configuration", "Context", "Types", "Utils")
     .whereLayer("Color").mayOnlyAccessLayers("Configuration", "Context", "Utils")
     .whereLayer("DocumentHighlight").mayOnlyAccessLayers("Context", "References", "Utils")
     .whereLayer("DocumentLink").mayOnlyAccessLayers(

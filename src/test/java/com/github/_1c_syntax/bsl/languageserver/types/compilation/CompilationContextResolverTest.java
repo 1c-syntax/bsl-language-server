@@ -64,6 +64,28 @@ class CompilationContextResolverTest {
   private final CompilationContextResolver resolver = new CompilationContextResolver(new ModuleCompilationContexts(registry),
     new CompilationContextIndex(caches.compilationContextDeclarationsCache(), caches.compilationContextBranchesCache()));
 
+  @ParameterizedTest
+  @EnumSource(value = ModuleType.class, names = {"ObjectModule", "ManagerModule", "OrdinaryApplicationModule"})
+  void commonModuleDirectiveRestrictionsDoNotRejectOtherModuleKinds(ModuleType kind) {
+    var document = document(kind);
+    if (kind != ModuleType.OrdinaryApplicationModule) {
+      var md = com.github._1c_syntax.bsl.mdo.Document.builder().name("Заказ").build();
+      when(document.getMdObject()).thenReturn(Optional.of(md));
+      var family = kind == ModuleType.ObjectModule ? "ДокументОбъект" : "ДокументМенеджер";
+      var generic = new TypeRef(TypeKind.PLATFORM, family + ".<Имя документа>");
+      when(registry.findAllGenericsByFamilyCore(family)).thenReturn(List.of(generic));
+      var metadata = mock(PlatformMetadata.class);
+      when(metadata.availabilities()).thenReturn(Set.of(Availability.SERVER));
+      when(registry.getTypeMetadata(generic, FileType.BSL)).thenReturn(metadata);
+    }
+    assertThat(resolver.moduleContexts(document)).isNotEmpty();
+    for (var directive : List.of(CompilerDirectiveKind.AT_SERVER_NO_CONTEXT,
+      CompilerDirectiveKind.AT_CLIENT_AT_SERVER_NO_CONTEXT, CompilerDirectiveKind.AT_CLIENT_AT_SERVER)) {
+      assertThat(resolver.methodContext(document, Optional.of(directive)))
+        .as("%s with %s", kind, directive).isEmpty();
+    }
+  }
+
   @Test
   void serverCallChangesVisibilityWithoutChangingExecutionContexts() {
     var document = document(ModuleType.CommonModule);

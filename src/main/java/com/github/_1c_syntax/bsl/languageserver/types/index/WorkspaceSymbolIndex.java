@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types.index;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextConfigurationBindingChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
@@ -340,14 +341,45 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
    * <p>
    * Запись документа удаляется фильтром всей корзины каждого своего ключа, а у ключей вроде
    * общих префиксов имён в корзине записи тысяч документов — удаление всех по одному квадратично.
+   * Поэтому записи всех документов очищаемого контекста снимаются разом: каждая корзина
+   * фильтруется один раз по множеству их URI. Индекс общий на контексты всех рабочих папок, поэтому
+   * записи документов остальных контекстов остаются; если других записей нет, дерево очищается
+   * целиком.
+   * Повторные события того же контекста находят его URI уже снятым и ничего не делают.
    */
   @Override
-  protected boolean clearWholeIndex() {
+  protected boolean clearContext(ServerContext serverContext, URI removedUri) {
     lock.writeLock().lock();
     try {
-      if (!indexedByUri.isEmpty()) {
-        indexedByUri.clear();
+      if (!indexedByUri.containsKey(removedUri)) {
+        // Записи контекста уже сняты первым событием, либо документ не был проиндексирован.
+        return true;
+      }
+      var uris = new HashSet<URI>(serverContext.getDocuments().keySet());
+      uris.add(removedUri);
+
+      var keys = new HashSet<String>();
+      for (var uri : uris) {
+        var removed = indexedByUri.remove(uri);
+        if (removed != null) {
+          for (var entry : removed) {
+            keys.addAll(keysOf(entry.name(), entry.lowerName()));
+          }
+        }
+      }
+      if (indexedByUri.isEmpty()) {
         trie.clear();
+        return true;
+      }
+      for (var key : keys) {
+        var bucket = trie.get(key);
+        if (bucket == null) {
+          continue;
+        }
+        bucket.removeIf(entry -> uris.contains(entry.uri()));
+        if (bucket.isEmpty()) {
+          trie.remove(key);
+        }
       }
       return true;
     } finally {

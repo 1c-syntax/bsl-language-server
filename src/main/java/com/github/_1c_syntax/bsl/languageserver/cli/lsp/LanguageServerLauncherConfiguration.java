@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.cli.lsp;
 
 import org.eclipse.lsp4j.jsonrpc.Launcher;
-import org.eclipse.lsp4j.launch.LSPLauncher;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.springframework.context.annotation.Bean;
@@ -40,12 +39,18 @@ public class LanguageServerLauncherConfiguration {
   @Bean
   public Launcher<LanguageClient> launcher(
     LanguageServer server,
-    FileAwarePrintWriter printWriter
+    TraceAwareLauncherBuilder builder
   ) {
     InputStream in = System.in;
     OutputStream out = System.out;
 
-    return LSPLauncher.createServerLauncher(server, in, out, false, printWriter);
+    return builder
+      .setLocalService(server)
+      .setRemoteInterface(LanguageClient.class)
+      .setInput(in)
+      .setOutput(out)
+      .validateMessages(false)
+      .create();
 
   }
 

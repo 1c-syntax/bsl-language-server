@@ -15,5 +15,8 @@ Must be used only in the code of managed form modules and in the code of command
 
 In server or client common modules, the execution context is obvious, so there is no sense in compilation directives. In common modules with client and server attributes, using compilation directives makes it difficult to understand which ones are procedures (functions) are available eventually.
 
+If a directive leaves a common-module method with no available compilation contexts, the finding is reported by
+`CompilationDirectiveNotAllowed`. The needless-directive recommendation is not duplicated in that case.
+
 ## Sources
 * [Standard: Use of compilation and preprocessor directives (RU)](https://its.1c.ru/db/v8std#content:439:hdoc)

@@ -81,7 +81,8 @@ Additional sources of workspace folders:
 | `register_workspace_folder` | Register a project directory as a workspace folder and index its sources; the name can be given explicitly, otherwise the directory name is used |
 | `unregister_workspace_folder` | Remove a workspace folder and release its index |
 | `analyze_file` | Diagnostics for a file |
-| `document_symbols` | Symbol tree of a file (methods, regions, variables) |
+| `document_symbols` | Symbol tree of a file (methods, regions, variables). Each symbol has its whole range and the `selectionRange` of its name — a position for `definition`, `find_references` and `call_hierarchy` |
+| `symbol_text` | Source text of a symbol of a file — a region, method or `Перем`-declared variable, as in `document_symbols`: by name (case-insensitive), optionally narrowed by `scope` — a method name or `$module` for the module level, or by position (the symbol whose name is there, otherwise the innermost method or variable containing it). Each match tells its `scope`, where it is declared, and the `selectionRange` of its name; for methods the description comment above the declaration is included |
 | `find_references` | All references to the symbol at a position |
 | `call_hierarchy` | Incoming and outgoing calls of the method/procedure at a position |
 | `hover` | Hover info for a symbol (signature, type, documentation) |

@@ -92,14 +92,14 @@ class GlobalScopeProviderBslContextTest {
   }
 
   @Test
-  void languageKeywordsByCategory() {
+  void keywordSnippetsAreIndexedForBothLanguages() {
     var ifKw = keyword("Если", "If", LanguageKeywordCategory.STATEMENT,
       "Если <?> Тогда\nКонецЕсли;", "If <?> Then\nEndIf;");
     var trueKw = keyword("Истина", "True", LanguageKeywordCategory.LITERAL,
       "Истина", "True");
     var procKw = keyword("Процедура", "Procedure", LanguageKeywordCategory.DECLARATION,
       "Процедура <?>()\nКонецПроцедуры", "Procedure <?>()\nEndProcedure");
-    // PRAGMA / ANNOTATION / PREPROCESSOR_INSTRUCTION в keywords не идут.
+    // Отсутствие сниппетов у этих конструкций не мешает загрузить остальные.
     var pragma = keyword("НаКлиенте", "AtClient", LanguageKeywordCategory.PRAGMA, "", "");
     var annotation = keyword("Перед", "Before", LanguageKeywordCategory.ANNOTATION, "", "");
     var pre = keyword("Область", "Region", LanguageKeywordCategory.PREPROCESSOR_INSTRUCTION, "", "");
@@ -107,8 +107,11 @@ class GlobalScopeProviderBslContextTest {
     var scope = scope(providerOf(
       ifKw, trueKw, procKw, pragma, annotation, pre));
 
-    assertThat(scope.getKeywords(FileType.BSL)).contains("Если", "If", "Истина", "True", "Процедура", "Procedure");
-    assertThat(scope.getKeywords(FileType.BSL)).doesNotContain("НаКлиенте", "Перед", "Область");
+    assertThat(scope.findKeywordSnippet("Если", FileType.BSL)).isPresent()
+      .isEqualTo(scope.findKeywordSnippet("If", FileType.BSL));
+    assertThat(scope.findKeywordSnippet("Procedure", FileType.BSL)).isPresent();
+    assertThat(scope.findKeywordSnippet("True", FileType.BSL)).isPresent();
+    assertThat(scope.findKeywordSnippet("AtClient", FileType.BSL)).isEmpty();
   }
 
   @Test

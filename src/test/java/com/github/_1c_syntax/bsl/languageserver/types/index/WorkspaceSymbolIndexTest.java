@@ -43,6 +43,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.IdentityHashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CancellationException;
@@ -141,8 +142,8 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void removalWhileContextIsClearedDropsEntriesOfAllDocuments() {
-    // given: проиндексированы два документа
+  void removalWhileContextIsClearedDropsEntriesOfAllDocumentsOfThatContext() {
+    // given: проиндексированы два документа очищаемого контекста и документ другого контекста
     var first = TestUtils.getDocumentContext(
       Path.of("./src/test/resources/types/index/ПерваяОчищаемая.bsl").toUri(), """
       Процедура ПерваяОчищаемая()
@@ -153,18 +154,30 @@ class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
       Процедура ВтораяОчищаемая()
       КонецПроцедуры
       """);
+    var foreign = TestUtils.getDocumentContext(
+      Path.of("./src/test/resources/types/index/ЧужаяОстающаяся.bsl").toUri(), """
+      Процедура ЧужаяОстающаяся()
+      КонецПроцедуры
+      """);
     eventPublisher.publishEvent(new DocumentContextContentChangedEvent(first));
     eventPublisher.publishEvent(new DocumentContextContentChangedEvent(second));
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(foreign));
     assertThat(index.search("ВтораяОчищаемая", NO_CANCEL)).isNotEmpty();
+    assertThat(index.search("ЧужаяОстающаяся", NO_CANCEL)).isNotEmpty();
     var clearing = mock(ServerContext.class);
     when(clearing.isClearing()).thenReturn(true);
+    // первый документ из карты контекста уже удалён, второй ещё на месте
+    when(clearing.getDocuments()).thenReturn(Map.of(second.getUri(), second));
 
     // when: контекст очищается целиком, и удалён первый документ
     index.handleDocumentRemoved(new ServerContextDocumentRemovedEvent(clearing, first.getUri()));
 
-    // then: индекс очищен разом — записей второго документа в нём тоже нет
+    // then: записи контекста сняты разом — записей второго документа в нём тоже нет
     assertThat(index.search("ПерваяОчищаемая", NO_CANCEL)).isEmpty();
     assertThat(index.search("ВтораяОчищаемая", NO_CANCEL)).isEmpty();
+    // then: записи документа другого контекста остались
+    assertThat(index.search("ЧужаяОстающаяся", NO_CANCEL))
+      .anyMatch(entry -> entry.name().equals("ЧужаяОстающаяся"));
   }
 
   @Test

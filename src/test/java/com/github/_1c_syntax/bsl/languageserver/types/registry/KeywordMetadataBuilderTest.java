@@ -25,7 +25,6 @@ import org.junit.jupiter.api.Test;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.function.Predicate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -36,37 +35,30 @@ import static org.assertj.core.api.Assertions.assertThat;
  */
 class KeywordMetadataBuilderTest {
 
-  private static final Predicate<String> ALLOW_ALL = c -> true;
-  private static final Predicate<String> DENY_ALL = c -> false;
-
   @Test
   void emptyBuilderProducesEmptyMetadata() {
-    var builder = new KeywordMetadataBuilder(ALLOW_ALL);
+    var builder = new KeywordMetadataBuilder();
 
     var result = builder.build();
 
-    assertThat(result.keywords()).isEmpty();
     assertThat(result.snippets()).isEmpty();
     assertThat(result.descriptions()).isEmpty();
   }
 
   @Test
   void blankNameSkipped() {
-    var builder = new KeywordMetadataBuilder(ALLOW_ALL);
+    var builder = new KeywordMetadataBuilder();
 
-    builder.add(Map.of("name", ""));
-    builder.add(Map.of("alias", "OnlyEn"));
+    builder.add(Map.of("name", "", "description", "ignored"));
+    builder.add(Map.of("alias", "OnlyEn", "description", "ignored"));
 
-    assertThat(builder.build().keywords()).isEmpty();
+    assertThat(builder.build().descriptions()).isEmpty();
   }
 
   @Test
-  void categoryFilterExcludesKeywordFromCompletionButIndexesDescription() {
+  void descriptionIsIndexedIndependentlyOfCompletionCategory() {
 
-    // given — фильтр пропускает только LITERAL, наша запись STATEMENT,
-    // плюс есть description: имя не попадает в completion, описание — в индекс.
-    Predicate<String> onlyLiteral = "LITERAL"::equals;
-    var builder = new KeywordMetadataBuilder(onlyLiteral);
+    var builder = new KeywordMetadataBuilder();
 
     builder.add(Map.of(
       "name", "Пока",
@@ -75,13 +67,12 @@ class KeywordMetadataBuilderTest {
       "description", "Цикл по условию"));
 
     var result = builder.build();
-    assertThat(result.keywords()).isEmpty();
     assertThat(result.descriptions()).containsKey("пока").containsKey("while");
   }
 
   @Test
   void entryWithoutAliasIndexedByRuOnly() {
-    var builder = new KeywordMetadataBuilder(ALLOW_ALL);
+    var builder = new KeywordMetadataBuilder();
 
     builder.add(Map.of(
       "name", "ТолькоРу",
@@ -89,13 +80,12 @@ class KeywordMetadataBuilderTest {
       "snippet", Map.of("ru", "ТолькоРу <?>;")));
 
     var result = builder.build();
-    assertThat(result.keywords()).containsExactly("ТолькоРу");
     assertThat(result.snippets()).containsOnlyKeys("толькору");
   }
 
   @Test
   void emptySnippetIsNotIndexed() {
-    var builder = new KeywordMetadataBuilder(ALLOW_ALL);
+    var builder = new KeywordMetadataBuilder();
 
     builder.add(Map.of(
       "name", "Если",
@@ -107,7 +97,7 @@ class KeywordMetadataBuilderTest {
 
   @Test
   void emptyDescriptionIsNotIndexed() {
-    var builder = new KeywordMetadataBuilder(ALLOW_ALL);
+    var builder = new KeywordMetadataBuilder();
 
     builder.add(Map.of("name", "Безописания", "category", "STATEMENT"));
 
@@ -116,7 +106,7 @@ class KeywordMetadataBuilderTest {
 
   @Test
   void descriptionByParentIndexedBilingually() {
-    var builder = new KeywordMetadataBuilder(DENY_ALL);
+    var builder = new KeywordMetadataBuilder();
 
     var byParent = new LinkedHashMap<String, Map<String, String>>();
     byParent.put("Процедура", Map.of("ru", "в процедуре", "en", "in procedure"));
@@ -138,7 +128,7 @@ class KeywordMetadataBuilderTest {
 
   @Test
   void descriptionByParentSkipsBlankAndMalformedEntries() {
-    var builder = new KeywordMetadataBuilder(ALLOW_ALL);
+    var builder = new KeywordMetadataBuilder();
 
     var byParent = new LinkedHashMap<String, Object>();
     byParent.put("Процедура", Map.of("ru", "в процедуре"));
@@ -157,19 +147,19 @@ class KeywordMetadataBuilderTest {
 
   @Test
   void duplicateNameDeduplicates() {
-    var builder = new KeywordMetadataBuilder(ALLOW_ALL);
+    var builder = new KeywordMetadataBuilder();
 
-    builder.add(Map.of("name", "Если", "alias", "If", "category", "STATEMENT"));
-    builder.add(Map.of("name", "Если", "alias", "If", "category", "PREPROCESSOR_INSTRUCTION"));
+    builder.add(Map.of("name", "Если", "alias", "If", "description", "first"));
+    builder.add(Map.of("name", "Если", "alias", "If", "description", "second"));
 
-    assertThat(builder.build().keywords()).containsExactly("Если", "If");
+    assertThat(builder.build().descriptions()).containsOnlyKeys("если", "if");
   }
 
   @Test
   void snippetAsNonMapTreatedAsAbsent() {
 
     // given — поле "snippet" не Map, а строка → snippet не индексируется.
-    var builder = new KeywordMetadataBuilder(ALLOW_ALL);
+    var builder = new KeywordMetadataBuilder();
 
     builder.add(Map.of(
       "name", "Если",
@@ -184,7 +174,7 @@ class KeywordMetadataBuilderTest {
 
     // given — внутри "snippet" значения — числа, а не строки. asStringMap
     // отфильтрует их, итог — пустая мапа, snippet считается отсутствующим.
-    var builder = new KeywordMetadataBuilder(ALLOW_ALL);
+    var builder = new KeywordMetadataBuilder();
 
     Map<String, Object> snippet = new LinkedHashMap<>();
     snippet.put("ru", 42);
@@ -198,7 +188,7 @@ class KeywordMetadataBuilderTest {
   void descriptionByParentNotAMapIgnored() {
 
     // given — поле "descriptionByParent" — строка, не Map → пропускается.
-    var builder = new KeywordMetadataBuilder(ALLOW_ALL);
+    var builder = new KeywordMetadataBuilder();
 
     builder.add(Map.of(
       "name", "Возврат",
