@@ -37,7 +37,6 @@ import org.springframework.ai.mcp.annotation.McpToolParam;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
-import java.net.URI;
 import java.util.List;
 
 /**
@@ -107,7 +106,7 @@ public class CallHierarchyTool {
       var item = items.get(0);
       // Вызовы считаются по документу, где объявлен элемент, как в LSP-запросах callHierarchy/*Calls:
       // по позиции на месте вызова элемент может оказаться методом другого модуля.
-      var itemDocument = documentContext.getServerContext().getDocument(URI.create(item.getUri()));
+      var itemDocument = documentContext.getServerContext().getDocumentUnsafe(item.getUri());
       if (itemDocument == null) {
         return new Result(CallHierarchyItemDto.from(item), List.of(), List.of());
       }
