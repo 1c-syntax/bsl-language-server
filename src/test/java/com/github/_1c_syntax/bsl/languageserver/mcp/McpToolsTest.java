@@ -472,6 +472,30 @@ class McpToolsTest {
   }
 
   @Test
+  void fileAcceptsUriReturnedByDefinition() {
+    var definition = definitionTool.definition(FILE, CALL_LINE, CALL_CHARACTER).definitions().get(0);
+
+    var symbols = documentSymbolsTool.documentSymbols(definition.uri());
+
+    assertThat(symbols.symbols()).extracting(symbol -> symbol.name()).contains("ПерваяФункция");
+  }
+
+  @Test
+  void fileAcceptsUriWithEncodedCyrillic() {
+    // Так uri документа приходит в ответах инструментов на macOS и Linux: кириллица пути закодирована.
+    // На Windows инструменты отдают её как есть, но клиент может прислать и закодированную форму.
+    var designerDir = "src/test/resources/metadata/designer";
+    registerWorkspaceFolderTool.registerWorkspaceFolder(Absolute.path(designerDir).toString(), null);
+    var moduleUri = Absolute.uri(new File(designerDir, "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl"))
+      .toASCIIString();
+    assertThat(moduleUri).contains("%D0%");
+
+    var symbols = documentSymbolsTool.documentSymbols(moduleUri);
+
+    assertThat(symbols.symbols()).extracting(symbol -> symbol.name()).contains("НеУстаревшаяПроцедура");
+  }
+
+  @Test
   void definitionResolvesToDeclaration() {
     var result = definitionTool.definition(FILE, CALL_LINE, CALL_CHARACTER);
 

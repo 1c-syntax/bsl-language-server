@@ -27,9 +27,9 @@ package com.github._1c_syntax.bsl.languageserver.mcp.tools;
 final class McpToolParams {
 
   static final String FILE = """
-    Path to the .bsl/.os file (absolute or relative to the working directory). The file must lie \
-    inside a registered workspace folder — see the `list_workspace_folders` and `register_workspace_folder` \
-    tools.""";
+    Path to the .bsl/.os file (absolute or relative to the working directory), or its `file:` URI as other \
+    tools return it in `uri` fields. The file must lie inside a registered workspace folder — see the \
+    `list_workspace_folders` and `register_workspace_folder` tools.""";
   static final String FILE_TYPE = "File language: `BSL` for 1C:Enterprise BSL or `OS` for OneScript.";
   static final String LINE = "Zero-based line number of the symbol.";
   static final String CHARACTER = "Zero-based character offset within the line.";

@@ -65,6 +65,8 @@ The client workflow:
 
 The error messages are self-contained: for an unknown or missing `workspaceFolder` the server lists the registered folders and names the tool that registers a new one, so an agent can recover without asking a human.
 
+The `file` argument takes a path to the file (absolute or relative to the server process working directory) or a `file:` URI exactly as other tools return it in `uri` fields — for example, from a `definition` or `find_references` answer.
+
 Additional sources of workspace folders:
 
 - **LSP.** In the combined modes (`lsp --mcp`, `websocket --mcp`) workspace folders come from the LSP client into the same shared context — there is no need to register them over MCP, they show up in `list_workspace_folders` right away.
