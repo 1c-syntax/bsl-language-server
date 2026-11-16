@@ -2370,7 +2370,7 @@
 </code></pre></div>
 <h2 id="Workspace-folders">Workspace folders<a class="headerlink" href="#Workspace-folders" title="Permanent link">&para;</a></h2>
 <p>The terminology is LSP's: a <strong>workspace folder</strong> is a single project root directory, and the set of registered folders makes up the <strong>workspace</strong> this server serves. What gets registered and passed to the tools is a folder.</p>
-<p>Every analysis tool answers only inside a registered workspace folder — a 1C configuration or OneScript project whose sources are indexed. A file outside every registered folder is not analysed, and the tools that are not bound to a file (<code>type_info</code>, <code>global_member_info</code>, <code>global_member_search</code>) require an explicit <code>workspaceFolder</code> argument.</p>
+<p>Every analysis tool answers only inside a registered workspace folder — a 1C configuration or OneScript project whose sources are indexed. A file outside every registered folder is not analysed, and the tools that are not bound to a file (<code>type_info</code>, <code>global_member_info</code>, <code>global_member_search</code>, <code>workspace_folder_symbol_search</code>) require an explicit <code>workspaceFolder</code> argument.</p>
 <p>The client workflow:</p>
 <ol>
 <li><code>list_workspace_folders</code> — see what is already registered and get the <code>uri</code> values.</li>
@@ -2451,6 +2451,10 @@
 <tr>
 <td><code>type_at_position</code></td>
 <td>Inferred type of the expression under the cursor and its available methods and properties</td>
+</tr>
+<tr>
+<td><code>workspace_folder_symbol_search</code></td>
+<td>Search methods and module-level variables of a workspace folder (regions are not indexed): exact, prefix, camel-hump and word-start matches first; when <code>fuzzy</code> is true, substring-inside-word and subsequence matches follow; ranked like <code>workspace/symbol</code>, with <code>limit</code> bounding the answer; only symbols of the requested folder are returned</td>
 </tr>
 </tbody>
 </table>
