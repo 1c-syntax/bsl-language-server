@@ -45,6 +45,7 @@ import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.eclipse.lsp4j.TextDocumentSyncKind;
 import org.eclipse.lsp4j.WorkspaceClientCapabilities;
 import org.eclipse.lsp4j.WorkspaceFolder;
+import org.eclipse.lsp4j.jsonrpc.services.ServiceEndpoints;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -63,9 +64,11 @@ import java.io.IOException;
 import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -274,6 +277,66 @@ class BSLLanguageServerTest {
     InitializedParams params = new InitializedParams();
     // then - should not throw
     server.initialized(params);
+  }
+
+  @Test
+  void protocolExtensionsArePublishedAsJsonRpcMethods() {
+    // when
+    var supportedMethods = ServiceEndpoints.getSupportedMethods(BSLLanguageServer.class);
+
+    // then
+    assertThat(supportedMethods).containsKeys("textDocument/x-diagnostics", "workspace/x-awaitPopulated");
+  }
+
+  @Test
+  void awaitPopulatedIsPendingUntilInitialized() {
+    // given
+    var initParams = new InitializeParams();
+    var workspaceFolder = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString(), "test");
+    initParams.setWorkspaceFolders(List.of(workspaceFolder));
+    server.initialize(initParams);
+
+    // when
+    var populated = server.awaitPopulated();
+
+    // then
+    assertThat(populated).isNotDone();
+  }
+
+  @Test
+  void awaitPopulatedCompletesAfterWorkspacesArePopulated() throws Exception {
+    // given
+    var initParams = new InitializeParams();
+    var workspaceFolder = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString(), "test");
+    initParams.setWorkspaceFolders(List.of(workspaceFolder));
+    server.initialize(initParams);
+    var populated = server.awaitPopulated();
+
+    // when
+    server.initialized(new InitializedParams());
+    populated.get(1, TimeUnit.MINUTES);
+
+    // then
+    assertThat(serverContextProvider.getAllContexts().values())
+      .isNotEmpty()
+      .allSatisfy(serverContext -> assertThat(serverContext.getDocuments()).isNotEmpty());
+  }
+
+  @Test
+  void awaitPopulatedCancellationDoesNotAffectOtherRequests() throws Exception {
+    // given
+    var initParams = new InitializeParams();
+    var workspaceFolder = new WorkspaceFolder(Absolute.path(PATH_TO_METADATA).toUri().toString(), "test");
+    initParams.setWorkspaceFolders(List.of(workspaceFolder));
+    server.initialize(initParams);
+    server.awaitPopulated().cancel(true);
+
+    // when
+    server.initialized(new InitializedParams());
+    var populated = server.awaitPopulated();
+
+    // then
+    assertThat(populated).succeedsWithin(Duration.ofMinutes(1));
   }
 
   @Test

@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
+import com.github._1c_syntax.bsl.languageserver.jsonrpc.WorkspaceProtocolExtension;
 import com.github._1c_syntax.bsl.languageserver.providers.CommandProvider;
 import com.github._1c_syntax.bsl.languageserver.providers.SymbolProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.BSLFiles;
@@ -70,11 +71,12 @@ import java.util.concurrent.ExecutorService;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class BSLWorkspaceService implements WorkspaceService {
+public class BSLWorkspaceService implements WorkspaceService, WorkspaceProtocolExtension {
 
   private final CommandProvider commandProvider;
   private final SymbolProvider symbolProvider;
   private final ServerContextProvider serverContextProvider;
+  private final WorkspacesPopulator workspacesPopulator;
   @Qualifier("workspaceServiceExecutor")
   private final AsyncTaskExecutor executor;
   @Qualifier("populateContextExecutor")
@@ -86,6 +88,16 @@ public class BSLWorkspaceService implements WorkspaceService {
       executor,
       cancelChecker -> Either.forRight(symbolProvider.getSymbols(params, cancelChecker))
     );
+  }
+
+  /**
+   * {@inheritDoc}
+   * <p>
+   * См. {@link WorkspacesPopulator#awaitPopulated()}
+   */
+  @Override
+  public CompletableFuture<Void> awaitPopulated() {
+    return workspacesPopulator.awaitPopulated();
   }
 
   @Override

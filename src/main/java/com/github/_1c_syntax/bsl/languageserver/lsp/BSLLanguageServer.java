@@ -22,13 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.lsp;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
-import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.Diagnostics;
-import com.github._1c_syntax.bsl.languageserver.jsonrpc.ProtocolExtension;
+import com.github._1c_syntax.bsl.languageserver.jsonrpc.TextDocumentProtocolExtension;
+import com.github._1c_syntax.bsl.languageserver.jsonrpc.WorkspaceProtocolExtension;
 import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.client.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.providers.CommandProvider;
@@ -98,20 +97,16 @@ import org.eclipse.lsp4j.services.LanguageServer;
 import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
 import org.jspecify.annotations.Nullable;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
 
 /**
  * Основной класс BSL Language Server.
@@ -123,7 +118,7 @@ import java.util.concurrent.ExecutorService;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
+public class BSLLanguageServer implements LanguageServer, TextDocumentProtocolExtension, WorkspaceProtocolExtension {
 
   /**
    * Glob-шаблоны файлов рабочей области, за изменениями которых наблюдает клиент.
@@ -141,8 +136,6 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   private final GlobalLanguageServerConfiguration globalConfiguration;
   private final ServerInfo serverInfo;
   private final SemanticTokensLegend legend;
-  @Qualifier("populateContextExecutor")
-  private final ExecutorService populateContextExecutor;
 
   private boolean shutdownWasCalled;
 
@@ -267,27 +260,8 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
   @Override
   public void initialized(InitializedParams params) {
+    // Наполнение контекстов рабочих областей запускает WorkspacesPopulator по ClientInitializedEvent.
     registerFileWatchers();
-
-    // Populate all workspace contexts
-    var allContexts = serverContextProvider.getAllContexts();
-    var tasks = allContexts.entrySet().stream()
-      .map((Map.Entry<URI, ServerContext> entry) -> {
-        try (var ctx = WorkspaceContextHolder.forUri(entry.getKey())) {
-          return CompletableFuture.runAsync(
-            entry.getValue()::populateContext,
-            populateContextExecutor
-          );
-        }
-      })
-      .toArray(CompletableFuture[]::new);
-
-    CompletableFuture.allOf(tasks)
-      .whenComplete((Void unused, @Nullable Throwable throwable) -> {
-        if (throwable != null) {
-          LOGGER.error("Error populating workspace contexts", throwable);
-        }
-      });
   }
 
   /**
@@ -394,6 +368,16 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
   @Override
   public CompletableFuture<Diagnostics> diagnostics(DiagnosticParams params) {
     return textDocumentService.diagnostics(params);
+  }
+
+  /**
+   * {@inheritDoc}
+   * <p>
+   * См. {@link BSLWorkspaceService#awaitPopulated()}
+   */
+  @Override
+  public CompletableFuture<Void> awaitPopulated() {
+    return workspaceService.awaitPopulated();
   }
 
   @Override
