@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794845659462,
+  "lastUpdate": 1794847136348,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -47678,6 +47678,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.2356314897384384",
             "extra": "mean: 93.0693491299947 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7c82c9c8e15f69d17c34534afed038d0de3a1b53",
+          "message": "Merge pull request #4965 from 1c-syntax/fix/foreign-context-content-lifetime-20261116\n\nfix(types): сохранять содержимое документа при вложенном расчёте типов",
+          "timestamp": "2026-11-16T16:50:45+01:00",
+          "tree_id": "a8f180bd9b2aa69fba96bbae25c42a0f942929f6",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/7c82c9c8e15f69d17c34534afed038d0de3a1b53"
+        },
+        "date": 1794847118772,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 92.46177840232849,
+            "unit": "sec",
+            "range": "stddev: 1.400665774592972",
+            "extra": "mean: 92.46177840232849 sec\nrounds: 3"
           }
         ]
       }
