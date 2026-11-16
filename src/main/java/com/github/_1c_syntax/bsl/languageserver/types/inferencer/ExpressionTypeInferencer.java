@@ -1214,7 +1214,6 @@ public class ExpressionTypeInferencer {
    * @return тип с учётом достижимых возвратов и документирующего комментария.
    */
   private TypeSet inferContextualReturnTypes(MethodSymbol method, InferenceContext ctx, ExecutionContext context) {
-    var owner = method.getOwner();
     var target = reachableReturnContext(method, ctx, context);
     if (target == null) {
       return TypeSet.EMPTY;
@@ -1237,7 +1236,7 @@ public class ExpressionTypeInferencer {
       return partial.types();
     }
     var revision = ctx.contextualReturns.revision();
-    var nested = ctx.nested(owner, target);
+    var nested = ctx.nested(method.getOwner(), target);
     var inferred = returnTypesInContext(method, nested, target);
     ctx.sawMissing |= nested.sawMissing;
     ctx.failed |= nested.failed;
