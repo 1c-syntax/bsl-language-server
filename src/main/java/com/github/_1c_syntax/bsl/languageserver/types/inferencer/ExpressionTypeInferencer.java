@@ -350,7 +350,7 @@ public class ExpressionTypeInferencer {
     ctx.depth++;
     try {
       var result = inferWithContexts(node, ctx, useCallerContext);
-      if (cacheKey != null && !ctx.cycleCut && !ctx.bodyInFlowCut && !ctx.depthCut && !ctx.failed) {
+      if (cacheKey != null && completeRoot(ctx)) {
         inferredExpressionTypeIndex.put(uri, cacheKey, result, ctx.dependencies, revision);
       }
       return result;
@@ -1178,6 +1178,28 @@ public class ExpressionTypeInferencer {
   }
 
   /**
+   * Определить контекст вызванного метода, если его объявление и ветка препроцессора доступны.
+   *
+   * @param method вызываемый метод.
+   * @param ctx состояние текущего запроса вывода.
+   * @param context режим в точке вызова.
+   * @return целевой контекст либо {@code null}, если вызов в нём недостижим.
+   */
+  private @Nullable ExecutionContext reachableReturnContext(MethodSymbol method, InferenceContext ctx,
+                                                            ExecutionContext context) {
+    var owner = method.getOwner();
+    var profile = ctx.compilation.methodContext(owner, method.getCompilerDirectiveKind(), compilationContextResolver);
+    var target = profile.map(value -> compilationContextResolver.targetContext(
+      ctx.documentContext, owner, value, context)).orElse(context);
+    var branch = owner.getSymbolTree().getMethodPreprocessorContexts(method);
+    if ((profile.isPresent() && !profile.get().contexts().contains(target))
+        || (branch != null && !branch.contains(target))) {
+      return null;
+    }
+    return target;
+  }
+
+  /**
    * Вывести возвращаемый тип по доступному телу функции в контексте назначения вызова.
    * <p>
    * Известное отсутствие объявления в целевом режиме даёт пустой тип. Иначе результат тела
@@ -1193,12 +1215,8 @@ public class ExpressionTypeInferencer {
    */
   private TypeSet inferContextualReturnTypes(MethodSymbol method, InferenceContext ctx, ExecutionContext context) {
     var owner = method.getOwner();
-    var profile = ctx.compilation.methodContext(owner, method.getCompilerDirectiveKind(), compilationContextResolver);
-    var target = profile.map(value -> compilationContextResolver.targetContext(
-      ctx.documentContext, owner, value, context)).orElse(context);
-    var branch = owner.getSymbolTree().getMethodPreprocessorContexts(method);
-    if ((profile.isPresent() && !profile.get().contexts().contains(target))
-        || (branch != null && !branch.contains(target))) {
+    var target = reachableReturnContext(method, ctx, context);
+    if (target == null) {
       return TypeSet.EMPTY;
     }
     var key = new ContextualReturnKey(method, target);

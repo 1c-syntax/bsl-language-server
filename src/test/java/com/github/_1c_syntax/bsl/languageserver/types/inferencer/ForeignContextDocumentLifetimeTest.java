@@ -42,6 +42,10 @@ import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.NullSource;
+import org.jspecify.annotations.Nullable;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.util.AopTestUtils;
@@ -139,8 +143,10 @@ class ForeignContextDocumentLifetimeTest extends AbstractServerContextAwareTest 
     assertCleared(documents.callee());
   }
 
-  @Test
-  void busyCalleeDoesNotBlockOrKeepTheIndexedApproximation() throws Exception {
+  @ParameterizedTest
+  @NullSource
+  @EnumSource(value = ExecutionContext.class, names = "THIN_CLIENT")
+  void busyCalleeDoesNotBlockOrKeepTheIndexedApproximation(@Nullable ExecutionContext executionContext) throws Exception {
     var documents = documents(CONTEXTUAL_CALLEE);
     var lock = context.getDocumentLock(documents.callee().getUri()).writeLock();
     var uri = context.getWorkspaceUri();
@@ -149,14 +155,14 @@ class ForeignContextDocumentLifetimeTest extends AbstractServerContextAwareTest 
       lock.lock();
       try {
         var result = reader.submit(() -> WorkspaceContextHolder.call(uri,
-          () -> typesAtCall(documents.caller(), ExecutionContext.THIN_CLIENT)));
+          () -> typesAtCall(documents.caller(), executionContext)));
 
         assertThat(result.get(5, SECONDS)).containsExactlyInAnyOrder("Строка", "Число");
       } finally {
         lock.unlock();
       }
 
-      assertThat(typesAtCall(documents.caller(), ExecutionContext.THIN_CLIENT)).containsExactly("Строка");
+      assertThat(typesAtCall(documents.caller(), executionContext)).containsExactly("Строка");
       assertThat(indexedTypes(documents.callee())).containsExactlyInAnyOrder("Строка", "Число");
       assertThat(errors.messages()).isEmpty();
     }
@@ -178,7 +184,7 @@ class ForeignContextDocumentLifetimeTest extends AbstractServerContextAwareTest 
   }
 
   @Test
-  void sameDocumentCallsStillNarrowByCompilationContext() throws Exception {
+  void sameDocumentCallsStillNarrowByCompilationContext() {
     var documents = documents(CONTEXTUAL_CALLEE + """
       Процедура Вызов()
         Результат = Проверка();
@@ -210,7 +216,7 @@ class ForeignContextDocumentLifetimeTest extends AbstractServerContextAwareTest 
     return symbolTypeIndex.getReturnTypes(method).refs().stream().map(TypeRef::qualifiedName).toList();
   }
 
-  private List<String> typesAtCall(DocumentContext document, ExecutionContext executionContext) {
+  private List<String> typesAtCall(DocumentContext document, @Nullable ExecutionContext executionContext) {
     var source = document.getContent();
     var index = source.lastIndexOf("Проверка()") + 2;
     var position = new Position(source.substring(0, index).split("\n", -1).length - 1,
@@ -237,7 +243,7 @@ class ForeignContextDocumentLifetimeTest extends AbstractServerContextAwareTest 
     }
   }
 
-  private AutoCloseable interceptComments(Consumer<DocumentContext> beforeRead) throws Exception {
+  private AutoCloseable interceptComments(Consumer<DocumentContext> beforeRead) {
     ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
     var previous = (CommentTypeResolver) ReflectionTestUtils.getField(target, "commentTypeResolver");
     var intercepted = spy(previous);
