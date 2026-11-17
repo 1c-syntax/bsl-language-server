@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.SkipSu
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticComputer;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticsConfiguration;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -55,6 +56,8 @@ class DiagnosticsTest extends AbstractServerContextAwareTest {
   protected LanguageServerConfiguration configuration;
   @Autowired
   protected DiagnosticsConfiguration diagnosticsConfiguration;
+  @Autowired
+  private DiagnosticComputer diagnosticComputer;
 
   private DocumentContext documentContext;
 
@@ -390,5 +393,38 @@ class DiagnosticsTest extends AbstractServerContextAwareTest {
       .setExclude(new TreeSet<>(List.of("Подсистема2")));
     assertThat(diagnosticsConfiguration.diagnostics(documentContext))
       .isEmpty();
+  }
+
+  @Test
+  void testDiagnosticComputerUsesConfiguredDiagnostics() {
+    // given
+    configuration.getDiagnosticsOptions().setMode(Mode.ONLY);
+    Map<String, Either<Boolean, Map<String, Object>>> rules = new HashMap<>();
+    rules.put("SemicolonPresence", Either.forLeft(true));
+    configuration.getDiagnosticsOptions().setParameters(rules);
+
+    var documentContextWithIssues = TestUtils.getDocumentContext("А = 1", context);
+
+    // when
+    var diagnostics = diagnosticComputer.compute(documentContextWithIssues);
+
+    // then
+    assertThat(diagnostics)
+      .isNotEmpty()
+      .allSatisfy(diagnostic -> assertThat(diagnostic.getCode().getLeft()).isEqualTo("SemicolonPresence"));
+  }
+
+  @Test
+  void testDiagnosticComputerComputesNothingWhenDiagnosticsAreOff() {
+    // given
+    configuration.getDiagnosticsOptions().setMode(Mode.OFF);
+
+    var documentContextWithIssues = TestUtils.getDocumentContext("А = 1", context);
+
+    // when
+    var diagnostics = diagnosticComputer.compute(documentContextWithIssues);
+
+    // then
+    assertThat(diagnostics).isEmpty();
   }
 }

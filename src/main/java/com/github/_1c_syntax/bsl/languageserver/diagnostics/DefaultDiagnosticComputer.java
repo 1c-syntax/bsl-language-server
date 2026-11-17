@@ -26,10 +26,10 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.GitBlameComputer;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticsConfiguration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.Diagnostic;
-import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
@@ -51,12 +51,14 @@ import java.util.function.Predicate;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public abstract class DefaultDiagnosticComputer implements DiagnosticComputer {
+public class DefaultDiagnosticComputer implements DiagnosticComputer {
 
   private final LanguageServerConfiguration configuration;
 
   @Qualifier("diagnosticComputerExecutor")
   private final ExecutorService executor;
+
+  private final DiagnosticsConfiguration diagnosticsConfiguration;
 
   @Override
   public List<Diagnostic> compute(DocumentContext documentContext) {
@@ -108,6 +110,7 @@ public abstract class DefaultDiagnosticComputer implements DiagnosticComputer {
     }
   }
 
-  @Lookup("diagnostics")
-  protected abstract List<BSLDiagnostic> diagnostics(DocumentContext documentContext);
+  private List<BSLDiagnostic> diagnostics(DocumentContext documentContext) {
+    return diagnosticsConfiguration.diagnostics(documentContext);
+  }
 }
