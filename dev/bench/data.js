@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794927626174,
+  "lastUpdate": 1794930720084,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -47802,6 +47802,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 0.9202859695835466",
             "extra": "mean: 90.19852590560913 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "43dd29377464d8c9bda7378f60c385c59276135c",
+          "message": "Merge pull request #4960 from 1c-syntax/perf/reference-local-key-lifetime-20261116\n\nperf(references): интернировать локальные ключи в пакете документа",
+          "timestamp": "2026-11-17T16:01:19+01:00",
+          "tree_id": "9a32fa55881f77391cf65662618957dd0b11732b",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/43dd29377464d8c9bda7378f60c385c59276135c"
+        },
+        "date": 1794930690511,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 90.38828770319621,
+            "unit": "sec",
+            "range": "stddev: 2.051026789119586",
+            "extra": "mean: 90.38828770319621 sec\nrounds: 3"
           }
         ]
       }
