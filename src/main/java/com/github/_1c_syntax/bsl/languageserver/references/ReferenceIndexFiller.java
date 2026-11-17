@@ -33,7 +33,6 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
-import com.github._1c_syntax.bsl.languageserver.references.model.LocationRepository;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrence;
@@ -97,7 +96,6 @@ public class ReferenceIndexFiller {
   );
 
   private final ReferenceIndex index;
-  private final LocationRepository locationRepository;
   private final LanguageServerConfiguration configuration;
   private final OScriptLibraryIndex oScriptLibraryIndex;
   private final GlobalScopeProvider globalScopeProvider;
@@ -938,11 +936,7 @@ public class ReferenceIndexFiller {
       var interner = localVariableInterner;
       if (interner == null) {
         interner = new GenericInterner<>();
-        locationRepository.getSymbolOccurrencesByLocationUri(uri)
-          .map(SymbolOccurrence::symbol)
-          .filter(symbol -> symbol.symbolKind() == SymbolKind.Variable && !symbol.scopeName().isEmpty()
-            && !ReferenceIndex.SELF_MEMBER_SCOPE.equals(symbol.scopeName()))
-          .forEach(interner::intern);
+        index.getLocalVariableKeys(uri).forEach(interner::intern);
         localVariableInterner = interner;
       }
 

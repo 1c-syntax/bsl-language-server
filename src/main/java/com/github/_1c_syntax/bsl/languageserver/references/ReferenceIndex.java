@@ -52,6 +52,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Индекс ссылок на символы в проекте.
@@ -195,6 +196,22 @@ public class ReferenceIndex {
       .flatMap(Optional::stream)
       .filter(reference -> reference.from().equals(symbol))
       .collect(Collectors.toList());
+  }
+
+  /**
+   * Ключи локальных переменных в текущем снимке вхождений документа.
+   * <p>
+   * Поток не восстанавливает ссылки и не обращается к AST. Повторные использования переменной
+   * могут вернуть один ключ несколько раз; его канонизация остаётся на стороне вызывающего кода.
+   *
+   * @param uri нормализованный URI документа.
+   * @return поток ключей переменных с областью метода, без модульных переменных и self-членов.
+   */
+  Stream<Symbol> getLocalVariableKeys(URI uri) {
+    return locationRepository.getSymbolOccurrencesByLocationUri(uri)
+      .map(SymbolOccurrence::symbol)
+      .filter(symbol -> symbol.symbolKind() == SymbolKind.Variable && !symbol.scopeName().isEmpty()
+        && !SELF_MEMBER_SCOPE.equals(symbol.scopeName()));
   }
 
   /**
