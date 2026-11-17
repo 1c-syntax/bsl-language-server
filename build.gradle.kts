@@ -242,6 +242,11 @@ if (providers.gradleProperty("native").isPresent) {
                     "--no-fallback",
                     "-H:+ReportExceptionStackTraces"
                 )
+                // Дополнительные аргументы native-image для экспериментов: -PnativeExtraArgs="--a --b"
+                providers.gradleProperty("nativeExtraArgs").orNull
+                    ?.split(" ")
+                    ?.filter { it.isNotBlank() }
+                    ?.let { buildArgs.addAll(it) }
             }
         }
     }
