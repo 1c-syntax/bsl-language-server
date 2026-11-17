@@ -137,6 +137,9 @@ public class ServerContext {
   private final AtomicReference<CompletableFuture<@Nullable Void>> preparation
     = new AtomicReference<>(CompletableFuture.completedFuture(null));
 
+  /** Первое наполнение рабочей области (см. {@link #awaitPopulated()}). */
+  private final CompletableFuture<Void> population = new CompletableFuture<>();
+
   /** Документы, заведённые, пока рабочая область готовилась в фоне. */
   private final Set<DocumentContext> createdWhilePreparing = ConcurrentHashMap.newKeySet();
 
@@ -179,6 +182,20 @@ public class ServerContext {
    */
   public void awaitPreparation() {
     preparation.get().join();
+  }
+
+  /**
+   * Дождаться окончания первого наполнения рабочей области через {@link #populateContext()}:
+   * документы разобраны, слушатели события наполнения отработали.
+   * <p>
+   * Future завершается успешно, если наполнение прошло (в том числе когда наполнять нечего,
+   * потому что корень конфигурации не задан), и с ошибкой, если наполнение не удалось. Отмена
+   * возвращённого future не влияет на наполнение и на другие ожидания.
+   *
+   * @return future окончания наполнения рабочей области
+   */
+  public CompletableFuture<Void> awaitPopulated() {
+    return population.copy();
   }
 
   /**
@@ -229,7 +246,23 @@ public class ServerContext {
     });
   }
 
+  /**
+   * Наполнить рабочую область документами из корня конфигурации.
+   * <p>
+   * По окончании, в том числе когда корень конфигурации не задан или наполнение завершилось
+   * ошибкой, завершает ожидание {@link #awaitPopulated()}, если оно ещё не завершено.
+   */
   public void populateContext() {
+    try {
+      populateFromConfigurationRoot();
+    } catch (RuntimeException | Error e) {
+      population.completeExceptionally(e);
+      throw e;
+    }
+    population.complete(null);
+  }
+
+  private void populateFromConfigurationRoot() {
     if (configurationRoot == null) {
       LOGGER.info("Can't populate server context. Configuration root is not defined.");
       return;

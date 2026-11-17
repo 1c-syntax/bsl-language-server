@@ -54,9 +54,11 @@ import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.mockito.Mockito.doAnswer;
@@ -238,6 +240,67 @@ class ServerContextTest extends AbstractServerContextAwareTest {
       .filter(p -> p.contains("CommonModules"))
       .toList();
     assertThat(commonModuleUris).isEmpty();
+  }
+
+  @Test
+  void populatedIsAwaitedUntilPopulationEnds() {
+    // given
+    initServerContext(PATH_TO_METADATA, false);
+    var populated = context.awaitPopulated();
+    var doneBeforePopulation = populated.isDone();
+
+    // when
+    context.populateContext();
+
+    // then
+    assertThat(doneBeforePopulation).isFalse();
+    assertThat(populated).succeedsWithin(Duration.ofSeconds(30));
+  }
+
+  @Test
+  void populationWithoutConfigurationRootEndsAwaiting() {
+    // given
+    serverContextProvider.clear();
+    var workspace = serverContextProvider.registerDefaultWorkspace();
+
+    // when
+    WorkspaceContextHolder.run(workspace.getWorkspaceUri(), workspace::populateContext);
+
+    // then
+    assertThat(workspace.awaitPopulated()).succeedsWithin(Duration.ofSeconds(30));
+  }
+
+  @Test
+  void failedPopulationEndsAwaitingWithError() {
+    // given: чтение метаданных падает — наполнение не может получить конфигурацию.
+    serverContextProvider.clear();
+    doThrow(new IllegalStateException("metadata reading failed"))
+      .when(computeConfigurationExecutor).submit(ArgumentMatchers.<Callable<Object>>any());
+    var workspace = serverContextProvider.addWorkspace(Absolute.uri(Absolute.path(PATH_TO_METADATA).toUri()));
+    workspace.awaitPreparation();
+
+    // when
+    var populationError = catchThrowable(() ->
+      WorkspaceContextHolder.run(workspace.getWorkspaceUri(), workspace::populateContext));
+
+    // then
+    assertThat(populationError).isNotNull();
+    assertThat(workspace.awaitPopulated())
+      .failsWithin(Duration.ofSeconds(30))
+      .withThrowableOfType(ExecutionException.class);
+  }
+
+  @Test
+  void cancellingAwaitingDoesNotAffectPopulation() {
+    // given
+    initServerContext(PATH_TO_METADATA, false);
+    context.awaitPopulated().cancel(true);
+
+    // when
+    context.populateContext();
+
+    // then
+    assertThat(context.awaitPopulated()).succeedsWithin(Duration.ofSeconds(30));
   }
 
   @Test

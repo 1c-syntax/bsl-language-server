@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.junit.jupiter.api.BeforeEach;
@@ -31,6 +32,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.net.URI;
 import java.nio.file.Path;
+import java.time.Duration;
 
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
@@ -101,6 +103,40 @@ class ServerContextProviderTest {
 
     // cleanup
     serverContextProvider.removeWorkspace(workspaceFolder);
+  }
+
+  @Test
+  void awaitPopulatedWithoutWorkspacesIsDoneAtOnce() {
+    // when
+    var populated = serverContextProvider.awaitPopulated();
+
+    // then
+    assertThat(populated).isDone();
+  }
+
+  @Test
+  void awaitPopulatedWaitsForEveryWorkspace(@TempDir Path firstRoot, @TempDir Path secondRoot) {
+    // given
+    var firstFolder = new WorkspaceFolder(Absolute.uri(firstRoot.toUri()).toString(), "workspace-1");
+    var secondFolder = new WorkspaceFolder(Absolute.uri(secondRoot.toUri()).toString(), "workspace-2");
+    var first = serverContextProvider.addWorkspace(firstFolder);
+    var second = serverContextProvider.addWorkspace(secondFolder);
+    try {
+      var populated = serverContextProvider.awaitPopulated();
+
+      // when
+      WorkspaceContextHolder.run(first.getWorkspaceUri(), first::populateContext);
+      var doneAfterFirst = populated.isDone();
+      WorkspaceContextHolder.run(second.getWorkspaceUri(), second::populateContext);
+
+      // then
+      assertThat(doneAfterFirst).isFalse();
+      assertThat(populated).succeedsWithin(Duration.ofSeconds(30));
+    } finally {
+      // cleanup: пока каталоги существуют — после их удаления clear() рабочие области не находит.
+      serverContextProvider.removeWorkspace(firstFolder);
+      serverContextProvider.removeWorkspace(secondFolder);
+    }
   }
 
   @Test

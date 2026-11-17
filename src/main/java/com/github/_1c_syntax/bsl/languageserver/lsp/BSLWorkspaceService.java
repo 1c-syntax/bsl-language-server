@@ -76,7 +76,6 @@ public class BSLWorkspaceService implements WorkspaceService, WorkspaceProtocolE
   private final CommandProvider commandProvider;
   private final SymbolProvider symbolProvider;
   private final ServerContextProvider serverContextProvider;
-  private final WorkspacesPopulator workspacesPopulator;
   @Qualifier("workspaceServiceExecutor")
   private final AsyncTaskExecutor executor;
   @Qualifier("populateContextExecutor")
@@ -93,11 +92,11 @@ public class BSLWorkspaceService implements WorkspaceService, WorkspaceProtocolE
   /**
    * {@inheritDoc}
    * <p>
-   * См. {@link WorkspacesPopulator#awaitPopulated()}
+   * См. {@link ServerContextProvider#awaitPopulated()}
    */
   @Override
   public CompletableFuture<Void> awaitPopulated() {
-    return workspacesPopulator.awaitPopulated();
+    return serverContextProvider.awaitPopulated();
   }
 
   @Override

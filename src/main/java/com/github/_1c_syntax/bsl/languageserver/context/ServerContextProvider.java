@@ -45,6 +45,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -406,6 +407,20 @@ public class ServerContextProvider {
    */
   public Map<URI, ServerContext> getAllContexts() {
     return Collections.unmodifiableMap(contexts);
+  }
+
+  /**
+   * Дождаться окончания наполнения рабочих областей, зарегистрированных на момент вызова
+   * (см. {@link ServerContext#awaitPopulated()}).
+   *
+   * @return future, завершающийся, когда наполнены все эти рабочие области (сразу, если их нет);
+   *         с ошибкой, если наполнение какой-либо из них не удалось
+   */
+  public CompletableFuture<Void> awaitPopulated() {
+    var populations = contexts.values().stream()
+      .map(ServerContext::awaitPopulated)
+      .toArray(CompletableFuture<?>[]::new);
+    return CompletableFuture.allOf(populations);
   }
 
   /**
