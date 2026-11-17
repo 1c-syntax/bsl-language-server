@@ -438,11 +438,12 @@ public class ReferenceIndex {
     }
 
     return getSourceDefinedSymbol(serverContext, symbolOccurrence.symbol())
-      .flatMap(symbol -> getFromSymbol(serverContext, symbolOccurrence).map(from -> {
-        var range = symbolOccurrence.range();
-        var occurrenceType = symbolOccurrence.occurrenceType();
-        return new Reference(from, symbol, uri, range, occurrenceType);
-      }))
+      .flatMap((SourceDefinedSymbol symbol) -> getFromSymbol(serverContext, symbolOccurrence)
+        .map((SourceDefinedSymbol from) -> {
+          var range = symbolOccurrence.range();
+          var occurrenceType = symbolOccurrence.occurrenceType();
+          return new Reference(from, symbol, uri, range, occurrenceType);
+        }))
       .filter(ReferenceAccessibility::isAccessible);
   }
 
@@ -460,7 +461,7 @@ public class ReferenceIndex {
     }
     return selfMemberResolver
       .resolveSelfMember(document, occurrence.symbol().symbolKind(), occurrence.symbol().symbolName())
-      .flatMap(memberSymbol -> getFromSymbol(serverContext, occurrence).map(from -> new Reference(
+      .flatMap(memberSymbol -> getFromSymbol(serverContext, occurrence).map((SourceDefinedSymbol from) -> new Reference(
         from,
         memberSymbol,
         occurrence.uri(),
