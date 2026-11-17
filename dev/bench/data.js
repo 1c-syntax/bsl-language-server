@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794850186581,
+  "lastUpdate": 1794927626174,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -47771,6 +47771,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.1048501962524926",
             "extra": "mean: 89.56540242830913 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Kirill Chernenko",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "c2fa5d9fe99376fc6555be2a6d73b706a8975a1a",
+          "message": "Merge pull request #4972 from 1c-syntax/fix/local-call-boundary-types-20261118\n\nfix(types): сохранять локальные значения перед вызовами",
+          "timestamp": "2026-11-17T15:42:34+01:00",
+          "tree_id": "3f3bbc9577640366e8480e60a3999fd8e4779d01",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/c2fa5d9fe99376fc6555be2a6d73b706a8975a1a"
+        },
+        "date": 1794927591942,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 90.19852590560913,
+            "unit": "sec",
+            "range": "stddev: 0.9202859695835466",
+            "extra": "mean: 90.19852590560913 sec\nrounds: 3"
           }
         ]
       }
