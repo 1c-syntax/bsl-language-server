@@ -26,11 +26,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.springframework.context.event.EventListener;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import java.util.concurrent.CompletableFuture;
 
 /**
  * Наблюдатель за жизнью родительского процесса, запустившего Language Server.
+ * <p>
+ * Завершение родительского процесса отслеживается средствами JDK ({@link ProcessHandle#onExit()}),
+ * без периодического опроса.
  */
 @Component
 @Slf4j
@@ -38,12 +42,17 @@ import org.springframework.stereotype.Component;
 public class ParentProcessWatcher {
 
   private final LanguageServer languageServer;
-  private long parentProcessId;
 
   /**
    * Обработчик события {@link LanguageServerInitializedEvent}.
    * <p>
-   * Анализирует параметры запроса и подготавливает данные для слежения за родительским процессом.
+   * Начинает слежение за процессом, идентификатор которого передан в параметрах инициализации.
+   * Когда этот процесс завершается, Language Server завершает работу. Если процесс с таким
+   * идентификатором уже не существует, Language Server завершает работу сразу.
+   * Завершение выполняется асинхронно, вне потока обработчика.
+   * <p>
+   * Если идентификатор не передан или совпадает с идентификатором текущего процесса,
+   * слежение не выполняется.
    *
    * @param event Событие
    */
@@ -53,30 +62,26 @@ public class ParentProcessWatcher {
     if (processId == null) {
       return;
     }
-    parentProcessId = processId;
-  }
 
-  /**
-   * Фоновая процедура, отслеживающая родительский процесс.
-   */
-  @Scheduled(fixedDelay = 30000L)
-  public void watch() {
-    if (parentProcessId == 0) {
+    long parentProcessId = processId;
+    // Для текущего процесса ProcessHandle#onExit() не поддерживается.
+    if (parentProcessId == ProcessHandle.current().pid()) {
       return;
     }
 
-    boolean processIsAlive = ProcessHandle.of(parentProcessId)
-      .map(ProcessHandle::isAlive)
-      .orElse(false);
+    ProcessHandle.of(parentProcessId)
+      .map(ProcessHandle::onExit)
+      .orElseGet(() -> CompletableFuture.completedFuture(null))
+      .thenRunAsync(() -> onParentProcessExit(parentProcessId));
+  }
 
-    if (!processIsAlive) {
-      var message = "Parent process with pid " + parentProcessId + " is not found. Closing application...";
-      try {
-        LOGGER.info(message);
-      } catch (NoClassDefFoundError | Exception e) {
-        System.out.println(message);
-      }
-      languageServer.exit();
+  private void onParentProcessExit(long parentProcessId) {
+    var message = "Parent process with pid " + parentProcessId + " is not found. Closing application...";
+    try {
+      LOGGER.info(message);
+    } catch (NoClassDefFoundError | Exception e) {
+      System.out.println(message);
     }
+    languageServer.exit();
   }
 }
