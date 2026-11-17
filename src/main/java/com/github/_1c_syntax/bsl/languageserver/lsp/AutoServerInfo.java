@@ -41,7 +41,7 @@ import java.util.jar.Manifest;
 @Component
 public class AutoServerInfo extends org.eclipse.lsp4j.ServerInfo implements Serializable {
 
-  private static final String MANIFEST_VERSION = readVersion();
+  private static final String MANIFEST_VERSION = readVersion(Thread.currentThread().getContextClassLoader());
 
   @SuppressWarnings("FieldMayBeFinal")
   @Value("${spring.application.name:Dummy Language Server}")
@@ -54,20 +54,27 @@ public class AutoServerInfo extends org.eclipse.lsp4j.ServerInfo implements Seri
     setVersion(MANIFEST_VERSION);
   }
 
-  private static String readVersion() {
-    final InputStream mfStream = Thread.currentThread()
-      .getContextClassLoader()
-      .getResourceAsStream("META-INF/MANIFEST.MF");
-
+  /**
+   * Прочитать версию приложения из {@code META-INF/MANIFEST.MF}.
+   *
+   * @param classLoader Загрузчик классов, через который ищется манифест.
+   * @return Значение атрибута {@code Implementation-Version} либо пустая строка, если манифест
+   *   не найден, не читается или не содержит этого атрибута.
+   */
+  static String readVersion(ClassLoader classLoader) {
     Manifest manifest = new Manifest();
-    try {
+    try (InputStream mfStream = classLoader.getResourceAsStream("META-INF/MANIFEST.MF")) {
+      if (mfStream == null) {
+        return "";
+      }
       manifest.read(mfStream);
     } catch (IOException e) {
       LOGGER.error("Can't read manifest", e);
       return "";
     }
 
-    return manifest.getMainAttributes().getValue(Attributes.Name.IMPLEMENTATION_VERSION);
+    var version = manifest.getMainAttributes().getValue(Attributes.Name.IMPLEMENTATION_VERSION);
+    return version != null ? version : "";
   }
 
 }
