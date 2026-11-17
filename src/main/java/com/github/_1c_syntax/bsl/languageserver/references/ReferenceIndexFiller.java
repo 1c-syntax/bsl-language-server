@@ -33,7 +33,9 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.references.model.LocationRepository;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
+import com.github._1c_syntax.bsl.languageserver.references.model.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrence;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
@@ -50,6 +52,7 @@ import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.types.ModuleType;
+import com.github._1c_syntax.utils.GenericInterner;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
@@ -94,6 +97,7 @@ public class ReferenceIndexFiller {
   );
 
   private final ReferenceIndex index;
+  private final LocationRepository locationRepository;
   private final LanguageServerConfiguration configuration;
   private final OScriptLibraryIndex oScriptLibraryIndex;
   private final GlobalScopeProvider globalScopeProvider;
@@ -205,25 +209,72 @@ public class ReferenceIndexFiller {
    * прежнее содержимое индекса остаётся нетронутым.
    */
   public void fill(DocumentContext documentContext) {
-    var occurrences = new ArrayList<SymbolOccurrence>();
-    var sync = new ReferenceIndexSync(index, occurrences);
+    var batch = new ArrayList<SymbolOccurrence>();
+    var sink = new BatchingSink(batch);
     var documentContextAst = documentContext.getAst();
-    new MethodSymbolReferenceIndexFinder(documentContext, sync).visitFile(documentContextAst);
-    new VariableSymbolReferenceIndexFinder(documentContext, sync).visitFile(documentContextAst);
+    new MethodSymbolReferenceIndexFinder(documentContext, sink).visitFile(documentContextAst);
+    new VariableSymbolReferenceIndexFinder(documentContext, sink).visitFile(documentContextAst);
     // Неквалифицированные self-члены (реквизиты/платформенные методы self-типа модуля)
     // индексируются только если у модуля вообще есть self-тип — иначе проход впустую.
     if (globalScopeProvider.moduleTypeRefByUri(documentContext.getUri()).isPresent()) {
-      new SelfMemberReferenceIndexFinder(documentContext, sync).visitFile(documentContextAst);
+      new SelfMemberReferenceIndexFinder(documentContext, sink).visitFile(documentContextAst);
     }
-    index.replaceReferences(documentContext.getUri(), occurrences);
+    index.replaceReferences(documentContext.getUri(), batch);
     filled.add(documentContext.getUri());
+  }
+
+  /**
+   * Приёмник обращений к символам, найденных файндерами при обходе AST:
+   * копит построенные вхождения в буфер для последующей атомарной публикации.
+   */
+  @RequiredArgsConstructor
+  private final class BatchingSink {
+
+    private final List<SymbolOccurrence> batch;
+    private @Nullable GenericInterner<Symbol> localVariableInterner;
+
+    void addMethodCall(URI uri, String mdoRef, ModuleType moduleType, String symbolName, Range range) {
+      batch.add(index.methodCallOccurrence(uri, mdoRef, moduleType, symbolName, range));
+    }
+
+    void addModuleReference(URI uri, String mdoRef, ModuleType moduleType, Range range) {
+      batch.add(index.moduleReferenceOccurrence(uri, mdoRef, moduleType, range));
+    }
+
+    void addVariableUsage(URI uri, String mdoRef, ModuleType moduleType, String methodName,
+                          String variableName, Range range, OccurrenceType occurrenceType) {
+      if (methodName.isEmpty()) {
+        batch.add(index.variableOccurrence(uri, mdoRef, moduleType, methodName, variableName, range, occurrenceType));
+        return;
+      }
+
+      var interner = localVariableInterner;
+      if (interner == null) {
+        interner = new GenericInterner<>();
+        locationRepository.getSymbolOccurrencesByLocationUri(uri)
+          .map(SymbolOccurrence::symbol)
+          .filter(symbol -> symbol.symbolKind() == SymbolKind.Variable && !symbol.scopeName().isEmpty()
+            && !ReferenceIndex.SELF_MEMBER_SCOPE.equals(symbol.scopeName()))
+          .forEach(interner::intern);
+        localVariableInterner = interner;
+      }
+
+      var symbol = index.variableSymbol(mdoRef, moduleType, methodName, variableName);
+      batch.add(index.variableOccurrence(uri, symbol, range, occurrenceType, interner));
+    }
+
+    void addSelfMemberUsage(URI uri, String mdoRef, ModuleType moduleType, SymbolKind symbolKind,
+                            String name, Range range) {
+      batch.add(index.selfMemberOccurrence(
+        uri, mdoRef, moduleType, symbolKind, name, range, OccurrenceType.REFERENCE));
+    }
   }
 
   @RequiredArgsConstructor
   private class MethodSymbolReferenceIndexFinder extends BSLParserBaseVisitor<ParserRuleContext> {
 
     private final DocumentContext documentContext;
-    private final ReferenceIndexSync sync;
+    private final BatchingSink sink;
     private Set<String> commonModuleMdoRefFromSubParams = Collections.emptySet();
 
     @Override
@@ -408,7 +459,7 @@ public class ReferenceIndexFiller {
 
       var ctor = libraryClassConstructor(libUri.get());
       if (ctor.isPresent()) {
-        sync.addMethodCall(
+        sink.addMethodCall(
           documentContext.getUri(),
           libMdoRef,
           moduleType,
@@ -416,7 +467,7 @@ public class ReferenceIndexFiller {
           range
         );
       } else {
-        sync.addModuleReference(
+        sink.addModuleReference(
           documentContext.getUri(),
           libMdoRef,
           moduleType,
@@ -454,7 +505,7 @@ public class ReferenceIndexFiller {
       var moduleType = actualLibraryModuleType(libUri.get(), ModuleType.OScriptModule);
 
       // Ссылка на сам identifier модуля — нужна для go-to-definition без точки.
-      sync.addModuleReference(
+      sink.addModuleReference(
         documentContext.getUri(),
         libMdoRef,
         moduleType,
@@ -497,7 +548,7 @@ public class ReferenceIndexFiller {
       documentContext.getServerContext()
         .findCommonModule(identifierText)
         .ifPresent(commonModule ->
-          sync.addModuleReference(
+          sink.addModuleReference(
             documentContext.getUri(),
             commonModule.getMdoReference().getMdoRef(),
             ModuleType.CommonModule,
@@ -507,7 +558,7 @@ public class ReferenceIndexFiller {
     }
 
     private void addMethodCall(String mdoRef, ModuleType moduleType, String methodName, Range range) {
-      sync.addMethodCall(documentContext.getUri(), mdoRef, moduleType, methodName, range);
+      sink.addMethodCall(documentContext.getUri(), mdoRef, moduleType, methodName, range);
     }
 
     /**
@@ -590,16 +641,16 @@ public class ReferenceIndexFiller {
   private class VariableSymbolReferenceIndexFinder extends BSLParserBaseVisitor<ParserRuleContext> {
 
     private final DocumentContext documentContext;
-    private final ReferenceIndexSync sync;
+    private final BatchingSink sink;
     @SuppressWarnings("NullAway.Init")
     private @Nullable SourceDefinedSymbol currentScope;
     private final Map<String, String> variableToCommonModuleMap = new HashMap<>();
     /** variable name (lowercase) → URI .os-файла library-класса, на экземпляр которого переменная инициализирована. */
     private final Map<String, String> variableToLibraryClassUriMap = new HashMap<>();
 
-    private VariableSymbolReferenceIndexFinder(DocumentContext documentContext, ReferenceIndexSync sync) {
+    private VariableSymbolReferenceIndexFinder(DocumentContext documentContext, BatchingSink sink) {
       this.documentContext = documentContext;
-      this.sync = sync;
+      this.sink = sink;
     }
 
     @Override
@@ -888,7 +939,7 @@ public class ReferenceIndexFiller {
         methodName = methodSymbol.get().getName();
       }
 
-      sync.addVariableUsage(
+      sink.addVariableUsage(
         documentContext.getUri(),
         documentContext.getMdoRef(),
         documentContext.getModuleType(),
@@ -913,7 +964,7 @@ public class ReferenceIndexFiller {
       if (methodCall != null && methodCall.methodName() != null) {
         var methodNameToken = methodCall.methodName().IDENTIFIER();
         if (methodNameToken != null) {
-          sync.addMethodCall(
+          sink.addMethodCall(
             documentContext.getUri(),
             mdoRef,
             ModuleType.CommonModule,
@@ -938,7 +989,7 @@ public class ReferenceIndexFiller {
       if (methodCall != null && methodCall.methodName() != null) {
         var methodNameToken = methodCall.methodName().IDENTIFIER();
         if (methodNameToken != null) {
-          sync.addMethodCall(
+          sink.addMethodCall(
             documentContext.getUri(),
             libClassUri,
             ModuleType.OScriptClass,
@@ -962,15 +1013,15 @@ public class ReferenceIndexFiller {
   private class SelfMemberReferenceIndexFinder extends BSLParserBaseVisitor<ParserRuleContext> {
 
     private final DocumentContext documentContext;
-    private final ReferenceIndexSync sync;
+    private final BatchingSink sink;
     private final SymbolTree symbolTree;
     private final URI uri;
     private final String mdoRef;
     private final ModuleType moduleType;
 
-    SelfMemberReferenceIndexFinder(DocumentContext documentContext, ReferenceIndexSync sync) {
+    SelfMemberReferenceIndexFinder(DocumentContext documentContext, BatchingSink sink) {
       this.documentContext = documentContext;
-      this.sync = sync;
+      this.sink = sink;
       this.symbolTree = documentContext.getSymbolTree();
       this.uri = documentContext.getUri();
       this.mdoRef = documentContext.getMdoRef();
@@ -988,7 +1039,7 @@ public class ReferenceIndexFiller {
           && symbolTree.getMethodSymbol(name).isEmpty()
           && globalScopeProvider.globalFunction(name, documentContext.getFileType()).isEmpty()
           && selfMemberResolver.resolveSelfMember(documentContext, SymbolKind.Method, name).isPresent()) {
-          sync.addSelfMemberUsage(uri, mdoRef, moduleType, SymbolKind.Method, name, Ranges.create(methodNameCtx));
+          sink.addSelfMemberUsage(uri, mdoRef, moduleType, SymbolKind.Method, name, Ranges.create(methodNameCtx));
         }
       }
       return super.visitGlobalMethodCall(ctx);
@@ -1024,7 +1075,7 @@ public class ReferenceIndexFiller {
         && symbolTree.getVariableSymbolInScope(scopeNode, name).isEmpty()
         && globalScopeProvider.globalProperty(name, documentContext.getFileType()).isEmpty()
         && selfMemberResolver.resolveSelfMember(documentContext, SymbolKind.Property, name).isPresent()) {
-        sync.addSelfMemberUsage(uri, mdoRef, moduleType, SymbolKind.Property, name, Ranges.create(identifier));
+        sink.addSelfMemberUsage(uri, mdoRef, moduleType, SymbolKind.Property, name, Ranges.create(identifier));
       }
     }
   }
