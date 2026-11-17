@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794930720084,
+  "lastUpdate": 1794932293209,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -47833,6 +47833,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.051026789119586",
             "extra": "mean: 90.38828770319621 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "7d9c85dc72d07d8f1593e38694b42f11a1b90419",
+          "message": "Merge pull request #4967 from 1c-syntax/fix/reference-index-removed-source-20261117\n\nfix(references): пропускать вхождения удалённого документа",
+          "timestamp": "2026-11-17T16:02:43+01:00",
+          "tree_id": "f5abed7e9168a7774370c2960b441d9c86cba612",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/7d9c85dc72d07d8f1593e38694b42f11a1b90419"
+        },
+        "date": 1794932263585,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 89.84284337361653,
+            "unit": "sec",
+            "range": "stddev: 2.8986270874552607",
+            "extra": "mean: 89.84284337361653 sec\nrounds: 3"
           }
         ]
       }
