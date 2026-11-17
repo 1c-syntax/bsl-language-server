@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.AllArgsConstructor;
@@ -80,6 +81,7 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
 
   private final Map<DiagnosticCode, List<Range<Integer>>> diagnosticIgnorance = new HashMap<>();
   private final Map<DiagnosticCode, Deque<Integer>> ignoranceStack = new HashMap<>();
+  private final List<SuppressionComment> suppressionComments = new ArrayList<>();
 
   public DiagnosticIgnoranceComputer(DocumentContext documentContext) {
     this.documentContext = documentContext;
@@ -90,18 +92,19 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
 
     diagnosticIgnorance.clear();
     ignoranceStack.clear();
+    suppressionComments.clear();
 
     List<Token> codeTokens = documentContext.getTokensFromDefaultChannel();
     List<Token> comments = documentContext.getComments();
 
     if (codeTokens.isEmpty() && comments.isEmpty()) {
-      return new Data(diagnosticIgnorance);
+      return new Data(diagnosticIgnorance, suppressionComments);
     }
 
     computeCommentsIgnorance(codeTokens, comments);
     computeExtensionIgnorance();
 
-    return new Data(diagnosticIgnorance);
+    return new Data(diagnosticIgnorance, suppressionComments);
   }
 
   private void computeExtensionIgnorance() {
@@ -207,6 +210,8 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
       return null;
     }
 
+    addSuppressionComment(comment, matcher, true);
+
     DiagnosticCode key = getKey(matcher);
 
     Deque<Integer> stack = ignoranceStack.computeIfAbsent(key, s -> new ArrayDeque<>());
@@ -225,6 +230,8 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
       return false;
     }
 
+    addSuppressionComment(comment, matcher, false);
+
     DiagnosticCode key = getKey(matcher);
 
     Deque<Integer> stack = ignoranceStack.computeIfAbsent(key, s -> new ArrayDeque<>());
@@ -238,6 +245,11 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
     addIgnoredRange(key, ignoreRangeStart, ignoreRangeEnd);
 
     return true;
+  }
+
+  private void addSuppressionComment(Token comment, Matcher matcher, boolean disabling) {
+    var hasExplanation = !comment.getText().substring(matcher.end()).isBlank();
+    suppressionComments.add(new SuppressionComment(Ranges.create(comment), disabling, hasExplanation));
   }
 
   private void addIgnoredRange(DiagnosticCode diagnosticKey, int ignoreRangeStart, int ignoreRangeEnd) {
@@ -257,9 +269,33 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
     return key;
   }
 
+  /**
+   * Распознанная в комментарии директива подавления диагностик.
+   *
+   * @param range          диапазон комментария, в котором найдена директива
+   * @param disabling      {@code true} для {@code -off}/{@code -выкл}, {@code false} для {@code -on}/{@code -вкл}
+   * @param hasExplanation признак непустого текста после директивы
+   */
+  public record SuppressionComment(
+    org.eclipse.lsp4j.Range range,
+    boolean disabling,
+    boolean hasExplanation
+  ) {
+  }
+
   @AllArgsConstructor
   public static class Data {
     private final Map<DiagnosticCode, List<Range<Integer>>> diagnosticIgnorance;
+    private final List<SuppressionComment> suppressionComments;
+
+    /**
+     * Распознанные в документе директивы подавления диагностик в порядке появления.
+     *
+     * @return список директив; пустой, если подавлений в документе нет
+     */
+    public List<SuppressionComment> getSuppressionComments() {
+      return suppressionComments;
+    }
 
     public boolean diagnosticShouldBeIgnored(Diagnostic diagnostic) {
       if (diagnosticIgnorance.isEmpty()) {

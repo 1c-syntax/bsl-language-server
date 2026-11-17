@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.GitBlameComputer;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.Diagnostic;
@@ -38,6 +39,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * Реализация {@link DiagnosticComputer} по умолчанию.
@@ -70,7 +72,14 @@ public abstract class DefaultDiagnosticComputer implements DiagnosticComputer {
       ? GitBlameComputer.Data.empty()
       : new GitBlameComputer(documentContext.getUri(), ignoredAuthors).compute();
 
-    var futures = diagnostics(documentContext).stream()
+    var diagnostics = diagnostics(documentContext);
+
+    var nonSuppressibleCodes = diagnostics.stream()
+      .filter(diagnostic -> !diagnostic.getInfo().isSuppressible())
+      .map(diagnostic -> diagnostic.getInfo().getCode().getStringValue())
+      .collect(Collectors.toSet());
+
+    var futures = diagnostics.stream()
       .map((BSLDiagnostic diagnostic) ->
         executor.submit(() -> safeGetDiagnostics(diagnostic, documentContext)))
       .toList();
@@ -78,7 +87,8 @@ public abstract class DefaultDiagnosticComputer implements DiagnosticComputer {
     return futures.stream()
       .map(DefaultDiagnosticComputer::getUninterruptibly)
       .flatMap(List::stream)
-      .filter(Predicate.not(diagnosticIgnorance::diagnosticShouldBeIgnored))
+      .filter(diagnostic -> nonSuppressibleCodes.contains(DiagnosticCode.getStringValue(diagnostic.getCode()))
+        || !diagnosticIgnorance.diagnosticShouldBeIgnored(diagnostic))
       .filter(Predicate.not(gitBlameIgnorance::diagnosticShouldBeIgnored))
       .toList();
   }
