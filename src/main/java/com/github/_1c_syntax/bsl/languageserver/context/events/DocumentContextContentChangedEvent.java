@@ -34,17 +34,16 @@ import java.io.Serial;
  * <p>
  * Разбор документа не всегда означает правку: тот же самый текст перечитывается заново
  * после освобождения вторичных данных. Такой разбор выводы, сделанные по прежнему тексту,
- * обычно оставляет верными — отличить один случай от другого позволяет
- * {@link #isContentChanged()}. Исключение — дерево символов, устаревшее без правки текста
- * (классификаторы отвечают о его методах и присваиваниях иначе, чем при построении): по тому
- * же тексту оно строится заново, символы уже не равны прежним, и такой разбор — изменение.
+ * оставляет верными — отличить один случай от другого позволяет {@link #isContentChanged()}.
+ * Если при этом дерево символов построено заново, потому что прежнее устарело, следом
+ * публикуется {@link DocumentContextSymbolTreeRebuiltEvent}.
  */
 public class DocumentContextContentChangedEvent extends ApplicationEvent {
 
   @Serial
   private static final long serialVersionUID = 3091414460731918073L;
 
-  /** Изменилось ли построенное по документу с прошлого разбора. */
+  /** Отличается ли разобранное содержимое от разобранного в прошлый раз. */
   private final transient boolean contentChanged;
 
   /**
@@ -59,9 +58,8 @@ public class DocumentContextContentChangedEvent extends ApplicationEvent {
   /**
    * @param source         документ.
    * @param contentChanged {@code true}, если разобранное содержимое отличается от
-   *                       разобранного в прошлый раз либо по тому же тексту заново
-   *                       построено устаревшее дерево символов; {@code false}, если
-   *                       документ перечитан без изменений.
+   *                       разобранного в прошлый раз; {@code false}, если документ
+   *                       перечитан без изменений.
    */
   public DocumentContextContentChangedEvent(DocumentContext source, boolean contentChanged) {
     super(source);
@@ -70,9 +68,7 @@ public class DocumentContextContentChangedEvent extends ApplicationEvent {
 
   /**
    * @return {@code true}, если разобранное содержимое отличается от разобранного в прошлый
-   *     раз либо по тому же тексту заново построено устаревшее дерево символов: символы
-   *     тогда не равны прежним; {@code false}, если это перечитывание того же текста с
-   *     прежним деревом.
+   *     раз; {@code false}, если это перечитывание того же текста.
    */
   public boolean isContentChanged() {
     return contentChanged;

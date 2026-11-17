@@ -24,8 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 import com.github._1c_syntax.bsl.context.api.ContextNames;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextConfigurationBindingChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextSymbolTreeRebuiltEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
@@ -125,11 +125,12 @@ public class ConfigurationModuleMembersProvider {
     register(documentContext, event.isContentChanged());
   }
 
-  // Привязка к метаданным определяет, членами какого типа становятся методы модуля, и
-  // порядок тот же, что у правки: индексатор ссылок и индекс типов идут следом.
+  // Дерево символов построено заново по прежнему тексту. Если сменилась привязка к метаданным,
+  // сменился и тип, членами которого становятся методы модуля. Порядок тот же, что у правки:
+  // индексатор ссылок и индекс типов идут следом.
   @Order(100)
   @EventListener
-  public void handleEvent(DocumentContextConfigurationBindingChangedEvent event) {
+  public void handleEvent(DocumentContextSymbolTreeRebuiltEvent event) {
     register(event.getSource(), true);
   }
 

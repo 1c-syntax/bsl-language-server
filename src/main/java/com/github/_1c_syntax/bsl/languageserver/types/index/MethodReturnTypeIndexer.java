@@ -29,9 +29,9 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextConfigurationBindingChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextSymbolTreeRebuiltEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
@@ -308,16 +308,17 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   }
 
   /**
-   * Посчитать заново значения документа, у которого изменилась привязка к метаданным
-   * конфигурации. Его дерево символов построено заново, а методы нового дерева не равны
-   * прежним, если сменился их вид, поэтому значения, записанные по прежним, уже не найти.
+   * Посчитать заново значения документа, дерево символов которого построено заново по прежнему
+   * тексту (в том числе после изменения привязки к метаданным конфигурации). Методы нового
+   * дерева не равны прежним, если сменился их вид, поэтому значения, записанные по прежним, уже
+   * не найти.
    *
-   * @param event событие изменения привязки документа.
+   * @param event событие построения дерева символов заново.
    */
   @Order(300)
   @EventListener
   @Override
-  public void handleConfigurationBindingChanged(DocumentContextConfigurationBindingChangedEvent event) {
+  public void handleSymbolTreeRebuilt(DocumentContextSymbolTreeRebuiltEvent event) {
     reindexDocument(event.getSource());
   }
 

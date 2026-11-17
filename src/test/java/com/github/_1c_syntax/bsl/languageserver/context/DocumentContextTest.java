@@ -201,7 +201,7 @@ class DocumentContextTest {
   }
 
   @Test
-  void rereadingSameContentThatRebuildsSymbolTreeIsAChange() throws IllegalAccessException {
+  void rereadingSameContentThatRebuildsSymbolTreeIsTreeRebuildNotContentChange() throws IllegalAccessException {
     // given: голое присваивание «А = 0» завело переменную, а потом у своего типа модуля
     // появился реквизит А
     var documentContext = getDocumentContext();
@@ -211,9 +211,38 @@ class DocumentContextTest {
     // when: тот же текст перечитан, и дерево построено заново
     documentContext.rebuild(documentContext.getContent(), documentContext.getVersion() + 1);
 
-    // then: символы уже не те, что были, — посчитанное по прежним надо пересчитать, как
-    // после правки
+    // then: текст прежний, а дерево построено заново — символы уже не те, что были
+    assertThat(documentContext.isContentChangedOnLastRebuild()).isFalse();
+    assertThat(documentContext.isSymbolTreeRebuiltOnLastRebuild()).isTrue();
+  }
+
+  @Test
+  void rereadingSameContentWithUpToDateSymbolTreeIsNotTreeRebuild() {
+    // given
+    var documentContext = getDocumentContext();
+
+    // when: тот же текст перечитан, дерево годно
+    documentContext.rebuild(documentContext.getContent(), documentContext.getVersion() + 1);
+
+    // then
+    assertThat(documentContext.isSymbolTreeRebuiltOnLastRebuild()).isFalse();
+  }
+
+  @Test
+  void contentChangeIsNotReportedAsTreeRebuild() throws IllegalAccessException {
+    // given: перед правкой дерево было перестроено по тому же тексту
+    var documentContext = getDocumentContext();
+    SelfMemberClassifier nameIsSelfProperty = (document, name) -> "А".equals(name);
+    FieldUtils.writeField(documentContext, "selfMemberClassifier", nameIsSelfProperty, true);
+    documentContext.rebuild(documentContext.getContent(), documentContext.getVersion() + 1);
+
+    // when: текст изменился
+    documentContext.rebuild(documentContext.getContent() + "\n", documentContext.getVersion() + 1);
+
+    // then: о новом дереве говорит изменение содержимого, перестройкой по тому же тексту это
+    // не считается
     assertThat(documentContext.isContentChangedOnLastRebuild()).isTrue();
+    assertThat(documentContext.isSymbolTreeRebuiltOnLastRebuild()).isFalse();
   }
 
   @Test

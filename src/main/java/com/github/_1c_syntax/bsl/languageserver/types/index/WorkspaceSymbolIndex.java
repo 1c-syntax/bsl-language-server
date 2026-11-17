@@ -24,8 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.types.index;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextConfigurationBindingChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextSymbolTreeRebuiltEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
@@ -246,14 +246,15 @@ public class WorkspaceSymbolIndex extends AbstractDocumentLifecycleClearableInde
   }
 
   /**
-   * Переиндексировать документ, у которого изменилась привязка к метаданным конфигурации: от неё
-   * зависят имя контейнера и вид символов.
+   * Переиндексировать документ, дерево символов которого построено заново по прежнему тексту:
+   * от привязки к метаданным конфигурации и от классификации зависят имя контейнера и вид
+   * символов.
    *
-   * @param event событие изменения привязки документа
+   * @param event событие построения дерева символов заново
    */
   @EventListener
   @Override
-  public void handleConfigurationBindingChanged(DocumentContextConfigurationBindingChangedEvent event) {
+  public void handleSymbolTreeRebuilt(DocumentContextSymbolTreeRebuiltEvent event) {
     index(event.getSource());
   }
 

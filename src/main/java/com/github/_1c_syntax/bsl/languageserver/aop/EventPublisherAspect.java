@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextConfigurationBindingChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextSymbolTreeRebuiltEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentAddedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
@@ -143,6 +144,10 @@ public class EventPublisherAspect {
     var documentContext = (DocumentContext) joinPoint.getThis();
     publishEvent(new DocumentContextContentChangedEvent(
       documentContext, documentContext.isContentChangedOnLastRebuild()));
+    // Тот же текст, но дерево построено заново: символы не равны прежним.
+    if (documentContext.isSymbolTreeRebuiltOnLastRebuild()) {
+      publishEvent(new DocumentContextSymbolTreeRebuiltEvent(documentContext));
+    }
   }
 
   @AfterReturning(
@@ -162,10 +167,8 @@ public class EventPublisherAspect {
     returning = "symbolTreeRebuilt"
   )
   public void documentContextSymbolTreeRefreshed(DocumentContext documentContext, boolean symbolTreeRebuilt) {
-    // Дерево построено заново по тому же тексту: символы не равны прежним, и для посчитанного
-    // по ним это такое же изменение, как правка.
     if (symbolTreeRebuilt) {
-      publishEvent(new DocumentContextContentChangedEvent(documentContext, true));
+      publishEvent(new DocumentContextSymbolTreeRebuiltEvent(documentContext));
     }
   }
 

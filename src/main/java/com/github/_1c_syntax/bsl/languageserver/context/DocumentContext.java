@@ -113,12 +113,18 @@ public class DocumentContext implements Comparable<DocumentContext> {
   private byte @Nullable [] contentFingerprint;
 
   /**
-   * Изменилось ли при последнем разборе то, что построено по документу: содержимое
-   * отличалось от разобранного до этого либо дерево символов по тому же тексту построено
-   * заново, потому что прежнее устарело. У документа, разбираемого впервые, — {@code true}.
+   * Отличалось ли содержимое, с которым документ разобран последний раз, от того,
+   * с которым он был разобран до этого. У документа, разбираемого впервые, — {@code true}.
    */
   @Getter
   private boolean contentChangedOnLastRebuild = true;
+
+  /**
+   * Построено ли при последнем разборе дерево символов заново по тому же тексту: прежнее
+   * устарело, хотя содержимое не менялось.
+   */
+  @Getter
+  private boolean symbolTreeRebuiltOnLastRebuild;
 
   @Getter
   private int version;
@@ -409,6 +415,7 @@ public class DocumentContext implements Comparable<DocumentContext> {
         // описывать его, а не то, что пришло: иначе следующий разбор того же текста счёл бы
         // документ неизменившимся, и записи, построенные по прежнему дереву, остались бы жить.
         contentChangedOnLastRebuild = false;
+        symbolTreeRebuiltOnLastRebuild = false;
         clearDependantData();
         return;
       }
@@ -440,9 +447,9 @@ public class DocumentContext implements Comparable<DocumentContext> {
       // сорвавшийся разбор не должен выглядеть состоявшимся, иначе повторная попытка сочтёт
       // текст прежним и работу не переделает.
       contentFingerprint = fingerprint;
-      // Дерево, построенное заново по тому же тексту, отличается от прежнего видом символов,
-      // поэтому для посчитанного по символам это такое же изменение, как правка текста.
-      contentChangedOnLastRebuild = symbolTreeRebuilt;
+      contentChangedOnLastRebuild = contentChanged;
+      // Новое дерево после правки текста — следствие правки и отдельно не отмечается.
+      symbolTreeRebuiltOnLastRebuild = symbolTreeRebuilt && !contentChanged;
 
     } finally {
       releaseLocks();
@@ -583,7 +590,6 @@ public class DocumentContext implements Comparable<DocumentContext> {
         return false;
       }
       replaceSymbolTree();
-      contentChangedOnLastRebuild = true;
       return true;
     } finally {
       releaseLocks();

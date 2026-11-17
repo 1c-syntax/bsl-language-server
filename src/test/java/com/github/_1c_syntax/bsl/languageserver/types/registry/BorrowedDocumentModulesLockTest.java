@@ -25,6 +25,8 @@ import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwa
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextSymbolTreeRebuiltEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
@@ -36,11 +38,16 @@ import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
@@ -73,6 +80,9 @@ class BorrowedDocumentModulesLockTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private TypeRegistry typeRegistry;
+
+  @Autowired
+  private ConfigurableApplicationContext applicationContext;
 
   @Autowired
   private ReferenceIndex referenceIndex;
@@ -183,18 +193,28 @@ class BorrowedDocumentModulesLockTest extends AbstractServerContextAwareTest {
     var main = document(MAIN_OBJECT_MODULE);
     var extension = document(EXTENSION_OBJECT_MODULE);
     var extensionContent = extensionAssigningLateVariable();
+    var events = new CopyOnWriteArrayList<ApplicationEvent>();
 
-    // when: перестроение модуля основной конфигурации закончилось, а модуль расширения после
-    // этого никто не перечитывает — в редакторе правили только основной модуль.
-    buildExtensionWhileMainModuleRebuildsDeclaringLateVariable(main, extension, extensionContent);
+    try (var recording = recordEvents(extension, events)) {
+      // when: перестроение модуля основной конфигурации закончилось, а модуль расширения после
+      // этого никто не перечитывает — в редакторе правили только основной модуль.
+      buildExtensionWhileMainModuleRebuildsDeclaringLateVariable(main, extension, extensionContent);
 
-    // then: дерево модуля расширения не осталось построенным по прежнему дереву основного:
-    // присваивание признано реквизитом типа, и индекс ссылок собран по новому дереву. Дерево
-    // перепроверяется не на потоке правки, поэтому результат дожидается.
-    await().pollInSameThread().atMost(Duration.ofSeconds(30)).untilAsserted(() -> {
-      assertThat(extension.getSymbolTree().getBasis().bareSelfProperties()).contains(LATE_VARIABLE);
-      assertLateVariableRefersToMainModule(extension, extensionContent);
-    });
+      // then: дерево модуля расширения не осталось построенным по прежнему дереву основного:
+      // присваивание признано реквизитом типа, и индекс ссылок собран по новому дереву. Дерево
+      // перепроверяется не на потоке правки, поэтому результат дожидается.
+      await().pollInSameThread().atMost(Duration.ofSeconds(30)).untilAsserted(() -> {
+        assertThat(extension.getSymbolTree().getBasis().bareSelfProperties()).contains(LATE_VARIABLE);
+        assertLateVariableRefersToMainModule(extension, extensionContent);
+        // Об этом сказано перестройкой дерева; изменение текста было одно — правка расширения.
+        assertThat(events).hasAtLeastOneElementOfType(DocumentContextSymbolTreeRebuiltEvent.class);
+        assertThat(events)
+          .filteredOn(DocumentContextContentChangedEvent.class::isInstance)
+          .map(DocumentContextContentChangedEvent.class::cast)
+          .filteredOn(DocumentContextContentChangedEvent::isContentChanged)
+          .hasSize(1);
+      });
+    }
   }
 
   @Test
@@ -208,20 +228,30 @@ class BorrowedDocumentModulesLockTest extends AbstractServerContextAwareTest {
     assertThat(extension.getSymbolTree().getBasis().bareSelfProperties()).doesNotContain(LATE_VARIABLE);
     assertThat(context.getDocumentState(extension)).isEqualTo(DocumentState.WITHOUT_CONTENT);
 
-    // when: в модуле основной конфигурации объявили экспортную переменную, а файл модуля
-    // расширения никто не открывал.
-    var mainContent = "Перем " + LATE_VARIABLE + " Экспорт;\n"
-      + Files.readString(FIXTURE.resolve(MAIN_OBJECT_MODULE));
-    context.rebuildDocument(main, mainContent, 1);
+    var events = new CopyOnWriteArrayList<ApplicationEvent>();
 
-    // then: дерево модуля расширения построено заново по его файлу, присваивание признано
-    // реквизитом типа, индекс ссылок собран по новому дереву, а сам модуль снова освобождён:
-    // иначе каждый такой модуль держал бы текст до конца сессии.
-    await().pollInSameThread().atMost(Duration.ofSeconds(30)).untilAsserted(() -> {
-      assertThat(extension.getSymbolTree().getBasis().bareSelfProperties()).contains(LATE_VARIABLE);
-      assertLateVariableRefersToMainModule(extension, extensionContent);
-      assertThat(context.getDocumentState(extension)).isEqualTo(DocumentState.WITHOUT_CONTENT);
-    });
+    try (var recording = recordEvents(extension, events)) {
+      // when: в модуле основной конфигурации объявили экспортную переменную, а файл модуля
+      // расширения никто не открывал.
+      var mainContent = "Перем " + LATE_VARIABLE + " Экспорт;\n"
+        + Files.readString(FIXTURE.resolve(MAIN_OBJECT_MODULE));
+      context.rebuildDocument(main, mainContent, 1);
+
+      // then: дерево модуля расширения построено заново по его файлу, присваивание признано
+      // реквизитом типа, индекс ссылок собран по новому дереву, а сам модуль снова освобождён:
+      // иначе каждый такой модуль держал бы текст до конца сессии. Текст модуля не менялся —
+      // об этом сказано перестройкой дерева, а не изменением содержимого.
+      await().pollInSameThread().atMost(Duration.ofSeconds(30)).untilAsserted(() -> {
+        assertThat(extension.getSymbolTree().getBasis().bareSelfProperties()).contains(LATE_VARIABLE);
+        assertLateVariableRefersToMainModule(extension, extensionContent);
+        assertThat(context.getDocumentState(extension)).isEqualTo(DocumentState.WITHOUT_CONTENT);
+        assertThat(events).hasAtLeastOneElementOfType(DocumentContextSymbolTreeRebuiltEvent.class);
+        assertThat(events)
+          .filteredOn(DocumentContextContentChangedEvent.class::isInstance)
+          .map(DocumentContextContentChangedEvent.class::cast)
+          .noneMatch(DocumentContextContentChangedEvent::isContentChanged);
+      });
+    }
   }
 
   @Test
@@ -309,6 +339,25 @@ class BorrowedDocumentModulesLockTest extends AbstractServerContextAwareTest {
         .asInstanceOf(InstanceOfAssertFactories.type(SourceDefinedSymbol.class))
         .extracting(SourceDefinedSymbol::getOwner)
         .isSameAs(main));
+  }
+
+  /**
+   * Записывает события изменения содержимого и перестройки дерева, источник которых —
+   * документ, пока запись не закрыта.
+   */
+  private AutoCloseable recordEvents(DocumentContext document, List<ApplicationEvent> events) {
+    ApplicationListener<ApplicationEvent> listener = (ApplicationEvent event) -> {
+      var source = switch (event) {
+        case DocumentContextContentChangedEvent changed -> changed.getSource();
+        case DocumentContextSymbolTreeRebuiltEvent rebuilt -> rebuilt.getSource();
+        default -> null;
+      };
+      if (source == document) {
+        events.add(event);
+      }
+    };
+    applicationContext.addApplicationListener(listener);
+    return () -> applicationContext.removeApplicationListener(listener);
   }
 
   private DocumentContext document(String path) {
