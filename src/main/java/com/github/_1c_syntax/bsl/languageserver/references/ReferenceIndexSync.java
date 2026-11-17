@@ -36,7 +36,7 @@ import java.util.List;
 
 /** Собирает вхождения одного документа и канонизирует локальные ключи до публикации пакета. */
 @RequiredArgsConstructor
-public final class ReferenceIndexBatch {
+public final class ReferenceIndexSync {
   private final ReferenceIndex index;
   private final List<SymbolOccurrence> occurrences;
   private @Nullable GenericInterner<Symbol> localVariables;
