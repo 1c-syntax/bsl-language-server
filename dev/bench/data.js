@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794941383487,
+  "lastUpdate": 1794944254158,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -47895,6 +47895,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.8868933889583688",
             "extra": "mean: 93.02716747919719 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6ec92f9c1e6efd79cefb94ce57508a5462e9d2a0",
+          "message": "Merge pull request #2881 from 1c-syntax/feature/native-watch-process\n\nfeat(lsp): отслеживать завершение родительского процесса через ProcessHandle.onExit",
+          "timestamp": "2026-11-17T19:41:49+01:00",
+          "tree_id": "651893ca3d1bdf73277bb92df253fd5bafbe4781",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/6ec92f9c1e6efd79cefb94ce57508a5462e9d2a0"
+        },
+        "date": 1794944224407,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 90.425066391627,
+            "unit": "sec",
+            "range": "stddev: 2.356072274546209",
+            "extra": "mean: 90.425066391627 sec\nrounds: 3"
           }
         ]
       }
