@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794944254158,
+  "lastUpdate": 1794949292751,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -47926,6 +47926,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 2.356072274546209",
             "extra": "mean: 90.425066391627 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "29ba7561388e09f87b9a40f62b273aa29e4508b1",
+          "message": "Merge pull request #4977 from 1c-syntax/ccr-d69453bd-2np9mv\n\nrefactor: перенос доработок из #3938, не связанных с GraalVM",
+          "timestamp": "2026-11-17T21:39:21+01:00",
+          "tree_id": "d64ff27fd0b6fbb43c6f7214538801613651293d",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/29ba7561388e09f87b9a40f62b273aa29e4508b1"
+        },
+        "date": 1794949274498,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 89.71566065152486,
+            "unit": "sec",
+            "range": "stddev: 0.30329556768017385",
+            "extra": "mean: 89.71566065152486 sec\nrounds: 3"
           }
         ]
       }
