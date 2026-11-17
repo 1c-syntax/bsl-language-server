@@ -1863,34 +1863,45 @@ public class ExpressionTypeInferencer {
       .orElse(module);
     var visible = new ArrayList<VariableSymbol>(symbolTree.getVariablesOfScope(scope));
     if (scope != module) {
-      addModuleVariables(symbolTree.getVariablesOfScope(module), visible, body);
+      addModuleVariables(symbolTree, visible, body);
     }
     return visible;
   }
 
   /**
-   * Добавить переменные, объявленные {@code Перем} на уровне модуля, чьи имена встречаются
-   * в идентификаторах тела. Переменные, созданные присваиванием в теле модуля, из методов
-   * не видны. Набор не зависит от готовности индекса ссылок.
+   * Добавить переменные модуля, к которым обращаются из тела. Имена свойств и методов
+   * не являются обращениями к переменным; локальные объявления могут затенять общие.
+   * Набор не зависит от готовности индекса ссылок.
    *
-   * @param atModuleLevel переменные области видимости модуля.
+   * @param symbolTree    дерево символов модуля.
    * @param target        набор, куда добавлять.
    * @param body          тело метода.
    */
-  private static void addModuleVariables(List<VariableSymbol> atModuleLevel, List<VariableSymbol> target,
+  private static void addModuleVariables(SymbolTree symbolTree, List<VariableSymbol> target,
                                          BSLParser.CodeBlockContext body) {
-    if (atModuleLevel.isEmpty()) {
+    if (symbolTree.getVariablesOfScope(symbolTree.getModule()).isEmpty()) {
       return;
     }
     Set<String> names = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
     for (var identifier : Trees.findAllTokenNodes(body, BSLLexer.IDENTIFIER)) {
-      names.add(identifier.getText());
-    }
-    for (var candidate : atModuleLevel) {
-      if (candidate.getKind() == VariableKind.MODULE && names.contains(candidate.getName())) {
-        target.add(candidate);
+      if (isVariableIdentifier(identifier)) {
+        names.add(identifier.getText());
       }
     }
+    for (var name : names) {
+      symbolTree.getVariableSymbolInScope(body, name)
+        .filter(variable -> variable.getKind() == VariableKind.MODULE)
+        .ifPresent(target::add);
+    }
+  }
+
+  /** Идентификатор переменной, включая получателя цепочки и переменную внутри индекса. */
+  private static boolean isVariableIdentifier(ParseTree identifier) {
+    return identifier.getParent() instanceof ParserRuleContext parent && switch (parent.getRuleIndex()) {
+      case BSLParser.RULE_complexIdentifier, BSLParser.RULE_lValue, BSLParser.RULE_callStatement,
+           BSLParser.RULE_forStatement, BSLParser.RULE_forEachStatement -> true;
+      default -> false;
+    };
   }
 
   /**

@@ -52,6 +52,7 @@ import java.util.ArrayList;
 import java.util.ArrayDeque;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -197,6 +198,9 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
 
     /** Переменные, ячейки которых в этом выводе типов уже посчитаны. */
     private final Set<VariableSymbol> cellsDone = Collections.newSetFromMap(new IdentityHashMap<>(0));
+
+    /** Ячейки текущего расчёта, включая обнаруженные во вложенных телах зависимости. */
+    private final List<VariableSymbol> growingCells = new ArrayList<>(0);
 
     /** Идут ли круги прямо сейчас: изнутри них ячейки заново не считаются. */
     private boolean cellsComputing;
@@ -638,9 +642,6 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * @param inputs          исходные данные расчёта.
    */
   private void ensureCells(DocumentContext documentContext, BSLParser.CodeBlockContext body, FlowInputs inputs) {
-    if (inputs.session().cellsComputing) {
-      return;
-    }
     ensureCellsFor(documentContext, sharedVariablesOf(body, inputs), inputs);
   }
 
@@ -682,18 +683,28 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       for (var variable : pending) {
         session.replaceCell(variable, inputs.declaredFact().apply(variable));
       }
-      grow(documentContext, pending, inputs);
+      session.growingCells.addAll(pending);
+      if (outerComputing) {
+        return;
+      }
+      if (session.growingCells.size() != pending.size()) {
+        session.growingCells.sort(Comparator.comparing(VariableSymbol::getName, String.CASE_INSENSITIVE_ORDER));
+      }
+      grow(documentContext, session.growingCells, inputs);
       if (inputs.cacheable() && !inputs.sawMissing().getAsBoolean()
         && (complete == null || complete.getAsBoolean())) {
-        pending.forEach(variable -> settled.putIfAbsent(variable, session.cells.get(variable)));
+        session.growingCells.forEach(variable -> settled.putIfAbsent(variable, session.cells.get(variable)));
       }
     } finally {
       session.cellsComputing = outerComputing;
+      if (!outerComputing) {
+        session.growingCells.clear();
+      }
       session.cellsChanged.run();
     }
   }
 
-  /** Переменные тела, видимые другим телам: у переменных модуля набор один на весь документ. */
+  /** Общие переменные, к которым обращается тело. */
   private static List<VariableSymbol> sharedVariablesOf(BSLParser.CodeBlockContext body, FlowInputs inputs) {
     var shared = new ArrayList<VariableSymbol>(0);
     for (var variable : inputs.variables().apply(body)) {
@@ -716,7 +727,9 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   private void grow(DocumentContext documentContext, List<VariableSymbol> shared, FlowInputs inputs) {
     var session = inputs.session();
     var bodies = changedBodiesOf(documentContext, shared, inputs);
-    for (var round = 0; round < MAX_PASSES && !bodies.isEmpty(); round++) {
+    var cellCount = shared.size();
+    var passes = 0;
+    while (passes < MAX_PASSES && !bodies.isEmpty()) {
       var grown = false;
       for (var body : bodies) {
         if (inputs.compilationContexts().apply(body).map(Set::isEmpty).orElse(false)) {
@@ -727,8 +740,15 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
         var facts = compute(documentContext, body, layoutOf(documentContext, body), inputs);
         grown |= growCells(shared, session, facts);
       }
-      if (!grown) {
+      if (shared.size() != cellCount) {
+        shared.sort(Comparator.comparing(VariableSymbol::getName, String.CASE_INSENSITIVE_ORDER));
+        cellCount = shared.size();
+        bodies = changedBodiesOf(documentContext, shared, inputs);
+        passes = 0;
+      } else if (!grown) {
         break;
+      } else {
+        passes++;
       }
     }
   }
@@ -736,7 +756,8 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   /** Добавить выходные типы тела к текущим приближениям общих ячеек. */
   private static boolean growCells(List<VariableSymbol> shared, FlowSession session, Facts facts) {
     var grown = false;
-    for (var variable : shared) {
+    for (var i = 0; i < shared.size(); i++) {
+      var variable = shared.get(i);
       var index = facts.indexOf(variable);
       if (index == null) {
         continue;

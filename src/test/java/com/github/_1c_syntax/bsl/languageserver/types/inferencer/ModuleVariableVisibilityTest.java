@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.types.index.MethodReturnTypeInde
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -66,8 +67,9 @@ class ModuleVariableVisibilityTest extends AbstractServerContextAwareTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"ready", "Unrelated"})
-  void localResultDoesNotAnalyzeUnrelatedModuleState(String value) {
+  @ValueSource(strings = {"\"ready\"", "\"Unrelated\"", "Receiver.Unrelated", "Receiver.Child.Unrelated",
+    "Receiver[\"Unrelated\"]", "Unrelated()"})
+  void localResultDoesNotAnalyzeUnrelatedModuleState(String expression) {
     var document = document("""
       Var Unrelated;
       Procedure Initialize()
@@ -78,12 +80,66 @@ class ModuleVariableVisibilityTest extends AbstractServerContextAwareTest {
         Result.Insert("Next", Recursive());
         Return Result;
       EndFunction
+      Function Unrelated()
+        Return "ready";
+      EndFunction
       Function Independent()
         // Unrelated is a name in a comment, not a variable read.
-        Result = "%s";
+        Receiver = New Structure("Unrelated, Child", "ready", New Structure("Unrelated", "ready"));
+        Result = %s;
         Return Result;
       EndFunction
-      """.formatted(value));
+      """.formatted(expression));
+
+    assertThat(recursiveBodiesForIndependent(document)).isZero();
+  }
+
+  @Test
+  void localDeclarationShadowsTheModuleVariable() {
+    var document = document("""
+      Var Unrelated;
+      Procedure Initialize()
+        Unrelated = Recursive();
+      EndProcedure
+      Function Recursive()
+        Return 1;
+      EndFunction
+      Function Independent()
+        Var Unrelated;
+        Unrelated = "ready";
+        Return Unrelated;
+      EndFunction
+      """);
+
+    assertThat(recursiveBodiesForIndependent(document)).isZero();
+  }
+
+  @Test
+  void variableUsedInsideAnIndexExpressionKeepsItsWriters() {
+    var source = """
+      Var Unrelated;
+      Procedure Initialize()
+        Unrelated = Recursive();
+      EndProcedure
+      Function Recursive()
+        Return 0;
+      EndFunction
+      Function Independent()
+        Receiver = New Array;
+        Receiver.Add("ready");
+        Result = Receiver[Unrelated];
+        Return Result;
+      EndFunction
+      """;
+    var document = document(source);
+    var line = source.substring(0, source.indexOf("Result = Receiver[")).lines().count() - 1;
+
+    assertThat(typeService.expressionTypesAt(document,
+      new Position((int) line, "  Result = Receiver[".length() + 1)).refs())
+      .extracting(TypeRef::qualifiedName).contains("Число");
+  }
+
+  private int recursiveBodiesForIndependent(DocumentContext document) {
     var method = document.getSymbolTree().getMethodSymbol("Independent").orElseThrow();
     ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
     var original = (ReturnTypeFromBodyInference) ReflectionTestUtils.getField(target, "returnTypeFromBodyInference");
@@ -100,8 +156,7 @@ class ModuleVariableVisibilityTest extends AbstractServerContextAwareTest {
     try {
       assertThat(inferencer.computeReturnTypes(method).types().refs())
         .extracting(TypeRef::qualifiedName).containsExactly("Строка");
-      assertThat(unrelatedCalls).as("unrelated module-state writers must not participate in a local-only result")
-        .hasValue(0);
+      return unrelatedCalls.get();
     } finally {
       ReflectionTestUtils.setField(target, "returnTypeFromBodyInference", original);
     }
