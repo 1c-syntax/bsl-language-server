@@ -163,12 +163,70 @@ class ModuleVariableVisibilityTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void forCounterDefinesTheModuleVariable() {
+    var document = document("""
+      Var Counter;
+      Procedure Write()
+        For Counter = 1 To 3 Do
+        EndDo;
+      EndProcedure
+      Function Read()
+        Result = Counter;
+        Return Result;
+      EndFunction
+      """);
+
+    assertThat(inferencer.computeReturnTypes(document.getSymbolTree().getMethodSymbol("Read").orElseThrow())
+      .types().refs()).extracting(TypeRef::qualifiedName).contains("Число");
+  }
+
+  @Test
+  void foreachBindingDefinesTheModuleVariable() {
+    var document = document("""
+      Var Item;
+      Procedure Write()
+        For Each Item In New Structure("Key", 1) Do
+        EndDo;
+      EndProcedure
+      Function Read()
+        Result = Item;
+        Return Result;
+      EndFunction
+      """);
+
+    assertThat(inferencer.computeReturnTypes(document.getSymbolTree().getMethodSymbol("Read").orElseThrow())
+      .types().refs()).extracting(TypeRef::qualifiedName).contains("КлючИЗначение");
+  }
+
+  @Test
+  void nonMutatingCallStatementKeepsTheModuleReceiver() {
+    var source = """
+      Var Shared;
+      Procedure Write()
+        Shared = New Structure("Key", 1);
+      EndProcedure
+      Procedure Read()
+        Shared.Count();
+      EndProcedure
+      """;
+    var document = document(source);
+    var line = source.substring(0, source.indexOf("Shared.Count")).lines().count() - 1;
+    var shared = document.getSymbolTree().getModuleVariableVisibleFromMethods("Shared").orElseThrow();
+
+    assertThat(typeService.typesOfVariableAt(shared, new Position((int) line, 3)).refs())
+      .extracting(TypeRef::qualifiedName).contains("Структура");
+  }
+
+  @Test
   void moduleVariableReadsAreCaseInsensitive() {
     var document = document("""
       Var Shared;
       Procedure Initialize()
-        Shared = "ready";
+        Shared = StringValue();
       EndProcedure
+      Function StringValue()
+        Return "ready";
+      EndFunction
       Function Read()
         Result = sHaReD;
         Return Result;

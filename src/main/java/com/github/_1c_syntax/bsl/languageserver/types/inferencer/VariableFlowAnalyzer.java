@@ -691,8 +691,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
         session.growingCells.sort(Comparator.comparing(VariableSymbol::getName, String.CASE_INSENSITIVE_ORDER));
       }
       grow(documentContext, session.growingCells, inputs);
-      if (inputs.cacheable() && !inputs.sawMissing().getAsBoolean()
-        && (complete == null || complete.getAsBoolean())) {
+      if (canPublishCells(inputs, complete)) {
         session.growingCells.forEach(variable -> settled.putIfAbsent(variable, session.cells.get(variable)));
       }
     } finally {
@@ -702,6 +701,12 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       }
       session.cellsChanged.run();
     }
+  }
+
+  /** Проверить полноту входных данных перед публикацией общих ячеек. */
+  private static boolean canPublishCells(FlowInputs inputs, @Nullable BooleanSupplier complete) {
+    return inputs.cacheable() && !inputs.sawMissing().getAsBoolean()
+      && (complete == null || complete.getAsBoolean());
   }
 
   /** Общие переменные, к которым обращается тело. */

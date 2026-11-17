@@ -1739,7 +1739,7 @@ public class ExpressionTypeInferencer {
         .computeIfAbsent(target, key -> new Lazy<>(() -> propertyMethodInference.outParameterCallsOf(key)))
         .getOrCompute();
     var owner = variable.getOwner();
-    Map<BSLParser.CodeBlockContext, List<VariableSymbol>> variablesByBody = new IdentityHashMap<>();
+    var variablesByBody = new IdentityHashMap<BSLParser.CodeBlockContext, List<VariableSymbol>>();
     return new VariableFlowAnalyzer.FlowInputs(
       ctx.flowSession,
       ctx.flowBodiesRead::add,
