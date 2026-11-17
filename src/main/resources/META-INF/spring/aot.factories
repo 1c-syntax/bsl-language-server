@@ -1,0 +1,2 @@
+org.springframework.beans.factory.aot.BeanRegistrationAotProcessor=\
+com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScopedProxyBeanRegistrationAotProcessor

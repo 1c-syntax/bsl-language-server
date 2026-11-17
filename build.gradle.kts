@@ -9,7 +9,9 @@ plugins {
     `java-library`
     `maven-publish`
     jacoco
-    id("org.graalvm.buildtools.native") version "1.1.19"
+    // Подключается только с -Pnative (см. ниже): иначе Spring Boot добавляет AOT-обработку
+    // (processAot/processTestAot) в обычные build и test.
+    id("org.graalvm.buildtools.native") version "1.1.19" apply false
     id("com.diffplug.spotless") version "7.0.4"
     // git-versioning 7 подтягивает JGit 7 без GpgObjectSigner и ломает JReleaser 1.26.0.
     // Остаёмся на 6.4.4 до поддержки JGit 7 в JReleaser 2.x.
@@ -183,6 +185,8 @@ dependencies {
     // test utils
     testImplementation("com.github.hazendaz.jmockit:jmockit:2.3.0")
     testImplementation("org.awaitility:awaitility:4.3.0")
+    // TestCompiler/TestGenerationContext для проверки AOT-обработки контекста
+    testImplementation("org.springframework:spring-core-test")
 
     // архитектурные тесты (проверка конвенций именования/аннотаций/зависимостей)
     testImplementation("com.tngtech.archunit:archunit-junit6:1.5.1")
@@ -223,17 +227,22 @@ tasks.named<org.springframework.boot.gradle.tasks.bundling.BootBuildImage>("boot
     imageName.set("docker.io/1csyntax/bsl-language-server:${project.version}")
 }
 
-graalvmNative {
-    binaries {
-        named("main") {
-            imageName.set("bsl-language-server")
-            // При подключённом java-library плагин по умолчанию собирает разделяемую библиотеку.
-            sharedLibrary.set(false)
-            mainClass.set("com.github._1c_syntax.bsl.languageserver.MainApplication")
-            buildArgs.addAll(
-                "--no-fallback",
-                "-H:+ReportExceptionStackTraces"
-            )
+// Сборка native-image: ./gradlew nativeCompile -Pnative (нужен GraalVM, GRAALVM_HOME).
+if (providers.gradleProperty("native").isPresent) {
+    apply(plugin = "org.graalvm.buildtools.native")
+
+    configure<org.graalvm.buildtools.gradle.dsl.GraalVMExtension> {
+        binaries {
+            named("main") {
+                imageName.set("bsl-language-server")
+                // При подключённом java-library плагин по умолчанию собирает разделяемую библиотеку.
+                sharedLibrary.set(false)
+                mainClass.set("com.github._1c_syntax.bsl.languageserver.MainApplication")
+                buildArgs.addAll(
+                    "--no-fallback",
+                    "-H:+ReportExceptionStackTraces"
+                )
+            }
         }
     }
 }
