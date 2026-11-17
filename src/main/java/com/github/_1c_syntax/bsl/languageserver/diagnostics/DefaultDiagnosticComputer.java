@@ -26,7 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.GitBlameComputer;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticsConfiguration;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticsSelector;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.Diagnostic;
@@ -58,7 +58,7 @@ public class DefaultDiagnosticComputer implements DiagnosticComputer {
   @Qualifier("diagnosticComputerExecutor")
   private final ExecutorService executor;
 
-  private final DiagnosticsConfiguration diagnosticsConfiguration;
+  private final DiagnosticsSelector diagnosticsSelector;
 
   @Override
   public List<Diagnostic> compute(DocumentContext documentContext) {
@@ -72,7 +72,7 @@ public class DefaultDiagnosticComputer implements DiagnosticComputer {
       ? GitBlameComputer.Data.empty()
       : new GitBlameComputer(documentContext.getUri(), ignoredAuthors).compute();
 
-    var futures = diagnostics(documentContext).stream()
+    var futures = diagnosticsSelector.select(documentContext).stream()
       .map((BSLDiagnostic diagnostic) ->
         executor.submit(() -> safeGetDiagnostics(diagnostic, documentContext)))
       .toList();
@@ -108,9 +108,5 @@ public class DefaultDiagnosticComputer implements DiagnosticComputer {
     } catch (ExecutionException e) {
       throw new IllegalStateException("Error computing diagnostics", e);
     }
-  }
-
-  private List<BSLDiagnostic> diagnostics(DocumentContext documentContext) {
-    return diagnosticsConfiguration.diagnostics(documentContext);
   }
 }
