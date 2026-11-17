@@ -482,12 +482,12 @@ public class ReferenceIndex {
     }
 
     return getSourceDefinedSymbol(serverContext, symbolOccurrence.symbol())
-      .map((SourceDefinedSymbol symbol) -> {
-        var from = getFromSymbol(serverContext, symbolOccurrence);
-        var range = symbolOccurrence.range();
-        var occurrenceType = symbolOccurrence.occurrenceType();
-        return new Reference(from, symbol, uri, range, occurrenceType);
-      })
+      .flatMap((SourceDefinedSymbol symbol) -> getFromSymbol(serverContext, symbolOccurrence)
+        .map((SourceDefinedSymbol from) -> {
+          var range = symbolOccurrence.range();
+          var occurrenceType = symbolOccurrence.occurrenceType();
+          return new Reference(from, symbol, uri, range, occurrenceType);
+        }))
       .filter(ReferenceAccessibility::isAccessible);
   }
 
@@ -505,12 +505,12 @@ public class ReferenceIndex {
     }
     return selfMemberResolver
       .resolveSelfMember(document, occurrence.symbol().symbolKind(), occurrence.symbol().symbolName())
-      .map(memberSymbol -> new Reference(
-        getFromSymbol(serverContext, occurrence),
+      .flatMap(memberSymbol -> getFromSymbol(serverContext, occurrence).map((SourceDefinedSymbol from) -> new Reference(
+        from,
         memberSymbol,
         occurrence.uri(),
         occurrence.range(),
-        occurrence.occurrenceType()));
+        occurrence.occurrenceType())));
   }
 
   private static Optional<SourceDefinedSymbol> getSourceDefinedSymbol(ServerContext serverContext, Symbol symbolEntity) {
@@ -542,14 +542,15 @@ public class ReferenceIndex {
       .flatMap(symbolTree -> symbolTree.getMethodSymbol(symbolName));
   }
 
-  private static SourceDefinedSymbol getFromSymbol(ServerContext serverContext, SymbolOccurrence symbolOccurrence) {
+  private static Optional<SourceDefinedSymbol> getFromSymbol(ServerContext serverContext,
+                                                            SymbolOccurrence symbolOccurrence) {
     var uri = symbolOccurrence.uri();
     var position = symbolOccurrence.startPosition();
 
+    // Вхождение могло попасть в снимок запроса до удаления документа и очистки индекса.
     return Optional.ofNullable(serverContext.getDocumentNoLock(uri))
       .map(DocumentContext::getSymbolTree)
-      .map(symbolTree -> symbolTree.getSymbolAtPosition(position))
-      .orElseThrow();
+      .map(symbolTree -> symbolTree.getSymbolAtPosition(position));
   }
 
 }
