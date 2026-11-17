@@ -9,6 +9,7 @@ plugins {
     `java-library`
     `maven-publish`
     jacoco
+    id("org.graalvm.buildtools.native") version "1.1.19"
     id("com.diffplug.spotless") version "7.0.4"
     // git-versioning 7 подтягивает JGit 7 без GpgObjectSigner и ломает JReleaser 1.26.0.
     // Остаёмся на 6.4.4 до поддержки JGit 7 в JReleaser 2.x.
@@ -127,6 +128,12 @@ dependencies {
 
     // AOP
     implementation("org.aspectj:aspectjrt:1.9.27")
+    // Spring AOT разбирает pointcut-выражения @Aspect-бинов через PointcutParser из weaver'а,
+    // а AOT-сгенерированные advisor'ы (кэш, Sentry) требуют AspectJExpressionPointcut в рантайме.
+    // Classpath AOT-обработки и рантайма должны совпадать, поэтому weaver — в implementation.
+    // Наши аспекты вплетаются CTW (io.freefair.aspectj.post-compile-weaving); Spring AOP
+    // пропускает классы, скомпилированные ajc, и повторно их не проксирует.
+    implementation("org.aspectj:aspectjweaver:1.9.27")
 
     // commons utils
     implementation("commons-io:commons-io:2.22.0")
@@ -214,6 +221,19 @@ tasks.bootJar {
 
 tasks.named<org.springframework.boot.gradle.tasks.bundling.BootBuildImage>("bootBuildImage") {
     imageName.set("docker.io/1csyntax/bsl-language-server:${project.version}")
+}
+
+graalvmNative {
+    binaries {
+        named("main") {
+            imageName.set("bsl-language-server")
+            mainClass.set("com.github._1c_syntax.bsl.languageserver.MainApplication")
+            buildArgs.addAll(
+                "--no-fallback",
+                "-H:+ReportExceptionStackTraces"
+            )
+        }
+    }
 }
 
 afterEvaluate {
