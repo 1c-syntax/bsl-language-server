@@ -23,9 +23,16 @@ package com.github._1c_syntax.bsl.languageserver.aop;
 
 import com.github._1c_syntax.bsl.languageserver.aop.measures.ConditionalOnMeasuresEnabled;
 import org.aspectj.lang.Aspects;
+import org.jspecify.annotations.Nullable;
+import org.springframework.aot.hint.MemberCategory;
+import org.springframework.aot.hint.RuntimeHints;
+import org.springframework.aot.hint.RuntimeHintsRegistrar;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.ImportRuntimeHints;
 import org.springframework.context.annotation.Lazy;
+
+import java.util.stream.Stream;
 
 /**
  * Конфигурация фреймворка AspectJ.
@@ -33,7 +40,21 @@ import org.springframework.context.annotation.Lazy;
  * Каждый аспект с compile-time weaving должен быть объявлен как {@link Bean}.
  */
 @Configuration
+@ImportRuntimeHints(AspectJConfiguration.AspectsRuntimeHints.class)
 public class AspectJConfiguration {
+
+  /**
+   * Подсказки для native-image: экземпляры аспектов получаются рефлексивным вызовом
+   * статического {@code aspectOf()}, который добавляет ajc при compile-time weaving.
+   */
+  static class AspectsRuntimeHints implements RuntimeHintsRegistrar {
+
+    @Override
+    public void registerHints(RuntimeHints hints, @Nullable ClassLoader classLoader) {
+      Stream.of(EventPublisherAspect.class, SentryAspect.class, MeasuresAspect.class)
+        .forEach(aspectClass -> hints.reflection().registerType(aspectClass, MemberCategory.INVOKE_PUBLIC_METHODS));
+    }
+  }
 
   /**
    * @return Основной аспект подсистемы событий.
