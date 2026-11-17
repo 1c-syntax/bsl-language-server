@@ -72,14 +72,13 @@ final class VariableFlowPass {
   private FlowEnvironment entry;
 
   /**
-   * Окружение, с которым управление покидает тело: объединение значений перед каждым
-   * вызовом. Нужно переменным, видимым другим телам: вызванный метод застаёт их
-   * такими, какими они были в точке вызова.
+   * Значения перед каждым вызовом. Вместе с выходным окружением дают значения переменных
+   * по всей области видимости, в том числе локальных переменных в их объявлении.
    */
   private FlowEnvironment leaving = FlowEnvironment.EMPTY;
   private FlowEnvironment lastLeavingInput = FlowEnvironment.EMPTY;
   /** Изменившиеся после предыдущего вызова переменные; на входе в вершину учитываются все. */
-  private final @Nullable BitSet changedForLeaving;
+  private final BitSet changedForLeaving;
 
   /** Посчитанное окружение на выходе вершины и вход, для которого он посчитан. */
   private final Map<CfgVertex, FlowEnvironment> outputsByVertex = new IdentityHashMap<>();
@@ -107,7 +106,7 @@ final class VariableFlowPass {
         shared.add(i);
       }
     }
-    changedForLeaving = shared.isEmpty() ? null : new BitSet(bodyVariables.variables().size());
+    changedForLeaving = new BitSet(bodyVariables.variables().size());
   }
 
   /**
@@ -266,9 +265,7 @@ final class VariableFlowPass {
    * перед каждым из них: пока идут проходы, отсюда отвечают вложенные запросы.
    */
   private FlowEnvironment applyStatements(CfgVertex vertex, FlowEnvironment incoming) {
-    if (changedForLeaving != null) {
-      changedForLeaving.set(0, bodyVariables.variables().size());
-    }
+    changedForLeaving.set(0, bodyVariables.variables().size());
     var current = incoming;
     for (var statement : layout.statementsOf(vertex)) {
       beforeStatement.put(statement, current);
@@ -292,7 +289,7 @@ final class VariableFlowPass {
           ? assignments.at(change, statement, beforeStatement, inputs.assigned())
           : inputs.mutations().apply(variable, change.position(), current.get(change.index()));
         var changed = current.with(change.index(), updated, bodyVariables.variables().size());
-        if (changedForLeaving != null && changed != current) {
+        if (changed != current) {
           changedForLeaving.set(change.index());
         }
         current = changed;
@@ -302,8 +299,8 @@ final class VariableFlowPass {
   }
 
   /**
-   * Вернуть к объединению по области видимости переменные, видимые другим телам,
-   * если оператор содержит вызов.
+   * Запомнить значения перед вызовом и вернуть к объединению по области видимости
+   * переменные, видимые другим телам, если оператор содержит вызов.
    * <p>
    * Вызванный метод мог присвоить такой переменной что угодно, поэтому дальше по коду
    * известно только объединение по области видимости — оно же входной факт. Присваивание в самом
@@ -321,15 +318,16 @@ final class VariableFlowPass {
     @Nullable List<Change> changes,
     FlowEnvironment current
   ) {
-    var changed = changedForLeaving;
-    if (changed == null || !layout.hasCall(statement)) {
+    if (!layout.hasCall(statement)) {
       return current;
     }
-    // То, что переменная содержит перед вызовом, вызванный метод видит — значит это
-    // часть её значения на входе в другие тела, наравне со значением на выходе.
+    // Значения перед вызовом входят в объединение по области видимости независимо
+    // от того, есть ли в этом теле общие переменные.
+    var changed = changedForLeaving;
     leaving = leaving.union(current, lastLeavingInput, changed);
     lastLeavingInput = current;
     changed.clear();
+
     var result = current;
     for (var index : shared) {
       if (assignedBy(changes, index)) {
