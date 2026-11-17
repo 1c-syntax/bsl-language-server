@@ -162,13 +162,16 @@ public class EventPublisherAspect {
     }
   }
 
+  // Перехватывается метод документа, а не ServerContext.refreshSymbolTree: он возвращается, пока
+  // вызывающий ещё держит блокировку документа на запись, и слушатели, читающие дерево разбора,
+  // успевают отработать раньше, чем другой писатель освободит документ.
   @AfterReturning(
-    pointcut = "Pointcuts.isServerContext() && Pointcuts.isRefreshSymbolTreeCall() && args(documentContext)",
+    pointcut = "Pointcuts.isDocumentContext() && Pointcuts.isRefreshSymbolTreeCall()",
     returning = "symbolTreeRebuilt"
   )
-  public void documentContextSymbolTreeRefreshed(DocumentContext documentContext, boolean symbolTreeRebuilt) {
+  public void documentContextSymbolTreeRefreshed(JoinPoint joinPoint, boolean symbolTreeRebuilt) {
     if (symbolTreeRebuilt) {
-      publishEvent(new DocumentContextSymbolTreeRebuiltEvent(documentContext));
+      publishEvent(new DocumentContextSymbolTreeRebuiltEvent((DocumentContext) joinPoint.getThis()));
     }
   }
 

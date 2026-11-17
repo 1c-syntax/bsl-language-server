@@ -51,6 +51,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -206,8 +207,11 @@ class BorrowedDocumentModulesLockTest extends AbstractServerContextAwareTest {
       await().pollInSameThread().atMost(Duration.ofSeconds(30)).untilAsserted(() -> {
         assertThat(extension.getSymbolTree().getBasis().bareSelfProperties()).contains(LATE_VARIABLE);
         assertLateVariableRefersToMainModule(extension, extensionContent);
-        // Об этом сказано перестройкой дерева; изменение текста было одно — правка расширения.
-        assertThat(events).hasAtLeastOneElementOfType(DocumentContextSymbolTreeRebuiltEvent.class);
+        // Об этом сказано перестройкой дерева — под блокировкой документа; изменение текста было
+        // одно — правка расширения.
+        assertThat(events)
+          .hasAtLeastOneElementOfType(DocumentContextSymbolTreeRebuiltEvent.class)
+          .doesNotHaveAnyElementsOfTypes(TreeRebuiltOutsideLock.class);
         assertThat(events)
           .filteredOn(DocumentContextContentChangedEvent.class::isInstance)
           .map(DocumentContextContentChangedEvent.class::cast)
@@ -245,7 +249,9 @@ class BorrowedDocumentModulesLockTest extends AbstractServerContextAwareTest {
         assertThat(extension.getSymbolTree().getBasis().bareSelfProperties()).contains(LATE_VARIABLE);
         assertLateVariableRefersToMainModule(extension, extensionContent);
         assertThat(context.getDocumentState(extension)).isEqualTo(DocumentState.WITHOUT_CONTENT);
-        assertThat(events).hasAtLeastOneElementOfType(DocumentContextSymbolTreeRebuiltEvent.class);
+        assertThat(events)
+          .hasAtLeastOneElementOfType(DocumentContextSymbolTreeRebuiltEvent.class)
+          .doesNotHaveAnyElementsOfTypes(TreeRebuiltOutsideLock.class);
         assertThat(events)
           .filteredOn(DocumentContextContentChangedEvent.class::isInstance)
           .map(DocumentContextContentChangedEvent.class::cast)
@@ -343,7 +349,9 @@ class BorrowedDocumentModulesLockTest extends AbstractServerContextAwareTest {
 
   /**
    * Записывает события изменения содержимого и перестройки дерева, источник которых —
-   * документ, пока запись не закрыта.
+   * документ, пока запись не закрыта. Событие перестройки обязано приходить, пока публикующий
+   * поток держит блокировку документа на запись: слушатели читают дерево разбора, и писатель,
+   * освобождающий документ под этой блокировкой, не должен отнять его посреди их работы.
    */
   private AutoCloseable recordEvents(DocumentContext document, List<ApplicationEvent> events) {
     ApplicationListener<ApplicationEvent> listener = (ApplicationEvent event) -> {
@@ -352,12 +360,24 @@ class BorrowedDocumentModulesLockTest extends AbstractServerContextAwareTest {
         case DocumentContextSymbolTreeRebuiltEvent rebuilt -> rebuilt.getSource();
         default -> null;
       };
-      if (source == document) {
-        events.add(event);
+      if (source != document) {
+        return;
+      }
+      events.add(event);
+      var lock = (ReentrantReadWriteLock) context.getDocumentLock(document.getUri());
+      if (event instanceof DocumentContextSymbolTreeRebuiltEvent && !lock.isWriteLockedByCurrentThread()) {
+        events.add(new TreeRebuiltOutsideLock(document));
       }
     };
     applicationContext.addApplicationListener(listener);
     return () -> applicationContext.removeApplicationListener(listener);
+  }
+
+  /** Отметка о событии перестройки дерева, опубликованном без блокировки документа. */
+  private static final class TreeRebuiltOutsideLock extends ApplicationEvent {
+    TreeRebuiltOutsideLock(DocumentContext source) {
+      super(source);
+    }
   }
 
   private DocumentContext document(String path) {
