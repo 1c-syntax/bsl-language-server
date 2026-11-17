@@ -226,14 +226,11 @@ public class ReferenceIndexFiller {
   /**
    * Приёмник обращений к символам, найденных файндерами при обходе AST:
    * копит построенные вхождения в буфер для последующей атомарной публикации.
-   * Всё временное состояние, включая интернер локальных ключей, принадлежит одному наполнению документа.
    */
-  @SuppressWarnings("java:S2972")
   @RequiredArgsConstructor
   private final class BatchingSink {
 
     private final List<SymbolOccurrence> batch;
-    private @Nullable GenericInterner<Symbol> localVariableInterner;
 
     void addMethodCall(URI uri, String mdoRef, ModuleType moduleType, String symbolName, Range range) {
       batch.add(index.methodCallOccurrence(uri, mdoRef, moduleType, symbolName, range));
@@ -243,26 +240,8 @@ public class ReferenceIndexFiller {
       batch.add(index.moduleReferenceOccurrence(uri, mdoRef, moduleType, range));
     }
 
-    void addVariableUsage(URI uri, String mdoRef, ModuleType moduleType, String methodName,
-                          String variableName, Range range, OccurrenceType occurrenceType) {
-      if (methodName.isEmpty()) {
-        batch.add(index.variableOccurrence(uri, mdoRef, moduleType, methodName, variableName, range, occurrenceType));
-        return;
-      }
-
-      var interner = localVariableInterner;
-      if (interner == null) {
-        interner = new GenericInterner<>();
-        locationRepository.getSymbolOccurrencesByLocationUri(uri)
-          .map(SymbolOccurrence::symbol)
-          .filter(symbol -> symbol.symbolKind() == SymbolKind.Variable && !symbol.scopeName().isEmpty()
-            && !ReferenceIndex.SELF_MEMBER_SCOPE.equals(symbol.scopeName()))
-          .forEach(interner::intern);
-        localVariableInterner = interner;
-      }
-
-      var symbol = index.variableSymbol(mdoRef, moduleType, methodName, variableName);
-      batch.add(index.variableOccurrence(uri, symbol, range, occurrenceType, interner));
+    void addVariableUsage(SymbolOccurrence occurrence) {
+      batch.add(occurrence);
     }
 
     void addSelfMemberUsage(URI uri, String mdoRef, ModuleType moduleType, SymbolKind symbolKind,
@@ -649,6 +628,7 @@ public class ReferenceIndexFiller {
     private final Map<String, String> variableToCommonModuleMap = new HashMap<>();
     /** variable name (lowercase) → URI .os-файла library-класса, на экземпляр которого переменная инициализирована. */
     private final Map<String, String> variableToLibraryClassUriMap = new HashMap<>();
+    private @Nullable GenericInterner<Symbol> localVariableInterner;
 
     private VariableSymbolReferenceIndexFinder(DocumentContext documentContext, BatchingSink sink) {
       this.documentContext = documentContext;
@@ -941,15 +921,33 @@ public class ReferenceIndexFiller {
         methodName = methodSymbol.get().getName();
       }
 
-      sink.addVariableUsage(
-        documentContext.getUri(),
-        documentContext.getMdoRef(),
-        documentContext.getModuleType(),
-        methodName,
-        variableName,
-        range,
-        usage ? OccurrenceType.REFERENCE : OccurrenceType.DEFINITION
-      );
+      sink.addVariableUsage(variableOccurrence(methodName, variableName, range,
+        usage ? OccurrenceType.REFERENCE : OccurrenceType.DEFINITION));
+    }
+
+    /** Канонизирует локальные ключи в пределах одного обхода переменных документа. */
+    private SymbolOccurrence variableOccurrence(String methodName, String variableName, Range range,
+                                                OccurrenceType occurrenceType) {
+      var uri = documentContext.getUri();
+      var mdoRef = documentContext.getMdoRef();
+      var moduleType = documentContext.getModuleType();
+      if (methodName.isEmpty()) {
+        return index.variableOccurrence(uri, mdoRef, moduleType, methodName, variableName, range, occurrenceType);
+      }
+
+      var interner = localVariableInterner;
+      if (interner == null) {
+        interner = new GenericInterner<>();
+        locationRepository.getSymbolOccurrencesByLocationUri(uri)
+          .map(SymbolOccurrence::symbol)
+          .filter(symbol -> symbol.symbolKind() == SymbolKind.Variable && !symbol.scopeName().isEmpty()
+            && !ReferenceIndex.SELF_MEMBER_SCOPE.equals(symbol.scopeName()))
+          .forEach(interner::intern);
+        localVariableInterner = interner;
+      }
+
+      var symbol = index.variableSymbol(mdoRef, moduleType, methodName, variableName);
+      return index.variableOccurrence(uri, symbol, range, occurrenceType, interner);
     }
 
     private void processCommonModuleMethodCalls(List<? extends BSLParser.ModifierContext> modifiers, String mdoRef) {
