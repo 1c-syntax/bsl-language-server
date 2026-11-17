@@ -86,8 +86,10 @@ stdio/SSE/Streamable HTTP, либо флагом `--mcp` рядом с `lsp`/`we
 - **Spring DI и скоупы бинов.** Различай три уровня: *синглтоны приложения*
   (`ServerContextProvider`, `GlobalLanguageServerConfiguration`, LSP-сервисы); **`@WorkspaceScope`**
   — **по одному экземпляру на каждый workspace** (`ServerContext`, `ReferenceIndex`, `TypeRegistry`,
-  `DiagnosticInfos`, индексы типов, per-workspace конфиг и executor'ы); *prototype* — `DocumentContext`
-  (по экземпляру на документ).
+  `DiagnosticInfos`, индексы типов, per-workspace конфиг и executor'ы); *prototype* — диагностики.
+  `DocumentContext` — не бин: по экземпляру на документ его создаёт синглтон `DocumentContextFactory`,
+  передавая зависимости через конструктор. Prototype-бины с аргументами (`ObjectProvider.getObject(args)`)
+  не используй: в AOT/native при явных аргументах Spring не вызывает `@Autowired`-сеттеры.
 - **Multi-workspace.** `ServerContextProvider` держит `URI → ServerContext` (по папке workspace) и
   индекс документов для O(1) поиска. «Текущий» workspace выбирается через **thread-local**
   `WorkspaceContextHolder` (а не передаётся параметром); CGLIB-прокси workspace-бина резолвит
