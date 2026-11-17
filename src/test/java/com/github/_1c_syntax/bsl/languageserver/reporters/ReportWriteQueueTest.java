@@ -21,8 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -99,6 +105,37 @@ class ReportWriteQueueTest {
       release.countDown();
       producer.join();
     }
+  }
+
+  /**
+   * Задача видит workspace-контекст того потока, который её поставил, — иначе workspace-scoped
+   * бины (например, {@code DiagnosticInfos}) в потоке записи не резолвятся. Контекст снимается
+   * на каждую задачу отдельно: поток очереди общий, а постановщики могут быть из разных workspace.
+   */
+  @Test
+  void propagatesWorkspaceContextOfSubmitterToTask() throws InterruptedException {
+    var firstWorkspace = URI.create("file:///report-write-queue/first/");
+    var secondWorkspace = URI.create("file:///report-write-queue/second/");
+    List<@Nullable URI> observed = Collections.synchronizedList(new ArrayList<>());
+    Runnable recordWorkspace = () -> observed.add(WorkspaceContextHolder.get());
+
+    WorkspaceContextHolder.registerWorkspace(firstWorkspace, "first");
+    WorkspaceContextHolder.registerWorkspace(secondWorkspace, "second");
+    try (var queue = new ReportWriteQueue("test")) {
+      // свежий поток: контекст потока теста мог остаться от предыдущих тестов этого форка
+      var producer = new Thread(() -> {
+        WorkspaceContextHolder.run(firstWorkspace, () -> queue.submit(recordWorkspace));
+        WorkspaceContextHolder.run(secondWorkspace, () -> queue.submit(recordWorkspace));
+        queue.submit(recordWorkspace);
+      });
+      producer.start();
+      producer.join();
+    } finally {
+      WorkspaceContextHolder.unregisterWorkspace(firstWorkspace);
+      WorkspaceContextHolder.unregisterWorkspace(secondWorkspace);
+    }
+
+    assertThat(observed).containsExactly(firstWorkspace, secondWorkspace, null);
   }
 
   @Test

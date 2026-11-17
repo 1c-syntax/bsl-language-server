@@ -25,17 +25,20 @@ import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import lombok.experimental.UtilityClass;
 
 import java.nio.file.Path;
+import java.util.List;
 
 /**
  * Прогон полного жизненного цикла репортёра по готовому {@link AnalysisInfo}.
  * <p>
  * Тестам удобно задавать результаты анализа целиком, тогда как репортёр принимает их по одному.
+ * Результаты передаются через {@link ReportSession}, как и при реальном анализе: запись идёт
+ * в потоке очереди записи, а не в потоке теста.
  */
 @UtilityClass
 class ReporterTestDriver {
 
   /**
-   * Сформировать отчёт: открыть, передать результаты по одному, завершить.
+   * Сформировать отчёт: открыть, передать результаты по одному через сессию, завершить.
    *
    * @param reporter     репортёр
    * @param analysisInfo результаты анализа
@@ -43,7 +46,9 @@ class ReporterTestDriver {
    */
   static void report(DiagnosticReporter reporter, AnalysisInfo analysisInfo, Path outputDir) {
     reporter.beginReport(new ReportContext(analysisInfo.date(), analysisInfo.sourceDir()), outputDir);
-    analysisInfo.fileinfos().forEach(reporter::accept);
-    reporter.endReport();
+    try (var session = new ReportSession(List.of(reporter))) {
+      analysisInfo.fileinfos().forEach(session::accept);
+      session.commit();
+    }
   }
 }

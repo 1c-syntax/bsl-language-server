@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
+import io.micrometer.context.ContextSnapshotFactory;
+
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
@@ -30,6 +32,9 @@ import java.util.concurrent.atomic.AtomicReference;
  * <p>
  * Все переданные задачи исполняет один и тот же поток, поэтому код записи может работать с
  * состоянием (генератором, буфером) без синхронизации: конкурентных вызовов не бывает.
+ * Контекст потока-постановщика (в том числе workspace из
+ * {@link com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder})
+ * переносится в поток очереди для каждой задачи отдельно.
  * <p>
  * {@link #submit} не ждёт ни выполнения задачи, ни освобождения места: анализ только ставит
  * запись в очередь и продолжается. Плата за это — очередь не ограничена. Пока запись успевает
@@ -45,6 +50,8 @@ final class ReportWriteQueue implements AutoCloseable {
   private static final Runnable POISON = () -> {
     // маркер завершения: до исполнения не доходит
   };
+
+  private static final ContextSnapshotFactory SNAPSHOT_FACTORY = ContextSnapshotFactory.builder().build();
 
   private final BlockingQueue<Runnable> queue;
   private final Thread worker;
@@ -66,11 +73,19 @@ final class ReportWriteQueue implements AutoCloseable {
 
   /**
    * Поставить задачу записи в очередь и сразу вернуть управление.
+   * <p>
+   * Задача исполняется с контекстом (ThreadLocal-значениями, зарегистрированными в Micrometer
+   * Context Propagation, — в том числе текущим workspace), снятым в потоке, вызвавшем этот метод.
    *
    * @param task задача; исполняется в потоке очереди
    */
   void submit(Runnable task) {
-    put(task);
+    var snapshot = SNAPSHOT_FACTORY.captureAll();
+    put(() -> {
+      try (var scope = snapshot.setThreadLocals()) {
+        task.run();
+      }
+    });
   }
 
   /**
