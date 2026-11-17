@@ -68,6 +68,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionT
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.MethodCallNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TernaryOperatorNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.UnaryOperationNode;
+import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.utils.Lazy;
@@ -97,6 +98,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.function.Function;
 
 /**
@@ -1737,6 +1739,7 @@ public class ExpressionTypeInferencer {
         .computeIfAbsent(target, key -> new Lazy<>(() -> propertyMethodInference.outParameterCallsOf(key)))
         .getOrCompute();
     var owner = variable.getOwner();
+    Map<BSLParser.CodeBlockContext, List<VariableSymbol>> variablesByBody = new IdentityHashMap<>();
     return new VariableFlowAnalyzer.FlowInputs(
       ctx.flowSession,
       ctx.flowBodiesRead::add,
@@ -1749,7 +1752,7 @@ public class ExpressionTypeInferencer {
       ctx.executionContext,
       body -> compilationContexts(body, owner, ctx),
       () -> ctx.sawMissing || ctx.failed,
-      body -> variablesOfBody(owner, body),
+      body -> variablesByBody.computeIfAbsent(body, key -> variablesOfBody(owner, key)),
       target -> target.getKind() == VariableKind.MODULE,
       declaredOf,
       this::definitionPositions,
@@ -1860,21 +1863,31 @@ public class ExpressionTypeInferencer {
       .orElse(module);
     var visible = new ArrayList<VariableSymbol>(symbolTree.getVariablesOfScope(scope));
     if (scope != module) {
-      addModuleVariables(symbolTree.getVariablesOfScope(module), visible);
+      addModuleVariables(symbolTree.getVariablesOfScope(module), visible, body);
     }
     return visible;
   }
 
   /**
-   * Добавить к набору переменные, объявленные {@code Перем} на уровне модуля: они видны из
-   * любого метода, а созданные присваиванием в теле модуля — нет.
+   * Добавить переменные, объявленные {@code Перем} на уровне модуля, чьи имена встречаются
+   * в идентификаторах тела. Переменные, созданные присваиванием в теле модуля, из методов
+   * не видны. Набор не зависит от готовности индекса ссылок.
    *
    * @param atModuleLevel переменные области видимости модуля.
    * @param target        набор, куда добавлять.
+   * @param body          тело метода.
    */
-  private static void addModuleVariables(List<VariableSymbol> atModuleLevel, List<VariableSymbol> target) {
+  private static void addModuleVariables(List<VariableSymbol> atModuleLevel, List<VariableSymbol> target,
+                                         BSLParser.CodeBlockContext body) {
+    if (atModuleLevel.isEmpty()) {
+      return;
+    }
+    Set<String> names = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+    for (var identifier : Trees.findAllTokenNodes(body, BSLLexer.IDENTIFIER)) {
+      names.add(identifier.getText());
+    }
     for (var candidate : atModuleLevel) {
-      if (candidate.getKind() == VariableKind.MODULE) {
+      if (candidate.getKind() == VariableKind.MODULE && names.contains(candidate.getName())) {
         target.add(candidate);
       }
     }

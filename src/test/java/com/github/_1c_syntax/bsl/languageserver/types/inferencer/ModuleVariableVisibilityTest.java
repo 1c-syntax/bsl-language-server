@@ -1,0 +1,174 @@
+/*
+ * This file is a part of BSL Language Server.
+ *
+ * Copyright (c) 2018-2026
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ *
+ * BSL Language Server is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3.0 of the License, or (at your option) any later version.
+ *
+ * BSL Language Server is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BSL Language Server.
+ */
+package com.github._1c_syntax.bsl.languageserver.types.inferencer;
+
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.types.TypeService;
+import com.github._1c_syntax.bsl.languageserver.types.index.InferredExpressionTypeIndex;
+import com.github._1c_syntax.bsl.languageserver.types.index.MethodReturnTypeIndexer;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.util.AopTestUtils;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.spy;
+
+@CleanupContextBeforeClassAndAfterClass
+@TestPropertySource(properties = "app.platform-context.enabled=false")
+class ModuleVariableVisibilityTest extends AbstractServerContextAwareTest {
+  @Autowired
+  private ExpressionTypeInferencer inferencer;
+  @Autowired
+  private VariableFlowAnalyzer analyzer;
+  @Autowired
+  private MethodReturnTypeIndexer indexer;
+  @Autowired
+  private InferredExpressionTypeIndex expressions;
+  @Autowired
+  private TypeService typeService;
+
+  @BeforeEach
+  void setUp() {
+    initServerContext();
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"ready", "Unrelated"})
+  void localResultDoesNotAnalyzeUnrelatedModuleState(String value) {
+    var document = document("""
+      Var Unrelated;
+      Procedure Initialize()
+        Unrelated = Recursive();
+      EndProcedure
+      Function Recursive()
+        Result = New Structure;
+        Result.Insert("Next", Recursive());
+        Return Result;
+      EndFunction
+      Function Independent()
+        // Unrelated is a name in a comment, not a variable read.
+        Result = "%s";
+        Return Result;
+      EndFunction
+      """.formatted(value));
+    var method = document.getSymbolTree().getMethodSymbol("Independent").orElseThrow();
+    ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
+    var original = (ReturnTypeFromBodyInference) ReflectionTestUtils.getField(target, "returnTypeFromBodyInference");
+    var counted = spy(original);
+    var unrelatedCalls = new AtomicInteger();
+    doAnswer(invocation -> {
+      var called = (MethodSymbol) invocation.getArgument(0);
+      if (called.getName().equals("Recursive")) {
+        unrelatedCalls.incrementAndGet();
+      }
+      return invocation.callRealMethod();
+    }).when(counted).of(any(), any(), any(), any());
+    ReflectionTestUtils.setField(target, "returnTypeFromBodyInference", counted);
+    try {
+      assertThat(inferencer.computeReturnTypes(method).types().refs())
+        .extracting(TypeRef::qualifiedName).containsExactly("Строка");
+      assertThat(unrelatedCalls).as("unrelated module-state writers must not participate in a local-only result")
+        .hasValue(0);
+    } finally {
+      ReflectionTestUtils.setField(target, "returnTypeFromBodyInference", original);
+    }
+  }
+
+  @Test
+  void moduleVariableReadsAreCaseInsensitive() {
+    var document = document("""
+      Var Shared;
+      Procedure Initialize()
+        Shared = "ready";
+      EndProcedure
+      Function Read()
+        Result = sHaReD;
+        Return Result;
+      EndFunction
+      """);
+
+    assertThat(inferencer.computeReturnTypes(document.getSymbolTree().getMethodSymbol("Read").orElseThrow())
+      .types().refs()).extracting(TypeRef::qualifiedName).contains("Строка");
+  }
+
+  @Test
+  void moduleVariableMutationsStillContributeToTheResult() {
+    var document = document("""
+      Var Shared;
+      Procedure Initialize()
+        Shared = New Structure;
+      EndProcedure
+      Function Read()
+        Shared.Insert("Answer", 42);
+        Result = Shared.Answer;
+        Return Result;
+      EndFunction
+      """);
+
+    assertThat(inferencer.computeReturnTypes(document.getSymbolTree().getMethodSymbol("Read").orElseThrow())
+      .types().refs()).extracting(TypeRef::qualifiedName).containsExactly("Число");
+  }
+
+  @Test
+  void unusedModuleStateRemainsAvailableAtItsDeclaration() {
+    var document = document("""
+      Var Shared;
+      Procedure WriteNumber()
+        Shared = 1;
+      EndProcedure
+      Function Independent()
+        Result = "ready";
+        Return Result;
+      EndFunction
+      Shared = False;
+      """);
+    assertThat(inferencer.computeReturnTypes(document.getSymbolTree().getMethodSymbol("Independent").orElseThrow())
+      .types().refs()).extracting(TypeRef::qualifiedName).containsExactly("Строка");
+    var shared = document.getSymbolTree().getVariablesOfScope(document.getSymbolTree().getModule()).stream()
+      .filter(variable -> variable.getName().equals("Shared")).findFirst().orElseThrow();
+
+    assertThat(typeService.typesOfVariableAt(shared, shared.getSelectionRange().getStart()).refs())
+      .extracting(TypeRef::qualifiedName).contains("Булево", "Число");
+  }
+
+  private DocumentContext document(String source) {
+    var document = TestUtils.getDocumentContext(source, context);
+    analyzer.clear(document.getUri());
+    indexer.clear(document.getUri());
+    expressions.clear(document.getUri());
+    return document;
+  }
+}
