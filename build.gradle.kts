@@ -227,6 +227,8 @@ graalvmNative {
     binaries {
         named("main") {
             imageName.set("bsl-language-server")
+            // При подключённом java-library плагин по умолчанию собирает разделяемую библиотеку.
+            sharedLibrary.set(false)
             mainClass.set("com.github._1c_syntax.bsl.languageserver.MainApplication")
             buildArgs.addAll(
                 "--no-fallback",
