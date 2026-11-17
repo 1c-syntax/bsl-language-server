@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextConfigurationBindingChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
@@ -73,10 +72,9 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class AnnotationReferenceFinder implements ReferenceFinder {
 
-  private final ServerContextProvider serverContextProvider;
   private final AnnotationRepository annotationRepository;
 
-  private final Map<URI, List<AnnotationPosition>> positionsByUri = new ConcurrentHashMap<>();
+  private final Map<URI, AnnotationPositions> positionsByUri = new ConcurrentHashMap<>();
 
   @EventListener
   public void handleContextRefresh(ServerContextPopulatedEvent event) {
@@ -110,13 +108,13 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
 
   @Override
   public Optional<Reference> findReference(URI uri, Position position) {
-    return serverContextProvider.getDocumentNoLock(uri)
-      .filter(document -> document.getFileType() == FileType.OS)
-      .flatMap(document -> positionsByUri.getOrDefault(uri, List.of()).stream()
+    return Optional.ofNullable(positionsByUri.get(uri))
+      .filter(snapshot -> snapshot.document().getFileType() == FileType.OS)
+      .flatMap(snapshot -> snapshot.positions().stream()
         .filter(candidate -> Ranges.containsPosition(candidate.range(), position))
         .findFirst()
         .flatMap(candidate -> resolveSymbol(candidate).map(symbol -> Reference.of(
-          document.getSymbolTree().getModule(), symbol,
+          snapshot.document().getSymbolTree().getModule(), symbol,
           new Location(uri.toString(), candidate.selectionRange())))));
   }
 
@@ -151,7 +149,7 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
         return null;
       }
     }.visit(document.getAst());
-    positionsByUri.put(document.getUri(), List.copyOf(positions));
+    positionsByUri.put(document.getUri(), new AnnotationPositions(document, List.copyOf(positions)));
   }
 
   private static Optional<AnnotationPosition> referencePosition(TerminalNode terminal) {
@@ -185,6 +183,9 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
     var annotation = (BSLParser.AnnotationContext) parameter.getParent().getParent();
     return Optional.of(new AnnotationPosition(Ranges.create(terminal), selectionRange,
       annotation.annotationName().getText(), name == null ? "Значение" : name.getText()));
+  }
+
+  private record AnnotationPositions(DocumentContext document, List<AnnotationPosition> positions) {
   }
 
   private record AnnotationPosition(
