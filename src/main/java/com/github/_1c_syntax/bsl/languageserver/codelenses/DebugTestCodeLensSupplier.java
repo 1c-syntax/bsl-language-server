@@ -29,14 +29,11 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import lombok.EqualsAndHashCode;
-import lombok.Getter;
 import lombok.ToString;
 import lombok.Value;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.Command;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Lazy;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
@@ -59,28 +56,23 @@ public class DebugTestCodeLensSupplier
   private final TestRunnerAdapter testRunnerAdapter;
   private final Resources resources;
 
-  // Self-injection для работы кэша в базовом классе.
-  @Autowired
-  @Lazy
-  @Getter
-  @SuppressWarnings("NullAway.Init")
-  private DebugTestCodeLensSupplier self;
-
   /**
    * Конструктор поставщика линз отладки теста.
    *
    * @param configuration           Конфигурация language server.
    * @param clientCapabilitiesHolder Хранилище клиентских возможностей.
+   * @param testSourcesProvider     Поставщик каталогов с исходниками тестов.
    * @param testRunnerAdapter       Адаптер внешнего раннера тестов.
    * @param resources               Локализованные ресурсы сервера.
    */
   public DebugTestCodeLensSupplier(
     LanguageServerConfiguration configuration,
     ClientCapabilitiesHolder clientCapabilitiesHolder,
+    TestSourcesProvider testSourcesProvider,
     TestRunnerAdapter testRunnerAdapter,
     Resources resources
   ) {
-    super(configuration, clientCapabilitiesHolder);
+    super(configuration, clientCapabilitiesHolder, testSourcesProvider);
     this.testRunnerAdapter = testRunnerAdapter;
     this.resources = resources;
   }

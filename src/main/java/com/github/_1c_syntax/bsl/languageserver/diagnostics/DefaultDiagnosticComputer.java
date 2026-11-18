@@ -26,10 +26,10 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.GitBlameComputer;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticsSelector;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.Diagnostic;
-import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
@@ -51,12 +51,14 @@ import java.util.function.Predicate;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public abstract class DefaultDiagnosticComputer implements DiagnosticComputer {
+public class DefaultDiagnosticComputer implements DiagnosticComputer {
 
   private final LanguageServerConfiguration configuration;
 
   @Qualifier("diagnosticComputerExecutor")
   private final ExecutorService executor;
+
+  private final DiagnosticsSelector diagnosticsSelector;
 
   @Override
   public List<Diagnostic> compute(DocumentContext documentContext) {
@@ -70,7 +72,7 @@ public abstract class DefaultDiagnosticComputer implements DiagnosticComputer {
       ? GitBlameComputer.Data.empty()
       : new GitBlameComputer(documentContext.getUri(), ignoredAuthors).compute();
 
-    var futures = diagnostics(documentContext).stream()
+    var futures = diagnosticsSelector.select(documentContext).stream()
       .map((BSLDiagnostic diagnostic) ->
         executor.submit(() -> safeGetDiagnostics(diagnostic, documentContext)))
       .toList();
@@ -107,7 +109,4 @@ public abstract class DefaultDiagnosticComputer implements DiagnosticComputer {
       throw new IllegalStateException("Error computing diagnostics", e);
     }
   }
-
-  @Lookup("diagnostics")
-  protected abstract List<BSLDiagnostic> diagnostics(DocumentContext documentContext);
 }

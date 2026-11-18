@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Diagno
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.info.DiagnosticInfo;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticsSelector;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
@@ -116,12 +117,9 @@ class DefaultDiagnosticComputerTest {
   }
 
   private DefaultDiagnosticComputer computerWith(List<BSLDiagnostic> diagnostics) {
-    return new DefaultDiagnosticComputer(configuration, executor) {
-      @Override
-      protected List<BSLDiagnostic> diagnostics(DocumentContext documentContext) {
-        return diagnostics;
-      }
-    };
+    var diagnosticsSelector = mock(DiagnosticsSelector.class);
+    when(diagnosticsSelector.select(documentContext)).thenReturn(diagnostics);
+    return new DefaultDiagnosticComputer(configuration, executor, diagnosticsSelector);
   }
 
   private static Diagnostic diagnostic(String message) {

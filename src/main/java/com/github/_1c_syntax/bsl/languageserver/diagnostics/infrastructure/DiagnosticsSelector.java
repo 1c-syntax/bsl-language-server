@@ -39,27 +39,37 @@ import com.github._1c_syntax.bsl.support.SupportVariant;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Scope;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-@Configuration
+/**
+ * Отбор диагностик, применимых к документу.
+ * <p>
+ * Учитывает настройки диагностик (режим, параметры, минимальный уровень LSP, поддержку,
+ * фильтр подсистем), тип файла, тип модуля, режим совместимости конфигурации и аннотацию
+ * {@link Disabled}.
+ */
+@Component
 @RequiredArgsConstructor
-public class DiagnosticsConfiguration {
+public class DiagnosticsSelector {
 
   private final DiagnosticObjectProvider diagnosticObjectProvider;
   private final DiagnosticInfos diagnosticInfos;
   private final LanguageServerConfiguration configuration;
 
-  @Bean
-  @Scope("prototype")
-  public List<BSLDiagnostic> diagnostics(DocumentContext documentContext) {
+  /**
+   * Получить диагностики, применимые к документу.
+   *
+   * @param documentContext Контекст документа
+   * @return Новые экземпляры применимых диагностик; пустой список, если диагностики для документа
+   *   вычислять не нужно
+   */
+  public List<BSLDiagnostic> select(DocumentContext documentContext) {
 
     var diagnosticInfosByClass = diagnosticInfos.getByClass();
     var diagnosticsOptions = configuration.getDiagnosticsOptions();
