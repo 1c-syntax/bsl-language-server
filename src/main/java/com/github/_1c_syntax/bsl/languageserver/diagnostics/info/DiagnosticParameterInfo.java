@@ -58,6 +58,10 @@ public final class DiagnosticParameterInfo {
       value = Float.parseFloat(valueToCast);
     } else if (type == String.class) {
       value = valueToCast;
+    } else if (type == List.class) {
+      // Параметр-список: внешнее (config/SonarQube) представление по умолчанию — строка через запятую.
+      // В List значение разбирается при применении конфигурации (см. DiagnosticHelper).
+      value = valueToCast;
     } else {
       throw new IllegalArgumentException("Unsupported diagnostic parameter type " + type);
     }
