@@ -24,14 +24,13 @@ package com.github._1c_syntax.bsl.languageserver.nativeimage;
 import io.github.classgraph.ClassGraph;
 import io.github.classgraph.ClassInfo;
 import io.github.classgraph.ScanResult;
+import nonapi.io.github.classgraph.scanspec.ScanSpec;
 import org.graalvm.nativeimage.hosted.Feature;
 import org.graalvm.nativeimage.hosted.RuntimeClassInitialization;
 import org.graalvm.nativeimage.hosted.RuntimeReflection;
 
-import java.lang.reflect.Field;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Function;
 
 /**
@@ -116,24 +115,10 @@ public final class ClassGraphScansFeature implements Feature {
     try {
       var scanSpecField = ClassGraph.class.getDeclaredField("scanSpec");
       scanSpecField.setAccessible(true);
-      var scanSpec = (nonapi.io.github.classgraph.scanspec.ScanSpec) scanSpecField.get(classGraph);
-      var packages = scanSpec.packageAcceptReject;
-      return ClassGraphScans.key(
-        setField(packages, "accept"),
-        setField(packages, "reject"),
-        scanSpec.enableAnnotationInfo
-      );
+      return ClassGraphScans.key((ScanSpec) scanSpecField.get(classGraph));
     } catch (ReflectiveOperationException e) {
       throw new IllegalStateException("Cannot read ClassGraph scan spec", e);
     }
-  }
-
-  @SuppressWarnings("unchecked")
-  private static Set<String> setField(Object acceptReject, String name) throws ReflectiveOperationException {
-    Field field = nonapi.io.github.classgraph.scanspec.AcceptReject.class.getDeclaredField(name);
-    field.setAccessible(true);
-    var value = (Set<String>) field.get(acceptReject);
-    return value == null ? Set.of() : value;
   }
 
   private enum Usage {

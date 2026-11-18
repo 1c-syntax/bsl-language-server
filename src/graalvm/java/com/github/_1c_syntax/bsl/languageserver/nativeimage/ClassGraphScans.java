@@ -21,9 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.nativeimage;
 
+import nonapi.io.github.classgraph.scanspec.AcceptReject;
+import nonapi.io.github.classgraph.scanspec.ScanSpec;
+
+import java.lang.reflect.Field;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
@@ -57,6 +62,29 @@ public final class ClassGraphScans {
     return "accept=" + sorted(acceptedPackages)
       + ";reject=" + sorted(rejectedPackages)
       + ";annotations=" + annotationInfo;
+  }
+
+  /**
+   * Ключ сканирования по конфигурации ClassGraph.
+   *
+   * @param scanSpec конфигурация сканирования
+   * @return ключ, см. {@link #key(Collection, Collection, boolean)}
+   */
+  public static String key(ScanSpec scanSpec) {
+    var packages = scanSpec.packageAcceptReject;
+    return key(stringSet(packages, "accept"), stringSet(packages, "reject"), scanSpec.enableAnnotationInfo);
+  }
+
+  @SuppressWarnings("unchecked")
+  private static Set<String> stringSet(AcceptReject acceptReject, String fieldName) {
+    try {
+      Field field = AcceptReject.class.getDeclaredField(fieldName);
+      field.setAccessible(true);
+      var value = (Set<String>) field.get(acceptReject);
+      return value == null ? Set.of() : value;
+    } catch (ReflectiveOperationException e) {
+      throw new IllegalStateException("Cannot read ClassGraph scan spec", e);
+    }
   }
 
   static void put(String key, String scanResultJson) {

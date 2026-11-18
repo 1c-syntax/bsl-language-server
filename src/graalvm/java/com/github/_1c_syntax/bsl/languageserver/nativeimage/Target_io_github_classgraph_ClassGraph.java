@@ -21,14 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.nativeimage;
 
-import com.oracle.svm.core.SubstrateUtil;
 import com.oracle.svm.core.annotate.Alias;
 import com.oracle.svm.core.annotate.Substitute;
 import com.oracle.svm.core.annotate.TargetClass;
 import io.github.classgraph.ScanResult;
 import nonapi.io.github.classgraph.scanspec.ScanSpec;
-
-import java.util.Set;
 
 /**
  * Сканирование ClassGraph в native-образе: classpath для сканирования во время выполнения нет,
@@ -42,25 +39,10 @@ final class Target_io_github_classgraph_ClassGraph {
 
   @Substitute
   public ScanResult scan() {
-    var packages = SubstrateUtil.cast(scanSpec.packageAcceptReject, Target_nonapi_io_github_classgraph_scanspec_AcceptReject.class);
-    var key = ClassGraphScans.key(
-      packages.accept == null ? Set.of() : packages.accept,
-      packages.reject == null ? Set.of() : packages.reject,
-      scanSpec.enableAnnotationInfo
-    );
+    var key = ClassGraphScans.key(scanSpec);
     var json = ClassGraphScans.get(key).orElseThrow(() -> new IllegalStateException(
       "ClassGraph scan was not performed at native image build time: " + key
-        + ". Add it to " + ClassGraphScansFeature.class.getName()));
+        + ". Add it to com.github._1c_syntax.bsl.languageserver.nativeimage.ClassGraphScansFeature"));
     return ScanResult.fromJSON(json);
   }
-}
-
-@TargetClass(className = "nonapi.io.github.classgraph.scanspec.AcceptReject")
-final class Target_nonapi_io_github_classgraph_scanspec_AcceptReject {
-
-  @Alias
-  Set<String> accept;
-
-  @Alias
-  Set<String> reject;
 }
