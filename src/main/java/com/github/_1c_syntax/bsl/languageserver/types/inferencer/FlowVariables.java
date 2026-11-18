@@ -37,10 +37,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 
-/** Переменные тела и их изменения; коллекции создаются здесь и наружу отдаются только для чтения. */
-record FlowVariables(List<VariableSymbol> variables, Map<VariableSymbol, Integer> indexes,
+/**
+ * Переменные тела и их изменения; коллекции наружу отдаются только для чтения.
+ * Исходный набор видимых переменных сохраняется и для тех, чьи изменения не легли в граф:
+ * они по-прежнему могут требовать расчёта общих ячеек.
+ */
+record FlowVariables(List<VariableSymbol> visibleVariables, List<VariableSymbol> variables,
+                     Map<VariableSymbol, Integer> indexes,
                      Map<ParserRuleContext, List<Change>> changesByStatement) {
   FlowVariables {
+    visibleVariables = List.copyOf(visibleVariables);
     variables = Collections.unmodifiableList(variables);
     indexes = Collections.unmodifiableMap(indexes);
     changesByStatement = Collections.unmodifiableMap(changesByStatement);
@@ -55,7 +61,8 @@ record FlowVariables(List<VariableSymbol> variables, Map<VariableSymbol, Integer
     Map<VariableSymbol, Integer> indexes = new IdentityHashMap<>();
     var variables = new ArrayList<VariableSymbol>();
     Map<ParserRuleContext, List<Change>> changesByStatement = new IdentityHashMap<>();
-    for (var variable : inputs.variables().apply(body)) {
+    var visibleVariables = List.copyOf(inputs.variables().apply(body));
+    for (var variable : visibleVariables) {
       var changes = changesOf.apply(variable);
       var definitions = changes.definitions();
       var mutations = changes.mutations();
@@ -74,7 +81,7 @@ record FlowVariables(List<VariableSymbol> variables, Map<VariableSymbol, Integer
     }
 
     changesByStatement.replaceAll((statement, changes) -> List.copyOf(changes));
-    return new FlowVariables(variables, indexes, changesByStatement);
+    return new FlowVariables(visibleVariables, variables, indexes, changesByStatement);
   }
 
   /** Разложить позиции изменений по операторам, в которых они стоят. */

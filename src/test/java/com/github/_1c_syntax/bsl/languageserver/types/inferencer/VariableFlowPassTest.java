@@ -152,7 +152,7 @@ class VariableFlowPassTest {
       indexes.put(variables.get(i), i);
     }
     return new VariableFlowPass(analyzer, document, graph, layout, inputs, null,
-      new FlowVariables(variables, indexes, Map.of()));
+      new FlowVariables(variables, variables, indexes, Map.of()));
   }
 
   private static List<VariableSymbol> variables(int count) {

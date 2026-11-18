@@ -642,7 +642,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * @param inputs          исходные данные расчёта.
    */
   private void ensureCells(DocumentContext documentContext, BSLParser.CodeBlockContext body, FlowInputs inputs) {
-    ensureCellsFor(documentContext, sharedVariablesOf(body, inputs), inputs);
+    ensureCellsFor(documentContext, sharedVariablesOf(documentContext, body, inputs), inputs);
   }
 
   /**
@@ -709,10 +709,12 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       && (complete == null || complete.getAsBoolean());
   }
 
-  /** Общие переменные, к которым обращается тело. */
-  private static List<VariableSymbol> sharedVariablesOf(BSLParser.CodeBlockContext body, FlowInputs inputs) {
+  /** Общие переменные, к которым обращается тело; их перечень берётся из структуры текущего AST. */
+  private List<VariableSymbol> sharedVariablesOf(DocumentContext document, BSLParser.CodeBlockContext body,
+                                                FlowInputs inputs) {
     var shared = new ArrayList<VariableSymbol>(0);
-    for (var variable : inputs.variables().apply(body)) {
+    var visible = variablesOf(document, body, layoutOf(document, body), inputs).visibleVariables();
+    for (var variable : visible) {
       if (inputs.session().contextTracking && ((variable.getKind() == VariableKind.PARAMETER
           && !inputs.session().contextFreeDeclarations)
         || variable.getKind() == VariableKind.MODULE || variable.getKind() == VariableKind.GLOBAL)) {
@@ -977,7 +979,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   /** Разные внешние тела одного модуля ждут общие ячейки до захвата собственного расчёта тела. */
   private void ensureRootCells(DocumentContext documentContext, BSLParser.CodeBlockContext body, FlowInputs inputs,
                                BooleanSupplier complete) {
-    var shared = sharedVariablesOf(body, inputs);
+    var shared = sharedVariablesOf(documentContext, body, inputs);
     if (shared.isEmpty()) {
       return;
     }
