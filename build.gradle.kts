@@ -231,6 +231,21 @@ tasks.named<org.springframework.boot.gradle.tasks.bundling.BootBuildImage>("boot
 if (providers.gradleProperty("native").isPresent) {
     apply(plugin = "org.graalvm.buildtools.native")
 
+    // Код, нужный только сборщику native-image (Feature, подмены @TargetClass): в обычный jar не попадает.
+    val graalvm by sourceSets.creating {
+        // runtimeClasspath: подменяемые библиотеки (ClassGraph) приходят к нам только транзитивно в рантайме
+        compileClasspath += sourceSets.main.get().output + sourceSets.main.get().runtimeClasspath
+    }
+    dependencies {
+        "graalvmCompileOnly"("org.graalvm.nativeimage:svm:25.0.4")
+    }
+    // Аспектов в этом коде нет, а ajc для этого source set не настроен.
+    tasks.named<JavaCompile>("compileGraalvmJava") {
+        extensions.configure<io.freefair.gradle.plugins.aspectj.AjcAction> {
+            enabled.set(false)
+        }
+    }
+
     configure<org.graalvm.buildtools.gradle.dsl.GraalVMExtension> {
         binaries {
             named("main") {
@@ -238,9 +253,11 @@ if (providers.gradleProperty("native").isPresent) {
                 // При подключённом java-library плагин по умолчанию собирает разделяемую библиотеку.
                 sharedLibrary.set(false)
                 mainClass.set("com.github._1c_syntax.bsl.languageserver.MainApplication")
+                classpath(graalvm.output)
                 buildArgs.addAll(
                     "--no-fallback",
-                    "-H:+ReportExceptionStackTraces"
+                    "-H:+ReportExceptionStackTraces",
+                    "--features=com.github._1c_syntax.bsl.languageserver.nativeimage.ClassGraphScansFeature"
                 )
                 // Дополнительные аргументы native-image для экспериментов: -PnativeExtraArgs="--a --b"
                 providers.gradleProperty("nativeExtraArgs").orNull
