@@ -29,7 +29,6 @@ import org.springframework.beans.factory.config.CustomScopeConfigurer;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Import;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.context.aot.ApplicationContextAotGenerator;
@@ -133,9 +132,9 @@ public class WorkspaceScopedProxyAotTest {
     });
   }
 
-  // Область регистрируется без CGLIB-конфигурации: сгенерированный прокси-класс конфигурации
-  // переиспользовался бы между тестами в одной JVM и не попадал бы в результат генерации.
-  @Configuration(proxyBeanMethods = false)
+  // Конфигурации теста — lite-классы без @Configuration. Без CGLIB: сгенерированный прокси-класс
+  // конфигурации переиспользовался бы между тестами в одной JVM и не попадал бы в результат
+  // генерации. Без @Component: иначе их подхватывает сканирование пакета в BSLLSBinding.
   @Import(WorkspaceScopedProxyBeanFactoryPostProcessor.class)
   public static class ScopeConfig {
     @Bean
@@ -146,7 +145,6 @@ public class WorkspaceScopedProxyAotTest {
     }
   }
 
-  @Configuration(proxyBeanMethods = false)
   @Import(ScopeConfig.class)
   public static class TestConfig {
     // Объявлен раньше прокси: бин рабочей области ищется по типу, пока фабрика прокси
@@ -170,7 +168,6 @@ public class WorkspaceScopedProxyAotTest {
     }
   }
 
-  @Configuration(proxyBeanMethods = false)
   @Import(ScopeConfig.class)
   public static class HiddenTypeConfig {
     // Тип из чужого пакета с закрытым типом-параметром: код прокси должен генерироваться
