@@ -51,6 +51,7 @@ import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.beanutils.PropertyUtils;
 import org.jspecify.annotations.Nullable;
+import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
@@ -82,6 +83,7 @@ import static tools.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Component
 @Scope(value = "workspace", proxyMode = ScopedProxyMode.TARGET_CLASS)
+@RegisterReflectionForBinding(LanguageServerConfiguration.class)
 public class LanguageServerConfiguration {
 
   /**
