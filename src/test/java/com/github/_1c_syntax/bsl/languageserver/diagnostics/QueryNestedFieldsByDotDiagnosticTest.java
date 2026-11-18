@@ -54,4 +54,9 @@ class QueryNestedFieldsByDotDiagnosticTest extends AbstractDiagnosticTest<QueryN
       .hasRange(115, 3, 115, 82) //Ошибка №6
       .hasRange(137, 6, 137, 40); //Ошибка №8
   }
+
+  @Test
+  void joinAfterVirtualTableParameter() {
+    assertThat(getDiagnostics("QueryNestedFieldsByDotDiagnosticJoin")).isEmpty();
+  }
 }
