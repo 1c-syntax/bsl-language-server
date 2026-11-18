@@ -129,6 +129,67 @@ class ModuleVariableVisibilityTest extends AbstractServerContextAwareTest {
       .types().refs()).extracting(TypeRef::qualifiedName).contains("Строка").doesNotContain("Число");
   }
 
+  @Test
+  void moduleInitializationDoesNotReadEveryVisibleCell() {
+    var document = document("""
+      Var Needed;
+      Var Other;
+      Procedure WriteOther()
+        Other = Recursive();
+      EndProcedure
+      Function Recursive()
+        Result = New Structure;
+        Result.Insert("Next", Recursive());
+        Return Result;
+      EndFunction
+      Function Independent()
+        Result = Needed;
+        Return Result;
+      EndFunction
+      Needed = "ready";
+      """);
+
+    assertThat(recursiveBodiesForIndependent(document)).isZero();
+  }
+
+  @Test
+  void aReverseCellChainReachesItsFixedPointBeforePublication() {
+    var source = new StringBuilder();
+    for (var i = 0; i < 20; i++) {
+      source.append("Var V%02d;%n".formatted(i));
+    }
+    for (var i = 0; i < 20; i++) {
+      source.append("Procedure Write%02d()%n".formatted(i));
+      source.append(i == 19 ? "V19 = \"ready\";\n" : "V%02d = V%02d;%n".formatted(i, i + 1));
+      source.append("EndProcedure\n");
+    }
+    source.append("Function Read() Result = V00; Return Result; EndFunction\n");
+    var document = document(source.toString());
+    var result = inferencer.computeReturnTypes(document.getSymbolTree().getMethodSymbol("Read").orElseThrow());
+
+    assertThat(result.types().refs()).extracting(TypeRef::qualifiedName).contains("Строка");
+    assertThat(result.incomplete()).isFalse();
+  }
+
+  @Test
+  void anExpandingCellIsNotReportedAsACompleteReturnType() {
+    var document = document("""
+      Var Shared;
+      Procedure Grow()
+        Shared = New Structure("Next", Shared);
+      EndProcedure
+      Function Read()
+        Result = Shared;
+        Return Result;
+      EndFunction
+      """);
+    var result = inferencer.computeReturnTypes(document.getSymbolTree().getMethodSymbol("Read").orElseThrow());
+
+    assertThat(result.incomplete()).isTrue();
+    var repeated = inferencer.computeReturnTypes(document.getSymbolTree().getMethodSymbol("Read").orElseThrow());
+    assertThat(repeated.incomplete()).as("the previous partial cells must not become a settled cache hit").isTrue();
+  }
+
   @ParameterizedTest
   @ValueSource(strings = {"\"ready\"", "\"Unrelated\"", "Receiver.Unrelated", "Receiver.Child.Unrelated",
     "Receiver[\"Unrelated\"]", "Unrelated()"})

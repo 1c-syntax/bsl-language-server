@@ -1430,8 +1430,10 @@ public class ExpressionTypeInferencer {
 
   private TypeSet returnTypesInContext(MethodSymbol method, InferenceContext ctx, @Nullable ExecutionContext context) {
     try (var scope = MemberLookupSession.openIfAbsent()) {
-      return returnTypeFromBodyInference.of(method, expression -> inferInternal(expression, ctx), context,
+      var result = returnTypeFromBodyInference.of(method, expression -> inferInternal(expression, ctx), context,
         body -> ctx.compilation.possibleContexts(method.getOwner(), body, compilationContextResolver));
+      ctx.sawMissing |= ctx.flowSession.cellsIncomplete();
+      return result;
     }
   }
 
@@ -1508,6 +1510,7 @@ public class ExpressionTypeInferencer {
         ? variableFlowAnalyzer.typeAtRoot(owner, use, variable, inputs,
           () -> !ctx.cycleCut && !ctx.bodyInFlowCut && !ctx.depthCut)
         : variableFlowAnalyzer.typeAt(owner, use, variable, inputs);
+      ctx.sawMissing |= ctx.flowSession.cellsIncomplete();
       if (byFlow == null) {
         ctx.failed = true;
         // Обращение к переменной есть, а расчёт его не разместил — это дефект расчёта, а не
@@ -1618,7 +1621,9 @@ public class ExpressionTypeInferencer {
     var owner = variable.getOwner();
     var inputs = flowInputs(variable, ctx);
     var atPoint = variableFlowAnalyzer.typeAt(owner, position, atDefinition, variable, inputs);
-    return atPoint == null ? variableFlowAnalyzer.typesAcrossScope(owner, position, variable, inputs) : atPoint;
+    var result = atPoint == null ? variableFlowAnalyzer.typesAcrossScope(owner, position, variable, inputs) : atPoint;
+    ctx.sawMissing |= ctx.flowSession.cellsIncomplete();
+    return result;
   }
 
   /** Контексты запроса по модулю, методу и ветке; без метаданных остаются известные ограничения препроцессора. */
@@ -1751,7 +1756,7 @@ public class ExpressionTypeInferencer {
       cacheable,
       ctx.executionContext,
       body -> compilationContexts(body, owner, ctx),
-      () -> ctx.sawMissing || ctx.failed,
+      () -> ctx.sawMissing || ctx.failed || ctx.flowSession.cellsIncomplete(),
       body -> variablesByBody.computeIfAbsent(body, key -> variablesOfBody(owner, key)).visible(),
       body -> variablesByBody.computeIfAbsent(body, key -> variablesOfBody(owner, key)).readModuleVariables(),
       target -> target.getKind() == VariableKind.MODULE,
@@ -1863,26 +1868,25 @@ public class ExpressionTypeInferencer {
       .map(SourceDefinedSymbol.class::cast)
       .orElse(module);
     var visible = new ArrayList<VariableSymbol>(symbolTree.getVariablesOfScope(scope));
-    if (scope == module) {
-      return new BodyVariables(visible, Set.copyOf(visible));
+    var moduleVariables = moduleVariablesOfBody(symbolTree, body);
+    if (scope != module) {
+      visible.addAll(moduleVariables.visible());
     }
-    return new BodyVariables(visible, addModuleVariables(symbolTree, visible, body));
+    return new BodyVariables(visible, moduleVariables.readModuleVariables());
   }
 
   /**
-   * Добавить переменные модуля, к которым обращаются из тела. Имена свойств и методов
+   * Найти переменные модуля, к которым обращаются из тела, и отдельно их чтения. Имена свойств и методов
    * не являются обращениями к переменным; локальные объявления могут затенять общие.
    * Набор не зависит от готовности индекса ссылок.
    *
    * @param symbolTree    дерево символов модуля.
-   * @param target        набор, куда добавлять.
    * @param body          тело метода.
-   * @return читаемые переменные модуля; простое присваивание не требует предыдущего значения.
+   * @return обращения к переменным модуля и их чтения; простая запись не требует предыдущего значения.
    */
-  private static Set<VariableSymbol> addModuleVariables(SymbolTree symbolTree, List<VariableSymbol> target,
-                                         BSLParser.CodeBlockContext body) {
+  private static BodyVariables moduleVariablesOfBody(SymbolTree symbolTree, BSLParser.CodeBlockContext body) {
     if (symbolTree.getVariablesOfScope(symbolTree.getModule()).isEmpty()) {
-      return Set.of();
+      return new BodyVariables(List.of(), Set.of());
     }
     Set<String> names = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
     Set<String> readNames = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
@@ -1895,21 +1899,24 @@ public class ExpressionTypeInferencer {
       }
     }
     Set<VariableSymbol> read = new HashSet<>();
+    var target = new ArrayList<VariableSymbol>();
     for (var name : names) {
       symbolTree.getVariableSymbolInScope(body, name)
         .filter(variable -> variable.getKind() == VariableKind.MODULE)
-        .ifPresent(variable -> {
+        .ifPresent((VariableSymbol variable) -> {
           target.add(variable);
           if (readNames.contains(name)) {
             read.add(variable);
           }
         });
     }
-    return read;
+    return new BodyVariables(target, read);
   }
 
   private static boolean isSimpleAssignmentTarget(ParseTree identifier) {
-    var parent = (ParserRuleContext) identifier.getParent();
+    if (!(identifier.getParent() instanceof ParserRuleContext parent)) {
+      return false;
+    }
     BSLParser.LValueContext lValue = parent instanceof BSLParser.LValueContext value ? value
       : Trees.getAncestorByRuleIndex(parent, BSLParser.RULE_lValue);
     return lValue != null && lValue.getStart() == lValue.getStop()

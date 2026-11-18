@@ -100,8 +100,8 @@ record FlowVariables(List<VariableSymbol> visibleVariables, List<VariableSymbol>
     for (var i = 0; i < selected.size(); i++) {
       selectedIndexes.put(selected.get(i), i);
     }
-    Map<ParserRuleContext, List<Change>> selectedChanges = new IdentityHashMap<>();
-    changesByStatement.forEach((statement, changes) -> {
+    IdentityHashMap<ParserRuleContext, List<Change>> selectedChanges = new IdentityHashMap<>();
+    changesByStatement.forEach((ParserRuleContext statement, List<Change> changes) -> {
       var kept = new ArrayList<Change>();
       for (var change : changes) {
         var index = selectedIndexes.get(change.variable());

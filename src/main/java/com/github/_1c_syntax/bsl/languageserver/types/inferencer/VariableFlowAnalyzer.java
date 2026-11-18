@@ -37,6 +37,7 @@ import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.parser.BSLParser.CodeBlockContext;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -204,6 +205,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
 
     /** Идут ли круги прямо сейчас: изнутри них ячейки заново не считаются. */
     private boolean cellsComputing;
+    private boolean cellsIncomplete;
 
     private final Runnable cellsChanged;
 
@@ -242,6 +244,11 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
      */
     public boolean cellsComputing() {
       return cellsComputing;
+    }
+
+    /** Хотя бы одна ячейка текущего запроса остановлена до достижения неподвижного пункта. */
+    public boolean cellsIncomplete() {
+      return cellsIncomplete;
     }
 
     /**
@@ -450,36 +457,28 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    *     кэше ничего этого не нужно, а тип спрашивают на каждое обращение к переменной.
    */
   public record FlowInputs(
-    FlowSession session,
-    Consumer<BSLParser.CodeBlockContext> activeBodyRead,
-    boolean cacheable,
+    FlowSession session, Consumer<CodeBlockContext> activeBodyRead, boolean cacheable,
     @Nullable ExecutionContext executionContext,
-    Function<BSLParser.CodeBlockContext, Optional<Set<ExecutionContext>>> compilationContexts,
+    Function<CodeBlockContext, Optional<Set<ExecutionContext>>> compilationContexts,
     BooleanSupplier sawMissing,
-    Function<BSLParser.CodeBlockContext, Collection<VariableSymbol>> variables,
-    @Nullable Function<BSLParser.CodeBlockContext, Set<VariableSymbol>> readModuleVariables,
-    Predicate<VariableSymbol> sharedWithOtherBodies,
-    Function<VariableSymbol, TypeSet> declaredFact,
+    Function<CodeBlockContext, Collection<VariableSymbol>> variables,
+    @Nullable Function<CodeBlockContext, Set<VariableSymbol>> readModuleVariables,
+    Predicate<VariableSymbol> sharedWithOtherBodies, Function<VariableSymbol, TypeSet> declaredFact,
     Function<VariableSymbol, Collection<Position>> definitionPositions,
     Function<VariableSymbol, Collection<Position>> mutationPositions,
-    AssignedTypes assigned,
-    Mutations mutations,
-    GuardNarrowing narrowing
+    AssignedTypes assigned, Mutations mutations, GuardNarrowing narrowing
   ) {
     /** Входы без отдельного списка чтений сохраняют консервативный расчёт всех видимых переменных. */
-    public FlowInputs(FlowSession session, Consumer<BSLParser.CodeBlockContext> activeBodyRead, boolean cacheable,
-                      @Nullable ExecutionContext executionContext,
-                      Function<BSLParser.CodeBlockContext, Optional<Set<ExecutionContext>>> compilationContexts,
-                      BooleanSupplier sawMissing,
-                      Function<BSLParser.CodeBlockContext, Collection<VariableSymbol>> variables,
-                      Predicate<VariableSymbol> sharedWithOtherBodies,
-                      Function<VariableSymbol, TypeSet> declaredFact,
-                      Function<VariableSymbol, Collection<Position>> definitionPositions,
-                      Function<VariableSymbol, Collection<Position>> mutationPositions,
-                      AssignedTypes assigned, Mutations mutations, GuardNarrowing narrowing) {
-      this(session, activeBodyRead, cacheable, executionContext, compilationContexts, sawMissing, variables,
-        null, sharedWithOtherBodies, declaredFact, definitionPositions,
-        mutationPositions, assigned, mutations, narrowing);
+    public FlowInputs(FlowSession session, Consumer<CodeBlockContext> activeBodyRead, boolean cacheable,
+      @Nullable ExecutionContext executionContext,
+      Function<CodeBlockContext, Optional<Set<ExecutionContext>>> compilationContexts, BooleanSupplier sawMissing,
+      Function<CodeBlockContext, Collection<VariableSymbol>> variables,
+      Predicate<VariableSymbol> sharedWithOtherBodies, Function<VariableSymbol, TypeSet> declaredFact,
+      Function<VariableSymbol, Collection<Position>> definitionPositions,
+      Function<VariableSymbol, Collection<Position>> mutationPositions,
+      AssignedTypes assigned, Mutations mutations, GuardNarrowing narrowing) {
+      this(session, activeBodyRead, cacheable, executionContext, compilationContexts, sawMissing, variables, null,
+        sharedWithOtherBodies, declaredFact, definitionPositions, mutationPositions, assigned, mutations, narrowing);
     }
   }
 
@@ -714,7 +713,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       if (session.growingCells.size() != pending.size()) {
         session.growingCells.sort(Comparator.comparing(VariableSymbol::getName, String.CASE_INSENSITIVE_ORDER));
       }
-      grow(documentContext, session.growingCells, inputs);
+      session.cellsIncomplete |= !grow(documentContext, session.growingCells, inputs);
       if (canPublishCells(inputs, complete)) {
         session.growingCells.forEach(variable -> settled.putIfAbsent(variable, session.cells.get(variable)));
       }
@@ -729,7 +728,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
 
   /** Проверить полноту входных данных перед публикацией общих ячеек. */
   private static boolean canPublishCells(FlowInputs inputs, @Nullable BooleanSupplier complete) {
-    return inputs.cacheable() && !inputs.sawMissing().getAsBoolean()
+    return inputs.cacheable() && !inputs.session().cellsIncomplete && !inputs.sawMissing().getAsBoolean()
       && (complete == null || complete.getAsBoolean());
   }
 
@@ -755,12 +754,12 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   }
 
   /** Круги по телам, меняющим эти переменные, пока хоть одна ячейка растёт. */
-  private void grow(DocumentContext documentContext, List<VariableSymbol> shared, FlowInputs inputs) {
+  private boolean grow(DocumentContext documentContext, List<VariableSymbol> shared, FlowInputs inputs) {
     var session = inputs.session();
     var bodies = changedBodiesOf(documentContext, shared, inputs);
     var cellCount = shared.size();
     var passes = 0;
-    while (passes < MAX_PASSES && !bodies.isEmpty()) {
+    while (passes < Math.max(MAX_PASSES, shared.size() + 1) && !bodies.isEmpty()) {
       var grown = false;
       for (var body : bodies) {
         if (inputs.compilationContexts().apply(body).map(Set::isEmpty).orElse(false)) {
@@ -777,11 +776,12 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
         bodies = changedBodiesOf(documentContext, shared, inputs);
         passes = 0;
       } else if (!grown) {
-        break;
+        return true;
       } else {
         passes++;
       }
     }
+    return bodies.isEmpty();
   }
 
   /** Добавить выходные типы тела к текущим приближениям общих ячеек. */
@@ -1040,7 +1040,8 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     // Запомненное, оно пережило бы круги и отвечало бы приближением всем, в том числе
     // запросу, с которого круги и начались. Так же не запоминается окружение, посчитанное
     // на значениях, которых ещё нет: следующий расчёт принял бы его за полное.
-    if (byBody == null || inputs.session().cellsComputing || inputs.sawMissing().getAsBoolean()
+    if (byBody == null || inputs.session().cellsComputing || inputs.session().cellsIncomplete
+      || inputs.sawMissing().getAsBoolean()
       || (sharedRoot != null && !sharedRoot.getAsBoolean())) {
       return computed;
     }
