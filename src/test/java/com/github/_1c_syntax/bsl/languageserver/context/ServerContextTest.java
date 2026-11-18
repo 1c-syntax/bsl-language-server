@@ -23,6 +23,10 @@ package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.client.WorkDoneProgressHelper;
+import com.github._1c_syntax.bsl.languageserver.client.LanguageClientHolder;
+import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
+import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer;
@@ -59,6 +63,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Supplier;
 
@@ -72,6 +77,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.spy;
+import static org.junit.jupiter.api.Assertions.assertAll;
 
 @CleanupContextBeforeClassAndAfterEachTestMethod
 class ServerContextTest extends AbstractServerContextAwareTest {
@@ -353,6 +360,145 @@ class ServerContextTest extends AbstractServerContextAwareTest {
     assertThat(activity.get()).isNotNull();
     assertThat(activity.get().get()).isEmpty();
     verify(reporter, never()).tick();
+    verify(reporter).endProgress("");
+  }
+
+  @Test
+  void stoppingWaitsForConfigurationTriggeredDiagnosticRefresh(@TempDir Path workspace) throws Exception {
+    initServerContext(workspace, false);
+    var document = context.addDocument(workspace.resolve("Module.bsl").toUri());
+    context.openDocument(document, "", 1);
+    var provider = spy(new DiagnosticProvider(
+      mock(LanguageClientHolder.class), mock(ClientCapabilitiesHolder.class), serverContextProvider));
+    var entered = new CountDownLatch(1);
+    var release = new CountDownLatch(1);
+    doAnswer(invocation -> {
+      entered.countDown();
+      awaitWithinTestTimeout(release);
+      return null;
+    }).when(provider).computeAndPublishDiagnostics(document);
+    var workspaceUri = context.getWorkspaceUri();
+    var refresh = CompletableFuture.runAsync(() -> WorkspaceContextHolder.run(workspaceUri, () ->
+      provider.handleConfigurationChangedEvent(
+        new LanguageServerConfigurationChangedEvent(context.getLanguageServerConfiguration()))));
+    CompletableFuture<Void> stopping = null;
+    try {
+      assertThat(entered.await(10, TimeUnit.SECONDS)).isTrue();
+      stopping = CompletableFuture.runAsync(context::stopBackgroundWork);
+      await().atMost(Duration.ofSeconds(10)).until(context::isBackgroundWorkStopped);
+      assertThat(stopping).failsWithin(200, TimeUnit.MILLISECONDS)
+        .withThrowableOfType(java.util.concurrent.TimeoutException.class);
+    } finally {
+      release.countDown();
+      var stoppingToAwait = stopping;
+      assertAll(
+        () -> refresh.get(10, TimeUnit.SECONDS),
+        () -> {
+          if (stoppingToAwait != null) {
+            stoppingToAwait.get(10, TimeUnit.SECONDS);
+          }
+        }
+      );
+    }
+  }
+
+  @Test
+  void interruptedPopulationKeepsWorkersTrackedUntilTheyFinish() throws Exception {
+    initServerContext(PATH_TO_METADATA, false);
+    var file = new File(PATH_TO_METADATA, PATH_TO_MODULE_FILE);
+    var lock = (ReentrantReadWriteLock) context.getDocumentLock(Absolute.uri(file.toURI()));
+    var failure = new AtomicReference<RuntimeException>();
+    var interruptPreserved = new AtomicBoolean();
+    var workspace = context.getWorkspaceUri();
+    lock.writeLock().lock();
+    var population = Thread.ofPlatform().start(() -> WorkspaceContextHolder.run(workspace, () -> {
+      try {
+        context.populateContext(List.of(file));
+      } catch (RuntimeException e) {
+        failure.set(e);
+      } finally {
+        interruptPreserved.set(Thread.currentThread().isInterrupted());
+      }
+    }));
+    CompletableFuture<Void> stopping = null;
+    try {
+      await().atMost(Duration.ofSeconds(10)).until(lock::hasQueuedThreads);
+      population.interrupt();
+      stopping = CompletableFuture.runAsync(context::stopBackgroundWork);
+      await().atMost(Duration.ofSeconds(10)).until(context::isBackgroundWorkStopped);
+      assertThat(stopping).failsWithin(200, TimeUnit.MILLISECONDS)
+        .withThrowableOfType(java.util.concurrent.TimeoutException.class);
+    } finally {
+      lock.writeLock().unlock();
+      var stoppingToAwait = stopping;
+      assertAll(
+        () -> {
+          population.join(10000);
+          assertThat(population.isAlive()).isFalse();
+        },
+        () -> {
+          if (stoppingToAwait != null) {
+            stoppingToAwait.get(10, TimeUnit.SECONDS);
+          }
+        }
+      );
+    }
+    assertThat(failure.get()).isInstanceOf(IllegalStateException.class)
+      .hasCauseInstanceOf(InterruptedException.class);
+    assertThat(interruptPreserved).isTrue();
+    assertThat(context.getDocuments()).isEmpty();
+  }
+
+  @Test
+  void failedPopulationKeepsOtherWorkersTrackedUntilTheyFinish() throws Exception {
+    initServerContext(PATH_TO_METADATA, false);
+    var blocked = new File(PATH_TO_METADATA, PATH_TO_MODULE_FILE);
+    var failing = new File(PATH_TO_METADATA, PATH_TO_CATALOG_FILE);
+    var lock = (ReentrantReadWriteLock) context.getDocumentLock(Absolute.uri(blocked.toURI()));
+    var reporter = mock(WorkDoneProgressHelper.WorkDoneProgressReporter.class);
+    doReturn(reporter).when(workDoneProgressHelper)
+      .createProgress(ArgumentMatchers.anyInt(), ArgumentMatchers.anyString());
+    var entered = new CountDownLatch(1);
+    var fail = new CountDownLatch(1);
+    doAnswer(invocation -> {
+      entered.countDown();
+      awaitWithinTestTimeout(fail);
+      throw new IllegalStateException("population worker failed");
+    }).when(reporter).tick();
+    var failure = new AtomicReference<RuntimeException>();
+    var workspace = context.getWorkspaceUri();
+    lock.writeLock().lock();
+    var population = CompletableFuture.runAsync(() -> WorkspaceContextHolder.run(workspace, () -> {
+      try {
+        context.populateContext(List.of(blocked, failing));
+      } catch (RuntimeException e) {
+        failure.set(e);
+      }
+    }));
+    CompletableFuture<Void> stopping = null;
+    try {
+      assertThat(entered.await(10, TimeUnit.SECONDS)).isTrue();
+      await().atMost(Duration.ofSeconds(10)).until(lock::hasQueuedThreads);
+      fail.countDown();
+      stopping = CompletableFuture.runAsync(context::stopBackgroundWork);
+      await().atMost(Duration.ofSeconds(10)).until(context::isBackgroundWorkStopped);
+      assertThat(stopping).failsWithin(200, TimeUnit.MILLISECONDS)
+        .withThrowableOfType(java.util.concurrent.TimeoutException.class);
+    } finally {
+      fail.countDown();
+      lock.writeLock().unlock();
+      var stoppingToAwait = stopping;
+      assertAll(
+        () -> population.get(10, TimeUnit.SECONDS),
+        () -> {
+          if (stoppingToAwait != null) {
+            stoppingToAwait.get(10, TimeUnit.SECONDS);
+          }
+        }
+      );
+    }
+    assertThat(failure.get()).isInstanceOf(IllegalStateException.class)
+      .hasMessage("Error populating context");
     verify(reporter).endProgress("");
   }
 

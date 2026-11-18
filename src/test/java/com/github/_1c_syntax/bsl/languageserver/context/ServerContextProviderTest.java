@@ -29,8 +29,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.ApplicationListener;
 import org.springframework.context.event.ApplicationEventMulticaster;
+import org.springframework.context.event.GenericApplicationListener;
 
 import java.net.URI;
 import java.nio.file.Path;
@@ -46,6 +46,7 @@ import static org.awaitility.Awaitility.await;
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assertions.assertAll;
 
 @SpringBootTest
 class ServerContextProviderTest {
@@ -91,15 +92,12 @@ class ServerContextProviderTest {
     var entered = new CountDownLatch(1);
     var release = new CountDownLatch(1);
     var notified = new AtomicBoolean();
-    var listener = new ApplicationListener<BeforeWorkspaceRemovedEvent>() {
-      @Override
-      public void onApplicationEvent(BeforeWorkspaceRemovedEvent event) {
-        if (Absolute.uri(event.getWorkspaceUri()).equals(removed.getWorkspaceUri())) {
-          assertThat(removed.isBackgroundWorkStopped()).isTrue();
-          notified.set(true);
-        }
+    var listener = GenericApplicationListener.forEventType(BeforeWorkspaceRemovedEvent.class, event -> {
+      if (Absolute.uri(event.getWorkspaceUri()).equals(removed.getWorkspaceUri())) {
+        assertThat(removed.isBackgroundWorkStopped()).isTrue();
+        notified.set(true);
       }
-    };
+    });
     applicationEventMulticaster.addApplicationListener(listener);
     var work = CompletableFuture.runAsync(() -> removed.runBackgroundWork(() -> {
       entered.countDown();
@@ -121,11 +119,16 @@ class ServerContextProviderTest {
       assertThat(notified).isFalse();
     } finally {
       release.countDown();
-      work.get(10, TimeUnit.SECONDS);
+      var removalToAwait = removal;
       try {
-        if (removal != null) {
-          removal.get(10, TimeUnit.SECONDS);
-        }
+        assertAll(
+          () -> work.get(10, TimeUnit.SECONDS),
+          () -> {
+            if (removalToAwait != null) {
+              removalToAwait.get(10, TimeUnit.SECONDS);
+            }
+          }
+        );
       } finally {
         applicationEventMulticaster.removeApplicationListener(listener);
         serverContextProvider.clear();

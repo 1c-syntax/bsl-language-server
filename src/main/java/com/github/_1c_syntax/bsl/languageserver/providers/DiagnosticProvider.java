@@ -154,7 +154,7 @@ public final class DiagnosticProvider {
     }
     var serverContext = serverContextProvider.getAllContexts().get(workspaceUri);
     if (serverContext != null) {
-      refreshDiagnostics(serverContext);
+      serverContext.runBackgroundWork(() -> refreshDiagnostics(serverContext));
     }
   }
 

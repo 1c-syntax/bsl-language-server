@@ -65,7 +65,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.Phaser;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -315,34 +318,45 @@ public class ServerContext {
     // подхватывает чужие задачи заполнения. Те встают на блокировках документов, держатели
     // которых ждут эту же конфигурацию, — и ожидание замыкается.
     var complete = false;
+    var cancelled = new AtomicBoolean();
+    var workers = new Phaser(1);
     try {
       getConfiguration();
-      populateContextExecutor.submit(() ->
+      var population = populateContextExecutor.submit(() ->
         files.parallelStream().forEach((File file) -> {
-          if (backgroundWork.isStopped()) {
+          if (workers.register() < 0) {
             return;
           }
-          var uri = Absolute.uri(file.toURI());
-          if (showActivity) {
-            activeFiles.put(uri, System.nanoTime());
-          }
           try {
-            populateDocument(uri);
-            workDoneProgressReporter.tick();
-          } finally {
-            if (showActivity) {
-              activeFiles.remove(uri);
+            if (cancelled.get() || backgroundWork.isStopped()) {
+              return;
             }
+            var uri = Absolute.uri(file.toURI());
+            if (showActivity) {
+              activeFiles.put(uri, System.nanoTime());
+            }
+            try {
+              populateDocument(uri, cancelled);
+              workDoneProgressReporter.tick();
+            } finally {
+              if (showActivity) {
+                activeFiles.remove(uri);
+              }
+            }
+          } finally {
+            workers.arriveAndDeregister();
           }
         })
-      ).get();
+      );
+      awaitPopulation(population, cancelled);
       complete = !backgroundWork.isStopped();
     } catch (ExecutionException e) {
       throw new IllegalStateException("Error populating context", e);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      throw new IllegalStateException("Interrupted while populating context", e);
     } finally {
+      // Ошибка parallelStream может завершить корневую задачу раньше соседних работников.
+      // После снятия последнего допуска новые работники уже не зарегистрируются.
+      cancelled.set(true);
+      workers.awaitAdvance(workers.arriveAndDeregister());
       workDoneProgressReporter.endProgress(complete ? getMessage("populateContextPopulated") : "");
     }
 
@@ -355,11 +369,34 @@ public class ServerContext {
       configurationRoot, files.size(), millisSince(startedAt));
   }
 
-  private void populateDocument(URI uri) {
+  /** Дождаться физического завершения задачи, сохранив прерывание и отменив оставшиеся файлы. */
+  private static void awaitPopulation(Future<?> population, AtomicBoolean cancelled) throws ExecutionException {
+    InterruptedException interruption = null;
+    try {
+      while (true) {
+        try {
+          population.get();
+          break;
+        } catch (InterruptedException e) {
+          interruption = e;
+          cancelled.set(true);
+        }
+      }
+    } finally {
+      if (interruption != null) {
+        Thread.currentThread().interrupt();
+      }
+    }
+    if (interruption != null) {
+      throw new IllegalStateException("Interrupted while populating context", interruption);
+    }
+  }
+
+  private void populateDocument(URI uri, AtomicBoolean cancelled) {
     var lock = getDocumentLock(uri);
     lock.writeLock().lock();
     try {
-      if (backgroundWork.isStopped()) {
+      if (cancelled.get() || backgroundWork.isStopped()) {
         return;
       }
       var documentContext = documents.get(uri);
