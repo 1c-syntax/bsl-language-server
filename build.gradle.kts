@@ -264,6 +264,9 @@ if (providers.gradleProperty("native").isPresent) {
                 buildArgs.addAll(
                     "--no-fallback",
                     "-H:+ReportExceptionStackTraces",
+                    // Анализ многопоточный и активно аллоцирует: однопоточный Serial GC (по умолчанию)
+                    // заметно медленнее. G1 есть в Oracle GraalVM; для GraalVM CE: -PnativeGc=serial.
+                    "--gc=${providers.gradleProperty("nativeGc").getOrElse("G1")}",
                     "--features=com.github._1c_syntax.bsl.languageserver.nativeimage.ClassGraphScansFeature," +
                         "com.github._1c_syntax.bsl.languageserver.nativeimage.SpringCglibClassesFeature," +
                         "com.github._1c_syntax.bsl.languageserver.nativeimage.MdclassesReflectionFeature"
