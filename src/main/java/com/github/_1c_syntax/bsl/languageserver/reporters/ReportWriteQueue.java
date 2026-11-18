@@ -119,7 +119,7 @@ final class ReportWriteQueue implements AutoCloseable {
     try {
       CompletableFuture.runAsync(() -> drained = true, executor).join();
     } catch (CompletionException e) {
-      failure.compareAndSet(null, new IllegalStateException("Report write barrier failed", e.getCause()));
+      failure.compareAndSet(null, new IllegalStateException("Report write barrier failed", e));
     }
 
     if (interrupted || Thread.interrupted()) {

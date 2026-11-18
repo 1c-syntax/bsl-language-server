@@ -21,9 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
+import org.awaitility.Awaitility;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.AbstractExecutorService;
 import java.util.concurrent.CountDownLatch;
@@ -293,12 +295,8 @@ class ReportWriteQueueTest {
   /**
    * Дождаться, пока поток встанет на ожидание (закрытие ждёт барьер).
    */
-  private static void awaitWaiting(Thread thread) throws InterruptedException {
-    var deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
-    while (thread.getState() != Thread.State.WAITING) {
-      assertThat(System.nanoTime()).as("поток должен встать на ожидание").isLessThan(deadline);
-      Thread.sleep(10);
-    }
+  private static void awaitWaiting(Thread thread) {
+    Awaitility.await().atMost(Duration.ofSeconds(5)).until(() -> thread.getState() == Thread.State.WAITING);
   }
 
   private static void await(CountDownLatch latch) {
