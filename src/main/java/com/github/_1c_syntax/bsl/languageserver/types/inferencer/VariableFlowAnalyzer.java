@@ -768,6 +768,11 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
         // Окружения не запоминаются: они посчитаны по промежуточному приближению входа
         // и через круг устареют.
         var facts = compute(documentContext, body, layoutOf(documentContext, body), inputs);
+        if (shared.size() != cellCount) {
+          // Тело прочло ещё не рассчитанный вход. Его ответ может уточняться немонотонно:
+          // сначала запланировать новых писателей, затем заново вычислить вклад тела.
+          break;
+        }
         grown |= growCells(shared, session, facts);
       }
       if (shared.size() != cellCount) {

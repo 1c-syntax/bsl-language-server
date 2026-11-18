@@ -111,6 +111,8 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    */
   private static final int MAX_DOCUMENTS_IN_MEMORY = 8;
 
+  private static final Object UNSCOPED_INPUTS = new Object();
+
   private final ExpressionTypeInferencer inferencer;
   private final SymbolTypeIndex symbolTypeIndex;
 
@@ -155,7 +157,6 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
 
   /** Методы, значение которых посчитано по приближениям и ждёт пересчёта (см. computeIfAbsent). */
   private final Map<MethodSymbol, Object> provisional = new ConcurrentHashMap<>();
-  private static final Object UNSCOPED_INPUTS = new Object();
 
   /**
    * Часы, по которым видно, что чей расчёт застал, а что появилось уже после него. Своё
@@ -260,7 +261,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     }
     var known = indexed.contains(method);
     var previousInputs = provisional.get(method);
-    if (known && (previousInputs == null || approximate && previousInputs == inputs)) {
+    if (known && (previousInputs == null || (approximate && previousInputs == inputs))) {
       return;
     }
     var startedAt = clock.incrementAndGet();
@@ -501,9 +502,13 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     // Отметка снимается до расчёта: значение, изменившееся уже во время него, расчёт
     // застать не мог, и вызывающему понадобится ещё один заход.
     var startedAt = clock.incrementAndGet();
-    var changed = store(method, inferencer.computeReturnTypes(method), startedAt);
-    // Расчёт со свежего контекста идёт не посреди кругов: значение окончательное.
-    provisional.remove(method);
+    var computed = inferencer.computeReturnTypes(method);
+    var changed = store(method, computed, startedAt);
+    if (computed.incomplete()) {
+      provisional.put(method, UNSCOPED_INPUTS);
+    } else {
+      provisional.remove(method);
+    }
     return changed;
   }
 

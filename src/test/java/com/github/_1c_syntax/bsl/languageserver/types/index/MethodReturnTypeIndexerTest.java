@@ -313,9 +313,8 @@ class MethodReturnTypeIndexerTest {
     var firstInputs = new Object();
     var nextInputs = new Object();
     var calls = new AtomicInteger();
-    java.util.function.Supplier<ComputedReturnTypes> computation = () -> calls.incrementAndGet() == 1
-      ? new ComputedReturnTypes(STRING, Set.of(), false)
-      : new ComputedReturnTypes(NUMBER, Set.of(), false);
+    java.util.function.Supplier<ComputedReturnTypes> computation = () ->
+      new ComputedReturnTypes(calls.incrementAndGet() == 1 ? STRING : NUMBER, Set.of(), false);
 
     indexer.computeIfAbsent(consumerMethod, computation, true, firstInputs);
     indexer.computeIfAbsent(consumerMethod, computation, true, firstInputs);
@@ -350,6 +349,26 @@ class MethodReturnTypeIndexerTest {
     assertThat(calls.get()).isEqualTo(2);
     assertThat(indexer.isIndexed(consumerMethod)).isTrue();
     assertThat(symbolTypeIndex.getReturnTypes(consumerMethod)).isEqualTo(NUMBER);
+  }
+
+  @Test
+  void incompleteDocumentRecomputationRemainsEligibleForANeutralRetry() {
+    when(inferencer.computeReturnTypes(sourceMethod)).thenReturn(new ComputedReturnTypes(STRING, Set.of(), true));
+
+    indexer.handleContentChanged(new DocumentContextContentChangedEvent(source));
+
+    assertThat(indexer.isIndexed(sourceMethod)).isFalse();
+    var calls = new AtomicInteger();
+    java.util.function.Supplier<ComputedReturnTypes> complete = () -> {
+      calls.incrementAndGet();
+      return new ComputedReturnTypes(NUMBER, Set.of(), false);
+    };
+    indexer.computeIfAbsent(sourceMethod, complete);
+    indexer.computeIfAbsent(sourceMethod, complete);
+
+    assertThat(calls.get()).isEqualTo(1);
+    assertThat(symbolTypeIndex.getReturnTypes(sourceMethod)).isEqualTo(NUMBER);
+    assertThat(indexer.isIndexed(sourceMethod)).isTrue();
   }
 
   @Test

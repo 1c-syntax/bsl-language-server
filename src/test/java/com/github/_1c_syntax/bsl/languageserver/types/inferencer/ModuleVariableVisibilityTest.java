@@ -366,6 +366,33 @@ class ModuleVariableVisibilityTest extends AbstractServerContextAwareTest {
     assertThat(inferencer.computeReturnTypes(method).types()).isEqualTo(result.types());
   }
 
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void newlyDiscoveredInputsDoNotLeaveTemporaryArithmeticTypes(boolean numericWriter) {
+    var document = document("""
+      Var ZResult;
+      Var ASeed;
+      Procedure Initialize()
+        ZResult = GetSeed();
+      EndProcedure
+      Function GetSeed()
+        Return ASeed + "!";
+      EndFunction
+      Function Read()
+        Return ZResult;
+      EndFunction
+      %s
+      ASeed = "ready";
+      """.formatted(numericWriter ? "Procedure Numeric() ZResult = 42; EndProcedure" : ""));
+
+    var result = inferencer.computeReturnTypes(document.getSymbolTree().getMethodSymbol("Read").orElseThrow());
+
+    assertThat(result.types().refs()).extracting(TypeRef::qualifiedName).contains("Строка");
+    assertThat(result.types().refs().stream().anyMatch(type -> type.qualifiedName().equals("Число")))
+      .as("only a real numeric writer contributes Number").isEqualTo(numericWriter);
+    assertThat(result.incomplete()).isFalse();
+  }
+
   @Test
   void moduleVariableReadsAreCaseInsensitive() {
     var document = document("""
