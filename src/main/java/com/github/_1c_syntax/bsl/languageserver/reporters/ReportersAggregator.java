@@ -52,9 +52,8 @@ public class ReportersAggregator {
   // Don't remove @Autowired annotation. It's needed for injecting filteredReporters bean correctly.
   private List<DiagnosticReporter> filteredReporters;
 
-  @Autowired
   @Qualifier("reportWriteExecutor")
-  private ExecutorService reportWriteExecutor;
+  private final ExecutorService reportWriteExecutor;
 
   /**
    * Начать формирование отчётов всеми активными репортёрами.

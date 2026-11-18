@@ -21,7 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -108,31 +109,22 @@ final class ReportWriteQueue implements AutoCloseable {
   }
 
   private void awaitQueuedTasks() {
-    // исполнитель однопоточный и FIFO: барьер исполнится после всех задач, поставленных до него
-    var barrier = executor.submit(() -> {
-      drained = true;
-    });
-
-    // завершённый Future не проверяет прерывание: учитываем его заранее, чтобы исход закрытия
+    // завершённый барьер не проверяет прерывание: учитываем его заранее, чтобы исход закрытия
     // не зависел от того, успел ли барьер исполниться
     var interrupted = Thread.interrupted();
+
+    // исполнитель однопоточный и FIFO: барьер исполнится после всех задач, поставленных до него.
+    // join() не прерывается: идущая запись не должна пересечься с завершением отчёта.
+    // Прерывание во время ожидания он сохраняет во флаге потока
     try {
-      while (true) {
-        try {
-          barrier.get();
-          return;
-        } catch (InterruptedException e) {
-          // ждём дальше: идущая запись не должна пересечься с завершением отчёта
-          interrupted = true;
-        }
-      }
-    } catch (ExecutionException e) {
+      CompletableFuture.runAsync(() -> drained = true, executor).join();
+    } catch (CompletionException e) {
       failure.compareAndSet(null, new IllegalStateException("Report write barrier failed", e.getCause()));
-    } finally {
-      if (interrupted) {
-        Thread.currentThread().interrupt();
-        failure.compareAndSet(null, new IllegalStateException("Interrupted while waiting for report writes"));
-      }
+    }
+
+    if (interrupted || Thread.interrupted()) {
+      Thread.currentThread().interrupt();
+      failure.compareAndSet(null, new IllegalStateException("Interrupted while waiting for report writes"));
     }
   }
 }

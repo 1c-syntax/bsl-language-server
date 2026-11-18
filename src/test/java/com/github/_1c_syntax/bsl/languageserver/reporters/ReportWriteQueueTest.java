@@ -229,7 +229,8 @@ class ReportWriteQueueTest {
 
     @Override
     public boolean isTerminated() {
-      return shutdown;
+      // задачи исполняются сразу при постановке: после остановки исполнять нечего
+      return isShutdown();
     }
 
     @Override
