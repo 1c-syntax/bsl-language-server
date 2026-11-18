@@ -29,15 +29,11 @@ import com.github._1c_syntax.bsl.languageserver.commands.infrastructure.Commands
 import com.github._1c_syntax.bsl.languageserver.completion.CompletionData;
 import com.github._1c_syntax.bsl.languageserver.inlayhints.VariableTypeInlayHintData;
 import com.github._1c_syntax.bsl.languageserver.inlayhints.infrastructure.InlayHintsConfiguration;
+import com.github._1c_syntax.bsl.languageserver.util.AotHints;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.aot.hint.RuntimeHints;
-import org.springframework.aot.hint.annotation.ReflectiveRuntimeHintsRegistrar;
 import org.springframework.aot.hint.predicate.RuntimeHintsPredicates;
-import org.springframework.beans.BeanUtils;
-import org.springframework.context.annotation.ImportRuntimeHints;
-import org.springframework.core.annotation.AnnotatedElementUtils;
 
 import java.util.stream.Stream;
 
@@ -63,25 +59,9 @@ class LspDataRuntimeHintsTest {
   @MethodSource("dataTypes")
   void testDataTypesAreRegisteredForBinding(Class<?> owner, Class<?> dataType, String accessor) {
     // when
-    var hints = hintsOf(owner);
+    var hints = AotHints.hintsOf(owner);
 
     // then
     assertThat(RuntimeHintsPredicates.reflection().onMethodInvocation(dataType, accessor)).accepts(hints);
-  }
-
-  /**
-   * Подсказки, которые Spring AOT соберёт с класса: {@code @ImportRuntimeHints} и
-   * {@code @RegisterReflectionForBinding}.
-   */
-  private static RuntimeHints hintsOf(Class<?> owner) {
-    var hints = new RuntimeHints();
-    var importRuntimeHints = AnnotatedElementUtils.findMergedAnnotation(owner, ImportRuntimeHints.class);
-    if (importRuntimeHints != null) {
-      for (var registrar : importRuntimeHints.value()) {
-        BeanUtils.instantiateClass(registrar).registerHints(hints, owner.getClassLoader());
-      }
-    }
-    new ReflectiveRuntimeHintsRegistrar().registerRuntimeHints(hints, owner);
-    return hints;
   }
 }

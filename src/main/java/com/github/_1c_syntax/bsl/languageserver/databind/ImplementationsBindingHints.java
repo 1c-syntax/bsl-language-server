@@ -21,15 +21,19 @@
  */
 package com.github._1c_syntax.bsl.languageserver.databind;
 
+import com.google.gson.annotations.JsonAdapter;
 import org.jspecify.annotations.Nullable;
 import org.springframework.aot.hint.BindingReflectionHintsRegistrar;
+import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.io.DefaultResourceLoader;
 import org.springframework.core.type.filter.AssignableTypeFilter;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.ReflectionUtils;
 
+import java.lang.reflect.Field;
 import java.lang.reflect.Type;
 import java.util.Objects;
 
@@ -37,7 +41,7 @@ import java.util.Objects;
  * Подсказки для native-image к полиморфным типам, которые читаются и пишутся Jackson'ом.
  * <p>
  * Конкретные реализации типа находятся на classpath проекта во время AOT-обработки и
- * регистрируются для биндинга вместе со своими свойствами.
+ * регистрируются для биндинга вместе со своими свойствами и Gson-адаптерами полей.
  */
 public final class ImplementationsBindingHints {
 
@@ -63,8 +67,21 @@ public final class ImplementationsBindingHints {
       .map(BeanDefinition::getBeanClassName)
       .filter(Objects::nonNull)
       .map(className -> ClassUtils.resolveClassName(className, classLoader))
-      .toArray(Type[]::new);
+      .toList();
 
-    new BindingReflectionHintsRegistrar().registerReflectionHints(hints.reflection(), implementations);
+    new BindingReflectionHintsRegistrar().registerReflectionHints(hints.reflection(), implementations.toArray(Type[]::new));
+    implementations.forEach(implementation -> registerGsonAdapters(hints, implementation));
+  }
+
+  /**
+   * Те же данные LSP4J сериализует Gson'ом: адаптеры из {@link JsonAdapter} на полях создаются рефлексией.
+   */
+  private static void registerGsonAdapters(RuntimeHints hints, Class<?> type) {
+    ReflectionUtils.doWithFields(type, (Field field) -> {
+      var adapter = field.getAnnotation(JsonAdapter.class);
+      if (adapter != null) {
+        hints.reflection().registerType(adapter.value(), MemberCategory.INVOKE_DECLARED_CONSTRUCTORS);
+      }
+    });
   }
 }

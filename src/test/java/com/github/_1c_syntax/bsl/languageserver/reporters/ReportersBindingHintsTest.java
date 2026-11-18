@@ -23,11 +23,14 @@ package com.github._1c_syntax.bsl.languageserver.reporters;
 
 import com.contrastsecurity.sarif.Result;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
+import com.github._1c_syntax.bsl.languageserver.reporters.databind.DiagnosticCodeSerializer;
+import com.github._1c_syntax.bsl.languageserver.reporters.databind.DiagnosticMessageSerializer;
+import com.github._1c_syntax.bsl.languageserver.util.AotHints;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.springframework.aot.hint.RuntimeHints;
-import org.springframework.aot.hint.annotation.ReflectiveRuntimeHintsRegistrar;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.hint.predicate.RuntimeHintsPredicates;
 
 import java.util.stream.Stream;
@@ -53,13 +56,21 @@ class ReportersBindingHintsTest {
   @ParameterizedTest
   @MethodSource("reportedTypes")
   void testReportedTypesAreRegisteredForBinding(Class<?> reporter, Class<?> reportedType, String accessor) {
-    // given
-    var hints = new RuntimeHints();
-
     // when
-    new ReflectiveRuntimeHintsRegistrar().registerRuntimeHints(hints, reporter);
+    var hints = AotHints.hintsOf(reporter);
 
     // then
     assertThat(RuntimeHintsPredicates.reflection().onMethodInvocation(reportedType, accessor)).accepts(hints);
+  }
+
+  @ParameterizedTest
+  @ValueSource(classes = {DiagnosticCodeSerializer.class, DiagnosticMessageSerializer.class})
+  void testMixInSerializersOfJsonReportAreRegistered(Class<?> serializer) {
+    // when
+    var hints = AotHints.hintsOf(JsonReporter.class);
+
+    // then
+    assertThat(RuntimeHintsPredicates.reflection().onType(serializer)
+      .withMemberCategory(MemberCategory.INVOKE_DECLARED_CONSTRUCTORS)).accepts(hints);
   }
 }
