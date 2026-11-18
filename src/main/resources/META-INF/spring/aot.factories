@@ -1,2 +1,5 @@
 org.springframework.beans.factory.aot.BeanRegistrationAotProcessor=\
 com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScopedProxyBeanRegistrationAotProcessor
+
+org.springframework.aot.hint.RuntimeHintsRegistrar=\
+com.github._1c_syntax.bsl.languageserver.infrastructure.ResourcesRuntimeHints
