@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.Diagn
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import org.springframework.stereotype.Component;
 import tools.jackson.core.util.DefaultIndenter;
 import tools.jackson.core.util.DefaultPrettyPrinter;
@@ -37,6 +38,7 @@ import java.nio.file.Path;
 
 @Slf4j
 @Component
+@RegisterReflectionForBinding(CodeQualityReportEntry.class)
 public class CodeQualityReporter extends AbstractDiagnosticReporter {
 
   private ReportFile reportFile;

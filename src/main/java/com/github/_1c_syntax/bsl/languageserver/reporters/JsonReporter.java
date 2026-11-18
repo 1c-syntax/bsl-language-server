@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.databind.AnalysisInfoJsonMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import org.springframework.stereotype.Component;
 import tools.jackson.core.JsonGenerator;
 import tools.jackson.databind.SequenceWriter;
@@ -34,6 +35,7 @@ import java.time.format.DateTimeFormatter;
 
 @Slf4j
 @Component
+@RegisterReflectionForBinding(FileInfo.class)
 public class JsonReporter implements DiagnosticReporter {
 
   private ReportFile reportFile;

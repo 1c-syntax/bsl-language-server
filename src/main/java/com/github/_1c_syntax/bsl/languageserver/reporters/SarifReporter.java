@@ -52,6 +52,7 @@ import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.ServerInfo;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.SequenceWriter;
 import tools.jackson.databind.json.JsonMapper;
@@ -75,6 +76,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
  */
 @Component
 @Slf4j
+@RegisterReflectionForBinding({Tool.class, Invocation.class, Result.class})
 public class SarifReporter extends AbstractDiagnosticReporter {
 
   private static final Map<DiagnosticSeverity, Result.Level> severityToResultLevel = Map.of(
