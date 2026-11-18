@@ -47,7 +47,7 @@ class MinimumLSPDiagnosticLevelTest extends AbstractServerContextAwareTest {
   private LanguageServerConfiguration configuration;
 
   @Autowired
-  private DiagnosticsConfiguration diagnosticsConfiguration;
+  private DiagnosticsSelector diagnosticsSelector;
 
   @BeforeEach
   void setUp() {
@@ -68,7 +68,7 @@ class MinimumLSPDiagnosticLevelTest extends AbstractServerContextAwareTest {
     // when - get diagnostics for a document
     var documentContext = TestUtils.getDocumentContext("", context);
 
-    List<BSLDiagnostic> diagnostics = diagnosticsConfiguration.diagnostics(documentContext);
+    List<BSLDiagnostic> diagnostics = diagnosticsSelector.select(documentContext);
 
     // then - diagnostics with LSP severity below Warning (Information=3, Hint=4) should be filtered out
     // Only diagnostics with Error (1) or Warning (2) should be included
@@ -95,7 +95,7 @@ class MinimumLSPDiagnosticLevelTest extends AbstractServerContextAwareTest {
     // when - get diagnostics for a document
     var documentContext = TestUtils.getDocumentContext("", context);
 
-    List<BSLDiagnostic> diagnostics = diagnosticsConfiguration.diagnostics(documentContext);
+    List<BSLDiagnostic> diagnostics = diagnosticsSelector.select(documentContext);
 
     // then - all enabled diagnostics should be included (no filtering by LSP severity)
     assertThat(diagnostics).isNotEmpty();
@@ -125,7 +125,7 @@ class MinimumLSPDiagnosticLevelTest extends AbstractServerContextAwareTest {
     // when - get diagnostics for a document
     var documentContext = TestUtils.getDocumentContext("", context);
 
-    List<BSLDiagnostic> diagnostics = diagnosticsConfiguration.diagnostics(documentContext);
+    List<BSLDiagnostic> diagnostics = diagnosticsSelector.select(documentContext);
 
     // then - only diagnostics with Error severity should be included
     diagnostics.forEach(diagnostic -> {

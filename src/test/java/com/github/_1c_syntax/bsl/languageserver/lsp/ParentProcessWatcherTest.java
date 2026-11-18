@@ -24,18 +24,28 @@ package com.github._1c_syntax.bsl.languageserver.lsp;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
 import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.services.LanguageServer;
+import org.jspecify.annotations.Nullable;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.nio.file.Path;
+import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
+
+import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
 @ExtendWith(MockitoExtension.class)
 class ParentProcessWatcherTest {
+
+  private static final Duration EXIT_TIMEOUT = Duration.ofSeconds(10);
+  private static final Duration QUIET_PERIOD = Duration.ofSeconds(1);
 
   @InjectMocks
   private ParentProcessWatcher parentProcessWatcher;
@@ -43,36 +53,108 @@ class ParentProcessWatcherTest {
   @Mock
   private LanguageServer languageServer;
 
-  @Test
-  void testParentProcessIsDead() {
-    // given
-    var params = new InitializeParams();
-    params.setProcessId(-1);
+  private final List<Process> startedProcesses = new ArrayList<>();
 
-    var event = new LanguageServerInitializedEvent(languageServer, params);
-    parentProcessWatcher.handleEvent(event);
-
-    // when
-    parentProcessWatcher.watch();
-
-    // then
-    verify(languageServer, times(1)).exit();
+  @AfterEach
+  void tearDown() {
+    startedProcesses.forEach(Process::destroyForcibly);
   }
 
   @Test
-  void testParentProcessIsAlive() {
+  void testExitWhenParentProcessTerminates() throws Exception {
     // given
-    var params = new InitializeParams();
-    params.setProcessId((int) ProcessHandle.current().pid());
-
-    var event = new LanguageServerInitializedEvent(languageServer, params);
-    parentProcessWatcher.handleEvent(event);
+    var parentProcess = startParentProcess();
+    initialize(parentProcess.pid());
 
     // when
-    parentProcessWatcher.watch();
+    parentProcess.destroy();
 
     // then
-    verify(languageServer, never()).exit();
+    await()
+      .atMost(EXIT_TIMEOUT)
+      .untilAsserted(() -> verify(languageServer).exit());
+  }
+
+  @Test
+  void testExitWhenParentProcessIsAlreadyGone() throws Exception {
+    // given
+    var parentProcess = startParentProcess();
+    parentProcess.destroyForcibly().waitFor();
+
+    // when
+    initialize(parentProcess.pid());
+
+    // then
+    await()
+      .atMost(EXIT_TIMEOUT)
+      .untilAsserted(() -> verify(languageServer).exit());
+  }
+
+  @Test
+  void testNoExitWhileParentProcessIsAlive() throws Exception {
+    // given
+    var parentProcess = startParentProcess();
+
+    // when
+    initialize(parentProcess.pid());
+
+    // then
+    await()
+      .during(QUIET_PERIOD)
+      .atMost(QUIET_PERIOD.plusSeconds(1))
+      .untilAsserted(() -> verify(languageServer, never()).exit());
+  }
+
+  @Test
+  void testNoExitWhenParentProcessIsCurrentProcess() {
+    // when
+    initialize(ProcessHandle.current().pid());
+
+    // then
+    await()
+      .during(QUIET_PERIOD)
+      .atMost(QUIET_PERIOD.plusSeconds(1))
+      .untilAsserted(() -> verify(languageServer, never()).exit());
+  }
+
+  @Test
+  void testNoExitWithoutParentProcessId() {
+    // when
+    initialize(null);
+
+    // then
+    await()
+      .during(QUIET_PERIOD)
+      .atMost(QUIET_PERIOD.plusSeconds(1))
+      .untilAsserted(() -> verify(languageServer, never()).exit());
+  }
+
+  private void initialize(@Nullable Long processId) {
+    var params = new InitializeParams();
+    params.setProcessId(processId == null ? null : Math.toIntExact(processId));
+    parentProcessWatcher.handleEvent(new LanguageServerInitializedEvent(languageServer, params));
+  }
+
+  /**
+   * Запускает «родительский» процесс — отдельную JVM, которая просто спит.
+   * Кроссплатформенно, в отличие от утилит ОС вроде {@code sleep}/{@code timeout}.
+   */
+  private Process startParentProcess() throws Exception {
+    var java = Path.of(System.getProperty("java.home"), "bin", "java").toString();
+    var classPath = Path.of(SleepingProcess.class.getProtectionDomain().getCodeSource().getLocation().toURI())
+      .toString();
+    var process = new ProcessBuilder(java, "-cp", classPath, SleepingProcess.class.getName())
+      .redirectErrorStream(true)
+      .redirectOutput(ProcessBuilder.Redirect.DISCARD)
+      .start();
+    startedProcesses.add(process);
+    return process;
+  }
+
+  static class SleepingProcess {
+    public static void main(String[] args) throws InterruptedException {
+      Thread.sleep(Duration.ofMinutes(1));
+    }
   }
 
 }

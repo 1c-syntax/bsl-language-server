@@ -27,7 +27,8 @@ import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.SkipSu
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticsConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticComputer;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticsSelector;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.support.CompatibilityMode;
@@ -54,7 +55,9 @@ class DiagnosticsTest extends AbstractServerContextAwareTest {
 
   protected LanguageServerConfiguration configuration;
   @Autowired
-  protected DiagnosticsConfiguration diagnosticsConfiguration;
+  protected DiagnosticsSelector diagnosticsSelector;
+  @Autowired
+  private DiagnosticComputer diagnosticComputer;
 
   private DocumentContext documentContext;
 
@@ -81,15 +84,15 @@ class DiagnosticsTest extends AbstractServerContextAwareTest {
 
     // when-then pairs
     doReturn(new CompatibilityMode(3, 10)).when(bslConfiguration).getCompatibilityMode();
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .anyMatch(diagnostic -> diagnostic instanceof DeprecatedFindDiagnostic);
 
     doReturn(new CompatibilityMode(3, 6)).when(bslConfiguration).getCompatibilityMode();
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .anyMatch(diagnostic -> diagnostic instanceof DeprecatedFindDiagnostic);
 
     doReturn(new CompatibilityMode(2, 16)).when(bslConfiguration).getCompatibilityMode();
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .noneMatch(diagnostic -> diagnostic instanceof DeprecatedFindDiagnostic);
   }
 
@@ -100,19 +103,19 @@ class DiagnosticsTest extends AbstractServerContextAwareTest {
 
     // when-then pairs
     doReturn(ModuleType.CommandModule).when(documentContext).getModuleType();
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .anyMatch(diagnostic -> diagnostic instanceof CompilationDirectiveLostDiagnostic);
 
     doReturn(ModuleType.FormModule).when(documentContext).getModuleType();
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .anyMatch(diagnostic -> diagnostic instanceof CompilationDirectiveLostDiagnostic);
 
     doReturn(ModuleType.CommonModule).when(documentContext).getModuleType();
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .noneMatch(diagnostic -> diagnostic instanceof CompilationDirectiveLostDiagnostic);
 
     doReturn(ModuleType.UNKNOWN).when(documentContext).getModuleType();
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .noneMatch(diagnostic -> diagnostic instanceof CompilationDirectiveLostDiagnostic);
   }
 
@@ -124,19 +127,19 @@ class DiagnosticsTest extends AbstractServerContextAwareTest {
     // when-then pairs
     doReturn(ModuleType.CommonModule).when(documentContext).getModuleType();
     doReturn(FileType.BSL).when(documentContext).getFileType();
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .anyMatch(UnusedLocalMethodDiagnostic.class::isInstance);
 
     // UnusedLocalMethodDiagnostic не привязан к ModuleType — фильтрация по типу модуля
     // и наличию HBK выполняется внутри check.
     doReturn(ModuleType.UNKNOWN).when(documentContext).getModuleType();
     doReturn(FileType.BSL).when(documentContext).getFileType();
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .anyMatch(UnusedLocalMethodDiagnostic.class::isInstance);
 
     doReturn(ModuleType.UNKNOWN).when(documentContext).getModuleType();
     doReturn(FileType.OS).when(documentContext).getFileType();
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .anyMatch(UnusedLocalMethodDiagnostic.class::isInstance);
   }
 
@@ -149,68 +152,68 @@ class DiagnosticsTest extends AbstractServerContextAwareTest {
     // when-then pairs ComputeDiagnosticsSkipSupport.NEVER
     configuration.getDiagnosticsOptions().setSkipSupport(SkipSupport.NEVER);
     doReturn(SupportVariant.NONE).when(documentContext).getSupportVariant();
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .isNotEmpty();
 
     doReturn(SupportVariant.NONE).when(documentContext).getSupportVariant();
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .isNotEmpty();
 
     doReturn(SupportVariant.NOT_SUPPORTED).when(documentContext).getSupportVariant();
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .isNotEmpty();
 
     doReturn(SupportVariant.EDITABLE_SUPPORT_ENABLED).when(documentContext).getSupportVariant();
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .isNotEmpty();
 
     doReturn(SupportVariant.NOT_EDITABLE).when(documentContext).getSupportVariant();
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .isNotEmpty();
 
     // when-then pairs ComputeDiagnosticsSkipSupport.WITHSUPPORTLOCKED
     configuration.getDiagnosticsOptions().setSkipSupport(SkipSupport.WITH_SUPPORT_LOCKED);
     doReturn(SupportVariant.NONE).when(documentContext).getSupportVariant();
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .isNotEmpty();
 
     doReturn(SupportVariant.NONE).when(documentContext).getSupportVariant();
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .isNotEmpty();
 
     doReturn(SupportVariant.NOT_SUPPORTED).when(documentContext).getSupportVariant();
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .isNotEmpty();
 
     doReturn(SupportVariant.EDITABLE_SUPPORT_ENABLED).when(documentContext).getSupportVariant();
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .isNotEmpty();
 
     doReturn(SupportVariant.NOT_EDITABLE).when(documentContext).getSupportVariant();
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .isEmpty();
 
     // when-then pairs ComputeDiagnosticsSkipSupport.WITHSUPPORT
     configuration.getDiagnosticsOptions().setSkipSupport(SkipSupport.WITH_SUPPORT);
     doReturn(SupportVariant.NONE).when(documentContext).getSupportVariant();
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .isNotEmpty();
 
     doReturn(SupportVariant.NONE).when(documentContext).getSupportVariant();
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .isNotEmpty();
 
     doReturn(SupportVariant.NOT_SUPPORTED).when(documentContext).getSupportVariant();
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .isEmpty();
 
     doReturn(SupportVariant.EDITABLE_SUPPORT_ENABLED).when(documentContext)
       .getSupportVariant();
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .isEmpty();
 
     doReturn(SupportVariant.NOT_EDITABLE).when(documentContext).getSupportVariant();
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .isEmpty();
   }
 
@@ -219,7 +222,7 @@ class DiagnosticsTest extends AbstractServerContextAwareTest {
     // when
     configuration.getDiagnosticsOptions().setMode(Mode.OFF);
 
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext)).isEmpty();
+    assertThat(diagnosticsSelector.select(documentContext)).isEmpty();
   }
 
   @Test
@@ -227,7 +230,7 @@ class DiagnosticsTest extends AbstractServerContextAwareTest {
     // when
     configuration.getDiagnosticsOptions().setMode(Mode.ON);
 
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .hasSizeGreaterThan(10)
       .flatExtracting(Object::getClass)
       .doesNotContain(TooManyReturnsDiagnostic.class);
@@ -238,7 +241,7 @@ class DiagnosticsTest extends AbstractServerContextAwareTest {
     // when
     configuration.getDiagnosticsOptions().setMode(Mode.ALL);
 
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .hasSizeGreaterThan(10)
       .flatExtracting(Object::getClass)
       .contains(TooManyReturnsDiagnostic.class);
@@ -254,7 +257,7 @@ class DiagnosticsTest extends AbstractServerContextAwareTest {
 
     configuration.getDiagnosticsOptions().setParameters(rules);
 
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .hasSize(1)
       .flatExtracting(Object::getClass)
       .doesNotContain(TypoDiagnostic.class)
@@ -271,7 +274,7 @@ class DiagnosticsTest extends AbstractServerContextAwareTest {
     rules.put("TooManyReturns", Either.forLeft(true));
 
     configuration.getDiagnosticsOptions().setParameters(rules);
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .hasSizeGreaterThan(10)
       .flatExtracting(BSLDiagnostic::getClass)
       .doesNotContain(TypoDiagnostic.class)
@@ -295,42 +298,42 @@ class DiagnosticsTest extends AbstractServerContextAwareTest {
 
     doReturn(form).when(documentContext).getMdObject();
     // Без фильтра
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .isNotEmpty();
 
     configuration.getDiagnosticsOptions().getSubsystemsFilter()
       .setInclude(new TreeSet<>(List.of("ПодсистемаКотройНет")));
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .isEmpty();
 
     configuration.getDiagnosticsOptions().getSubsystemsFilter()
       .setInclude(new TreeSet<>(List.of("Подсистема1")));
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .isNotEmpty();
 
     configuration.getDiagnosticsOptions().getSubsystemsFilter()
       .setInclude(new TreeSet<>(List.of("Подсистема1_1")));
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .isNotEmpty();
 
     configuration.getDiagnosticsOptions().getSubsystemsFilter()
       .setInclude(new TreeSet<>(List.of("Подсистема1_1_1")));
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .isNotEmpty();
 
     configuration.getDiagnosticsOptions().getSubsystemsFilter()
       .setInclude(new TreeSet<>(List.of("Подсистема1_1_3")));
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .isEmpty();
 
     configuration.getDiagnosticsOptions().getSubsystemsFilter()
       .setInclude(new TreeSet<>(List.of("Подсистема2")));
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .isNotEmpty();
 
     configuration.getDiagnosticsOptions().getSubsystemsFilter()
       .setInclude(new TreeSet<>(List.of("Подсистема3")));
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .isEmpty();
   }
 
@@ -349,16 +352,16 @@ class DiagnosticsTest extends AbstractServerContextAwareTest {
 
     doReturn(mdObject).when(documentContext).getMdObject();
     // Без фильтра
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .isNotEmpty();
 
     configuration.getDiagnosticsOptions().getSubsystemsFilter()
       .setExclude(new TreeSet<>(List.of("ПодсистемаКотройНет")));
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .isNotEmpty();
     configuration.getDiagnosticsOptions().getSubsystemsFilter()
       .setExclude(new TreeSet<>(List.of("Подсистема2")));
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .isEmpty();
   }
 
@@ -376,19 +379,52 @@ class DiagnosticsTest extends AbstractServerContextAwareTest {
 
     doReturn(mdObject).when(documentContext).getMdObject();
     // Без фильтра
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .isNotEmpty();
 
     configuration.getDiagnosticsOptions().getSubsystemsFilter()
       .setInclude(new TreeSet<>(List.of("Подсистема2")));
     configuration.getDiagnosticsOptions().getSubsystemsFilter()
       .setExclude(new TreeSet<>(List.of("Подсистема2_2")));
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .isEmpty();
 
     configuration.getDiagnosticsOptions().getSubsystemsFilter()
       .setExclude(new TreeSet<>(List.of("Подсистема2")));
-    assertThat(diagnosticsConfiguration.diagnostics(documentContext))
+    assertThat(diagnosticsSelector.select(documentContext))
       .isEmpty();
+  }
+
+  @Test
+  void testDiagnosticComputerUsesConfiguredDiagnostics() {
+    // given
+    configuration.getDiagnosticsOptions().setMode(Mode.ONLY);
+    Map<String, Either<Boolean, Map<String, Object>>> rules = new HashMap<>();
+    rules.put("SemicolonPresence", Either.forLeft(true));
+    configuration.getDiagnosticsOptions().setParameters(rules);
+
+    var documentContextWithIssues = TestUtils.getDocumentContext("А = 1", context);
+
+    // when
+    var diagnostics = diagnosticComputer.compute(documentContextWithIssues);
+
+    // then
+    assertThat(diagnostics)
+      .isNotEmpty()
+      .allSatisfy(diagnostic -> assertThat(diagnostic.getCode().getLeft()).isEqualTo("SemicolonPresence"));
+  }
+
+  @Test
+  void testDiagnosticComputerComputesNothingWhenDiagnosticsAreOff() {
+    // given
+    configuration.getDiagnosticsOptions().setMode(Mode.OFF);
+
+    var documentContextWithIssues = TestUtils.getDocumentContext("А = 1", context);
+
+    // when
+    var diagnostics = diagnosticComputer.compute(documentContextWithIssues);
+
+    // then
+    assertThat(diagnostics).isEmpty();
   }
 }
