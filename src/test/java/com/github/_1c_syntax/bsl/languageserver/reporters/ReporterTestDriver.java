@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
+import com.github._1c_syntax.bsl.languageserver.infrastructure.ExecutorConfiguration;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import lombok.experimental.UtilityClass;
 
@@ -31,8 +32,8 @@ import java.util.List;
  * Прогон полного жизненного цикла репортёра по готовому {@link AnalysisInfo}.
  * <p>
  * Тестам удобно задавать результаты анализа целиком, тогда как репортёр принимает их по одному.
- * Результаты передаются через {@link ReportSession}, как и при реальном анализе: запись идёт
- * в потоке очереди записи, а не в потоке теста.
+ * Результаты передаются через {@link ReportSession} с исполнителем записи из конфигурации, как и
+ * при реальном анализе: запись идёт в потоке исполнителя, а не в потоке теста.
  */
 @UtilityClass
 class ReporterTestDriver {
@@ -46,9 +47,12 @@ class ReporterTestDriver {
    */
   static void report(DiagnosticReporter reporter, AnalysisInfo analysisInfo, Path outputDir) {
     reporter.beginReport(new ReportContext(analysisInfo.date(), analysisInfo.sourceDir()), outputDir);
-    try (var session = new ReportSession(List.of(reporter))) {
+    var writeExecutor = new ExecutorConfiguration().reportWriteExecutor();
+    try (var session = new ReportSession(List.of(reporter), writeExecutor)) {
       analysisInfo.fileinfos().forEach(session::accept);
       session.commit();
+    } finally {
+      writeExecutor.shutdown();
     }
   }
 }

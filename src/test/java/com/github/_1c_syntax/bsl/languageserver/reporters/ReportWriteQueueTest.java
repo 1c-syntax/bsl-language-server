@@ -21,17 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
-import org.jspecify.annotations.Nullable;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
@@ -41,37 +36,22 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class ReportWriteQueueTest {
 
-  /**
-   * Ключевое свойство: задачи исполняет ровно один поток. На нём держится весь контракт —
-   * репортёры пишут в свои генераторы без синхронизации.
-   */
-  @Test
-  void executesAllTasksOnSingleThread() {
-    Set<String> threads = ConcurrentHashMap.newKeySet();
-    var executed = new AtomicInteger();
+  private final ExecutorService executor = Executors.newSingleThreadExecutor();
 
-    try (var queue = new ReportWriteQueue("test")) {
-      IntStream.range(0, 200).parallel().forEach(i -> queue.submit(() -> {
-        threads.add(Thread.currentThread().getName());
-        executed.incrementAndGet();
-      }));
-    }
-
-    assertThat(threads).hasSize(1);
-    assertThat(executed).hasValue(200);
+  @AfterEach
+  void tearDown() {
+    executor.shutdownNow();
   }
 
   @Test
   void closeWaitsForQueuedTasks() {
     var executed = new AtomicInteger();
 
-    try (var queue = new ReportWriteQueue("test")) {
-      for (var i = 0; i < 50; i++) {
-        queue.submit(executed::incrementAndGet);
-      }
+    try (var queue = new ReportWriteQueue(executor)) {
+      IntStream.range(0, 200).parallel().forEach(i -> queue.submit(executed::incrementAndGet));
     }
 
-    assertThat(executed).hasValue(50);
+    assertThat(executed).hasValue(200);
   }
 
   /**
@@ -83,7 +63,7 @@ class ReportWriteQueueTest {
     var taskStarted = new CountDownLatch(1);
     var submitReturned = new CountDownLatch(1);
 
-    try (var queue = new ReportWriteQueue("test")) {
+    try (var queue = new ReportWriteQueue(executor)) {
       var producer = new Thread(() -> {
         queue.submit(() -> {
           taskStarted.countDown();
@@ -107,40 +87,9 @@ class ReportWriteQueueTest {
     }
   }
 
-  /**
-   * Задача видит workspace-контекст того потока, который её поставил, — иначе workspace-scoped
-   * бины (например, {@code DiagnosticInfos}) в потоке записи не резолвятся. Контекст снимается
-   * на каждую задачу отдельно: поток очереди общий, а постановщики могут быть из разных workspace.
-   */
-  @Test
-  void propagatesWorkspaceContextOfSubmitterToTask() throws InterruptedException {
-    var firstWorkspace = URI.create("file:///report-write-queue/first/");
-    var secondWorkspace = URI.create("file:///report-write-queue/second/");
-    List<@Nullable URI> observed = Collections.synchronizedList(new ArrayList<>());
-    Runnable recordWorkspace = () -> observed.add(WorkspaceContextHolder.get());
-
-    WorkspaceContextHolder.registerWorkspace(firstWorkspace, "first");
-    WorkspaceContextHolder.registerWorkspace(secondWorkspace, "second");
-    try (var queue = new ReportWriteQueue("test")) {
-      // свежий поток: контекст потока теста мог остаться от предыдущих тестов этого форка
-      var producer = new Thread(() -> {
-        WorkspaceContextHolder.run(firstWorkspace, () -> queue.submit(recordWorkspace));
-        WorkspaceContextHolder.run(secondWorkspace, () -> queue.submit(recordWorkspace));
-        queue.submit(recordWorkspace);
-      });
-      producer.start();
-      producer.join();
-    } finally {
-      WorkspaceContextHolder.unregisterWorkspace(firstWorkspace);
-      WorkspaceContextHolder.unregisterWorkspace(secondWorkspace);
-    }
-
-    assertThat(observed).containsExactly(firstWorkspace, secondWorkspace, null);
-  }
-
   @Test
   void closeRethrowsFirstTaskFailure() {
-    var queue = new ReportWriteQueue("test");
+    var queue = new ReportWriteQueue(executor);
     queue.submit(() -> {
       throw new IllegalStateException("запись сломалась");
     });
@@ -154,8 +103,8 @@ class ReportWriteQueueTest {
   void skipsTasksQueuedAfterFailure() {
     var afterFailure = new AtomicInteger();
 
-    // очередь однопоточная и FIFO: первая задача успевает упасть до разбора второй
-    var queue = new ReportWriteQueue("test");
+    // исполнитель однопоточный и FIFO: первая задача успевает упасть до разбора второй
+    var queue = new ReportWriteQueue(executor);
     queue.submit(() -> {
       throw new IllegalStateException("запись сломалась");
     });

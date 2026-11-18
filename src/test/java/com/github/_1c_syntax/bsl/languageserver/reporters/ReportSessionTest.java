@@ -22,23 +22,33 @@
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 class ReportSessionTest {
 
+  private final ExecutorService executor = Executors.newSingleThreadExecutor();
+
+  @AfterEach
+  void tearDown() {
+    executor.shutdownNow();
+  }
+
   @Test
   void deliversEveryResultToEveryReporter() {
     var first = new RecordingReporter("first");
     var second = new RecordingReporter("second");
 
-    try (var session = new ReportSession(List.of(first, second))) {
+    try (var session = new ReportSession(List.of(first, second), executor)) {
       session.accept(fileInfo("a.bsl"));
       session.accept(fileInfo("b.bsl"));
       session.commit();
@@ -52,7 +62,7 @@ class ReportSessionTest {
   void commitFinishesReports() {
     var reporter = new RecordingReporter("only");
 
-    try (var session = new ReportSession(List.of(reporter))) {
+    try (var session = new ReportSession(List.of(reporter), executor)) {
       session.accept(fileInfo("a.bsl"));
       session.commit();
     }
@@ -65,7 +75,7 @@ class ReportSessionTest {
   void closeWithoutCommitAbortsReports() {
     var reporter = new RecordingReporter("only");
 
-    try (var session = new ReportSession(List.of(reporter))) {
+    try (var session = new ReportSession(List.of(reporter), executor)) {
       session.accept(fileInfo("a.bsl"));
       // фиксации нет: анализ не дошёл до конца
     }
@@ -80,7 +90,7 @@ class ReportSessionTest {
     failing.failOnAccept = true;
     var healthy = new RecordingReporter("healthy");
 
-    var session = new ReportSession(List.of(failing, healthy));
+    var session = new ReportSession(List.of(failing, healthy), executor);
     session.accept(fileInfo("a.bsl"));
     session.commit();
 
@@ -99,7 +109,7 @@ class ReportSessionTest {
     failing.failOnEnd = true;
     var healthy = new RecordingReporter("healthy");
 
-    var session = new ReportSession(List.of(failing, healthy));
+    var session = new ReportSession(List.of(failing, healthy), executor);
     session.commit();
 
     assertThatThrownBy(session::close).isInstanceOf(IllegalStateException.class);
