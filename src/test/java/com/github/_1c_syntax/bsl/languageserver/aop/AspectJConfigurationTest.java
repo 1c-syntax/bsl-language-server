@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.computer.CognitiveComple
 import com.github._1c_syntax.bsl.languageserver.context.computer.ComplexityData;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.springframework.aop.aspectj.annotation.ReflectiveAspectJAdvisorFactory;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.aot.hint.RuntimeHints;
 import org.springframework.aot.hint.predicate.RuntimeHintsPredicates;
@@ -46,6 +47,16 @@ class AspectJConfigurationTest {
     // then
     assertThat(RuntimeHintsPredicates.reflection().onMethodInvocation(aspectClass, "aspectOf"))
       .accepts(hints);
+  }
+
+  /**
+   * Аспекты вплетаются при компиляции (ajc); Spring AOP не должен применять их повторно через
+   * прокси, иначе advice выполняется дважды (например, события публикуются по два раза).
+   */
+  @ParameterizedTest
+  @ValueSource(classes = {EventPublisherAspect.class, SentryAspect.class, MeasuresAspect.class})
+  void testCompileTimeWovenAspectsAreNotAppliedBySpringAop(Class<?> aspectClass) {
+    assertThat(new ReflectiveAspectJAdvisorFactory().isAspect(aspectClass)).isFalse();
   }
 
   /**

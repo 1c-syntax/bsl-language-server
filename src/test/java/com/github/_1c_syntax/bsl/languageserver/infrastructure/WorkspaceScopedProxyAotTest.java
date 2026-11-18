@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.infrastructure;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.aop.support.AopUtils;
+import org.springframework.aot.hint.MemberCategory;
 import org.springframework.aot.test.generate.TestGenerationContext;
 import org.springframework.beans.factory.config.CustomScopeConfigurer;
 import org.springframework.context.ApplicationContextInitializer;
@@ -90,6 +91,27 @@ public class WorkspaceScopedProxyAotTest {
         }
       }
     });
+  }
+
+  @Test
+  void proxyClassIsRegisteredForReflectiveAccessToItsStaticState() {
+    // given
+    var buildTimeContext = new AnnotationConfigApplicationContext();
+    buildTimeContext.registerBean(TestConfig.class);
+    var generationContext = new TestGenerationContext();
+
+    // when
+    new ApplicationContextAotGenerator().processAheadOfTime(buildTimeContext, generationContext);
+
+    // then: CGLIB при повторном использовании класса прокси читает его статические поля рефлексией
+    var proxyClassPrefix = Counter.class.getName() + "$$SpringCGLIB$$";
+    var proxyTypeHints = generationContext.getRuntimeHints().reflection().typeHints()
+      .filter(typeHint -> typeHint.getType().getName().startsWith(proxyClassPrefix))
+      .toList();
+    assertThat(proxyTypeHints)
+      .isNotEmpty()
+      .allSatisfy(typeHint -> assertThat(typeHint.getMemberCategories())
+        .contains(MemberCategory.ACCESS_DECLARED_FIELDS, MemberCategory.INVOKE_DECLARED_METHODS));
   }
 
   @Test
