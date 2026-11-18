@@ -27,7 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.jspecify.annotations.Nullable;
-import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
 
 import java.net.URI;
 import java.util.List;
@@ -36,7 +36,7 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /** Снимки позиций аннотаций и их параметров в документах одной рабочей области. */
-@Component
+@Repository
 @WorkspaceScope
 public class AnnotationPositionRepository {
   private final Map<URI, Snapshot> snapshots = new ConcurrentHashMap<>();
