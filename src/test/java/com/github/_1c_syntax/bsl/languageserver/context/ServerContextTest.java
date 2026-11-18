@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.ContextPropagatingExecutorService;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
@@ -49,6 +50,7 @@ import org.mockito.ArgumentMatchers;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -61,6 +63,8 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -403,7 +407,7 @@ class ServerContextTest extends AbstractServerContextAwareTest {
   }
 
   @Test
-  void interruptedPopulationKeepsWorkersTrackedUntilTheyFinish() throws Exception {
+  void interruptedPopulationKeepsWorkersTrackedUntilTheyFinish() {
     initServerContext(PATH_TO_METADATA, false);
     var file = new File(PATH_TO_METADATA, PATH_TO_MODULE_FILE);
     var lock = (ReentrantReadWriteLock) context.getDocumentLock(Absolute.uri(file.toURI()));
@@ -452,6 +456,28 @@ class ServerContextTest extends AbstractServerContextAwareTest {
   @Test
   void failedPopulationKeepsOtherWorkersTrackedUntilTheyFinish() throws Exception {
     initServerContext(PATH_TO_METADATA, false);
+    var workspace = context.getWorkspaceUri();
+    var executorField = "populateContextExecutor";
+    var original = ReflectionTestUtils.getField(context, executorField);
+    assertThat(original).isInstanceOf(ExecutorService.class);
+    try (var pool = new ForkJoinPool(2, workers -> new ForkJoinWorkerThread(workers) {
+      @Override
+      protected void onStart() {
+        WorkspaceContextHolder.set(workspace);
+        super.onStart();
+      }
+    }, null, true);
+         var controlled = new ContextPropagatingExecutorService(pool)) {
+      ReflectionTestUtils.setField(context, executorField, controlled);
+      try {
+        assertFailedPopulationWaitsForOtherWorkers();
+      } finally {
+        ReflectionTestUtils.setField(context, executorField, original);
+      }
+    }
+  }
+
+  private void assertFailedPopulationWaitsForOtherWorkers() throws Exception {
     var blocked = new File(PATH_TO_METADATA, PATH_TO_MODULE_FILE);
     var failing = new File(PATH_TO_METADATA, PATH_TO_CATALOG_FILE);
     var lock = (ReentrantReadWriteLock) context.getDocumentLock(Absolute.uri(blocked.toURI()));

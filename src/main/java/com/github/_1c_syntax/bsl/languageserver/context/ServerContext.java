@@ -331,18 +331,7 @@ public class ServerContext {
             if (cancelled.get() || backgroundWork.isStopped()) {
               return;
             }
-            var uri = Absolute.uri(file.toURI());
-            if (showActivity) {
-              activeFiles.put(uri, System.nanoTime());
-            }
-            try {
-              populateDocument(uri, cancelled);
-              workDoneProgressReporter.tick();
-            } finally {
-              if (showActivity) {
-                activeFiles.remove(uri);
-              }
-            }
+            populateFile(file, cancelled, activeFiles, showActivity, workDoneProgressReporter);
           } finally {
             workers.arriveAndDeregister();
           }
@@ -367,6 +356,28 @@ public class ServerContext {
     }
     LOGGER.info("Context of {} populated with {} files in {} ms",
       configurationRoot, files.size(), millisSince(startedAt));
+  }
+
+  /** Обработать файл и обновить прогресс, удалив активную метку при любом исходе. */
+  private void populateFile(
+    File file,
+    AtomicBoolean cancelled,
+    Map<URI, Long> activeFiles,
+    boolean showActivity,
+    WorkDoneProgressHelper.WorkDoneProgressReporter progress
+  ) {
+    var uri = Absolute.uri(file.toURI());
+    if (showActivity) {
+      activeFiles.put(uri, System.nanoTime());
+    }
+    try {
+      populateDocument(uri, cancelled);
+      progress.tick();
+    } finally {
+      if (showActivity) {
+        activeFiles.remove(uri);
+      }
+    }
   }
 
   /** Дождаться физического завершения задачи, сохранив прерывание и отменив оставшиеся файлы. */
