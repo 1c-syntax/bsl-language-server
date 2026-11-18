@@ -83,6 +83,8 @@ dependencies {
     api("io.micrometer:context-propagation")
 
     api("info.picocli:picocli-spring-boot-starter:4.7.7")
+    // генерирует конфигурацию native-image (рефлексия, ресурсы) для @Command-классов
+    annotationProcessor("info.picocli:picocli-codegen:4.7.7")
 
     // кэширование
     api("com.github.ben-manes.caffeine:caffeine:3.3.1")
@@ -205,6 +207,11 @@ tasks.withType<JavaCompile> {
     options.encoding = "UTF-8"
     options.compilerArgs.add("-Xlint:unchecked")
     options.compilerArgs.add("-Xlint:deprecation")
+}
+
+tasks.compileJava {
+    // каталог конфигурации native-image, которую генерирует picocli-codegen
+    options.compilerArgs.add("-Aproject=${project.group}/${project.name}")
 }
 
 tasks.jar {
