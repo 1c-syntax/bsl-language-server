@@ -544,9 +544,9 @@ class ServerContextTest extends AbstractServerContextAwareTest {
     var stop = CompletableFuture.runAsync(context::stopBackgroundWork);
 
     // then — остановка объявлена сразу, но ждёт конца идущей работы
+    await().atMost(Duration.ofSeconds(10)).until(context::isBackgroundWorkStopped);
     assertThat(stop).failsWithin(300, TimeUnit.MILLISECONDS)
       .withThrowableOfType(java.util.concurrent.TimeoutException.class);
-    assertThat(context.isBackgroundWorkStopped()).isTrue();
 
     release.countDown();
     stop.get(10, TimeUnit.SECONDS);
