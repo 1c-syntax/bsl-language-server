@@ -41,7 +41,7 @@ class LineLengthDiagnosticTest extends AbstractDiagnosticTest<LineLengthDiagnost
     List<Diagnostic> diagnostics = getDiagnostics();
 
     // then
-    assertThat(diagnostics).hasSize(13);
+    assertThat(diagnostics).hasSize(14);
     assertThat(diagnostics, true)
       .hasRange(4, 0, 4, 121)
       .hasRange(5, 0, 5, 122)
@@ -57,6 +57,7 @@ class LineLengthDiagnosticTest extends AbstractDiagnosticTest<LineLengthDiagnost
       .hasRange(52, 0, 52, 177)
       .hasRange(56, 0, 162)
       .hasRange(60, 0, 145)
+      .hasRange(65, 0, 135)
     ;
 
   }
@@ -72,7 +73,7 @@ class LineLengthDiagnosticTest extends AbstractDiagnosticTest<LineLengthDiagnost
     List<Diagnostic> diagnostics = getDiagnostics();
 
     // then
-    assertThat(diagnostics).hasSize(14);
+    assertThat(diagnostics).hasSize(15);
     assertThat(diagnostics, true)
       .hasRange(3, 0, 3, 120)
       .hasRange(4, 0, 4, 121)
@@ -89,6 +90,7 @@ class LineLengthDiagnosticTest extends AbstractDiagnosticTest<LineLengthDiagnost
       .hasRange(52, 0, 52, 177)
       .hasRange(56, 0, 162)
       .hasRange(60, 0, 145)
+      .hasRange(65, 0, 135)
     ;
   }
 
@@ -104,7 +106,7 @@ class LineLengthDiagnosticTest extends AbstractDiagnosticTest<LineLengthDiagnost
     List<Diagnostic> diagnostics = getDiagnostics();
 
     // then
-    assertThat(diagnostics).hasSize(11);
+    assertThat(diagnostics).hasSize(12);
     assertThat(diagnostics, true)
       .hasRange(4, 0, 4, 121)
       .hasRange(5, 0, 5, 122)
@@ -118,6 +120,7 @@ class LineLengthDiagnosticTest extends AbstractDiagnosticTest<LineLengthDiagnost
       // FIXme
       .hasRange(40, 0, 40, 140)
       .hasRange(52, 0, 52, 177)
+      .hasRange(65, 0, 135)
     ;
   }
 
@@ -130,8 +133,25 @@ class LineLengthDiagnosticTest extends AbstractDiagnosticTest<LineLengthDiagnost
     diagnosticInstance.configure(configuration);
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    // When excluding trailing comments, we should have exactly 12 diagnostics
-    assertThat(diagnostics).hasSize(12);
+    // When excluding trailing comments, we should have exactly 13 diagnostics.
+    // The trailing comment on line 11 is gone and the diagnostic on line 12 ends on the code.
+    assertThat(diagnostics).hasSize(13);
+    assertThat(diagnostics, true)
+      .hasRange(4, 0, 4, 121)
+      .hasRange(5, 0, 5, 122)
+      .hasRange(8, 0, 8, 127)
+      .hasRange(12, 0, 12, 124)
+      .hasRange(36, 0, 36, 127)
+      .hasRange(44, 0, 44, 143)
+      .hasRange(47, 0, 47, 139)
+      .hasRange(49, 0, 49, 138)
+      // FIXme
+      .hasRange(40, 0, 40, 140)
+      .hasRange(52, 0, 52, 177)
+      .hasRange(56, 0, 162)
+      .hasRange(60, 0, 145)
+      .hasRange(65, 0, 135)
+    ;
   }
 
   @Test
@@ -145,7 +165,21 @@ class LineLengthDiagnosticTest extends AbstractDiagnosticTest<LineLengthDiagnost
     List<Diagnostic> diagnostics = getDiagnostics();
 
     // Should have the same count as testConfigureSkipMethodDescription but with trailing comments excluded
-    assertThat(diagnostics).hasSize(10);
+    assertThat(diagnostics).hasSize(11);
+    assertThat(diagnostics, true)
+      .hasRange(4, 0, 4, 121)
+      .hasRange(5, 0, 5, 122)
+      .hasRange(8, 0, 8, 127)
+      .hasRange(12, 0, 12, 124)
+      .hasRange(36, 0, 36, 127)
+      .hasRange(44, 0, 44, 143)
+      .hasRange(47, 0, 47, 139)
+      .hasRange(49, 0, 49, 138)
+      // FIXme
+      .hasRange(40, 0, 40, 140)
+      .hasRange(52, 0, 52, 177)
+      .hasRange(65, 0, 135)
+    ;
   }
 
   @Test
@@ -157,7 +191,8 @@ class LineLengthDiagnosticTest extends AbstractDiagnosticTest<LineLengthDiagnost
     diagnosticInstance.configure(configuration);
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(8);
+    // Only lines with code are checked, including the string literal with https:// on line 65
+    assertThat(diagnostics).hasSize(9);
     assertThat(diagnostics, true)
       .hasRange(4, 0, 4, 121)
       .hasRange(5, 0, 5, 122)
@@ -167,6 +202,83 @@ class LineLengthDiagnosticTest extends AbstractDiagnosticTest<LineLengthDiagnost
       .hasRange(47, 0, 47, 139)
       .hasRange(49, 0, 49, 138)
       .hasRange(52, 0, 52, 177)
+      .hasRange(65, 0, 135)
+    ;
+  }
+
+  @Test
+  void testCheckCommentsFalseWithExcludeTrailingComments() {
+    // Test that excludeTrailingComments has no effect when checkComments is disabled
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("maxLineLength", 120);
+    configuration.put("checkComments", false);
+    configuration.put("excludeTrailingComments", true);
+    diagnosticInstance.configure(configuration);
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    // All comments are already excluded by checkComments, so the result matches testCheckCommentsFalse
+    assertThat(diagnostics).hasSize(9);
+    assertThat(diagnostics, true)
+      .hasRange(4, 0, 4, 121)
+      .hasRange(5, 0, 5, 122)
+      .hasRange(12, 0, 12, 124)
+      .hasRange(40, 0, 40, 140)
+      .hasRange(44, 0, 44, 143)
+      .hasRange(47, 0, 47, 139)
+      .hasRange(49, 0, 49, 138)
+      .hasRange(52, 0, 52, 177)
+      .hasRange(65, 0, 135)
+    ;
+  }
+
+  @Test
+  void testCheckCommentsFalseWithCheckMethodDescriptionFalse() {
+    // Test that checkMethodDescription has no effect when checkComments is disabled
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("maxLineLength", 120);
+    configuration.put("checkComments", false);
+    configuration.put("checkMethodDescription", false);
+    diagnosticInstance.configure(configuration);
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    // All comments are already excluded by checkComments, so the result matches testCheckCommentsFalse
+    assertThat(diagnostics).hasSize(9);
+    assertThat(diagnostics, true)
+      .hasRange(4, 0, 4, 121)
+      .hasRange(5, 0, 5, 122)
+      .hasRange(12, 0, 12, 124)
+      .hasRange(40, 0, 40, 140)
+      .hasRange(44, 0, 44, 143)
+      .hasRange(47, 0, 47, 139)
+      .hasRange(49, 0, 49, 138)
+      .hasRange(52, 0, 52, 177)
+      .hasRange(65, 0, 135)
+    ;
+  }
+
+  @Test
+  void testCheckCommentsFalseWithCheckMethodDescriptionFalseAndExcludeTrailingComments() {
+    // Test that both comment options have no effect when checkComments is disabled
+    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
+    configuration.put("maxLineLength", 120);
+    configuration.put("checkComments", false);
+    configuration.put("checkMethodDescription", false);
+    configuration.put("excludeTrailingComments", true);
+    diagnosticInstance.configure(configuration);
+    List<Diagnostic> diagnostics = getDiagnostics();
+
+    // All comments are already excluded by checkComments, so the result matches testCheckCommentsFalse
+    assertThat(diagnostics).hasSize(9);
+    assertThat(diagnostics, true)
+      .hasRange(4, 0, 4, 121)
+      .hasRange(5, 0, 5, 122)
+      .hasRange(12, 0, 12, 124)
+      .hasRange(40, 0, 40, 140)
+      .hasRange(44, 0, 44, 143)
+      .hasRange(47, 0, 47, 139)
+      .hasRange(49, 0, 49, 138)
+      .hasRange(52, 0, 52, 177)
+      .hasRange(65, 0, 135)
     ;
   }
 

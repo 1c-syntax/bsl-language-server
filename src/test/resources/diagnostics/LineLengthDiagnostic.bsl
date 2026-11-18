@@ -63,3 +63,4 @@
 //  Параметр1 - ТипПараметра - Описание
 Процедура Тест2(Параметр1)
 КонецПроцедуры
+Ссылка = "https://example.com/very/long/path/to/some/important/resource/which/is/longer/than/max/line/length/limit/of/this/diagnostic";
