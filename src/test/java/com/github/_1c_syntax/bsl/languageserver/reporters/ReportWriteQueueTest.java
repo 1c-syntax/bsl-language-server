@@ -154,6 +154,57 @@ class ReportWriteQueueTest {
   }
 
   /**
+   * Прерывание, пришедшее уже во время ожидания идущей записи, тоже не обрывает ожидание
+   * и завершает закрытие исключением.
+   */
+  @Test
+  void interruptDuringCloseWaitIsRecorded() throws Exception {
+    var taskStarted = new CountDownLatch(1);
+    var release = new CountDownLatch(1);
+    var taskFinished = new AtomicBoolean();
+    var finishedWhenClosed = new AtomicBoolean();
+    var interruptRestored = new AtomicBoolean();
+    var closeFailed = new AtomicBoolean();
+
+    var queue = new ReportWriteQueue(executor);
+    queue.submit(() -> {
+      taskStarted.countDown();
+      await(release);
+      taskFinished.set(true);
+    });
+    assertThat(taskStarted.await(5, TimeUnit.SECONDS)).isTrue();
+
+    var closer = new Thread(() -> {
+      try {
+        queue.close();
+      } catch (IllegalStateException e) {
+        closeFailed.set(true);
+      }
+      finishedWhenClosed.set(taskFinished.get());
+      interruptRestored.set(Thread.currentThread().isInterrupted());
+    });
+    closer.setDaemon(true);
+    closer.start();
+
+    try {
+      awaitWaiting(closer);
+      closer.interrupt();
+
+      // запись ещё не отпущена: прерванное закрытие обязано ждать дальше
+      closer.join(500);
+      assertThat(closer.isAlive()).as("close() должен дождаться идущей записи").isTrue();
+    } finally {
+      release.countDown();
+    }
+
+    closer.join(TimeUnit.SECONDS.toMillis(5));
+    assertThat(closer.isAlive()).as("close() должен завершиться после записи").isFalse();
+    assertThat(closeFailed).isTrue();
+    assertThat(finishedWhenClosed).isTrue();
+    assertThat(interruptRestored).isTrue();
+  }
+
+  /**
    * Исход прерванного закрытия не зависит от того, успели ли записи завершиться к моменту
    * ожидания: закрытие всё равно завершается исключением и сохраняет флаг прерывания.
    */
@@ -236,6 +287,17 @@ class ReportWriteQueueTest {
     @Override
     public boolean awaitTermination(long timeout, TimeUnit unit) {
       return true;
+    }
+  }
+
+  /**
+   * Дождаться, пока поток встанет на ожидание (закрытие ждёт барьер).
+   */
+  private static void awaitWaiting(Thread thread) throws InterruptedException {
+    var deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(5);
+    while (thread.getState() != Thread.State.WAITING) {
+      assertThat(System.nanoTime()).as("поток должен встать на ожидание").isLessThan(deadline);
+      Thread.sleep(10);
     }
   }
 
