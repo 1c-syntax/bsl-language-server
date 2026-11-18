@@ -21,6 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.aop;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.computer.CognitiveComplexityComputer;
+import com.github._1c_syntax.bsl.languageserver.context.computer.ComplexityData;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.aot.hint.RuntimeHints;
@@ -42,5 +46,27 @@ class AspectJConfigurationTest {
     // then
     assertThat(RuntimeHintsPredicates.reflection().onMethodInvocation(aspectClass, "aspectOf"))
       .accepts(hints);
+  }
+
+  /**
+   * Статические части join point'ов, вплетённых ajc, разрешают типы своих сигнатур по имени
+   * ({@code Factory.makeClass}).
+   */
+  @ParameterizedTest
+  @ValueSource(classes = {
+    DocumentContext.class,              // объявляющий тип вплетённого метода
+    SymbolTree.class,                   // тип результата DocumentContext.computeSymbolTree
+    CognitiveComplexityComputer.class,
+    ComplexityData.class
+  })
+  void testTypesOfWovenJoinPointSignaturesAreRegistered(Class<?> type) {
+    // given
+    var hints = new RuntimeHints();
+
+    // when
+    new AspectJConfiguration.AspectsRuntimeHints().registerHints(hints, getClass().getClassLoader());
+
+    // then
+    assertThat(RuntimeHintsPredicates.reflection().onType(type)).accepts(hints);
   }
 }
