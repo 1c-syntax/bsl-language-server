@@ -430,6 +430,8 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    *                            только от самого тела: окружение считается на всё тело разом
    *                            и переиспользуется всеми запросами, поэтому набор переменных
    *                            не может зависеть от того, про какую из них спросили первой.
+   * @param readModuleVariables чтения переменных модуля; при отсутствии сведений все видимые
+   *                            переменные консервативно считаются входами расчёта.
    * @param sharedWithOtherBodies видна ли переменная другим телам модуля: тогда её тип
    *                            задаёт не только это тело, и любой вызов мог его сменить.
    * @param declaredFact        что о переменной объявлено помимо кода: типы параметра,
@@ -455,6 +457,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     Function<BSLParser.CodeBlockContext, Optional<Set<ExecutionContext>>> compilationContexts,
     BooleanSupplier sawMissing,
     Function<BSLParser.CodeBlockContext, Collection<VariableSymbol>> variables,
+    @Nullable Function<BSLParser.CodeBlockContext, Set<VariableSymbol>> readModuleVariables,
     Predicate<VariableSymbol> sharedWithOtherBodies,
     Function<VariableSymbol, TypeSet> declaredFact,
     Function<VariableSymbol, Collection<Position>> definitionPositions,
@@ -463,6 +466,21 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     Mutations mutations,
     GuardNarrowing narrowing
   ) {
+    /** Входы без отдельного списка чтений сохраняют консервативный расчёт всех видимых переменных. */
+    public FlowInputs(FlowSession session, Consumer<BSLParser.CodeBlockContext> activeBodyRead, boolean cacheable,
+                      @Nullable ExecutionContext executionContext,
+                      Function<BSLParser.CodeBlockContext, Optional<Set<ExecutionContext>>> compilationContexts,
+                      BooleanSupplier sawMissing,
+                      Function<BSLParser.CodeBlockContext, Collection<VariableSymbol>> variables,
+                      Predicate<VariableSymbol> sharedWithOtherBodies,
+                      Function<VariableSymbol, TypeSet> declaredFact,
+                      Function<VariableSymbol, Collection<Position>> definitionPositions,
+                      Function<VariableSymbol, Collection<Position>> mutationPositions,
+                      AssignedTypes assigned, Mutations mutations, GuardNarrowing narrowing) {
+      this(session, activeBodyRead, cacheable, executionContext, compilationContexts, sawMissing, variables,
+        null, sharedWithOtherBodies, declaredFact, definitionPositions,
+        mutationPositions, assigned, mutations, narrowing);
+    }
   }
 
   /**
@@ -642,7 +660,13 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * @param inputs          исходные данные расчёта.
    */
   private void ensureCells(DocumentContext documentContext, BSLParser.CodeBlockContext body, FlowInputs inputs) {
-    ensureCellsFor(documentContext, sharedVariablesOf(documentContext, body, inputs), inputs);
+    var shared = sharedVariablesOf(documentContext, body, inputs);
+    if (inputs.session().cellsComputing) {
+      var read = variablesOf(documentContext, body, layoutOf(documentContext, body), inputs).readModuleVariables();
+      shared.removeIf(variable -> variable.getKind() == VariableKind.MODULE
+        && !inputs.session().cellsDone.contains(variable) && !read.contains(variable));
+    }
+    ensureCellsFor(documentContext, shared, inputs);
   }
 
   /**
@@ -1104,6 +1128,9 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     // тоже, а тело из этого списка отдало бы им пустой вклад.
     ensureCells(documentContext, body, inputs);
     var variables = variablesOf(documentContext, body, layout, inputs);
+    if (inputs.session().cellsComputing) {
+      variables = variables.forCells(inputs.session().cellsDone);
+    }
     if (variables.variables().isEmpty()) {
       return new Facts(Map.of(), Map.of(), Map.of(), FlowEnvironment.EMPTY);
     }

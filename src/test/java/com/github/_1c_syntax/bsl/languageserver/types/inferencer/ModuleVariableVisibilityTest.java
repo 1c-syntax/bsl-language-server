@@ -66,6 +66,69 @@ class ModuleVariableVisibilityTest extends AbstractServerContextAwareTest {
     initServerContext();
   }
 
+  @Test
+  void computingOneCellDoesNotEvaluateAnUnrelatedWriteInTheSameProcedure() {
+    var document = document("""
+      Var Needed;
+      Var Other;
+      Procedure WriteState()
+        Needed = "ready";
+        Other = Recursive();
+      EndProcedure
+      Function Recursive()
+        Result = New Structure;
+        Result.Insert("Next", Recursive());
+        Return Result;
+      EndFunction
+      Function Independent()
+        Result = Needed;
+        Return Result;
+      EndFunction
+      """);
+    var method = document.getSymbolTree().getMethodSymbol("Independent").orElseThrow();
+    ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
+    var original = (ReturnTypeFromBodyInference) ReflectionTestUtils.getField(target, "returnTypeFromBodyInference");
+    var counted = spy(original);
+    var unrelatedCalls = new AtomicInteger();
+    doAnswer(invocation -> {
+      var called = (MethodSymbol) invocation.getArgument(0);
+      if (called.getName().equals("Recursive")) {
+        unrelatedCalls.incrementAndGet();
+      }
+      return invocation.callRealMethod();
+    }).when(counted).of(any(), any(), any(), any());
+    ReflectionTestUtils.setField(target, "returnTypeFromBodyInference", counted);
+    try {
+      assertThat(inferencer.computeReturnTypes(method).types().refs())
+        .extracting(TypeRef::qualifiedName).contains("Строка");
+      assertThat(unrelatedCalls.get()).as("the other assignment is not an input of Needed").isZero();
+    } finally {
+      ReflectionTestUtils.setField(target, "returnTypeFromBodyInference", original);
+    }
+  }
+
+  @Test
+  void aReadCellKeepsItsValueAtTheAssignmentRatherThanItsWholeScopeUnion() {
+    var document = document("""
+      Var Needed;
+      Var Other;
+      Procedure WriteState()
+        Other = "ready";
+        Needed = Other;
+      EndProcedure
+      Procedure WriteNumber()
+        Other = 1;
+      EndProcedure
+      Function Read()
+        Result = Needed;
+        Return Result;
+      EndFunction
+      """);
+
+    assertThat(inferencer.computeReturnTypes(document.getSymbolTree().getMethodSymbol("Read").orElseThrow())
+      .types().refs()).extracting(TypeRef::qualifiedName).contains("Строка").doesNotContain("Число");
+  }
+
   @ParameterizedTest
   @ValueSource(strings = {"\"ready\"", "\"Unrelated\"", "Receiver.Unrelated", "Receiver.Child.Unrelated",
     "Receiver[\"Unrelated\"]", "Unrelated()"})

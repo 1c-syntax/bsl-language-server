@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.VariableFlowAnalyzer.Change;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.VariableFlowAnalyzer.Changes;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.VariableFlowAnalyzer.FlowInputs;
@@ -35,6 +36,7 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 
 /**
@@ -44,12 +46,14 @@ import java.util.function.Function;
  */
 record FlowVariables(List<VariableSymbol> visibleVariables, List<VariableSymbol> variables,
                      Map<VariableSymbol, Integer> indexes,
-                     Map<ParserRuleContext, List<Change>> changesByStatement) {
+                     Map<ParserRuleContext, List<Change>> changesByStatement,
+                     Set<VariableSymbol> readModuleVariables) {
   FlowVariables {
     visibleVariables = List.copyOf(visibleVariables);
     variables = Collections.unmodifiableList(variables);
     indexes = Collections.unmodifiableMap(indexes);
     changesByStatement = Collections.unmodifiableMap(changesByStatement);
+    readModuleVariables = Set.copyOf(readModuleVariables);
   }
 
   static FlowVariables collect(BSLParser.CodeBlockContext body, FlowLayout layout, FlowInputs inputs,
@@ -81,7 +85,40 @@ record FlowVariables(List<VariableSymbol> visibleVariables, List<VariableSymbol>
     }
 
     changesByStatement.replaceAll((statement, changes) -> List.copyOf(changes));
-    return new FlowVariables(visibleVariables, variables, indexes, changesByStatement);
+    var reads = inputs.readModuleVariables();
+    return new FlowVariables(visibleVariables, variables, indexes, changesByStatement,
+      reads == null ? Set.copyOf(visibleVariables) : reads.apply(body));
+  }
+
+  /** Оставить все локальные значения, входы и запрошенные выходы расчёта общих ячеек. */
+  FlowVariables forCells(Set<VariableSymbol> requested) {
+    if (variables.stream().allMatch(variable -> neededForCells(variable, requested))) {
+      return this;
+    }
+    var selected = variables.stream().filter(variable -> neededForCells(variable, requested)).toList();
+    Map<VariableSymbol, Integer> selectedIndexes = new IdentityHashMap<>();
+    for (var i = 0; i < selected.size(); i++) {
+      selectedIndexes.put(selected.get(i), i);
+    }
+    Map<ParserRuleContext, List<Change>> selectedChanges = new IdentityHashMap<>();
+    changesByStatement.forEach((statement, changes) -> {
+      var kept = new ArrayList<Change>();
+      for (var change : changes) {
+        var index = selectedIndexes.get(change.variable());
+        if (index != null) {
+          kept.add(new Change(change.variable(), index, change.position(), change.definition()));
+        }
+      }
+      if (!kept.isEmpty()) {
+        selectedChanges.put(statement, List.copyOf(kept));
+      }
+    });
+    return new FlowVariables(visibleVariables, selected, selectedIndexes, selectedChanges, readModuleVariables);
+  }
+
+  private boolean neededForCells(VariableSymbol variable, Set<VariableSymbol> requested) {
+    return variable.getKind() != VariableKind.MODULE || requested.contains(variable)
+      || readModuleVariables.contains(variable);
   }
 
   /** Разложить позиции изменений по операторам, в которых они стоят. */

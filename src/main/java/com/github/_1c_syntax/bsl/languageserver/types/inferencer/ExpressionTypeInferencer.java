@@ -1739,7 +1739,7 @@ public class ExpressionTypeInferencer {
         .computeIfAbsent(target, key -> new Lazy<>(() -> propertyMethodInference.outParameterCallsOf(key)))
         .getOrCompute();
     var owner = variable.getOwner();
-    var variablesByBody = new IdentityHashMap<BSLParser.CodeBlockContext, List<VariableSymbol>>();
+    var variablesByBody = new IdentityHashMap<BSLParser.CodeBlockContext, BodyVariables>();
     return new VariableFlowAnalyzer.FlowInputs(
       ctx.flowSession,
       ctx.flowBodiesRead::add,
@@ -1752,7 +1752,8 @@ public class ExpressionTypeInferencer {
       ctx.executionContext,
       body -> compilationContexts(body, owner, ctx),
       () -> ctx.sawMissing || ctx.failed,
-      body -> variablesByBody.computeIfAbsent(body, key -> variablesOfBody(owner, key)),
+      body -> variablesByBody.computeIfAbsent(body, key -> variablesOfBody(owner, key)).visible(),
+      body -> variablesByBody.computeIfAbsent(body, key -> variablesOfBody(owner, key)).readModuleVariables(),
       target -> target.getKind() == VariableKind.MODULE,
       declaredOf,
       this::definitionPositions,
@@ -1837,6 +1838,9 @@ public class ExpressionTypeInferencer {
     return formExpressionInference.applyKindAssignment(variable, kinds.get(position), incoming);
   }
 
+  /** Видимые переменные тела и чтения общих ячеек, собранные одним обходом идентификаторов. */
+  private record BodyVariables(List<VariableSymbol> visible, Set<VariableSymbol> readModuleVariables) { }
+
   /**
    * Переменные, видимые в теле: расчёт по потоку считает их все разом, одним поиском
    * неподвижной точки.
@@ -1848,9 +1852,9 @@ public class ExpressionTypeInferencer {
    *
    * @param owner документ с телом.
    * @param body  тело, для которого идёт расчёт.
-   * @return переменные, видимые в этом теле.
+   * @return видимые переменные тела и чтения общих ячеек.
    */
-  private static List<VariableSymbol> variablesOfBody(DocumentContext owner, BSLParser.CodeBlockContext body) {
+  private static BodyVariables variablesOfBody(DocumentContext owner, BSLParser.CodeBlockContext body) {
     // Раскладку по областям видимости дерево символов уже держит готовой и ленивой —
     // своего перебора всех переменных модуля на каждый расчёт тела не нужно.
     var symbolTree = owner.getSymbolTree();
@@ -1859,10 +1863,10 @@ public class ExpressionTypeInferencer {
       .map(SourceDefinedSymbol.class::cast)
       .orElse(module);
     var visible = new ArrayList<VariableSymbol>(symbolTree.getVariablesOfScope(scope));
-    if (scope != module) {
-      addModuleVariables(symbolTree, visible, body);
+    if (scope == module) {
+      return new BodyVariables(visible, Set.copyOf(visible));
     }
-    return visible;
+    return new BodyVariables(visible, addModuleVariables(symbolTree, visible, body));
   }
 
   /**
@@ -1873,23 +1877,43 @@ public class ExpressionTypeInferencer {
    * @param symbolTree    дерево символов модуля.
    * @param target        набор, куда добавлять.
    * @param body          тело метода.
+   * @return читаемые переменные модуля; простое присваивание не требует предыдущего значения.
    */
-  private static void addModuleVariables(SymbolTree symbolTree, List<VariableSymbol> target,
+  private static Set<VariableSymbol> addModuleVariables(SymbolTree symbolTree, List<VariableSymbol> target,
                                          BSLParser.CodeBlockContext body) {
     if (symbolTree.getVariablesOfScope(symbolTree.getModule()).isEmpty()) {
-      return;
+      return Set.of();
     }
     Set<String> names = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+    Set<String> readNames = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
     for (var identifier : Trees.findAllTokenNodes(body, BSLLexer.IDENTIFIER)) {
       if (isVariableIdentifier(identifier)) {
         names.add(identifier.getText());
+        if (!isSimpleAssignmentTarget(identifier)) {
+          readNames.add(identifier.getText());
+        }
       }
     }
+    Set<VariableSymbol> read = new HashSet<>();
     for (var name : names) {
       symbolTree.getVariableSymbolInScope(body, name)
         .filter(variable -> variable.getKind() == VariableKind.MODULE)
-        .ifPresent(target::add);
+        .ifPresent(variable -> {
+          target.add(variable);
+          if (readNames.contains(name)) {
+            read.add(variable);
+          }
+        });
     }
+    return read;
+  }
+
+  private static boolean isSimpleAssignmentTarget(ParseTree identifier) {
+    var parent = (ParserRuleContext) identifier.getParent();
+    BSLParser.LValueContext lValue = parent instanceof BSLParser.LValueContext value ? value
+      : Trees.getAncestorByRuleIndex(parent, BSLParser.RULE_lValue);
+    return lValue != null && lValue.getStart() == lValue.getStop()
+      && lValue.getParent() instanceof BSLParser.AssignmentContext;
   }
 
   /** Идентификатор переменной, включая получателя цепочки и переменную внутри индекса. */
