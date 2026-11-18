@@ -498,21 +498,7 @@ public class ExpressionTypeInferencer {
       // Переменная — её тип в этой точке кода, даже честно пустой: невыведенный тип
       // нельзя подменять self-свойством того же имени.
       if (target instanceof VariableSymbol variable) {
-        if (ctx.flowSession.contextTracking && (variable.getOwner() != ctx.documentContext
-          || !(variable.getScope() instanceof MethodSymbol)
-          || (variable.getKind() != VariableKind.DYNAMIC && variable.getKind() != VariableKind.LOCAL
-            && !(variable.getKind() == VariableKind.PARAMETER && ctx.flowSession.contextFreeDeclarations)))) {
-          markContextSensitive(ctx);
-        }
-        if (returnedValue && variable.getOwner() == ctx.documentContext
-          && terminal.getParent() instanceof ParserRuleContext use) {
-          var independent = variableFlowAnalyzer.independentReturnTypeAt(ctx.documentContext, use, variable,
-            flowInputs(variable, ctx));
-          if (independent != null) {
-            return independent;
-          }
-        }
-        return flowTypeAt(variable, terminal, ctx);
+        return referencedVariableType(variable, terminal, ctx, returnedValue);
       }
       if (target instanceof MethodSymbol method) {
         return methodReturnType(method, ctx);
@@ -522,7 +508,10 @@ public class ExpressionTypeInferencer {
     if (!(maybeRef.orElse(null) instanceof ModuleSymbol)) {
       markContextSensitive(ctx);
     }
-    var text = terminal.getText();
+    return implicitIdentifierType(terminal.getText(), ctx);
+  }
+
+  private TypeSet implicitIdentifierType(String text, InferenceContext ctx) {
     if (text.isBlank()) {
       return TypeSet.EMPTY;
     }
@@ -532,6 +521,30 @@ public class ExpressionTypeInferencer {
     }
     return scopeMemberTypeResolver.selfMemberType(ctx.documentContext, text, MemberKind.PROPERTY)
       .orElseGet(() -> scopeMemberTypeResolver.globalPropertyType(ctx.documentContext, text));
+  }
+
+  private TypeSet referencedVariableType(VariableSymbol variable, TerminalNode terminal,
+                                         InferenceContext ctx, boolean returnedValue) {
+    if (ctx.flowSession.contextTracking && !contextFreeLocal(variable, ctx)) {
+      markContextSensitive(ctx);
+    }
+    if (returnedValue && variable.getOwner() == ctx.documentContext
+      && terminal.getParent() instanceof ParserRuleContext use) {
+      var independent = variableFlowAnalyzer.independentReturnTypeAt(ctx.documentContext, use, variable,
+        flowInputs(variable, ctx));
+      if (independent != null) {
+        return independent;
+      }
+    }
+    return flowTypeAt(variable, terminal, ctx);
+  }
+
+  private static boolean contextFreeLocal(VariableSymbol variable, InferenceContext ctx) {
+    if (variable.getOwner() != ctx.documentContext || !(variable.getScope() instanceof MethodSymbol)) {
+      return false;
+    }
+    return variable.getKind() == VariableKind.DYNAMIC || variable.getKind() == VariableKind.LOCAL
+      || (variable.getKind() == VariableKind.PARAMETER && ctx.flowSession.contextFreeDeclarations);
   }
 
   // ---------------------------------------------------------------------------
