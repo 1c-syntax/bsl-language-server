@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.references.model;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Position;
@@ -48,7 +49,17 @@ public class AnnotationPositionRepository {
    * @param positions позиции аннотаций и их параметров.
    */
   public void replace(DocumentContext document, List<AnnotationPosition> positions) {
-    snapshots.put(document.getUri(), new Snapshot(document, List.copyOf(positions)));
+    snapshots.put(document.getUri(), new Snapshot(document.getSymbolTree().getModule(), List.copyOf(positions)));
+  }
+
+  /**
+   * Обновить модуль существующего снимка, сохранив позиции неизменённого текста.
+   *
+   * @param document документ с прежним текстом и актуальным деревом символов.
+   */
+  public void refreshModule(DocumentContext document) {
+    snapshots.computeIfPresent(document.getUri(), (uri, snapshot) ->
+      new Snapshot(document.getSymbolTree().getModule(), snapshot.positions()));
   }
 
   /**
@@ -66,14 +77,14 @@ public class AnnotationPositionRepository {
    *
    * @param uri URI документа.
    * @param position позиция обращения.
-   * @return позиция аннотации вместе с документом из того же снимка либо пустой результат.
+   * @return позиция аннотации вместе с модулем из того же снимка либо пустой результат.
    */
   public Optional<Match> find(URI uri, Position position) {
     var snapshot = snapshots.get(uri);
     return snapshot == null ? Optional.empty() : snapshot.positions().stream()
       .filter(candidate -> Ranges.containsPosition(candidate.range(), position))
       .findFirst()
-      .map(candidate -> new Match(snapshot.document(), candidate));
+      .map(candidate -> new Match(snapshot.module(), candidate));
   }
 
   /**
@@ -91,10 +102,10 @@ public class AnnotationPositionRepository {
   ) {
   }
 
-  /** Вхождение и его документ, прочитанные из одного снимка. */
-  public record Match(DocumentContext document, AnnotationPosition position) {
+  /** Вхождение и его модуль, прочитанные из одного снимка. */
+  public record Match(ModuleSymbol module, AnnotationPosition position) {
   }
 
-  private record Snapshot(DocumentContext document, List<AnnotationPosition> positions) {
+  private record Snapshot(ModuleSymbol module, List<AnnotationPosition> positions) {
   }
 }

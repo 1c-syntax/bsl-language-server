@@ -85,6 +85,8 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
     findAndRegisterAnnotation(document);
     if (event.isContentChanged() || !annotationPositionRepository.contains(document.getUri())) {
       indexPositions(document);
+    } else {
+      annotationPositionRepository.refreshModule(document);
     }
   }
 
@@ -100,14 +102,15 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
     annotationRepository.removeByUri(document.getUri());
     findAndRegisterAnnotation(document);
     // Перепривязка меняет определения, но не текст: сохранённые позиции остаются актуальными.
+    annotationPositionRepository.refreshModule(document);
   }
 
   @Override
   public Optional<Reference> findReference(URI uri, Position position) {
     return annotationPositionRepository.find(uri, position)
-      .filter(match -> match.document().getFileType() == FileType.OS)
+      .filter(match -> match.module().getOwner().getFileType() == FileType.OS)
       .flatMap(match -> resolveSymbol(match.position()).map(symbol -> Reference.of(
-        match.document().getSymbolTree().getModule(), symbol,
+        match.module(), symbol,
         new Location(uri.toString(), match.position().selectionRange()))));
   }
 
