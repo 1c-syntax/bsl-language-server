@@ -113,7 +113,9 @@ final class ReportWriteQueue implements AutoCloseable {
       drained = true;
     });
 
-    var interrupted = false;
+    // завершённый Future не проверяет прерывание: учитываем его заранее, чтобы исход закрытия
+    // не зависел от того, успел ли барьер исполниться
+    var interrupted = Thread.interrupted();
     try {
       while (true) {
         try {

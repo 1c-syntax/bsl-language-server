@@ -24,6 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.reporters;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.List;
+import java.util.concurrent.AbstractExecutorService;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -133,16 +135,41 @@ class ReportWriteQueueTest {
       finishedWhenClosed.set(taskFinished.get());
       interruptRestored.set(Thread.currentThread().isInterrupted());
     });
+    // зависший при регрессии поток не должен держать JVM тестов
+    closer.setDaemon(true);
     closer.start();
 
-    // запись ещё не отпущена: закрытие обязано ждать
-    closer.join(500);
-    assertThat(closer.isAlive()).as("close() должен дождаться идущей записи").isTrue();
+    try {
+      // запись ещё не отпущена: закрытие обязано ждать
+      closer.join(500);
+      assertThat(closer.isAlive()).as("close() должен дождаться идущей записи").isTrue();
+    } finally {
+      release.countDown();
+    }
 
-    release.countDown();
-    closer.join();
+    closer.join(TimeUnit.SECONDS.toMillis(5));
+    assertThat(closer.isAlive()).as("close() должен завершиться после записи").isFalse();
     assertThat(finishedWhenClosed).isTrue();
     assertThat(interruptRestored).isTrue();
+  }
+
+  /**
+   * Исход прерванного закрытия не зависит от того, успели ли записи завершиться к моменту
+   * ожидания: закрытие всё равно завершается исключением и сохраняет флаг прерывания.
+   */
+  @Test
+  void interruptedCloseFailsEvenWhenWritesAreAlreadyDone() {
+    // задачи исполняются прямо при постановке: к ожиданию барьер уже завершён
+    var queue = new ReportWriteQueue(new CallerThreadExecutor());
+
+    Thread.currentThread().interrupt();
+    try {
+      assertThatThrownBy(queue::close).isInstanceOf(IllegalStateException.class);
+      assertThat(Thread.currentThread().isInterrupted()).isTrue();
+    } finally {
+      // флаг прерывания не должен пережить тест
+      Thread.interrupted();
+    }
   }
 
   @Test
@@ -170,6 +197,45 @@ class ReportWriteQueueTest {
 
     assertThatThrownBy(queue::close).isInstanceOf(IllegalStateException.class);
     assertThat(afterFailure).hasValue(0);
+  }
+
+  /**
+   * Исполнитель, выполняющий задачу в потоке, который её поставил.
+   */
+  private static final class CallerThreadExecutor extends AbstractExecutorService {
+
+    private volatile boolean shutdown;
+
+    @Override
+    public void execute(Runnable command) {
+      command.run();
+    }
+
+    @Override
+    public void shutdown() {
+      shutdown = true;
+    }
+
+    @Override
+    public List<Runnable> shutdownNow() {
+      shutdown = true;
+      return List.of();
+    }
+
+    @Override
+    public boolean isShutdown() {
+      return shutdown;
+    }
+
+    @Override
+    public boolean isTerminated() {
+      return shutdown;
+    }
+
+    @Override
+    public boolean awaitTermination(long timeout, TimeUnit unit) {
+      return true;
+    }
   }
 
   private static void await(CountDownLatch latch) {
