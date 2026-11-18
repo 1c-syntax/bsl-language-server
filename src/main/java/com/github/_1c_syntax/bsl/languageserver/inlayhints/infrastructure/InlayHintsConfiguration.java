@@ -21,12 +21,17 @@
  */
 package com.github._1c_syntax.bsl.languageserver.inlayhints.infrastructure;
 
+import com.github._1c_syntax.bsl.languageserver.databind.ImplementationsBindingHints;
 import com.github._1c_syntax.bsl.languageserver.inlayhints.InlayHintData;
 import com.github._1c_syntax.bsl.languageserver.inlayhints.InlayHintSupplier;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.jspecify.annotations.Nullable;
+import org.springframework.aot.hint.RuntimeHints;
+import org.springframework.aot.hint.RuntimeHintsRegistrar;
 import org.springframework.boot.jackson.autoconfigure.JsonMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.ImportRuntimeHints;
 import tools.jackson.databind.jsontype.NamedType;
 
 import java.util.Collection;
@@ -40,7 +45,19 @@ import java.util.stream.Collectors;
  * пакета {@link com.github._1c_syntax.bsl.languageserver.inlayhints}.
  */
 @Configuration
+@ImportRuntimeHints(InlayHintsConfiguration.InlayHintDataRuntimeHints.class)
 public class InlayHintsConfiguration {
+
+  /**
+   * Подсказки для native-image: данные inlay hints, которые Jackson читает из {@code data} подсказки.
+   */
+  static class InlayHintDataRuntimeHints implements RuntimeHintsRegistrar {
+
+    @Override
+    public void registerHints(RuntimeHints hints, @Nullable ClassLoader classLoader) {
+      ImplementationsBindingHints.register(hints, classLoader, InlayHintData.class);
+    }
+  }
 
   /**
    * Получить список сапплаеров inlay hints в разрезе их идентификаторов.

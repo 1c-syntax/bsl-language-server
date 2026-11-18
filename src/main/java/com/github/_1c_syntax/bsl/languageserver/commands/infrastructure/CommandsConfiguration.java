@@ -23,9 +23,14 @@ package com.github._1c_syntax.bsl.languageserver.commands.infrastructure;
 
 import com.github._1c_syntax.bsl.languageserver.commands.CommandArguments;
 import com.github._1c_syntax.bsl.languageserver.commands.CommandSupplier;
+import com.github._1c_syntax.bsl.languageserver.databind.ImplementationsBindingHints;
+import org.jspecify.annotations.Nullable;
+import org.springframework.aot.hint.RuntimeHints;
+import org.springframework.aot.hint.RuntimeHintsRegistrar;
 import org.springframework.boot.jackson.autoconfigure.JsonMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.ImportRuntimeHints;
 import tools.jackson.databind.jsontype.NamedType;
 
 import java.util.Collection;
@@ -39,7 +44,19 @@ import java.util.stream.Collectors;
  * пакета {@link com.github._1c_syntax.bsl.languageserver.commands}.
  */
 @Configuration
+@ImportRuntimeHints(CommandsConfiguration.CommandArgumentsRuntimeHints.class)
 public class CommandsConfiguration {
+
+  /**
+   * Подсказки для native-image: аргументы команд, которые Jackson читает из запроса клиента.
+   */
+  static class CommandArgumentsRuntimeHints implements RuntimeHintsRegistrar {
+
+    @Override
+    public void registerHints(RuntimeHints hints, @Nullable ClassLoader classLoader) {
+      ImplementationsBindingHints.register(hints, classLoader, CommandArguments.class);
+    }
+  }
 
   /**
    * Получить список сапплаеров команд в разрезе их идентификаторов.
