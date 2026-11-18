@@ -50,13 +50,14 @@ public class JsonReporter implements DiagnosticReporter {
 
   /**
    * Подсказки для native-image: {@link DiagnosticMixIn}, о котором биндинг-подсказки не знают,
-   * и подключаемые им сериализаторы. Аннотации mixin'а Jackson читает с его методов.
+   * и подключаемые им сериализаторы. Аннотации mixin'а Jackson читает с его полей и методов.
    */
   static class MixInSerializersRuntimeHints implements RuntimeHintsRegistrar {
 
     @Override
     public void registerHints(RuntimeHints hints, @Nullable ClassLoader classLoader) {
-      hints.reflection().registerType(DiagnosticMixIn.class, MemberCategory.INVOKE_DECLARED_METHODS);
+      hints.reflection().registerType(DiagnosticMixIn.class,
+        MemberCategory.ACCESS_DECLARED_FIELDS, MemberCategory.INVOKE_DECLARED_METHODS);
       Stream.of(DiagnosticCodeSerializer.class, DiagnosticMessageSerializer.class)
         .forEach(serializer -> hints.reflection().registerType(serializer, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS));
     }

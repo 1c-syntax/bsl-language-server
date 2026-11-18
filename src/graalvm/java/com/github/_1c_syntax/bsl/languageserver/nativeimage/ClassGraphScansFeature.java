@@ -89,12 +89,14 @@ public final class ClassGraphScansFeature implements Feature {
   }
 
   /**
-   * ScanResult.fromJSON восстанавливает объекты модели ClassGraph рефлексией по полям.
+   * ScanResult.fromJSON восстанавливает объекты модели ClassGraph рефлексией по полям,
+   * в том числе непубличные (например, ScanResult.SerializationFormat).
    */
   private static void registerClassGraphJsonModel(BeforeAnalysisAccess access, List<String> classpath) {
     try (var scanResult = new ClassGraph()
       .overrideClasspath(classpath)
       .enableClassInfo()
+      .ignoreClassVisibility()
       .acceptPackages("io.github.classgraph", "nonapi.io.github.classgraph")
       .scan()) {
       scanResult.getAllClasses().forEach((ClassInfo classInfo) -> {

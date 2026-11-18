@@ -74,6 +74,16 @@ class ReportersBindingHintsTest {
     assertThat(RuntimeHintsPredicates.reflection().onType(DiagnosticMixIn.class)).accepts(hints);
   }
 
+  @Test
+  void testFieldsOfJsonReportMixInAreRegistered() {
+    // when
+    var hints = AotHints.hintsOf(JsonReporter.class);
+
+    // then: сериализаторы кода и сообщения диагностики объявлены на полях mixin'а
+    assertThat(RuntimeHintsPredicates.reflection().onType(DiagnosticMixIn.class)
+      .withMemberCategory(MemberCategory.ACCESS_DECLARED_FIELDS)).accepts(hints);
+  }
+
   @ParameterizedTest
   @ValueSource(classes = {DiagnosticCodeSerializer.class, DiagnosticMessageSerializer.class})
   void testMixInSerializersOfJsonReportAreRegistered(Class<?> serializer) {
