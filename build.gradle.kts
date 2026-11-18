@@ -265,7 +265,8 @@ if (providers.gradleProperty("native").isPresent) {
                     "--no-fallback",
                     "-H:+ReportExceptionStackTraces",
                     "--features=com.github._1c_syntax.bsl.languageserver.nativeimage.ClassGraphScansFeature," +
-                        "com.github._1c_syntax.bsl.languageserver.nativeimage.SpringCglibClassesFeature"
+                        "com.github._1c_syntax.bsl.languageserver.nativeimage.SpringCglibClassesFeature," +
+                        "com.github._1c_syntax.bsl.languageserver.nativeimage.MdclassesReflectionFeature"
                 )
                 // Дополнительные аргументы native-image для экспериментов: -PnativeExtraArgs="--a --b"
                 providers.gradleProperty("nativeExtraArgs").orNull
