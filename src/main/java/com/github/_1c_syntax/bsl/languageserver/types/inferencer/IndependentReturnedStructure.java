@@ -1,0 +1,121 @@
+/*
+ * This file is a part of BSL Language Server.
+ *
+ * Copyright (c) 2018-2026
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ *
+ * BSL Language Server is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3.0 of the License, or (at your option) any later version.
+ *
+ * BSL Language Server is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BSL Language Server.
+ */
+package com.github._1c_syntax.bsl.languageserver.types.inferencer;
+
+import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraph;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionTreeBuildingVisitor;
+import com.github._1c_syntax.bsl.parser.BSLParser;
+import org.antlr.v4.runtime.ParserRuleContext;
+
+import java.util.Locale;
+import java.util.Set;
+
+/** Достаточные условия независимости локальной структуры, изменяемой только вставками литеральных ключей. */
+final class IndependentReturnedStructure {
+  private IndependentReturnedStructure() {
+  }
+
+  static boolean supports(DocumentContext document, BSLParser.CodeBlockContext body, VariableSymbol variable,
+                          FlowVariables variables, ControlFlowGraph graph, VariableFlowAnalyzer.FlowInputs inputs) {
+    return variables.indexes().containsKey(variable) && closedChanges(document, variable, variables)
+      && closedConditions(variable, graph, inputs) && !escapes(document, body, variable);
+  }
+
+  private static boolean closedChanges(DocumentContext document, VariableSymbol variable, FlowVariables variables) {
+    var definitions = 0;
+    for (var entry : variables.changesByStatement().entrySet()) {
+      for (var change : entry.getValue()) {
+        if (change.variable() == variable) {
+          if (!Trees.getTrailingComment(document.getTokens(), entry.getKey().getStop()).isEmpty()
+            || !supportedChange(entry.getKey(), change.definition(), variable.getName())) {
+            return false;
+          }
+          definitions += change.definition() ? 1 : 0;
+        }
+      }
+    }
+    return definitions == 1;
+  }
+
+  private static boolean supportedChange(ParserRuleContext statement,
+                                         boolean definition, String variableName) {
+    if (definition) {
+      return statement instanceof BSLParser.AssignmentContext assignment
+        && Set.of("новыйструктура", "новыйструктура()", "newstructure", "newstructure()")
+        .contains(assignment.expression().getText().toLowerCase(Locale.ROOT));
+    }
+    return statement instanceof BSLParser.CallStatementContext call && literalInsert(call, variableName);
+  }
+
+  private static boolean closedConditions(VariableSymbol variable, ControlFlowGraph graph,
+                                           VariableFlowAnalyzer.FlowInputs inputs) {
+    for (var vertex : graph.vertexSet()) {
+      var condition = FlowConditionNarrowing.conditionOf(vertex);
+      if (condition == null) {
+        continue;
+      }
+      var mentioned = inputs.narrowing().variablesOf(condition);
+      if (mentioned.contains(variable) && (mentioned.stream().anyMatch(other -> other != variable)
+        || !org.antlr.v4.runtime.tree.Trees.findAllRuleNodes(condition, BSLParser.RULE_methodCall).isEmpty())) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private static boolean escapes(DocumentContext document, BSLParser.CodeBlockContext body, VariableSymbol variable) {
+    for (var node : org.antlr.v4.runtime.tree.Trees.findAllRuleNodes(body, BSLParser.RULE_callParam)) {
+      for (var identifier : org.antlr.v4.runtime.tree.Trees.findAllTokenNodes(node, BSLParser.IDENTIFIER)) {
+        if (identifier.getText().equalsIgnoreCase(variable.getName())
+          && document.getSymbolTreeNoLock().getVariableSymbolInScope(body, identifier.getText()).orElse(null) == variable) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  private static boolean literalInsert(BSLParser.CallStatementContext call, String variableName) {
+    if (call.IDENTIFIER() == null || !call.IDENTIFIER().getText().equalsIgnoreCase(variableName)
+      || !call.modifier().isEmpty() || call.accessCall() == null || call.accessCall().methodCall() == null) {
+      return false;
+    }
+    var method = call.accessCall().methodCall();
+    if (method.methodName() == null || !(method.methodName().getText().equalsIgnoreCase("Insert")
+      || method.methodName().getText().equalsIgnoreCase("Вставить")) || method.doCall() == null
+      || method.doCall().callParamList() == null) {
+      return false;
+    }
+    var params = method.doCall().callParamList().callParam();
+    if (params.size() != 1 || params.getFirst().expression() == null) {
+      return false;
+    }
+    var expression = params.getFirst().expression();
+    var literal = ExpressionTreeBuildingVisitor.buildExpressionTree(expression);
+    return literal != null && literal.getNodeType() == ExpressionNodeType.LITERAL
+      && expression.getText().startsWith("\"");
+  }
+}

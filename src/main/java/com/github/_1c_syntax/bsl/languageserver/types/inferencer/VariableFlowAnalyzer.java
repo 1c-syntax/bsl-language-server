@@ -27,6 +27,8 @@ import com.github._1c_syntax.bsl.languageserver.cfg.PreprocessorFlow;
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraphIndex;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
@@ -553,6 +555,42 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     FlowInputs inputs
   ) {
     return typeAt(documentContext, use, variable, inputs, null);
+  }
+
+  /** Вычислить замкнутое локальное построение возвращаемой структуры без общего кэша фактов тела. */
+  @Nullable TypeSet independentReturnTypeAt(DocumentContext document, ParserRuleContext use,
+                                           VariableSymbol variable, FlowInputs inputs) {
+    if ((variable.getKind() != VariableKind.DYNAMIC && variable.getKind() != VariableKind.LOCAL)
+      || !(variable.getScope() instanceof MethodSymbol) || document.getFileType() != FileType.BSL) {
+      return null;
+    }
+    var body = enclosingBody(use);
+    if (body == null || inputs.session().active.containsKey(body)) {
+      return null;
+    }
+    var layout = layoutOf(document, body);
+    var statement = enclosingStatement(use, layout);
+    if (statement == null) {
+      return null;
+    }
+    var variables = variablesOf(document, body, layout, inputs);
+    var graph = controlFlowGraphIndex.graphOf(document, body, CfgBuildOptions.defaults());
+    if (!IndependentReturnedStructure.supports(document, body, variable, variables, graph, inputs)) {
+      return null;
+    }
+    var selected = variables.forVariable(variable);
+    var compiled = inputs.compilationContexts().apply(body)
+      .map(contexts -> PreprocessorFlow.of(graph, contexts, document.getFileType())).orElse(null);
+    var pass = new VariableFlowPass(this, document, graph, layout, inputs, compiled, selected);
+    inputs.activeBodyRead().accept(body);
+    inputs.session().active.put(body, pass);
+    try {
+      var facts = pass.computeFacts();
+      var index = facts.indexOf(variable);
+      return index == null ? null : facts.beforeStatement().getOrDefault(statement, FlowEnvironment.EMPTY).get(index);
+    } finally {
+      inputs.session().active.remove(body);
+    }
   }
 
   /**
