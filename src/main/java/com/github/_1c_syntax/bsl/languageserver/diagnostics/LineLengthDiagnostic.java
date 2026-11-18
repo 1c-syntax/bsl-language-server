@@ -56,6 +56,7 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
   private static final int MAX_LINE_LENGTH = 120;
   private static final boolean CHECK_METHOD_DESCRIPTION = true;
   private static final boolean EXCLUDE_TRAILING_COMMENTS = false;
+  private static final boolean CHECK_COMMENTS = true;
 
   private int prevTokenType;
 
@@ -77,6 +78,12 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
   )
   private boolean excludeTrailingComments = EXCLUDE_TRAILING_COMMENTS;
 
+  @DiagnosticParameter(
+    type = Boolean.class,
+    defaultValue = "" + CHECK_COMMENTS
+  )
+  private boolean checkComments = CHECK_COMMENTS;
+
   private final Map<Integer, List<Integer>> tokensInOneLine = new HashMap<>();
 
   @Override
@@ -94,21 +101,23 @@ public class LineLengthDiagnostic extends AbstractDiagnostic {
     }
 
     // Then process comments
-    if (checkMethodDescription) {
-      documentContext.getComments().stream()
-        .filter(comment -> shouldIncludeComment(comment, linesWithCode))
-        .forEach(this::putInCollection);
-    } else {
-      var descriptionRanges = documentContext.getSymbolTree().getMethods().stream()
-        .map(MethodSymbol::getDescription)
-        .flatMap(Optional::stream)
-        .map(MethodDescription::getRange)
-        .collect(Collectors.toList()); // список должен остаться модифицируемым!
+    if (checkComments) {
+      if (checkMethodDescription) {
+        documentContext.getComments().stream()
+          .filter(comment -> shouldIncludeComment(comment, linesWithCode))
+          .forEach(this::putInCollection);
+      } else {
+        var descriptionRanges = documentContext.getSymbolTree().getMethods().stream()
+          .map(MethodSymbol::getDescription)
+          .flatMap(Optional::stream)
+          .map(MethodDescription::getRange)
+          .collect(Collectors.toList()); // список должен остаться модифицируемым!
 
-      documentContext.getComments().stream()
-        .filter(token -> !descriptionContainToken(descriptionRanges, token))
-        .filter(comment -> shouldIncludeComment(comment, linesWithCode))
-        .forEach(this::putInCollection);
+        documentContext.getComments().stream()
+          .filter(token -> !descriptionContainToken(descriptionRanges, token))
+          .filter(comment -> shouldIncludeComment(comment, linesWithCode))
+          .forEach(this::putInCollection);
+      }
     }
 
     tokensInOneLine.forEach((Integer key, List<Integer> value) -> {
