@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795006033895,
+  "lastUpdate": 1795018861934,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -47988,6 +47988,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 1.413136263259878",
             "extra": "mean: 89.48498781522115 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "45edf0dd99864b4c1b86d5165d3463bfb8f865bc",
+          "message": "Merge pull request #4978 from 1c-syntax/ccr-d69453bd-2np9mv-generic-reporter\n\nfix(reporters): переносить workspace-контекст в поток записи отчётов",
+          "timestamp": "2026-11-18T17:04:01+01:00",
+          "tree_id": "740c9ec35e23d05a00ed7e5f6a4fe42f0fab2c42",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/45edf0dd99864b4c1b86d5165d3463bfb8f865bc"
+        },
+        "date": 1795018830947,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 90.16814057032268,
+            "unit": "sec",
+            "range": "stddev: 2.5311317206707766",
+            "extra": "mean: 90.16814057032268 sec\nrounds: 3"
           }
         ]
       }
