@@ -21,60 +21,54 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * Однопоточная очередь записи отчётов.
+ * Очередь записи отчётов поверх однопоточного исполнителя.
  * <p>
- * Все переданные задачи исполняет один и тот же поток, поэтому код записи может работать с
- * состоянием (генератором, буфером) без синхронизации: конкурентных вызовов не бывает.
+ * Исполнитель обязан исполнять задачи по одному и в порядке постановки: на этом держится запись
+ * без синхронизации — код записи работает с состоянием (генератором, буфером), не опасаясь
+ * конкурентных вызовов.
  * <p>
- * {@link #submit} не ждёт ни выполнения задачи, ни освобождения места: анализ только ставит
- * запись в очередь и продолжается. Плата за это — очередь не ограничена. Пока запись успевает
- * за разбором (обычный случай: сериализация результата на порядок дешевле разбора модуля),
- * в очереди почти пусто. Если же запись устойчиво медленнее разбора — много активных форматов
- * на машине с большим числом ядер, — очередь будет расти, и выигрыш по памяти сойдёт на нет.
+ * {@link #submit} не ждёт выполнения задачи: анализ только ставит запись в очередь и продолжается.
  * <p>
  * Первый сбой задачи запоминается, последующие задачи не исполняются, а исключение
- * пробрасывается из {@link #close()}.
+ * пробрасывается из {@link #close()}. Задачи, поставленные после закрытия, тоже не исполняются.
+ * Исполнитель очередь не останавливает: он ей не принадлежит.
  */
 final class ReportWriteQueue implements AutoCloseable {
 
-  private static final Runnable POISON = () -> {
-    // маркер завершения: до исполнения не доходит
-  };
+  private final ExecutorService executor;
+  private final AtomicReference<RuntimeException> failure = new AtomicReference<>();
 
-  private final BlockingQueue<Runnable> queue;
-  private final Thread worker;
-  private final AtomicReference<Throwable> failure = new AtomicReference<>();
-
-  private volatile boolean stoppedNormally;
+  // выставляется барьером закрытия в потоке исполнителя: всё, что стоит в очереди после него,
+  // поставлено уже после закрытия
+  private volatile boolean drained;
 
   private boolean closed;
 
   /**
-   * @param name имя очереди, попадает в имя потока
+   * @param executor однопоточный исполнитель задач записи
    */
-  ReportWriteQueue(String name) {
-    this.queue = new LinkedBlockingQueue<>();
-    this.worker = new Thread(this::processQueue, "report-write-" + name);
-    this.worker.setDaemon(true);
-    this.worker.start();
+  ReportWriteQueue(ExecutorService executor) {
+    this.executor = executor;
   }
 
   /**
    * Поставить задачу записи в очередь и сразу вернуть управление.
    *
-   * @param task задача; исполняется в потоке очереди
+   * @param task задача; исполняется в потоке исполнителя
    */
   void submit(Runnable task) {
-    put(task);
+    executor.execute(() -> runTask(task));
   }
 
   /**
-   * Дождаться исполнения поставленных задач и остановить поток очереди.
+   * Дождаться исполнения поставленных задач. Прерывание не обрывает ожидание идущей записи:
+   * флаг прерывания восстанавливается после неё, а закрытие завершается исключением.
    *
    * @throws RuntimeException первое исключение, с которым упала задача записи
    */
@@ -82,62 +76,55 @@ final class ReportWriteQueue implements AutoCloseable {
   public void close() {
     if (!closed) {
       closed = true;
-      put(POISON);
-      try {
-        worker.join();
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-      }
+      awaitQueuedTasks();
     }
 
     var thrown = failure.get();
-    if (thrown instanceof RuntimeException runtimeException) {
-      throw runtimeException;
-    }
-
-    // поток мог умереть на Error (например, OutOfMemoryError): сам он ничего не записал,
-    // и молча зафиксировать отчёт как полный нельзя
-    if (!stoppedNormally) {
-      throw new IllegalStateException("Report write thread terminated unexpectedly");
-    }
-  }
-
-  private void processQueue() {
-    while (true) {
-      Runnable task;
-      try {
-        task = queue.take();
-      } catch (InterruptedException e) {
-        Thread.currentThread().interrupt();
-        return;
-      }
-
-      if (task == POISON) {
-        stoppedNormally = true;
-        return;
-      }
-
-      // после первого сбоя состояние отчёта уже испорчено — дописывать в него нечего
-      if (failure.get() == null) {
-        runTask(task);
-      }
+    if (thrown != null) {
+      throw thrown;
     }
   }
 
   private void runTask(Runnable task) {
+    // после закрытия отчёты уже завершены, а после первого сбоя состояние отчёта испорчено —
+    // в обоих случаях писать некуда
+    if (drained || failure.get() != null) {
+      return;
+    }
+
+    var completed = false;
     try {
       task.run();
+      completed = true;
     } catch (RuntimeException e) {
       failure.compareAndSet(null, e);
+      completed = true;
+    } finally {
+      // задача оборвалась на Error (например, OutOfMemoryError): сама она ничего не записала,
+      // и молча зафиксировать отчёт как полный нельзя
+      if (!completed) {
+        failure.compareAndSet(null, new IllegalStateException("Report write task terminated unexpectedly"));
+      }
     }
   }
 
-  private void put(Runnable task) {
+  private void awaitQueuedTasks() {
+    // завершённый барьер не проверяет прерывание: учитываем его заранее, чтобы исход закрытия
+    // не зависел от того, успел ли барьер исполниться
+    var interrupted = Thread.interrupted();
+
+    // исполнитель однопоточный и FIFO: барьер исполнится после всех задач, поставленных до него.
+    // join() не прерывается: идущая запись не должна пересечься с завершением отчёта.
+    // Прерывание во время ожидания он сохраняет во флаге потока
     try {
-      queue.put(task);
-    } catch (InterruptedException e) {
+      CompletableFuture.runAsync(() -> drained = true, executor).join();
+    } catch (CompletionException e) {
+      failure.compareAndSet(null, new IllegalStateException("Report write barrier failed", e));
+    }
+
+    if (interrupted || Thread.interrupted()) {
       Thread.currentThread().interrupt();
-      throw new IllegalStateException("Interrupted while queueing report write", e);
+      failure.compareAndSet(null, new IllegalStateException("Interrupted while waiting for report writes"));
     }
   }
 }

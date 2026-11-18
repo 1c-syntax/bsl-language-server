@@ -30,6 +30,7 @@ import org.springframework.stereotype.Component;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 
 /**
@@ -50,6 +51,9 @@ public class ReportersAggregator {
   @Lazy
   // Don't remove @Autowired annotation. It's needed for injecting filteredReporters bean correctly.
   private List<DiagnosticReporter> filteredReporters;
+
+  @Qualifier("reportWriteExecutor")
+  private final ExecutorService reportWriteExecutor;
 
   /**
    * Начать формирование отчётов всеми активными репортёрами.
@@ -76,7 +80,7 @@ public class ReportersAggregator {
       throw e;
     }
 
-    return new ReportSession(activeReporters);
+    return new ReportSession(activeReporters, reportWriteExecutor);
   }
 
   /**
