@@ -35,12 +35,17 @@ import java.util.concurrent.atomic.AtomicReference;
  * {@link #submit} не ждёт выполнения задачи: анализ только ставит запись в очередь и продолжается.
  * <p>
  * Первый сбой задачи запоминается, последующие задачи не исполняются, а исключение
- * пробрасывается из {@link #close()}. Исполнитель очередь не останавливает: он ей не принадлежит.
+ * пробрасывается из {@link #close()}. Задачи, поставленные после закрытия, тоже не исполняются.
+ * Исполнитель очередь не останавливает: он ей не принадлежит.
  */
 final class ReportWriteQueue implements AutoCloseable {
 
   private final ExecutorService executor;
   private final AtomicReference<RuntimeException> failure = new AtomicReference<>();
+
+  // выставляется барьером закрытия в потоке исполнителя: всё, что стоит в очереди после него,
+  // поставлено уже после закрытия
+  private volatile boolean drained;
 
   private boolean closed;
 
@@ -61,7 +66,8 @@ final class ReportWriteQueue implements AutoCloseable {
   }
 
   /**
-   * Дождаться исполнения поставленных задач.
+   * Дождаться исполнения поставленных задач. Прерывание не обрывает ожидание идущей записи:
+   * флаг прерывания восстанавливается после неё, а закрытие завершается исключением.
    *
    * @throws RuntimeException первое исключение, с которым упала задача записи
    */
@@ -79,8 +85,9 @@ final class ReportWriteQueue implements AutoCloseable {
   }
 
   private void runTask(Runnable task) {
-    // после первого сбоя состояние отчёта уже испорчено — дописывать в него нечего
-    if (failure.get() != null) {
+    // после закрытия отчёты уже завершены, а после первого сбоя состояние отчёта испорчено —
+    // в обоих случаях писать некуда
+    if (drained || failure.get() != null) {
       return;
     }
 
@@ -101,16 +108,29 @@ final class ReportWriteQueue implements AutoCloseable {
   }
 
   private void awaitQueuedTasks() {
-    // исполнитель однопоточный и FIFO: пустая задача завершится после всех поставленных ранее
+    // исполнитель однопоточный и FIFO: барьер исполнится после всех задач, поставленных до него
+    var barrier = executor.submit(() -> {
+      drained = true;
+    });
+
+    var interrupted = false;
     try {
-      executor.submit(() -> {
-        // барьер: ждём, пока исполнитель дойдёт до него
-      }).get();
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      failure.compareAndSet(null, new IllegalStateException("Interrupted while waiting for report writes", e));
+      while (true) {
+        try {
+          barrier.get();
+          return;
+        } catch (InterruptedException e) {
+          // ждём дальше: идущая запись не должна пересечься с завершением отчёта
+          interrupted = true;
+        }
+      }
     } catch (ExecutionException e) {
       failure.compareAndSet(null, new IllegalStateException("Report write barrier failed", e.getCause()));
+    } finally {
+      if (interrupted) {
+        Thread.currentThread().interrupt();
+        failure.compareAndSet(null, new IllegalStateException("Interrupted while waiting for report writes"));
+      }
     }
   }
 }

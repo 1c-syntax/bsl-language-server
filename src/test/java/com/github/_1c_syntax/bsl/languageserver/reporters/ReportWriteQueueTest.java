@@ -28,6 +28,7 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.IntStream;
 
@@ -85,6 +86,63 @@ class ReportWriteQueueTest {
       release.countDown();
       producer.join();
     }
+  }
+
+  /**
+   * Прерванный анализ может прислать результат уже после закрытия очереди, когда отчёты
+   * завершены или прерваны: такой результат писать некуда.
+   */
+  @Test
+  void skipsTasksSubmittedAfterClose() throws Exception {
+    var executed = new AtomicInteger();
+    var queue = new ReportWriteQueue(executor);
+    queue.close();
+
+    queue.submit(executed::incrementAndGet);
+    // исполнитель однопоточный и FIFO: к завершению пробы поздняя задача уже разобрана
+    executor.submit(() -> {
+      // проба
+    }).get(5, TimeUnit.SECONDS);
+
+    assertThat(executed).hasValue(0);
+  }
+
+  /**
+   * Прерванное закрытие всё равно дожидается идущей записи: иначе отчёт завершится или
+   * прервётся одновременно с записью в него.
+   */
+  @Test
+  void interruptedCloseWaitsForRunningTask() throws Exception {
+    var taskStarted = new CountDownLatch(1);
+    var release = new CountDownLatch(1);
+    var taskFinished = new AtomicBoolean();
+    var finishedWhenClosed = new AtomicBoolean();
+    var interruptRestored = new AtomicBoolean();
+
+    var queue = new ReportWriteQueue(executor);
+    queue.submit(() -> {
+      taskStarted.countDown();
+      await(release);
+      taskFinished.set(true);
+    });
+    assertThat(taskStarted.await(5, TimeUnit.SECONDS)).isTrue();
+
+    var closer = new Thread(() -> {
+      Thread.currentThread().interrupt();
+      assertThatThrownBy(queue::close).isInstanceOf(IllegalStateException.class);
+      finishedWhenClosed.set(taskFinished.get());
+      interruptRestored.set(Thread.currentThread().isInterrupted());
+    });
+    closer.start();
+
+    // запись ещё не отпущена: закрытие обязано ждать
+    closer.join(500);
+    assertThat(closer.isAlive()).as("close() должен дождаться идущей записи").isTrue();
+
+    release.countDown();
+    closer.join();
+    assertThat(finishedWhenClosed).isTrue();
+    assertThat(interruptRestored).isTrue();
   }
 
   @Test
