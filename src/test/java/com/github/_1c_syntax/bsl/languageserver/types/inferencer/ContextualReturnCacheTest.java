@@ -35,6 +35,27 @@ import java.util.Set;
 
 class ContextualReturnCacheTest {
   @Test
+  void approximationInputsDoNotCrossQueryRevisionOrRecursionGuards() {
+    var cache = new ContextualReturnCache();
+    var method = mock(MethodSymbol.class);
+    var caller = mock(MethodSymbol.class);
+    var key = new ContextualReturnKey(method, null);
+    var guard = new ContextualReturnCache.Guard(key, Set.of(method), Set.of(), 4);
+    var otherStack = new ContextualReturnCache.Guard(key, Set.of(method, caller), Set.of(), 4);
+    var otherDepth = new ContextualReturnCache.Guard(key, Set.of(method), Set.of(), 5);
+    var otherBody = new ContextualReturnCache.Guard(key, Set.of(method), Set.of(mock(BSLParser.CodeBlockContext.class)), 4);
+    var inputs = cache.approximationInputs(guard);
+
+    assertThat(cache.approximationInputs(guard)).isSameAs(inputs);
+    assertThat(cache.approximationInputs(otherStack)).isNotSameAs(inputs);
+    assertThat(cache.approximationInputs(otherDepth)).isNotSameAs(inputs);
+    assertThat(cache.approximationInputs(otherBody)).isNotSameAs(inputs);
+    assertThat(new ContextualReturnCache().approximationInputs(guard)).isNotSameAs(inputs);
+    cache.invalidate();
+    assertThat(cache.approximationInputs(guard)).isNotSameAs(inputs);
+  }
+
+  @Test
   void depthCutResultsDoNotCrossGuardOrDepthBoundaries() {
     var cache = new ContextualReturnCache();
     var method = mock(MethodSymbol.class);

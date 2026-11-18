@@ -154,7 +154,8 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   private final Set<MethodSymbol> indexed = ConcurrentHashMap.newKeySet();
 
   /** Методы, значение которых посчитано по приближениям и ждёт пересчёта (см. computeIfAbsent). */
-  private final Set<MethodSymbol> provisional = ConcurrentHashMap.newKeySet();
+  private final Map<MethodSymbol, Object> provisional = new ConcurrentHashMap<>();
+  private static final Object UNSCOPED_INPUTS = new Object();
 
   /**
    * Часы, по которым видно, что чей расчёт застал, а что появилось уже после него. Своё
@@ -239,17 +240,34 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    *                    расчёта устареют.
    */
   public void computeIfAbsent(MethodSymbol method, Supplier<ComputedReturnTypes> computation, boolean approximate) {
+    computeIfAbsent(method, computation, approximate, UNSCOPED_INPUTS);
+  }
+
+  /**
+   * Считает значение с ключом текущих приближений. Предварительное значение повторно используется
+   * только при совпадении ключа по ссылке; после изменения ячеек или защиты вызывающий передаёт новый.
+   * Ключ не должен удерживать дерево разбора или состояние запроса.
+   *
+   * @param method метод.
+   * @param computation расчёт в контексте вызывающего.
+   * @param approximate считается ли значение по текущим приближениям.
+   * @param inputs непрозрачный ключ входных данных и защиты текущего расчёта.
+   */
+  public void computeIfAbsent(MethodSymbol method, Supplier<ComputedReturnTypes> computation,
+                              boolean approximate, Object inputs) {
     if (!method.isFunction()) {
       return;
     }
     var known = indexed.contains(method);
-    if (known && (approximate || !provisional.contains(method))) {
+    var previousInputs = provisional.get(method);
+    if (known && (previousInputs == null || approximate && previousInputs == inputs)) {
       return;
     }
     var startedAt = clock.incrementAndGet();
-    store(method, computation.get(), startedAt);
-    if (approximate) {
-      provisional.add(method);
+    var computed = computation.get();
+    store(method, computed, startedAt);
+    if (approximate || computed.incomplete()) {
+      provisional.put(method, inputs);
     } else {
       provisional.remove(method);
     }
@@ -281,7 +299,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * @return {@code true}, если типы возврата метода уже выводились и не по приближениям.
    */
   public boolean isIndexed(MethodSymbol method) {
-    return indexed.contains(method) && !provisional.contains(method);
+    return indexed.contains(method) && !provisional.containsKey(method);
   }
 
   /**
@@ -1545,7 +1563,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    */
   private boolean recomputeEach(List<MethodSymbol> methods) {
     var before = methods.stream().map(symbolTypeIndex::getReturnTypes).toList();
-    provisional.addAll(methods);
+    methods.forEach(method -> provisional.put(method, UNSCOPED_INPUTS));
     for (var method : methods) {
       // Пометка «посчитан» не снимается: пересчёт и так идёт напрямую, а без пометки
       // соседний метод, читающий этот прямо сейчас, счёл бы его непосчитанным и снова

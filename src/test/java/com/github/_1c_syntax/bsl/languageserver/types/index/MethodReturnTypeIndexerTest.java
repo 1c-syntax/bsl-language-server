@@ -309,6 +309,50 @@ class MethodReturnTypeIndexerTest {
   }
 
   @Test
+  void provisionalReturnIsReusedOnlyForTheSameInputsAndCompletedReturnIsShared() {
+    var firstInputs = new Object();
+    var nextInputs = new Object();
+    var calls = new AtomicInteger();
+    java.util.function.Supplier<ComputedReturnTypes> computation = () -> calls.incrementAndGet() == 1
+      ? new ComputedReturnTypes(STRING, Set.of(), false)
+      : new ComputedReturnTypes(NUMBER, Set.of(), false);
+
+    indexer.computeIfAbsent(consumerMethod, computation, true, firstInputs);
+    indexer.computeIfAbsent(consumerMethod, computation, true, firstInputs);
+    assertThat(calls.get()).isEqualTo(1);
+    assertThat(symbolTypeIndex.getReturnTypes(consumerMethod)).isEqualTo(STRING);
+
+    indexer.computeIfAbsent(consumerMethod, computation, true, nextInputs);
+    assertThat(calls.get()).isEqualTo(2);
+    assertThat(symbolTypeIndex.getReturnTypes(consumerMethod)).isEqualTo(NUMBER);
+    assertThat(indexer.isIndexed(consumerMethod)).isFalse();
+
+    indexer.computeIfAbsent(consumerMethod, computation);
+    indexer.computeIfAbsent(consumerMethod, computation, true, firstInputs);
+    indexer.computeIfAbsent(consumerMethod, computation, true, nextInputs);
+    assertThat(calls.get()).isEqualTo(3);
+    assertThat(indexer.isIndexed(consumerMethod)).isTrue();
+  }
+
+  @Test
+  void anIncompleteNeutralValueIsRecomputedAndItsCompleteReplacementIsCached() {
+    var calls = new AtomicInteger();
+    java.util.function.Supplier<ComputedReturnTypes> computation = () -> calls.incrementAndGet() == 1
+      ? new ComputedReturnTypes(STRING, Set.of(), true)
+      : new ComputedReturnTypes(NUMBER, Set.of(), false);
+
+    indexer.computeIfAbsent(consumerMethod, computation);
+    var firstIndexed = indexer.isIndexed(consumerMethod);
+    indexer.computeIfAbsent(consumerMethod, computation);
+    indexer.computeIfAbsent(consumerMethod, computation);
+
+    assertThat(firstIndexed).isFalse();
+    assertThat(calls.get()).isEqualTo(2);
+    assertThat(indexer.isIndexed(consumerMethod)).isTrue();
+    assertThat(symbolTypeIndex.getReturnTypes(consumerMethod)).isEqualTo(NUMBER);
+  }
+
+  @Test
   void recomputationOfDocumentMakesProvisionalValueFinal() {
     // given: экспортная функция посчитана по приближениям раньше, чем до неё дошёл
     // пересчёт её документа.

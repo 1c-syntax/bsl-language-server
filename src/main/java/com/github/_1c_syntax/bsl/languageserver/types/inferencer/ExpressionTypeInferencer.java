@@ -1093,10 +1093,14 @@ public class ExpressionTypeInferencer {
       // сравнение самих URI нормализует проценты и стоит заметно дороже.
       if (owner == ctx.documentContext) {
         // Посреди кругов по ячейкам переменных модуля тело считается по приближениям ячеек:
-        // такое значение годится, пока круги идут, и пересчитывается первым же запросом
-        // после них.
-        methodReturnTypeIndexer.computeIfAbsent(method, () -> returnTypesOfBody(method, ctx),
-          ctx.flowSession.cellsComputing());
+        // такое значение годится только при тех же входных ячейках и защите рекурсии.
+        if (ctx.flowSession.cellsComputing()) {
+          var guard = ctx.contextualReturns.guard(new ContextualReturnKey(method, null), ctx);
+          var inputs = ctx.contextualReturns.approximationInputs(guard);
+          methodReturnTypeIndexer.computeIfAbsent(method, () -> returnTypesOfBody(method, ctx), true, inputs);
+        } else {
+          methodReturnTypeIndexer.computeIfAbsent(method, () -> returnTypesOfBody(method, ctx));
+        }
       } else {
         if (method.isFunction() && !methodReturnTypeIndexer.isIndexed(method)) {
           // Значение чужой функции ещё не посчитано — так бывает, пока рабочая область

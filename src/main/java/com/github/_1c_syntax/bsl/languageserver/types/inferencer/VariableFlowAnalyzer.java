@@ -1040,8 +1040,10 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     // Запомненное, оно пережило бы круги и отвечало бы приближением всем, в том числе
     // запросу, с которого круги и начались. Так же не запоминается окружение, посчитанное
     // на значениях, которых ещё нет: следующий расчёт принял бы его за полное.
-    if (byBody == null || inputs.session().cellsComputing || inputs.session().cellsIncomplete
-      || inputs.sawMissing().getAsBoolean()
+    if (byBody == null) {
+      return computed;
+    }
+    if (inputs.session().cellsComputing || inputs.session().cellsIncomplete || inputs.sawMissing().getAsBoolean()
       || (sharedRoot != null && !sharedRoot.getAsBoolean())) {
       return computed;
     }

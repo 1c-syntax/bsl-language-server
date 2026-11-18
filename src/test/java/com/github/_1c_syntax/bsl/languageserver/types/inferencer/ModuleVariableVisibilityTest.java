@@ -342,6 +342,31 @@ class ModuleVariableVisibilityTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void provisionalReturnTracksModuleCellGrowth() {
+    var document = document("""
+      Var ZResult;
+      Var ASeed;
+      Procedure Initialize()
+        ZResult = GetSeed();
+      EndProcedure
+      Function GetSeed()
+        Return ASeed;
+      EndFunction
+      Function Read()
+        Return ZResult;
+      EndFunction
+      ASeed = "ready";
+      """);
+    var method = document.getSymbolTree().getMethodSymbol("Read").orElseThrow();
+
+    var result = inferencer.computeReturnTypes(method);
+
+    assertThat(result.types().refs()).extracting(TypeRef::qualifiedName).contains("Строка");
+    assertThat(result.incomplete()).isFalse();
+    assertThat(inferencer.computeReturnTypes(method).types()).isEqualTo(result.types());
+  }
+
+  @Test
   void moduleVariableReadsAreCaseInsensitive() {
     var document = document("""
       Var Shared;

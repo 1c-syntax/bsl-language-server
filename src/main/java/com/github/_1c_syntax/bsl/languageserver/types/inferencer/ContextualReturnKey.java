@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Ключ мемоизации возвращаемого типа внутри одного запроса вывода.
@@ -30,5 +31,5 @@ import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionCon
  * @param method символ функции.
  * @param context контекст назначения вызова после перехода с клиента на сервер, если он нужен.
  */
-record ContextualReturnKey(MethodSymbol method, ExecutionContext context) { }
+record ContextualReturnKey(MethodSymbol method, @Nullable ExecutionContext context) { }
 
