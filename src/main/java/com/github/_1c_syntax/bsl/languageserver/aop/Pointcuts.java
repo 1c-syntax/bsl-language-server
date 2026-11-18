@@ -230,9 +230,9 @@ public class Pointcuts {
   }
 
   /**
-   * Это вызов метода removeWorkspace.
+   * Это удаление остановленной рабочей области.
    */
-  @Pointcut("isBSLLanguageServerScope() && execution(* removeWorkspace(..))")
+  @Pointcut("isBSLLanguageServerScope() && execution(* removeStoppedWorkspace(..))")
   public void isRemoveWorkspaceCall() {
     // no-op
   }

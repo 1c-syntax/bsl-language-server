@@ -980,6 +980,26 @@ class MethodReturnTypeIndexerTest {
   }
 
   @Test
+  void stoppingSmallCycleSkipsRemainingMethodsAndReleasesDocuments() {
+    var ring = ring("stoppedSmallPass", 3);
+    var serverContext = serverContextOf(ring.documents());
+    var loading = trackLoading(serverContext, ring.documents());
+    var stopped = new AtomicBoolean();
+    when(serverContext.isBackgroundWorkStopped()).thenAnswer(invocation -> stopped.get());
+    when(inferencer.computeReturnTypes(any())).thenAnswer(invocation -> {
+      stopped.set(true);
+      return new ComputedReturnTypes(STRING, Set.of(), false);
+    });
+    clearInvocations(inferencer);
+
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+    verify(inferencer, times(1)).computeReturnTypes(any());
+    assertThat(loading.loaded()).isEmpty();
+    verify(progressReporter).endProgress("");
+  }
+
+  @Test
   void stoppingWhilePreloadWaitsForWriteLockSkipsReload() throws Exception {
     var ring = ring("lockedPreload", 9);
     var serverContext = serverContextOf(ring.documents());

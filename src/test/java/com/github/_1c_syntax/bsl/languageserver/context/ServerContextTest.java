@@ -71,6 +71,7 @@ import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.clearInvocations;
 
 @CleanupContextBeforeClassAndAfterEachTestMethod
 class ServerContextTest extends AbstractServerContextAwareTest {
@@ -265,11 +266,66 @@ class ServerContextTest extends AbstractServerContextAwareTest {
     // given
     initServerContext(PATH_TO_METADATA, false);
     context.stopBackgroundWork();
+    clearInvocations(workDoneProgressHelper);
 
     // when
     context.populateContext();
 
     // then
+    assertThat(context.getDocuments()).isEmpty();
+    verify(workDoneProgressHelper, never()).createProgress(ArgumentMatchers.anyInt(), ArgumentMatchers.anyString());
+  }
+
+  @Test
+  void stoppingDuringDiscoveryWaitsForDiscoveryToFinish() throws Exception {
+    initServerContext(PATH_TO_METADATA, false);
+    var reporter = mock(WorkDoneProgressHelper.WorkDoneProgressReporter.class);
+    doReturn(reporter).when(workDoneProgressHelper).createProgress(0, "");
+    var entered = new CountDownLatch(1);
+    var release = new CountDownLatch(1);
+    doAnswer(invocation -> {
+      entered.countDown();
+      awaitWithinTestTimeout(release);
+      return null;
+    }).when(reporter).beginProgress(ArgumentMatchers.anyString());
+    var workspace = context.getWorkspaceUri();
+    var population = CompletableFuture.runAsync(() -> WorkspaceContextHolder.run(workspace, context::populateContext));
+    try {
+      assertThat(entered.await(10, TimeUnit.SECONDS)).isTrue();
+      var stopping = CompletableFuture.runAsync(context::stopBackgroundWork);
+      await().atMost(Duration.ofSeconds(10)).until(context::isBackgroundWorkStopped);
+      assertThat(stopping).isNotDone();
+      release.countDown();
+      population.get(10, TimeUnit.SECONDS);
+      stopping.get(10, TimeUnit.SECONDS);
+      assertThat(context.getDocuments()).isEmpty();
+    } finally {
+      release.countDown();
+      population.get(10, TimeUnit.SECONDS);
+    }
+  }
+
+  @Test
+  void stoppingWhilePopulationWaitsForDocumentLockSkipsParsing() throws Exception {
+    initServerContext(PATH_TO_METADATA, false);
+    var file = new File(PATH_TO_METADATA, PATH_TO_MODULE_FILE);
+    var lock = (ReentrantReadWriteLock) context.getDocumentLock(Absolute.uri(file.toURI()));
+    var workspace = context.getWorkspaceUri();
+    lock.writeLock().lock();
+    try (var controls = java.util.concurrent.Executors.newSingleThreadExecutor()) {
+      var population = controls.submit(() ->
+        WorkspaceContextHolder.run(workspace, () -> context.populateContext(List.of(file))));
+      CompletableFuture<Void> stopping;
+      try {
+        await().atMost(Duration.ofSeconds(10)).until(lock::hasQueuedThreads);
+        stopping = CompletableFuture.runAsync(context::stopBackgroundWork);
+        await().atMost(Duration.ofSeconds(10)).until(context::isBackgroundWorkStopped);
+      } finally {
+        lock.writeLock().unlock();
+      }
+      population.get(10, TimeUnit.SECONDS);
+      stopping.get(10, TimeUnit.SECONDS);
+    }
     assertThat(context.getDocuments()).isEmpty();
   }
 

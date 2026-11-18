@@ -219,17 +219,23 @@ public class ServerContextProvider {
    */
   public synchronized void removeWorkspace(WorkspaceFolder workspaceFolder) {
     var uri = Absolute.uri(workspaceFolder.getUri());
+    // Новые внешние документы сразу направляются в оставшуюся рабочую область.
+    repointPrimaryBeforeRemoval(uri);
     var removed = contexts.get(uri);
     if (removed != null) {
       // Пока рабочая область на месте: фоновая работа может искать её в этой карте.
       removed.stopBackgroundWork();
     }
+    removeStoppedWorkspace(workspaceFolder);
+  }
+
+  /** Удалить остановленную область, сохраняя её контекст для уведомления об удалении. */
+  private void removeStoppedWorkspace(WorkspaceFolder workspaceFolder) {
+    var uri = Absolute.uri(workspaceFolder.getUri());
     var preparing = contexts.get(uri);
     if (preparing == null) {
       return;
     }
-    // Новые untitled-буферы и внешние файлы не должны попасть в контекст, который скоро очистится.
-    repointPrimaryBeforeRemoval(uri);
     // Обработчик подготовки ищет контекст в этой карте, чтобы завершить её.
     // Сохраняем контекст и его бины до конца подготовки, даже если обработчик ещё не запущен.
     preparing.awaitPreparation();

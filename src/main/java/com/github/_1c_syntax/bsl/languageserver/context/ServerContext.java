@@ -234,6 +234,10 @@ public class ServerContext {
   }
 
   public void populateContext() {
+    runBackgroundWork(this::discoverAndPopulateContext);
+  }
+
+  private void discoverAndPopulateContext() {
     if (configurationRoot == null) {
       LOGGER.info("Can't populate server context. Configuration root is not defined.");
       return;
@@ -355,6 +359,9 @@ public class ServerContext {
     var lock = getDocumentLock(uri);
     lock.writeLock().lock();
     try {
+      if (backgroundWork.isStopped()) {
+        return;
+      }
       var documentContext = documents.get(uri);
       if (documentContext == null) {
         documentContext = createDocumentContext(uri);

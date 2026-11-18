@@ -22,15 +22,25 @@
 package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.utils.Absolute;
+import com.github._1c_syntax.bsl.languageserver.events.BeforeWorkspaceRemovedEvent;
 import org.eclipse.lsp4j.WorkspaceFolder;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationListener;
+import org.springframework.context.event.ApplicationEventMulticaster;
 
 import java.net.URI;
 import java.nio.file.Path;
+import java.time.Duration;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+
+import static org.awaitility.Awaitility.await;
 
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
@@ -42,6 +52,9 @@ class ServerContextProviderTest {
 
   @Autowired
   private ServerContextProvider serverContextProvider;
+
+  @Autowired
+  private ApplicationEventMulticaster applicationEventMulticaster;
 
   @BeforeEach
   void setUp() {
@@ -67,6 +80,58 @@ class ServerContextProviderTest {
 
     // cleanup
     serverContextProvider.removeWorkspace(workspaceFolder);
+  }
+
+  @Test
+  void removalRepointsPrimaryAndStopsWorkBeforeNotification(@TempDir Path workspace) throws Exception {
+    var fallback = serverContextProvider.registerDefaultWorkspace();
+    var folder = new WorkspaceFolder(workspace.toUri().toString(), "stopping");
+    var removed = serverContextProvider.addWorkspace(folder);
+    removed.awaitPreparation();
+    var entered = new CountDownLatch(1);
+    var release = new CountDownLatch(1);
+    var notified = new AtomicBoolean();
+    var listener = new ApplicationListener<BeforeWorkspaceRemovedEvent>() {
+      @Override
+      public void onApplicationEvent(BeforeWorkspaceRemovedEvent event) {
+        if (Absolute.uri(event.getWorkspaceUri()).equals(removed.getWorkspaceUri())) {
+          assertThat(removed.isBackgroundWorkStopped()).isTrue();
+          notified.set(true);
+        }
+      }
+    };
+    applicationEventMulticaster.addApplicationListener(listener);
+    var work = CompletableFuture.runAsync(() -> removed.runBackgroundWork(() -> {
+      entered.countDown();
+      try {
+        assertThat(release.await(10, TimeUnit.SECONDS)).isTrue();
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        throw new IllegalStateException(e);
+      }
+    }));
+    CompletableFuture<Void> removal = null;
+    try {
+      assertThat(entered.await(10, TimeUnit.SECONDS)).isTrue();
+      removal = CompletableFuture.runAsync(() -> serverContextProvider.removeWorkspace(folder));
+      await().atMost(Duration.ofSeconds(10)).until(removed::isBackgroundWorkStopped);
+      assertThat(removal).isNotDone();
+      assertThat(serverContextProvider.resolveContextForDocument(URI.create("untitled:during-removal")))
+        .isSameAs(fallback);
+      assertThat(notified).isFalse();
+    } finally {
+      release.countDown();
+      work.get(10, TimeUnit.SECONDS);
+      try {
+        if (removal != null) {
+          removal.get(10, TimeUnit.SECONDS);
+        }
+      } finally {
+        applicationEventMulticaster.removeApplicationListener(listener);
+        serverContextProvider.clear();
+      }
+    }
+    assertThat(notified).isTrue();
   }
 
   @Test

@@ -813,6 +813,9 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       for (var pass = 0; pass < MAX_PASSES && !serverContext.isBackgroundWorkStopped(); pass++) {
         var changed = false;
         for (var method : methods) {
+          if (serverContext.isBackgroundWorkStopped()) {
+            return;
+          }
           changed |= recompute(method);
         }
         if (!changed) {
