@@ -23,7 +23,10 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraph;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionTreeBuildingVisitor;
@@ -35,6 +38,19 @@ import org.jspecify.annotations.Nullable;
 /** Достаточные условия независимости локальной структуры, изменяемой только вставками литеральных ключей. */
 final class IndependentReturnedStructure {
   private IndependentReturnedStructure() {
+  }
+
+  static boolean localVariable(DocumentContext document, VariableSymbol variable) {
+    return switch (variable.getKind()) {
+      case DYNAMIC, LOCAL -> variable.getScope() instanceof MethodSymbol && document.getFileType() == FileType.BSL;
+      default -> false;
+    };
+  }
+
+  static @Nullable TypeSet typeBefore(VariableFlowAnalyzer.Facts facts, ParserRuleContext statement,
+                                     VariableSymbol variable) {
+    var index = facts.indexOf(variable);
+    return index == null ? null : facts.beforeStatement().getOrDefault(statement, FlowEnvironment.EMPTY).get(index);
   }
 
   static boolean supports(DocumentContext document, BSLParser.CodeBlockContext body, VariableSymbol variable,
@@ -120,7 +136,8 @@ final class IndependentReturnedStructure {
       return false;
     }
     var access = call.accessCall();
-    return access != null && access.methodCall() != null && literalInsert(access.methodCall());
+    var method = access == null ? null : access.methodCall();
+    return method != null && literalInsert(method);
   }
 
   private static boolean literalInsert(BSLParser.MethodCallContext method) {

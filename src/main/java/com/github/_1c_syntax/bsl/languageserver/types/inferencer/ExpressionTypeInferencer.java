@@ -524,10 +524,16 @@ public class ExpressionTypeInferencer {
     }
     if (returnedValue && variable.getOwner() == ctx.documentContext
       && terminal.getParent() instanceof ParserRuleContext use) {
-      var independent = variableFlowAnalyzer.independentReturnTypeAt(ctx.documentContext, use, variable,
-        flowInputs(variable, ctx));
-      if (independent != null) {
-        return independent;
+      try {
+        var independent = variableFlowAnalyzer.independentReturnTypeAt(ctx.documentContext, use, variable,
+          flowInputs(variable, ctx), () -> canRememberReturn(ctx));
+        if (independent != null) {
+          return independent;
+        }
+      } catch (DocumentContentUnavailableException exception) {
+        ctx.failed = true;
+        LOGGER.debug("Document {} was released while inferring a returned local", ctx.documentContext.getUri(), exception);
+        return TypeSet.EMPTY;
       }
     }
     return flowTypeAt(variable, terminal, ctx);

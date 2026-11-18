@@ -27,8 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.cfg.PreprocessorFlow;
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraphIndex;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
@@ -216,7 +214,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     private final Runnable cellsChanged;
     private final Runnable cellRead;
     /** Проекция локального результата живёт только в запросе и не заменяет общие facts тела. */
-    private @Nullable Map<ReturnedLocalKey, Facts> independentReturnFacts;
+    private @Nullable Map<ReturnedLocalKey, @Nullable Facts> independentReturnFacts;
 
     /** Создать сессию без внешних результатов, зависящих от её приближений. */
     public FlowSession() {
@@ -295,11 +293,11 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     }
 
     /** Вычислить замкнутое локальное построение возвращаемой структуры без общего кэша фактов тела. */
-    private @Nullable TypeSet independentReturnTypeAt(
+    private static @Nullable TypeSet independentReturnTypeAt(
       VariableFlowAnalyzer analyzer, DocumentContext document, ParserRuleContext use,
-      VariableSymbol variable, FlowInputs inputs
+      VariableSymbol variable, FlowInputs inputs, BooleanSupplier complete
     ) {
-      var body = independentBody(document, use, variable);
+      var body = IndependentReturnedStructure.localVariable(document, variable) ? enclosingBody(use) : null;
       if (body == null || inputs.session().active.containsKey(body)) {
         return null;
       }
@@ -312,12 +310,15 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       var key = new ReturnedLocalKey(body, variable, inputs.executionContext());
       var remembered = session.independentReturnFacts == null ? null : session.independentReturnFacts.get(key);
       inputs.activeBodyRead().accept(body);
-      if (remembered != null) {
-        return independentTypeBefore(remembered, statement, variable);
+      if (session.independentReturnFacts != null && session.independentReturnFacts.containsKey(key)) {
+        return remembered == null ? null : IndependentReturnedStructure.typeBefore(remembered, statement, variable);
       }
       var variables = analyzer.variablesOf(document, body, layout, inputs);
       var graph = analyzer.controlFlowGraphIndex.graphOf(document, body, CfgBuildOptions.defaults());
       if (!IndependentReturnedStructure.supports(document, body, variable, variables, graph, inputs)) {
+        if (inputs.cacheable()) {
+          session.rememberIndependentFacts(key, null, inputs, complete);
+        }
         return null;
       }
       var selected = variables.forVariable(variable);
@@ -327,24 +328,16 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       inputs.session().active.put(body, pass);
       try {
         var facts = pass.computeFacts();
-        session.rememberIndependentFacts(key, facts, inputs);
-        return independentTypeBefore(facts, statement, variable);
+        session.rememberIndependentFacts(key, facts, inputs, complete);
+        return IndependentReturnedStructure.typeBefore(facts, statement, variable);
       } finally {
         inputs.session().active.remove(body);
       }
     }
 
-    private static @Nullable CodeBlockContext independentBody(DocumentContext document, ParserRuleContext use,
-                                                              VariableSymbol variable) {
-      if ((variable.getKind() != VariableKind.DYNAMIC && variable.getKind() != VariableKind.LOCAL)
-        || !(variable.getScope() instanceof MethodSymbol) || document.getFileType() != FileType.BSL) {
-        return null;
-      }
-      return enclosingBody(use);
-    }
-
-    private void rememberIndependentFacts(ReturnedLocalKey key, Facts facts, FlowInputs inputs) {
-      if (cellsComputing || cellsIncomplete || inputs.sawMissing().getAsBoolean()) {
+    private void rememberIndependentFacts(ReturnedLocalKey key, @Nullable Facts facts, FlowInputs inputs,
+                                          BooleanSupplier complete) {
+      if (cellsComputing || cellsIncomplete || inputs.sawMissing().getAsBoolean() || !complete.getAsBoolean()) {
         return;
       }
       if (independentReturnFacts == null) {
@@ -633,8 +626,8 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
 
   /** Тип замкнуто строящейся локальной структуры; {@code null} требует полного прохода тела. */
   @Nullable TypeSet independentReturnTypeAt(DocumentContext document, ParserRuleContext use,
-                                           VariableSymbol variable, FlowInputs inputs) {
-    return inputs.session().independentReturnTypeAt(this, document, use, variable, inputs);
+                                           VariableSymbol variable, FlowInputs inputs, BooleanSupplier complete) {
+    return FlowSession.independentReturnTypeAt(this, document, use, variable, inputs, complete);
   }
 
   /**
