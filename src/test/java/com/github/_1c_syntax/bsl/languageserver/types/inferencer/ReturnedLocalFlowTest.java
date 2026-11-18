@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContentUnavailableException;
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
@@ -30,6 +31,8 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionTreeBuildingVisitor;
+import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.junit.jupiter.api.Test;
@@ -44,12 +47,14 @@ import org.springframework.test.util.ReflectionTestUtils;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.doThrow;
 
 class ReturnedLocalFlowTest extends AbstractServerContextAwareTest {
   @Autowired
@@ -142,21 +147,21 @@ class ReturnedLocalFlowTest extends AbstractServerContextAwareTest {
     var session = new VariableFlowAnalyzer.FlowSession();
     var server = projectedInputs(session, variable, ExecutionContext.SERVER, assignments);
 
-    assertThat(analyzer.independentReturnTypeAt(document, first, variable, server).refs())
+    assertThat(analyzer.independentReturnTypeAt(document, first, variable, server, () -> true).refs())
       .extracting(TypeRef::qualifiedName).containsExactly("String");
     var afterFirst = assignments.get();
     assertThat(afterFirst).isPositive();
-    assertThat(analyzer.independentReturnTypeAt(document, last, variable, server).refs())
+    assertThat(analyzer.independentReturnTypeAt(document, last, variable, server, () -> true).refs())
       .extracting(TypeRef::qualifiedName).containsExactly("String");
     assertThat(assignments.get()).as("later returns read facts computed by the first return").isEqualTo(afterFirst);
 
     var client = projectedInputs(session, variable, ExecutionContext.THIN_CLIENT, assignments);
-    assertThat(analyzer.independentReturnTypeAt(document, last, variable, client).refs())
+    assertThat(analyzer.independentReturnTypeAt(document, last, variable, client, () -> true).refs())
       .extracting(TypeRef::qualifiedName).containsExactly("Number");
     assertThat(assignments.get()).isGreaterThan(afterFirst);
     var afterClient = assignments.get();
     var another = projectedInputs(new VariableFlowAnalyzer.FlowSession(), variable, ExecutionContext.SERVER, assignments);
-    assertThat(analyzer.independentReturnTypeAt(document, first, variable, another).refs())
+    assertThat(analyzer.independentReturnTypeAt(document, first, variable, another, () -> true).refs())
       .extracting(TypeRef::qualifiedName).containsExactly("String");
     assertThat(assignments.get()).isGreaterThan(afterClient);
   }
@@ -227,6 +232,106 @@ class ReturnedLocalFlowTest extends AbstractServerContextAwareTest {
     } finally {
       ReflectionTestUtils.setField(target, "returnTypeFromBodyInference", original);
     }
+  }
+
+  @Test
+  void stableRejectionsDoNotRescanEachReturnAndRemainSeparateByContext() {
+    var document = TestUtils.getDocumentContext("""
+      Function Build(Flag)
+        Result = New Structure;
+        Alias(Result);
+        If Flag Then
+          Return Result;
+        EndIf;
+        Return Result;
+      EndFunction
+      """, context);
+    var body = VariableFlowAnalyzer.bodyAt(document, new Position(1, 3));
+    var variable = document.getSymbolTree().getVariableSymbolInScope(body, "Result").orElseThrow();
+    var first = (ParserRuleContext) Trees.findTerminalNodeContainsPosition(document.getAst(), new Position(4, 12))
+      .orElseThrow().getParent();
+    var last = (ParserRuleContext) Trees.findTerminalNodeContainsPosition(document.getAst(), new Position(6, 10))
+      .orElseThrow().getParent();
+    var checks = new AtomicInteger();
+    var narrowing = mock(VariableFlowAnalyzer.GuardNarrowing.class);
+    doAnswer(call -> {
+      checks.incrementAndGet();
+      return Set.of();
+    }).when(narrowing).variablesOf(any());
+    var session = new VariableFlowAnalyzer.FlowSession();
+    var server = rejectionInputs(session, variable, ExecutionContext.SERVER, narrowing);
+    assertThat(analyzer.independentReturnTypeAt(document, first, variable, server, () -> true)).isNull();
+    var afterFirst = checks.get();
+    assertThat(afterFirst).isPositive();
+
+    assertThat(analyzer.independentReturnTypeAt(document, last, variable, server, () -> true)).isNull();
+    assertThat(checks.get()).isEqualTo(afterFirst);
+    var client = rejectionInputs(session, variable, ExecutionContext.THIN_CLIENT, narrowing);
+    assertThat(analyzer.independentReturnTypeAt(document, last, variable, client, () -> true)).isNull();
+    assertThat(checks.get()).isGreaterThan(afterFirst);
+  }
+
+  private static VariableFlowAnalyzer.FlowInputs rejectionInputs(VariableFlowAnalyzer.FlowSession session,
+      VariableSymbol variable, ExecutionContext mode, VariableFlowAnalyzer.GuardNarrowing narrowing) {
+    return new VariableFlowAnalyzer.FlowInputs(session, body -> {}, true, mode, body -> Optional.empty(), () -> false,
+      body -> List.of(variable), candidate -> false, candidate -> TypeSet.EMPTY,
+      candidate -> List.of(new Position(1, 2)), candidate -> List.of(),
+      (candidate, statement, position) -> TypeSet.EMPTY, (candidate, position, incoming) -> incoming, narrowing);
+  }
+
+  @Test
+  void aFailedProjectionDoesNotDiscardIndependentLiteralReturns() {
+    var document = TestUtils.getDocumentContext("""
+      Function Build(Flag)
+        If Flag Then
+          Return 1;
+        EndIf;
+        Result = New Structure;
+        Return Result;
+      EndFunction
+      """, context);
+    ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
+    var original = (VariableFlowAnalyzer) ReflectionTestUtils.getField(target, "variableFlowAnalyzer");
+    VariableFlowAnalyzer real = AopTestUtils.getUltimateTargetObject(original);
+    var failing = spy(real);
+    doThrow(new DocumentContentUnavailableException(document.getUri())).when(failing)
+      .independentReturnTypeAt(any(), any(), any(), any(), any());
+    ReflectionTestUtils.setField(target, "variableFlowAnalyzer", failing);
+    try {
+      var result = inferencer.computeReturnTypes(document.getSymbolTree().getMethodSymbol("Build").orElseThrow());
+      assertThat(result.types().refs()).extracting(TypeRef::qualifiedName).contains("Число");
+      assertThat(result.incomplete()).isTrue();
+    } finally {
+      ReflectionTestUtils.setField(target, "variableFlowAnalyzer", original);
+    }
+  }
+
+  @Test
+  void aDepthCutProjectionDoesNotPoisonAShallowerLookupInTheSameSession() {
+    var document = TestUtils.getDocumentContext("""
+      Function Build()
+        Result = New Structure;
+        Return Result;
+      EndFunction
+      """, context);
+    var method = document.getSymbolTree().getMethodSymbol("Build").orElseThrow();
+    var statement = (BSLParser.ReturnStatementContext) Trees.findAllRuleNodes(document.getAst(),
+      BSLParser.RULE_returnStatement).iterator().next();
+    var expression = ExpressionTreeBuildingVisitor.buildExpressionTree(statement.expression());
+    var inference = new InferenceContext(document, ExecutionContext.SERVER);
+    inference.visited.add(method);
+    ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
+    inference.depth = (Integer) ReflectionTestUtils.getField(target, "MAX_DEPTH") - 1;
+
+    TypeSet deep = ReflectionTestUtils.invokeMethod(target, "inferInternal", expression, inference, false, true);
+    assertThat(deep.isEmpty()).isTrue();
+    assertThat(inference.depthCut).isTrue();
+    inference.depth = 0;
+    inference.depthCut = false;
+    TypeSet shallow = ReflectionTestUtils.invokeMethod(target, "inferInternal", expression, inference, false, true);
+
+    assertThat(shallow.refs()).extracting(TypeRef::qualifiedName).containsExactly("Структура");
+    assertThat(inference.depthCut).isFalse();
   }
 
   @Test
