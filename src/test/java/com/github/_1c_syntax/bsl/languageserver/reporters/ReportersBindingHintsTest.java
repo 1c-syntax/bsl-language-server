@@ -25,7 +25,9 @@ import com.contrastsecurity.sarif.Result;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.databind.DiagnosticCodeSerializer;
 import com.github._1c_syntax.bsl.languageserver.reporters.databind.DiagnosticMessageSerializer;
+import com.github._1c_syntax.bsl.languageserver.reporters.databind.DiagnosticMixIn;
 import com.github._1c_syntax.bsl.languageserver.util.AotHints;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -61,6 +63,15 @@ class ReportersBindingHintsTest {
 
     // then
     assertThat(RuntimeHintsPredicates.reflection().onMethodInvocation(reportedType, accessor)).accepts(hints);
+  }
+
+  @Test
+  void testMixInOfJsonReportIsRegistered() {
+    // when
+    var hints = AotHints.hintsOf(JsonReporter.class);
+
+    // then: без регистрации mixin'а Jackson не видит его аннотаций и пишет код диагностики как бин
+    assertThat(RuntimeHintsPredicates.reflection().onType(DiagnosticMixIn.class)).accepts(hints);
   }
 
   @ParameterizedTest

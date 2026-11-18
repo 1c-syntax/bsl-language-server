@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.databind.AnalysisInfoJsonMapper;
 import com.github._1c_syntax.bsl.languageserver.reporters.databind.DiagnosticCodeSerializer;
 import com.github._1c_syntax.bsl.languageserver.reporters.databind.DiagnosticMessageSerializer;
+import com.github._1c_syntax.bsl.languageserver.reporters.databind.DiagnosticMixIn;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
 import org.springframework.aot.hint.MemberCategory;
@@ -48,13 +49,14 @@ import java.util.stream.Stream;
 public class JsonReporter implements DiagnosticReporter {
 
   /**
-   * Подсказки для native-image: сериализаторы, подключаемые через {@code DiagnosticMixIn},
-   * о котором биндинг-подсказки не знают.
+   * Подсказки для native-image: {@link DiagnosticMixIn}, о котором биндинг-подсказки не знают,
+   * и подключаемые им сериализаторы. Аннотации mixin'а Jackson читает с его методов.
    */
   static class MixInSerializersRuntimeHints implements RuntimeHintsRegistrar {
 
     @Override
     public void registerHints(RuntimeHints hints, @Nullable ClassLoader classLoader) {
+      hints.reflection().registerType(DiagnosticMixIn.class, MemberCategory.INVOKE_DECLARED_METHODS);
       Stream.of(DiagnosticCodeSerializer.class, DiagnosticMessageSerializer.class)
         .forEach(serializer -> hints.reflection().registerType(serializer, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS));
     }
