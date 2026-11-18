@@ -27,11 +27,10 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionTreeBuildingVisitor;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ConstructorCallNode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
-
-import java.util.Locale;
-import java.util.Set;
+import org.jspecify.annotations.Nullable;
 
 /** Достаточные условия независимости локальной структуры, изменяемой только вставками литеральных ключей. */
 final class IndependentReturnedStructure {
@@ -48,13 +47,14 @@ final class IndependentReturnedStructure {
     var definitions = 0;
     for (var entry : variables.changesByStatement().entrySet()) {
       for (var change : entry.getValue()) {
-        if (change.variable() == variable) {
-          if (!Trees.getTrailingComment(document.getTokens(), entry.getKey().getStop()).isEmpty()
-            || !supportedChange(entry.getKey(), change.definition(), variable.getName())) {
-            return false;
-          }
-          definitions += change.definition() ? 1 : 0;
+        if (change.variable() != variable) {
+          continue;
         }
+        if (!Trees.getTrailingComment(document.getTokens(), entry.getKey().getStop()).isEmpty()
+          || !supportedChange(entry.getKey(), change.definition(), variable.getName())) {
+          return false;
+        }
+        definitions += change.definition() ? 1 : 0;
       }
     }
     return definitions == 1;
@@ -64,10 +64,26 @@ final class IndependentReturnedStructure {
                                          boolean definition, String variableName) {
     if (definition) {
       return statement instanceof BSLParser.AssignmentContext assignment
-        && Set.of("новыйструктура", "новыйструктура()", "newstructure", "newstructure()")
-        .contains(assignment.expression().getText().toLowerCase(Locale.ROOT));
+        && emptyStructure(assignment);
     }
     return statement instanceof BSLParser.CallStatementContext call && literalInsert(call, variableName);
+  }
+
+  private static boolean emptyStructure(BSLParser.AssignmentContext assignment) {
+    var expression = ExpressionTreeBuildingVisitor.buildExpressionTree(assignment.expression());
+    if (!(expression instanceof ConstructorCallNode constructor)
+      || !constructor.isStaticallyTyped() || !parameterless(constructor)) {
+      return false;
+    }
+    var typeName = constructor.getTypeName().getRepresentingAst();
+    return typeName != null && ("Structure".equalsIgnoreCase(typeName.getText())
+      || "Структура".equalsIgnoreCase(typeName.getText()));
+  }
+
+  private static boolean parameterless(ConstructorCallNode constructor) {
+    var arguments = constructor.arguments();
+    return arguments.isEmpty() || (arguments.size() == 1
+      && arguments.getFirst().getNodeType() == ExpressionNodeType.SKIPPED_CALL_ARG);
   }
 
   private static boolean closedConditions(VariableSymbol variable, ControlFlowGraph graph,
@@ -100,20 +116,30 @@ final class IndependentReturnedStructure {
 
   private static boolean literalInsert(BSLParser.CallStatementContext call, String variableName) {
     if (call.IDENTIFIER() == null || !call.IDENTIFIER().getText().equalsIgnoreCase(variableName)
-      || !call.modifier().isEmpty() || call.accessCall() == null || call.accessCall().methodCall() == null) {
+      || !call.modifier().isEmpty()) {
       return false;
     }
-    var method = call.accessCall().methodCall();
-    if (method.methodName() == null || !(method.methodName().getText().equalsIgnoreCase("Insert")
-      || method.methodName().getText().equalsIgnoreCase("Вставить")) || method.doCall() == null
-      || method.doCall().callParamList() == null) {
+    var access = call.accessCall();
+    return access != null && access.methodCall() != null && literalInsert(access.methodCall());
+  }
+
+  private static boolean literalInsert(BSLParser.MethodCallContext method) {
+    var name = method.methodName();
+    if (name == null || !("Insert".equalsIgnoreCase(name.getText()) || "Вставить".equalsIgnoreCase(name.getText()))) {
       return false;
     }
-    var params = method.doCall().callParamList().callParam();
-    if (params.size() != 1 || params.getFirst().expression() == null) {
+    var call = method.doCall();
+    if (call == null || call.callParamList() == null) {
       return false;
     }
-    var expression = params.getFirst().expression();
+    var params = call.callParamList().callParam();
+    return params.size() == 1 && stringLiteral(params.getFirst().expression());
+  }
+
+  private static boolean stringLiteral(BSLParser.@Nullable ExpressionContext expression) {
+    if (expression == null) {
+      return false;
+    }
     var literal = ExpressionTreeBuildingVisitor.buildExpressionTree(expression);
     return literal != null && literal.getNodeType() == ExpressionNodeType.LITERAL
       && expression.getText().startsWith("\"");

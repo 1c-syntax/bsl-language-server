@@ -26,37 +26,50 @@ import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionCon
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import org.antlr.v4.runtime.ParserRuleContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.eclipse.lsp4j.Position;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.util.AopTestUtils;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.mock;
 
 class ReturnedLocalFlowTest extends AbstractServerContextAwareTest {
   @Autowired
   private ExpressionTypeInferencer inferencer;
   @Autowired
   private TypeService typeService;
+  @Autowired
+  private VariableFlowAnalyzer analyzer;
 
   @BeforeEach
   void setUp() {
     initServerContext();
   }
 
-  @Test
-  void anIndependentReturnedStructureDoesNotEvaluateUnrelatedLocals() {
+  @ParameterizedTest
+  @ValueSource(strings = {"New Structure", "New Structure()", "Новый Структура", "Новый Структура()"})
+  void anIndependentReturnedStructureDoesNotEvaluateUnrelatedLocals(String constructor) {
     var document = TestUtils.getDocumentContext("""
       Function Independent()
-        Result = New Structure;
+        Result = %s;
         Result.Insert("Status");
         Unused = Recursive();
         Return Result;
@@ -66,7 +79,7 @@ class ReturnedLocalFlowTest extends AbstractServerContextAwareTest {
         Node.Insert("Next", Recursive());
         Return Node;
       EndFunction
-      """, context);
+      """.formatted(constructor), context);
     ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
     var original = (ReturnTypeFromBodyInference) ReflectionTestUtils.getField(target, "returnTypeFromBodyInference");
     var counted = spy(original);
@@ -108,6 +121,115 @@ class ReturnedLocalFlowTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void projectedFactsAreReusedAcrossReturnsButNotAcrossModesOrSessions() {
+    var document = TestUtils.getDocumentContext("""
+      Function Build(Flag)
+        Result = New Structure;
+        If Flag Then
+          Return Result;
+        EndIf;
+        Result.Insert("Late");
+        Return Result;
+      EndFunction
+      """, context);
+    var body = VariableFlowAnalyzer.bodyAt(document, new Position(1, 3));
+    var variable = document.getSymbolTree().getVariableSymbolInScope(body, "Result").orElseThrow();
+    var first = (ParserRuleContext) Trees.findTerminalNodeContainsPosition(document.getAst(), new Position(3, 12))
+      .orElseThrow().getParent();
+    var last = (ParserRuleContext) Trees.findTerminalNodeContainsPosition(document.getAst(), new Position(6, 10))
+      .orElseThrow().getParent();
+    var assignments = new AtomicInteger();
+    var session = new VariableFlowAnalyzer.FlowSession();
+    var server = projectedInputs(session, variable, ExecutionContext.SERVER, assignments);
+
+    assertThat(analyzer.independentReturnTypeAt(document, first, variable, server).refs())
+      .extracting(TypeRef::qualifiedName).containsExactly("String");
+    var afterFirst = assignments.get();
+    assertThat(afterFirst).isPositive();
+    assertThat(analyzer.independentReturnTypeAt(document, last, variable, server).refs())
+      .extracting(TypeRef::qualifiedName).containsExactly("String");
+    assertThat(assignments.get()).as("later returns read facts computed by the first return").isEqualTo(afterFirst);
+
+    var client = projectedInputs(session, variable, ExecutionContext.THIN_CLIENT, assignments);
+    assertThat(analyzer.independentReturnTypeAt(document, last, variable, client).refs())
+      .extracting(TypeRef::qualifiedName).containsExactly("Number");
+    assertThat(assignments.get()).isGreaterThan(afterFirst);
+    var afterClient = assignments.get();
+    var another = projectedInputs(new VariableFlowAnalyzer.FlowSession(), variable, ExecutionContext.SERVER, assignments);
+    assertThat(analyzer.independentReturnTypeAt(document, first, variable, another).refs())
+      .extracting(TypeRef::qualifiedName).containsExactly("String");
+    assertThat(assignments.get()).isGreaterThan(afterClient);
+  }
+
+  private static VariableFlowAnalyzer.FlowInputs projectedInputs(VariableFlowAnalyzer.FlowSession session,
+      VariableSymbol variable, ExecutionContext mode, AtomicInteger assignments) {
+    return new VariableFlowAnalyzer.FlowInputs(session, body -> {}, false, mode, body -> Optional.empty(), () -> false,
+      body -> List.of(variable), candidate -> false, candidate -> TypeSet.EMPTY,
+      candidate -> List.of(new Position(1, 2)), candidate -> List.of(new Position(5, 2)),
+      (candidate, statement, position) -> {
+        assignments.incrementAndGet();
+        return TypeSet.of(new TypeRef(TypeKind.PRIMITIVE, mode == ExecutionContext.SERVER ? "String" : "Number"));
+      }, (candidate, position, incoming) -> incoming, mock(VariableFlowAnalyzer.GuardNarrowing.class));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"NewStructure", "НовыйСтруктура"})
+  void anIdentifierSpelledLikeAConstructorKeepsItsAssignedType(String name) {
+    var document = TestUtils.getDocumentContext("""
+      Function Build()
+        %s = "ready";
+        Result = %s;
+        Return Result;
+      EndFunction
+      """.formatted(name, name), context);
+
+    assertThat(inferencer.computeReturnTypes(document.getSymbolTree().getMethodSymbol("Build").orElseThrow())
+      .types().refs()).extracting(TypeRef::qualifiedName).containsExactly("Строка");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "Result = New Structure; // Структура",
+    "Result = New Structure; Result = New Structure;",
+    "Result = New Structure; Key = \"Status\"; Result.Insert(Key);",
+    "Result = New Structure; Alias(Result);",
+    "Result = New Structure; If TypeOf(Result) = Type(\"Structure\") Then "
+      + "Result.Insert(\"Checked\"); EndIf;"
+  })
+  void dependentConstructionsKeepTheFullFlow(String construction) {
+    var document = TestUtils.getDocumentContext("""
+      Function Build()
+        %s
+        Unused = Hidden();
+        Return Result;
+      EndFunction
+      Function Hidden()
+        Return 1;
+      EndFunction
+      Procedure Alias(Value)
+      EndProcedure
+      """.formatted(construction), context);
+    ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
+    var original = (ReturnTypeFromBodyInference) ReflectionTestUtils.getField(target, "returnTypeFromBodyInference");
+    var counted = spy(original);
+    var hiddenCalls = new AtomicInteger();
+    doAnswer(call -> {
+      if (((MethodSymbol) call.getArgument(0)).getName().equals("Hidden")) {
+        hiddenCalls.incrementAndGet();
+      }
+      return call.callRealMethod();
+    }).when(counted).of(any(), any(), any(), any());
+    ReflectionTestUtils.setField(target, "returnTypeFromBodyInference", counted);
+    try {
+      var result = inferencer.computeReturnTypes(document.getSymbolTree().getMethodSymbol("Build").orElseThrow());
+      assertThat(result.types().refs()).extracting(TypeRef::qualifiedName).contains("Структура");
+      assertThat(hiddenCalls.get()).as("a dependent result uses the full body flow").isPositive();
+    } finally {
+      ReflectionTestUtils.setField(target, "returnTypeFromBodyInference", original);
+    }
+  }
+
+  @Test
   void aReturnBeforeAnInsertionDoesNotSeeTheLaterField() {
     var document = TestUtils.getDocumentContext("""
       Function Before()
@@ -124,6 +246,7 @@ class ReturnedLocalFlowTest extends AbstractServerContextAwareTest {
     var before = inferencer.computeReturnTypes(document.getSymbolTree().getMethodSymbol("Before").orElseThrow());
     var after = inferencer.computeReturnTypes(document.getSymbolTree().getMethodSymbol("After").orElseThrow());
 
+    assertThat(before.types().refs()).extracting(TypeRef::qualifiedName).containsExactly("Структура");
     assertThat(before.types().localFields().values().stream()
       .flatMap(fields -> fields.keySet().stream())).noneMatch(name -> name.equalsIgnoreCase("Late"));
     assertThat(after.types().localFields().values().stream()

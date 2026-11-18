@@ -60,6 +60,7 @@ import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -214,6 +215,8 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
 
     private final Runnable cellsChanged;
     private final Runnable cellRead;
+    /** Проекция локального результата живёт только в запросе и не заменяет общие facts тела. */
+    private @Nullable Map<ReturnedLocalKey, Facts> independentReturnFacts;
 
     /** Создать сессию без внешних результатов, зависящих от её приближений. */
     public FlowSession() {
@@ -232,8 +235,13 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     }
 
     FlowSession(Runnable cellsChanged, Runnable cellRead) {
-      this.cellsChanged = cellsChanged;
       this.cellRead = cellRead;
+      this.cellsChanged = () -> {
+        if (independentReturnFacts != null) {
+          independentReturnFacts.clear();
+        }
+        cellsChanged.run();
+      };
     }
 
     /** Вход мог быть прочитан через готовое окружение без вызова cellOf в текущем вычислении. */
@@ -286,6 +294,71 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       return true;
     }
 
+    /** Вычислить замкнутое локальное построение возвращаемой структуры без общего кэша фактов тела. */
+    private @Nullable TypeSet independentReturnTypeAt(
+      VariableFlowAnalyzer analyzer, DocumentContext document, ParserRuleContext use,
+      VariableSymbol variable, FlowInputs inputs
+    ) {
+      var body = independentBody(document, use, variable);
+      if (body == null || inputs.session().active.containsKey(body)) {
+        return null;
+      }
+      var layout = analyzer.layoutOf(document, body);
+      var statement = enclosingStatement(use, layout);
+      if (statement == null) {
+        return null;
+      }
+      var session = inputs.session();
+      var key = new ReturnedLocalKey(body, variable, inputs.executionContext());
+      var remembered = session.independentReturnFacts == null ? null : session.independentReturnFacts.get(key);
+      inputs.activeBodyRead().accept(body);
+      if (remembered != null) {
+        return independentTypeBefore(remembered, statement, variable);
+      }
+      var variables = analyzer.variablesOf(document, body, layout, inputs);
+      var graph = analyzer.controlFlowGraphIndex.graphOf(document, body, CfgBuildOptions.defaults());
+      if (!IndependentReturnedStructure.supports(document, body, variable, variables, graph, inputs)) {
+        return null;
+      }
+      var selected = variables.forVariable(variable);
+      var compiled = inputs.compilationContexts().apply(body)
+        .map(contexts -> PreprocessorFlow.of(graph, contexts, document.getFileType())).orElse(null);
+      var pass = new VariableFlowPass(analyzer, document, graph, layout, inputs, compiled, selected);
+      inputs.session().active.put(body, pass);
+      try {
+        var facts = pass.computeFacts();
+        session.rememberIndependentFacts(key, facts, inputs);
+        return independentTypeBefore(facts, statement, variable);
+      } finally {
+        inputs.session().active.remove(body);
+      }
+    }
+
+    private static @Nullable CodeBlockContext independentBody(DocumentContext document, ParserRuleContext use,
+                                                              VariableSymbol variable) {
+      if ((variable.getKind() != VariableKind.DYNAMIC && variable.getKind() != VariableKind.LOCAL)
+        || !(variable.getScope() instanceof MethodSymbol) || document.getFileType() != FileType.BSL) {
+        return null;
+      }
+      return enclosingBody(use);
+    }
+
+    private void rememberIndependentFacts(ReturnedLocalKey key, Facts facts, FlowInputs inputs) {
+      if (cellsComputing || cellsIncomplete || inputs.sawMissing().getAsBoolean()) {
+        return;
+      }
+      if (independentReturnFacts == null) {
+        independentReturnFacts = new HashMap<>();
+      }
+      independentReturnFacts.put(key, facts);
+    }
+
+    private static @Nullable TypeSet independentTypeBefore(Facts facts, ParserRuleContext statement,
+                                                          VariableSymbol variable) {
+      var index = facts.indexOf(variable);
+      return index == null ? null : facts.beforeStatement().getOrDefault(statement, FlowEnvironment.EMPTY).get(index);
+    }
+
     /**
      * Идут ли прямо сейчас круги по ячейкам переменных модуля.
      * <p>
@@ -334,7 +407,8 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     }
   }
 
-
+  private record ReturnedLocalKey(CodeBlockContext body, VariableSymbol variable,
+                                  @Nullable ExecutionContext context) { }
 
   /**
    * Изменение типа одной переменной одним оператором.
@@ -557,40 +631,10 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     return typeAt(documentContext, use, variable, inputs, null);
   }
 
-  /** Вычислить замкнутое локальное построение возвращаемой структуры без общего кэша фактов тела. */
+  /** Тип замкнуто строящейся локальной структуры; {@code null} требует полного прохода тела. */
   @Nullable TypeSet independentReturnTypeAt(DocumentContext document, ParserRuleContext use,
                                            VariableSymbol variable, FlowInputs inputs) {
-    if ((variable.getKind() != VariableKind.DYNAMIC && variable.getKind() != VariableKind.LOCAL)
-      || !(variable.getScope() instanceof MethodSymbol) || document.getFileType() != FileType.BSL) {
-      return null;
-    }
-    var body = enclosingBody(use);
-    if (body == null || inputs.session().active.containsKey(body)) {
-      return null;
-    }
-    var layout = layoutOf(document, body);
-    var statement = enclosingStatement(use, layout);
-    if (statement == null) {
-      return null;
-    }
-    var variables = variablesOf(document, body, layout, inputs);
-    var graph = controlFlowGraphIndex.graphOf(document, body, CfgBuildOptions.defaults());
-    if (!IndependentReturnedStructure.supports(document, body, variable, variables, graph, inputs)) {
-      return null;
-    }
-    var selected = variables.forVariable(variable);
-    var compiled = inputs.compilationContexts().apply(body)
-      .map(contexts -> PreprocessorFlow.of(graph, contexts, document.getFileType())).orElse(null);
-    var pass = new VariableFlowPass(this, document, graph, layout, inputs, compiled, selected);
-    inputs.activeBodyRead().accept(body);
-    inputs.session().active.put(body, pass);
-    try {
-      var facts = pass.computeFacts();
-      var index = facts.indexOf(variable);
-      return index == null ? null : facts.beforeStatement().getOrDefault(statement, FlowEnvironment.EMPTY).get(index);
-    } finally {
-      inputs.session().active.remove(body);
-    }
+    return inputs.session().independentReturnTypeAt(this, document, use, variable, inputs);
   }
 
   /**
