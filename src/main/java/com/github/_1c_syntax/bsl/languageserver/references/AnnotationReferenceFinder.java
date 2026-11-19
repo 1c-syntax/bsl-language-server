@@ -38,13 +38,7 @@ import com.github._1c_syntax.bsl.languageserver.references.model.AnnotationPosit
 import com.github._1c_syntax.bsl.languageserver.references.model.AnnotationPositionRepository.AnnotationPosition;
 import com.github._1c_syntax.bsl.languageserver.references.model.AnnotationRepository;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
-import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import lombok.RequiredArgsConstructor;
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
@@ -54,7 +48,6 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Optional;
 
 /**
@@ -127,58 +120,9 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
   }
 
   private void indexPositions(DocumentContext document) {
-    if (document.getFileType() != FileType.OS) {
-      return;
+    if (document.getFileType() == FileType.OS) {
+      annotationPositionRepository.replace(document, AnnotationPositionCollector.collect(document.getAst()));
     }
-    var positions = new ArrayList<AnnotationPosition>();
-    var annotationTokens = new BSLParserBaseVisitor<Void>() {
-      @Override
-      public Void visitTerminal(TerminalNode node) {
-        referencePosition(node).ifPresent(positions::add);
-        return null;
-      }
-    };
-    new BSLParserBaseVisitor<Void>() {
-      @Override
-      public Void visitAnnotation(BSLParser.AnnotationContext annotation) {
-        annotationTokens.visit(annotation);
-        return null;
-      }
-    }.visit(document.getAst());
-    annotationPositionRepository.replace(document, positions);
-  }
-
-  private static Optional<AnnotationPosition> referencePosition(TerminalNode terminal) {
-    if (!(terminal.getParent() instanceof ParserRuleContext parent)) {
-      return Optional.empty();
-    }
-    if (parent instanceof BSLParser.AnnotationNameContext name
-      && name.getParent() instanceof BSLParser.AnnotationContext annotation) {
-      return Optional.of(new AnnotationPosition(Ranges.create(terminal), Ranges.create(annotation),
-        name.getText(), null));
-    }
-    BSLParser.AnnotationParamContext parameter;
-    if (parent instanceof BSLParser.AnnotationParamNameContext name) {
-      parameter = (BSLParser.AnnotationParamContext) name.getParent();
-    } else {
-      var value = parent instanceof BSLParser.AnnotationParamValueContext context
-        ? context : Trees.<BSLParser.AnnotationParamValueContext>getAncestorByRuleIndex(
-        parent, BSLParser.RULE_annotationParamValue);
-      if (value == null) {
-        return Optional.empty();
-      }
-      parameter = (BSLParser.AnnotationParamContext) value.getParent();
-    }
-    var name = parameter.annotationParamName();
-    var selection = name == null ? parameter.annotationParamValue() : name;
-    if (selection == null) {
-      return Optional.empty();
-    }
-
-    var selectionRange = Ranges.create(selection);
-    var annotation = (BSLParser.AnnotationContext) parameter.getParent().getParent();
-    return Optional.of(new AnnotationPosition(Ranges.create(terminal), selectionRange,
-      annotation.annotationName().getText(), name == null ? "Значение" : name.getText()));
   }
 
   private void findAndRegisterAnnotation(DocumentContext documentContext) {
