@@ -738,7 +738,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     ensureCellsFor(documentContext, shared, inputs, null);
   }
 
-  private void ensureCellsFor(DocumentContext documentContext, List<VariableSymbol> shared, FlowInputs inputs,
+  void ensureCellsFor(DocumentContext documentContext, List<VariableSymbol> shared, FlowInputs inputs,
                               @Nullable BooleanSupplier complete) {
     var session = inputs.session();
     // Готовые ячейки — общие на весь документ и переживают отдельный вывод типов. Без
@@ -805,6 +805,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   private boolean grow(DocumentContext documentContext, List<VariableSymbol> shared, FlowInputs inputs) {
     var session = inputs.session();
     var bodies = changedBodiesOf(documentContext, shared, inputs);
+    Map<CodeBlockContext, Optional<CellWriterInputs>> writerInputs = new IdentityHashMap<>();
     var cellCount = shared.size();
     var passes = 0;
     while (passes < Math.max(MAX_PASSES, shared.size() + 1) && !bodies.isEmpty()) {
@@ -816,7 +817,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
         }
         // Окружения не запоминаются: они посчитаны по промежуточному приближению входа
         // и через круг устареют.
-        var facts = compute(documentContext, body, layoutOf(documentContext, body), inputs);
+        var facts = CellWriterInputs.compute(this, documentContext, body, shared, inputs, writerInputs);
         // После открытия нового входа его писатели должны попасть в следующий проход;
         // преждевременный вклад текущего тела не сохраняется.
         grown |= shared.size() == cellCount && growCells(shared, session, facts);
@@ -825,6 +826,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
         shared.sort(Comparator.comparing(VariableSymbol::getName, String.CASE_INSENSITIVE_ORDER));
         cellCount = shared.size();
         bodies = changedBodiesOf(documentContext, shared, inputs);
+        writerInputs.clear();
         passes = 0;
       } else if (!grown) {
         return true;
@@ -1159,7 +1161,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   }
 
   /** Собрать изменения типов по операторам и посчитать по ним окружения тела. */
-  private Facts compute(
+  Facts compute(
     DocumentContext documentContext,
     BSLParser.CodeBlockContext body,
     FlowLayout layout,
@@ -1172,6 +1174,11 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     if (inputs.session().cellsComputing) {
       variables = variables.forCells(inputs.session().cellsDone);
     }
+    return computeFacts(documentContext, body, layout, inputs, variables);
+  }
+
+  Facts computeFacts(DocumentContext documentContext, CodeBlockContext body, FlowLayout layout,
+                     FlowInputs inputs, FlowVariables variables) {
     if (variables.variables().isEmpty()) {
       return new Facts(Map.of(), Map.of(), Map.of(), FlowEnvironment.EMPTY);
     }

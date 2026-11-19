@@ -72,7 +72,10 @@ class ModuleVariableVisibilityTest extends AbstractServerContextAwareTest {
       Var Needed;
       Var Other;
       Procedure WriteState()
-        Needed = "ready";
+        Value = "ready";
+        Prepared = Value;
+        Needed = Prepared;
+        Unused = Recursive();
         Other = Recursive();
       EndProcedure
       Function Recursive()
@@ -101,7 +104,7 @@ class ModuleVariableVisibilityTest extends AbstractServerContextAwareTest {
     try {
       assertThat(inferencer.computeReturnTypes(method).types().refs())
         .extracting(TypeRef::qualifiedName).contains("Строка");
-      assertThat(unrelatedCalls.get()).as("the other assignment is not an input of Needed").isZero();
+      assertThat(unrelatedCalls.get()).as("the other module write and unused local are not inputs of Needed").isZero();
     } finally {
       ReflectionTestUtils.setField(target, "returnTypeFromBodyInference", original);
     }
