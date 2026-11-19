@@ -156,7 +156,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   private final Set<MethodSymbol> indexed = ConcurrentHashMap.newKeySet();
 
   /** Методы, значение которых посчитано по приближениям и ждёт пересчёта (см. computeIfAbsent). */
-  private final Map<MethodSymbol, Object> provisional = new ConcurrentHashMap<>();
+  private final Map<MethodSymbol, ProvisionalReturn> provisional = new ConcurrentHashMap<>();
 
   /**
    * Часы, по которым видно, что чей расчёт застал, а что появилось уже после него. Своё
@@ -261,14 +261,14 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     }
     var known = indexed.contains(method);
     var previousInputs = provisional.get(method);
-    if (known && (previousInputs == null || (approximate && previousInputs == inputs))) {
+    if (known && (previousInputs == null || (approximate && previousInputs.inputs == inputs))) {
       return;
     }
     var startedAt = clock.incrementAndGet();
     var computed = computation.get();
     store(method, computed, startedAt);
     if (approximate || computed.incomplete()) {
-      provisional.put(method, inputs);
+      provisional.put(method, new ProvisionalReturn(inputs, approximate ? null : computed.incompleteMethodReturns()));
     } else {
       provisional.remove(method);
     }
@@ -505,7 +505,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     var computed = inferencer.computeReturnTypes(method);
     var changed = store(method, computed, startedAt);
     if (computed.incomplete()) {
-      provisional.put(method, UNSCOPED_INPUTS);
+      provisional.put(method, new ProvisionalReturn(UNSCOPED_INPUTS, computed.incompleteMethodReturns()));
     } else {
       provisional.remove(method);
     }
@@ -812,6 +812,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
           changed |= recompute(method);
         }
         if (!changed) {
+          completeComponent(component);
           return;
         }
       }
@@ -863,7 +864,11 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     ResolveProgress progress,
     int pass
   ) {
-    if (pass >= MAX_PASSES || changedLastPass.isEmpty()) {
+    if (changedLastPass.isEmpty()) {
+      completeComponent(component);
+      return CompletableFuture.completedFuture(null);
+    }
+    if (pass >= MAX_PASSES) {
       return CompletableFuture.completedFuture(null);
     }
     var dispatch = new PassDispatch(serverContext, component, byDocument, changedLastPass, progress, pass == 0);
@@ -1568,7 +1573,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    */
   private boolean recomputeEach(List<MethodSymbol> methods) {
     var before = methods.stream().map(symbolTypeIndex::getReturnTypes).toList();
-    methods.forEach(method -> provisional.put(method, UNSCOPED_INPUTS));
+    methods.forEach(method -> provisional.put(method, new ProvisionalReturn(UNSCOPED_INPUTS, null)));
     for (var method : methods) {
       // Пометка «посчитан» не снимается: пересчёт и так идёт напрямую, а без пометки
       // соседний метод, читающий этот прямо сейчас, счёл бы его непосчитанным и снова
@@ -1664,6 +1669,61 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     return Resources.getResourceString(globalConfiguration.getLanguage(), getClass(), key);
   }
 
+  /** Завершить стабильные циклы, чья единственная недостающая информация находится внутри компоненты. */
+  private void completeComponent(List<URI> component) {
+    var members = Set.copyOf(component);
+    var candidates = componentCandidates(component);
+    var dependents = new HashMap<MethodSymbol, List<MethodSymbol>>();
+    var blocked = new java.util.ArrayDeque<MethodSymbol>();
+    for (var entry : candidates.entrySet()) {
+      for (var dependency : java.util.Objects.requireNonNull(entry.getValue().missingMethods)) {
+        if (blockedComponentInput(dependency, members, candidates)) {
+          blocked.add(entry.getKey());
+        } else if (candidates.containsKey(dependency)) {
+          dependents.computeIfAbsent(dependency, ignored -> new ArrayList<>()).add(entry.getKey());
+        }
+      }
+    }
+    while (!blocked.isEmpty()) {
+      var method = blocked.removeFirst();
+      if (candidates.remove(method) != null) {
+        blocked.addAll(dependents.getOrDefault(method, List.of()));
+      }
+    }
+    candidates.forEach((method, observed) -> provisional.remove(method, observed));
+  }
+
+  private Map<MethodSymbol, ProvisionalReturn> componentCandidates(List<URI> component) {
+    Map<MethodSymbol, ProvisionalReturn> candidates = new HashMap<>();
+    for (var uri : component) {
+      for (var method : methodsByUri.getOrDefault(uri, List.of())) {
+        var observed = provisional.get(method);
+        if (indexed.contains(method) && observed != null && observed.missingMethods != null
+          && !observed.missingMethods.isEmpty()) {
+          candidates.put(method, observed);
+        }
+      }
+    }
+    return candidates;
+  }
+
+  private boolean blockedComponentInput(MethodSymbol method, Set<URI> component,
+                                         Map<MethodSymbol, ProvisionalReturn> candidates) {
+    return !component.contains(method.getOwner().getUri())
+      || (!candidates.containsKey(method) && !isIndexed(method));
+  }
+
+  /** Запись сравнивается по идентичности, чтобы завершение не снимало более новую предварительную версию. */
+  private static final class ProvisionalReturn {
+    private final Object inputs;
+    private final @Nullable Set<MethodSymbol> missingMethods;
+
+    private ProvisionalReturn(Object inputs, @Nullable Set<MethodSymbol> missingMethods) {
+      this.inputs = inputs;
+      this.missingMethods = missingMethods;
+    }
+  }
+
   /**
    * Результат расчёта типов возврата метода.
    *
@@ -1671,7 +1731,20 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * @param consulted  методы, значения которых участвовали в расчёте.
    * @param incomplete расчёт обращался к методу, значение которого ещё не посчитано, —
    *                   значит его надо повторить, когда рабочая область будет наполнена.
+   * @param incompleteMethodReturns все незавершённые входы, если неполнота вызвана только возвратами
+   *                                этих функций; {@code null} сохраняет прочие либо неизвестные причины.
    */
-  public record ComputedReturnTypes(TypeSet types, Set<MethodSymbol> consulted, boolean incomplete) {
+  public record ComputedReturnTypes(TypeSet types, Set<MethodSymbol> consulted, boolean incomplete,
+                                    @Nullable Set<MethodSymbol> incompleteMethodReturns) {
+    public ComputedReturnTypes {
+      if (incompleteMethodReturns != null) {
+        incompleteMethodReturns = Set.copyOf(incompleteMethodReturns);
+      }
+    }
+
+    /** Прежний контракт без уточнения причины неполноты не разрешает завершать цикл по предположению. */
+    public ComputedReturnTypes(TypeSet types, Set<MethodSymbol> consulted, boolean incomplete) {
+      this(types, consulted, incomplete, incomplete ? null : Set.of());
+    }
   }
 }

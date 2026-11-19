@@ -47,6 +47,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 
 import java.net.URI;
@@ -542,6 +543,52 @@ class MethodReturnTypeIndexerTest {
     verify(serverContext).rebuildDocument(consumer);
     verify(inferencer, never()).computeReturnTypes(consumerMethod);
     assertThat(symbolTypeIndex.getReturnTypes(consumerMethod)).isEqualTo(STRING);
+  }
+
+  @ParameterizedTest
+  @CsvSource({"2,none", "9,none", "2,intrinsic", "9,intrinsic", "2,unindexed", "9,unindexed",
+    "2,provisional", "9,provisional"})
+  void aStableCycleIsFinalOnlyWhenItsMissingInputsAreInsideTheComponent(int size, String blocker) {
+    var ring = ring("readiness-cycle", size);
+    var outsideDocument = document("file:///outside-return.bsl");
+    var outside = method(outsideDocument, true);
+    ServerContext serverContext;
+    if (blocker.equals("provisional")) {
+      var documents = Arrays.copyOf(ring.documents(), size + 1);
+      documents[size] = outsideDocument;
+      serverContext = serverContextOf(documents);
+      when(inferencer.computeReturnTypes(outside)).thenReturn(new ComputedReturnTypes(STRING, Set.of(), true));
+      indexer.computeIfAbsent(outside, () -> new ComputedReturnTypes(STRING, Set.of(), true));
+    } else {
+      serverContext = serverContextOf(ring.documents());
+    }
+    for (var i = 0; i < size; i++) {
+      var peer = ring.methods()[(i + 1) % size];
+      var first = i == 0;
+      when(inferencer.computeReturnTypes(ring.methods()[i])).thenAnswer(invocation -> {
+        Set<MethodSymbol> missing = new java.util.HashSet<>();
+        if (!indexer.isIndexed(peer)) {
+          missing.add(peer);
+        }
+        if (first && (blocker.equals("unindexed") || blocker.equals("provisional"))) {
+          missing.add(outside);
+        }
+        var intrinsic = first && blocker.equals("intrinsic");
+        var consulted = first && !blocker.equals("none") ? Set.of(peer, outside) : Set.of(peer);
+        return new ComputedReturnTypes(STRING, consulted, intrinsic || !missing.isEmpty(), intrinsic ? null : missing);
+      });
+    }
+
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+    for (var method : ring.methods()) {
+      assertThat(indexer.isIndexed(method)).as("component size=%s blocker=%s", size, blocker)
+        .isEqualTo(blocker.equals("none"));
+      assertThat(symbolTypeIndex.getReturnTypes(method)).isEqualTo(STRING);
+    }
+    if (blocker.equals("provisional")) {
+      assertThat(indexer.isIndexed(outside)).isFalse();
+    }
   }
 
   @Test

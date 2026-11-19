@@ -761,19 +761,17 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     var passes = 0;
     while (passes < Math.max(MAX_PASSES, shared.size() + 1) && !bodies.isEmpty()) {
       var grown = false;
-      for (var body : bodies) {
+      for (var index = 0; index < bodies.size() && shared.size() == cellCount; index++) {
+        var body = bodies.get(index);
         if (inputs.compilationContexts().apply(body).map(Set::isEmpty).orElse(false)) {
           continue;
         }
         // Окружения не запоминаются: они посчитаны по промежуточному приближению входа
         // и через круг устареют.
         var facts = compute(documentContext, body, layoutOf(documentContext, body), inputs);
-        if (shared.size() != cellCount) {
-          // Тело прочло ещё не рассчитанный вход. Его ответ может уточняться немонотонно:
-          // сначала запланировать новых писателей, затем заново вычислить вклад тела.
-          break;
-        }
-        grown |= growCells(shared, session, facts);
+        // После открытия нового входа его писатели должны попасть в следующий проход;
+        // преждевременный вклад текущего тела не сохраняется.
+        grown |= shared.size() == cellCount && growCells(shared, session, facts);
       }
       if (shared.size() != cellCount) {
         shared.sort(Comparator.comparing(VariableSymbol::getName, String.CASE_INSENSITIVE_ORDER));

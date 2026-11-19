@@ -967,7 +967,7 @@ public class ExpressionTypeInferencer {
       }
     }
     if (result.isEmpty() && unparsedModule) {
-      ctx.sawMissing = true;
+      ctx.noteMissingData();
     }
     return attachDefaultElementTypes(result);
   }
@@ -1105,14 +1105,14 @@ public class ExpressionTypeInferencer {
         if (method.isFunction() && !methodReturnTypeIndexer.isIndexed(method)) {
           // Значение чужой функции ещё не посчитано — так бывает, пока рабочая область
           // наполняется. Расчёт, опирающийся на него, придётся повторить.
-          ctx.sawMissing = true;
+          ctx.noteMissingMethod(method);
         }
       }
       if (symbolTypeIndex.returnAwaitsUnparsedModule(method)) {
         // Объявленное значение ссылается на модуль, до которого очередь ещё не дошла, и пока
         // оно неполно — хотя по самому ответу этого не видно. Объявленное пересобирается,
         // когда рабочая область наполнена, а расчёт, прочитавший его сейчас, придётся повторить.
-        ctx.sawMissing = true;
+        ctx.noteMissingData();
       }
       return symbolTypeIndex.getReturnTypes(method);
     } finally {
@@ -1170,7 +1170,7 @@ public class ExpressionTypeInferencer {
     var serverContext = owner.getServerContext();
     var lock = serverContext.getDocumentLock(owner.getUri()).readLock();
     if (!lock.tryLock()) {
-      ctx.sawMissing = true;
+      ctx.noteMissingData();
       return symbolTypeIndex.getReturnTypes(method);
     }
     try {
@@ -1244,7 +1244,7 @@ public class ExpressionTypeInferencer {
     var revision = ctx.contextualReturns.revision();
     var nested = ctx.nested(method.getOwner(), target);
     var inferred = returnTypesInContext(method, nested, target);
-    ctx.sawMissing |= nested.sawMissing;
+    ctx.inheritMissingInputs(nested);
     ctx.failed |= nested.failed;
     ctx.cycleCut |= nested.cycleCut;
     ctx.bodyInFlowCut |= nested.bodyInFlowCut;
@@ -1412,7 +1412,8 @@ public class ExpressionTypeInferencer {
           && needsOwnApproximation(method, ctx)) {
         types = refinedByOwnValue(method, types, ctx);
       }
-      return new MethodReturnTypeIndexer.ComputedReturnTypes(types, Set.copyOf(ctx.consulted), ctx.sawMissing || ctx.failed);
+      return new MethodReturnTypeIndexer.ComputedReturnTypes(types, Set.copyOf(ctx.consulted),
+        ctx.sawMissing || ctx.failed, ctx.incompleteMethodReturns());
     } catch (StackOverflowError | RuntimeException e) {
       // Пустое значение метода сохранится как окончательное, и все его вызывающие останутся
       // ни с чем. Без записи в журнал это выглядит как «у метода не выводится тип», а не
@@ -1468,7 +1469,7 @@ public class ExpressionTypeInferencer {
       ctx.cutMethods.addAll(refining.cutMethods);
       ctx.flowBodiesRead.addAll(refining.flowBodiesRead);
       ctx.dependencies.addAll(refining.dependencies);
-      ctx.sawMissing = ctx.sawMissing || refining.sawMissing;
+      ctx.inheritMissingInputs(refining);
       ctx.failed |= refining.failed;
       ctx.depthCut |= refining.depthCut;
       if (refined.isEmpty() || refined.equals(current)) {
@@ -1650,7 +1651,7 @@ public class ExpressionTypeInferencer {
     for (var context : ExecutionContext.copyOf(contexts)) {
       var nested = ctx.nested(ctx.documentContext, context);
       result = result.union(inference.apply(nested));
-      ctx.sawMissing |= nested.sawMissing;
+      ctx.inheritMissingInputs(nested);
       ctx.failed |= nested.failed;
       ctx.cycleCut |= nested.cycleCut;
       ctx.bodyInFlowCut |= nested.bodyInFlowCut;
@@ -1717,7 +1718,7 @@ public class ExpressionTypeInferencer {
         // Объявление ведёт туда, что ещё не разобрано, и по самому ответу этого не видно:
         // значение метода, посчитанное на нём, решил бы порядок наполнения. Такой расчёт
         // проход после наполнения повторит.
-        ctx.sawMissing = true;
+        ctx.noteMissingData();
         return computed;
       }
       declaredByVariable.put(target, computed);
@@ -2241,7 +2242,7 @@ public class ExpressionTypeInferencer {
   private TypeSet typesOfAssignmentComment(DocumentContext owner, BSLParser.AssignmentContext assignment,
                                            InferenceContext ctx) {
     if (!workspacePopulated) {
-      return commentTypeResolver.ofAssignment(owner, assignment, () -> ctx.sawMissing = true);
+      return commentTypeResolver.ofAssignment(owner, assignment, ctx::noteMissingData);
     }
     return commentTypeResolver.ofAssignment(owner, assignment);
   }

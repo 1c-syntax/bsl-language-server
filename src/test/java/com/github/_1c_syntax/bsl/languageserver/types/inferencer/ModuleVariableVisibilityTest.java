@@ -186,6 +186,7 @@ class ModuleVariableVisibilityTest extends AbstractServerContextAwareTest {
     var result = inferencer.computeReturnTypes(document.getSymbolTree().getMethodSymbol("Read").orElseThrow());
 
     assertThat(result.incomplete()).isTrue();
+    assertThat(result.incompleteMethodReturns()).as("a capped cell is not a missing method-return cycle").isNull();
     var repeated = inferencer.computeReturnTypes(document.getSymbolTree().getMethodSymbol("Read").orElseThrow());
     assertThat(repeated.incomplete()).as("the previous partial cells must not become a settled cache hit").isTrue();
   }

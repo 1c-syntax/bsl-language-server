@@ -93,6 +93,8 @@ final class InferenceContext {
    * член либо объявление, ведущие в модуль, до которого очередь ещё не дошла.
    */
   boolean sawMissing;
+  private boolean missingData;
+  private final Set<MethodSymbol> missingMethods = new HashSet<>();
   /** Расчёт сорвался либо поток не разместил обращение: пустой ответ нельзя сохранять как полный. */
   boolean failed;
   /** Расчёт оборван ограничением глубины; результат зависит от оставшегося бюджета. */
@@ -100,6 +102,37 @@ final class InferenceContext {
   int depth;
   /** Запрос начат публичным выводом выражения; вложенный расчёт потока всё равно не ждёт других владельцев. */
   boolean sharedRootFlow;
+
+  /** Недоступны данные, а не только возвращаемое значение известной функции. */
+  void noteMissingData() {
+    sawMissing = true;
+    missingData = true;
+  }
+
+  void noteMissingMethod(MethodSymbol method) {
+    sawMissing = true;
+    missingMethods.add(method);
+  }
+
+  void inheritMissingInputs(InferenceContext nested) {
+    sawMissing |= nested.sawMissing;
+    missingData |= nested.missingData || nested.flowSession.cellsIncomplete();
+    missingMethods.addAll(nested.missingMethods);
+  }
+
+  /** Только перечисленные возвращаемые значения мешают завершению; null сохраняет прочую неполноту. */
+  @Nullable Set<MethodSymbol> incompleteMethodReturns() {
+    if (!sawMissing && !failed) {
+      return Set.of();
+    }
+    if (missingData || failed || flowSession.cellsIncomplete()) {
+      return null;
+    }
+    if (depthCut || bodyInFlowCut || missingMethods.isEmpty()) {
+      return null;
+    }
+    return Set.copyOf(missingMethods);
+  }
 
   InferenceContext(DocumentContext documentContext, @Nullable ExecutionContext executionContext) {
     this(documentContext, executionContext, new ContextualReturnCache(), new CompilationContextMemo());
