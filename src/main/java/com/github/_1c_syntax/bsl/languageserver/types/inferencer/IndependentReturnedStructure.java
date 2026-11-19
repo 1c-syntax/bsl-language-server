@@ -27,10 +27,9 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ConstructorCallNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionTreeBuildingVisitor;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.MethodCallNode;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ConstructorCallNode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -131,7 +130,8 @@ final class IndependentReturnedStructure {
     if (expression instanceof ConstructorCallNode constructor) {
       return emptyStructure(constructor);
     }
-    return allowLocalCall && expression instanceof MethodCallNode call
+    return allowLocalCall && expression != null
+      && expression.getRepresentingAst() instanceof BSLParser.GlobalMethodCallContext call
       && localCallInitializer(document, call, variable, variables, reachable);
   }
 
@@ -139,16 +139,15 @@ final class IndependentReturnedStructure {
    * Вызов вычисляется штатно, но не читает локальное окружение вызывающего тела.
    * Применимо только к неизменяемому после присваивания результату и телу без общих ячеек.
    */
-  private static boolean localCallInitializer(DocumentContext document, MethodCallNode call,
+  private static boolean localCallInitializer(DocumentContext document, BSLParser.GlobalMethodCallContext call,
                                               VariableSymbol variable, FlowVariables variables,
                                               Predicate<ParserRuleContext> reachable) {
-    var arguments = call.arguments();
-    if (!(call.getRepresentingAst() instanceof BSLParser.GlobalMethodCallContext source) || arguments.size() > 1
-        || arguments.stream().anyMatch(argument -> argument.getNodeType() != ExpressionNodeType.SKIPPED_CALL_ARG)
+    var arguments = call.doCall().callParamList().callParam();
+    if (arguments.size() > 1 || arguments.stream().anyMatch(argument -> argument.expression() != null)
         || variables.hasVisibleModuleVariables()) {
       return false;
     }
-    return document.getSymbolTreeNoLock().getMethodSymbol(source.methodName().getText())
+    return document.getSymbolTreeNoLock().getMethodSymbol(call.methodName().getText())
         .filter(MethodSymbol::isFunction).isPresent()
       && variables.changesByStatement().entrySet().stream()
         .filter(entry -> reachable.test(entry.getKey()))
