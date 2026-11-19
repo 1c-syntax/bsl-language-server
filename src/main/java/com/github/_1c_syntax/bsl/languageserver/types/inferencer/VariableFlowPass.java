@@ -209,7 +209,7 @@ final class VariableFlowPass {
    */
   private TypeSet entryFactOf(VariableSymbol variable) {
     return inputs.sharedWithOtherBodies().test(variable)
-      ? analyzer.cellOf(documentContext, variable, inputs)
+      ? analyzer.cellOf(documentContext, variable, inputs, bodyVariables.readModuleVariables().contains(variable))
       : inputs.declaredFact().apply(variable);
   }
 

@@ -1833,7 +1833,8 @@ public class ExpressionTypeInferencer {
         attachDefaultElementTypes(inferFromDefinition(owner, statement, position, ctx)),
       (target, position, incoming) -> applyMutation(target, position, incoming, ctx,
         callsOf.apply(target), kindsOf.apply(target), propertiesOf.apply(target)),
-      narrowingCallback(owner)
+      narrowingCallback(owner),
+      ctx::noteMissingData
     );
   }
 

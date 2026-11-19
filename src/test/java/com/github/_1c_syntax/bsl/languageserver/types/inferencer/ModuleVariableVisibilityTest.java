@@ -533,6 +533,42 @@ class ModuleVariableVisibilityTest extends AbstractServerContextAwareTest {
       .extracting(TypeRef::qualifiedName).contains("Булево", "Число");
   }
 
+  @Test
+  void aNestedReturnReadingAnUnpublishedCellStaysProvisional() {
+    var document = document("""
+      Var Shared;
+      Function ReadCell()
+        Return Shared;
+      EndFunction
+      Function Independent()
+        Shared = 20;
+        Result = "ready";
+        Return Result;
+      EndFunction
+      Shared = 10;
+      """);
+    var tree = document.getSymbolTree();
+    var shared = tree.getVariablesOfScope(tree.getModule()).getFirst();
+    var reader = tree.getMethodSymbol("ReadCell").orElseThrow();
+    var independent = tree.getMethodSymbol("Independent").orElseThrow();
+    var caller = InferenceContext.neutral(document);
+    caller.noteMissingData();
+
+    ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
+    ReflectionTestUtils.invokeMethod(target, "variableTypeAt", shared, shared.getSelectionRange().getStart(),
+      false, caller);
+    assertThat(caller.flowSession.cellsIncomplete()).as("the solver finished, but its inputs were incomplete").isFalse();
+
+    ReflectionTestUtils.invokeMethod(target, "methodReturnType", reader, caller);
+    ReflectionTestUtils.invokeMethod(target, "methodReturnType", independent, caller);
+
+    assertThat(indexer.isIndexed(reader)).as("a nested reader must not publish the approximation as final").isFalse();
+    assertThat(indexer.isIndexed(independent)).as("writing a cell does not require its previous value").isTrue();
+
+    ReflectionTestUtils.invokeMethod(target, "methodReturnType", reader, InferenceContext.neutral(document));
+    assertThat(indexer.isIndexed(reader)).as("a later complete cell calculation can publish the return").isTrue();
+  }
+
   private DocumentContext document(String source) {
     var document = TestUtils.getDocumentContext(source, context);
     analyzer.clear(document.getUri());

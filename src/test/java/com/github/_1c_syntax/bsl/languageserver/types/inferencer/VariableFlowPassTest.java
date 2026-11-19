@@ -50,6 +50,7 @@ import java.util.stream.IntStream;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -88,7 +89,7 @@ class VariableFlowPassTest {
     doAnswer(call -> {
       reads.add(shared);
       return values.getLast();
-    }).when(analyzer).cellOf(same(document), same(shared), same(inputs));
+    }).when(analyzer).cellOf(same(document), same(shared), same(inputs), eq(false));
     var pass = pass(variables, inputs);
 
     var entry = pass.computeFacts().leaving();

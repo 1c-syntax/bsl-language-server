@@ -200,6 +200,9 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     /** Переменные, ячейки которых в этом выводе типов уже посчитаны. */
     private final Set<VariableSymbol> cellsDone = Collections.newSetFromMap(new IdentityHashMap<>(0));
 
+    /** Ячейки с неполными входами, оставленные предыдущими проходами этой сессии. */
+    private @Nullable Set<VariableSymbol> incompleteCellInputs;
+
     /** Ячейки текущего расчёта, включая обнаруженные во вложенных телах зависимости. */
     private final List<VariableSymbol> growingCells = new ArrayList<>(0);
 
@@ -234,6 +237,40 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     /** Вход мог быть прочитан через готовое окружение без вызова cellOf в текущем вычислении. */
     void noteCellInput() {
       cellRead.run();
+    }
+
+    private boolean hasIncompleteCellInputs(VariableSymbol variable) {
+      return incompleteCellInputs != null && incompleteCellInputs.contains(variable);
+    }
+
+    private void markIncompleteCellInputs(Collection<VariableSymbol> variables) {
+      if (incompleteCellInputs == null) {
+        incompleteCellInputs = Collections.newSetFromMap(new IdentityHashMap<>(0));
+      }
+      incompleteCellInputs.addAll(variables);
+    }
+
+    private void publishCells(Map<VariableSymbol, TypeSet> settled, FlowInputs inputs,
+                              @Nullable BooleanSupplier complete) {
+      if (cellsIncomplete || inputs.sawMissing().getAsBoolean() || (complete != null && !complete.getAsBoolean())) {
+        markIncompleteCellInputs(growingCells);
+      } else if (inputs.cacheable()) {
+        growingCells.forEach(variable -> settled.putIfAbsent(variable, cells.get(variable)));
+      }
+    }
+
+    private void finishCellComputation(boolean outerComputing, List<VariableSymbol> pending, boolean finished) {
+      if (!finished) {
+        markIncompleteCellInputs(pending);
+      }
+      cellsComputing = outerComputing;
+      if (!outerComputing) {
+        if (!finished) {
+          markIncompleteCellInputs(growingCells);
+        }
+        growingCells.clear();
+      }
+      cellsChanged.run();
     }
 
     private boolean replaceCell(VariableSymbol variable, TypeSet type) {
@@ -462,6 +499,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * @param assigned            колбэк, отдающий присваиваемые типы по позиции.
    * @param mutations           колбэк, применяющий изменение оператора-мутатора.
    * @param narrowing           колбэк, сужающий тип по охраняющему условию ветки.
+   * @param noteUnpublishedCell отметить, что результат опирается на неопубликованный вход ячейки.
    *     <p>
    *     Переменные и места изменений отдаются поставщиками, а не значениями: за ними стоит
    *     обход индекса ссылок и разбор документирующих комментариев. При готовом ответе в
@@ -477,7 +515,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     Predicate<VariableSymbol> sharedWithOtherBodies, Function<VariableSymbol, TypeSet> declaredFact,
     Function<VariableSymbol, Collection<Position>> definitionPositions,
     Function<VariableSymbol, Collection<Position>> mutationPositions,
-    AssignedTypes assigned, Mutations mutations, GuardNarrowing narrowing
+    AssignedTypes assigned, Mutations mutations, GuardNarrowing narrowing, Runnable noteUnpublishedCell
   ) {
     /** Входы без отдельного списка чтений сохраняют консервативный расчёт всех видимых переменных. */
     public FlowInputs(FlowSession session, Consumer<CodeBlockContext> activeBodyRead, boolean cacheable,
@@ -489,7 +527,8 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       Function<VariableSymbol, Collection<Position>> mutationPositions,
       AssignedTypes assigned, Mutations mutations, GuardNarrowing narrowing) {
       this(session, activeBodyRead, cacheable, executionContext, compilationContexts, sawMissing, variables, null,
-        sharedWithOtherBodies, declaredFact, definitionPositions, mutationPositions, assigned, mutations, narrowing);
+        sharedWithOtherBodies, declaredFact, definitionPositions, mutationPositions, assigned, mutations, narrowing,
+        () -> {});
     }
   }
 
@@ -610,7 +649,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     // Тела у объявления нет либо переменная в нём не живёт — так стоит `Перем` уровня
     // модуля. Значение такой переменной оставляют тела, и оно как раз в её ячейке.
     ensureCellsFor(documentContext, List.of(variable), inputs);
-    return cellOf(documentContext, variable, inputs);
+    return cellOf(documentContext, variable, inputs, true);
   }
 
   /**
@@ -624,15 +663,21 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * @param documentContext контекст документа с переменной.
    * @param variable        переменная.
    * @param inputs          исходные данные расчёта.
+   * @param read            используется ли значение ячейки как вход текущего расчёта.
    * @return тип на входе в тело.
    */
-  TypeSet cellOf(DocumentContext documentContext, VariableSymbol variable, FlowInputs inputs) {
-    inputs.session().noteCellInput();
+  TypeSet cellOf(DocumentContext documentContext, VariableSymbol variable, FlowInputs inputs, boolean read) {
+    var session = inputs.session();
+    session.noteCellInput();
     var settled = cellsOf(documentContext, inputs.executionContext()).get(variable);
     if (settled != null) {
       return settled;
     }
-    var current = inputs.session().cells.get(variable);
+    // Предыдущий проход мог оставить неполный вход для следующего расчёта.
+    if (read && session.hasIncompleteCellInputs(variable)) {
+      inputs.noteUnpublishedCell().run();
+    }
+    var current = session.cells.get(variable);
     return current == null ? inputs.declaredFact().apply(variable) : current;
   }
 
@@ -714,34 +759,23 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     var outerComputing = session.cellsComputing;
     session.cellsComputing = true;
     session.cellsChanged.run();
+    var finished = false;
     try {
       for (var variable : pending) {
         session.replaceCell(variable, inputs.declaredFact().apply(variable));
       }
       session.growingCells.addAll(pending);
-      if (outerComputing) {
-        return;
-      }
-      if (session.growingCells.size() != pending.size()) {
-        session.growingCells.sort(Comparator.comparing(VariableSymbol::getName, String.CASE_INSENSITIVE_ORDER));
-      }
-      session.cellsIncomplete |= !grow(documentContext, session.growingCells, inputs);
-      if (canPublishCells(inputs, complete)) {
-        session.growingCells.forEach(variable -> settled.putIfAbsent(variable, session.cells.get(variable)));
-      }
-    } finally {
-      session.cellsComputing = outerComputing;
       if (!outerComputing) {
-        session.growingCells.clear();
+        if (session.growingCells.size() != pending.size()) {
+          session.growingCells.sort(Comparator.comparing(VariableSymbol::getName, String.CASE_INSENSITIVE_ORDER));
+        }
+        session.cellsIncomplete |= !grow(documentContext, session.growingCells, inputs);
+        session.publishCells(settled, inputs, complete);
       }
-      session.cellsChanged.run();
+      finished = true;
+    } finally {
+      session.finishCellComputation(outerComputing, pending, finished);
     }
-  }
-
-  /** Проверить полноту входных данных перед публикацией общих ячеек. */
-  private static boolean canPublishCells(FlowInputs inputs, @Nullable BooleanSupplier complete) {
-    return inputs.cacheable() && !inputs.session().cellsIncomplete && !inputs.sawMissing().getAsBoolean()
-      && (complete == null || complete.getAsBoolean());
   }
 
   /** Общие переменные, к которым обращается тело; их перечень берётся из структуры текущего AST. */
