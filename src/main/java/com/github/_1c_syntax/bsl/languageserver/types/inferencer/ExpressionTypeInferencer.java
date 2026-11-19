@@ -1145,8 +1145,7 @@ public class ExpressionTypeInferencer {
   }
 
   private static void inheritReturn(ContextualReturnCache.Result result, InferenceContext ctx) {
-    ctx.inheritMissingInputs(result.missingInputs());
-    ctx.incompleteCellInput |= result.incompleteCellInput();
+    ctx.inheritMissingInputs(result.missingInputs(), result.incompleteCellInput());
     ctx.cycleCut |= result.cycleCut();
     ctx.bodyInFlowCut |= result.bodyInFlowCut();
     ctx.depthCut |= result.depthCut();
@@ -1159,7 +1158,7 @@ public class ExpressionTypeInferencer {
   private static ContextualReturnCache.Result returnSnapshot(TypeSet types, InferenceContext ctx) {
     return new ContextualReturnCache.Result(types, Set.copyOf(ctx.consulted), Set.copyOf(ctx.dependencies),
       Set.copyOf(ctx.cutMethods), Set.copyOf(ctx.flowBodiesRead), ctx.cycleCut, ctx.bodyInFlowCut, ctx.depthCut,
-      ctx.missingInputSnapshot(), ctx.incompleteCellInput);
+      ctx.missingInputSnapshot(), ctx.hasIncompleteCellInput());
   }
 
   /** Локальная функция без ограничений компиляции, возвращающая только имена общих модулей. */

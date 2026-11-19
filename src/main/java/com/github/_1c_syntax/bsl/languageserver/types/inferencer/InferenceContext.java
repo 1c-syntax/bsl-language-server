@@ -88,15 +88,8 @@ final class InferenceContext {
   boolean bodyInFlowCut;
   /** Идёт уточняющий проход по телу рекурсивной функции с её же приближением. */
   boolean refining;
-  /**
-   * Расчёт опирался на то, что ещё не посчитано или не разобрано: значение чужого метода,
-   * член либо объявление, ведущие в модуль, до которого очередь ещё не дошла.
-   * Пустой набор означает готовность, непустой — недостающие возвраты функций,
-   * {@code null} — недоступность других данных.
-   */
-  private @Nullable Set<MethodSymbol> missingInputs = new HashSet<>();
-  /** Результат читает оставшееся от прежнего прохода неполное значение ячейки. */
-  boolean incompleteCellInput;
+  /** Отсутствие состояния означает, что расчёт пока не встретил недостающих входов. */
+  private @Nullable MissingInputs missingInputs;
   /** Расчёт сорвался либо поток не разместил обращение: пустой ответ нельзя сохранять как полный. */
   boolean failed;
   /** Расчёт оборван ограничением глубины; результат зависит от оставшегося бюджета. */
@@ -139,49 +132,70 @@ final class InferenceContext {
 
   /** Недоступны данные, а не только возвращаемое значение известной функции. */
   void noteMissingData() {
-    missingInputs = null;
+    missingInputs().methods = null;
   }
 
   void noteIncompleteCellInput() {
-    incompleteCellInput = true;
+    missingInputs().incompleteCell = true;
   }
 
   void noteMissingMethod(MethodSymbol method) {
-    if (missingInputs != null) {
-      missingInputs.add(method);
+    var methods = missingInputs().methods;
+    if (methods != null) {
+      methods.add(method);
     }
   }
 
   void inheritMissingInputs(InferenceContext nested) {
-    incompleteCellInput |= nested.incompleteCellInput;
-    if (nested.missingInputs == null || nested.flowSession.cellsIncomplete()) {
-      noteMissingData();
-      return;
-    }
-    inheritMissingInputs(nested.missingInputs);
+    inheritMissingInputs(nested.flowSession.cellsIncomplete() ? null : nested.missingMethodInputs(),
+      nested.hasIncompleteCellInput());
   }
 
-  void inheritMissingInputs(@Nullable Set<MethodSymbol> missing) {
+  void inheritMissingInputs(@Nullable Set<MethodSymbol> missing, boolean incompleteCell) {
+    if (incompleteCell) {
+      noteIncompleteCellInput();
+    }
     if (missing == null) {
       noteMissingData();
       return;
     }
-    if (missingInputs != null) {
-      missingInputs.addAll(missing);
+    if (missing.isEmpty()) {
+      return;
+    }
+    var methods = missingInputs().methods;
+    if (methods != null) {
+      methods.addAll(missing);
     }
   }
 
   /** Снимок недостающих входов сохраняет причину неполноты при повторном чтении результата. */
   @Nullable Set<MethodSymbol> missingInputSnapshot() {
-    return missingInputs == null || flowSession.cellsIncomplete() ? null : Set.copyOf(missingInputs);
+    var methods = missingMethodInputs();
+    return methods == null || flowSession.cellsIncomplete() ? null : Set.copyOf(methods);
   }
 
   boolean sawMissing() {
-    return incompleteCellInput || hasOtherMissingInputs();
+    return hasIncompleteCellInput() || hasOtherMissingInputs();
+  }
+
+  boolean hasIncompleteCellInput() {
+    return missingInputs != null && missingInputs.incompleteCell;
   }
 
   boolean hasOtherMissingInputs() {
-    return missingInputs == null || !missingInputs.isEmpty();
+    var methods = missingMethodInputs();
+    return methods == null || !methods.isEmpty();
+  }
+
+  private @Nullable Set<MethodSymbol> missingMethodInputs() {
+    return missingInputs == null ? Set.of() : missingInputs.methods;
+  }
+
+  private MissingInputs missingInputs() {
+    if (missingInputs == null) {
+      missingInputs = new MissingInputs();
+    }
+    return missingInputs;
   }
 
   void noteIncompleteCells() {
@@ -195,13 +209,20 @@ final class InferenceContext {
     if (!sawMissing() && !failed) {
       return Set.of();
     }
-    if (incompleteCellInput || missingInputs == null || failed || flowSession.cellsIncomplete()) {
+    var methods = missingMethodInputs();
+    if (hasIncompleteCellInput() || methods == null || failed || flowSession.cellsIncomplete()) {
       return null;
     }
-    if (depthCut || bodyInFlowCut || missingInputs.isEmpty()) {
+    if (depthCut || bodyInFlowCut || methods.isEmpty()) {
       return null;
     }
-    return Set.copyOf(missingInputs);
+    return Set.copyOf(methods);
+  }
+
+  private static final class MissingInputs {
+    /** Недостающие возвраты. {@code null} также допускает другую причину неполноты. */
+    private @Nullable Set<MethodSymbol> methods = new HashSet<>();
+    private boolean incompleteCell;
   }
 
   /** Запрос без выбора одного режима объединяет результаты доступных контекстов. */

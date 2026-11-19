@@ -254,7 +254,9 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
                               @Nullable BooleanSupplier complete) {
       if (cellsIncomplete || inputs.sawMissing().getAsBoolean() || (complete != null && !complete.getAsBoolean())) {
         markIncompleteCellInputs(growingCells);
-      } else if (inputs.cacheable()) {
+        return;
+      }
+      if (inputs.cacheable()) {
         growingCells.forEach(variable -> settled.putIfAbsent(variable, cells.get(variable)));
       }
     }
@@ -615,7 +617,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       return null;
     }
     return typeAtStatement(
-      documentContext, body, layout, useStatement, null, position, atDefinition, variable, inputs);
+      documentContext, body, layout, useStatement, null, position, atDefinition, variable, inputs, null);
   }
 
   /**
@@ -920,22 +922,6 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   }
 
   /** Общая часть обоих входов: проверки применимости и чтение окружения. */
-  @Nullable
-  private TypeSet typeAtStatement(
-    DocumentContext documentContext,
-    BSLParser.CodeBlockContext body,
-    FlowLayout layout,
-    ParserRuleContext useStatement,
-    @Nullable ParserRuleContext useNode,
-    Position usePosition,
-    boolean atDefinition,
-    VariableSymbol variable,
-    FlowInputs inputs
-  ) {
-    return typeAtStatement(documentContext, body, layout, useStatement, useNode, usePosition,
-      atDefinition, variable, inputs, null);
-  }
-
   private @Nullable TypeSet typeAtStatement(DocumentContext documentContext, BSLParser.CodeBlockContext body,
     FlowLayout layout, ParserRuleContext useStatement, @Nullable ParserRuleContext useNode,
     Position usePosition, boolean atDefinition, VariableSymbol variable, FlowInputs inputs,
