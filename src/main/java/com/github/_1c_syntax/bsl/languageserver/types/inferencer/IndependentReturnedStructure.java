@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
-import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionTreeBuildingVisitor;
@@ -54,18 +53,10 @@ final class IndependentReturnedStructure {
     };
   }
 
-  static @Nullable TypeSet typeBefore(VariableFlowAnalyzer.@Nullable Facts facts, ParserRuleContext statement,
-                                     VariableSymbol variable) {
-    if (facts == null) {
-      return null;
-    }
-    var index = facts.indexOf(variable);
-    return index == null ? null : facts.beforeStatement().getOrDefault(statement, FlowEnvironment.EMPTY).get(index);
-  }
-
   static boolean supports(DocumentContext document, BSLParser.CodeBlockContext body, VariableSymbol variable,
-                          FlowVariables variables, ControlFlowGraph graph, VariableFlowAnalyzer.FlowInputs inputs) {
-    return variables.indexes().containsKey(variable) && closedChanges(document, variable, variables)
+                          FlowVariables variables, ControlFlowGraph graph, VariableFlowAnalyzer.FlowInputs inputs,
+                          Predicate<ParserRuleContext> reachable) {
+    return variables.indexes().containsKey(variable) && closedChanges(document, variable, variables, reachable)
       && closedConditions(variable, graph, inputs) && !escapes(document, body, variable);
   }
 
@@ -78,7 +69,7 @@ final class IndependentReturnedStructure {
     for (var node : Trees.findAllRuleNodes(body, BSLParser.RULE_returnStatement)) {
       var candidate = returnedVariable(document, body, (BSLParser.ReturnStatementContext) node, reachable);
       if (candidate != null && !selected.contains(candidate) && localVariable(document, candidate)
-        && supports(document, body, candidate, variables, graph, inputs)) {
+        && supports(document, body, candidate, variables, graph, inputs, reachable)) {
         selected.add(candidate);
       }
     }
@@ -98,17 +89,13 @@ final class IndependentReturnedStructure {
     return document.getSymbolTreeNoLock().getVariableSymbolInScope(body, terminal.getText()).orElse(null);
   }
 
-  static boolean reachable(ParserRuleContext statement, FlowLayout layout, @Nullable PreprocessorFlow compiled) {
-    var placed = statement;
-    while (placed != null && !layout.hasStatement(placed)) {
-      placed = placed.getParent();
-    }
-    return placed != null && (compiled == null || compiled.vertices().contains(layout.vertexOf(placed)));
-  }
-
-  private static boolean closedChanges(DocumentContext document, VariableSymbol variable, FlowVariables variables) {
+  private static boolean closedChanges(DocumentContext document, VariableSymbol variable, FlowVariables variables,
+                                       Predicate<ParserRuleContext> reachable) {
     var definitions = 0;
     for (var entry : variables.changesByStatement().entrySet()) {
+      if (!reachable.test(entry.getKey())) {
+        continue;
+      }
       for (var change : entry.getValue()) {
         if (change.variable() != variable) {
           continue;

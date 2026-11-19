@@ -292,7 +292,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       return true;
     }
 
-    /** Вычислить замкнутое локальное построение возвращаемой структуры без общего кэша фактов тела. */
+    /** Прочитать готовые факты тела либо вычислить замкнутое локальное построение возвращаемой структуры. */
     private static @Nullable TypeSet independentReturnTypeAt(
       VariableFlowAnalyzer analyzer, DocumentContext document, ParserRuleContext use,
       VariableSymbol variable, FlowInputs inputs, BooleanSupplier complete
@@ -306,25 +306,38 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       if (statement == null) {
         return null;
       }
-      var session = inputs.session();
-      var key = new ReturnedLocalKey(body, variable, inputs.executionContext());
       inputs.activeBodyRead().accept(body);
+      var cached = analyzer.cachedFacts(document.getUri(), body, inputs);
+      if (cached != null) {
+        return typeBefore(cached, statement, variable);
+      }
+      var key = new ReturnedLocalKey(body, variable, inputs.executionContext());
+      return projectedReturnTypeAt(analyzer, document, layout, statement, key, inputs, complete);
+    }
+
+    private static @Nullable TypeSet projectedReturnTypeAt(
+      VariableFlowAnalyzer analyzer, DocumentContext document, FlowLayout layout, ParserRuleContext statement,
+      ReturnedLocalKey key, FlowInputs inputs, BooleanSupplier complete
+    ) {
+      var session = inputs.session();
+      var body = key.body();
+      var variable = key.variable();
       if (session.independentReturnFacts != null && session.independentReturnFacts.containsKey(key)) {
-        return IndependentReturnedStructure.typeBefore(session.independentReturnFacts.get(key), statement, variable);
+        return typeBefore(session.independentReturnFacts.get(key), statement, variable);
       }
       var variables = analyzer.variablesOf(document, body, layout, inputs);
       var graph = analyzer.controlFlowGraphIndex.graphOf(document, body, CfgBuildOptions.defaults());
-      if (!IndependentReturnedStructure.supports(document, body, variable, variables, graph, inputs)) {
+      var compiled = inputs.compilationContexts().apply(body)
+        .map(contexts -> PreprocessorFlow.of(graph, contexts, document.getFileType())).orElse(null);
+      Predicate<ParserRuleContext> reachable = node -> reachableStatement(node, layout, compiled);
+      if (!IndependentReturnedStructure.supports(document, body, variable, variables, graph, inputs, reachable)) {
         if (inputs.cacheable()) {
           session.rememberIndependentFacts(key, null, inputs, complete);
         }
         return null;
       }
-      var compiled = inputs.compilationContexts().apply(body)
-        .map(contexts -> PreprocessorFlow.of(graph, contexts, document.getFileType())).orElse(null);
       var selected = variables.forVariables(IndependentReturnedStructure.returnedLocals(
-        document, body, variables, graph, inputs, variable,
-        returned -> IndependentReturnedStructure.reachable(returned, layout, compiled)));
+        document, body, variables, graph, inputs, variable, reachable));
       var pass = new VariableFlowPass(analyzer, document, graph, layout, inputs, compiled, selected);
       inputs.session().active.put(body, pass);
       try {
@@ -332,10 +345,28 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
         for (var result : selected.variables()) {
           session.rememberIndependentFacts(new ReturnedLocalKey(body, result, inputs.executionContext()), facts, inputs, complete);
         }
-        return IndependentReturnedStructure.typeBefore(facts, statement, variable);
+        return typeBefore(facts, statement, variable);
       } finally {
         inputs.session().active.remove(body);
       }
+    }
+
+    private static boolean reachableStatement(ParserRuleContext statement, FlowLayout layout,
+                                              @Nullable PreprocessorFlow compiled) {
+      var placed = statement;
+      while (placed != null && !layout.hasStatement(placed)) {
+        placed = placed.getParent();
+      }
+      return placed != null && (compiled == null || compiled.vertices().contains(layout.vertexOf(placed)));
+    }
+
+    private static @Nullable TypeSet typeBefore(@Nullable Facts facts, ParserRuleContext statement,
+                                                VariableSymbol variable) {
+      if (facts == null) {
+        return null;
+      }
+      var index = facts.indexOf(variable);
+      return index == null ? null : facts.beforeStatement().getOrDefault(statement, FlowEnvironment.EMPTY).get(index);
     }
 
     private void rememberIndependentFacts(ReturnedLocalKey key, @Nullable Facts facts, FlowInputs inputs,
@@ -1116,6 +1147,17 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       }
     }
     return computeAndPublish(documentContext, body, layout, inputs, byBody, sharedRoot);
+  }
+
+  private @Nullable Facts cachedFacts(URI uri, BSLParser.CodeBlockContext body, FlowInputs inputs) {
+    if (!inputs.cacheable()) {
+      return null;
+    }
+    var context = inputs.executionContext();
+    var byBody = context == null
+      ? factsByUri.getOrDefault(uri, Map.of())
+      : contextualFactsByUri.getOrDefault(uri, Map.of()).getOrDefault(context, Map.of());
+    return byBody.get(body);
   }
 
   /** Разные внешние тела одного модуля ждут общие ячейки до захвата собственного расчёта тела. */

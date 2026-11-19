@@ -406,8 +406,9 @@ class ReturnedLocalFlowTest extends AbstractServerContextAwareTest {
       (candidate, statement, position) -> TypeSet.EMPTY, (candidate, position, incoming) -> incoming, narrowing);
   }
 
-  @Test
-  void aFailedProjectionDoesNotDiscardIndependentLiteralReturns() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void aFailedProjectionDoesNotDiscardIndependentLiteralReturns(boolean contentReleased) {
     var document = TestUtils.getDocumentContext("""
       Function Build(Flag)
         If Flag Then
@@ -421,7 +422,9 @@ class ReturnedLocalFlowTest extends AbstractServerContextAwareTest {
     var original = (VariableFlowAnalyzer) ReflectionTestUtils.getField(target, "variableFlowAnalyzer");
     VariableFlowAnalyzer real = AopTestUtils.getUltimateTargetObject(original);
     var failing = spy(real);
-    doThrow(new DocumentContentUnavailableException(document.getUri())).when(failing)
+    var failure = contentReleased ? new DocumentContentUnavailableException(document.getUri())
+      : new IllegalArgumentException("incomplete expression in the edited document");
+    doThrow(failure).when(failing)
       .independentReturnTypeAt(any(), any(), any(), any(), any());
     ReflectionTestUtils.setField(target, "variableFlowAnalyzer", failing);
     try {
@@ -460,6 +463,79 @@ class ReturnedLocalFlowTest extends AbstractServerContextAwareTest {
 
     assertThat(shallow.refs()).extracting(TypeRef::qualifiedName).containsExactly("Структура");
     assertThat(inference.depthCut).isFalse();
+  }
+
+  @Test
+  void aDeepReturnedLocalCanUseAlreadyComputedFactsFromTheSameMode() {
+    var document = TestUtils.getDocumentContext("""
+      Function Build()
+        Result = New Structure;
+        Result.Insert("Status");
+        Return Result;
+      EndFunction
+      """, context);
+    var method = document.getSymbolTree().getMethodSymbol("Build").orElseThrow();
+    var statement = (BSLParser.ReturnStatementContext) Trees.findAllRuleNodes(document.getAst(),
+      BSLParser.RULE_returnStatement).iterator().next();
+    var expression = ExpressionTreeBuildingVisitor.buildExpressionTree(statement.expression());
+    ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
+    var shallow = new InferenceContext(document, ExecutionContext.SERVER);
+    shallow.visited.add(method);
+    TypeSet warm = ReflectionTestUtils.invokeMethod(target, "inferInternal", expression, shallow, false, false);
+    assertThat(warm.refs()).extracting(TypeRef::qualifiedName).containsExactly("Структура");
+
+    var deep = new InferenceContext(document, ExecutionContext.SERVER);
+    deep.visited.add(method);
+    deep.depth = (Integer) ReflectionTestUtils.getField(target, "MAX_DEPTH") - 1;
+    TypeSet result = ReflectionTestUtils.invokeMethod(target, "inferInternal", expression, deep, false, true);
+    assertThat(result).isEqualTo(warm);
+    assertThat(deep.depthCut).isFalse();
+  }
+
+  @Test
+  void inactiveAssignmentDoesNotInvalidateTheServerProjection() {
+    var document = TestUtils.getDocumentContext("""
+      Function Build()
+      #If Server Then
+        Result = New Structure;
+      #Else
+        Result = 1;
+      #EndIf
+        Unused = Recursive();
+        Return Result;
+      EndFunction
+      Function Recursive()
+        Return 1;
+      EndFunction
+      """, context);
+    var method = document.getSymbolTree().getMethodSymbol("Build").orElseThrow();
+    var statement = (BSLParser.ReturnStatementContext) Trees.findAllRuleNodes(document.getAst(),
+      BSLParser.RULE_returnStatement).iterator().next();
+    var expression = ExpressionTreeBuildingVisitor.buildExpressionTree(statement.expression());
+    ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
+    var original = (ReturnTypeFromBodyInference) ReflectionTestUtils.getField(target, "returnTypeFromBodyInference");
+    var counted = spy(original);
+    var calls = new AtomicInteger();
+    doAnswer(call -> {
+      calls.incrementAndGet();
+      return call.callRealMethod();
+    }).when(counted).of(any(), any(), any(), any());
+    ReflectionTestUtils.setField(target, "returnTypeFromBodyInference", counted);
+    try {
+      var server = new InferenceContext(document, ExecutionContext.SERVER);
+      server.visited.add(method);
+      TypeSet serverTypes = ReflectionTestUtils.invokeMethod(target, "inferInternal", expression, server, false, true);
+      assertThat(serverTypes.refs()).extracting(TypeRef::qualifiedName).containsExactly("Структура");
+      assertThat(calls.get()).isZero();
+
+      var neutral = new InferenceContext(document, null);
+      neutral.visited.add(method);
+      TypeSet union = ReflectionTestUtils.invokeMethod(target, "inferInternal", expression, neutral, false, true);
+      assertThat(union.refs()).extracting(TypeRef::qualifiedName).contains("Структура", "Число");
+      assertThat(calls.get()).isPositive();
+    } finally {
+      ReflectionTestUtils.setField(target, "returnTypeFromBodyInference", original);
+    }
   }
 
   @Test
