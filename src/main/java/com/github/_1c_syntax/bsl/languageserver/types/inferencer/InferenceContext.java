@@ -221,8 +221,12 @@ final class InferenceContext {
 
   private static final class MissingInputs {
     /** Недостающие возвраты. {@code null} также допускает другую причину неполноты. */
-    private @Nullable Set<MethodSymbol> methods = new HashSet<>();
+    private @Nullable Set<MethodSymbol> methods;
     private boolean incompleteCell;
+
+    private MissingInputs() {
+      methods = new HashSet<>();
+    }
   }
 
   /** Запрос без выбора одного режима объединяет результаты доступных контекстов. */
