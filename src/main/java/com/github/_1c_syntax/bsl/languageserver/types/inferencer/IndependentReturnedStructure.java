@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionTreeBuildingVisitor;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.MethodCallNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ConstructorCallNode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -40,8 +41,10 @@ import java.util.IdentityHashMap;
 import java.util.Set;
 import java.util.function.Predicate;
 
-/** Достаточные условия независимости локальной структуры, изменяемой только вставками литеральных ключей. */
+/** Достаточные условия, при которых локальное возвращаемое значение можно вычислить отдельно. */
 final class IndependentReturnedStructure {
+  private static final int INSERT_WITH_VALUE_ARITY = 2;
+
   private IndependentReturnedStructure() {
   }
 
@@ -55,7 +58,8 @@ final class IndependentReturnedStructure {
   static boolean supports(DocumentContext document, BSLParser.CodeBlockContext body, VariableSymbol variable,
                           FlowVariables variables, Set<CfgVertex> vertices, VariableFlowAnalyzer.FlowInputs inputs,
                           Predicate<ParserRuleContext> reachable) {
-    return variables.indexes().containsKey(variable) && closedChanges(document, variable, variables, reachable)
+    return variables.indexes().containsKey(variable)
+      && closedChanges(document, variable, variables, reachable, !inputs.session().cellsComputing())
       && closedConditions(variable, vertices, inputs) && !escapes(document, body, variable, reachable);
   }
 
@@ -89,7 +93,7 @@ final class IndependentReturnedStructure {
   }
 
   private static boolean closedChanges(DocumentContext document, VariableSymbol variable, FlowVariables variables,
-                                       Predicate<ParserRuleContext> reachable) {
+                                       Predicate<ParserRuleContext> reachable, boolean allowLocalCall) {
     var definitions = 0;
     for (var entry : variables.changesByStatement().entrySet()) {
       if (!reachable.test(entry.getKey())) {
@@ -99,7 +103,8 @@ final class IndependentReturnedStructure {
         if (change.variable() != variable) {
           continue;
         }
-        if (!supportedChange(document, entry.getKey(), change.definition(), variable.getName())) {
+        if (!supportedChange(document, entry.getKey(), change.definition(), variable, variables, reachable,
+          allowLocalCall)) {
           return false;
         }
         definitions += change.definition() ? 1 : 0;
@@ -109,19 +114,50 @@ final class IndependentReturnedStructure {
   }
 
   private static boolean supportedChange(DocumentContext document, ParserRuleContext statement,
-                                         boolean definition, String variableName) {
+                                         boolean definition, VariableSymbol variable, FlowVariables variables,
+                                         Predicate<ParserRuleContext> reachable, boolean allowLocalCall) {
     if (definition) {
       return statement instanceof BSLParser.AssignmentContext assignment
         && Trees.getTrailingComment(document.getTokens(), assignment.getStop()).isEmpty()
-        && emptyStructure(assignment);
+        && closedInitializer(document, assignment, variable, variables, reachable, allowLocalCall);
     }
-    return statement instanceof BSLParser.CallStatementContext call && literalInsert(call, variableName);
+    return statement instanceof BSLParser.CallStatementContext call && literalInsert(call, variable.getName());
   }
 
-  private static boolean emptyStructure(BSLParser.AssignmentContext assignment) {
+  private static boolean closedInitializer(DocumentContext document, BSLParser.AssignmentContext assignment,
+                                           VariableSymbol variable, FlowVariables variables,
+                                           Predicate<ParserRuleContext> reachable, boolean allowLocalCall) {
     var expression = ExpressionTreeBuildingVisitor.buildExpressionTree(assignment.expression());
-    if (!(expression instanceof ConstructorCallNode constructor)
-      || !constructor.isStaticallyTyped() || !parameterless(constructor)) {
+    if (expression instanceof ConstructorCallNode constructor) {
+      return emptyStructure(constructor);
+    }
+    return allowLocalCall && expression instanceof MethodCallNode call
+      && localCallInitializer(document, call, variable, variables, reachable);
+  }
+
+  /**
+   * Вызов вычисляется штатно, но не читает локальное окружение вызывающего тела.
+   * Применимо только к неизменяемому после присваивания результату и телу без общих ячеек.
+   */
+  private static boolean localCallInitializer(DocumentContext document, MethodCallNode call,
+                                              VariableSymbol variable, FlowVariables variables,
+                                              Predicate<ParserRuleContext> reachable) {
+    var arguments = call.arguments();
+    var name = call.getName();
+    if (name == null || arguments.size() > 1
+        || arguments.stream().anyMatch(argument -> argument.getNodeType() != ExpressionNodeType.SKIPPED_CALL_ARG)
+        || variables.hasVisibleModuleVariables()) {
+      return false;
+    }
+    return document.getSymbolTreeNoLock().getMethodSymbol(name.getText()).filter(MethodSymbol::isFunction).isPresent()
+      && variables.changesByStatement().entrySet().stream()
+        .filter(entry -> reachable.test(entry.getKey()))
+        .flatMap(entry -> entry.getValue().stream())
+        .noneMatch(change -> change.variable() == variable && !change.definition());
+  }
+
+  private static boolean emptyStructure(ConstructorCallNode constructor) {
+    if (!constructor.isStaticallyTyped() || !parameterless(constructor)) {
       return false;
     }
     var typeName = constructor.getTypeName().getRepresentingAst();
@@ -190,7 +226,7 @@ final class IndependentReturnedStructure {
     var params = call.callParamList().callParam();
     return switch (params.size()) {
       case 1 -> stringLiteral(params.getFirst().expression());
-      case 2 -> stringLiteral(params.getFirst().expression()) && literal(params.getLast().expression());
+      case INSERT_WITH_VALUE_ARITY -> stringLiteral(params.getFirst().expression()) && literal(params.getLast().expression());
       default -> false;
     };
   }
