@@ -524,7 +524,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     var changed = new AtomicBoolean();
     // Блокировка записи computedAt объединяет публикацию типа и признака неполноты.
     // Расчёт тела выполняется до её захвата: тело может вызывать другие функции.
-    computedAt.compute(method, (key, publishedAt) -> {
+    computedAt.compute(method, (MethodSymbol key, @Nullable Long publishedAt) -> {
       if (onDemand && partial != null && isIndexed(key)) {
         return publishedAt;
       }
@@ -1726,7 +1726,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     Map<MethodSymbol, ProvisionalReturn> candidates = new HashMap<>();
     for (var uri : component) {
       for (var method : methodsByUri.getOrDefault(uri, List.of())) {
-        computedAt.computeIfPresent(method, (key, startedAt) -> {
+        computedAt.computeIfPresent(method, (MethodSymbol key, Long startedAt) -> {
           var observed = provisional.get(key);
           if (indexed.contains(key) && observed != null && observed.missingMethods != null
             && !observed.missingMethods.isEmpty()) {
