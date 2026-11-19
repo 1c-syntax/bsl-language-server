@@ -911,7 +911,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * корзины на нём выстраивались бы все потоки пакетного анализа. Двойная работа при гонке
    * безвредна — раскладка от расчёта не зависит.
    */
-  private FlowLayout layoutOf(DocumentContext documentContext, BSLParser.CodeBlockContext body) {
+  FlowLayout layoutOf(DocumentContext documentContext, BSLParser.CodeBlockContext body) {
     var byBody = layoutsByUri.computeIfAbsent(documentContext.getUri(), uri -> new ConcurrentHashMap<>());
     var cached = byBody.get(body);
     if (cached != null) {
@@ -1196,8 +1196,8 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   }
 
   /** Структура переменных тела для текущего дерева символов, общая для всех режимов расчёта. */
-  private FlowVariables variablesOf(DocumentContext documentContext, BSLParser.CodeBlockContext body,
-                                    FlowLayout layout, FlowInputs inputs) {
+  FlowVariables variablesOf(DocumentContext documentContext, BSLParser.CodeBlockContext body,
+                            FlowLayout layout, FlowInputs inputs) {
     var byBody = variablesByUri.get(documentContext.getUri(), documentContext.getSymbolTree(),
       tree -> new ConcurrentHashMap<>());
     var cached = byBody.get(body);

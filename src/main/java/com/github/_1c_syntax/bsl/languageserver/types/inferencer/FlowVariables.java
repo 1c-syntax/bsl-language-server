@@ -38,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 /**
  * Переменные тела и их изменения; коллекции наружу отдаются только для чтения.
@@ -92,10 +93,18 @@ record FlowVariables(List<VariableSymbol> visibleVariables, List<VariableSymbol>
 
   /** Оставить все локальные значения, входы и запрошенные выходы расчёта общих ячеек. */
   FlowVariables forCells(Set<VariableSymbol> requested) {
-    if (variables.stream().allMatch(variable -> neededForCells(variable, requested))) {
+    return select(variable -> neededForCells(variable, requested));
+  }
+
+  FlowVariables forVariables(Set<VariableSymbol> selected) {
+    return select(selected::contains);
+  }
+
+  private FlowVariables select(Predicate<VariableSymbol> needed) {
+    if (variables.stream().allMatch(needed)) {
       return this;
     }
-    var selected = variables.stream().filter(variable -> neededForCells(variable, requested)).toList();
+    var selected = variables.stream().filter(needed).toList();
     Map<VariableSymbol, Integer> selectedIndexes = new IdentityHashMap<>();
     for (var i = 0; i < selected.size(); i++) {
       selectedIndexes.put(selected.get(i), i);
