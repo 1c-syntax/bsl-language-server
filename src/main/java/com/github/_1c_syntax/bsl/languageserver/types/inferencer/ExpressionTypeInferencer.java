@@ -1957,7 +1957,7 @@ public class ExpressionTypeInferencer {
     Set<String> names = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
     Set<String> readNames = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
     for (var identifier : Trees.findAllTokenNodes(body, BSLLexer.IDENTIFIER)) {
-      if (isVariableIdentifier(identifier)) {
+      if (FlowVariables.isVariableIdentifier(identifier)) {
         names.add(identifier.getText());
         if (!isVariableWriteTarget(identifier)) {
           readNames.add(identifier.getText());
@@ -1990,15 +1990,6 @@ public class ExpressionTypeInferencer {
       : Trees.getAncestorByRuleIndex(parent, BSLParser.RULE_lValue);
     return lValue != null && lValue.getStart() == lValue.getStop()
       && lValue.getParent() instanceof BSLParser.AssignmentContext;
-  }
-
-  /** Идентификатор переменной, включая получателя цепочки и переменную внутри индекса. */
-  private static boolean isVariableIdentifier(ParseTree identifier) {
-    return identifier.getParent() instanceof ParserRuleContext parent && switch (parent.getRuleIndex()) {
-      case BSLParser.RULE_complexIdentifier, BSLParser.RULE_lValue, BSLParser.RULE_callStatement,
-           BSLParser.RULE_forStatement, BSLParser.RULE_forEachStatement -> true;
-      default -> false;
-    };
   }
 
   /**

@@ -301,6 +301,36 @@ class ModuleVariableVisibilityTest extends AbstractServerContextAwareTest {
       .extracting(TypeRef::qualifiedName).contains("Число");
   }
 
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void cellWriterDistinguishesMemberNamesFromIndexVariables(boolean indexAccess) {
+    var receiver = indexAccess
+      ? "Receiver = New Array; Receiver.Add(\"ready\");"
+      : "Receiver = New Structure(\"Unrelated\", \"ready\");";
+    var access = indexAccess ? "Receiver[Unrelated]" : "Receiver.Unrelated";
+    var document = document("""
+      Var Needed;
+      Procedure WriteNeeded()
+        Var Unrelated;
+        Needed = "ready";
+        Unrelated = Recursive();
+        %s
+        Needed = %s;
+      EndProcedure
+      Function Recursive()
+        Return 0;
+      EndFunction
+      Function Independent()
+        Value = Needed;
+        Return Value;
+      EndFunction
+      """.formatted(receiver, access));
+
+    assertThat(recursiveBodiesForIndependent(document, "Строка", "Неопределено") > 0)
+      .as("whether the access reads the variable Unrelated")
+      .isEqualTo(indexAccess);
+  }
+
   private int recursiveBodiesForIndependent(DocumentContext document) {
     return recursiveBodiesForIndependent(document, "Строка");
   }

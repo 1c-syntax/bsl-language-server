@@ -138,16 +138,20 @@ record CellWriterInputs(FlowVariables variables, List<VariableSymbol> readCells)
     return result;
   }
 
-  /** Имена членов тоже проверяются в области видимости. Совпадение может лишь расширить набор. */
+  /** Учитываются переменные в операторах, включая получателей и индексы. */
   private static void addReferencedVariables(SymbolTree tree, BSLParser.CodeBlockContext body,
     List<ParserRuleContext> statements, Set<ParserRuleContext> examined, Set<VariableSymbol> visible,
     Set<VariableSymbol> selected, ArrayDeque<VariableSymbol> pending) {
     for (var statement : statements) {
-      if (examined.add(statement)) {
-        for (var token : Trees.findAllTokenNodes(statement, BSLLexer.IDENTIFIER)) {
-          tree.getVariableSymbolInScope(body, token.getText()).filter(visible::contains).filter(selected::add)
-            .ifPresent(pending::addLast);
+      if (!examined.add(statement)) {
+        continue;
+      }
+      for (var token : Trees.findAllTokenNodes(statement, BSLLexer.IDENTIFIER)) {
+        if (!FlowVariables.isVariableIdentifier(token)) {
+          continue;
         }
+        tree.getVariableSymbolInScope(body, token.getText()).filter(visible::contains).filter(selected::add)
+          .ifPresent(pending::addLast);
       }
     }
   }

@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.types.inferencer.VariableFlowAna
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.VariableFlowAnalyzer.FlowInputs;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Position;
 
 import java.util.ArrayList;
@@ -128,6 +129,15 @@ record FlowVariables(List<VariableSymbol> visibleVariables, List<VariableSymbol>
   private boolean neededForCells(VariableSymbol variable, Set<VariableSymbol> requested) {
     return variable.getKind() != VariableKind.MODULE || requested.contains(variable)
       || readModuleVariables.contains(variable);
+  }
+
+  /** Идентификатор переменной, включая получателя цепочки и переменную внутри индекса. */
+  static boolean isVariableIdentifier(ParseTree identifier) {
+    return identifier.getParent() instanceof ParserRuleContext parent && switch (parent.getRuleIndex()) {
+      case BSLParser.RULE_complexIdentifier, BSLParser.RULE_lValue, BSLParser.RULE_callStatement,
+           BSLParser.RULE_forStatement, BSLParser.RULE_forEachStatement -> true;
+      default -> false;
+    };
   }
 
   /** Разложить позиции изменений по операторам, в которых они стоят. */
