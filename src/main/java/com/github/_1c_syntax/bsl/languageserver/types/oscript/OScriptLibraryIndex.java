@@ -367,11 +367,8 @@ public class OScriptLibraryIndex {
             return FileVisitResult.TERMINATE;
           }
           var fileName = file.getFileName().toString();
-          if (!fileName.toLowerCase(Locale.ROOT).endsWith(DirContents.OS_SUFFIX)) {
-            return FileVisitResult.CONTINUE;
-          }
           var parent = file.getParent();
-          if (parent == null) {
+          if (parent == null || !fileName.toLowerCase(Locale.ROOT).endsWith(DirContents.OS_SUFFIX)) {
             return FileVisitResult.CONTINUE;
           }
           var parentName = parent.getFileName().toString();

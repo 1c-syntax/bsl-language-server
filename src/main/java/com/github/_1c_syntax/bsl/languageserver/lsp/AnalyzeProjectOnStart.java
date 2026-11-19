@@ -36,11 +36,10 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Phaser;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Перехватчик события заполнения контекста сервера, запускающий анализ всех файлов контекста.
@@ -109,22 +108,23 @@ public class AnalyzeProjectOnStart {
     ServerContext serverContext, Collection<DocumentContext> documents,
     WorkDoneProgressHelper.WorkDoneProgressReporter progress, AtomicBoolean cancelled
   ) {
-    var failure = new AtomicReference<Throwable>();
-    documents.parallelStream().forEach(document -> {
-      if (cancelled.get() || serverContext.isBackgroundWorkStopped()) {
-        return;
-      }
-      try {
-        analyzeDocument(serverContext, document, progress, cancelled);
-      } catch (RuntimeException | Error e) {
-        // Не выбрасываем исключение из parallelStream, пока другие файлы ещё обрабатываются.
-        failure.compareAndSet(null, e);
-        cancelled.set(true);
-      }
-    });
-    var cause = failure.get();
-    if (cause != null) {
-      throw new CompletionException(cause);
+    var active = new Phaser(1);
+    try {
+      documents.parallelStream().forEach((DocumentContext document) -> {
+        if (cancelled.get() || serverContext.isBackgroundWorkStopped() || active.register() < 0) {
+          return;
+        }
+        try {
+          analyzeDocument(serverContext, document, progress, cancelled);
+        } finally {
+          active.arriveAndDeregister();
+        }
+      });
+    } finally {
+      // При исключении параллельный проход может выйти раньше соседних обработчиков.
+      // Зарегистрированные дожидаются окончания, остальные не начинают работу.
+      cancelled.set(true);
+      active.awaitAdvance(active.arriveAndDeregister());
     }
   }
 
