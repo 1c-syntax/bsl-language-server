@@ -265,6 +265,10 @@ class ModuleVariableVisibilityTest extends AbstractServerContextAwareTest {
   }
 
   private int recursiveBodiesForIndependent(DocumentContext document) {
+    return recursiveBodiesForIndependent(document, "Строка");
+  }
+
+  private int recursiveBodiesForIndependent(DocumentContext document, String... expectedTypes) {
     var method = document.getSymbolTree().getMethodSymbol("Independent").orElseThrow();
     ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
     var original = (ReturnTypeFromBodyInference) ReflectionTestUtils.getField(target, "returnTypeFromBodyInference");
@@ -280,7 +284,7 @@ class ModuleVariableVisibilityTest extends AbstractServerContextAwareTest {
     ReflectionTestUtils.setField(target, "returnTypeFromBodyInference", counted);
     try {
       assertThat(inferencer.computeReturnTypes(method).types().refs())
-        .extracting(TypeRef::qualifiedName).containsExactly("Строка");
+        .extracting(TypeRef::qualifiedName).containsExactlyInAnyOrder(expectedTypes);
       return unrelatedCalls.get();
     } finally {
       ReflectionTestUtils.setField(target, "returnTypeFromBodyInference", original);
@@ -303,6 +307,47 @@ class ModuleVariableVisibilityTest extends AbstractServerContextAwareTest {
 
     assertThat(inferencer.computeReturnTypes(document.getSymbolTree().getMethodSymbol("Read").orElseThrow())
       .types().refs()).extracting(TypeRef::qualifiedName).contains("Число");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"For Unrelated = 1 To 3 Do", "For Each Unrelated In New Array Do"})
+  void loopBindingDoesNotReadItsOtherWriters(String loop) {
+    var document = document(loopWriterSource(loop));
+
+    assertThat(recursiveBodiesForIndependent(document, "Строка", "Неопределено")).isZero();
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"For Unrelated = Unrelated To 3 Do",
+    "For Each Unrelated In Unrelated Do", "For Counter = 1 To Unrelated Do",
+    "For Counter = 1 To 3 Do\n Log(Unrelated);"})
+  void loopInputStillReadsItsWriters(String loop) {
+    var document = document(loopWriterSource(loop));
+
+    assertThat(recursiveBodiesForIndependent(document, "Строка", "Неопределено")).isPositive();
+  }
+
+  private static String loopWriterSource(String loop) {
+    return """
+      Var Needed;
+      Var Unrelated;
+      Procedure WriteOther()
+        Unrelated = Recursive();
+      EndProcedure
+      Function Recursive()
+        Return 1;
+      EndFunction
+      Procedure WriteNeeded()
+        Needed = "ready";
+        %s
+          Needed = "ready";
+        EndDo;
+      EndProcedure
+      Function Independent()
+        Result = Needed;
+        Return Result;
+      EndFunction
+      """.formatted(loop);
   }
 
   @Test

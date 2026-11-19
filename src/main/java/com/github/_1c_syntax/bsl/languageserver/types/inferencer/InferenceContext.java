@@ -147,9 +147,22 @@ final class InferenceContext {
       noteMissingData();
       return;
     }
-    if (missingInputs != null) {
-      missingInputs.addAll(nested.missingInputs);
+    inheritMissingInputs(nested.missingInputs);
+  }
+
+  void inheritMissingInputs(@Nullable Set<MethodSymbol> missing) {
+    if (missing == null) {
+      noteMissingData();
+      return;
     }
+    if (missingInputs != null) {
+      missingInputs.addAll(missing);
+    }
+  }
+
+  /** Снимок недостающих входов сохраняет причину неполноты при повторном чтении результата. */
+  @Nullable Set<MethodSymbol> missingInputSnapshot() {
+    return missingInputs == null || flowSession.cellsIncomplete() ? null : Set.copyOf(missingInputs);
   }
 
   boolean sawMissing() {
@@ -187,7 +200,7 @@ final class InferenceContext {
   }
 
   /** Состояние одного вложенного расчёта; признаки его неполноты не наследуются от соседних вызовов. */
-  InferenceContext nested(DocumentContext owner, ExecutionContext target) {
+  InferenceContext nested(DocumentContext owner, @Nullable ExecutionContext target) {
     var session = owner == documentContext && target == executionContext
       ? flowSession : new VariableFlowAnalyzer.FlowSession(contextualReturns::invalidate);
     var result = new InferenceContext(owner, target, contextualReturns, session, compilation);

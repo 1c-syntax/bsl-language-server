@@ -1092,15 +1092,11 @@ public class ExpressionTypeInferencer {
       // по ссылке: на URI в рабочей области приходится ровно один DocumentContext, а
       // сравнение самих URI нормализует проценты и стоит заметно дороже.
       if (owner == ctx.documentContext) {
-        // Посреди кругов по ячейкам переменных модуля тело считается по приближениям ячеек:
-        // такое значение годится только при тех же входных ячейках и защите рекурсии.
-        if (ctx.flowSession.cellsComputing()) {
-          var guard = ctx.contextualReturns.guard(new ContextualReturnKey(method, null), ctx);
-          var inputs = ctx.contextualReturns.approximationInputs(guard);
-          methodReturnTypeIndexer.computeIfAbsent(method, () -> returnTypesOfBody(method, ctx), true, inputs);
-        } else {
-          methodReturnTypeIndexer.computeIfAbsent(method, () -> returnTypesOfBody(method, ctx));
+        var result = neutralReturnTypes(method, ctx);
+        if (symbolTypeIndex.returnAwaitsUnparsedModule(method)) {
+          ctx.noteMissingData();
         }
+        return result;
       } else {
         if (method.isFunction() && !methodReturnTypeIndexer.isIndexed(method)) {
           // Значение чужой функции ещё не посчитано — так бывает, пока рабочая область
@@ -1118,6 +1114,45 @@ public class ExpressionTypeInferencer {
     } finally {
       ctx.visited.remove(method);
     }
+  }
+
+  /** Повторный вызов с теми же входами переиспользует и неполный ответ только внутри этого запроса. */
+  private TypeSet neutralReturnTypes(MethodSymbol method, InferenceContext ctx) {
+    var guard = ctx.contextualReturns.guard(new ContextualReturnKey(method, null), ctx);
+    var reusable = canUseContextualReturns(ctx);
+    var previous = reusable ? ctx.contextualReturns.get(guard) : null;
+    if (previous != null) {
+      inheritReturn(previous, ctx);
+      return previous.types();
+    }
+    var revision = ctx.contextualReturns.revision();
+    var nested = ctx.nested(method.getOwner(), null);
+    var inputs = reusable ? ctx.contextualReturns.approximationInputs(guard) : new Object();
+    var computed = methodReturnTypeIndexer.computeIfAbsent(method, () -> returnTypesOfBody(method, nested),
+      ctx.flowSession.cellsComputing(), inputs);
+    var types = computed == null ? symbolTypeIndex.getReturnTypes(method)
+      : symbolTypeIndex.getReturnTypes(method, computed.types());
+    var result = new ContextualReturnCache.Result(types,
+      Set.copyOf(nested.consulted), Set.copyOf(nested.dependencies), Set.copyOf(nested.cutMethods),
+      Set.copyOf(nested.flowBodiesRead), nested.cycleCut, nested.bodyInFlowCut, nested.depthCut,
+      nested.missingInputSnapshot());
+    inheritReturn(result, ctx);
+    ctx.failed |= nested.failed;
+    if (computed != null && reusable && canUseContextualReturns(nested)) {
+      ctx.contextualReturns.remember(guard, result, revision);
+    }
+    return types;
+  }
+
+  private static void inheritReturn(ContextualReturnCache.Result result, InferenceContext ctx) {
+    ctx.inheritMissingInputs(result.missingInputs());
+    ctx.cycleCut |= result.cycleCut();
+    ctx.bodyInFlowCut |= result.bodyInFlowCut();
+    ctx.depthCut |= result.depthCut();
+    ctx.consulted.addAll(result.consulted());
+    ctx.cutMethods.addAll(result.cutMethods());
+    ctx.flowBodiesRead.addAll(result.flowBodiesRead());
+    ctx.dependencies.addAll(result.dependencies());
   }
 
   /** Локальная функция без ограничений компиляции, возвращающая только имена общих модулей. */
@@ -1232,13 +1267,7 @@ public class ExpressionTypeInferencer {
     var guard = ctx.contextualReturns.guard(key, ctx);
     var partial = canUseContextualReturns(ctx) ? ctx.contextualReturns.get(guard) : null;
     if (partial != null) {
-      ctx.cycleCut |= partial.cycleCut();
-      ctx.bodyInFlowCut |= partial.bodyInFlowCut();
-      ctx.depthCut |= partial.depthCut();
-      ctx.consulted.addAll(partial.consulted());
-      ctx.cutMethods.addAll(partial.cutMethods());
-      ctx.flowBodiesRead.addAll(partial.flowBodiesRead());
-      ctx.dependencies.addAll(partial.dependencies());
+      inheritReturn(partial, ctx);
       return partial.types();
     }
     var revision = ctx.contextualReturns.revision();
@@ -1898,7 +1927,7 @@ public class ExpressionTypeInferencer {
     for (var identifier : Trees.findAllTokenNodes(body, BSLLexer.IDENTIFIER)) {
       if (isVariableIdentifier(identifier)) {
         names.add(identifier.getText());
-        if (!isSimpleAssignmentTarget(identifier)) {
+        if (!isVariableWriteTarget(identifier)) {
           readNames.add(identifier.getText());
         }
       }
@@ -1918,9 +1947,12 @@ public class ExpressionTypeInferencer {
     return new BodyVariables(target, read);
   }
 
-  private static boolean isSimpleAssignmentTarget(ParseTree identifier) {
+  private static boolean isVariableWriteTarget(ParseTree identifier) {
     if (!(identifier.getParent() instanceof ParserRuleContext parent)) {
       return false;
+    }
+    if (parent instanceof BSLParser.ForStatementContext || parent instanceof BSLParser.ForEachStatementContext) {
+      return true;
     }
     BSLParser.LValueContext lValue = parent instanceof BSLParser.LValueContext value ? value
       : Trees.getAncestorByRuleIndex(parent, BSLParser.RULE_lValue);

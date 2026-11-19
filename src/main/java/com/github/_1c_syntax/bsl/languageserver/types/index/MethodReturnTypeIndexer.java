@@ -253,16 +253,17 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * @param computation расчёт в контексте вызывающего.
    * @param approximate считается ли значение по текущим приближениям.
    * @param inputs непрозрачный ключ входных данных и защиты текущего расчёта.
+   * @return результат выполненного расчёта либо {@code null}, если расчёт не потребовался.
    */
-  public void computeIfAbsent(MethodSymbol method, Supplier<ComputedReturnTypes> computation,
-                              boolean approximate, Object inputs) {
+  public @Nullable ComputedReturnTypes computeIfAbsent(MethodSymbol method, Supplier<ComputedReturnTypes> computation,
+                                                       boolean approximate, Object inputs) {
     if (!method.isFunction()) {
-      return;
+      return null;
     }
     var known = indexed.contains(method);
     var previousInputs = provisional.get(method);
     if (known && (previousInputs == null || (approximate && previousInputs.inputs == inputs))) {
-      return;
+      return null;
     }
     var startedAt = clock.incrementAndGet();
     var computed = computation.get();
@@ -275,6 +276,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     if (!known) {
       rememberMethodOfUri(method);
     }
+    return computed;
   }
 
   /**
