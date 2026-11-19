@@ -143,13 +143,13 @@ final class IndependentReturnedStructure {
                                               VariableSymbol variable, FlowVariables variables,
                                               Predicate<ParserRuleContext> reachable) {
     var arguments = call.arguments();
-    var name = call.getName();
-    if (name == null || arguments.size() > 1
+    if (!(call.getRepresentingAst() instanceof BSLParser.GlobalMethodCallContext source) || arguments.size() > 1
         || arguments.stream().anyMatch(argument -> argument.getNodeType() != ExpressionNodeType.SKIPPED_CALL_ARG)
         || variables.hasVisibleModuleVariables()) {
       return false;
     }
-    return document.getSymbolTreeNoLock().getMethodSymbol(name.getText()).filter(MethodSymbol::isFunction).isPresent()
+    return document.getSymbolTreeNoLock().getMethodSymbol(source.methodName().getText())
+        .filter(MethodSymbol::isFunction).isPresent()
       && variables.changesByStatement().entrySet().stream()
         .filter(entry -> reachable.test(entry.getKey()))
         .flatMap(entry -> entry.getValue().stream())
