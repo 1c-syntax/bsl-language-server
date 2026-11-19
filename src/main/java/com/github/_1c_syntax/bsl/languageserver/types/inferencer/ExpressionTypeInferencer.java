@@ -539,7 +539,10 @@ public class ExpressionTypeInferencer {
       } catch (DocumentContentUnavailableException exception) {
         ctx.failed = true;
         LOGGER.debug("Document {} was released while inferring a returned local", ctx.documentContext.getUri(), exception);
-        return flowTypeAt(variable, terminal, ctx);
+      } catch (StackOverflowError | RuntimeException exception) {
+        ctx.failed = true;
+        LOGGER.error("Независимый расчёт возвращаемой переменной {} сорвался: {}", variable.getName(),
+          ctx.documentContext.getUri(), exception);
       }
     }
     return flowTypeAt(variable, terminal, ctx);
