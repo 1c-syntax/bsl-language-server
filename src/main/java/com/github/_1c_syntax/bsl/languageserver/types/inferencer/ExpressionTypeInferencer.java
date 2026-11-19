@@ -1265,21 +1265,28 @@ public class ExpressionTypeInferencer {
     }
     var key = new ContextualReturnKey(method, target);
     var sameFlow = method.getOwner() == ctx.documentContext && target == ctx.executionContext;
-    // Вне расчёта ячеек достаточно обычного чтения результата по ключу.
-    var allowIndependent = sameFlow && ctx.flowSession.cellsComputing();
     if (!sameFlow) {
       ctx.contextualReturns.noteCellRead();
     }
-    var remembered = canUseContextualReturns(ctx) ? ctx.contextualReturns.get(key) : null;
+    var reusable = canUseContextualReturns(ctx);
+    var remembered = reusable ? ctx.contextualReturns.get(key) : null;
     if (remembered != null) {
       return remembered;
     }
+
     var guard = ctx.contextualReturns.guard(key, ctx);
-    var partial = canUseContextualReturns(ctx) ? ctx.contextualReturns.get(guard, allowIndependent) : null;
+    // Вне расчёта ячеек достаточно обычного чтения результата по ключу.
+    var allowIndependent = sameFlow && ctx.flowSession.cellsComputing();
+    var partial = reusable ? ctx.contextualReturns.get(guard, allowIndependent) : null;
     if (partial != null) {
       inheritReturn(partial, ctx);
       return partial.types();
     }
+    return computeContextualReturnTypes(method, target, ctx, guard, allowIndependent);
+  }
+
+  private TypeSet computeContextualReturnTypes(MethodSymbol method, ExecutionContext target, InferenceContext ctx,
+                                                ContextualReturnCache.Guard guard, boolean allowIndependent) {
     var revision = ctx.contextualReturns.revision();
     var cellReads = ctx.contextualReturns.cellReads();
     var nested = ctx.nested(method.getOwner(), target);
@@ -1301,7 +1308,7 @@ public class ExpressionTypeInferencer {
           Set.copyOf(nested.consulted), Set.copyOf(nested.dependencies), Set.copyOf(nested.cutMethods),
           Set.copyOf(nested.flowBodiesRead), false, false, false));
       } else {
-        ctx.contextualReturns.remember(key, result, revision);
+        ctx.contextualReturns.remember(guard.key(), result, revision);
       }
       return result;
     }
