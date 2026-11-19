@@ -120,11 +120,12 @@ final class ContextualReturnCache {
   record Result(TypeSet types, Set<MethodSymbol> consulted, Set<URI> dependencies, Set<MethodSymbol> cutMethods,
                 Set<BSLParser.CodeBlockContext> flowBodiesRead,
                 boolean cycleCut, boolean bodyInFlowCut, boolean depthCut,
-                @Nullable Set<MethodSymbol> missingInputs) {
+                @Nullable Set<MethodSymbol> missingInputs, boolean incompleteCellInput) {
     Result(TypeSet types, Set<MethodSymbol> consulted, Set<URI> dependencies, Set<MethodSymbol> cutMethods,
            Set<BSLParser.CodeBlockContext> flowBodiesRead,
            boolean cycleCut, boolean bodyInFlowCut, boolean depthCut) {
-      this(types, consulted, dependencies, cutMethods, flowBodiesRead, cycleCut, bodyInFlowCut, depthCut, Set.of());
+      this(types, consulted, dependencies, cutMethods, flowBodiesRead, cycleCut, bodyInFlowCut, depthCut, Set.of(),
+        false);
     }
   }
 

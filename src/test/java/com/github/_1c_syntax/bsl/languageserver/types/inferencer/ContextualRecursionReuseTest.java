@@ -100,6 +100,52 @@ class ContextualRecursionReuseTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void aReturnWithIncompleteCellInputCanBeReusedWithinOneRevision() {
+    initServerContext();
+    var document = TestUtils.getDocumentContext("""
+      Var Shared;
+      Function ReadCell()
+        Return Shared;
+      EndFunction
+      Shared = 10;
+      """, context);
+    var tree = document.getSymbolTree();
+    var shared = tree.getVariablesOfScope(tree.getModule()).getFirst();
+    var reader = tree.getMethodSymbol("ReadCell").orElseThrow();
+    var root = new InferenceContext(document, ExecutionContext.SERVER);
+    root.noteMissingData();
+    ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
+    ReflectionTestUtils.invokeMethod(target, "variableTypeAt", shared, shared.getSelectionRange().getStart(), false,
+      root);
+
+    var original = (ReturnTypeFromBodyInference) ReflectionTestUtils.getField(target, "returnTypeFromBodyInference");
+    var counted = spy(original);
+    ReflectionTestUtils.setField(target, "returnTypeFromBodyInference", counted);
+    try {
+      var first = root.nested(document, ExecutionContext.SERVER);
+      TypeSet inferred = ReflectionTestUtils.invokeMethod(target, "methodReturnType", reader, first);
+      assertThat(first.sawMissing()).isTrue();
+      assertThat(inferred.refs()).extracting(TypeRef::qualifiedName).containsExactly("Число");
+
+      clearInvocations(counted);
+      var sameRevision = root.nested(document, ExecutionContext.SERVER);
+      TypeSet reused = ReflectionTestUtils.invokeMethod(target, "methodReturnType", reader, sameRevision);
+      assertThat(reused).isEqualTo(inferred);
+      assertThat(sameRevision.sawMissing()).isTrue();
+      assertThat(mockingDetails(counted).getInvocations()).isEmpty();
+
+      root.contextualReturns.invalidate();
+      var nextRevision = root.nested(document, ExecutionContext.SERVER);
+      TypeSet recomputed = ReflectionTestUtils.invokeMethod(target, "methodReturnType", reader, nextRevision);
+      assertThat(recomputed).isEqualTo(inferred);
+      assertThat(nextRevision.sawMissing()).isTrue();
+      assertThat(mockingDetails(counted).getInvocations()).isNotEmpty();
+    } finally {
+      ReflectionTestUtils.setField(target, "returnTypeFromBodyInference", original);
+    }
+  }
+
+  @Test
   void aRootOutsideTheCalleesCycleDoesNotRefineItsOwnValue(TestReporter reporter) {
     var root = Path.of("src/test/resources/metadata/commonModuleCalls");
     initServerContext(root, false);

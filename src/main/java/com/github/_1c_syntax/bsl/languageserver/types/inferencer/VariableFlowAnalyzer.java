@@ -499,7 +499,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * @param assigned            колбэк, отдающий присваиваемые типы по позиции.
    * @param mutations           колбэк, применяющий изменение оператора-мутатора.
    * @param narrowing           колбэк, сужающий тип по охраняющему условию ветки.
-   * @param noteUnpublishedCell отметить, что результат опирается на неопубликованный вход ячейки.
+   * @param noteIncompleteCellInput отметить, что результат опирается на неполный вход ячейки.
    *     <p>
    *     Переменные и места изменений отдаются поставщиками, а не значениями: за ними стоит
    *     обход индекса ссылок и разбор документирующих комментариев. При готовом ответе в
@@ -515,7 +515,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     Predicate<VariableSymbol> sharedWithOtherBodies, Function<VariableSymbol, TypeSet> declaredFact,
     Function<VariableSymbol, Collection<Position>> definitionPositions,
     Function<VariableSymbol, Collection<Position>> mutationPositions,
-    AssignedTypes assigned, Mutations mutations, GuardNarrowing narrowing, Runnable noteUnpublishedCell
+    AssignedTypes assigned, Mutations mutations, GuardNarrowing narrowing, Runnable noteIncompleteCellInput
   ) {
     /** Входы без отдельного списка чтений сохраняют консервативный расчёт всех видимых переменных. */
     public FlowInputs(FlowSession session, Consumer<CodeBlockContext> activeBodyRead, boolean cacheable,
@@ -675,7 +675,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     }
     // Предыдущий проход мог оставить неполный вход для следующего расчёта.
     if (read && session.hasIncompleteCellInputs(variable)) {
-      inputs.noteUnpublishedCell().run();
+      inputs.noteIncompleteCellInput().run();
     }
     var current = session.cells.get(variable);
     return current == null ? inputs.declaredFact().apply(variable) : current;

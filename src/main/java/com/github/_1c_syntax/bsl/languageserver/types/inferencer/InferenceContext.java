@@ -95,6 +95,8 @@ final class InferenceContext {
    * {@code null} — недоступность других данных.
    */
   private @Nullable Set<MethodSymbol> missingInputs = new HashSet<>();
+  /** Результат читает оставшееся от прежнего прохода неполное значение ячейки. */
+  boolean incompleteCellInput;
   /** Расчёт сорвался либо поток не разместил обращение: пустой ответ нельзя сохранять как полный. */
   boolean failed;
   /** Расчёт оборван ограничением глубины; результат зависит от оставшегося бюджета. */
@@ -140,6 +142,10 @@ final class InferenceContext {
     missingInputs = null;
   }
 
+  void noteIncompleteCellInput() {
+    incompleteCellInput = true;
+  }
+
   void noteMissingMethod(MethodSymbol method) {
     if (missingInputs != null) {
       missingInputs.add(method);
@@ -147,6 +153,7 @@ final class InferenceContext {
   }
 
   void inheritMissingInputs(InferenceContext nested) {
+    incompleteCellInput |= nested.incompleteCellInput;
     if (nested.missingInputs == null || nested.flowSession.cellsIncomplete()) {
       noteMissingData();
       return;
@@ -170,6 +177,10 @@ final class InferenceContext {
   }
 
   boolean sawMissing() {
+    return incompleteCellInput || hasOtherMissingInputs();
+  }
+
+  boolean hasOtherMissingInputs() {
     return missingInputs == null || !missingInputs.isEmpty();
   }
 
@@ -184,7 +195,7 @@ final class InferenceContext {
     if (!sawMissing() && !failed) {
       return Set.of();
     }
-    if (missingInputs == null || failed || flowSession.cellsIncomplete()) {
+    if (incompleteCellInput || missingInputs == null || failed || flowSession.cellsIncomplete()) {
       return null;
     }
     if (depthCut || bodyInFlowCut || missingInputs.isEmpty()) {

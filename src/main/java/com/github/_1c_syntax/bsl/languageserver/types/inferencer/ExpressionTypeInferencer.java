@@ -1135,10 +1135,7 @@ public class ExpressionTypeInferencer {
       ctx.flowSession.cellsComputing(), inputs);
     var types = computed == null ? symbolTypeIndex.getReturnTypes(method)
       : symbolTypeIndex.getReturnTypes(method, computed.types());
-    var result = new ContextualReturnCache.Result(types,
-      Set.copyOf(nested.consulted), Set.copyOf(nested.dependencies), Set.copyOf(nested.cutMethods),
-      Set.copyOf(nested.flowBodiesRead), nested.cycleCut, nested.bodyInFlowCut, nested.depthCut,
-      nested.missingInputSnapshot());
+    var result = returnSnapshot(types, nested);
     inheritReturn(result, ctx);
     ctx.failed |= nested.failed;
     if (computed != null && reusable && canUseContextualReturns(nested)) {
@@ -1149,6 +1146,7 @@ public class ExpressionTypeInferencer {
 
   private static void inheritReturn(ContextualReturnCache.Result result, InferenceContext ctx) {
     ctx.inheritMissingInputs(result.missingInputs());
+    ctx.incompleteCellInput |= result.incompleteCellInput();
     ctx.cycleCut |= result.cycleCut();
     ctx.bodyInFlowCut |= result.bodyInFlowCut();
     ctx.depthCut |= result.depthCut();
@@ -1156,6 +1154,12 @@ public class ExpressionTypeInferencer {
     ctx.cutMethods.addAll(result.cutMethods());
     ctx.flowBodiesRead.addAll(result.flowBodiesRead());
     ctx.dependencies.addAll(result.dependencies());
+  }
+
+  private static ContextualReturnCache.Result returnSnapshot(TypeSet types, InferenceContext ctx) {
+    return new ContextualReturnCache.Result(types, Set.copyOf(ctx.consulted), Set.copyOf(ctx.dependencies),
+      Set.copyOf(ctx.cutMethods), Set.copyOf(ctx.flowBodiesRead), ctx.cycleCut, ctx.bodyInFlowCut, ctx.depthCut,
+      ctx.missingInputSnapshot(), ctx.incompleteCellInput);
   }
 
   /** Локальная функция без ограничений компиляции, возвращающая только имена общих модулей. */
@@ -1304,19 +1308,15 @@ public class ExpressionTypeInferencer {
     if (canRememberReturn(nested)) {
       if (allowIndependent && revision == ctx.contextualReturns.revision()
           && cellReads == ctx.contextualReturns.cellReads()) {
-        ctx.contextualReturns.rememberWithoutCellInputs(guard, new ContextualReturnCache.Result(result,
-          Set.copyOf(nested.consulted), Set.copyOf(nested.dependencies), Set.copyOf(nested.cutMethods),
-          Set.copyOf(nested.flowBodiesRead), false, false, false));
+        ctx.contextualReturns.rememberWithoutCellInputs(guard, returnSnapshot(result, nested));
       } else {
         ctx.contextualReturns.remember(guard.key(), result, revision);
       }
       return result;
     }
-    if (!nested.sawMissing() && canUseContextualReturns(nested)) {
-      ctx.contextualReturns.remember(guard, new ContextualReturnCache.Result(result,
-        Set.copyOf(nested.consulted), Set.copyOf(nested.dependencies), Set.copyOf(nested.cutMethods),
-        Set.copyOf(nested.flowBodiesRead),
-        nested.cycleCut, nested.bodyInFlowCut, nested.depthCut), revision);
+    // Неполный вход ячейки живёт в сессии и может использоваться с той же защитой и ревизией.
+    if (!nested.hasOtherMissingInputs() && canUseContextualReturns(nested)) {
+      ctx.contextualReturns.remember(guard, returnSnapshot(result, nested), revision);
     }
     return result;
   }
@@ -1834,7 +1834,7 @@ public class ExpressionTypeInferencer {
       (target, position, incoming) -> applyMutation(target, position, incoming, ctx,
         callsOf.apply(target), kindsOf.apply(target), propertiesOf.apply(target)),
       narrowingCallback(owner),
-      ctx::noteMissingData
+      ctx::noteIncompleteCellInput
     );
   }
 
