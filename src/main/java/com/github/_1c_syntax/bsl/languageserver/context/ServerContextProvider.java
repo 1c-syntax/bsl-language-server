@@ -427,6 +427,7 @@ public class ServerContextProvider {
    * Очистить все workspaces.
    */
   public synchronized void clear() {
+    contexts.values().forEach(ServerContext::requestBackgroundWorkStop);
     new ArrayList<>(contexts.keySet()).forEach(uri ->
       removeWorkspace(new WorkspaceFolder(uri.toString(), uri.toString()))
     );

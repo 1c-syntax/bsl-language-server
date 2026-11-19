@@ -205,8 +205,10 @@ public class OScriptLibraryFileSystemWatcher {
       }
       WorkspaceContextHolder.run(workspaceUri, () -> {
         try {
-          LOGGER.debug("lib.config changed, reindexing OneScript libraries for {}", workspaceUri);
-          index.reindex(serverContext);
+          serverContext.runBackgroundWork(() -> {
+            LOGGER.debug("lib.config changed, reindexing OneScript libraries for {}", workspaceUri);
+            index.reindex(serverContext);
+          });
         } catch (RuntimeException e) {
           LOGGER.warn("Failed to reindex OneScript libraries for {}", workspaceUri, e);
         }

@@ -38,17 +38,24 @@ import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.support.StaticListableBeanFactory;
 
 import java.net.URI;
+import java.time.Duration;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
@@ -68,7 +75,7 @@ class AnalyzeProjectOnStartStoppingTest {
 
   @BeforeEach
   void prepare() {
-    executor = Executors.newSingleThreadExecutor();
+    executor = new ForkJoinPool(2);
     context = spy(new ServerContext(new StaticListableBeanFactory().getBeanProvider(DocumentContext.class),
       mock(WorkDoneProgressHelper.class), mock(GlobalLanguageServerConfiguration.class),
       executor, executor, Caffeine.newBuilder().build()));
@@ -127,6 +134,91 @@ class AnalyzeProjectOnStartStoppingTest {
 
     verify(context, never()).rebuildDocument(document);
     verify(diagnostics, never()).computeAndPublishDiagnostics(document);
+    verify(progress).endProgress("");
+  }
+
+  @Test
+  void interruptionDoesNotReleaseTheWorkspaceWhileADiagnosticStillRuns() throws Exception {
+    var workerEntered = new CountDownLatch(1);
+    var finishWorker = new CountDownLatch(1);
+    doAnswer(invocation -> {
+      workerEntered.countDown();
+      assertThat(finishWorker.await(10, SECONDS)).isTrue();
+      return null;
+    }).when(diagnostics).computeAndPublishDiagnostics(document);
+    var listener = new AtomicReference<Thread>();
+
+    try (var controls = Executors.newFixedThreadPool(2)) {
+      var analysis = controls.submit(() -> {
+        listener.set(Thread.currentThread());
+        try {
+          analyzer.handleEvent(new ServerContextPopulatedEvent(context));
+          return false;
+        } catch (IllegalStateException e) {
+          return Thread.currentThread().isInterrupted() && e.getCause() instanceof InterruptedException;
+        }
+      });
+      try {
+        assertThat(workerEntered.await(5, SECONDS)).isTrue();
+        listener.get().interrupt();
+        var stopping = controls.submit(context::stopBackgroundWork);
+        await().atMost(5, SECONDS).until(context::isBackgroundWorkStopped);
+        await().pollInterval(Duration.ofMillis(20)).during(Duration.ofMillis(150)).atMost(3, SECONDS)
+          .until(() -> !stopping.isDone() && !analysis.isDone());
+        verify(progress, never()).endProgress(anyString());
+
+        finishWorker.countDown();
+        assertThat(analysis.get(5, SECONDS)).isTrue();
+        stopping.get(5, SECONDS);
+      } finally {
+        finishWorker.countDown();
+      }
+    }
+    verify(progress).endProgress("");
+  }
+
+  @Test
+  void aFailedDiagnosticDoesNotReleaseTheWorkspaceWhileAnotherFileStillRuns() throws Exception {
+    var broken = mock(DocumentContext.class);
+    when(broken.getUri()).thenReturn(URI.create("file:///analysis-failure.bsl"));
+    var documents = new LinkedHashMap<URI, DocumentContext>();
+    documents.put(document.getUri(), document);
+    documents.put(broken.getUri(), broken);
+    doReturn(documents).when(context).getDocuments();
+    doNothing().when(context).rebuildDocument(broken);
+    var workerEntered = new CountDownLatch(1);
+    var workerFailed = new CountDownLatch(1);
+    var finishWorker = new CountDownLatch(1);
+    doAnswer(invocation -> {
+      workerEntered.countDown();
+      assertThat(finishWorker.await(10, SECONDS)).isTrue();
+      return null;
+    }).when(diagnostics).computeAndPublishDiagnostics(document);
+    var failure = new IllegalArgumentException("Diagnostic failed");
+    doAnswer(invocation -> {
+      assertThat(workerEntered.await(5, SECONDS)).isTrue();
+      workerFailed.countDown();
+      throw failure;
+    }).when(diagnostics).computeAndPublishDiagnostics(broken);
+
+    try (var controls = Executors.newFixedThreadPool(2)) {
+      var analysis = controls.submit(() -> catchThrowable(
+        () -> analyzer.handleEvent(new ServerContextPopulatedEvent(context))));
+      try {
+        assertThat(workerFailed.await(5, SECONDS)).isTrue();
+        var stopping = controls.submit(context::stopBackgroundWork);
+        await().atMost(5, SECONDS).until(context::isBackgroundWorkStopped);
+        await().pollInterval(Duration.ofMillis(20)).during(Duration.ofMillis(150)).atMost(3, SECONDS)
+          .until(() -> !stopping.isDone() && !analysis.isDone());
+        verify(progress, never()).endProgress(anyString());
+
+        finishWorker.countDown();
+        assertThat(analysis.get(5, SECONDS)).isInstanceOf(IllegalStateException.class).hasRootCause(failure);
+        stopping.get(5, SECONDS);
+      } finally {
+        finishWorker.countDown();
+      }
+    }
     verify(progress).endProgress("");
   }
 }

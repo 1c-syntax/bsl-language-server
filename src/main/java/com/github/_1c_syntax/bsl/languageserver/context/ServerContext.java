@@ -133,8 +133,7 @@ public class ServerContext {
 
   private final Map<DocumentContext, DocumentState> states = new ConcurrentHashMap<>();
   private final Set<DocumentContext> openedDocuments = ConcurrentHashMap.newKeySet();
-  private volatile boolean clearing;
-  /** Жизненный цикл фоновой работы этой рабочей области. */
+  /** Остановка фоновой работы и очистка этой рабочей области. */
   private final WorkspaceBackgroundWork backgroundWork = new WorkspaceBackgroundWork();
 
   /**
@@ -578,8 +577,7 @@ public class ServerContext {
    * На всё время очистки {@link #isClearing()} отвечает {@code true}.
    */
   public void clear() {
-    clearing = true;
-    try {
+    backgroundWork.runCleanup(() -> {
       openedDocuments.clear();
       for (var uri : new ArrayList<>(documents.keySet())) {
         removeDocument(uri);
@@ -594,9 +592,7 @@ public class ServerContext {
       commonModuleNameFilter = CommonModuleNameFilter.ALLOW_ALL;
       commonModuleCache.invalidateAll();
       configurationMetadata.clear();
-    } finally {
-      clearing = false;
-    }
+    });
   }
 
   /**
@@ -609,7 +605,7 @@ public class ServerContext {
    * @return {@code true}, пока идёт {@link #clear()}.
    */
   public boolean isClearing() {
-    return clearing;
+    return backgroundWork.isClearing();
   }
 
   /**
@@ -623,6 +619,11 @@ public class ServerContext {
    */
   public boolean runBackgroundWork(Runnable work) {
     return backgroundWork.run(work);
+  }
+
+  /** Запретить новую фоновую работу и сообщить об отмене уже запущенной. */
+  void requestBackgroundWorkStop() {
+    backgroundWork.requestStop();
   }
 
   /**

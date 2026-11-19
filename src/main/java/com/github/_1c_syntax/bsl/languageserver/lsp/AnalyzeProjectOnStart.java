@@ -34,8 +34,13 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Перехватчик события заполнения контекста сервера, запускающий анализ всех файлов контекста.
@@ -73,40 +78,73 @@ public class AnalyzeProjectOnStart {
     var progress = workDoneProgressHelper.createProgress(documentContexts.size(), getMessage("filesSuffix"));
     progress.beginProgress(getMessage("analyzeProject"));
 
+    var cancelled = new AtomicBoolean();
+    var completed = false;
     try {
-      executor.submit(() ->
-        documentContexts.parallelStream().forEach((DocumentContext documentContext) -> {
-          if (serverContext.isBackgroundWorkStopped()) {
-            return;
-          }
-          progress.tick();
+      var analysis = CompletableFuture.runAsync(
+        () -> analyzeDocuments(serverContext, documentContexts, progress, cancelled), executor);
+      awaitAnalysis(analysis, cancelled);
+      completed = !serverContext.isBackgroundWorkStopped();
+    } finally {
+      progress.endProgress(completed ? getMessage("projectAnalyzed") : "");
+    }
+  }
 
-          // Работа с документом — под его верхнеуровневым локом, как в остальных
-          // писателях (didOpen, DocumentChangeExecutor, MCP): перестроение,
-          // синхронная переиндексация ссылок по событию rebuild и очистка не должны
-          // пересекаться с конкурентными читателями/писателями этого документа.
-          var lock = serverContext.getDocumentLock(documentContext.getUri());
-          lock.writeLock().lock();
-          try {
-            if (serverContext.isBackgroundWorkStopped()) {
-              return;
-            }
-            serverContext.rebuildDocument(documentContext);
-            diagnosticProvider.computeAndPublishDiagnostics(documentContext);
-
-            serverContext.tryClearDocument(documentContext);
-          } finally {
-            lock.writeLock().unlock();
-          }
-        })
-      ).get();
-
-      progress.endProgress(serverContext.isBackgroundWorkStopped() ? "" : getMessage("projectAnalyzed"));
+  private static void awaitAnalysis(CompletableFuture<Void> analysis, AtomicBoolean cancelled) {
+    try {
+      analysis.get();
     } catch (ExecutionException e) {
       throw new IllegalStateException("Can't analyze project on start", e);
     } catch (InterruptedException e) {
+      cancelled.set(true);
+      // Отмена Future переводит её в завершённое состояние сразу. Здесь нужно дождаться
+      // физических работников до возврата из runBackgroundWork и очистки контекста.
+      analysis.handle((ignored, failure) -> null).join();
       Thread.currentThread().interrupt();
       throw new IllegalStateException("Interrupted while analyzing project on start", e);
+    }
+  }
+
+  private void analyzeDocuments(
+    ServerContext serverContext, Collection<DocumentContext> documents,
+    WorkDoneProgressHelper.WorkDoneProgressReporter progress, AtomicBoolean cancelled
+  ) {
+    var failure = new AtomicReference<Throwable>();
+    documents.parallelStream().forEach(document -> {
+      if (cancelled.get() || serverContext.isBackgroundWorkStopped()) {
+        return;
+      }
+      try {
+        analyzeDocument(serverContext, document, progress, cancelled);
+      } catch (RuntimeException | Error e) {
+        // Не выбрасываем исключение из parallelStream, пока другие файлы ещё обрабатываются.
+        failure.compareAndSet(null, e);
+        cancelled.set(true);
+      }
+    });
+    var cause = failure.get();
+    if (cause != null) {
+      throw new CompletionException(cause);
+    }
+  }
+
+  private void analyzeDocument(
+    ServerContext serverContext, DocumentContext document,
+    WorkDoneProgressHelper.WorkDoneProgressReporter progress, AtomicBoolean cancelled
+  ) {
+    progress.tick();
+    // Перестроение, переиндексация и очистка идут под блокировкой записи документа.
+    var lock = serverContext.getDocumentLock(document.getUri()).writeLock();
+    lock.lock();
+    try {
+      if (cancelled.get() || serverContext.isBackgroundWorkStopped()) {
+        return;
+      }
+      serverContext.rebuildDocument(document);
+      diagnosticProvider.computeAndPublishDiagnostics(document);
+      serverContext.tryClearDocument(document);
+    } finally {
+      lock.unlock();
     }
   }
 

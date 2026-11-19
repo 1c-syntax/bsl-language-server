@@ -57,6 +57,67 @@ import static org.mockito.Mockito.verify;
 
 class ServerContextProviderLifecycleTest {
 
+  @Test
+  void shutdownSignalsEveryWorkspaceBeforeWaitingForTheFirst(@TempDir Path root) throws Exception {
+    var firstWork = new WorkspaceBackgroundWork();
+    var secondWork = new WorkspaceBackgroundWork();
+    var waitingForWorkspace = new CountDownLatch(1);
+    var first = contextWithBackgroundWork(firstWork, waitingForWorkspace);
+    var second = contextWithBackgroundWork(secondWork, waitingForWorkspace);
+    var beans = new StaticListableBeanFactory();
+    beans.addBean("serverContext", first);
+    var provider = new ServerContextProvider(beans.getBeanProvider(ServerContext.class),
+      mock(LanguageServerConfiguration.class), mock(WorkspaceBeanScope.class));
+    provider.addWorkspace(Absolute.uri(root.resolve("first").toUri()));
+    beans.addBean("serverContext", second);
+    provider.addWorkspace(Absolute.uri(root.resolve("second").toUri()));
+
+    var started = new CountDownLatch(2);
+    var releaseWorkers = new CountDownLatch(1);
+    Runnable work = () -> {
+      started.countDown();
+      await().atMost(Duration.ofSeconds(5)).until(() -> releaseWorkers.getCount() == 0);
+    };
+    try (var executor = Executors.newFixedThreadPool(3)) {
+      var firstTask = executor.submit(() -> firstWork.run(work));
+      var secondTask = executor.submit(() -> secondWork.run(work));
+      try {
+        assertThat(started.await(5, TimeUnit.SECONDS)).isTrue();
+        var shutdown = executor.submit(provider::clear);
+        try {
+          assertThat(waitingForWorkspace.await(5, TimeUnit.SECONDS)).isTrue();
+          assertThat(firstWork.isStopped()).isTrue();
+          assertThat(secondWork.isStopped()).isTrue();
+          assertThat(shutdown.isDone()).isFalse();
+        } finally {
+          releaseWorkers.countDown();
+          shutdown.get(5, TimeUnit.SECONDS);
+        }
+        assertThat(firstTask.get(5, TimeUnit.SECONDS)).isTrue();
+        assertThat(secondTask.get(5, TimeUnit.SECONDS)).isTrue();
+        assertThat(provider.getAllContexts()).isEmpty();
+      } finally {
+        releaseWorkers.countDown();
+        provider.clear();
+      }
+    }
+  }
+
+  private static ServerContext contextWithBackgroundWork(WorkspaceBackgroundWork work, CountDownLatch waiting) {
+    var context = mock(ServerContext.class);
+    doAnswer(invocation -> {
+      work.requestStop();
+      return null;
+    }).when(context).requestBackgroundWorkStop();
+    doAnswer(invocation -> {
+      work.requestStop();
+      waiting.countDown();
+      work.stop();
+      return null;
+    }).when(context).stopBackgroundWork();
+    return context;
+  }
+
   /** Новые внешние документы выбирают оставшийся контекст, пока старый ещё завершает подготовку. */
   @ParameterizedTest
   @ValueSource(booleans = {false, true})

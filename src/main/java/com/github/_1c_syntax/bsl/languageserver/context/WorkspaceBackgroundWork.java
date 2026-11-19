@@ -25,7 +25,7 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 /**
- * Допуск и остановка фоновой работы одной рабочей области.
+ * Допуск фоновой работы, её остановка и состояние очистки одной рабочей области.
  * <p>
  * Работа держит блокировку на чтение. Остановка сначала запрещает новую работу, затем берёт
  * блокировку на запись и дожидается завершения уже запущенной. Долгая работа проверяет
@@ -34,6 +34,7 @@ import java.util.concurrent.locks.ReentrantReadWriteLock;
 final class WorkspaceBackgroundWork {
   private final ReadWriteLock lock;
   private volatile boolean stopped;
+  private volatile boolean clearing;
 
   WorkspaceBackgroundWork() {
     lock = new ReentrantReadWriteLock();
@@ -52,13 +53,30 @@ final class WorkspaceBackgroundWork {
     }
   }
 
-  void stop() {
+  void requestStop() {
     stopped = true;
+  }
+
+  void stop() {
+    requestStop();
     lock.writeLock().lock();
     lock.writeLock().unlock();
   }
 
   boolean isStopped() {
     return stopped;
+  }
+
+  void runCleanup(Runnable cleanup) {
+    clearing = true;
+    try {
+      cleanup.run();
+    } finally {
+      clearing = false;
+    }
+  }
+
+  boolean isClearing() {
+    return clearing;
   }
 }
