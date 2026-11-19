@@ -301,7 +301,7 @@ public class ExpressionTypeInferencer {
   }
 
   private static boolean completeRoot(InferenceContext ctx) {
-    return !ctx.cycleCut && !ctx.bodyInFlowCut && !ctx.depthCut && !ctx.sawMissing && !ctx.failed
+    return !ctx.cycleCut && !ctx.bodyInFlowCut && !ctx.depthCut && !ctx.sawMissing() && !ctx.failed
       && !ctx.flowSession.computing();
   }
 
@@ -1256,7 +1256,7 @@ public class ExpressionTypeInferencer {
     var result = symbolTypeIndex.getReturnTypes(method, inferred);
     if (canRememberReturn(nested)) {
       ctx.contextualReturns.remember(key, result, revision);
-    } else if (!nested.sawMissing && canUseContextualReturns(nested)) {
+    } else if (!nested.sawMissing() && canUseContextualReturns(nested)) {
       ctx.contextualReturns.remember(guard, new ContextualReturnCache.Result(result,
         Set.copyOf(nested.consulted), Set.copyOf(nested.dependencies), Set.copyOf(nested.cutMethods),
         Set.copyOf(nested.flowBodiesRead),
@@ -1267,7 +1267,7 @@ public class ExpressionTypeInferencer {
 
   /** Только завершённые результаты без текущих приближений переживают вложенный вызов. */
   private static boolean canRememberReturn(InferenceContext result) {
-    return !result.sawMissing && !result.cycleCut && !result.bodyInFlowCut
+    return !result.sawMissing() && !result.cycleCut && !result.bodyInFlowCut
       && !result.depthCut && canUseContextualReturns(result);
   }
 
@@ -1413,7 +1413,7 @@ public class ExpressionTypeInferencer {
         types = refinedByOwnValue(method, types, ctx);
       }
       return new MethodReturnTypeIndexer.ComputedReturnTypes(types, Set.copyOf(ctx.consulted),
-        ctx.sawMissing || ctx.failed, ctx.incompleteMethodReturns());
+        ctx.sawMissing() || ctx.failed, ctx.incompleteMethodReturns());
     } catch (StackOverflowError | RuntimeException e) {
       // Пустое значение метода сохранится как окончательное, и все его вызывающие останутся
       // ни с чем. Без записи в журнал это выглядит как «у метода не выводится тип», а не
@@ -1430,14 +1430,14 @@ public class ExpressionTypeInferencer {
    * с полными входными данными собственное приближение нужно при повторном входе в этот метод.
    */
   private static boolean needsOwnApproximation(MethodSymbol method, InferenceContext ctx) {
-    return ctx.visited.size() > 1 || ctx.flowSession.computing() || ctx.sawMissing || ctx.cutMethods.contains(method);
+    return ctx.visited.size() > 1 || ctx.flowSession.computing() || ctx.sawMissing() || ctx.cutMethods.contains(method);
   }
 
   private TypeSet returnTypesInContext(MethodSymbol method, InferenceContext ctx, @Nullable ExecutionContext context) {
     try (var scope = MemberLookupSession.openIfAbsent()) {
       var result = returnTypeFromBodyInference.of(method, expression -> inferInternal(expression, ctx), context,
         body -> ctx.compilation.possibleContexts(method.getOwner(), body, compilationContextResolver));
-      ctx.sawMissing |= ctx.flowSession.cellsIncomplete();
+      ctx.noteIncompleteCells();
       return result;
     }
   }
@@ -1515,7 +1515,7 @@ public class ExpressionTypeInferencer {
         ? variableFlowAnalyzer.typeAtRoot(owner, use, variable, inputs,
           () -> !ctx.cycleCut && !ctx.bodyInFlowCut && !ctx.depthCut)
         : variableFlowAnalyzer.typeAt(owner, use, variable, inputs);
-      ctx.sawMissing |= ctx.flowSession.cellsIncomplete();
+      ctx.noteIncompleteCells();
       if (byFlow == null) {
         ctx.failed = true;
         // Обращение к переменной есть, а расчёт его не разместил — это дефект расчёта, а не
@@ -1627,7 +1627,7 @@ public class ExpressionTypeInferencer {
     var inputs = flowInputs(variable, ctx);
     var atPoint = variableFlowAnalyzer.typeAt(owner, position, atDefinition, variable, inputs);
     var result = atPoint == null ? variableFlowAnalyzer.typesAcrossScope(owner, position, variable, inputs) : atPoint;
-    ctx.sawMissing |= ctx.flowSession.cellsIncomplete();
+    ctx.noteIncompleteCells();
     return result;
   }
 
@@ -1761,7 +1761,7 @@ public class ExpressionTypeInferencer {
       cacheable,
       ctx.executionContext,
       body -> compilationContexts(body, owner, ctx),
-      () -> ctx.sawMissing || ctx.failed || ctx.flowSession.cellsIncomplete(),
+      () -> ctx.sawMissing() || ctx.failed || ctx.flowSession.cellsIncomplete(),
       body -> variablesByBody.computeIfAbsent(body, key -> variablesOfBody(owner, key)).visible(),
       body -> variablesByBody.computeIfAbsent(body, key -> variablesOfBody(owner, key)).readModuleVariables(),
       target -> target.getKind() == VariableKind.MODULE,

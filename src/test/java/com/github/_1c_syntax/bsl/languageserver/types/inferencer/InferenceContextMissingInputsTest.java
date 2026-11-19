@@ -44,7 +44,7 @@ class InferenceContextMissingInputsTest {
 
     parent.inheritMissingInputs(child);
 
-    assertThat(parent.sawMissing).isTrue();
+    assertThat(parent.sawMissing()).isTrue();
     assertThat(parent.incompleteMethodReturns()).containsExactlyInAnyOrder(first, second);
     child.noteMissingData();
     parent.inheritMissingInputs(child);
@@ -74,7 +74,7 @@ class InferenceContextMissingInputsTest {
 
     var fresh = inference.forRefinement();
 
-    assertThat(fresh.sawMissing).isFalse();
+    assertThat(fresh.sawMissing()).isFalse();
     assertThat(fresh.incompleteMethodReturns()).isEmpty();
     assertThat(inference.incompleteMethodReturns()).isNull();
   }

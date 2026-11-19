@@ -1674,12 +1674,13 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     var members = Set.copyOf(component);
     var candidates = componentCandidates(component);
     var dependents = new HashMap<MethodSymbol, List<MethodSymbol>>();
-    var blocked = new java.util.ArrayDeque<MethodSymbol>();
+    var blocked = new ArrayDeque<MethodSymbol>();
     for (var entry : candidates.entrySet()) {
       for (var dependency : java.util.Objects.requireNonNull(entry.getValue().missingMethods)) {
         if (blockedComponentInput(dependency, members, candidates)) {
           blocked.add(entry.getKey());
-        } else if (candidates.containsKey(dependency)) {
+        }
+        if (candidates.containsKey(dependency)) {
           dependents.computeIfAbsent(dependency, ignored -> new ArrayList<>()).add(entry.getKey());
         }
       }
@@ -1690,7 +1691,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
         blocked.addAll(dependents.getOrDefault(method, List.of()));
       }
     }
-    candidates.forEach((method, observed) -> provisional.remove(method, observed));
+    candidates.forEach(provisional::remove);
   }
 
   private Map<MethodSymbol, ProvisionalReturn> componentCandidates(List<URI> component) {

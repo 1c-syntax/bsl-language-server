@@ -58,8 +58,8 @@ class DiagnosticCompilationMemoTest {
       assertThat(first.compilation).isSameAs(second.compilation);
       assertThat(first.contextualReturns).isNotSameAs(second.contextualReturns);
       assertThat(first.flowSession).isNotSameAs(second.flowSession);
-      first.sawMissing = true;
-      assertThat(second.sawMissing).isFalse();
+      first.noteMissingData();
+      assertThat(second.sawMissing()).isFalse();
     }
     assertThat(DiagnosticDeclarationSession.current()).isNull();
   }
