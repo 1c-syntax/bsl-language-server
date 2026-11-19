@@ -308,10 +308,9 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       }
       var session = inputs.session();
       var key = new ReturnedLocalKey(body, variable, inputs.executionContext());
-      var remembered = session.independentReturnFacts == null ? null : session.independentReturnFacts.get(key);
       inputs.activeBodyRead().accept(body);
       if (session.independentReturnFacts != null && session.independentReturnFacts.containsKey(key)) {
-        return remembered == null ? null : IndependentReturnedStructure.typeBefore(remembered, statement, variable);
+        return IndependentReturnedStructure.typeBefore(session.independentReturnFacts.get(key), statement, variable);
       }
       var variables = analyzer.variablesOf(document, body, layout, inputs);
       var graph = analyzer.controlFlowGraphIndex.graphOf(document, body, CfgBuildOptions.defaults());
