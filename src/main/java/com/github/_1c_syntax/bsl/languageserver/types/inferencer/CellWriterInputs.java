@@ -110,11 +110,12 @@ record CellWriterInputs(FlowVariables variables, List<VariableSymbol> readCells)
       changes.forEach(change -> result.computeIfAbsent(change.variable(), unused -> new ArrayList<>()).add(statement)));
     for (var vertex : layout.orderedVertices()) {
       var condition = FlowConditionNarrowing.conditionOf(vertex);
-      if (condition != null) {
-        for (var symbol : inputs.narrowing().variablesOf(condition)) {
-          if (symbol instanceof VariableSymbol variable) {
-            result.computeIfAbsent(variable, unused -> new ArrayList<>()).add(condition);
-          }
+      if (condition == null) {
+        continue;
+      }
+      for (var symbol : inputs.narrowing().variablesOf(condition)) {
+        if (symbol instanceof VariableSymbol variable) {
+          result.computeIfAbsent(variable, unused -> new ArrayList<>()).add(condition);
         }
       }
     }
@@ -129,7 +130,9 @@ record CellWriterInputs(FlowVariables variables, List<VariableSymbol> readCells)
         case ForLoopVertex loop -> result.addAll(loop.getLoopHeader().expression());
         case ForeachLoopVertex loop -> result.add(loop.getLoopHeader().expression());
         case WhileLoopVertex loop -> result.add(loop.getExpression());
-        default -> { }
+        default -> {
+          // Входы остальных вершин учитываются по присваиваниям, мутациям и условиям.
+        }
       }
     }
     return result;
