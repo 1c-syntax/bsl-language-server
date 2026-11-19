@@ -208,6 +208,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     private boolean cellsIncomplete;
 
     private final Runnable cellsChanged;
+    private final Runnable cellRead;
 
     /** Создать сессию без внешних результатов, зависящих от её приближений. */
     public FlowSession() {
@@ -222,7 +223,17 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
      * @param cellsChanged сброс результатов, вычисленных по прежним приближениям.
      */
     public FlowSession(Runnable cellsChanged) {
+      this(cellsChanged, () -> {});
+    }
+
+    FlowSession(Runnable cellsChanged, Runnable cellRead) {
       this.cellsChanged = cellsChanged;
+      this.cellRead = cellRead;
+    }
+
+    /** Вход мог быть прочитан через готовое окружение без вызова cellOf в текущем вычислении. */
+    void noteCellInput() {
+      cellRead.run();
     }
 
     private boolean replaceCell(VariableSymbol variable, TypeSet type) {
@@ -616,6 +627,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * @return тип на входе в тело.
    */
   TypeSet cellOf(DocumentContext documentContext, VariableSymbol variable, FlowInputs inputs) {
+    inputs.session().noteCellInput();
     var settled = cellsOf(documentContext, inputs.executionContext()).get(variable);
     if (settled != null) {
       return settled;
@@ -984,6 +996,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     if (byBody != null) {
       var cached = byBody.get(body);
       if (cached != null) {
+        inputs.session().noteCellInput();
         return cached;
       }
     }
@@ -991,11 +1004,13 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       && !inputs.sawMissing().getAsBoolean()) {
       var independent = modeIndependentFacts(documentContext, body, inputs);
       if (independent != null) {
+        inputs.session().noteCellInput();
         return independent;
       }
       ensureRootCells(documentContext, body, inputs, sharedRoot);
       if (sharedRoot.getAsBoolean() && !inputs.session().computing() && !inputs.sawMissing().getAsBoolean()) {
         var target = byBody;
+        inputs.session().noteCellInput();
         return rootComputations.compute(documentContext.getUri(), body, inputs.executionContext(),
           () -> target.get(body), () -> computeAndPublish(documentContext, body, layout, inputs, target, sharedRoot));
       }

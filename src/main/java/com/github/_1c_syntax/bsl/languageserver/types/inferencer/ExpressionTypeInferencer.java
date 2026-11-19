@@ -1085,6 +1085,7 @@ public class ExpressionTypeInferencer {
           return contextualReturnTypes(method, ctx, ctx.executionContext);
         } catch (DocumentContentUnavailableException exception) {
           LOGGER.debug("Document {} was released while inferring contextual return types", owner.getUri(), exception);
+          ctx.contextualReturns.noteCellRead();
           // Документ мог закрыться после проверки состояния; известные типы остаются в индексе.
           return symbolTypeIndex.getReturnTypes(method);
         }
@@ -1100,6 +1101,7 @@ public class ExpressionTypeInferencer {
   }
 
   private TypeSet neutralReferenceType(MethodSymbol method, InferenceContext ctx) {
+    ctx.contextualReturns.noteCellRead();
     TypeSet result;
     if (method.getOwner() == ctx.documentContext) {
       result = neutralReturnTypes(method, ctx);
@@ -1202,6 +1204,7 @@ public class ExpressionTypeInferencer {
     if (owner == ctx.documentContext) {
       return inferContextualReturnTypes(method, ctx, context);
     }
+    ctx.contextualReturns.noteCellRead();
 
     var serverContext = owner.getServerContext();
     var lock = serverContext.getDocumentLock(owner.getUri()).readLock();
@@ -1261,17 +1264,24 @@ public class ExpressionTypeInferencer {
       return TypeSet.EMPTY;
     }
     var key = new ContextualReturnKey(method, target);
+    var sameFlow = method.getOwner() == ctx.documentContext && target == ctx.executionContext;
+    // Вне расчёта ячеек достаточно обычного чтения результата по ключу.
+    var allowIndependent = sameFlow && ctx.flowSession.cellsComputing();
+    if (!sameFlow) {
+      ctx.contextualReturns.noteCellRead();
+    }
     var remembered = canUseContextualReturns(ctx) ? ctx.contextualReturns.get(key) : null;
     if (remembered != null) {
       return remembered;
     }
     var guard = ctx.contextualReturns.guard(key, ctx);
-    var partial = canUseContextualReturns(ctx) ? ctx.contextualReturns.get(guard) : null;
+    var partial = canUseContextualReturns(ctx) ? ctx.contextualReturns.get(guard, allowIndependent) : null;
     if (partial != null) {
       inheritReturn(partial, ctx);
       return partial.types();
     }
     var revision = ctx.contextualReturns.revision();
+    var cellReads = ctx.contextualReturns.cellReads();
     var nested = ctx.nested(method.getOwner(), target);
     var inferred = returnTypesInContext(method, nested, target);
     ctx.inheritMissingInputs(nested);
@@ -1285,7 +1295,14 @@ public class ExpressionTypeInferencer {
     ctx.flowBodiesRead.addAll(nested.flowBodiesRead);
     var result = symbolTypeIndex.getReturnTypes(method, inferred);
     if (canRememberReturn(nested)) {
-      ctx.contextualReturns.remember(key, result, revision);
+      if (allowIndependent && revision == ctx.contextualReturns.revision()
+          && cellReads == ctx.contextualReturns.cellReads()) {
+        ctx.contextualReturns.rememberWithoutCellInputs(guard, new ContextualReturnCache.Result(result,
+          Set.copyOf(nested.consulted), Set.copyOf(nested.dependencies), Set.copyOf(nested.cutMethods),
+          Set.copyOf(nested.flowBodiesRead), false, false, false));
+      } else {
+        ctx.contextualReturns.remember(key, result, revision);
+      }
       return result;
     }
     if (!nested.sawMissing() && canUseContextualReturns(nested)) {

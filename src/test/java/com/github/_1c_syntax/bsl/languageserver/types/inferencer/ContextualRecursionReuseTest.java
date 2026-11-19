@@ -22,7 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestReporter;
@@ -42,6 +44,60 @@ import static org.mockito.Mockito.spy;
 class ContextualRecursionReuseTest extends AbstractServerContextAwareTest {
   @Autowired
   private ExpressionTypeInferencer inferencer;
+
+  @Test
+  void onlyReturnsWithoutCellInputsSurviveARevision() {
+    initServerContext();
+    var document = TestUtils.getDocumentContext("""
+      Var Shared;
+      Function Constant()
+        Return "constant";
+      EndFunction
+      Function ReadCell()
+        Return Shared;
+      EndFunction
+      Function ReadThroughCall()
+        Return ReadCell();
+      EndFunction
+      Shared = 10;
+      """, context);
+    var tree = document.getSymbolTree();
+    var constant = tree.getMethodSymbol("Constant").orElseThrow();
+    var reader = tree.getMethodSymbol("ReadCell").orElseThrow();
+    var caller = tree.getMethodSymbol("ReadThroughCall").orElseThrow();
+    var ctx = new InferenceContext(document, ExecutionContext.SERVER);
+    ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
+    var original = (ReturnTypeFromBodyInference) ReflectionTestUtils.getField(target, "returnTypeFromBodyInference");
+    var counted = spy(original);
+    ReflectionTestUtils.setField(target, "returnTypeFromBodyInference", counted);
+    try {
+      ReflectionTestUtils.invokeMethod(target, "methodReturnType", reader, ctx);
+      ReflectionTestUtils.setField(ctx.flowSession, "cellsComputing", true);
+      ctx.contextualReturns.invalidate();
+      TypeSet independent = ReflectionTestUtils.invokeMethod(target, "methodReturnType", constant, ctx);
+      assertThat(independent.refs()).extracting(TypeRef::qualifiedName).containsExactly("Строка");
+      ReflectionTestUtils.invokeMethod(target, "methodReturnType", reader, ctx);
+      TypeSet dependent = ReflectionTestUtils.invokeMethod(target, "methodReturnType", caller, ctx);
+      assertThat(dependent.refs()).extracting(TypeRef::qualifiedName).contains("Число");
+      clearInvocations(counted);
+      TypeSet cached = ReflectionTestUtils.invokeMethod(target, "methodReturnType", caller, ctx);
+      assertThat(cached).isEqualTo(dependent);
+      assertThat(mockingDetails(counted).getInvocations()).isEmpty();
+
+      ctx.contextualReturns.invalidate();
+      TypeSet reused = ReflectionTestUtils.invokeMethod(target, "methodReturnType", constant, ctx);
+      TypeSet recomputed = ReflectionTestUtils.invokeMethod(target, "methodReturnType", caller, ctx);
+
+      assertThat(reused).isEqualTo(independent);
+      assertThat(recomputed).isEqualTo(dependent);
+      var bodies = mockingDetails(counted).getInvocations().stream()
+        .filter(call -> call.getMethod().getName().equals("of") && call.getMethod().getParameterCount() == 4)
+        .map(call -> call.getArgument(0)).toList();
+      assertThat(bodies).doesNotContain(constant).contains(caller);
+    } finally {
+      ReflectionTestUtils.setField(target, "returnTypeFromBodyInference", original);
+    }
+  }
 
   @Test
   void aRootOutsideTheCalleesCycleDoesNotRefineItsOwnValue(TestReporter reporter) {

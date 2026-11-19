@@ -115,7 +115,11 @@ final class InferenceContext {
   private InferenceContext(DocumentContext documentContext, @Nullable ExecutionContext executionContext,
                            ContextualReturnCache contextualReturns, CompilationContextMemo compilation) {
     this(documentContext, executionContext, contextualReturns,
-      new VariableFlowAnalyzer.FlowSession(contextualReturns::invalidate), compilation);
+      flowSessionFor(contextualReturns), compilation);
+  }
+
+  private static VariableFlowAnalyzer.FlowSession flowSessionFor(ContextualReturnCache cache) {
+    return new VariableFlowAnalyzer.FlowSession(cache::invalidate, cache::noteCellRead);
   }
 
   private InferenceContext(DocumentContext documentContext, @Nullable ExecutionContext executionContext,
@@ -202,7 +206,7 @@ final class InferenceContext {
   /** Состояние одного вложенного расчёта; признаки его неполноты не наследуются от соседних вызовов. */
   InferenceContext nested(DocumentContext owner, @Nullable ExecutionContext target) {
     var session = owner == documentContext && target == executionContext
-      ? flowSession : new VariableFlowAnalyzer.FlowSession(contextualReturns::invalidate);
+      ? flowSession : flowSessionFor(contextualReturns);
     var result = new InferenceContext(owner, target, contextualReturns, session, compilation);
     if (session != flowSession) {
       session.contextTracking = flowSession.contextTracking;

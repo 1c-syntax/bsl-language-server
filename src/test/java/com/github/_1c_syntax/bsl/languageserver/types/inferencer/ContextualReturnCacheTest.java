@@ -78,6 +78,33 @@ class ContextualReturnCacheTest {
   }
 
   @Test
+  void anIndependentResultSurvivesACellRevisionButKeepsItsGuards() {
+    var cache = new ContextualReturnCache();
+    var method = mock(MethodSymbol.class);
+    var dependency = mock(MethodSymbol.class);
+    var caller = mock(MethodSymbol.class);
+    var server = new ContextualReturnKey(method, ExecutionContext.SERVER);
+    var client = new ContextualReturnKey(method, ExecutionContext.THIN_CLIENT);
+    var original = new ContextualReturnCache.Guard(server, Set.of(method, caller), Set.of(), Set.of(), Set.of(), 4, true);
+    var newCycle = new ContextualReturnCache.Guard(server, Set.of(method, dependency),
+      Set.of(), Set.of(), Set.of(), 4, true);
+    var outsideCells = new ContextualReturnCache.Guard(server, Set.of(method, caller), Set.of(), 4);
+    var anotherMode = new ContextualReturnCache.Guard(client, Set.of(method, caller),
+      Set.of(), Set.of(), Set.of(), 4, true);
+    var result = new ContextualReturnCache.Result(TypeSet.of(TypeRef.UNDEFINED), Set.of(dependency), Set.of(),
+      Set.of(), Set.of(), false, false, false);
+
+    cache.rememberWithoutCellInputs(original, result);
+    cache.invalidate();
+
+    assertThat(cache.get(original, true)).isSameAs(result);
+    assertThat(cache.get(original, false)).isNull();
+    assertThat(cache.get(newCycle, true)).isNull();
+    assertThat(cache.get(outsideCells, true)).isNull();
+    assertThat(cache.get(anotherMode, true)).isNull();
+  }
+
+  @Test
   void anUncutDepthBudgetDoesNotPreventReuseOfKnownResults() {
     var cache = new ContextualReturnCache();
     var method = mock(MethodSymbol.class);
