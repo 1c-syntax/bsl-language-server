@@ -188,15 +188,22 @@ final class IndependentReturnedStructure {
       return false;
     }
     var params = call.callParamList().callParam();
-    return params.size() == 1 && stringLiteral(params.getFirst().expression());
+    return switch (params.size()) {
+      case 1 -> stringLiteral(params.getFirst().expression());
+      case 2 -> stringLiteral(params.getFirst().expression()) && literal(params.getLast().expression());
+      default -> false;
+    };
   }
 
   private static boolean stringLiteral(BSLParser.@Nullable ExpressionContext expression) {
+    return expression != null && expression.getText().startsWith("\"") && literal(expression);
+  }
+
+  private static boolean literal(BSLParser.@Nullable ExpressionContext expression) {
     if (expression == null) {
       return false;
     }
-    var literal = ExpressionTreeBuildingVisitor.buildExpressionTree(expression);
-    return literal != null && literal.getNodeType() == ExpressionNodeType.LITERAL
-      && expression.getText().startsWith("\"");
+    var tree = ExpressionTreeBuildingVisitor.buildExpressionTree(expression);
+    return tree != null && tree.getNodeType() == ExpressionNodeType.LITERAL;
   }
 }

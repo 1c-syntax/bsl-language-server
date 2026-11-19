@@ -89,6 +89,32 @@ class ReturnedLocalFlowTest extends AbstractServerContextAwareTest {
     assertThat(unrelatedCallsIn(document)).isZero();
   }
 
+  @Test
+  void aLiteralFieldValueKeepsTheProjectionAndItsType() {
+    var document = TestUtils.getDocumentContext("""
+      Function Independent()
+        Result = New Structure();
+        Result.Insert("Status", True);
+        Unused = Recursive();
+        Return Result;
+      EndFunction
+      Function Recursive()
+        Node = New Structure;
+        Node.Insert("Next", Recursive());
+        Return Node;
+      EndFunction
+      """, context);
+
+    assertThat(unrelatedCallsIn(document)).isZero();
+    var method = document.getSymbolTree().getMethodSymbol("Independent").orElseThrow();
+    var result = inferencer.computeReturnTypes(method).types();
+    assertThat(result.localFields().values().stream()
+      .flatMap(fields -> fields.entrySet().stream())
+      .filter(entry -> entry.getKey().equalsIgnoreCase("Status"))
+      .flatMap(entry -> entry.getValue().types().refs().stream()))
+      .extracting(TypeRef::qualifiedName).containsExactly("Булево");
+  }
+
   private int unrelatedCallsIn(DocumentContext document) {
     ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
     var original = (ReturnTypeFromBodyInference) ReflectionTestUtils.getField(target, "returnTypeFromBodyInference");
