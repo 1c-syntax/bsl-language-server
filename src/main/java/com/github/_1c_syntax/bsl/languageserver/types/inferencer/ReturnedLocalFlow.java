@@ -68,6 +68,7 @@ final class ReturnedLocalFlow {
     var key = new Key(body, variable, inputs.executionContext());
     var cached = analyzer.cachedFacts(document.getUri(), body, inputs);
     if (cached != null || session.hasIndependentFacts(key)) {
+      session.noteCellInput();
       return typeBefore(cached == null ? session.independentFacts(key) : cached, statement, variable);
     }
     var graph = graphs.graphOf(document, body, CfgBuildOptions.defaults());
