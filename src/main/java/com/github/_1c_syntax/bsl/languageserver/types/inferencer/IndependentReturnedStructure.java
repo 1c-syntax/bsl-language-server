@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraph;
+import com.github._1c_syntax.bsl.languageserver.cfg.PreprocessorFlow;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
@@ -33,7 +34,13 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionT
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ConstructorCallNode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.jspecify.annotations.Nullable;
+
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Set;
+import java.util.function.Predicate;
 
 /** Достаточные условия независимости локальной структуры, изменяемой только вставками литеральных ключей. */
 final class IndependentReturnedStructure {
@@ -59,6 +66,43 @@ final class IndependentReturnedStructure {
       && closedConditions(variable, graph, inputs) && !escapes(document, body, variable);
   }
 
+  /** Собрать замкнутые локальные результаты для одного прохода, не добавляя остальные переменные тела. */
+  static Set<VariableSymbol> returnedLocals(DocumentContext document, BSLParser.CodeBlockContext body,
+      FlowVariables variables, ControlFlowGraph graph, VariableFlowAnalyzer.FlowInputs inputs, VariableSymbol required,
+      Predicate<ParserRuleContext> reachable) {
+    Set<VariableSymbol> selected = Collections.newSetFromMap(new IdentityHashMap<>(0));
+    selected.add(required);
+    for (var node : Trees.findAllRuleNodes(body, BSLParser.RULE_returnStatement)) {
+      var candidate = returnedVariable(document, body, (BSLParser.ReturnStatementContext) node, reachable);
+      if (candidate != null && !selected.contains(candidate) && localVariable(document, candidate)
+        && supports(document, body, candidate, variables, graph, inputs)) {
+        selected.add(candidate);
+      }
+    }
+    return selected;
+  }
+
+  private static @Nullable VariableSymbol returnedVariable(DocumentContext document, BSLParser.CodeBlockContext body,
+      BSLParser.ReturnStatementContext returned, Predicate<ParserRuleContext> reachable) {
+    if (!reachable.test(returned)) {
+      return null;
+    }
+    var expression = ExpressionTreeBuildingVisitor.buildExpressionTree(returned.expression());
+    if (expression == null || expression.getNodeType() != ExpressionNodeType.IDENTIFIER
+      || !(expression.getRepresentingAst() instanceof TerminalNode terminal)) {
+      return null;
+    }
+    return document.getSymbolTreeNoLock().getVariableSymbolInScope(body, terminal.getText()).orElse(null);
+  }
+
+  static boolean reachable(ParserRuleContext statement, FlowLayout layout, @Nullable PreprocessorFlow compiled) {
+    var placed = statement;
+    while (placed != null && !layout.hasStatement(placed)) {
+      placed = placed.getParent();
+    }
+    return placed != null && (compiled == null || compiled.vertices().contains(layout.vertexOf(placed)));
+  }
+
   private static boolean closedChanges(DocumentContext document, VariableSymbol variable, FlowVariables variables) {
     var definitions = 0;
     for (var entry : variables.changesByStatement().entrySet()) {
@@ -66,7 +110,7 @@ final class IndependentReturnedStructure {
         if (change.variable() != variable) {
           continue;
         }
-        if (!Trees.getTrailingComment(document.getTokens(), entry.getKey().getStop()).isEmpty()
+        if ((change.definition() && !Trees.getTrailingComment(document.getTokens(), entry.getKey().getStop()).isEmpty())
           || !supportedChange(entry.getKey(), change.definition(), variable.getName())) {
           return false;
         }
@@ -121,7 +165,8 @@ final class IndependentReturnedStructure {
   private static boolean escapes(DocumentContext document, BSLParser.CodeBlockContext body, VariableSymbol variable) {
     for (var node : org.antlr.v4.runtime.tree.Trees.findAllRuleNodes(body, BSLParser.RULE_callParam)) {
       for (var identifier : org.antlr.v4.runtime.tree.Trees.findAllTokenNodes(node, BSLParser.IDENTIFIER)) {
-        if (identifier.getText().equalsIgnoreCase(variable.getName())
+        if (identifier.getParent() instanceof BSLParser.ComplexIdentifierContext complex
+          && complex.IDENTIFIER() == identifier && identifier.getText().equalsIgnoreCase(variable.getName())
           && document.getSymbolTreeNoLock().getVariableSymbolInScope(body, identifier.getText()).orElse(null) == variable) {
           return true;
         }

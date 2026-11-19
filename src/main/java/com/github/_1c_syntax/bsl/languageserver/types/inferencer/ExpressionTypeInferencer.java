@@ -533,7 +533,7 @@ public class ExpressionTypeInferencer {
       } catch (DocumentContentUnavailableException exception) {
         ctx.failed = true;
         LOGGER.debug("Document {} was released while inferring a returned local", ctx.documentContext.getUri(), exception);
-        return TypeSet.EMPTY;
+        return flowTypeAt(variable, terminal, ctx);
       }
     }
     return flowTypeAt(variable, terminal, ctx);

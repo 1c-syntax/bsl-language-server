@@ -101,10 +101,6 @@ record FlowVariables(List<VariableSymbol> visibleVariables, List<VariableSymbol>
     return select(selected::contains);
   }
 
-  FlowVariables forVariable(VariableSymbol variable) {
-    return select(candidate -> candidate == variable);
-  }
-
   private FlowVariables select(Predicate<VariableSymbol> needed) {
     if (variables.stream().allMatch(needed)) {
       return this;

@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContentUnavailableException;
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
@@ -85,6 +86,10 @@ class ReturnedLocalFlowTest extends AbstractServerContextAwareTest {
         Return Node;
       EndFunction
       """.formatted(constructor), context);
+    assertThat(unrelatedCallsIn(document)).isZero();
+  }
+
+  private int unrelatedCallsIn(DocumentContext document) {
     ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
     var original = (ReturnTypeFromBodyInference) ReflectionTestUtils.getField(target, "returnTypeFromBodyInference");
     var counted = spy(original);
@@ -101,10 +106,132 @@ class ReturnedLocalFlowTest extends AbstractServerContextAwareTest {
       assertThat(result.types().refs()).extracting(TypeRef::qualifiedName).containsExactly("Структура");
       assertThat(result.types().localFields().values().stream()
         .anyMatch(fields -> fields.keySet().stream().anyMatch(name -> name.equalsIgnoreCase("Status")))).isTrue();
-      assertThat(unrelatedCalls.get()).isZero();
+      return unrelatedCalls.get();
     } finally {
       ReflectionTestUtils.setField(target, "returnTypeFromBodyInference", original);
     }
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "Result.Insert(\"Status\"); // insertion note",
+    "Result.Insert(\"Status\"); Response = New Structure(\"Result\", 1); Log(Response.Result);"
+  })
+  void insertCommentsAndSameNamedMembersDoNotEscapeTheLocal(String statements) {
+    var document = TestUtils.getDocumentContext("""
+      Function Independent()
+        Result = New Structure;
+        %s
+        Unused = Recursive();
+        Return Result;
+      EndFunction
+      Function Recursive()
+        Node = New Structure;
+        Node.Insert("Next", Recursive());
+        Return Node;
+      EndFunction
+      Procedure Log(Value)
+      EndProcedure
+      """.formatted(statements), context);
+
+    assertThat(unrelatedCallsIn(document)).isZero();
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {3, 12})
+  void differentReturnedLocalsShareOneProjectedBodyPass(int count) {
+    var source = new StringBuilder("Function Batch(Flag)\n");
+    for (var i = 0; i < count; i++) {
+      source.append("  V%d = New Structure;%n".formatted(i));
+    }
+    for (var i = 0; i < count - 1; i++) {
+      source.append("  If Flag = %d Then Return V%d; EndIf;%n".formatted(i, i));
+    }
+    source.append("  Return V%d;%nEndFunction%n".formatted(count - 1));
+    var document = TestUtils.getDocumentContext(source.toString(), context);
+    var body = VariableFlowAnalyzer.bodyAt(document, new Position(1, 3));
+    var variables = java.util.stream.IntStream.range(0, count)
+      .mapToObj(i -> document.getSymbolTree().getVariableSymbolInScope(body, "V" + i).orElseThrow()).toList();
+    var planning = new AtomicInteger();
+    var assignments = new AtomicInteger();
+    var session = new VariableFlowAnalyzer.FlowSession();
+    var inputs = new VariableFlowAnalyzer.FlowInputs(session, used -> {}, false, ExecutionContext.SERVER,
+      used -> {
+        planning.incrementAndGet();
+        return Optional.empty();
+      }, () -> false, used -> variables, variable -> false, variable -> TypeSet.EMPTY,
+      variable -> List.of(new Position(variables.indexOf(variable) + 1, 2)), variable -> List.of(),
+      (variable, statement, position) -> {
+        assignments.incrementAndGet();
+        return TypeSet.of(new TypeRef(TypeKind.PLATFORM, "Структура"));
+      }, (variable, position, incoming) -> incoming, mock(VariableFlowAnalyzer.GuardNarrowing.class));
+    var returns = Trees.findAllRuleNodes(body, BSLParser.RULE_returnStatement);
+
+    for (var node : returns) {
+      var use = ((BSLParser.ReturnStatementContext) node).expression();
+      var variable = document.getSymbolTree().getVariableSymbolInScope(body, use.getText()).orElseThrow();
+      assertThat(analyzer.independentReturnTypeAt(document, use, variable, inputs, () -> true).refs())
+        .extracting(TypeRef::qualifiedName).containsExactly("Структура");
+    }
+
+    assertThat(planning.get()).as("one compiled body pass serves every returned local").isEqualTo(1);
+    assertThat(assignments.get()).isEqualTo(count);
+  }
+
+  @Test
+  void batchingDifferentLocalsStillSkipsUnrelatedRecursion() {
+    var document = TestUtils.getDocumentContext("""
+      Function Independent(Choice)
+        Unused = Recursive();
+        First = New Structure;
+        First.Insert("Status");
+        Second = New Structure;
+        Second.Insert("Status");
+        Third = New Structure;
+        Third.Insert("Status");
+        If Choice = 1 Then Return First; EndIf;
+        If Choice = 2 Then Return Second; EndIf;
+        Return Third;
+      EndFunction
+      Function Recursive()
+        Node = New Structure;
+        Node.Insert("Next", Recursive());
+        Return Node;
+      EndFunction
+      """, context);
+
+    assertThat(unrelatedCallsIn(document)).isZero();
+  }
+
+  @Test
+  void aBatchDoesNotReadDeclarationsOfAnUnavailableCompilationBranch() {
+    var document = TestUtils.getDocumentContext("""
+      Function Build()
+      #If Server Then
+        ServerResult = New Structure;
+        Return ServerResult;
+      #Else
+        ClientResult = New Structure;
+        Return ClientResult;
+      #EndIf
+      EndFunction
+      """, context);
+    var body = VariableFlowAnalyzer.bodyAt(document, new Position(2, 3));
+    var server = document.getSymbolTree().getVariableSymbolInScope(body, "ServerResult").orElseThrow();
+    var client = document.getSymbolTree().getVariableSymbolInScope(body, "ClientResult").orElseThrow();
+    var use = ((BSLParser.ReturnStatementContext) Trees.findAllRuleNodes(body, BSLParser.RULE_returnStatement)
+      .iterator().next()).expression();
+    var structure = TypeSet.of(new TypeRef(TypeKind.PLATFORM, "Структура"));
+    var inputs = new VariableFlowAnalyzer.FlowInputs(new VariableFlowAnalyzer.FlowSession(), used -> {}, false,
+      ExecutionContext.SERVER, used -> Optional.of(Set.of(ExecutionContext.SERVER)), () -> false,
+      used -> List.of(server, client), variable -> false, variable -> {
+        assertThat(variable).as("inactive declarations are not needed for the selected return").isSameAs(server);
+        return TypeSet.EMPTY;
+      }, variable -> List.of(new Position(variable == server ? 2 : 5, 2)), variable -> List.of(),
+      (variable, statement, position) -> structure, (variable, position, incoming) -> incoming,
+      mock(VariableFlowAnalyzer.GuardNarrowing.class));
+
+    assertThat(analyzer.independentReturnTypeAt(document, use, server, inputs, () -> true)).isEqualTo(structure);
   }
 
   @Test
@@ -300,6 +427,7 @@ class ReturnedLocalFlowTest extends AbstractServerContextAwareTest {
     try {
       var result = inferencer.computeReturnTypes(document.getSymbolTree().getMethodSymbol("Build").orElseThrow());
       assertThat(result.types().refs()).extracting(TypeRef::qualifiedName).contains("Число");
+      assertThat(result.types().refs()).extracting(TypeRef::qualifiedName).contains("Структура");
       assertThat(result.incomplete()).isTrue();
     } finally {
       ReflectionTestUtils.setField(target, "variableFlowAnalyzer", original);

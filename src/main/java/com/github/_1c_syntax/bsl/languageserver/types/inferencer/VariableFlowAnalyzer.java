@@ -321,14 +321,18 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
         }
         return null;
       }
-      var selected = variables.forVariable(variable);
       var compiled = inputs.compilationContexts().apply(body)
         .map(contexts -> PreprocessorFlow.of(graph, contexts, document.getFileType())).orElse(null);
+      var selected = variables.forVariables(IndependentReturnedStructure.returnedLocals(
+        document, body, variables, graph, inputs, variable,
+        returned -> IndependentReturnedStructure.reachable(returned, layout, compiled)));
       var pass = new VariableFlowPass(analyzer, document, graph, layout, inputs, compiled, selected);
       inputs.session().active.put(body, pass);
       try {
         var facts = pass.computeFacts();
-        session.rememberIndependentFacts(key, facts, inputs, complete);
+        for (var result : selected.variables()) {
+          session.rememberIndependentFacts(new ReturnedLocalKey(body, result, inputs.executionContext()), facts, inputs, complete);
+        }
         return IndependentReturnedStructure.typeBefore(facts, statement, variable);
       } finally {
         inputs.session().active.remove(body);
