@@ -62,6 +62,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.List;
 import java.util.Set;
@@ -168,6 +169,81 @@ class MethodReturnTypeIndexerTest {
     assertThat(reads.get()).isEqualTo(2);
     assertThat(visibleAsReady).isFalse();
     assertThat(indexer.isIndexed(consumerMethod)).isFalse();
+  }
+
+  @Test
+  void aDelayedApproximationCannotReplaceAValueCompletedWhileItWasRunning() throws Exception {
+    var completeStarted = new CountDownLatch(1);
+    var approximateStarted = new CountDownLatch(1);
+    var finishComplete = new CountDownLatch(1);
+    var finishApproximate = new CountDownLatch(1);
+    try (var executor = Executors.newFixedThreadPool(2)) {
+      try {
+        var complete = executor.submit(() -> indexer.computeIfAbsent(consumerMethod, () -> {
+          completeStarted.countDown();
+          await().atMost(10, SECONDS).until(() -> finishComplete.getCount() == 0);
+          return new ComputedReturnTypes(NUMBER, Set.of(), false);
+        }));
+        assertThat(completeStarted.await(10, SECONDS)).isTrue();
+        var approximate = executor.submit(() -> indexer.computeIfAbsent(consumerMethod, () -> {
+          approximateStarted.countDown();
+          await().atMost(10, SECONDS).until(() -> finishApproximate.getCount() == 0);
+          return new ComputedReturnTypes(STRING, Set.of(), false);
+        }, true));
+        assertThat(approximateStarted.await(10, SECONDS)).isTrue();
+
+        finishComplete.countDown();
+        complete.get(10, SECONDS);
+        finishApproximate.countDown();
+        approximate.get(10, SECONDS);
+      } finally {
+        finishComplete.countDown();
+        finishApproximate.countDown();
+      }
+    }
+    assertThat(indexer.isIndexed(consumerMethod)).isTrue();
+    assertThat(symbolTypeIndex.getReturnTypes(consumerMethod)).isEqualTo(NUMBER);
+  }
+
+  @Test
+  void concurrentPublishersKeepTheTypeAndReadinessTogether() throws Exception {
+    var publishedType = new AtomicReference<>(TypeSet.EMPTY);
+    var approximateIsPublishing = new CountDownLatch(1);
+    var finishApproximatePublication = new CountDownLatch(1);
+    when(symbolTypeIndex.getReturnTypes(consumerMethod)).thenAnswer(invocation -> publishedType.get());
+    doAnswer(invocation -> {
+      TypeSet types = invocation.getArgument(1);
+      if (types.equals(STRING)) {
+        approximateIsPublishing.countDown();
+        assertThat(finishApproximatePublication.await(10, SECONDS)).isTrue();
+      }
+      publishedType.set(types);
+      return null;
+    }).when(symbolTypeIndex).putReturnTypes(any(), any());
+
+    try (var executor = Executors.newFixedThreadPool(2)) {
+      var fullPublisher = new AtomicReference<Thread>();
+      try {
+        var approximate = executor.submit(() -> indexer.computeIfAbsent(consumerMethod,
+          () -> new ComputedReturnTypes(STRING, Set.of(), false), true));
+        assertThat(approximateIsPublishing.await(10, SECONDS)).isTrue();
+
+        var complete = executor.submit(() -> indexer.computeIfAbsent(consumerMethod, () -> {
+          fullPublisher.set(Thread.currentThread());
+          return new ComputedReturnTypes(NUMBER, Set.of(), false);
+        }));
+        await().atMost(10, SECONDS).until(() -> complete.isDone()
+          || fullPublisher.get() != null && fullPublisher.get().getState() == Thread.State.BLOCKED);
+        finishApproximatePublication.countDown();
+        approximate.get(10, SECONDS);
+        complete.get(10, SECONDS);
+      } finally {
+        finishApproximatePublication.countDown();
+      }
+    }
+
+    assertThat(indexer.isIndexed(consumerMethod)).isTrue();
+    assertThat(publishedType.get()).isEqualTo(NUMBER);
   }
 
   @AfterEach

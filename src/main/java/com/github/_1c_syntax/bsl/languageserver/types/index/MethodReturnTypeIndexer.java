@@ -73,6 +73,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.RejectedExecutionException;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
@@ -267,10 +268,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     }
     var startedAt = clock.incrementAndGet();
     var computed = computation.get();
-    store(method, computed, startedAt, provisionalResult(computed, approximate, inputs));
-    if (!known) {
-      rememberMethodOfUri(method);
-    }
+    store(method, computed, startedAt, provisionalResult(computed, approximate, inputs), true);
     return computed;
   }
 
@@ -500,13 +498,15 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     // застать не мог, и вызывающему понадобится ещё один заход.
     var startedAt = clock.incrementAndGet();
     var computed = inferencer.computeReturnTypes(method);
-    return store(method, computed, startedAt, provisionalResult(computed, false, UNSCOPED_INPUTS));
+    return store(method, computed, startedAt, provisionalResult(computed, false, UNSCOPED_INPUTS), false);
   }
 
   private static @Nullable ProvisionalReturn provisionalResult(ComputedReturnTypes computed, boolean approximate,
                                                                Object inputs) {
-    return approximate || computed.incomplete()
-      ? new ProvisionalReturn(inputs, approximate ? null : computed.incompleteMethodReturns()) : null;
+    if (approximate) {
+      return new ProvisionalReturn(inputs, null);
+    }
+    return computed.incomplete() ? new ProvisionalReturn(inputs, computed.incompleteMethodReturns()) : null;
   }
 
   /**
@@ -516,11 +516,30 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * @param computed  результат расчёта.
    * @param startedAt отметка часов на момент начала расчёта.
    * @param partial   признак предварительного значения либо {@code null} для окончательного.
+   * @param onDemand  расчёт, начатый из-за отсутствия готового результата.
    * @return {@code true}, если набор типов изменился.
    */
   private boolean store(MethodSymbol method, ComputedReturnTypes computed, long startedAt,
-                        @Nullable ProvisionalReturn partial) {
-    link(method, computed.consulted());
+                        @Nullable ProvisionalReturn partial, boolean onDemand) {
+    var changed = new AtomicBoolean();
+    // Блокировка записи computedAt объединяет публикацию типа и признака неполноты.
+    // Расчёт тела выполняется до её захвата: тело может вызывать другие функции.
+    computedAt.compute(method, (key, publishedAt) -> {
+      if (onDemand && partial != null && isIndexed(key)) {
+        return publishedAt;
+      }
+      if (onDemand && !indexed.contains(key)) {
+        rememberMethodOfUri(key);
+      }
+      link(key, computed.consulted());
+      schedulePending(key, computed);
+      changed.set(publishReturnType(key, computed.types(), startedAt, partial));
+      return startedAt;
+    });
+    return changed.get();
+  }
+
+  private void schedulePending(MethodSymbol method, ComputedReturnTypes computed) {
     if (!maintenance && computed.consulted().stream().anyMatch(pending::contains)) {
       // Расчёт опирался на значение, которое само ждёт пересчёта: вызванный метод посчитан,
       // но предварительно. Когда проход доведёт его до полного, вызывающему понадобится
@@ -551,17 +570,18 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
             .toList());
       }
     }
-    // Признак неполноты виден до обновления типа и indexed. Окончательный результат
-    // снимает только ту отметку, которую застал перед публикацией.
-    var previousMarker = provisional.get(method);
+  }
+
+  private boolean publishReturnType(MethodSymbol method, TypeSet types, long startedAt,
+                                    @Nullable ProvisionalReturn partial) {
+    // Признак неполноты виден до обновления типа и indexed.
     if (partial != null) {
       provisional.put(method, partial);
     }
     var previous = symbolTypeIndex.getReturnTypes(method);
-    symbolTypeIndex.putReturnTypes(method, computed.types());
+    symbolTypeIndex.putReturnTypes(method, types);
     indexed.add(method);
     var valueChanged = !symbolTypeIndex.getReturnTypes(method).equals(previous);
-    computedAt.put(method, startedAt);
     if (valueChanged) {
       // Обе отметки берутся из одной точки — до расчёта. Строго полнее было бы отмечать
       // изменение уже после того, как значение выложено: тогда ловился бы и расчёт,
@@ -571,8 +591,8 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       changedAt.merge(method.getOwner().getUri(), startedAt, Math::max);
       valueChanges.incrementAndGet();
     }
-    if (partial == null && previousMarker != null) {
-      provisional.remove(method, previousMarker);
+    if (partial == null) {
+      provisional.remove(method);
     }
     return valueChanged;
   }
@@ -1706,11 +1726,14 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     Map<MethodSymbol, ProvisionalReturn> candidates = new HashMap<>();
     for (var uri : component) {
       for (var method : methodsByUri.getOrDefault(uri, List.of())) {
-        var observed = provisional.get(method);
-        if (indexed.contains(method) && observed != null && observed.missingMethods != null
-          && !observed.missingMethods.isEmpty()) {
-          candidates.put(method, observed);
-        }
+        computedAt.computeIfPresent(method, (key, startedAt) -> {
+          var observed = provisional.get(key);
+          if (indexed.contains(key) && observed != null && observed.missingMethods != null
+            && !observed.missingMethods.isEmpty()) {
+            candidates.put(key, observed);
+          }
+          return startedAt;
+        });
       }
     }
     return candidates;
