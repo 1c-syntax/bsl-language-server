@@ -180,7 +180,7 @@ final class IndependentReturnedStructure {
       }
       var mentioned = inputs.narrowing().variablesOf(condition);
       if (mentioned.contains(variable) && (mentioned.stream().anyMatch(other -> other != variable)
-        || !org.antlr.v4.runtime.tree.Trees.findAllRuleNodes(condition, BSLParser.RULE_methodCall).isEmpty())) {
+        || !Trees.findAllRuleNodes(condition, BSLParser.RULE_methodCall).isEmpty())) {
         return false;
       }
     }
@@ -193,7 +193,7 @@ final class IndependentReturnedStructure {
       if (!reachable.test(node)) {
         continue;
       }
-      for (var identifier : org.antlr.v4.runtime.tree.Trees.findAllTokenNodes(node, BSLParser.IDENTIFIER)) {
+      for (var identifier : Trees.findAllTokenNodes(node, BSLParser.IDENTIFIER)) {
         if (identifier.getParent() instanceof BSLParser.ComplexIdentifierContext complex
           && complex.IDENTIFIER() == identifier && identifier.getText().equalsIgnoreCase(variable.getName())
           && document.getSymbolTreeNoLock().getVariableSymbolInScope(body, identifier.getText()).orElse(null) == variable) {
