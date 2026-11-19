@@ -118,10 +118,6 @@ final class InferenceContext {
       flowSessionFor(contextualReturns), compilation);
   }
 
-  private static VariableFlowAnalyzer.FlowSession flowSessionFor(ContextualReturnCache cache) {
-    return new VariableFlowAnalyzer.FlowSession(cache::invalidate, cache::noteCellRead);
-  }
-
   private InferenceContext(DocumentContext documentContext, @Nullable ExecutionContext executionContext,
                            ContextualReturnCache contextualReturns, VariableFlowAnalyzer.FlowSession flowSession,
                            CompilationContextMemo compilation) {
@@ -133,6 +129,10 @@ final class InferenceContext {
     this.visited = new HashSet<>();
     this.inProgress = new HashMap<>();
     this.dependencies = new HashSet<>();
+  }
+
+  private static VariableFlowAnalyzer.FlowSession flowSessionFor(ContextualReturnCache cache) {
+    return new VariableFlowAnalyzer.FlowSession(cache::invalidate, cache::noteCellRead);
   }
 
   /** Недоступны данные, а не только возвращаемое значение известной функции. */
