@@ -492,14 +492,19 @@ class ReturnedLocalFlowTest extends AbstractServerContextAwareTest {
     assertThat(deep.depthCut).isFalse();
   }
 
-  @Test
-  void inactiveAssignmentDoesNotInvalidateTheServerProjection() {
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "Result = 1;",
+    "Alias(Result);",
+    "If Result <> Undefined And Other <> Undefined Then Result.Insert(\"Status\"); EndIf;"
+  })
+  void inactiveCodeDoesNotInvalidateTheServerProjection(String clientCode) {
     var document = TestUtils.getDocumentContext("""
       Function Build()
-      #If Server Then
         Result = New Structure;
-      #Else
-        Result = 1;
+        Other = 1;
+      #If Client Then
+        %s
       #EndIf
         Unused = Recursive();
         Return Result;
@@ -507,7 +512,9 @@ class ReturnedLocalFlowTest extends AbstractServerContextAwareTest {
       Function Recursive()
         Return 1;
       EndFunction
-      """, context);
+      Procedure Alias(Value)
+      EndProcedure
+      """.formatted(clientCode), context);
     var method = document.getSymbolTree().getMethodSymbol("Build").orElseThrow();
     var statement = (BSLParser.ReturnStatementContext) Trees.findAllRuleNodes(document.getAst(),
       BSLParser.RULE_returnStatement).iterator().next();
@@ -528,10 +535,11 @@ class ReturnedLocalFlowTest extends AbstractServerContextAwareTest {
       assertThat(serverTypes.refs()).extracting(TypeRef::qualifiedName).containsExactly("Структура");
       assertThat(calls.get()).isZero();
 
-      var neutral = new InferenceContext(document, null);
-      neutral.visited.add(method);
-      TypeSet union = ReflectionTestUtils.invokeMethod(target, "inferInternal", expression, neutral, false, true);
-      assertThat(union.refs()).extracting(TypeRef::qualifiedName).contains("Структура", "Число");
+      var client = new InferenceContext(document, ExecutionContext.THIN_CLIENT);
+      client.visited.add(method);
+      TypeSet clientTypes = ReflectionTestUtils.invokeMethod(target, "inferInternal", expression, client, false, true);
+      assertThat(clientTypes.refs()).extracting(TypeRef::qualifiedName)
+        .containsExactly(clientCode.equals("Result = 1;") ? "Число" : "Структура");
       assertThat(calls.get()).isPositive();
     } finally {
       ReflectionTestUtils.setField(target, "returnTypeFromBodyInference", original);

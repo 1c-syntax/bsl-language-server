@@ -21,8 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
-import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraph;
-import com.github._1c_syntax.bsl.languageserver.cfg.PreprocessorFlow;
+import com.github._1c_syntax.bsl.languageserver.cfg.CfgVertex;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
@@ -54,22 +53,22 @@ final class IndependentReturnedStructure {
   }
 
   static boolean supports(DocumentContext document, BSLParser.CodeBlockContext body, VariableSymbol variable,
-                          FlowVariables variables, ControlFlowGraph graph, VariableFlowAnalyzer.FlowInputs inputs,
+                          FlowVariables variables, Set<CfgVertex> vertices, VariableFlowAnalyzer.FlowInputs inputs,
                           Predicate<ParserRuleContext> reachable) {
     return variables.indexes().containsKey(variable) && closedChanges(document, variable, variables, reachable)
-      && closedConditions(variable, graph, inputs) && !escapes(document, body, variable);
+      && closedConditions(variable, vertices, inputs) && !escapes(document, body, variable, reachable);
   }
 
   /** Собрать замкнутые локальные результаты для одного прохода, не добавляя остальные переменные тела. */
   static Set<VariableSymbol> returnedLocals(DocumentContext document, BSLParser.CodeBlockContext body,
-      FlowVariables variables, ControlFlowGraph graph, VariableFlowAnalyzer.FlowInputs inputs, VariableSymbol required,
+      FlowVariables variables, Set<CfgVertex> vertices, VariableFlowAnalyzer.FlowInputs inputs, VariableSymbol required,
       Predicate<ParserRuleContext> reachable) {
     Set<VariableSymbol> selected = Collections.newSetFromMap(new IdentityHashMap<>(0));
     selected.add(required);
     for (var node : Trees.findAllRuleNodes(body, BSLParser.RULE_returnStatement)) {
       var candidate = returnedVariable(document, body, (BSLParser.ReturnStatementContext) node, reachable);
       if (candidate != null && !selected.contains(candidate) && localVariable(document, candidate)
-        && supports(document, body, candidate, variables, graph, inputs, reachable)) {
+        && supports(document, body, candidate, variables, vertices, inputs, reachable)) {
         selected.add(candidate);
       }
     }
@@ -100,8 +99,7 @@ final class IndependentReturnedStructure {
         if (change.variable() != variable) {
           continue;
         }
-        if ((change.definition() && !Trees.getTrailingComment(document.getTokens(), entry.getKey().getStop()).isEmpty())
-          || !supportedChange(entry.getKey(), change.definition(), variable.getName())) {
+        if (!supportedChange(document, entry.getKey(), change.definition(), variable.getName())) {
           return false;
         }
         definitions += change.definition() ? 1 : 0;
@@ -110,10 +108,11 @@ final class IndependentReturnedStructure {
     return definitions == 1;
   }
 
-  private static boolean supportedChange(ParserRuleContext statement,
+  private static boolean supportedChange(DocumentContext document, ParserRuleContext statement,
                                          boolean definition, String variableName) {
     if (definition) {
       return statement instanceof BSLParser.AssignmentContext assignment
+        && Trees.getTrailingComment(document.getTokens(), assignment.getStop()).isEmpty()
         && emptyStructure(assignment);
     }
     return statement instanceof BSLParser.CallStatementContext call && literalInsert(call, variableName);
@@ -136,9 +135,9 @@ final class IndependentReturnedStructure {
       && arguments.getFirst().getNodeType() == ExpressionNodeType.SKIPPED_CALL_ARG);
   }
 
-  private static boolean closedConditions(VariableSymbol variable, ControlFlowGraph graph,
+  private static boolean closedConditions(VariableSymbol variable, Set<CfgVertex> vertices,
                                            VariableFlowAnalyzer.FlowInputs inputs) {
-    for (var vertex : graph.vertexSet()) {
+    for (var vertex : vertices) {
       var condition = FlowConditionNarrowing.conditionOf(vertex);
       if (condition == null) {
         continue;
@@ -152,8 +151,12 @@ final class IndependentReturnedStructure {
     return true;
   }
 
-  private static boolean escapes(DocumentContext document, BSLParser.CodeBlockContext body, VariableSymbol variable) {
-    for (var node : org.antlr.v4.runtime.tree.Trees.findAllRuleNodes(body, BSLParser.RULE_callParam)) {
+  private static boolean escapes(DocumentContext document, BSLParser.CodeBlockContext body, VariableSymbol variable,
+                                 Predicate<ParserRuleContext> reachable) {
+    for (var node : Trees.<ParserRuleContext>findAllRuleNodes(body, BSLParser.RULE_callParam)) {
+      if (!reachable.test(node)) {
+        continue;
+      }
       for (var identifier : org.antlr.v4.runtime.tree.Trees.findAllTokenNodes(node, BSLParser.IDENTIFIER)) {
         if (identifier.getParent() instanceof BSLParser.ComplexIdentifierContext complex
           && complex.IDENTIFIER() == identifier && identifier.getText().equalsIgnoreCase(variable.getName())
