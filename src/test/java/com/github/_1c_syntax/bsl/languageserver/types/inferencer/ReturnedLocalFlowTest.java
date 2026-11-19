@@ -39,6 +39,7 @@ import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.eclipse.lsp4j.Position;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -106,6 +107,49 @@ class ReturnedLocalFlowTest extends AbstractServerContextAwareTest {
       """, context);
 
     assertThat(unrelatedCallsIn(document)).isZero();
+    var method = document.getSymbolTree().getMethodSymbol("Independent").orElseThrow();
+    var result = inferencer.computeReturnTypes(method).types();
+    assertThat(result.localFields().values().stream()
+      .flatMap(fields -> fields.entrySet().stream())
+      .filter(entry -> entry.getKey().equalsIgnoreCase("Status"))
+      .flatMap(entry -> entry.getValue().types().refs().stream()))
+      .extracting(TypeRef::qualifiedName).containsExactly("Булево");
+  }
+
+  @ParameterizedTest
+  @CsvSource(value = {
+    "Make() | Unused = Recursive(); | true",
+    "Make(Seed) | Unused = Recursive(); | false",
+    "Make() | Shared = Recursive(); Unused = Recursive(); | false",
+    "Make() | Result.Insert(\"Other\", 1); Unused = Recursive(); | false"
+  }, delimiter = '|')
+  void aCallInitializerIsProjectedOnlyWithoutCallerInputsOrMutations(String initializer, String statements,
+                                                                    boolean independent) {
+    var document = TestUtils.getDocumentContext("""
+      Var Shared;
+      Function Independent()
+        Seed = 1;
+        Result = %s;
+        %s
+        Return Result;
+      EndFunction
+      Function Make(Value = 0)
+        Local = New Structure();
+        Local.Insert("Status", True);
+        Return Local;
+      EndFunction
+      Function Recursive()
+        Node = New Structure;
+        Node.Insert("Next", Recursive());
+        Return Node;
+      EndFunction
+      """.formatted(initializer, statements), context);
+
+    if (independent) {
+      assertThat(unrelatedCallsIn(document)).isZero();
+    } else {
+      assertThat(unrelatedCallsIn(document)).isPositive();
+    }
     var method = document.getSymbolTree().getMethodSymbol("Independent").orElseThrow();
     var result = inferencer.computeReturnTypes(method).types();
     assertThat(result.localFields().values().stream()
