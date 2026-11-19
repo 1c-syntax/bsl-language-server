@@ -301,8 +301,10 @@ public class ExpressionTypeInferencer {
   }
 
   private static boolean completeRoot(InferenceContext ctx) {
-    return !ctx.cycleCut && !ctx.bodyInFlowCut && !ctx.depthCut && !ctx.sawMissing() && !ctx.failed
-      && !ctx.flowSession.computing();
+    if (ctx.cycleCut || ctx.bodyInFlowCut || ctx.depthCut) {
+      return false;
+    }
+    return !ctx.sawMissing() && !ctx.failed && !ctx.flowSession.computing();
   }
 
   /**
@@ -1091,29 +1093,28 @@ public class ExpressionTypeInferencer {
       // документа, считаем на месте — дерево разбора здесь доступно. Документы сравниваются
       // по ссылке: на URI в рабочей области приходится ровно один DocumentContext, а
       // сравнение самих URI нормализует проценты и стоит заметно дороже.
-      if (owner == ctx.documentContext) {
-        var result = neutralReturnTypes(method, ctx);
-        if (symbolTypeIndex.returnAwaitsUnparsedModule(method)) {
-          ctx.noteMissingData();
-        }
-        return result;
-      } else {
-        if (method.isFunction() && !methodReturnTypeIndexer.isIndexed(method)) {
-          // Значение чужой функции ещё не посчитано — так бывает, пока рабочая область
-          // наполняется. Расчёт, опирающийся на него, придётся повторить.
-          ctx.noteMissingMethod(method);
-        }
-      }
-      if (symbolTypeIndex.returnAwaitsUnparsedModule(method)) {
-        // Объявленное значение ссылается на модуль, до которого очередь ещё не дошла, и пока
-        // оно неполно — хотя по самому ответу этого не видно. Объявленное пересобирается,
-        // когда рабочая область наполнена, а расчёт, прочитавший его сейчас, придётся повторить.
-        ctx.noteMissingData();
-      }
-      return symbolTypeIndex.getReturnTypes(method);
+      return neutralReferenceType(method, ctx);
     } finally {
       ctx.visited.remove(method);
     }
+  }
+
+  private TypeSet neutralReferenceType(MethodSymbol method, InferenceContext ctx) {
+    TypeSet result;
+    if (method.getOwner() == ctx.documentContext) {
+      result = neutralReturnTypes(method, ctx);
+    } else {
+      if (method.isFunction() && !methodReturnTypeIndexer.isIndexed(method)) {
+        ctx.noteMissingMethod(method);
+      }
+      result = symbolTypeIndex.getReturnTypes(method);
+    }
+    // Объявленное значение ссылается на ещё не разобранный модуль. По самому типу
+    // этого не видно, но опиравшийся на него расчёт придётся повторить.
+    if (symbolTypeIndex.returnAwaitsUnparsedModule(method)) {
+      ctx.noteMissingData();
+    }
+    return result;
   }
 
   /** Повторный вызов с теми же входами переиспользует и неполный ответ только внутри этого запроса. */
@@ -1285,7 +1286,9 @@ public class ExpressionTypeInferencer {
     var result = symbolTypeIndex.getReturnTypes(method, inferred);
     if (canRememberReturn(nested)) {
       ctx.contextualReturns.remember(key, result, revision);
-    } else if (!nested.sawMissing() && canUseContextualReturns(nested)) {
+      return result;
+    }
+    if (!nested.sawMissing() && canUseContextualReturns(nested)) {
       ctx.contextualReturns.remember(guard, new ContextualReturnCache.Result(result,
         Set.copyOf(nested.consulted), Set.copyOf(nested.dependencies), Set.copyOf(nested.cutMethods),
         Set.copyOf(nested.flowBodiesRead),
@@ -1457,8 +1460,13 @@ public class ExpressionTypeInferencer {
   /**
    * Вложенный расчёт может быть усечён защитой вызывающего. Самостоятельному запросу
    * с полными входными данными собственное приближение нужно при повторном входе в этот метод.
+   * В проходе по ячейкам отсечённый вызов уточняет метод, на котором замкнулся цикл.
+   * Промежуточные методы используют это приближение при следующем обходе цикла.
    */
   private static boolean needsOwnApproximation(MethodSymbol method, InferenceContext ctx) {
+    if (ctx.flowSession.cellsComputing()) {
+      return ctx.cutMethods.contains(method);
+    }
     return ctx.visited.size() > 1 || ctx.flowSession.computing() || ctx.sawMissing() || ctx.cutMethods.contains(method);
   }
 

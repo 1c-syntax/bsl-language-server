@@ -150,6 +150,26 @@ class MethodReturnTypeIndexerTest {
     returns(consumerMethod, TypeSet.EMPTY, sourceMethod);
   }
 
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void provisionalResultIsNeverReportedReadyDuringPublication(boolean approximate) {
+    var reads = new AtomicInteger();
+    var visibleAsReady = new AtomicBoolean();
+    when(symbolTypeIndex.getReturnTypes(consumerMethod)).thenAnswer(invocation -> {
+      if (reads.incrementAndGet() == 2) {
+        visibleAsReady.set(indexer.isIndexed(consumerMethod));
+      }
+      return STRING;
+    });
+
+    indexer.computeIfAbsent(consumerMethod, () -> new ComputedReturnTypes(STRING, Set.of(), !approximate),
+      approximate, new Object());
+
+    assertThat(reads.get()).isEqualTo(2);
+    assertThat(visibleAsReady).isFalse();
+    assertThat(indexer.isIndexed(consumerMethod)).isFalse();
+  }
+
   @AfterEach
   void stopExecutor() {
     resolveExecutor.shutdownNow();

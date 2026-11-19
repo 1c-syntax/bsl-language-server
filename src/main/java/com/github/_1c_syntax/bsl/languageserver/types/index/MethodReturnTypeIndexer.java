@@ -267,12 +267,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     }
     var startedAt = clock.incrementAndGet();
     var computed = computation.get();
-    store(method, computed, startedAt);
-    if (approximate || computed.incomplete()) {
-      provisional.put(method, new ProvisionalReturn(inputs, approximate ? null : computed.incompleteMethodReturns()));
-    } else {
-      provisional.remove(method);
-    }
+    store(method, computed, startedAt, provisionalResult(computed, approximate, inputs));
     if (!known) {
       rememberMethodOfUri(method);
     }
@@ -505,13 +500,13 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     // застать не мог, и вызывающему понадобится ещё один заход.
     var startedAt = clock.incrementAndGet();
     var computed = inferencer.computeReturnTypes(method);
-    var changed = store(method, computed, startedAt);
-    if (computed.incomplete()) {
-      provisional.put(method, new ProvisionalReturn(UNSCOPED_INPUTS, computed.incompleteMethodReturns()));
-    } else {
-      provisional.remove(method);
-    }
-    return changed;
+    return store(method, computed, startedAt, provisionalResult(computed, false, UNSCOPED_INPUTS));
+  }
+
+  private static @Nullable ProvisionalReturn provisionalResult(ComputedReturnTypes computed, boolean approximate,
+                                                               Object inputs) {
+    return approximate || computed.incomplete()
+      ? new ProvisionalReturn(inputs, approximate ? null : computed.incompleteMethodReturns()) : null;
   }
 
   /**
@@ -520,9 +515,11 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * @param method    метод.
    * @param computed  результат расчёта.
    * @param startedAt отметка часов на момент начала расчёта.
+   * @param partial   признак предварительного значения либо {@code null} для окончательного.
    * @return {@code true}, если набор типов изменился.
    */
-  private boolean store(MethodSymbol method, ComputedReturnTypes computed, long startedAt) {
+  private boolean store(MethodSymbol method, ComputedReturnTypes computed, long startedAt,
+                        @Nullable ProvisionalReturn partial) {
     link(method, computed.consulted());
     if (!maintenance && computed.consulted().stream().anyMatch(pending::contains)) {
       // Расчёт опирался на значение, которое само ждёт пересчёта: вызванный метод посчитан,
@@ -554,6 +551,12 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
             .toList());
       }
     }
+    // Признак неполноты виден до обновления типа и indexed. Окончательный результат
+    // снимает только ту отметку, которую застал перед публикацией.
+    var previousMarker = provisional.get(method);
+    if (partial != null) {
+      provisional.put(method, partial);
+    }
     var previous = symbolTypeIndex.getReturnTypes(method);
     symbolTypeIndex.putReturnTypes(method, computed.types());
     indexed.add(method);
@@ -567,6 +570,9 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       // воспроизводимость падает вместо того, чтобы вырасти (замеры в #4480).
       changedAt.merge(method.getOwner().getUri(), startedAt, Math::max);
       valueChanges.incrementAndGet();
+    }
+    if (partial == null && previousMarker != null) {
+      provisional.remove(method, previousMarker);
     }
     return valueChanged;
   }

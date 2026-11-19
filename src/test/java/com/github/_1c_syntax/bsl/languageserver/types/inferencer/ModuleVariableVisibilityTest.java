@@ -191,6 +191,40 @@ class ModuleVariableVisibilityTest extends AbstractServerContextAwareTest {
     assertThat(repeated.incomplete()).as("the previous partial cells must not become a settled cache hit").isTrue();
   }
 
+  @Test
+  void recursiveReturnKeepsNestedFieldTypesWhenReadThroughAModuleCell() {
+    var document = document("""
+      Var Shared;
+      Procedure Write()
+        Shared = Outer();
+      EndProcedure
+      Function Read()
+        Result = Shared;
+        Return Result;
+      EndFunction
+      Function Outer()
+        Result = New Structure("Name", "ready");
+        Result.Insert("Next", Branch());
+        Return Result;
+      EndFunction
+      Function Branch()
+        Existing = Shared;
+        If Flag Then
+          Return Outer();
+        EndIf;
+        Return Existing = Undefined;
+      EndFunction
+      """);
+    var method = document.getSymbolTree().getMethodSymbol("Read").orElseThrow();
+
+    var result = inferencer.computeReturnTypes(method);
+
+    assertThat(result.types().getFieldTypes("Name").refs()).extracting(TypeRef::qualifiedName)
+      .containsExactly("Строка");
+    assertThat(result.types().getFieldTypes("Next").refs()).extracting(TypeRef::qualifiedName)
+      .contains("Структура");
+  }
+
   @ParameterizedTest
   @ValueSource(strings = {"\"ready\"", "\"Unrelated\"", "Receiver.Unrelated", "Receiver.Child.Unrelated",
     "Receiver[\"Unrelated\"]", "Unrelated()"})

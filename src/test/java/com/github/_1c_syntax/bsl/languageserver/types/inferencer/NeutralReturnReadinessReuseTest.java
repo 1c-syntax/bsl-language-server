@@ -103,19 +103,19 @@ class NeutralReturnReadinessReuseTest extends AbstractServerContextAwareTest {
       var first = inferencer.computeReturnTypes(root);
       assertThat(first.types().refs()).extracting(TypeRef::qualifiedName).containsExactly("Строка");
       assertThat(first.incomplete()).isTrue();
-      assertThat(counts.get("Leaf")).as("repeated calls share the incomplete result and readiness flags").isEqualTo(1);
+      assertThat(counts).as("repeated calls share the incomplete result and readiness flags").containsEntry("Leaf", 1);
       for (var i = 1; i <= branches; i++) {
-        assertThat(counts.get("Branch" + i)).as("branch %s body calculations in one request", i).isEqualTo(1);
+        assertThat(counts).as("branch %s body calculations in one request", i).containsEntry("Branch" + i, 1);
       }
 
       var second = inferencer.computeReturnTypes(root);
       assertThat(second.incomplete()).isTrue();
       assertThat(second.types()).isEqualTo(first.types());
-      assertThat(counts.get("Leaf")).as("the next request retries the incomplete body").isEqualTo(2);
-      assertThat(counts.get("Pending")).as("a complete body remains globally reusable").isEqualTo(1);
-      assertThat(counts.get("Ready")).as("a sibling's missing input does not contaminate a complete body").isEqualTo(1);
+      assertThat(counts).as("the next request retries the incomplete body").containsEntry("Leaf", 2);
+      assertThat(counts).as("a complete body remains globally reusable").containsEntry("Pending", 1);
+      assertThat(counts).as("a sibling's missing input does not contaminate a complete body").containsEntry("Ready", 1);
       for (var i = 1; i <= branches; i++) {
-        assertThat(counts.get("Branch" + i)).as("branch %s is retried in the next request", i).isEqualTo(2);
+        assertThat(counts).as("branch %s is retried in the next request", i).containsEntry("Branch" + i, 2);
       }
     } finally {
       ReflectionTestUtils.setField(target, "returnTypeFromBodyInference", originalBodies);
