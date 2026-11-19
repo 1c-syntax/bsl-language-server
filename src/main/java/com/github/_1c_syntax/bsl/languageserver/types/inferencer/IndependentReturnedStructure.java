@@ -54,8 +54,11 @@ final class IndependentReturnedStructure {
     };
   }
 
-  static @Nullable TypeSet typeBefore(VariableFlowAnalyzer.Facts facts, ParserRuleContext statement,
+  static @Nullable TypeSet typeBefore(VariableFlowAnalyzer.@Nullable Facts facts, ParserRuleContext statement,
                                      VariableSymbol variable) {
+    if (facts == null) {
+      return null;
+    }
     var index = facts.indexOf(variable);
     return index == null ? null : facts.beforeStatement().getOrDefault(statement, FlowEnvironment.EMPTY).get(index);
   }
