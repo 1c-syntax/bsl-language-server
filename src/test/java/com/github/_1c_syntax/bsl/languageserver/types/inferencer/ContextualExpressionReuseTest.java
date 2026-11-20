@@ -119,7 +119,7 @@ class ContextualExpressionReuseTest extends AbstractServerContextAwareTest {
     var failure = missingPlacement ? doReturn((Object) null) : doThrow(new IllegalStateException("transient flow failure"));
     failure.doCallRealMethod().when(counted)
       .typeAtRoot(any(DocumentContext.class), any(ParserRuleContext.class), any(VariableSymbol.class),
-        any(VariableFlowAnalyzer.FlowInputs.class), any(java.util.function.BooleanSupplier.class));
+        any(FlowInputs.class), any(java.util.function.BooleanSupplier.class));
     var populated = ReflectionTestUtils.getField(target, "workspacePopulated");
     ReflectionTestUtils.setField(target, "variableFlowAnalyzer", counted);
     ReflectionTestUtils.setField(target, "workspacePopulated", true);

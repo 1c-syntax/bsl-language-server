@@ -36,7 +36,6 @@ import com.google.common.base.Equivalence;
 import java.util.List;
 import java.util.Map;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.VariableFlowAnalyzer.Facts;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.VariableFlowAnalyzer.FlowInputs;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.VariableFlowAnalyzer.Change;
 
 import static com.github._1c_syntax.bsl.languageserver.types.inferencer.VariableFlowAnalyzer.MAX_PASSES;

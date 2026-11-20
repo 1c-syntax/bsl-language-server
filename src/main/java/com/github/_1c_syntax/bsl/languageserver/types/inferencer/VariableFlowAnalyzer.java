@@ -66,8 +66,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BooleanSupplier;
 import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -301,11 +299,14 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       if (types == null) {
         return true;
       }
-      return seen.add(types) && (!types.lazyFields().isEmpty() || !types.lazyElements().isEmpty()
+      if (!seen.add(types)) {
+        return false;
+      }
+      return !types.lazyFields().isEmpty() || !types.lazyElements().isEmpty()
         || types.elementTypes().values().stream().anyMatch(value -> hasDeferredType(value, seen))
         || types.describedTypes().values().stream().anyMatch(value -> hasDeferredType(value, seen))
         || types.localFields().values().stream().flatMap(fields -> fields.values().stream())
-          .anyMatch(field -> hasDeferredType(field.types(), seen)));
+          .anyMatch(field -> hasDeferredType(field.types(), seen));
     }
 
     boolean hasIndependentFacts(ReturnedLocalFlow.Key key) {
@@ -513,91 +514,6 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       Position position,
       TypeSet incoming
     );
-  }
-
-  /**
-   * Исходные данные расчёта по телу.
-   *
-   * @param session             расчёты, идущие прямо сейчас в рамках этого вывода типов.
-   * @param activeBodyRead      уведомление о проверке текущего окружения тела, включая
-   *                            проверку при отсутствии активного расчёта.
-   * @param cacheable           можно ли запоминать результат: вложенный расчёт мог быть
-   *                            усечён защитой от циклов, такой результат переиспользовать нельзя.
-   * @param executionContext    режим для выбора кеша; {@code null} использует общий результат
-   *                            по всем возможным контекстам модуля и метода.
-   * @param compilationContexts возможные режимы каждого тела с учётом выбранного контекста,
-   *                            модуля, директивы и ветки объявления метода. Пустое множество
-   *                            исключает тело; пустой Optional отключает модель контекстов 1С.
-   * @param sawMissing          видел ли вывод типов значения, которых ещё нет: пока рабочая
-   *                            область наполняется, так бывает с функциями модулей, до которых
-   *                            очередь не дошла. Посчитанное на них неполно и в кэши, живущие
-   *                            дольше вывода, не попадает: следующий расчёт взял бы оттуда
-   *                            неполное значение, не узнав, что оно неполное.
-   * @param variables           переменные тела, за типами которых следит расчёт. Зависят
-   *                            только от самого тела: окружение считается на всё тело разом
-   *                            и переиспользуется всеми запросами, поэтому набор переменных
-   *                            не может зависеть от того, про какую из них спросили первой.
-   * @param readModuleVariables чтения переменных модуля; при отсутствии сведений все видимые
-   *                            переменные консервативно считаются входами расчёта.
-   * @param sharedWithOtherBodies видна ли переменная другим телам модуля: тогда её тип
-   *                            задаёт не только это тело, и любой вызов мог его сменить.
-   * @param declaredFact        что о переменной объявлено помимо кода: типы параметра,
-   *                            типизирующий комментарий и прочее, известное до первого
-   *                            присваивания. У переменной, видимой другим телам, это лишь
-   *                            начальное приближение её ячейки.
-   * @param definitionPositions позиции всех присваиваний переменной в документе;
-   *                            учитываются только попавшие в это тело.
-   * @param mutationPositions   позиции операторов, меняющих тип переменной на месте.
-   * @param assigned            колбэк, отдающий присваиваемые типы по позиции.
-   * @param mutations           колбэк, применяющий изменение оператора-мутатора.
-   * @param narrowing           колбэк, сужающий тип по охраняющему условию ветки.
-   * @param noteIncompleteCellInput отметить, что результат опирается на неполный вход ячейки.
-   * @param prepareCells        самостоятельный расчёт ячеек при первом обращении во вложенном выводе.
-   *     <p>
-   *     Переменные и места изменений отдаются поставщиками, а не значениями: за ними стоит
-   *     обход индекса ссылок и разбор документирующих комментариев. При готовом ответе в
-   *     кэше ничего этого не нужно, а тип спрашивают на каждое обращение к переменной.
-   */
-  public record FlowInputs(
-    FlowSession session, Consumer<CodeBlockContext> activeBodyRead, boolean cacheable,
-    @Nullable ExecutionContext executionContext,
-    Function<CodeBlockContext, Optional<Set<ExecutionContext>>> compilationContexts,
-    BooleanSupplier sawMissing,
-    Function<CodeBlockContext, Collection<VariableSymbol>> variables,
-    @Nullable Function<CodeBlockContext, Set<VariableSymbol>> readModuleVariables,
-    Predicate<VariableSymbol> sharedWithOtherBodies, Function<VariableSymbol, TypeSet> declaredFact,
-    Function<VariableSymbol, Collection<Position>> definitionPositions,
-    Function<VariableSymbol, Collection<Position>> mutationPositions,
-    AssignedTypes assigned, Mutations mutations, GuardNarrowing narrowing, Runnable noteIncompleteCellInput,
-    @Nullable Consumer<List<VariableSymbol>> prepareCells
-  ) {
-    /** Входы без отдельного списка чтений сохраняют консервативный расчёт всех видимых переменных. */
-    public FlowInputs(FlowSession session, Consumer<CodeBlockContext> activeBodyRead, boolean cacheable,
-      @Nullable ExecutionContext executionContext,
-      Function<CodeBlockContext, Optional<Set<ExecutionContext>>> compilationContexts, BooleanSupplier sawMissing,
-      Function<CodeBlockContext, Collection<VariableSymbol>> variables,
-      Predicate<VariableSymbol> sharedWithOtherBodies, Function<VariableSymbol, TypeSet> declaredFact,
-      Function<VariableSymbol, Collection<Position>> definitionPositions,
-      Function<VariableSymbol, Collection<Position>> mutationPositions,
-      AssignedTypes assigned, Mutations mutations, GuardNarrowing narrowing) {
-      this(session, activeBodyRead, cacheable, executionContext, compilationContexts, sawMissing, variables, null,
-        sharedWithOtherBodies, declaredFact, definitionPositions, mutationPositions, assigned, mutations, narrowing,
-        () -> {}, null);
-    }
-
-    public FlowInputs(FlowSession session, Consumer<CodeBlockContext> activeBodyRead, boolean cacheable,
-      @Nullable ExecutionContext executionContext,
-      Function<CodeBlockContext, Optional<Set<ExecutionContext>>> compilationContexts, BooleanSupplier sawMissing,
-      Function<CodeBlockContext, Collection<VariableSymbol>> variables,
-      @Nullable Function<CodeBlockContext, Set<VariableSymbol>> readModuleVariables,
-      Predicate<VariableSymbol> sharedWithOtherBodies, Function<VariableSymbol, TypeSet> declaredFact,
-      Function<VariableSymbol, Collection<Position>> definitionPositions,
-      Function<VariableSymbol, Collection<Position>> mutationPositions,
-      AssignedTypes assigned, Mutations mutations, GuardNarrowing narrowing, Runnable noteIncompleteCellInput) {
-      this(session, activeBodyRead, cacheable, executionContext, compilationContexts, sawMissing, variables,
-        readModuleVariables, sharedWithOtherBodies, declaredFact, definitionPositions, mutationPositions, assigned,
-        mutations, narrowing, noteIncompleteCellInput, null);
-    }
   }
 
   /**
@@ -820,18 +736,8 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
         pending.add(variable);
       }
     }
-    if (pending.isEmpty()) {
+    if (pending.isEmpty() || preparePendingCells(inputs, pending, settled)) {
       return;
-    }
-    var prepare = inputs.prepareCells();
-    if (prepare != null && !inputs.cacheable() && !session.computing()) {
-      prepare.accept(pending);
-      if (pending.removeIf(variable -> settled.containsKey(variable) && session.cellsDone.remove(variable))) {
-        session.cellsChanged.run();
-      }
-      if (pending.isEmpty()) {
-        return;
-      }
     }
     // Признак возвращается к прежнему значению, а не гасится: круги по одной переменной
     // могут запуститься из кругов по другой, и снятие признака открыло бы внешним кругам
@@ -856,6 +762,20 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     } finally {
       session.finishCellComputation(outerComputing, pending, finished);
     }
+  }
+
+  private static boolean preparePendingCells(FlowInputs inputs, List<VariableSymbol> pending,
+                                             Map<VariableSymbol, TypeSet> settled) {
+    var prepare = inputs.prepareCells();
+    var session = inputs.session();
+    if (prepare == null || inputs.cacheable() || session.computing()) {
+      return false;
+    }
+    prepare.accept(pending);
+    if (pending.removeIf(variable -> settled.containsKey(variable) && session.cellsDone.remove(variable))) {
+      session.cellsChanged.run();
+    }
+    return pending.isEmpty();
   }
 
   /** Общие переменные, к которым обращается тело; их перечень берётся из структуры текущего AST. */

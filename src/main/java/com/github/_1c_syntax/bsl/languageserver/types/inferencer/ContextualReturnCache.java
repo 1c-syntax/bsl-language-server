@@ -32,7 +32,6 @@ import org.jspecify.annotations.Nullable;
 
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -66,6 +65,8 @@ final class ContextualReturnCache {
   private long cellReads;
   private @Nullable Map<ExecutionContext, Set<VariableSymbol>> attemptedCellPreparations;
   private @Nullable ContextualReturnCache preparationOwner;
+  /** Самостоятельный расчёт ячеек. Его промежуточные результаты остаются внутри запроса. */
+  boolean preparingCells;
 
   ContextualReturnCache() {
     revision = 0;
@@ -74,6 +75,7 @@ final class ContextualReturnCache {
   ContextualReturnCache forRefinement() {
     var result = new ContextualReturnCache();
     result.preparationOwner = preparationOwner == null ? this : preparationOwner;
+    result.preparingCells = preparingCells;
     return result;
   }
 
@@ -82,7 +84,7 @@ final class ContextualReturnCache {
       return preparationOwner.reserveCellPreparation(context, variables);
     }
     if (attemptedCellPreparations == null) {
-      attemptedCellPreparations = new EnumMap<>(ExecutionContext.class);
+      attemptedCellPreparations = new HashMap<>();
     }
     var attempted = attemptedCellPreparations.computeIfAbsent(context, ignored -> new HashSet<>());
     return variables.stream().filter(attempted::add).toList();

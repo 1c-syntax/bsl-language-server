@@ -200,11 +200,11 @@ class ModeIndependentFlowCacheTest extends AbstractServerContextAwareTest {
       inputs(fixture, mode, calls, value, tracking, sensitive, reachable), () -> complete);
   }
 
-  private VariableFlowAnalyzer.FlowInputs inputs(Fixture fixture, ExecutionContext mode, AtomicInteger calls,
+  private FlowInputs inputs(Fixture fixture, ExecutionContext mode, AtomicInteger calls,
       Supplier<TypeSet> value, boolean tracking, boolean sensitive, boolean reachable) {
     var session = new VariableFlowAnalyzer.FlowSession();
     if (tracking) target.startContextTracking(session);
-    return new VariableFlowAnalyzer.FlowInputs(session, body -> {}, true, mode,
+    return new FlowInputs(session, body -> {}, true, mode,
       body -> Optional.of(reachable ? Set.of(mode) : Set.of()), () -> false, body -> fixture.variables(),
       variable -> variable.getKind() == VariableKind.MODULE,
       variable -> variable.getKind() == VariableKind.MODULE ? value.get() : TypeSet.EMPTY,
