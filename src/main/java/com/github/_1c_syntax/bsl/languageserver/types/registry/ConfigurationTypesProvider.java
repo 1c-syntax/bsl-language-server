@@ -398,6 +398,7 @@ public class ConfigurationTypesProvider {
       var value = ValueTypes.resolve(typeRegistry, constant.getValueType());
       var signature = new SignatureDescriptor(List.of(), value, BilingualString.EMPTY);
       return List.of(MemberDescriptor.method("Получить", List.of(signature))
+        .withReturnTypes(value)
         .withBilingualName(BilingualString.of("Получить", "Get"))
         .withStandardLibrary(true));
     }, FileType.BSL);
