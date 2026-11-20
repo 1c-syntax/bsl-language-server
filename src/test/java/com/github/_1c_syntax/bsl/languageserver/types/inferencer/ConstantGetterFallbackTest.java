@@ -22,8 +22,10 @@
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.types.index.MethodReturnTypeIndexer;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -44,6 +46,26 @@ class ConstantGetterFallbackTest extends AbstractServerContextAwareTest {
   @ParameterizedTest
   @ValueSource(strings = {"Константы.Threshold.Получить()", "Constants.Threshold.Get()"})
   void readsConstantTypeDuringPopulationWithoutPlatformContext(String getter, @TempDir Path root) throws IOException {
+    var result = readConstantType(root, getter, "<v8:Type>xs:decimal</v8:Type>");
+
+    assertThat(result.types().refs()).extracting(TypeRef::qualifiedName).containsExactly("Число");
+    assertThat(result.incomplete()).isFalse();
+  }
+
+  @Test
+  void readsAllDeclaredTypesOfCompositeConstant(@TempDir Path root) throws IOException {
+    var result = readConstantType(root, "Константы.Threshold.Получить()", """
+      <v8:Type>xs:decimal</v8:Type>
+      <v8:Type>xs:string</v8:Type>
+      """);
+
+    assertThat(result.types().refs()).extracting(TypeRef::qualifiedName).containsExactlyInAnyOrder("Число", "Строка");
+    assertThat(result.incomplete()).isFalse();
+  }
+
+  private MethodReturnTypeIndexer.ComputedReturnTypes readConstantType(
+    Path root, String getter, String declaredTypes
+  ) throws IOException {
     Files.writeString(root.resolve("Configuration.xml"), """
       <MetaDataObject xmlns="http://v8.1c.ru/8.3/MDClasses" version="2.11">
         <Configuration uuid="11111111-1111-4111-8111-111111111111">
@@ -58,10 +80,10 @@ class ConstantGetterFallbackTest extends AbstractServerContextAwareTest {
                       xmlns:v8="http://v8.1c.ru/8.1/data/core"
                       xmlns:xs="http://www.w3.org/2001/XMLSchema" version="2.11">
         <Constant uuid="22222222-2222-4222-8222-222222222222">
-          <Properties><Name>Threshold</Name><Type><v8:Type>xs:decimal</v8:Type></Type></Properties>
+          <Properties><Name>Threshold</Name><Type>%s</Type></Properties>
         </Constant>
       </MetaDataObject>
-      """);
+      """.formatted(declaredTypes));
     initServerContext(root, false);
     var document = TestUtils.getDocumentContext("""
       Function ReadValue()
@@ -70,9 +92,6 @@ class ConstantGetterFallbackTest extends AbstractServerContextAwareTest {
       """.formatted(getter), context);
     var method = document.getSymbolTree().getMethodSymbol("ReadValue").orElseThrow();
 
-    var result = inferencer.computeReturnTypes(method);
-
-    assertThat(result.types().refs()).extracting(TypeRef::qualifiedName).containsExactly("Число");
-    assertThat(result.incomplete()).isFalse();
+    return inferencer.computeReturnTypes(method);
   }
 }
