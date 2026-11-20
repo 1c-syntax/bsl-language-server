@@ -1839,7 +1839,7 @@ public class ExpressionTypeInferencer {
     // ответом стоит обход индекса ссылок, поэтому он запоминается на время запроса.
     Map<VariableSymbol, TypeSet> declaredByVariable = new HashMap<>();
     var sharedDeclarations = workspacePopulated ? DiagnosticDeclarationSession.current() : null;
-    return target -> {
+    return (VariableSymbol target) -> {
       var cached = declaredByVariable.get(target);
       if (cached != null) {
         return cached;
