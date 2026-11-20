@@ -24,11 +24,16 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.getDocumentContext;
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.getDocumentContextFromFile;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -91,6 +96,60 @@ class DiagnosticIgnoranceComputerTest {
     assertThat(ignoredDiagnostics).allMatch(data::diagnosticShouldBeIgnored);
     assertThat(notIgnoredDiagnostics).noneMatch(data::diagnosticShouldBeIgnored);
 
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "Перед", "После", "Вместо", "ИзменениеИКонтроль", "Before", "After", "Around", "ChangeAndValidate"
+  })
+  void testOnlyCanonicalAnnotationRangesAreExemptFromExtensionSuppression(String annotation) {
+    var documentContext = getDocumentContext("""
+      &ИзменениеИКонтроль("Метод")
+      &%s("Метод") Процедура Расш_Метод()
+        Сообщить("Исходный код");
+      КонецПроцедуры
+      """.formatted(annotation));
+    var data = new DiagnosticIgnoranceComputer(documentContext).compute();
+    var diagnostic = createDiagnostic("CanonicalSpellingKeywords", 2);
+    diagnostic.setRange(Ranges.create(1, 1, 1, annotation.length() + 1));
+
+    assertThat(data.diagnosticShouldBeIgnored(diagnostic)).isFalse();
+    diagnostic.setCode("RandomDiagnostic");
+    assertThat(data.diagnosticShouldBeIgnored(diagnostic)).isTrue();
+    assertThat(data.diagnosticShouldBeIgnored(createDiagnostic("CanonicalSpellingKeywords", 3))).isTrue();
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "// BSLLS-off\n&ИЗМЕНЕНИЕиконтроль(\"Метод\")",
+    "// BSLLS:CanonicalSpellingKeywords-off\n&ИЗМЕНЕНИЕиконтроль(\"Метод\")",
+    "&ИЗМЕНЕНИЕиконтроль(\"Метод\") // BSLLS:CanonicalSpellingKeywords-off"
+  })
+  void testCommentSuppressionStillAppliesToExtensionAnnotations(String annotations) {
+    var documentContext = getDocumentContext(annotations + "\nПроцедура Метод()\nКонецПроцедуры");
+    var token = documentContext.getTokensFromDefaultChannel().stream()
+      .filter(candidate -> candidate.getText().equals("ИЗМЕНЕНИЕиконтроль"))
+      .findFirst().orElseThrow();
+    var diagnostic = createDiagnostic("CanonicalSpellingKeywords", token.getLine());
+    diagnostic.setRange(Ranges.create(token));
+    var data = new DiagnosticIgnoranceComputer(documentContext).compute();
+
+    assertThat(data.diagnosticShouldBeIgnored(diagnostic)).isTrue();
+  }
+
+  @ParameterizedTest
+  @CsvSource({"bsl, false", "os, true"})
+  void testAnnotationExemptionIsLimitedToBsl(String extension, boolean ignored) {
+    var documentContext = getDocumentContext(URI.create("file:///extension." + extension), """
+      &CHANGEandvalidate("Method") Function Ext_Method()
+        Return 1;
+      EndFunction
+      """);
+    var diagnostic = createDiagnostic("CanonicalSpellingKeywords", 1);
+    diagnostic.setRange(Ranges.create(0, 1, 0, 18));
+    var data = new DiagnosticIgnoranceComputer(documentContext).compute();
+
+    assertThat(data.diagnosticShouldBeIgnored(diagnostic)).isEqualTo(ignored);
   }
 
   @Test

@@ -167,6 +167,15 @@ public final class Keywords {
   public static final MultiName AT_CLIENT_AT_SERVER_UP =
     MultiName.create("ATCLIENTATSERVER", "НАКЛИЕНТЕНАСЕРВЕРЕ");
 
+  public static final MultiName BEFORE = MultiName.create("Before", "Перед");
+  public static final MultiName BEFORE_UP = MultiName.create("BEFORE", "ПЕРЕД");
+  public static final MultiName AFTER = MultiName.create("After", "После");
+  public static final MultiName AFTER_UP = MultiName.create("AFTER", "ПОСЛЕ");
+  public static final MultiName AROUND = MultiName.create("Around", "Вместо");
+  public static final MultiName AROUND_UP = MultiName.create("AROUND", "ВМЕСТО");
+  public static final MultiName CHANGE_AND_VALIDATE = MultiName.create("ChangeAndValidate", "ИзменениеИКонтроль");
+  public static final MultiName CHANGE_AND_VALIDATE_UP = MultiName.create("CHANGEANDVALIDATE", "ИЗМЕНЕНИЕИКОНТРОЛЬ");
+
   public static final MultiName PUBLIC_REGION = MultiName.create("Public", "ПрограммныйИнтерфейс");
   public static final MultiName INTERNAL_REGION = MultiName.create("Internal", "СлужебныйПрограммныйИнтерфейс");
   public static final MultiName PRIVATE_REGION = MultiName.create("Private", "СлужебныеПроцедурыИФункции");

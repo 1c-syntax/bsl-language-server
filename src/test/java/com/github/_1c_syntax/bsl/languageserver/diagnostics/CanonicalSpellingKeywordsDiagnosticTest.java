@@ -21,15 +21,32 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.Mode;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.TextEdit;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
+import java.net.URI;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
 class CanonicalSpellingKeywordsDiagnosticTest extends AbstractDiagnosticTest<CanonicalSpellingKeywordsDiagnostic> {
+
+  private static final String EXTENSION_METHOD = """
+    &%s("Расчёт")
+    Функция Доп_Расчёт()
+    КонецФункции
+    """;
 
   CanonicalSpellingKeywordsDiagnosticTest() {
     super(CanonicalSpellingKeywordsDiagnostic.class);
@@ -300,6 +317,199 @@ class CanonicalSpellingKeywordsDiagnosticTest extends AbstractDiagnosticTest<Can
       .hasRange(465, 1, 465, 10)
 
     ;
+  }
+
+  /**
+   * Проверяет диапазоны и исправление регистра аннотаций BSL без изменения параметров и метода.
+   */
+  @ParameterizedTest
+  @CsvSource({
+    "Перед, пЕрЕд",
+    "После, пОсЛе",
+    "Вместо, вМеСтО",
+    "ИзменениеИКонтроль, ИЗМЕНЕНИЕиконтроль",
+    "Before, bEfOrE",
+    "After, aFtEr",
+    "Around, aRoUnD",
+    "ChangeAndValidate, CHANGEandvalidate"
+  })
+  void testExtensionAnnotations(String canonical, String mixedCase) {
+    initServerContext();
+    var canonicalDocument = TestUtils.getDocumentContext(EXTENSION_METHOD.formatted(canonical), context);
+    assertThat(getDiagnostics(canonicalDocument)).isEmpty();
+
+    for (var spelling : List.of(mixedCase, canonical.toUpperCase(Locale.ROOT), canonical.toLowerCase(Locale.ROOT))) {
+      var content = EXTENSION_METHOD.formatted(spelling);
+      var documentContext = TestUtils.getDocumentContext(content, context);
+      var diagnostics = getDiagnostics(documentContext);
+      assertThat(diagnostics).hasSize(1);
+      var diagnostic = diagnostics.getFirst();
+      assertThat(diagnostic).hasRange(0, 1, 0, spelling.length() + 1);
+
+      var quickFixes = getQuickFixes(diagnostic, documentContext);
+      assertThat(quickFixes).hasSize(1);
+      var edits = quickFixes.getFirst().getEdit().getChanges().get(documentContext.getUri().toString());
+      assertThat(edits).containsExactly(new TextEdit(diagnostic.getRange(), canonical));
+      var edit = edits.getFirst();
+      var correctedContent = content.substring(0, edit.getRange().getStart().getCharacter())
+        + edit.getNewText() + content.substring(edit.getRange().getEnd().getCharacter());
+      assertThat(correctedContent).isEqualTo(EXTENSION_METHOD.formatted(canonical));
+      context.rebuildDocument(documentContext, correctedContent, documentContext.getVersion() + 1);
+      assertThat(getDiagnostics(documentContext)).isEmpty();
+    }
+  }
+
+  /**
+   * Имена аннотаций OneScript не проверяются и не изменяются при исправлении ключевых слов.
+   */
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "перед", "пЕрЕд", "ПЕРЕД",
+    "после", "пОсЛе", "ПОСЛЕ",
+    "вместо", "вМеСтО", "ВМЕСТО",
+    "изменениеиконтроль", "ИЗМЕНЕНИЕиконтроль", "ИЗМЕНЕНИЕИКОНТРОЛЬ",
+    "before", "bEfOrE", "BEFORE",
+    "after", "aFtEr", "AFTER",
+    "around", "aRoUnD", "AROUND",
+    "changeandvalidate", "CHANGEandvalidate", "CHANGEANDVALIDATE"
+  })
+  void testOneScriptAnnotationsPreserveSpelling(String annotation) {
+    initServerContext();
+    configuration = context.getLanguageServerConfiguration();
+    configuration.getDiagnosticsOptions().setMode(Mode.ONLY);
+    configuration.getDiagnosticsOptions().setParameters(Map.of("CanonicalSpellingKeywords", Either.forLeft(true)));
+    var content = EXTENSION_METHOD.formatted(annotation) + "Процедура ОбычныйМетод() КонецПроцедуры\n";
+    var documentContext = TestUtils.getDocumentContext(URI.create("file:///custom-annotations.os"), content, context);
+    var diagnostics = documentContext.getDiagnostics();
+
+    assertThat(diagnostics).isEmpty();
+    assertThat(diagnosticInstance.getQuickFixes(diagnostics, new CodeActionParams(), documentContext)).isEmpty();
+
+    context.rebuildDocument(documentContext, content.replace("Процедура", "процедура"), documentContext.getVersion() + 1);
+    diagnostics = documentContext.getDiagnostics();
+    assertThat(diagnostics).hasSize(1);
+    var diagnostic = diagnostics.getFirst();
+    assertThat(diagnostic).hasRange(3, 0, 3, 9);
+    var quickFixes = getQuickFixes(diagnostic, documentContext);
+    assertThat(quickFixes).hasSize(1);
+    var edits = quickFixes.getFirst().getEdit().getChanges().get(documentContext.getUri().toString());
+    assertThat(edits).containsExactly(new TextEdit(diagnostic.getRange(), "Процедура"));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"bsl", "os"})
+  void testCustomAnnotationsAndNonKeywordText(String extension) {
+    initServerContext();
+    var documentContext = TestUtils.getDocumentContext(
+      URI.create("file:///custom-annotations." + extension),
+      """
+        &мОяАннотация
+        &CuStOmAnnotation
+        &ПеРедВызовом
+        &bEfOrECall
+        &Перед("ИЗМЕНЕНИЕиконтроль")
+        &After("CHANGEandvalidate")
+        Функция ПЕРЕД()
+          // &ВМЕСТО("Расчёт") &AROUND("Calculate")
+          Возврат "&ПОСЛЕ &BEFORE";
+        КонецФункции
+        """,
+      context
+    );
+
+    assertThat(getDiagnostics(documentContext)).isEmpty();
+  }
+
+  /**
+   * Проверка аннотаций подчиняется включению диагностики и её подавлению комментарием.
+   */
+  @ParameterizedTest
+  @CsvSource({"true, false", "false, false", "true, true"})
+  void testExtensionAnnotationsRespectConfigurationAndSuppression(boolean enabled, boolean suppressed) {
+    initServerContext();
+    configuration = context.getLanguageServerConfiguration();
+    configuration.getDiagnosticsOptions().setMode(Mode.ONLY);
+    configuration.getDiagnosticsOptions().setParameters(Map.of("CanonicalSpellingKeywords", Either.forLeft(enabled)));
+    var content = EXTENSION_METHOD.formatted("ИЗМЕНЕНИЕиконтроль");
+    if (suppressed) {
+      content = "// BSLLS:CanonicalSpellingKeywords-off\n" + content;
+    }
+    var documentContext = TestUtils.getDocumentContext(content, context);
+
+    assertThat(documentContext.getDiagnostics()).hasSize(enabled && !suppressed ? 1 : 0);
+  }
+
+  @Test
+  void testSingleLineExtensionKeepsAnnotationDiagnostics() {
+    initServerContext();
+    configuration = context.getLanguageServerConfiguration();
+    configuration.getDiagnosticsOptions().setMode(Mode.ONLY);
+    configuration.getDiagnosticsOptions().setParameters(Map.of("CanonicalSpellingKeywords", Either.forLeft(true)));
+    var documentContext = TestUtils.getDocumentContext("""
+      &пЕрЕд("Метод")
+      Процедура ОбычныйМетод() КонецПроцедуры
+      &ИЗМЕНЕНИЕиконтроль("Метод")
+      Процедура Расш_Метод() КонецПроцедуры
+      &AFTER("Метод")
+      Процедура СледующийМетод() КонецПроцедуры
+      """, context);
+    var diagnostics = documentContext.getDiagnostics();
+
+    assertThat(diagnostics).hasSize(3);
+    assertThat(diagnostics, true)
+      .hasRange(0, 1, 0, 6)
+      .hasRange(2, 1, 2, 19)
+      .hasRange(4, 1, 4, 6);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {
+    "&ИЗМЕНЕНИЕиконтроль(\"Метод\") Процедура Расш_Метод()\nКонецПроцедуры",
+    "&ИЗМЕНЕНИЕиконтроль(\"Метод\") Процедура Расш_Метод() КонецПроцедуры",
+    "&CHANGEandvalidate(\"Method\") Function Ext_Method()\nReturn 1;\nEndFunction",
+    "&CHANGEandvalidate(\"Method\") Function Ext_Method() Return 1; EndFunction",
+    "&ИЗМЕНЕНИЕиконтроль(\"Метод\")\nАсинх\nПроцедура\nРасш_Метод()\nКонецПроцедуры",
+    "&CHANGEandvalidate(\"Method\") Async\nFunction\nExt_Method()\nReturn 1;\nEndFunction"
+  })
+  void testAnnotationDiagnosticsAndQuickFixAcrossDeclarationLayouts(String content) {
+    initServerContext();
+    configuration = context.getLanguageServerConfiguration();
+    configuration.getDiagnosticsOptions().setMode(Mode.ONLY);
+    configuration.getDiagnosticsOptions().setParameters(Map.of("CanonicalSpellingKeywords", Either.forLeft(true)));
+    var documentContext = TestUtils.getDocumentContext(content, context);
+    var diagnostics = documentContext.getDiagnostics();
+
+    assertThat(diagnostics).hasSize(1);
+    var diagnostic = diagnostics.getFirst();
+    int annotationEnd = content.indexOf('(');
+    assertThat(diagnostic).hasRange(0, 1, 0, annotationEnd);
+    var quickFixes = getQuickFixes(diagnostic, documentContext);
+    assertThat(quickFixes).hasSize(1);
+    var edits = quickFixes.getFirst().getEdit().getChanges().get(documentContext.getUri().toString());
+    String canonical = content.startsWith("&ИЗМЕНЕНИЕ") ? "ИзменениеИКонтроль" : "ChangeAndValidate";
+    assertThat(edits).containsExactly(new TextEdit(diagnostic.getRange(), canonical));
+    var corrected = "&" + canonical + content.substring(annotationEnd);
+    context.rebuildDocument(documentContext, corrected, documentContext.getVersion() + 1);
+    assertThat(documentContext.getDiagnostics()).isEmpty();
+  }
+
+  @Test
+  void testOneScriptExtensionSuppressionIsUnchanged() {
+    initServerContext();
+    configuration = context.getLanguageServerConfiguration();
+    configuration.getDiagnosticsOptions().setMode(Mode.ONLY);
+    configuration.getDiagnosticsOptions().setParameters(Map.of("CanonicalSpellingKeywords", Either.forLeft(true)));
+    var documentContext = TestUtils.getDocumentContext(URI.create("file:///custom-annotations.os"), """
+      &CHANGEandvalidate("Method")
+      FUNCTION Ext_Method()
+        RETURN 1;
+      ENDFUNCTION
+      """, context);
+    var diagnostics = documentContext.getDiagnostics();
+
+    // Существующие границы подавления тела не относятся к проверке регистра аннотаций.
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics.getFirst()).hasRange(3, 0, 3, 11);
   }
 
   @Test
