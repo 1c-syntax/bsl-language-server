@@ -1911,7 +1911,8 @@ public class ExpressionTypeInferencer {
         callsOf.apply(target), kindsOf.apply(target), propertiesOf.apply(target)),
       narrowingCallback(owner),
       ctx::noteIncompleteCellInput,
-      cellPreparationFor(ctx)
+      cellPreparationFor(ctx),
+      ctx.contextualReturns.preparingCells
     );
   }
 

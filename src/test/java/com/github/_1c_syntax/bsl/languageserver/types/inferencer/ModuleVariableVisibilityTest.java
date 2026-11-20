@@ -53,6 +53,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BooleanSupplier;
+import java.util.stream.Collectors;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -349,9 +350,63 @@ class ModuleVariableVisibilityTest extends AbstractServerContextAwareTest {
     assertThat(isolated.sawMissing()).isTrue();
   }
 
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void preparationCanShareOnlyIndependentlySettledInputs(boolean independent) {
+    var root = Path.of("src/test/resources/metadata/commonModuleCalls");
+    initServerContext(root, false);
+    context.getConfiguration();
+    configurationTypes.tryRegister();
+    var supplier = root.resolve("CommonModules/СерверныйМодуль/Ext/Module.bsl").toUri();
+    TestUtils.getDocumentContext(supplier, """
+      Функция Маркер() Экспорт
+        Возврат "готово";
+      КонецФункции
+      """, context);
+    var consumer = root.resolve("CommonModules/КлиентСерверныйМодуль/Ext/Module.bsl").toUri();
+    var document = TestUtils.getDocumentContext(consumer, """
+      Перем Источник;
+      Перем Кэш;
+
+      Процедура ЗаполнитьИсточник()
+        Источник = %s;
+      КонецПроцедуры
+
+      Процедура ЗаполнитьКэш()
+        Кэш = Источник;
+      КонецПроцедуры
+      """.formatted(independent ? "\"готово\"" : "СерверныйМодуль.Маркер()"), context);
+    var tree = document.getSymbolTree();
+    var source = tree.getModuleVariableVisibleFromMethods("Источник").orElseThrow();
+    var cache = tree.getModuleVariableVisibleFromMethods("Кэш").orElseThrow();
+    ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
+    var request = new InferenceContext(document, ExecutionContext.SERVER);
+    if (independent) {
+      ReflectionTestUtils.invokeMethod(target, "prepareCells", request, List.of(source));
+    } else {
+      FlowInputs ordinary = ReflectionTestUtils.invokeMethod(target, "flowInputs", source, request);
+      VariableFlowAnalyzer flow = AopTestUtils.getUltimateTargetObject(analyzer);
+      flow.ensureCellsFor(document, List.of(source), ordinary, null);
+    }
+    assertThat(preparedCells(document)).hasEntrySatisfying(source, types -> assertThat(types.refs())
+      .extracting(TypeRef::qualifiedName).contains("Строка")).doesNotContainKey(cache);
+
+    ReflectionTestUtils.invokeMethod(target, "prepareCells",
+      new InferenceContext(document, ExecutionContext.SERVER), List.of(cache));
+
+    if (independent) {
+      assertThat(preparedCells(document)).hasEntrySatisfying(cache, types -> assertThat(types.refs())
+        .extracting(TypeRef::qualifiedName).contains("Строка"));
+    } else {
+      assertThat(preparedCells(document)).doesNotContainKey(cache);
+    }
+  }
+
   private Map<VariableSymbol, TypeSet> preparedCells(DocumentContext document) {
     VariableFlowAnalyzer target = AopTestUtils.getUltimateTargetObject(analyzer);
-    return ReflectionTestUtils.invokeMethod(target, "cellsOf", document, ExecutionContext.SERVER);
+    Map<VariableSymbol, VariableFlowAnalyzer.SettledCell> cells =
+      ReflectionTestUtils.invokeMethod(target, "cellsOf", document, ExecutionContext.SERVER);
+    return cells.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().types()));
   }
 
   @Test

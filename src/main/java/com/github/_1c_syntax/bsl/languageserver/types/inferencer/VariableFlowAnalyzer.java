@@ -130,6 +130,8 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   private record ModeIndependentFacts(Facts facts, long generation) {
   }
 
+  record SettledCell(TypeSet types, boolean independentlyPrepared) {}
+
   /**
    * Окружения по документу, режиму и телу. Создаются только для запрошенных режимов,
    * удаляются при очистке документа; результаты без ограничения режима хранятся в {@code factsByUri}.
@@ -140,7 +142,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * Ячейки переменных модуля по режимам и версии дерева символов. Смена дерева
    * обесценивает запись целиком, даже если символ переменной сравнивается равным прежнему.
    */
-  private final SourceBoundRecords<SymbolTree, Map<ExecutionContext, Map<VariableSymbol, TypeSet>>>
+  private final SourceBoundRecords<SymbolTree, Map<ExecutionContext, Map<VariableSymbol, SettledCell>>>
     contextualCellsByUri = new SourceBoundRecords<>();
   /**
    * Ячейки переменных, видимых другим телам.
@@ -149,7 +151,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * сдвинулось. Поэтому ячейки привязаны к дереву символов документа, по которому
    * посчитаны: после правки документа прежние не отдаются.
    */
-  private final SourceBoundRecords<SymbolTree, Map<VariableSymbol, TypeSet>> cellsByUri = new SourceBoundRecords<>();
+  private final SourceBoundRecords<SymbolTree, Map<VariableSymbol, SettledCell>> cellsByUri = new SourceBoundRecords<>();
 
   /**
    * Места изменения переменной, уже спрошенные у вызывающего.
@@ -256,14 +258,15 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       incompleteCellInputs.addAll(variables);
     }
 
-    private void publishCells(Map<VariableSymbol, TypeSet> settled, FlowInputs inputs,
+    private void publishCells(Map<VariableSymbol, SettledCell> settled, FlowInputs inputs,
                               @Nullable BooleanSupplier complete) {
       if (cellsIncomplete || inputs.sawMissing().getAsBoolean() || (complete != null && !complete.getAsBoolean())) {
         markIncompleteCellInputs(growingCells);
         return;
       }
       if (inputs.cacheable()) {
-        growingCells.forEach(variable -> settled.putIfAbsent(variable, cells.get(variable)));
+        growingCells.forEach(variable ->
+          settled.putIfAbsent(variable, new SettledCell(cells.get(variable), inputs.preparingCells())));
       }
     }
 
@@ -660,14 +663,12 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     var session = inputs.session();
     session.noteCellInput();
     var settled = cellsOf(documentContext, inputs.executionContext()).get(variable);
-    if (settled != null) {
-      return settled;
-    }
-    // Предыдущий проход мог оставить неполный вход для следующего расчёта.
-    if (read && session.hasIncompleteCellInputs(variable)) {
+    // Готовая обычная ячейка не подтверждает независимость от других документов.
+    if (read && (settled == null ? session.hasIncompleteCellInputs(variable)
+      : inputs.preparingCells() && !settled.independentlyPrepared())) {
       inputs.noteIncompleteCellInput().run();
     }
-    var current = session.cells.get(variable);
+    var current = settled == null ? session.cells.get(variable) : settled.types();
     return current == null ? inputs.declaredFact().apply(variable) : current;
   }
 
@@ -678,7 +679,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * @param context режим компиляции или {@code null} для общего хранилища.
    * @return изменяемая потокобезопасная карта, создаваемая при первом обращении.
    */
-  private Map<VariableSymbol, TypeSet> cellsOf(DocumentContext documentContext, @Nullable ExecutionContext context) {
+  private Map<VariableSymbol, SettledCell> cellsOf(DocumentContext documentContext, @Nullable ExecutionContext context) {
     if (context == null) {
       return cellsByUri.get(documentContext.getUri(), documentContext.getSymbolTreeNoLock(),
         tree -> new ConcurrentHashMap<>());
@@ -765,7 +766,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   }
 
   private static boolean preparePendingCells(FlowInputs inputs, List<VariableSymbol> pending,
-                                             Map<VariableSymbol, TypeSet> settled) {
+                                             Map<VariableSymbol, SettledCell> settled) {
     var prepare = inputs.prepareCells();
     var session = inputs.session();
     if (prepare == null || inputs.cacheable() || session.computing()) {
