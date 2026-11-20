@@ -79,6 +79,7 @@ import java.util.function.Predicate;
  * @param narrowing           колбэк, сужающий тип по охраняющему условию ветки.
  * @param noteIncompleteCellInput отметить, что результат опирается на неполный вход ячейки.
  * @param prepareCells        самостоятельный расчёт ячеек при первом обращении во вложенном выводе.
+ * @param preparingCells     изолированная подготовка, которой нужны проверенные независимые входы.
  *     <p>
  *     Переменные и места изменений отдаются поставщиками, а не значениями: за ними стоит
  *     обход индекса ссылок и разбор документирующих комментариев. При готовом ответе в
@@ -95,7 +96,7 @@ record FlowInputs(
   Function<VariableSymbol, Collection<Position>> definitionPositions,
   Function<VariableSymbol, Collection<Position>> mutationPositions,
   AssignedTypes assigned, Mutations mutations, GuardNarrowing narrowing, Runnable noteIncompleteCellInput,
-  @Nullable Consumer<List<VariableSymbol>> prepareCells
+  @Nullable Consumer<List<VariableSymbol>> prepareCells, boolean preparingCells
 ) {
   /** Входы без отдельного списка чтений сохраняют консервативный расчёт всех видимых переменных. */
   public FlowInputs(FlowSession session, Consumer<CodeBlockContext> activeBodyRead, boolean cacheable,
@@ -108,7 +109,7 @@ record FlowInputs(
     AssignedTypes assigned, Mutations mutations, GuardNarrowing narrowing) {
     this(session, activeBodyRead, cacheable, executionContext, compilationContexts, sawMissing, variables, null,
       sharedWithOtherBodies, declaredFact, definitionPositions, mutationPositions, assigned, mutations, narrowing,
-      () -> {}, null);
+      () -> {}, null, false);
   }
 
   public FlowInputs(FlowSession session, Consumer<CodeBlockContext> activeBodyRead, boolean cacheable,
@@ -122,6 +123,6 @@ record FlowInputs(
     AssignedTypes assigned, Mutations mutations, GuardNarrowing narrowing, Runnable noteIncompleteCellInput) {
     this(session, activeBodyRead, cacheable, executionContext, compilationContexts, sawMissing, variables,
       readModuleVariables, sharedWithOtherBodies, declaredFact, definitionPositions, mutationPositions, assigned,
-      mutations, narrowing, noteIncompleteCellInput, null);
+      mutations, narrowing, noteIncompleteCellInput, null, false);
   }
 }

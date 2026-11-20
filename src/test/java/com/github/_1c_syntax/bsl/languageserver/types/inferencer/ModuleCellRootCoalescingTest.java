@@ -120,14 +120,14 @@ class ModuleCellRootCoalescingTest extends AbstractServerContextAwareTest {
     }
   }
 
-  private static FlowInputs preparationInputs(VariableSymbol shared, boolean cacheable,
+  private static FlowInputs preparationInputs(VariableSymbol shared, boolean isolated,
                                              VariableFlowAnalyzer.AssignedTypes assigned,
                                              @Nullable Consumer<List<VariableSymbol>> prepare) {
-    return new FlowInputs(new VariableFlowAnalyzer.FlowSession(), body -> {}, cacheable, ExecutionContext.SERVER,
+    return new FlowInputs(new VariableFlowAnalyzer.FlowSession(), body -> {}, isolated, ExecutionContext.SERVER,
       body -> Optional.empty(), () -> false, body -> List.of(shared), null, variable -> true,
       variable -> TypeSet.EMPTY, variable -> List.of(new Position(2, 2)), variable -> List.of(),
       assigned, (variable, position, incoming) -> incoming, mock(VariableFlowAnalyzer.GuardNarrowing.class),
-      () -> {}, prepare);
+      () -> {}, prepare, isolated);
   }
 
   private void runConcurrentRoots(ExecutionContext secondMode, int expectedAssignments,
