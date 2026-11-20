@@ -231,8 +231,9 @@ class ModuleVariableVisibilityTest extends AbstractServerContextAwareTest {
       ReflectionTestUtils.setField(target, "variableFlowAnalyzer", analyzer);
     }
 
+    var expectedReturnTypes = complete ? List.of("Строка", "Число") : List.of("Строка");
     assertThat(entryPoints).allSatisfy(method -> assertThat(typeService.getReturnTypes(method).refs())
-      .extracting(TypeRef::qualifiedName).contains("Строка"));
+      .extracting(TypeRef::qualifiedName).containsAll(expectedReturnTypes));
     if (complete) {
       assertThat(attempts).hasValue(1);
       assertThat(preparedCells(document)).hasEntrySatisfying(shared, types -> assertThat(types.refs())
