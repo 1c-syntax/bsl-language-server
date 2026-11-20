@@ -95,6 +95,8 @@ final class InferenceContext {
   /** Расчёт оборван ограничением глубины; результат зависит от оставшегося бюджета. */
   boolean depthCut;
   int depth;
+  /** Самостоятельное решение ячеек, промежуточные типы которого остаются в запросе. */
+  boolean preparingCells;
   /** Запрос начат публичным выводом выражения; вложенный расчёт потока всё равно не ждёт других владельцев. */
   boolean sharedRootFlow;
 
@@ -236,7 +238,9 @@ final class InferenceContext {
 
   /** Новый расчёт приближения с общими метаданными, но без прежних значений типов и потока. */
   InferenceContext forRefinement() {
-    return new InferenceContext(documentContext, null, new ContextualReturnCache(), compilation);
+    var result = new InferenceContext(documentContext, null, contextualReturns.forRefinement(), compilation);
+    result.preparingCells = preparingCells;
+    return result;
   }
 
   /** Состояние одного вложенного расчёта; признаки его неполноты не наследуются от соседних вызовов. */
@@ -254,6 +258,7 @@ final class InferenceContext {
     result.inProgress.putAll(inProgress);
     result.depth = depth;
     result.refining = refining;
+    result.preparingCells = preparingCells;
     result.sharedRootFlow = sharedRootFlow;
     return result;
   }

@@ -292,6 +292,22 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       return true;
     }
 
+    boolean hasDeferredCellTypes() {
+      Set<TypeSet> seen = Collections.newSetFromMap(new IdentityHashMap<>());
+      return growingCells.stream().anyMatch(variable -> hasDeferredType(cells.get(variable), seen));
+    }
+
+    private static boolean hasDeferredType(@Nullable TypeSet types, Set<TypeSet> seen) {
+      if (types == null) {
+        return true;
+      }
+      return seen.add(types) && (!types.lazyFields().isEmpty() || !types.lazyElements().isEmpty()
+        || types.elementTypes().values().stream().anyMatch(value -> hasDeferredType(value, seen))
+        || types.describedTypes().values().stream().anyMatch(value -> hasDeferredType(value, seen))
+        || types.localFields().values().stream().flatMap(fields -> fields.values().stream())
+          .anyMatch(field -> hasDeferredType(field.types(), seen)));
+    }
+
     boolean hasIndependentFacts(ReturnedLocalFlow.Key key) {
       return independentReturnFacts != null && independentReturnFacts.containsKey(key);
     }
@@ -536,6 +552,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * @param mutations           колбэк, применяющий изменение оператора-мутатора.
    * @param narrowing           колбэк, сужающий тип по охраняющему условию ветки.
    * @param noteIncompleteCellInput отметить, что результат опирается на неполный вход ячейки.
+   * @param prepareCells        самостоятельный расчёт ячеек при первом обращении во вложенном выводе.
    *     <p>
    *     Переменные и места изменений отдаются поставщиками, а не значениями: за ними стоит
    *     обход индекса ссылок и разбор документирующих комментариев. При готовом ответе в
@@ -551,7 +568,8 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     Predicate<VariableSymbol> sharedWithOtherBodies, Function<VariableSymbol, TypeSet> declaredFact,
     Function<VariableSymbol, Collection<Position>> definitionPositions,
     Function<VariableSymbol, Collection<Position>> mutationPositions,
-    AssignedTypes assigned, Mutations mutations, GuardNarrowing narrowing, Runnable noteIncompleteCellInput
+    AssignedTypes assigned, Mutations mutations, GuardNarrowing narrowing, Runnable noteIncompleteCellInput,
+    @Nullable Consumer<List<VariableSymbol>> prepareCells
   ) {
     /** Входы без отдельного списка чтений сохраняют консервативный расчёт всех видимых переменных. */
     public FlowInputs(FlowSession session, Consumer<CodeBlockContext> activeBodyRead, boolean cacheable,
@@ -564,7 +582,21 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       AssignedTypes assigned, Mutations mutations, GuardNarrowing narrowing) {
       this(session, activeBodyRead, cacheable, executionContext, compilationContexts, sawMissing, variables, null,
         sharedWithOtherBodies, declaredFact, definitionPositions, mutationPositions, assigned, mutations, narrowing,
-        () -> {});
+        () -> {}, null);
+    }
+
+    public FlowInputs(FlowSession session, Consumer<CodeBlockContext> activeBodyRead, boolean cacheable,
+      @Nullable ExecutionContext executionContext,
+      Function<CodeBlockContext, Optional<Set<ExecutionContext>>> compilationContexts, BooleanSupplier sawMissing,
+      Function<CodeBlockContext, Collection<VariableSymbol>> variables,
+      @Nullable Function<CodeBlockContext, Set<VariableSymbol>> readModuleVariables,
+      Predicate<VariableSymbol> sharedWithOtherBodies, Function<VariableSymbol, TypeSet> declaredFact,
+      Function<VariableSymbol, Collection<Position>> definitionPositions,
+      Function<VariableSymbol, Collection<Position>> mutationPositions,
+      AssignedTypes assigned, Mutations mutations, GuardNarrowing narrowing, Runnable noteIncompleteCellInput) {
+      this(session, activeBodyRead, cacheable, executionContext, compilationContexts, sawMissing, variables,
+        readModuleVariables, sharedWithOtherBodies, declaredFact, definitionPositions, mutationPositions, assigned,
+        mutations, narrowing, noteIncompleteCellInput, null);
     }
   }
 
@@ -790,6 +822,16 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     }
     if (pending.isEmpty()) {
       return;
+    }
+    var prepare = inputs.prepareCells();
+    if (prepare != null && !inputs.cacheable() && !session.computing()) {
+      prepare.accept(pending);
+      if (pending.removeIf(variable -> settled.containsKey(variable) && session.cellsDone.remove(variable))) {
+        session.cellsChanged.run();
+      }
+      if (pending.isEmpty()) {
+        return;
+      }
     }
     // Признак возвращается к прежнему значению, а не гасится: круги по одной переменной
     // могут запуститься из кругов по другой, и снятие признака открыло бы внешним кругам

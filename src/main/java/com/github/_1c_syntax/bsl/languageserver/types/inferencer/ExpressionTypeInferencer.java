@@ -119,6 +119,7 @@ import java.util.function.Function;
 public class ExpressionTypeInferencer {
 
   private static final int MAX_DEPTH = 32;
+  private static final int CELL_PREPARATION_DEPTH = 48;
   private static final Set<String> MODE_INDEPENDENT_DATA_TYPES = Set.of("Структура", "ФиксированнаяСтруктура",
     "Массив", "Соответствие", "ФиксированноеСоответствие", "ТаблицаЗначений", "СписокЗначений");
 
@@ -343,7 +344,7 @@ public class ExpressionTypeInferencer {
     if (node == null) {
       return TypeSet.EMPTY;
     }
-    if (ctx.depth >= MAX_DEPTH) {
+    if (atDepthLimit(ctx)) {
       ctx.depthCut = true;
       return TypeSet.EMPTY;
     }
@@ -374,8 +375,12 @@ public class ExpressionTypeInferencer {
    * тип переменной ещё меняется. Эти результаты нельзя сохранять под URI исходного запроса.
    */
   private static @Nullable ParseTree cacheKeyFor(BslExpression node, InferenceContext ctx) {
-    return ctx.executionContext == null && ctx.visited.isEmpty() && ctx.inProgress.isEmpty()
+    return !ctx.preparingCells && ctx.executionContext == null && ctx.visited.isEmpty() && ctx.inProgress.isEmpty()
       && !ctx.flowSession.computing() ? node.getRepresentingAst() : null;
+  }
+
+  private static boolean atDepthLimit(InferenceContext context) {
+    return context.depth >= (context.preparingCells ? CELL_PREPARATION_DEPTH : MAX_DEPTH);
   }
 
   private TypeSet inferWithContexts(BslExpression node, InferenceContext ctx, boolean useCallerContext,
@@ -922,6 +927,11 @@ public class ExpressionTypeInferencer {
     if (member.kind() != expectedKind || !member.matches(memberName)) {
       return TypeSet.EMPTY;
     }
+    if (ctx.preparingCells) {
+      member.getSourceSymbol().filter(SourceDefinedSymbol.class::isInstance).map(SourceDefinedSymbol.class::cast)
+        .filter(symbol -> symbol.getOwner() != ctx.documentContext)
+        .ifPresent(symbol -> ctx.dependencies.add(symbol.getOwner().getUri()));
+    }
     // Для метода проектного модуля (в т.ч. вызванного межмодульно как
     // ОбщийМодуль.Метод()) берём полный тип возврата из индекса символов —
     // с localFields структуры/ТЗ, объявленными в JsDoc. MemberDescriptor
@@ -1167,8 +1177,7 @@ public class ExpressionTypeInferencer {
     var revision = ctx.contextualReturns.revision();
     var nested = ctx.nested(method.getOwner(), null);
     var inputs = reusable ? ctx.contextualReturns.approximationInputs(guard) : new Object();
-    var computed = methodReturnTypeIndexer.computeIfAbsent(method, () -> returnTypesOfBody(method, nested),
-      ctx.flowSession.cellsComputing(), inputs);
+    var computed = computeNeutralReturn(method, ctx, nested, inputs);
     var types = computed == null ? symbolTypeIndex.getReturnTypes(method)
       : symbolTypeIndex.getReturnTypes(method, computed.types());
     var result = returnSnapshot(types, nested);
@@ -1178,6 +1187,16 @@ public class ExpressionTypeInferencer {
       ctx.contextualReturns.remember(guard, result, revision);
     }
     return types;
+  }
+
+  private MethodReturnTypeIndexer.@Nullable ComputedReturnTypes computeNeutralReturn(
+    MethodSymbol method, InferenceContext caller, InferenceContext nested, Object inputs
+  ) {
+    if (caller.preparingCells) {
+      return method.isFunction() && !methodReturnTypeIndexer.isIndexed(method) ? returnTypesOfBody(method, nested) : null;
+    }
+    return methodReturnTypeIndexer.computeIfAbsent(method, () -> returnTypesOfBody(method, nested),
+      caller.flowSession.cellsComputing(), inputs);
   }
 
   private static void inheritReturn(ContextualReturnCache.Result result, InferenceContext ctx) {
@@ -1493,7 +1512,7 @@ public class ExpressionTypeInferencer {
     MethodSymbol method,
     InferenceContext ctx
   ) {
-    if (ctx.depth >= MAX_DEPTH) {
+    if (atDepthLimit(ctx)) {
       ctx.depthCut = true;
       return new MethodReturnTypeIndexer.ComputedReturnTypes(TypeSet.EMPTY, Set.of(), false);
     }
@@ -1596,6 +1615,9 @@ public class ExpressionTypeInferencer {
     if (owner != ctx.documentContext) {
       // Переменная из другого документа: чужое дерево разбора не читаем, берём
       // объявленное о ней — оно есть в самом символе.
+      if (ctx.preparingCells) {
+        ctx.dependencies.add(owner.getUri());
+      }
       return declaredTypes(variable);
     }
     if (!(terminal.getParent() instanceof ParserRuleContext use)) {
@@ -1779,7 +1801,7 @@ public class ExpressionTypeInferencer {
    * @return данные для {@link VariableFlowAnalyzer}.
    */
   private VariableFlowAnalyzer.FlowInputs flowInputs(VariableSymbol variable, InferenceContext ctx) {
-    var cacheable = ctx.visited.size() <= 1 && !ctx.refining;
+    var cacheable = ctx.visited.size() <= 1 && !ctx.refining && !ctx.preparingCells;
     var cached = ctx.flowInputs;
     if (cached != null && cached.cacheable() == cacheable) {
       return cached;
@@ -1869,8 +1891,33 @@ public class ExpressionTypeInferencer {
       (target, position, incoming) -> applyMutation(target, position, incoming, ctx,
         callsOf.apply(target), kindsOf.apply(target), propertiesOf.apply(target)),
       narrowingCallback(owner),
-      ctx::noteIncompleteCellInput
+      ctx::noteIncompleteCellInput,
+      workspacePopulated || ctx.preparingCells || ctx.executionContext == null
+        ? null : pending -> prepareCells(ctx, pending)
     );
+  }
+
+  private void prepareCells(InferenceContext caller, List<VariableSymbol> pending) {
+    var mode = caller.executionContext;
+    if (mode == null) {
+      return;
+    }
+    var requested = caller.contextualReturns.reserveCellPreparation(mode, pending);
+    if (requested.isEmpty()) {
+      return;
+    }
+    var document = caller.documentContext;
+    var tree = document.getSymbolTreeNoLock();
+    var isolated = new InferenceContext(document, mode, caller.compilation);
+    isolated.preparingCells = true;
+    var inputs = createFlowInputs(requested.getFirst(), isolated, true);
+    try {
+      variableFlowAnalyzer.ensureCellsFor(document, requested, inputs, () ->
+        !isolated.failed && !isolated.depthCut && isolated.dependencies.isEmpty()
+          && !isolated.flowSession.hasDeferredCellTypes() && tree == document.getSymbolTreeNoLock());
+    } catch (RuntimeException | StackOverflowError exception) {
+      LOGGER.debug("Самостоятельный расчёт модульных ячеек не завершился: {}", document.getUri(), exception);
+    }
   }
 
   /**

@@ -23,11 +23,14 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.index.InferredExpressionTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.MethodReturnTypeIndexer;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Position;
@@ -40,6 +43,8 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.AopTestUtils;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -64,6 +69,67 @@ class ModuleVariableVisibilityTest extends AbstractServerContextAwareTest {
   @BeforeEach
   void setUp() {
     initServerContext();
+  }
+
+  @Test
+  void preparationPublishesCompleteCellsWithoutPublishingMethodReturns() {
+    var document = document("""
+      Var Shared;
+      Procedure Fill()
+        Shared = Seed();
+      EndProcedure
+      Function Seed()
+        Return "ready";
+      EndFunction
+      """);
+    var tree = document.getSymbolTree();
+    var seed = tree.getMethodSymbol("Seed").orElseThrow();
+    var shared = tree.getModuleVariableVisibleFromMethods("Shared").orElseThrow();
+    ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
+    var neutral = InferenceContext.neutral(document);
+    neutral.preparingCells = true;
+
+    TypeSet value = ReflectionTestUtils.invokeMethod(target, "methodReturnType", seed, neutral);
+
+    assertThat(value.refs()).extracting(TypeRef::qualifiedName).containsExactly("Строка");
+    assertThat(indexer.isIndexed(seed)).isFalse();
+
+    ReflectionTestUtils.invokeMethod(target, "prepareCells",
+      new InferenceContext(document, ExecutionContext.SERVER), List.of(shared));
+
+    assertThat(preparedCells(document).get(shared).refs()).extracting(TypeRef::qualifiedName)
+      .containsExactlyInAnyOrder("Строка", "Неопределено");
+    assertThat(indexer.isIndexed(seed)).isFalse();
+  }
+
+  @Test
+  void preparationDoesNotPublishCellsAfterDepthCut() {
+    var source = new StringBuilder("""
+      Var Shared;
+      Procedure Fill()
+        Shared = Step0();
+      EndProcedure
+      """);
+    for (var i = 0; i < 64; i++) {
+      source.append("Function Step%d()%n".formatted(i));
+      source.append(i == 63 ? "Return \"ready\";\n" : "Return Step%d();%n".formatted(i + 1));
+      source.append("EndFunction\n");
+    }
+    var document = document(source.toString());
+    var tree = document.getSymbolTree();
+    var shared = tree.getModuleVariableVisibleFromMethods("Shared").orElseThrow();
+    ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
+
+    ReflectionTestUtils.invokeMethod(target, "prepareCells",
+      new InferenceContext(document, ExecutionContext.SERVER), List.of(shared));
+
+    assertThat(preparedCells(document)).doesNotContainKey(shared);
+    assertThat(tree.getMethods()).noneMatch(indexer::isIndexed);
+  }
+
+  private Map<VariableSymbol, TypeSet> preparedCells(DocumentContext document) {
+    VariableFlowAnalyzer target = AopTestUtils.getUltimateTargetObject(analyzer);
+    return ReflectionTestUtils.invokeMethod(target, "cellsOf", document, ExecutionContext.SERVER);
   }
 
   @Test
