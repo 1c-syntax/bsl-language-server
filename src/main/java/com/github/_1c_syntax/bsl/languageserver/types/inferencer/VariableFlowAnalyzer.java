@@ -65,7 +65,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -268,6 +267,19 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
         growingCells.forEach(variable ->
           settled.putIfAbsent(variable, new SettledCell(cells.get(variable), inputs.preparingCells())));
       }
+    }
+
+    private boolean preparePendingCells(FlowInputs inputs, List<VariableSymbol> pending,
+                                        Map<VariableSymbol, SettledCell> settled) {
+      var prepare = inputs.prepareCells();
+      if (prepare == null || inputs.cacheable() || computing()) {
+        return false;
+      }
+      prepare.accept(pending);
+      if (pending.removeIf(variable -> settled.containsKey(variable) && cellsDone.remove(variable))) {
+        cellsChanged.run();
+      }
+      return pending.isEmpty();
     }
 
     private void finishCellComputation(boolean outerComputing, List<VariableSymbol> pending, boolean finished) {
@@ -665,7 +677,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     var settled = cellsOf(documentContext, inputs.executionContext()).get(variable);
     // Готовая обычная ячейка не подтверждает независимость от других документов.
     if (read && (settled == null ? session.hasIncompleteCellInputs(variable)
-      : inputs.preparingCells() && !settled.independentlyPrepared())) {
+      : (inputs.preparingCells() && !settled.independentlyPrepared()))) {
       inputs.noteIncompleteCellInput().run();
     }
     var current = settled == null ? session.cells.get(variable) : settled.types();
@@ -737,7 +749,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
         pending.add(variable);
       }
     }
-    if (pending.isEmpty() || preparePendingCells(inputs, pending, settled)) {
+    if (pending.isEmpty() || session.preparePendingCells(inputs, pending, settled)) {
       return;
     }
     // Признак возвращается к прежнему значению, а не гасится: круги по одной переменной
@@ -763,20 +775,6 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     } finally {
       session.finishCellComputation(outerComputing, pending, finished);
     }
-  }
-
-  private static boolean preparePendingCells(FlowInputs inputs, List<VariableSymbol> pending,
-                                             Map<VariableSymbol, SettledCell> settled) {
-    var prepare = inputs.prepareCells();
-    var session = inputs.session();
-    if (prepare == null || inputs.cacheable() || session.computing()) {
-      return false;
-    }
-    prepare.accept(pending);
-    if (pending.removeIf(variable -> settled.containsKey(variable) && session.cellsDone.remove(variable))) {
-      session.cellsChanged.run();
-    }
-    return pending.isEmpty();
   }
 
   /** Общие переменные, к которым обращается тело; их перечень берётся из структуры текущего AST. */

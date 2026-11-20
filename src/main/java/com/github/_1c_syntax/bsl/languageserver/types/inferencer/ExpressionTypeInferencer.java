@@ -966,7 +966,9 @@ public class ExpressionTypeInferencer {
   private void notePreparedMemberInput(SourceDefinedSymbol symbol, InferenceContext ctx) {
     if (symbol.getOwner() != ctx.documentContext) {
       ctx.dependencies.add(symbol.getOwner().getUri());
-    } else if (symbol instanceof VariableSymbol variable && commentTypeResolver.hasExternalTypeLinks(variable)) {
+      return;
+    }
+    if (symbol instanceof VariableSymbol variable && commentTypeResolver.hasExternalTypeLinks(variable)) {
       ctx.noteMissingData();
     }
   }
@@ -1134,11 +1136,7 @@ public class ExpressionTypeInferencer {
     }
     ctx.visited.add(method);
     ctx.consulted.add(method);
-    if (owner != ctx.documentContext) {
-      ctx.dependencies.add(owner.getUri());
-    } else if (ctx.contextualReturns.preparingCells && symbolTypeIndex.returnMayReadAnotherDocument(method)) {
-      ctx.noteMissingData();
-    }
+    noteMethodInput(method, owner, ctx);
     try {
       // При первичном rebuild свой AST уже доступен, а ServerContext обновит состояние
       // только после обработчиков события. Контекстный результат не должен попасть в общий индекс.
@@ -1159,6 +1157,16 @@ public class ExpressionTypeInferencer {
       return neutralReferenceType(method, ctx);
     } finally {
       ctx.visited.remove(method);
+    }
+  }
+
+  private void noteMethodInput(MethodSymbol method, DocumentContext owner, InferenceContext ctx) {
+    if (owner != ctx.documentContext) {
+      ctx.dependencies.add(owner.getUri());
+      return;
+    }
+    if (ctx.contextualReturns.preparingCells && symbolTypeIndex.returnMayReadAnotherDocument(method)) {
+      ctx.noteMissingData();
     }
   }
 
@@ -1826,44 +1834,53 @@ public class ExpressionTypeInferencer {
     return computed;
   }
 
-  private FlowInputs createFlowInputs(VariableSymbol variable, InferenceContext ctx,
-                                                           boolean cacheable) {
+  private Function<VariableSymbol, TypeSet> declaredFactsFor(InferenceContext ctx) {
     // Объявленное о переменной расчёт спрашивает многократно — на входе в тело, в точках
     // слияния и при возврате к объединению по области видимости. У переменной модуля за
     // ответом стоит обход индекса ссылок, поэтому он запоминается на время запроса.
     Map<VariableSymbol, TypeSet> declaredByVariable = new HashMap<>();
     var sharedDeclarations = workspacePopulated ? DiagnosticDeclarationSession.current() : null;
-    Function<VariableSymbol, TypeSet> declaredOf = (VariableSymbol target) -> {
+    return target -> {
       var cached = declaredByVariable.get(target);
       if (cached != null) {
         return cached;
       }
-      if (ctx.contextualReturns.preparingCells
-        && variableTypeSources.stream().anyMatch(source -> source.hasExternalTypeLinks(target))) {
-        ctx.noteMissingData();
-      }
-      var revision = sharedDeclarations == null ? 0 : inferredExpressionTypeIndex.inputRevision();
-      if (sharedDeclarations != null) {
-        var shared = sharedDeclarations.get(target, revision);
-        if (shared != null) {
-          declaredByVariable.put(target, shared);
-          return shared;
-        }
-      }
-      var computed = declaredTypes(target);
-      if (declarationIncomplete(target)) {
-        // Объявление ведёт туда, что ещё не разобрано, и по самому ответу этого не видно:
-        // значение метода, посчитанное на нём, решил бы порядок наполнения. Такой расчёт
-        // проход после наполнения повторит.
-        ctx.noteMissingData();
-        return computed;
-      }
-      declaredByVariable.put(target, computed);
-      if (sharedDeclarations != null && revision == inferredExpressionTypeIndex.inputRevision()) {
-        sharedDeclarations.remember(target, revision, computed);
-      }
-      return computed;
+      return declaredFact(target, ctx, declaredByVariable, sharedDeclarations);
     };
+  }
+
+  private TypeSet declaredFact(VariableSymbol target, InferenceContext ctx,
+                               Map<VariableSymbol, TypeSet> declaredByVariable,
+                               @Nullable DiagnosticDeclarationSession sharedDeclarations) {
+    if (ctx.contextualReturns.preparingCells
+      && variableTypeSources.stream().anyMatch(source -> source.hasExternalTypeLinks(target))) {
+      ctx.noteMissingData();
+    }
+    var revision = sharedDeclarations == null ? 0 : inferredExpressionTypeIndex.inputRevision();
+    if (sharedDeclarations != null) {
+      var shared = sharedDeclarations.get(target, revision);
+      if (shared != null) {
+        declaredByVariable.put(target, shared);
+        return shared;
+      }
+    }
+    var computed = declaredTypes(target);
+    if (declarationIncomplete(target)) {
+      // Объявление ведёт туда, что ещё не разобрано, и по самому ответу этого не видно:
+      // значение метода, посчитанное на нём, решил бы порядок наполнения. Такой расчёт
+      // проход после наполнения повторит.
+      ctx.noteMissingData();
+      return computed;
+    }
+    declaredByVariable.put(target, computed);
+    if (sharedDeclarations != null && revision == inferredExpressionTypeIndex.inputRevision()) {
+      sharedDeclarations.remember(target, revision, computed);
+    }
+    return computed;
+  }
+
+  private FlowInputs createFlowInputs(VariableSymbol variable, InferenceContext ctx, boolean cacheable) {
+    var declaredOf = declaredFactsFor(ctx);
     // Операторы-мутаторы разбираются лениво и по одному разу на переменную: за ними стоит
     // обход индекса вызовов, а при готовом окружении в кэше они не нужны вовсе.
     Map<VariableSymbol, Lazy<Map<Position, BSLParser.CallStatementContext>>> callsByVariable = new HashMap<>();
@@ -1931,7 +1948,7 @@ public class ExpressionTypeInferencer {
     if (mode == null) {
       return;
     }
-    var requested = caller.contextualReturns.reserveCellPreparation(mode, pending);
+    var requested = caller.contextualReturns.cellPreparations().reserve(mode, pending);
     if (requested.isEmpty()) {
       return;
     }
