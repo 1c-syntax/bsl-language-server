@@ -323,6 +323,27 @@ class ReturnedLocalFlowTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void aDynamicStructureKeyDoesNotRequireItsRecursiveValueToInferTheReturn() {
+    var document = TestUtils.getDocumentContext("""
+      Function Build(Key)
+        Result = New Structure;
+        Value = Build(Key);
+        Result.Insert(Key, Value);
+        Return Result;
+      EndFunction
+      """, context);
+    var method = document.getSymbolTree().getMethodSymbol("Build").orElseThrow();
+    var inference = new InferenceContext(document, ExecutionContext.SERVER);
+    ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
+
+    TypeSet types = ReflectionTestUtils.invokeMethod(target, "methodReturnType", method, inference);
+
+    assertThat(types.refs()).extracting(TypeRef::qualifiedName).containsExactly("Структура");
+    assertThat(types.localFields()).isEmpty();
+    assertThat(inference.cycleCut).isFalse();
+  }
+
+  @Test
   void projectedFactsAreReusedAcrossReturnsButNotAcrossModesOrSessions() {
     var document = TestUtils.getDocumentContext("""
       Function Build(Flag)
