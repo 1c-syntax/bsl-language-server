@@ -534,7 +534,7 @@ public class OpenDataObjectInference {
 
   /** Имя ключа или колонки из первого аргумента — только строковым литералом. */
   @Nullable
-  private static String literalKeyOf(List<? extends BSLParser.CallParamContext> params) {
+  static String literalKeyOf(List<? extends BSLParser.CallParamContext> params) {
     var keyName = Optional.ofNullable(params.get(0).expression())
       .map(ExpressionTreeBuildingVisitor::buildExpressionTree)
       .map(OpenDataObjectInference::stringLiteralOf)
