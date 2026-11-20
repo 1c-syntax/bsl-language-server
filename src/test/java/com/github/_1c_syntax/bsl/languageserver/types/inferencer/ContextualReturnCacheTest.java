@@ -42,15 +42,15 @@ class ContextualReturnCacheTest {
     var first = mock(VariableSymbol.class);
     var second = mock(VariableSymbol.class);
 
-    assertThat(cache.reserveCellPreparation(ExecutionContext.SERVER, List.of(first))).containsExactly(first);
+    assertThat(cache.cellPreparations().reserve(ExecutionContext.SERVER, List.of(first))).containsExactly(first);
 
     var refinement = cache.forRefinement();
-    assertThat(refinement.reserveCellPreparation(ExecutionContext.SERVER, List.of(first, second)))
+    assertThat(refinement.cellPreparations().reserve(ExecutionContext.SERVER, List.of(first, second)))
       .containsExactly(second);
-    assertThat(cache.reserveCellPreparation(ExecutionContext.SERVER, List.of(second))).isEmpty();
-    assertThat(refinement.forRefinement().reserveCellPreparation(ExecutionContext.THIN_CLIENT, List.of(first)))
+    assertThat(cache.cellPreparations().reserve(ExecutionContext.SERVER, List.of(second))).isEmpty();
+    assertThat(refinement.forRefinement().cellPreparations().reserve(ExecutionContext.THIN_CLIENT, List.of(first)))
       .containsExactly(first);
-    assertThat(new ContextualReturnCache().reserveCellPreparation(ExecutionContext.SERVER, List.of(first)))
+    assertThat(new ContextualReturnCache().cellPreparations().reserve(ExecutionContext.SERVER, List.of(first)))
       .containsExactly(first);
   }
 

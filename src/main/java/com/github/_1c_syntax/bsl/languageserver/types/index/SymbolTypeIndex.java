@@ -41,6 +41,7 @@ import com.github._1c_syntax.bsl.languageserver.types.registry.FormByNameResolve
 import com.github._1c_syntax.bsl.languageserver.types.registry.TemplateByNameResolver;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.languageserver.utils.DescriptionTypes;
 import com.github._1c_syntax.bsl.parser.description.CollectionTypeDescription;
 import com.github._1c_syntax.bsl.parser.description.MethodDescription;
 import com.github._1c_syntax.bsl.parser.description.ParameterDescription;
@@ -60,7 +61,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Predicate;
 
 /**
  * Индекс декларативных типов символов.
@@ -472,24 +472,7 @@ public class SymbolTypeIndex {
    */
   private boolean anyAwaitsUnparsedModule(@Nullable List<? extends TypeDescription> types, DocumentContext owner,
                                           Set<MethodSymbol> visited) {
-    return anyTypeLinkMatches(types, link -> linkAwaitsUnparsedModule(link, owner, visited));
-  }
-
-  private static boolean anyTypeLinkMatches(@Nullable List<? extends TypeDescription> types,
-                                            Predicate<String> matches) {
-    return types != null && types.stream().anyMatch(type -> typeLinksMatch(type, matches));
-  }
-
-  private static boolean typeLinksMatch(TypeDescription type, Predicate<String> matches) {
-    var link = linkOf(type);
-    if (link != null && matches.test(link)) {
-      return true;
-    }
-    if (type instanceof CollectionTypeDescription collection && anyTypeLinkMatches(collection.valueTypes(), matches)) {
-      return true;
-    }
-    var fields = type.fields();
-    return fields != null && fields.stream().anyMatch(field -> anyTypeLinkMatches(field.types(), matches));
+    return DescriptionTypes.linksOf(types).anyMatch(link -> linkAwaitsUnparsedModule(link, owner, visited));
   }
 
   /** Может ли значение по ссылке зависеть от исходников вне документа со ссылкой. */
@@ -500,7 +483,8 @@ public class SymbolTypeIndex {
   /** Может ли значение из документации параметра зависеть от другого документа. */
   public boolean parameterMayReadAnotherDocument(ParameterDefinition parameter, DocumentContext owner) {
     return parameter.getDescription()
-      .map(description -> anyTypeLinkMatches(description.types(), link -> linkMayReadAnotherDocument(link, owner)))
+      .map(description -> DescriptionTypes.linksOf(description.types())
+        .anyMatch(link -> linkMayReadAnotherDocument(link, owner)))
       .orElse(false);
   }
 
@@ -516,7 +500,7 @@ public class SymbolTypeIndex {
     }
     Set<MethodSymbol> seen = visited == null ? new HashSet<>() : visited;
     return seen.add(method)
-      && anyTypeLinkMatches(returnedValue, link -> linkMayReadAnotherDocument(link, method.getOwner(), seen));
+      && DescriptionTypes.linksOf(returnedValue).anyMatch(link -> linkMayReadAnotherDocument(link, method.getOwner(), seen));
   }
 
   private boolean linkMayReadAnotherDocument(String link, DocumentContext owner, @Nullable Set<MethodSymbol> visited) {
@@ -576,18 +560,6 @@ public class SymbolTypeIndex {
       .map(MethodSymbol.class::cast)
       .map(function -> returnAwaitsUnparsedModule(function, visited))
       .orElse(false);
-  }
-
-  /**
-   * Ссылка {@code См.} описания типа: само описание-ссылка либо ссылка, уточняющая простой тип
-   * ({@code СтрокаТабличнойЧасти: См. …}).
-   */
-  private static @Nullable String linkOf(TypeDescription type) {
-    if (type.variant() == TypeDescription.Variant.HYPERLINK) {
-      return type.name();
-    }
-    var hyperlink = type.hyperlink();
-    return hyperlink == null ? null : hyperlink.link();
   }
 
   /**

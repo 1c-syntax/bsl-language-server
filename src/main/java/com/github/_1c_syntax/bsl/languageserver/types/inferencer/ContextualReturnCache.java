@@ -21,10 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
-import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -63,7 +61,7 @@ final class ContextualReturnCache {
   private final Map<BSLParser.CodeBlockContext, Optional<MethodSymbol>> bodyMethods = new HashMap<>();
   private long revision;
   private long cellReads;
-  private @Nullable Map<ExecutionContext, Set<VariableSymbol>> attemptedCellPreparations;
+  private @Nullable CellPreparationAttempts preparations;
   private @Nullable ContextualReturnCache preparationOwner;
   /** Самостоятельный расчёт ячеек. Его промежуточные результаты остаются внутри запроса. */
   boolean preparingCells;
@@ -79,15 +77,12 @@ final class ContextualReturnCache {
     return result;
   }
 
-  List<VariableSymbol> reserveCellPreparation(ExecutionContext context, List<VariableSymbol> variables) {
-    if (preparationOwner != null) {
-      return preparationOwner.reserveCellPreparation(context, variables);
+  CellPreparationAttempts cellPreparations() {
+    var owner = preparationOwner == null ? this : preparationOwner;
+    if (owner.preparations == null) {
+      owner.preparations = new CellPreparationAttempts();
     }
-    if (attemptedCellPreparations == null) {
-      attemptedCellPreparations = new HashMap<>();
-    }
-    var attempted = attemptedCellPreparations.computeIfAbsent(context, ignored -> new HashSet<>());
-    return variables.stream().filter(attempted::add).toList();
+    return owner.preparations;
   }
 
   @Nullable TypeSet get(ContextualReturnKey key) {

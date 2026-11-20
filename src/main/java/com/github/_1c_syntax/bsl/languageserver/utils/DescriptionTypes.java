@@ -27,7 +27,10 @@ import com.github._1c_syntax.bsl.parser.description.SourceDefinedSymbolDescripti
 import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import com.github._1c_syntax.bsl.parser.description.VariableDescription;
 import lombok.experimental.UtilityClass;
+import org.jspecify.annotations.Nullable;
 
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Stream;
 
 /**
@@ -80,6 +83,28 @@ public class DescriptionTypes {
       case COLLECTION -> type instanceof CollectionTypeDescription collection ? collection.collectionName() : type.name();
       case HYPERLINK -> "";
     };
+  }
+
+  /**
+   * Ссылки {@code См.} в описаниях типов, в том числе уточнения простого типа и вложенные ссылки.
+   * Сначала идёт ссылка самого типа, затем ссылки типов элементов коллекции и полей.
+   *
+   * @param types описания типов; {@code null} означает, что описаний нет.
+   * @return поток целей ссылок в порядке обхода описаний.
+   */
+  public Stream<String> linksOf(@Nullable List<? extends TypeDescription> types) {
+    return Stream.ofNullable(types).flatMap(List::stream)
+      .flatMap(DescriptionTypes::flatten)
+      .map(DescriptionTypes::linkOf)
+      .filter(Objects::nonNull);
+  }
+
+  private @Nullable String linkOf(TypeDescription type) {
+    if (type.variant() == TypeDescription.Variant.HYPERLINK) {
+      return type.name();
+    }
+    var hyperlink = type.hyperlink();
+    return hyperlink == null ? null : hyperlink.link();
   }
 
   private Stream<TypeDescription> flatten(TypeDescription type) {
