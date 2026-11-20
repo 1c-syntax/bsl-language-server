@@ -120,7 +120,7 @@ final class IndependentReturnedStructure {
         && Trees.getTrailingComment(document.getTokens(), assignment.getStop()).isEmpty()
         && closedInitializer(document, assignment, variable, variables, reachable, allowLocalCall);
     }
-    return statement instanceof BSLParser.CallStatementContext call && literalInsert(call, variable.getName());
+    return statement instanceof BSLParser.CallStatementContext call && supportedInsert(call, variable.getName());
   }
 
   private static boolean closedInitializer(DocumentContext document, BSLParser.AssignmentContext assignment,
@@ -203,17 +203,17 @@ final class IndependentReturnedStructure {
     return false;
   }
 
-  private static boolean literalInsert(BSLParser.CallStatementContext call, String variableName) {
+  private static boolean supportedInsert(BSLParser.CallStatementContext call, String variableName) {
     if (call.IDENTIFIER() == null || !call.IDENTIFIER().getText().equalsIgnoreCase(variableName)
       || !call.modifier().isEmpty()) {
       return false;
     }
     var access = call.accessCall();
     var method = access == null ? null : access.methodCall();
-    return method != null && literalInsert(method);
+    return method != null && supportedInsert(method);
   }
 
-  private static boolean literalInsert(BSLParser.MethodCallContext method) {
+  private static boolean supportedInsert(BSLParser.MethodCallContext method) {
     var name = method.methodName();
     if (name == null || !("Insert".equalsIgnoreCase(name.getText()) || "Вставить".equalsIgnoreCase(name.getText()))) {
       return false;
@@ -223,15 +223,12 @@ final class IndependentReturnedStructure {
       return false;
     }
     var params = call.callParamList().callParam();
-    return switch (params.size()) {
-      case 1 -> stringLiteral(params.getFirst().expression());
-      case INSERT_WITH_VALUE_ARITY -> stringLiteral(params.getFirst().expression()) && literal(params.getLast().expression());
-      default -> false;
-    };
-  }
-
-  private static boolean stringLiteral(BSLParser.@Nullable ExpressionContext expression) {
-    return expression != null && expression.getText().startsWith("\"") && literal(expression);
+    if (params.size() < 1 || params.size() > INSERT_WITH_VALUE_ARITY || params.getFirst().expression() == null) {
+      return false;
+    }
+    // Общий расчёт не добавляет поле по динамическому ключу и не вычисляет его значение.
+    return OpenDataObjectInference.literalKeyOf(params) == null
+      || params.size() == 1 || literal(params.getLast().expression());
   }
 
   private static boolean literal(BSLParser.@Nullable ExpressionContext expression) {

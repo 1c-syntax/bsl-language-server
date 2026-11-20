@@ -933,9 +933,10 @@ public class ExpressionTypeInferencer {
       return TypeSet.EMPTY;
     }
     if (ctx.contextualReturns.preparingCells) {
-      member.getSourceSymbol().filter(SourceDefinedSymbol.class::isInstance).map(SourceDefinedSymbol.class::cast)
-        .filter(symbol -> symbol.getOwner() != ctx.documentContext)
-        .ifPresent(symbol -> ctx.dependencies.add(symbol.getOwner().getUri()));
+      var source = member.getSourceSymbol().orElse(null);
+      if (source instanceof SourceDefinedSymbol symbol) {
+        notePreparedMemberInput(symbol, ctx);
+      }
     }
     // Для метода проектного модуля (в т.ч. вызванного межмодульно как
     // ОбщийМодуль.Метод()) берём полный тип возврата из индекса символов —
@@ -960,6 +961,14 @@ public class ExpressionTypeInferencer {
       }
     }
     return result;
+  }
+
+  private void notePreparedMemberInput(SourceDefinedSymbol symbol, InferenceContext ctx) {
+    if (symbol.getOwner() != ctx.documentContext) {
+      ctx.dependencies.add(symbol.getOwner().getUri());
+    } else if (symbol instanceof VariableSymbol variable && commentTypeResolver.hasExternalTypeLinks(variable)) {
+      ctx.noteMissingData();
+    }
   }
 
   private TypeSet inferDereference(BinaryOperationNode node, InferenceContext ctx) {

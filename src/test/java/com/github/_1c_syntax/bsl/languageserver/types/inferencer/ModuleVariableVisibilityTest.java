@@ -29,8 +29,10 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.index.InferredExpressionTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.MethodReturnTypeIndexer;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Position;
@@ -66,6 +68,8 @@ class ModuleVariableVisibilityTest extends AbstractServerContextAwareTest {
   private InferredExpressionTypeIndex expressions;
   @Autowired
   private TypeService typeService;
+  @Autowired
+  private TypeRegistry typeRegistry;
 
   @BeforeEach
   void setUp() {
@@ -228,6 +232,32 @@ class ModuleVariableVisibilityTest extends AbstractServerContextAwareTest {
     } else {
       assertThat(preparedCells(document).get(shared).refs()).extracting(TypeRef::qualifiedName).contains("Число");
     }
+  }
+
+  @Test
+  void preparationChecksTheTypeCommentOfAnOwnExportedProperty() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    TestUtils.getDocumentContextFromFile(PATH_TO_METADATA + "/CommonModules/ОбщегоНазначения/Ext/Module.bsl");
+    var document = TestUtils.getDocumentContextFromFile(PATH_TO_METADATA
+      + "/Catalogs/СправочникСМенеджером/Ext/ObjectModule.bsl");
+    var owner = typeRegistry.resolve("СправочникОбъект.СправочникСМенеджером").orElseThrow();
+    var members = typeRegistry.getMembers(owner, document.getFileType());
+    var external = members.stream().filter(member -> member.matches("ИтогРасчёта")).findFirst().orElseThrow();
+    var local = members.stream().filter(member -> member.matches("Данные")).findFirst().orElseThrow();
+    ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
+    var isolated = new InferenceContext(document, ExecutionContext.SERVER);
+    isolated.contextualReturns.preparingCells = true;
+
+    TypeSet localTypes = ReflectionTestUtils.invokeMethod(target, "typesOfMember", local, "Данные",
+      MemberKind.PROPERTY, TypeSet.EMPTY, isolated);
+    assertThat(localTypes.refs()).extracting(TypeRef::qualifiedName).containsExactly("Структура");
+    assertThat(isolated.sawMissing()).isFalse();
+
+    TypeSet externalTypes = ReflectionTestUtils.invokeMethod(target, "typesOfMember", external, "ИтогРасчёта",
+      MemberKind.PROPERTY, TypeSet.EMPTY, isolated);
+    assertThat(externalTypes.refs()).extracting(TypeRef::qualifiedName).containsExactly("Массив");
+    assertThat(isolated.sawMissing()).isTrue();
   }
 
   private Map<VariableSymbol, TypeSet> preparedCells(DocumentContext document) {
