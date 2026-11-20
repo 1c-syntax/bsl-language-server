@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.types.index.EventContractsIndex;
@@ -37,8 +38,12 @@ import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.parser.description.MethodDescription;
+import com.github._1c_syntax.bsl.parser.description.support.Hyperlink;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -50,6 +55,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 /**
@@ -172,6 +178,34 @@ class DeclaredParameterTypeResolverTest {
 
     // then
     assertThat(types).isEqualTo(TypeSet.EMPTY);
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "ОбщийМодуль.Прототип, false, true",
+    "Прототип, true, true",
+    "Прототип, false, false",
+    "Неизвестный, false, false"
+  })
+  void marksAnExternalTypeInheritedFromAMethodLink(String link, boolean targetTypeIsExternal, boolean expected) {
+    givenParameter("Данные");
+    var description = mock(MethodDescription.class);
+    var reference = mock(Hyperlink.class);
+    when(reference.link()).thenReturn(link);
+    when(description.getLinks()).thenReturn(List.of(reference));
+    when(method.getDescription()).thenReturn(Optional.of(description));
+
+    var tree = mock(SymbolTree.class);
+    var prototype = mock(MethodSymbol.class);
+    when(prototype.getName()).thenReturn("Прототип");
+    when(otherParameter.getName()).thenReturn("Данные");
+    when(prototype.getParameters()).thenReturn(List.of(otherParameter));
+    when(documentContext.getSymbolTree()).thenReturn(tree);
+    when(tree.getMethods()).thenReturn(List.of(prototype));
+    when(symbolTypeIndex.parameterMayReadAnotherDocument(otherParameter, documentContext))
+      .thenReturn(targetTypeIsExternal);
+
+    assertThat(resolver.hasExternalTypeLinks(variable)).isEqualTo(expected);
   }
 
   private void givenParameter(String name) {

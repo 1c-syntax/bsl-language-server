@@ -130,6 +130,11 @@ final class InferenceContext {
     return new VariableFlowAnalyzer.FlowSession(cache::invalidate, cache::noteCellRead);
   }
 
+  /** Защита от повторного входа или лимит глубины не дали завершить вывод. */
+  boolean hasCut() {
+    return cycleCut || bodyInFlowCut || depthCut;
+  }
+
   /** Недоступны данные, а не только возвращаемое значение известной функции. */
   void noteMissingData() {
     missingInputs().methods = null;

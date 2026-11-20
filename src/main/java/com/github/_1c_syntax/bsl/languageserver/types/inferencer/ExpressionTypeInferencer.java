@@ -304,7 +304,7 @@ public class ExpressionTypeInferencer {
   }
 
   private static boolean completeRoot(InferenceContext ctx) {
-    if (ctx.cycleCut || ctx.bodyInFlowCut || ctx.depthCut) {
+    if (ctx.hasCut()) {
       return false;
     }
     return !ctx.sawMissing() && !ctx.failed && !ctx.flowSession.computing();
@@ -1127,6 +1127,8 @@ public class ExpressionTypeInferencer {
     ctx.consulted.add(method);
     if (owner != ctx.documentContext) {
       ctx.dependencies.add(owner.getUri());
+    } else if (ctx.contextualReturns.preparingCells && symbolTypeIndex.returnMayReadAnotherDocument(method)) {
+      ctx.noteMissingData();
     }
     try {
       // При первичном rebuild свой AST уже доступен, а ServerContext обновит состояние
@@ -1382,8 +1384,7 @@ public class ExpressionTypeInferencer {
 
   /** Только завершённые результаты без текущих приближений переживают вложенный вызов. */
   private static boolean canRememberReturn(InferenceContext result) {
-    return !result.sawMissing() && !result.cycleCut && !result.bodyInFlowCut
-      && !result.depthCut && canUseContextualReturns(result);
+    return !result.sawMissing() && !result.hasCut() && canUseContextualReturns(result);
   }
 
   /**
@@ -1636,8 +1637,7 @@ public class ExpressionTypeInferencer {
     try {
       var inputs = flowInputs(variable, ctx);
       var byFlow = ctx.sharedRootFlow
-        ? variableFlowAnalyzer.typeAtRoot(owner, use, variable, inputs,
-          () -> !ctx.cycleCut && !ctx.bodyInFlowCut && !ctx.depthCut)
+        ? variableFlowAnalyzer.typeAtRoot(owner, use, variable, inputs, () -> !ctx.hasCut())
         : variableFlowAnalyzer.typeAt(owner, use, variable, inputs);
       ctx.noteIncompleteCells();
       if (byFlow == null) {
@@ -1829,6 +1829,10 @@ public class ExpressionTypeInferencer {
       if (cached != null) {
         return cached;
       }
+      if (ctx.contextualReturns.preparingCells
+        && variableTypeSources.stream().anyMatch(source -> source.hasExternalTypeLinks(target))) {
+        ctx.noteMissingData();
+      }
       var revision = sharedDeclarations == null ? 0 : inferredExpressionTypeIndex.inputRevision();
       if (sharedDeclarations != null) {
         var shared = sharedDeclarations.get(target, revision);
@@ -1928,12 +1932,16 @@ public class ExpressionTypeInferencer {
     var inputs = createFlowInputs(requested.getFirst(), isolated, true);
     try {
       variableFlowAnalyzer.ensureCellsFor(document, requested, inputs, () ->
-        !isolated.failed && !isolated.depthCut && isolated.dependencies.isEmpty()
-          && !isolated.flowSession.hasDeferredCellTypes()
+        completeCellPreparation(isolated)
           && Equivalence.identity().equivalent(tree, document.getSymbolTreeNoLock()));
     } catch (RuntimeException | StackOverflowError exception) {
       LOGGER.debug("Самостоятельный расчёт модульных ячеек не завершился: {}", document.getUri(), exception);
     }
+  }
+
+  private static boolean completeCellPreparation(InferenceContext isolated) {
+    return !isolated.failed && !isolated.hasCut() && isolated.dependencies.isEmpty()
+      && !isolated.flowSession.hasDeferredCellTypes();
   }
 
   /**
@@ -2395,6 +2403,9 @@ public class ExpressionTypeInferencer {
    */
   private TypeSet typesOfAssignmentComment(DocumentContext owner, BSLParser.AssignmentContext assignment,
                                            InferenceContext ctx) {
+    if (ctx.contextualReturns.preparingCells) {
+      return commentTypeResolver.ofAssignment(owner, assignment, ctx::noteMissingData, true);
+    }
     if (!workspacePopulated) {
       return commentTypeResolver.ofAssignment(owner, assignment, ctx::noteMissingData);
     }

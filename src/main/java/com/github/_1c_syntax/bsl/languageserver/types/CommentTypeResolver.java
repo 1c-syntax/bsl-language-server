@@ -146,14 +146,21 @@ public class CommentTypeResolver implements VariableTypeSource {
    */
   public TypeSet ofAssignment(DocumentContext owner, BSLParser.AssignmentContext assignment,
                               Runnable onIncomplete) {
+    return ofAssignment(owner, assignment, onIncomplete, false);
+  }
+
+  /** Уведомить также о ссылке на чужой документ, если результат должен пережить текущий вывод. */
+  public TypeSet ofAssignment(DocumentContext owner, BSLParser.AssignmentContext assignment,
+                              Runnable onIncomplete, boolean requireLocalTypes) {
     var trailing = trailingOf(owner, assignment);
     if (trailing == null) {
       return TypeSet.EMPTY;
     }
-    if (anyLinkAwaitsUnparsedModule(trailing.getLinks(), owner)) {
+    var links = trailing.getLinks();
+    if (anyLinkAwaitsUnparsedModule(links, owner) || (requireLocalTypes && anyLinkReadsAnotherDocument(links, owner))) {
       onIncomplete.run();
     }
-    return typesOfComment(trailing.getTypes(), trailing.getLinks(), owner, owner.getFileType());
+    return typesOfComment(trailing.getTypes(), links, owner, owner.getFileType());
   }
 
   /**
@@ -187,6 +194,18 @@ public class CommentTypeResolver implements VariableTypeSource {
     var trailing = description.getTrailingDescription().orElse(null);
     return (trailing != null && anyLinkAwaitsUnparsedModule(trailing.getLinks(), owner))
       || anyLinkAwaitsUnparsedModule(description.getLinks(), owner);
+  }
+
+  @Override
+  public boolean hasExternalTypeLinks(VariableSymbol variable) {
+    var owner = variable.getOwner();
+    return variable.getDescription().map(description ->
+      anyLinkReadsAnotherDocument(description.getLinks(), owner) || description.getTrailingDescription()
+        .map(trailing -> anyLinkReadsAnotherDocument(trailing.getLinks(), owner)).orElse(false)).orElse(false);
+  }
+
+  private boolean anyLinkReadsAnotherDocument(List<Hyperlink> links, DocumentContext owner) {
+    return links.stream().anyMatch(link -> symbolTypeIndex.linkMayReadAnotherDocument(link.link(), owner));
   }
 
   private boolean anyLinkAwaitsUnparsedModule(List<Hyperlink> links, DocumentContext owner) {

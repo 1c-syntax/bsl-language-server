@@ -47,6 +47,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
@@ -125,6 +126,108 @@ class ModuleVariableVisibilityTest extends AbstractServerContextAwareTest {
 
     assertThat(preparedCells(document)).doesNotContainKey(shared);
     assertThat(tree.getMethods()).noneMatch(indexer::isIndexed);
+  }
+
+  @Test
+  void preparationDoesNotPublishCellsAfterCuttingARecursiveReturn() {
+    var document = document("""
+      Var Shared;
+      Procedure Fill()
+        Shared = Seed();
+      EndProcedure
+      Function Seed()
+        Return ?(True, Seed(), "ready");
+      EndFunction
+      """);
+    var tree = document.getSymbolTree();
+    var shared = tree.getModuleVariableVisibleFromMethods("Shared").orElseThrow();
+    ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
+
+    ReflectionTestUtils.invokeMethod(target, "prepareCells",
+      new InferenceContext(document, ExecutionContext.SERVER), List.of(shared));
+
+    assertThat(preparedCells(document)).doesNotContainKey(shared);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void preparationDoesNotPublishCellsWithAnExternalTypeComment(boolean onDeclaration) {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var link = " // См. ОбщегоНазначения.ЗначениеВМассиве";
+    var document = document("""
+      Перем Общая;%s
+      Процедура Заполнить()
+        Общая = 1;%s
+      КонецПроцедуры
+      """.formatted(onDeclaration ? link : "", onDeclaration ? "" : link));
+    var shared = document.getSymbolTree().getModuleVariableVisibleFromMethods("Общая").orElseThrow();
+    ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
+
+    ReflectionTestUtils.invokeMethod(target, "prepareCells",
+      new InferenceContext(document, ExecutionContext.SERVER), List.of(shared));
+
+    assertThat(preparedCells(document)).doesNotContainKey(shared);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void preparationFollowsLocalCommentLinksToTheirReturnDescription(boolean externalReturn) {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var returnDescription = externalReturn ? "См. ОбщегоНазначения.ЗначениеВМассиве" : "Строка";
+    var document = document("""
+      Перем Общая;
+      Процедура Заполнить()
+        Общая = 1; // См. ТипЗначения
+      КонецПроцедуры
+      // Возвращаемое значение:
+      //  %s
+      Функция ТипЗначения()
+        Возврат "готово";
+      КонецФункции
+      """.formatted(returnDescription));
+    var shared = document.getSymbolTree().getModuleVariableVisibleFromMethods("Общая").orElseThrow();
+    ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
+
+    ReflectionTestUtils.invokeMethod(target, "prepareCells",
+      new InferenceContext(document, ExecutionContext.SERVER), List.of(shared));
+
+    if (externalReturn) {
+      assertThat(preparedCells(document)).doesNotContainKey(shared);
+    } else {
+      assertThat(preparedCells(document).get(shared).refs()).extracting(TypeRef::qualifiedName).contains("Строка");
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void preparationChecksTypeLinksOfParametersReadByTheWriter(boolean externalType) {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var parameterType = externalType ? "См. ОбщегоНазначения.ЗначениеВМассиве" : "Число";
+    var document = document("""
+      Перем Общая;
+      Процедура Заполнить()
+        Общая = ЗначениеДляЗаписи(1);
+      КонецПроцедуры
+      // Параметры:
+      //  Источник - %s
+      Функция ЗначениеДляЗаписи(Источник)
+        Возврат Источник;
+      КонецФункции
+      """.formatted(parameterType));
+    var shared = document.getSymbolTree().getModuleVariableVisibleFromMethods("Общая").orElseThrow();
+    ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
+
+    ReflectionTestUtils.invokeMethod(target, "prepareCells",
+      new InferenceContext(document, ExecutionContext.SERVER), List.of(shared));
+
+    if (externalType) {
+      assertThat(preparedCells(document)).doesNotContainKey(shared);
+    } else {
+      assertThat(preparedCells(document).get(shared).refs()).extracting(TypeRef::qualifiedName).contains("Число");
+    }
   }
 
   private Map<VariableSymbol, TypeSet> preparedCells(DocumentContext document) {
