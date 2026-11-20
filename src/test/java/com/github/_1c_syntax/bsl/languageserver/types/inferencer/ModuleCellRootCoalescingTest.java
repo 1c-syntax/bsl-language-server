@@ -34,7 +34,10 @@ import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.Position;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.util.AopTestUtils;
 
@@ -46,6 +49,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -89,6 +93,41 @@ class ModuleCellRootCoalescingTest extends AbstractServerContextAwareTest {
   @Test
   void cutRootDoesNotPublishItsIntermediateCellsToAnotherRoot() throws Exception {
     runConcurrentRoots(ExecutionContext.SERVER, 3, NUMBER, false, true);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void nestedFlowReusesOnlyACompletedPreparation(boolean complete) {
+    initServerContext();
+    var document = TestUtils.getDocumentContext(SOURCE, context);
+    VariableFlowAnalyzer target = AopTestUtils.getUltimateTargetObject(analyzer);
+    target.clear(document.getUri());
+    var shared = document.getSymbolTree().getModuleVariableVisibleFromMethods("Shared").orElseThrow();
+    var isolated = preparationInputs(shared, true, (variable, statement, position) -> NUMBER, null);
+    var fallbackWrites = new AtomicInteger();
+    var nested = preparationInputs(shared, false, (variable, statement, position) -> {
+      fallbackWrites.incrementAndGet();
+      return STRING;
+    }, pending -> target.ensureCellsFor(document, pending, isolated, () -> complete));
+
+    target.ensureCellsFor(document, List.of(shared), nested, null);
+
+    assertThat(target.cellOf(document, shared, nested, true)).isEqualTo(complete ? NUMBER : STRING);
+    if (complete) {
+      assertThat(fallbackWrites).hasValue(0);
+    } else {
+      assertThat(fallbackWrites.get()).isPositive();
+    }
+  }
+
+  private static FlowInputs preparationInputs(VariableSymbol shared, boolean cacheable,
+                                             VariableFlowAnalyzer.AssignedTypes assigned,
+                                             @Nullable Consumer<List<VariableSymbol>> prepare) {
+    return new FlowInputs(new VariableFlowAnalyzer.FlowSession(), body -> {}, cacheable, ExecutionContext.SERVER,
+      body -> Optional.empty(), () -> false, body -> List.of(shared), null, variable -> true,
+      variable -> TypeSet.EMPTY, variable -> List.of(new Position(2, 2)), variable -> List.of(),
+      assigned, (variable, position, incoming) -> incoming, mock(VariableFlowAnalyzer.GuardNarrowing.class),
+      () -> {}, prepare);
   }
 
   private void runConcurrentRoots(ExecutionContext secondMode, int expectedAssignments,

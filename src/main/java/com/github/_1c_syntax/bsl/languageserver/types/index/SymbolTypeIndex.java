@@ -60,6 +60,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Predicate;
 
 /**
  * Индекс декларативных типов символов.
@@ -471,15 +472,60 @@ public class SymbolTypeIndex {
    */
   private boolean anyAwaitsUnparsedModule(@Nullable List<? extends TypeDescription> types, DocumentContext owner,
                                           Set<MethodSymbol> visited) {
-    return types != null && types.stream().anyMatch(type -> awaitsUnparsedModule(type, owner, visited));
+    return anyTypeLinkMatches(types, link -> linkAwaitsUnparsedModule(link, owner, visited));
   }
 
-  /** Ведёт ли в ещё не разобранный модуль ссылка одного описания типа, его элементов или полей. */
-  private boolean awaitsUnparsedModule(TypeDescription type, DocumentContext owner, Set<MethodSymbol> visited) {
-    return linkAwaitsUnparsedModule(linkOf(type), owner, visited)
-      || (type instanceof CollectionTypeDescription collection
-      && anyAwaitsUnparsedModule(collection.valueTypes(), owner, visited))
-      || anyFieldAwaitsUnparsedModule(type.fields(), owner, visited);
+  private static boolean anyTypeLinkMatches(@Nullable List<? extends TypeDescription> types,
+                                            Predicate<String> matches) {
+    return types != null && types.stream().anyMatch(type -> typeLinksMatch(type, matches));
+  }
+
+  private static boolean typeLinksMatch(TypeDescription type, Predicate<String> matches) {
+    var link = linkOf(type);
+    if (link != null && matches.test(link)) {
+      return true;
+    }
+    if (type instanceof CollectionTypeDescription collection && anyTypeLinkMatches(collection.valueTypes(), matches)) {
+      return true;
+    }
+    var fields = type.fields();
+    return fields != null && fields.stream().anyMatch(field -> anyTypeLinkMatches(field.types(), matches));
+  }
+
+  /** Может ли значение по ссылке зависеть от исходников вне документа со ссылкой. */
+  public boolean linkMayReadAnotherDocument(String link, DocumentContext owner) {
+    return linkMayReadAnotherDocument(link, owner, null);
+  }
+
+  /** Может ли значение из документации параметра зависеть от другого документа. */
+  public boolean parameterMayReadAnotherDocument(ParameterDefinition parameter, DocumentContext owner) {
+    return parameter.getDescription()
+      .map(description -> anyTypeLinkMatches(description.types(), link -> linkMayReadAnotherDocument(link, owner)))
+      .orElse(false);
+  }
+
+  /** Может ли объявленный тип возврата зависеть от другого документа. */
+  public boolean returnMayReadAnotherDocument(MethodSymbol method) {
+    return returnMayReadAnotherDocument(method, null);
+  }
+
+  private boolean returnMayReadAnotherDocument(MethodSymbol method, @Nullable Set<MethodSymbol> visited) {
+    var returnedValue = method.getDescription().map(MethodDescription::getReturnedValue).orElse(List.of());
+    if (returnedValue.isEmpty()) {
+      return false;
+    }
+    Set<MethodSymbol> seen = visited == null ? new HashSet<>() : visited;
+    return seen.add(method)
+      && anyTypeLinkMatches(returnedValue, link -> linkMayReadAnotherDocument(link, method.getOwner(), seen));
+  }
+
+  private boolean linkMayReadAnotherDocument(String link, DocumentContext owner, @Nullable Set<MethodSymbol> visited) {
+    if (link.contains(".")) {
+      // Квалифицированная цепочка может читать типы других модулей и форм на любом шаге.
+      return true;
+    }
+    var local = findLocalFunction(owner, link);
+    return local != null && returnMayReadAnotherDocument(local, visited);
   }
 
   /**
@@ -542,12 +588,6 @@ public class SymbolTypeIndex {
     }
     var hyperlink = type.hyperlink();
     return hyperlink == null ? null : hyperlink.link();
-  }
-
-  private boolean anyFieldAwaitsUnparsedModule(@Nullable List<ParameterDescription> fields, DocumentContext owner,
-                                               Set<MethodSymbol> visited) {
-    return fields != null
-      && fields.stream().anyMatch(field -> anyAwaitsUnparsedModule(field.types(), owner, visited));
   }
 
   /**
