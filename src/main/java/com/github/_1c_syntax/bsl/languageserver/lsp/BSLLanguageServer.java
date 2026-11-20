@@ -99,6 +99,7 @@ import org.eclipse.lsp4j.services.TextDocumentService;
 import org.eclipse.lsp4j.services.WorkspaceService;
 import org.jspecify.annotations.Nullable;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.ImportRuntimeHints;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -123,6 +124,7 @@ import java.util.concurrent.ExecutorService;
 @Slf4j
 @Component
 @RequiredArgsConstructor
+@ImportRuntimeHints(Lsp4jRuntimeHints.class)
 public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
 
   /**

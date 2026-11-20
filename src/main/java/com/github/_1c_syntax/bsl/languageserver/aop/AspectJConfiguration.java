@@ -23,9 +23,26 @@ package com.github._1c_syntax.bsl.languageserver.aop;
 
 import com.github._1c_syntax.bsl.languageserver.aop.measures.ConditionalOnMeasuresEnabled;
 import org.aspectj.lang.Aspects;
+import org.jspecify.annotations.Nullable;
+import org.springframework.aot.hint.MemberCategory;
+import org.springframework.aot.hint.RuntimeHints;
+import org.springframework.aot.hint.RuntimeHintsRegistrar;
+import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
+import org.springframework.beans.factory.config.BeanDefinition;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.ImportRuntimeHints;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.util.ClassUtils;
+
+import java.lang.reflect.Executable;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Stream;
 
 /**
  * Конфигурация фреймворка AspectJ.
@@ -33,7 +50,81 @@ import org.springframework.context.annotation.Lazy;
  * Каждый аспект с compile-time weaving должен быть объявлен как {@link Bean}.
  */
 @Configuration
+@ImportRuntimeHints(AspectJConfiguration.AspectsRuntimeHints.class)
 public class AspectJConfiguration {
+
+  /**
+   * Подсказки для native-image к коду, который добавляет ajc при compile-time weaving.
+   * <ul>
+   *   <li>экземпляры аспектов получаются рефлексивным вызовом статического {@code aspectOf()};</li>
+   *   <li>статические части join point'ов ({@code ajc$tjp_*}) при инициализации класса разрешают
+   *   по имени типы своих сигнатур ({@code Factory.makeClass}): объявляющий класс, параметры,
+   *   результат, исключения. Вплетённые классы находятся на classpath во время AOT-обработки.</li>
+   * </ul>
+   */
+  static class AspectsRuntimeHints implements RuntimeHintsRegistrar {
+
+    private static final String BASE_PACKAGE = "com.github._1c_syntax.bsl.languageserver";
+    private static final String JOIN_POINT_FIELD_PREFIX = "ajc$tjp_";
+
+    @Override
+    public void registerHints(RuntimeHints hints, @Nullable ClassLoader classLoader) {
+      Stream.of(EventPublisherAspect.class, SentryAspect.class, MeasuresAspect.class)
+        .forEach(aspectClass -> hints.reflection().registerType(aspectClass, MemberCategory.INVOKE_PUBLIC_METHODS));
+
+      wovenClasses(classLoader).forEach(wovenClass -> registerSignatureTypes(hints, wovenClass));
+    }
+
+    private static Stream<Class<?>> wovenClasses(@Nullable ClassLoader classLoader) {
+      var scanner = new ClassPathScanningCandidateComponentProvider(false) {
+        @Override
+        protected boolean isCandidateComponent(AnnotatedBeanDefinition beanDefinition) {
+          return true;
+        }
+      };
+      scanner.setResourceLoader(new DefaultResourceLoader(classLoader));
+      scanner.addIncludeFilter((metadataReader, metadataReaderFactory) -> true);
+      return scanner.findCandidateComponents(BASE_PACKAGE).stream()
+        .map(BeanDefinition::getBeanClassName)
+        .filter(Objects::nonNull)
+        .<Class<?>>map(className -> ClassUtils.resolveClassName(className, classLoader))
+        .filter(AspectsRuntimeHints::hasJoinPoints);
+    }
+
+    private static boolean hasJoinPoints(Class<?> type) {
+      return Arrays.stream(type.getDeclaredFields())
+        .anyMatch(field -> field.getName().startsWith(JOIN_POINT_FIELD_PREFIX));
+    }
+
+    private static void registerSignatureTypes(RuntimeHints hints, Class<?> wovenClass) {
+      var types = new HashSet<Class<?>>();
+      types.add(wovenClass);
+      for (var method : wovenClass.getDeclaredMethods()) {
+        types.add(method.getReturnType());
+        addExecutableTypes(types, method);
+      }
+      for (var constructor : wovenClass.getDeclaredConstructors()) {
+        addExecutableTypes(types, constructor);
+      }
+      types.stream()
+        .map(AspectsRuntimeHints::componentType)
+        .filter(type -> !type.isPrimitive())
+        .forEach(type -> hints.reflection().registerType(type));
+    }
+
+    private static void addExecutableTypes(Set<Class<?>> types, Executable executable) {
+      types.addAll(Arrays.asList(executable.getParameterTypes()));
+      types.addAll(Arrays.asList(executable.getExceptionTypes()));
+    }
+
+    private static Class<?> componentType(Class<?> type) {
+      var result = type;
+      while (result.isArray()) {
+        result = result.getComponentType();
+      }
+      return result;
+    }
+  }
 
   /**
    * @return Основной аспект подсистемы событий.

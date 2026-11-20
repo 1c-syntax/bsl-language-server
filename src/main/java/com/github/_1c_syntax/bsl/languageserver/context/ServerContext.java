@@ -43,7 +43,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.config.ConfigurableBeanFactory;
 import org.springframework.context.annotation.Scope;
@@ -83,7 +82,7 @@ public class ServerContext {
     .skipDataCompositionSchema(true)
     .build();
 
-  private final ObjectProvider<DocumentContext> documentContextProvider;
+  private final DocumentContextFactory documentContextFactory;
   private final WorkDoneProgressHelper workDoneProgressHelper;
   private final GlobalLanguageServerConfiguration globalConfiguration;
   @Qualifier("computeConfigurationExecutor")
@@ -738,7 +737,7 @@ public class ServerContext {
 
   private DocumentContext createDocumentContext(URI uri) {
     var whilePreparing = isPreparing();
-    var documentContext = documentContextProvider.getObject(uri, this);
+    var documentContext = documentContextFactory.create(uri, this);
 
     documents.put(uri, documentContext);
     addMdoRefByUri(uri, documentContext);

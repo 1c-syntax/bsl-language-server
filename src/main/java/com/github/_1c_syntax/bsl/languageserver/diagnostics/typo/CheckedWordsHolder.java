@@ -21,8 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.typo;
 
+import org.jspecify.annotations.Nullable;
+import org.springframework.aot.hint.RuntimeHints;
+import org.springframework.aot.hint.RuntimeHintsRegistrar;
 import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.ImportRuntimeHints;
 import org.springframework.stereotype.Component;
 
 /**
@@ -30,7 +34,19 @@ import org.springframework.stereotype.Component;
  * Использует Spring Cache с EhCache для хранения кэша на диске.
  */
 @Component
+@ImportRuntimeHints(CheckedWordsHolder.WordStatusRuntimeHints.class)
 public class CheckedWordsHolder {
+
+  /**
+   * Подсказки для native-image: значения постоянного кэша хранятся Java-сериализацией.
+   */
+  static class WordStatusRuntimeHints implements RuntimeHintsRegistrar {
+
+    @Override
+    public void registerHints(RuntimeHints hints, @Nullable ClassLoader classLoader) {
+      hints.serialization().registerType(WordStatus.class);
+    }
+  }
 
   /**
    * Получает статус слова из кэша.

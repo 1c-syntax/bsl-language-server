@@ -396,18 +396,12 @@ class ArchitectureTest {
   // --- Внедрение зависимостей ---------------------------------------------------------------------
   // Предпочтительно конструкторное внедрение (Lombok @RequiredArgsConstructor). @Autowired на полях
   // и сеттерах — нежелателен. Исключения — классы из списка ниже, где конструкторное внедрение
-  // невозможно: AspectJ-аспекты и logback-appender (создаются вне Spring-контейнера), self-инъекция
-  // в code lens (циклична), именованные бины/провайдеры. Новый @Autowired вне списка валит сборку.
+  // невозможно: AspectJ-аспекты и logback-appender (создаются вне Spring-контейнера), именованные
+  // бины/провайдеры. Новый @Autowired вне списка валит сборку.
 
   private static final Set<String> ALLOWED_AUTOWIRED_CLASSES = Set.of(
     ROOT_PACKAGE + ".aop.MeasuresAspect",
     ROOT_PACKAGE + ".aop.SentryAspect",
-    ROOT_PACKAGE + ".codelenses.DebugTestCodeLensSupplier",
-    ROOT_PACKAGE + ".codelenses.RunAllTestsCodeLensSupplier",
-    ROOT_PACKAGE + ".codelenses.RunTestCodeLensSupplier",
-    ROOT_PACKAGE + ".context.DocumentContext",
-    ROOT_PACKAGE + ".context.computer.CognitiveComplexityComputer",
-    ROOT_PACKAGE + ".context.computer.CyclomaticComplexityComputer",
     ROOT_PACKAGE + ".diagnostics.AbstractMetadataDiagnostic",
     ROOT_PACKAGE + ".infrastructure.LanguageClientAwareAppender",
     ROOT_PACKAGE + ".reporters.ReportersAggregator"
@@ -421,7 +415,7 @@ class ArchitectureTest {
         (JavaClass javaClass) -> !ALLOWED_AUTOWIRED_CLASSES.contains(javaClass.getFullName())))
     .should().beAnnotatedWith(Autowired.class)
     .because("предпочтительно конструкторное внедрение (Lombok @RequiredArgsConstructor); "
-      + "оставшиеся @Autowired — AspectJ-аспекты, logback-appender и self-инъекция, "
+      + "оставшиеся @Autowired — AspectJ-аспекты, logback-appender и именованные бины, "
       + "которые нельзя внедрить через конструктор");
 
   /**

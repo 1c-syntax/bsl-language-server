@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.reporters;
 
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.SequenceWriter;
 import tools.jackson.databind.SerializationFeature;
@@ -32,6 +33,7 @@ import java.nio.file.Path;
 
 @Slf4j
 @Component
+@RegisterReflectionForBinding(TSLintReportEntry.class)
 public class TSLintReporter implements DiagnosticReporter {
 
   private ReportFile reportFile;
