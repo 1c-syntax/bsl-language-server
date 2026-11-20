@@ -87,7 +87,7 @@ class ModuleVariableVisibilityTest extends AbstractServerContextAwareTest {
     var shared = tree.getModuleVariableVisibleFromMethods("Shared").orElseThrow();
     ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
     var neutral = InferenceContext.neutral(document);
-    neutral.preparingCells = true;
+    neutral.contextualReturns.preparingCells = true;
 
     TypeSet value = ReflectionTestUtils.invokeMethod(target, "methodReturnType", seed, neutral);
 

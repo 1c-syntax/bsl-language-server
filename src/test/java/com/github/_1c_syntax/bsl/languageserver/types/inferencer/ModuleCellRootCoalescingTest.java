@@ -164,10 +164,10 @@ class ModuleCellRootCoalescingTest extends AbstractServerContextAwareTest {
       .orElseThrow().getParent();
   }
 
-  private static VariableFlowAnalyzer.FlowInputs inputs(VariableSymbol shared, ExecutionContext mode,
+  private static FlowInputs inputs(VariableSymbol shared, ExecutionContext mode,
       AtomicInteger calls, CountDownLatch firstEntered, CountDownLatch release, boolean failFirst,
       boolean partialRoot, Runnable markIncomplete) {
-    return new VariableFlowAnalyzer.FlowInputs(new VariableFlowAnalyzer.FlowSession(), body -> {}, true, mode,
+    return new FlowInputs(new VariableFlowAnalyzer.FlowSession(), body -> {}, true, mode,
       body -> Optional.empty(), () -> false, body -> List.of(shared), variable -> true, variable -> TypeSet.EMPTY,
       variable -> List.of(new Position(2, 2)), variable -> List.of(),
       (variable, statement, position) -> {
