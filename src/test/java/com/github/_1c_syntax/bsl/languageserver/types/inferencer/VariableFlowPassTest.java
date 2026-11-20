@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraph;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.VariableFlowAnalyzer.FlowInputs;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.VariableFlowAnalyzer.FlowSession;
 import com.github._1c_syntax.bsl.languageserver.types.model.LazyTypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;

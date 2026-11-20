@@ -55,7 +55,7 @@ final class IndependentReturnedStructure {
   }
 
   static boolean supports(DocumentContext document, BSLParser.CodeBlockContext body, VariableSymbol variable,
-                          FlowVariables variables, Set<CfgVertex> vertices, VariableFlowAnalyzer.FlowInputs inputs,
+                          FlowVariables variables, Set<CfgVertex> vertices, FlowInputs inputs,
                           Predicate<ParserRuleContext> reachable) {
     return variables.indexes().containsKey(variable)
       && closedChanges(document, variable, variables, reachable, !inputs.session().cellsComputing())
@@ -64,7 +64,7 @@ final class IndependentReturnedStructure {
 
   /** Собрать замкнутые локальные результаты для одного прохода, не добавляя остальные переменные тела. */
   static Set<VariableSymbol> returnedLocals(DocumentContext document, BSLParser.CodeBlockContext body,
-      FlowVariables variables, Set<CfgVertex> vertices, VariableFlowAnalyzer.FlowInputs inputs, VariableSymbol required,
+      FlowVariables variables, Set<CfgVertex> vertices, FlowInputs inputs, VariableSymbol required,
       Predicate<ParserRuleContext> reachable) {
     Set<VariableSymbol> selected = Collections.newSetFromMap(new IdentityHashMap<>(0));
     selected.add(required);
@@ -171,7 +171,7 @@ final class IndependentReturnedStructure {
   }
 
   private static boolean closedConditions(VariableSymbol variable, Set<CfgVertex> vertices,
-                                           VariableFlowAnalyzer.FlowInputs inputs) {
+                                           FlowInputs inputs) {
     for (var vertex : vertices) {
       var condition = FlowConditionNarrowing.conditionOf(vertex);
       if (condition == null) {

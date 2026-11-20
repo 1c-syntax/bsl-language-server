@@ -61,9 +61,28 @@ final class ContextualReturnCache {
   private final Map<BSLParser.CodeBlockContext, Optional<MethodSymbol>> bodyMethods = new HashMap<>();
   private long revision;
   private long cellReads;
+  private @Nullable CellPreparationAttempts preparations;
+  private @Nullable ContextualReturnCache preparationOwner;
+  /** Самостоятельный расчёт ячеек. Его промежуточные результаты остаются внутри запроса. */
+  boolean preparingCells;
 
   ContextualReturnCache() {
     revision = 0;
+  }
+
+  ContextualReturnCache forRefinement() {
+    var result = new ContextualReturnCache();
+    result.preparationOwner = preparationOwner == null ? this : preparationOwner;
+    result.preparingCells = preparingCells;
+    return result;
+  }
+
+  CellPreparationAttempts cellPreparations() {
+    var owner = preparationOwner == null ? this : preparationOwner;
+    if (owner.preparations == null) {
+      owner.preparations = new CellPreparationAttempts();
+    }
+    return owner.preparations;
   }
 
   @Nullable TypeSet get(ContextualReturnKey key) {

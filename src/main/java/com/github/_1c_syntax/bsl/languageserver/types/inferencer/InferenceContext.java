@@ -66,7 +66,7 @@ final class InferenceContext {
    */
   final VariableFlowAnalyzer.FlowSession flowSession;
   /** Исходные данные потока текущего запроса; признак разрешения кеша проверяется при каждом обращении. */
-  VariableFlowAnalyzer.@Nullable FlowInputs flowInputs;
+  @Nullable FlowInputs flowInputs;
   /**
    * Документы, чьё содержимое участвовало в расчёте: их правка делает
    * закэшированный результат недействительным.
@@ -128,6 +128,11 @@ final class InferenceContext {
 
   private static VariableFlowAnalyzer.FlowSession flowSessionFor(ContextualReturnCache cache) {
     return new VariableFlowAnalyzer.FlowSession(cache::invalidate, cache::noteCellRead);
+  }
+
+  /** Защита от повторного входа или лимит глубины не дали завершить вывод. */
+  boolean hasCut() {
+    return cycleCut || bodyInFlowCut || depthCut;
   }
 
   /** Недоступны данные, а не только возвращаемое значение известной функции. */
@@ -236,7 +241,7 @@ final class InferenceContext {
 
   /** Новый расчёт приближения с общими метаданными, но без прежних значений типов и потока. */
   InferenceContext forRefinement() {
-    return new InferenceContext(documentContext, null, new ContextualReturnCache(), compilation);
+    return new InferenceContext(documentContext, null, contextualReturns.forRefinement(), compilation);
   }
 
   /** Состояние одного вложенного расчёта; признаки его неполноты не наследуются от соседних вызовов. */

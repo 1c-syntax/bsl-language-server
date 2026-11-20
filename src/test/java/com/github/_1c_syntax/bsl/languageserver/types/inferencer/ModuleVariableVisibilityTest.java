@@ -23,11 +23,17 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.index.InferredExpressionTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.MethodReturnTypeIndexer;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.types.registry.ConfigurationTypesProvider;
+import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Position;
@@ -40,8 +46,13 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.AopTestUtils;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
+import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
@@ -60,10 +71,257 @@ class ModuleVariableVisibilityTest extends AbstractServerContextAwareTest {
   private InferredExpressionTypeIndex expressions;
   @Autowired
   private TypeService typeService;
+  @Autowired
+  private TypeRegistry typeRegistry;
+  @Autowired
+  private ConfigurationTypesProvider configurationTypes;
 
   @BeforeEach
   void setUp() {
     initServerContext();
+  }
+
+  @Test
+  void preparationPublishesCompleteCellsWithoutPublishingMethodReturns() {
+    var document = document("""
+      Var Shared;
+      Procedure Fill()
+        Shared = Seed();
+      EndProcedure
+      Function Seed()
+        Return "ready";
+      EndFunction
+      """);
+    var tree = document.getSymbolTree();
+    var seed = tree.getMethodSymbol("Seed").orElseThrow();
+    var shared = tree.getModuleVariableVisibleFromMethods("Shared").orElseThrow();
+    ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
+    var neutral = InferenceContext.neutral(document);
+    neutral.contextualReturns.preparingCells = true;
+
+    TypeSet value = ReflectionTestUtils.invokeMethod(target, "methodReturnType", seed, neutral);
+
+    assertThat(value.refs()).extracting(TypeRef::qualifiedName).containsExactly("Строка");
+    assertThat(indexer.isIndexed(seed)).isFalse();
+
+    ReflectionTestUtils.invokeMethod(target, "prepareCells",
+      new InferenceContext(document, ExecutionContext.SERVER), List.of(shared));
+
+    assertThat(preparedCells(document).get(shared).refs()).extracting(TypeRef::qualifiedName)
+      .containsExactlyInAnyOrder("Строка", "Неопределено");
+    assertThat(indexer.isIndexed(seed)).isFalse();
+  }
+
+  @Test
+  void preparationDoesNotPublishCellsAfterDepthCut() {
+    var source = new StringBuilder("""
+      Var Shared;
+      Procedure Fill()
+        Shared = Step0();
+      EndProcedure
+      """);
+    for (var i = 0; i < 64; i++) {
+      source.append("Function Step%d()%n".formatted(i));
+      source.append(i == 63 ? "Return \"ready\";\n" : "Return Step%d();%n".formatted(i + 1));
+      source.append("EndFunction\n");
+    }
+    var document = document(source.toString());
+    var tree = document.getSymbolTree();
+    var shared = tree.getModuleVariableVisibleFromMethods("Shared").orElseThrow();
+    ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
+
+    ReflectionTestUtils.invokeMethod(target, "prepareCells",
+      new InferenceContext(document, ExecutionContext.SERVER), List.of(shared));
+
+    assertThat(preparedCells(document)).doesNotContainKey(shared);
+    assertThat(tree.getMethods()).noneMatch(indexer::isIndexed);
+  }
+
+  @Test
+  void preparationDoesNotPublishCellsAfterCuttingARecursiveReturn() {
+    var document = document("""
+      Var Shared;
+      Procedure Fill()
+        Shared = Seed();
+      EndProcedure
+      Function Seed()
+        Return ?(True, Seed(), "ready");
+      EndFunction
+      """);
+    var tree = document.getSymbolTree();
+    var shared = tree.getModuleVariableVisibleFromMethods("Shared").orElseThrow();
+    ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
+
+    ReflectionTestUtils.invokeMethod(target, "prepareCells",
+      new InferenceContext(document, ExecutionContext.SERVER), List.of(shared));
+
+    assertThat(preparedCells(document)).doesNotContainKey(shared);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void preparationDoesNotPublishCellsWithAnExternalTypeComment(boolean onDeclaration) {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var link = " // См. ОбщегоНазначения.ЗначениеВМассиве";
+    var document = document("""
+      Перем Общая;%s
+      Процедура Заполнить()
+        Общая = 1;%s
+      КонецПроцедуры
+      """.formatted(onDeclaration ? link : "", onDeclaration ? "" : link));
+    var shared = document.getSymbolTree().getModuleVariableVisibleFromMethods("Общая").orElseThrow();
+    ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
+
+    ReflectionTestUtils.invokeMethod(target, "prepareCells",
+      new InferenceContext(document, ExecutionContext.SERVER), List.of(shared));
+
+    assertThat(preparedCells(document)).doesNotContainKey(shared);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void preparationFollowsLocalCommentLinksToTheirReturnDescription(boolean externalReturn) {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var returnDescription = externalReturn ? "См. ОбщегоНазначения.ЗначениеВМассиве" : "Строка";
+    var document = document("""
+      Перем Общая;
+      Процедура Заполнить()
+        Общая = 1; // См. ТипЗначения
+      КонецПроцедуры
+      // Возвращаемое значение:
+      //  %s
+      Функция ТипЗначения()
+        Возврат "готово";
+      КонецФункции
+      """.formatted(returnDescription));
+    var shared = document.getSymbolTree().getModuleVariableVisibleFromMethods("Общая").orElseThrow();
+    ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
+
+    ReflectionTestUtils.invokeMethod(target, "prepareCells",
+      new InferenceContext(document, ExecutionContext.SERVER), List.of(shared));
+
+    if (externalReturn) {
+      assertThat(preparedCells(document)).doesNotContainKey(shared);
+    } else {
+      assertThat(preparedCells(document).get(shared).refs()).extracting(TypeRef::qualifiedName).contains("Строка");
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void preparationChecksTypeLinksOfParametersReadByTheWriter(boolean externalType) {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var parameterType = externalType ? "См. ОбщегоНазначения.ЗначениеВМассиве" : "Число";
+    var document = document("""
+      Перем Общая;
+      Процедура Заполнить()
+        Общая = ЗначениеДляЗаписи(1);
+      КонецПроцедуры
+      // Параметры:
+      //  Источник - %s
+      Функция ЗначениеДляЗаписи(Источник)
+        Возврат Источник;
+      КонецФункции
+      """.formatted(parameterType));
+    var shared = document.getSymbolTree().getModuleVariableVisibleFromMethods("Общая").orElseThrow();
+    ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
+
+    ReflectionTestUtils.invokeMethod(target, "prepareCells",
+      new InferenceContext(document, ExecutionContext.SERVER), List.of(shared));
+
+    if (externalType) {
+      assertThat(preparedCells(document)).doesNotContainKey(shared);
+    } else {
+      assertThat(preparedCells(document).get(shared).refs()).extracting(TypeRef::qualifiedName).contains("Число");
+    }
+  }
+
+  @Test
+  void preparationChecksTheTypeCommentOfAnOwnExportedProperty() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    TestUtils.getDocumentContextFromFile(PATH_TO_METADATA + "/CommonModules/ОбщегоНазначения/Ext/Module.bsl");
+    var document = TestUtils.getDocumentContextFromFile(PATH_TO_METADATA
+      + "/Catalogs/СправочникСМенеджером/Ext/ObjectModule.bsl");
+    var owner = typeRegistry.resolve("СправочникОбъект.СправочникСМенеджером").orElseThrow();
+    var members = typeRegistry.getMembers(owner, document.getFileType());
+    var external = members.stream().filter(member -> member.matches("ИтогРасчёта")).findFirst().orElseThrow();
+    var local = members.stream().filter(member -> member.matches("Данные")).findFirst().orElseThrow();
+    ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
+    var isolated = new InferenceContext(document, ExecutionContext.SERVER);
+    isolated.contextualReturns.preparingCells = true;
+
+    TypeSet localTypes = ReflectionTestUtils.invokeMethod(target, "typesOfMember", local, "Данные",
+      MemberKind.PROPERTY, TypeSet.EMPTY, isolated);
+    assertThat(localTypes.refs()).extracting(TypeRef::qualifiedName).containsExactly("Структура");
+    assertThat(isolated.sawMissing()).isFalse();
+
+    TypeSet externalTypes = ReflectionTestUtils.invokeMethod(target, "typesOfMember", external, "ИтогРасчёта",
+      MemberKind.PROPERTY, TypeSet.EMPTY, isolated);
+    assertThat(externalTypes.refs()).extracting(TypeRef::qualifiedName).containsExactly("Массив");
+    assertThat(isolated.sawMissing()).isTrue();
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void preparationCanShareOnlyIndependentlySettledInputs(boolean independent) {
+    var root = Path.of("src/test/resources/metadata/commonModuleCalls");
+    initServerContext(root, false);
+    context.getConfiguration();
+    configurationTypes.tryRegister();
+    var supplier = root.resolve("CommonModules/СерверныйМодуль/Ext/Module.bsl").toUri();
+    TestUtils.getDocumentContext(supplier, """
+      Функция Маркер() Экспорт
+        Возврат "готово";
+      КонецФункции
+      """, context);
+    var consumer = root.resolve("CommonModules/КлиентСерверныйМодуль/Ext/Module.bsl").toUri();
+    var document = TestUtils.getDocumentContext(consumer, """
+      Перем Источник;
+      Перем Кэш;
+
+      Процедура ЗаполнитьИсточник()
+        Источник = %s;
+      КонецПроцедуры
+
+      Процедура ЗаполнитьКэш()
+        Кэш = Источник;
+      КонецПроцедуры
+      """.formatted(independent ? "\"готово\"" : "СерверныйМодуль.Маркер()"), context);
+    var tree = document.getSymbolTree();
+    var source = tree.getModuleVariableVisibleFromMethods("Источник").orElseThrow();
+    var cache = tree.getModuleVariableVisibleFromMethods("Кэш").orElseThrow();
+    ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
+    var request = new InferenceContext(document, ExecutionContext.SERVER);
+    if (independent) {
+      ReflectionTestUtils.invokeMethod(target, "prepareCells", request, List.of(source));
+    } else {
+      FlowInputs ordinary = ReflectionTestUtils.invokeMethod(target, "flowInputs", source, request);
+      VariableFlowAnalyzer flow = AopTestUtils.getUltimateTargetObject(analyzer);
+      flow.ensureCellsFor(document, List.of(source), ordinary, null);
+    }
+    assertThat(preparedCells(document)).hasEntrySatisfying(source, types -> assertThat(types.refs())
+      .extracting(TypeRef::qualifiedName).contains("Строка")).doesNotContainKey(cache);
+
+    ReflectionTestUtils.invokeMethod(target, "prepareCells",
+      new InferenceContext(document, ExecutionContext.SERVER), List.of(cache));
+
+    if (independent) {
+      assertThat(preparedCells(document)).hasEntrySatisfying(cache, types -> assertThat(types.refs())
+        .extracting(TypeRef::qualifiedName).contains("Строка"));
+    } else {
+      assertThat(preparedCells(document)).doesNotContainKey(cache);
+    }
+  }
+
+  private Map<VariableSymbol, TypeSet> preparedCells(DocumentContext document) {
+    VariableFlowAnalyzer target = AopTestUtils.getUltimateTargetObject(analyzer);
+    Map<VariableSymbol, VariableFlowAnalyzer.SettledCell> cells =
+      ReflectionTestUtils.invokeMethod(target, "cellsOf", document, ExecutionContext.SERVER);
+    return cells.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().types()));
   }
 
   @Test

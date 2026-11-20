@@ -56,4 +56,13 @@ public interface VariableTypeSource {
   default boolean isIncomplete(VariableSymbol variable) {
     return false;
   }
+
+  /**
+   * Может ли объявленный тип зависеть от комментариев в другом документе.
+   * @param variable переменная.
+   * @return {@code true}, если тип нельзя сохранить до следующей правки только этого документа.
+   */
+  default boolean hasExternalTypeLinks(VariableSymbol variable) {
+    return false;
+  }
 }

@@ -65,9 +65,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.BooleanSupplier;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -132,6 +129,8 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   private record ModeIndependentFacts(Facts facts, long generation) {
   }
 
+  record SettledCell(TypeSet types, boolean independentlyPrepared) {}
+
   /**
    * Окружения по документу, режиму и телу. Создаются только для запрошенных режимов,
    * удаляются при очистке документа; результаты без ограничения режима хранятся в {@code factsByUri}.
@@ -142,7 +141,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * Ячейки переменных модуля по режимам и версии дерева символов. Смена дерева
    * обесценивает запись целиком, даже если символ переменной сравнивается равным прежнему.
    */
-  private final SourceBoundRecords<SymbolTree, Map<ExecutionContext, Map<VariableSymbol, TypeSet>>>
+  private final SourceBoundRecords<SymbolTree, Map<ExecutionContext, Map<VariableSymbol, SettledCell>>>
     contextualCellsByUri = new SourceBoundRecords<>();
   /**
    * Ячейки переменных, видимых другим телам.
@@ -151,7 +150,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * сдвинулось. Поэтому ячейки привязаны к дереву символов документа, по которому
    * посчитаны: после правки документа прежние не отдаются.
    */
-  private final SourceBoundRecords<SymbolTree, Map<VariableSymbol, TypeSet>> cellsByUri = new SourceBoundRecords<>();
+  private final SourceBoundRecords<SymbolTree, Map<VariableSymbol, SettledCell>> cellsByUri = new SourceBoundRecords<>();
 
   /**
    * Места изменения переменной, уже спрошенные у вызывающего.
@@ -258,15 +257,29 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       incompleteCellInputs.addAll(variables);
     }
 
-    private void publishCells(Map<VariableSymbol, TypeSet> settled, FlowInputs inputs,
+    private void publishCells(Map<VariableSymbol, SettledCell> settled, FlowInputs inputs,
                               @Nullable BooleanSupplier complete) {
       if (cellsIncomplete || inputs.sawMissing().getAsBoolean() || (complete != null && !complete.getAsBoolean())) {
         markIncompleteCellInputs(growingCells);
         return;
       }
       if (inputs.cacheable()) {
-        growingCells.forEach(variable -> settled.putIfAbsent(variable, cells.get(variable)));
+        growingCells.forEach(variable ->
+          settled.putIfAbsent(variable, new SettledCell(cells.get(variable), inputs.preparingCells())));
       }
+    }
+
+    private boolean preparePendingCells(FlowInputs inputs, List<VariableSymbol> pending,
+                                        Map<VariableSymbol, SettledCell> settled) {
+      var prepare = inputs.prepareCells();
+      if (prepare == null || inputs.cacheable() || computing()) {
+        return false;
+      }
+      prepare.accept(pending);
+      if (pending.removeIf(variable -> settled.containsKey(variable) && cellsDone.remove(variable))) {
+        cellsChanged.run();
+      }
+      return pending.isEmpty();
     }
 
     private void finishCellComputation(boolean outerComputing, List<VariableSymbol> pending, boolean finished) {
@@ -290,6 +303,25 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       }
       cellsChanged.run();
       return true;
+    }
+
+    boolean hasDeferredCellTypes() {
+      Set<TypeSet> seen = Collections.newSetFromMap(new IdentityHashMap<>());
+      return growingCells.stream().anyMatch(variable -> hasDeferredType(cells.get(variable), seen));
+    }
+
+    private static boolean hasDeferredType(@Nullable TypeSet types, Set<TypeSet> seen) {
+      if (types == null) {
+        return true;
+      }
+      if (!seen.add(types)) {
+        return false;
+      }
+      return !types.lazyFields().isEmpty() || !types.lazyElements().isEmpty()
+        || types.elementTypes().values().stream().anyMatch(value -> hasDeferredType(value, seen))
+        || types.describedTypes().values().stream().anyMatch(value -> hasDeferredType(value, seen))
+        || types.localFields().values().stream().flatMap(fields -> fields.values().stream())
+          .anyMatch(field -> hasDeferredType(field.types(), seen));
     }
 
     boolean hasIndependentFacts(ReturnedLocalFlow.Key key) {
@@ -500,75 +532,6 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   }
 
   /**
-   * Исходные данные расчёта по телу.
-   *
-   * @param session             расчёты, идущие прямо сейчас в рамках этого вывода типов.
-   * @param activeBodyRead      уведомление о проверке текущего окружения тела, включая
-   *                            проверку при отсутствии активного расчёта.
-   * @param cacheable           можно ли запоминать результат: вложенный расчёт мог быть
-   *                            усечён защитой от циклов, такой результат переиспользовать нельзя.
-   * @param executionContext    режим для выбора кеша; {@code null} использует общий результат
-   *                            по всем возможным контекстам модуля и метода.
-   * @param compilationContexts возможные режимы каждого тела с учётом выбранного контекста,
-   *                            модуля, директивы и ветки объявления метода. Пустое множество
-   *                            исключает тело; пустой Optional отключает модель контекстов 1С.
-   * @param sawMissing          видел ли вывод типов значения, которых ещё нет: пока рабочая
-   *                            область наполняется, так бывает с функциями модулей, до которых
-   *                            очередь не дошла. Посчитанное на них неполно и в кэши, живущие
-   *                            дольше вывода, не попадает: следующий расчёт взял бы оттуда
-   *                            неполное значение, не узнав, что оно неполное.
-   * @param variables           переменные тела, за типами которых следит расчёт. Зависят
-   *                            только от самого тела: окружение считается на всё тело разом
-   *                            и переиспользуется всеми запросами, поэтому набор переменных
-   *                            не может зависеть от того, про какую из них спросили первой.
-   * @param readModuleVariables чтения переменных модуля; при отсутствии сведений все видимые
-   *                            переменные консервативно считаются входами расчёта.
-   * @param sharedWithOtherBodies видна ли переменная другим телам модуля: тогда её тип
-   *                            задаёт не только это тело, и любой вызов мог его сменить.
-   * @param declaredFact        что о переменной объявлено помимо кода: типы параметра,
-   *                            типизирующий комментарий и прочее, известное до первого
-   *                            присваивания. У переменной, видимой другим телам, это лишь
-   *                            начальное приближение её ячейки.
-   * @param definitionPositions позиции всех присваиваний переменной в документе;
-   *                            учитываются только попавшие в это тело.
-   * @param mutationPositions   позиции операторов, меняющих тип переменной на месте.
-   * @param assigned            колбэк, отдающий присваиваемые типы по позиции.
-   * @param mutations           колбэк, применяющий изменение оператора-мутатора.
-   * @param narrowing           колбэк, сужающий тип по охраняющему условию ветки.
-   * @param noteIncompleteCellInput отметить, что результат опирается на неполный вход ячейки.
-   *     <p>
-   *     Переменные и места изменений отдаются поставщиками, а не значениями: за ними стоит
-   *     обход индекса ссылок и разбор документирующих комментариев. При готовом ответе в
-   *     кэше ничего этого не нужно, а тип спрашивают на каждое обращение к переменной.
-   */
-  public record FlowInputs(
-    FlowSession session, Consumer<CodeBlockContext> activeBodyRead, boolean cacheable,
-    @Nullable ExecutionContext executionContext,
-    Function<CodeBlockContext, Optional<Set<ExecutionContext>>> compilationContexts,
-    BooleanSupplier sawMissing,
-    Function<CodeBlockContext, Collection<VariableSymbol>> variables,
-    @Nullable Function<CodeBlockContext, Set<VariableSymbol>> readModuleVariables,
-    Predicate<VariableSymbol> sharedWithOtherBodies, Function<VariableSymbol, TypeSet> declaredFact,
-    Function<VariableSymbol, Collection<Position>> definitionPositions,
-    Function<VariableSymbol, Collection<Position>> mutationPositions,
-    AssignedTypes assigned, Mutations mutations, GuardNarrowing narrowing, Runnable noteIncompleteCellInput
-  ) {
-    /** Входы без отдельного списка чтений сохраняют консервативный расчёт всех видимых переменных. */
-    public FlowInputs(FlowSession session, Consumer<CodeBlockContext> activeBodyRead, boolean cacheable,
-      @Nullable ExecutionContext executionContext,
-      Function<CodeBlockContext, Optional<Set<ExecutionContext>>> compilationContexts, BooleanSupplier sawMissing,
-      Function<CodeBlockContext, Collection<VariableSymbol>> variables,
-      Predicate<VariableSymbol> sharedWithOtherBodies, Function<VariableSymbol, TypeSet> declaredFact,
-      Function<VariableSymbol, Collection<Position>> definitionPositions,
-      Function<VariableSymbol, Collection<Position>> mutationPositions,
-      AssignedTypes assigned, Mutations mutations, GuardNarrowing narrowing) {
-      this(session, activeBodyRead, cacheable, executionContext, compilationContexts, sawMissing, variables, null,
-        sharedWithOtherBodies, declaredFact, definitionPositions, mutationPositions, assigned, mutations, narrowing,
-        () -> {});
-    }
-  }
-
-  /**
    * Тип переменной в точке использования, когда узел использования уже под рукой —
    * например в разборе выражения. Тело и оператор находятся подъёмом по дереву от узла.
    *
@@ -712,14 +675,12 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     var session = inputs.session();
     session.noteCellInput();
     var settled = cellsOf(documentContext, inputs.executionContext()).get(variable);
-    if (settled != null) {
-      return settled;
-    }
-    // Предыдущий проход мог оставить неполный вход для следующего расчёта.
-    if (read && session.hasIncompleteCellInputs(variable)) {
+    // Готовая обычная ячейка не подтверждает независимость от других документов.
+    if (read && (settled == null ? session.hasIncompleteCellInputs(variable)
+      : (inputs.preparingCells() && !settled.independentlyPrepared()))) {
       inputs.noteIncompleteCellInput().run();
     }
-    var current = session.cells.get(variable);
+    var current = settled == null ? session.cells.get(variable) : settled.types();
     return current == null ? inputs.declaredFact().apply(variable) : current;
   }
 
@@ -730,7 +691,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * @param context режим компиляции или {@code null} для общего хранилища.
    * @return изменяемая потокобезопасная карта, создаваемая при первом обращении.
    */
-  private Map<VariableSymbol, TypeSet> cellsOf(DocumentContext documentContext, @Nullable ExecutionContext context) {
+  private Map<VariableSymbol, SettledCell> cellsOf(DocumentContext documentContext, @Nullable ExecutionContext context) {
     if (context == null) {
       return cellsByUri.get(documentContext.getUri(), documentContext.getSymbolTreeNoLock(),
         tree -> new ConcurrentHashMap<>());
@@ -788,7 +749,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
         pending.add(variable);
       }
     }
-    if (pending.isEmpty()) {
+    if (pending.isEmpty() || session.preparePendingCells(inputs, pending, settled)) {
       return;
     }
     // Признак возвращается к прежнему значению, а не гасится: круги по одной переменной
