@@ -47,6 +47,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 
 import java.net.URI;
@@ -61,6 +62,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.List;
 import java.util.Set;
@@ -147,6 +149,101 @@ class MethodReturnTypeIndexerTest {
 
     returns(sourceMethod, TypeSet.EMPTY);
     returns(consumerMethod, TypeSet.EMPTY, sourceMethod);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void provisionalResultIsNeverReportedReadyDuringPublication(boolean approximate) {
+    var reads = new AtomicInteger();
+    var visibleAsReady = new AtomicBoolean();
+    when(symbolTypeIndex.getReturnTypes(consumerMethod)).thenAnswer(invocation -> {
+      if (reads.incrementAndGet() == 2) {
+        visibleAsReady.set(indexer.isIndexed(consumerMethod));
+      }
+      return STRING;
+    });
+
+    indexer.computeIfAbsent(consumerMethod, () -> new ComputedReturnTypes(STRING, Set.of(), !approximate),
+      approximate, new Object());
+
+    assertThat(reads.get()).isEqualTo(2);
+    assertThat(visibleAsReady).isFalse();
+    assertThat(indexer.isIndexed(consumerMethod)).isFalse();
+  }
+
+  @Test
+  void aDelayedApproximationCannotReplaceAValueCompletedWhileItWasRunning() throws Exception {
+    var completeStarted = new CountDownLatch(1);
+    var approximateStarted = new CountDownLatch(1);
+    var finishComplete = new CountDownLatch(1);
+    var finishApproximate = new CountDownLatch(1);
+    try (var executor = Executors.newFixedThreadPool(2)) {
+      try {
+        var complete = executor.submit(() -> indexer.computeIfAbsent(consumerMethod, () -> {
+          completeStarted.countDown();
+          await().atMost(10, SECONDS).until(() -> finishComplete.getCount() == 0);
+          return new ComputedReturnTypes(NUMBER, Set.of(), false);
+        }));
+        assertThat(completeStarted.await(10, SECONDS)).isTrue();
+        var approximate = executor.submit(() -> indexer.computeIfAbsent(consumerMethod, () -> {
+          approximateStarted.countDown();
+          await().atMost(10, SECONDS).until(() -> finishApproximate.getCount() == 0);
+          return new ComputedReturnTypes(STRING, Set.of(), false);
+        }, true));
+        assertThat(approximateStarted.await(10, SECONDS)).isTrue();
+
+        finishComplete.countDown();
+        complete.get(10, SECONDS);
+        finishApproximate.countDown();
+        approximate.get(10, SECONDS);
+      } finally {
+        finishComplete.countDown();
+        finishApproximate.countDown();
+      }
+    }
+    assertThat(indexer.isIndexed(consumerMethod)).isTrue();
+    assertThat(symbolTypeIndex.getReturnTypes(consumerMethod)).isEqualTo(NUMBER);
+  }
+
+  @Test
+  void concurrentPublishersKeepTheTypeAndReadinessTogether() throws Exception {
+    var publishedType = new AtomicReference<>(TypeSet.EMPTY);
+    var approximateIsPublishing = new CountDownLatch(1);
+    var finishApproximatePublication = new CountDownLatch(1);
+    when(symbolTypeIndex.getReturnTypes(consumerMethod)).thenAnswer(invocation -> publishedType.get());
+    doAnswer(invocation -> {
+      TypeSet types = invocation.getArgument(1);
+      if (types.equals(STRING)) {
+        approximateIsPublishing.countDown();
+        assertThat(finishApproximatePublication.await(10, SECONDS)).isTrue();
+      }
+      publishedType.set(types);
+      return null;
+    }).when(symbolTypeIndex).putReturnTypes(any(), any());
+
+    try (var executor = Executors.newFixedThreadPool(2)) {
+      var fullPublisher = new AtomicReference<Thread>();
+      try {
+        var approximate = executor.submit(() -> indexer.computeIfAbsent(consumerMethod,
+          () -> new ComputedReturnTypes(STRING, Set.of(), false), true));
+        assertThat(approximateIsPublishing.await(10, SECONDS)).isTrue();
+
+        var complete = executor.submit(() -> indexer.computeIfAbsent(consumerMethod, () -> {
+          fullPublisher.set(Thread.currentThread());
+          return new ComputedReturnTypes(NUMBER, Set.of(), false);
+        }));
+        await().atMost(10, SECONDS).until(() -> complete.isDone()
+          || fullPublisher.get() != null && fullPublisher.get().getState() == Thread.State.BLOCKED);
+        finishApproximatePublication.countDown();
+        approximate.get(10, SECONDS);
+        complete.get(10, SECONDS);
+      } finally {
+        finishApproximatePublication.countDown();
+      }
+    }
+
+    assertThat(indexer.isIndexed(consumerMethod)).isTrue();
+    assertThat(publishedType.get()).isEqualTo(NUMBER);
   }
 
   @AfterEach
@@ -306,6 +403,69 @@ class MethodReturnTypeIndexerTest {
     assertThat(finalBefore).isFalse();
     assertThat(symbolTypeIndex.getReturnTypes(consumerMethod)).isEqualTo(NUMBER);
     assertThat(indexer.isIndexed(consumerMethod)).isTrue();
+  }
+
+  @Test
+  void provisionalReturnIsReusedOnlyForTheSameInputsAndCompletedReturnIsShared() {
+    var firstInputs = new Object();
+    var nextInputs = new Object();
+    var calls = new AtomicInteger();
+    java.util.function.Supplier<ComputedReturnTypes> computation = () ->
+      new ComputedReturnTypes(calls.incrementAndGet() == 1 ? STRING : NUMBER, Set.of(), false);
+
+    indexer.computeIfAbsent(consumerMethod, computation, true, firstInputs);
+    indexer.computeIfAbsent(consumerMethod, computation, true, firstInputs);
+    assertThat(calls.get()).isEqualTo(1);
+    assertThat(symbolTypeIndex.getReturnTypes(consumerMethod)).isEqualTo(STRING);
+
+    indexer.computeIfAbsent(consumerMethod, computation, true, nextInputs);
+    assertThat(calls.get()).isEqualTo(2);
+    assertThat(symbolTypeIndex.getReturnTypes(consumerMethod)).isEqualTo(NUMBER);
+    assertThat(indexer.isIndexed(consumerMethod)).isFalse();
+
+    indexer.computeIfAbsent(consumerMethod, computation);
+    indexer.computeIfAbsent(consumerMethod, computation, true, firstInputs);
+    indexer.computeIfAbsent(consumerMethod, computation, true, nextInputs);
+    assertThat(calls.get()).isEqualTo(3);
+    assertThat(indexer.isIndexed(consumerMethod)).isTrue();
+  }
+
+  @Test
+  void anIncompleteNeutralValueIsRecomputedAndItsCompleteReplacementIsCached() {
+    var calls = new AtomicInteger();
+    java.util.function.Supplier<ComputedReturnTypes> computation = () -> calls.incrementAndGet() == 1
+      ? new ComputedReturnTypes(STRING, Set.of(), true)
+      : new ComputedReturnTypes(NUMBER, Set.of(), false);
+
+    indexer.computeIfAbsent(consumerMethod, computation);
+    var firstIndexed = indexer.isIndexed(consumerMethod);
+    indexer.computeIfAbsent(consumerMethod, computation);
+    indexer.computeIfAbsent(consumerMethod, computation);
+
+    assertThat(firstIndexed).isFalse();
+    assertThat(calls.get()).isEqualTo(2);
+    assertThat(indexer.isIndexed(consumerMethod)).isTrue();
+    assertThat(symbolTypeIndex.getReturnTypes(consumerMethod)).isEqualTo(NUMBER);
+  }
+
+  @Test
+  void incompleteDocumentRecomputationRemainsEligibleForANeutralRetry() {
+    when(inferencer.computeReturnTypes(sourceMethod)).thenReturn(new ComputedReturnTypes(STRING, Set.of(), true));
+
+    indexer.handleContentChanged(new DocumentContextContentChangedEvent(source));
+
+    assertThat(indexer.isIndexed(sourceMethod)).isFalse();
+    var calls = new AtomicInteger();
+    java.util.function.Supplier<ComputedReturnTypes> complete = () -> {
+      calls.incrementAndGet();
+      return new ComputedReturnTypes(NUMBER, Set.of(), false);
+    };
+    indexer.computeIfAbsent(sourceMethod, complete);
+    indexer.computeIfAbsent(sourceMethod, complete);
+
+    assertThat(calls.get()).isEqualTo(1);
+    assertThat(symbolTypeIndex.getReturnTypes(sourceMethod)).isEqualTo(NUMBER);
+    assertThat(indexer.isIndexed(sourceMethod)).isTrue();
   }
 
   @Test
@@ -479,6 +639,52 @@ class MethodReturnTypeIndexerTest {
     verify(serverContext).rebuildDocument(consumer);
     verify(inferencer, never()).computeReturnTypes(consumerMethod);
     assertThat(symbolTypeIndex.getReturnTypes(consumerMethod)).isEqualTo(STRING);
+  }
+
+  @ParameterizedTest
+  @CsvSource({"2,none", "9,none", "2,intrinsic", "9,intrinsic", "2,unindexed", "9,unindexed",
+    "2,provisional", "9,provisional"})
+  void aStableCycleIsFinalOnlyWhenItsMissingInputsAreInsideTheComponent(int size, String blocker) {
+    var ring = ring("readiness-cycle", size);
+    var outsideDocument = document("file:///outside-return.bsl");
+    var outside = method(outsideDocument, true);
+    ServerContext serverContext;
+    if (blocker.equals("provisional")) {
+      var documents = Arrays.copyOf(ring.documents(), size + 1);
+      documents[size] = outsideDocument;
+      serverContext = serverContextOf(documents);
+      when(inferencer.computeReturnTypes(outside)).thenReturn(new ComputedReturnTypes(STRING, Set.of(), true));
+      indexer.computeIfAbsent(outside, () -> new ComputedReturnTypes(STRING, Set.of(), true));
+    } else {
+      serverContext = serverContextOf(ring.documents());
+    }
+    for (var i = 0; i < size; i++) {
+      var peer = ring.methods()[(i + 1) % size];
+      var first = i == 0;
+      when(inferencer.computeReturnTypes(ring.methods()[i])).thenAnswer(invocation -> {
+        Set<MethodSymbol> missing = new java.util.HashSet<>();
+        if (!indexer.isIndexed(peer)) {
+          missing.add(peer);
+        }
+        if (first && (blocker.equals("unindexed") || blocker.equals("provisional"))) {
+          missing.add(outside);
+        }
+        var intrinsic = first && blocker.equals("intrinsic");
+        var consulted = first && !blocker.equals("none") ? Set.of(peer, outside) : Set.of(peer);
+        return new ComputedReturnTypes(STRING, consulted, intrinsic || !missing.isEmpty(), intrinsic ? null : missing);
+      });
+    }
+
+    indexer.handleServerContextPopulated(new ServerContextPopulatedEvent(serverContext));
+
+    for (var method : ring.methods()) {
+      assertThat(indexer.isIndexed(method)).as("component size=%s blocker=%s", size, blocker)
+        .isEqualTo(blocker.equals("none"));
+      assertThat(symbolTypeIndex.getReturnTypes(method)).isEqualTo(STRING);
+    }
+    if (blocker.equals("provisional")) {
+      assertThat(indexer.isIndexed(outside)).isFalse();
+    }
   }
 
   @Test

@@ -40,7 +40,8 @@ import java.util.Set;
 /**
  * Результаты функций в пределах одного запроса вывода и одной версии приближений.
  * <p>
- * Изменение ячеек либо вход/выход их уточняющего расчёта инвалидирует результаты.
+ * Изменение ячеек либо вход/выход их уточняющего расчёта инвалидирует зависимые результаты.
+ * Завершённые значения без чтения ячеек сохраняются с проверкой защиты от повторного входа.
  * Вложенные расчёты делят этот кеш; между потоками и запросами он не передаётся.
  * Частичный результат требует совпадения защиты для методов, участвовавших в расчёте,
  * включая отсечённые вызовы, и активности тел, чьи окружения были прочитаны.
@@ -50,22 +51,44 @@ import java.util.Set;
 final class ContextualReturnCache {
   private final Map<ContextualReturnKey, TypeSet> values = new HashMap<>();
   private final Map<Site, List<Entry>> guarded = new HashMap<>();
+  /** Один завершённый результат на метод и режим, если расчёт не обращался к ячейкам. */
+  private @Nullable Map<ContextualReturnKey, Entry> withoutCellInputs;
   /** Найденные соответствия полным запросам, чтобы повторный запрос не перебирал совместимые записи. */
   private final Map<Guard, Result> matchedGuards = new HashMap<>();
+  /** Непрозрачные ключи приближений: общий индекс не удерживает через них запрос или AST. */
+  private final Map<Guard, Object> approximationInputs = new HashMap<>();
   /** Связь тела с объявлением постоянна в пределах запроса и не зависит от приближений ячеек. */
   private final Map<BSLParser.CodeBlockContext, Optional<MethodSymbol>> bodyMethods = new HashMap<>();
   private long revision;
+  private long cellReads;
 
   ContextualReturnCache() {
     revision = 0;
   }
 
   @Nullable TypeSet get(ContextualReturnKey key) {
-    return values.get(key);
+    var result = values.get(key);
+    if (result != null) {
+      noteCellRead();
+    }
+    return result;
   }
 
   long revision() {
     return revision;
+  }
+
+  long cellReads() {
+    return cellReads;
+  }
+
+  void noteCellRead() {
+    // Сюда относятся и чтения готовых значений с неизвестным набором входных ячеек.
+    cellReads++;
+  }
+
+  Object approximationInputs(Guard guard) {
+    return approximationInputs.computeIfAbsent(guard, ignored -> new Object());
   }
 
   /** Результат, вычисленный через изменение зависимостей, не становится актуальным задним числом. */
@@ -80,6 +103,7 @@ final class ContextualReturnCache {
     values.clear();
     guarded.clear();
     matchedGuards.clear();
+    approximationInputs.clear();
   }
 
   /** Защита от повторного входа и остаток глубины на входе в расчёт. */
@@ -95,7 +119,15 @@ final class ContextualReturnCache {
   /** Частичный результат сохраняет признаки отсечения и зависимости для вызывающего расчёта. */
   record Result(TypeSet types, Set<MethodSymbol> consulted, Set<URI> dependencies, Set<MethodSymbol> cutMethods,
                 Set<BSLParser.CodeBlockContext> flowBodiesRead,
-                boolean cycleCut, boolean bodyInFlowCut, boolean depthCut) { }
+                boolean cycleCut, boolean bodyInFlowCut, boolean depthCut,
+                @Nullable Set<MethodSymbol> missingInputs, boolean incompleteCellInput) {
+    Result(TypeSet types, Set<MethodSymbol> consulted, Set<URI> dependencies, Set<MethodSymbol> cutMethods,
+           Set<BSLParser.CodeBlockContext> flowBodiesRead,
+           boolean cycleCut, boolean bodyInFlowCut, boolean depthCut) {
+      this(types, consulted, dependencies, cutMethods, flowBodiesRead, cycleCut, bodyInFlowCut, depthCut, Set.of(),
+        false);
+    }
+  }
 
   private record Site(ContextualReturnKey key, Set<BSLParser.CodeBlockContext> otherBodies,
                       boolean rootFlow, boolean cellsComputing) {
@@ -154,20 +186,38 @@ final class ContextualReturnCache {
   }
 
   @Nullable Result get(Guard guard) {
+    return get(guard, false);
+  }
+
+  @Nullable Result get(Guard guard, boolean allowIndependent) {
     var matched = matchedGuards.get(guard);
     if (matched != null) {
+      noteCellRead();
       return matched;
     }
-    var entries = guarded.get(Site.of(guard));
+    var site = Site.of(guard);
+    var entries = guarded.get(site);
     if (entries != null) {
       for (var entry : entries) {
         if (entry.matches(guard)) {
           matchedGuards.put(guard, entry.result());
+          noteCellRead();
           return entry.result();
         }
       }
     }
+    var independent = allowIndependent && withoutCellInputs != null ? withoutCellInputs.get(guard.key()) : null;
+    if (independent != null && Site.of(independent.guard()).equals(site) && independent.matches(guard)) {
+      return independent.result();
+    }
     return null;
+  }
+
+  void rememberWithoutCellInputs(Guard guard, Result result) {
+    if (withoutCellInputs == null) {
+      withoutCellInputs = new HashMap<>();
+    }
+    withoutCellInputs.put(guard.key(), new Entry(guard, result));
   }
 
   void remember(Guard guard, Result result, long startedAtRevision) {

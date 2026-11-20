@@ -88,11 +88,8 @@ final class InferenceContext {
   boolean bodyInFlowCut;
   /** Идёт уточняющий проход по телу рекурсивной функции с её же приближением. */
   boolean refining;
-  /**
-   * Расчёт опирался на то, что ещё не посчитано или не разобрано: значение чужого метода,
-   * член либо объявление, ведущие в модуль, до которого очередь ещё не дошла.
-   */
-  boolean sawMissing;
+  /** Отсутствие состояния означает, что расчёт пока не встретил недостающих входов. */
+  private @Nullable MissingInputs missingInputs;
   /** Расчёт сорвался либо поток не разместил обращение: пустой ответ нельзя сохранять как полный. */
   boolean failed;
   /** Расчёт оборван ограничением глубины; результат зависит от оставшегося бюджета. */
@@ -113,7 +110,7 @@ final class InferenceContext {
   private InferenceContext(DocumentContext documentContext, @Nullable ExecutionContext executionContext,
                            ContextualReturnCache contextualReturns, CompilationContextMemo compilation) {
     this(documentContext, executionContext, contextualReturns,
-      new VariableFlowAnalyzer.FlowSession(contextualReturns::invalidate), compilation);
+      flowSessionFor(contextualReturns), compilation);
   }
 
   private InferenceContext(DocumentContext documentContext, @Nullable ExecutionContext executionContext,
@@ -129,6 +126,109 @@ final class InferenceContext {
     this.dependencies = new HashSet<>();
   }
 
+  private static VariableFlowAnalyzer.FlowSession flowSessionFor(ContextualReturnCache cache) {
+    return new VariableFlowAnalyzer.FlowSession(cache::invalidate, cache::noteCellRead);
+  }
+
+  /** Недоступны данные, а не только возвращаемое значение известной функции. */
+  void noteMissingData() {
+    missingInputs().methods = null;
+  }
+
+  void noteIncompleteCellInput() {
+    missingInputs().incompleteCell = true;
+  }
+
+  void noteMissingMethod(MethodSymbol method) {
+    var methods = missingInputs().methods;
+    if (methods != null) {
+      methods.add(method);
+    }
+  }
+
+  void inheritMissingInputs(InferenceContext nested) {
+    inheritMissingInputs(nested.flowSession.cellsIncomplete() ? null : nested.missingMethodInputs(),
+      nested.hasIncompleteCellInput());
+  }
+
+  void inheritMissingInputs(@Nullable Set<MethodSymbol> missing, boolean incompleteCell) {
+    if (incompleteCell) {
+      noteIncompleteCellInput();
+    }
+    if (missing == null) {
+      noteMissingData();
+      return;
+    }
+    if (missing.isEmpty()) {
+      return;
+    }
+    var methods = missingInputs().methods;
+    if (methods != null) {
+      methods.addAll(missing);
+    }
+  }
+
+  /** Снимок недостающих входов сохраняет причину неполноты при повторном чтении результата. */
+  @Nullable Set<MethodSymbol> missingInputSnapshot() {
+    var methods = missingMethodInputs();
+    return methods == null || flowSession.cellsIncomplete() ? null : Set.copyOf(methods);
+  }
+
+  boolean sawMissing() {
+    return hasIncompleteCellInput() || hasOtherMissingInputs();
+  }
+
+  boolean hasIncompleteCellInput() {
+    return missingInputs != null && missingInputs.incompleteCell;
+  }
+
+  boolean hasOtherMissingInputs() {
+    var methods = missingMethodInputs();
+    return methods == null || !methods.isEmpty();
+  }
+
+  private @Nullable Set<MethodSymbol> missingMethodInputs() {
+    return missingInputs == null ? Set.of() : missingInputs.methods;
+  }
+
+  private MissingInputs missingInputs() {
+    if (missingInputs == null) {
+      missingInputs = new MissingInputs();
+    }
+    return missingInputs;
+  }
+
+  void noteIncompleteCells() {
+    if (flowSession.cellsIncomplete()) {
+      noteMissingData();
+    }
+  }
+
+  /** Только перечисленные возвращаемые значения мешают завершению; null сохраняет прочую неполноту. */
+  @Nullable Set<MethodSymbol> incompleteMethodReturns() {
+    if (!sawMissing() && !failed) {
+      return Set.of();
+    }
+    var methods = missingMethodInputs();
+    if (hasIncompleteCellInput() || methods == null || failed || flowSession.cellsIncomplete()) {
+      return null;
+    }
+    if (depthCut || bodyInFlowCut || methods.isEmpty()) {
+      return null;
+    }
+    return Set.copyOf(methods);
+  }
+
+  private static final class MissingInputs {
+    /** Недостающие возвраты. {@code null} также допускает другую причину неполноты. */
+    private @Nullable Set<MethodSymbol> methods;
+    private boolean incompleteCell;
+
+    private MissingInputs() {
+      methods = new HashSet<>();
+    }
+  }
+
   /** Запрос без выбора одного режима объединяет результаты доступных контекстов. */
   static InferenceContext neutral(DocumentContext documentContext) {
     return new InferenceContext(documentContext, null);
@@ -140,9 +240,9 @@ final class InferenceContext {
   }
 
   /** Состояние одного вложенного расчёта; признаки его неполноты не наследуются от соседних вызовов. */
-  InferenceContext nested(DocumentContext owner, ExecutionContext target) {
+  InferenceContext nested(DocumentContext owner, @Nullable ExecutionContext target) {
     var session = owner == documentContext && target == executionContext
-      ? flowSession : new VariableFlowAnalyzer.FlowSession(contextualReturns::invalidate);
+      ? flowSession : flowSessionFor(contextualReturns);
     var result = new InferenceContext(owner, target, contextualReturns, session, compilation);
     if (session != flowSession) {
       session.contextTracking = flowSession.contextTracking;
