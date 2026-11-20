@@ -223,12 +223,17 @@ final class IndependentReturnedStructure {
       return false;
     }
     var params = call.callParamList().callParam();
-    if (params.size() < 1 || params.size() > INSERT_WITH_VALUE_ARITY || params.getFirst().expression() == null) {
-      return false;
-    }
     // Общий расчёт не добавляет поле по динамическому ключу и не вычисляет его значение.
-    return OpenDataObjectInference.literalKeyOf(params) == null
-      || params.size() == 1 || literal(params.getLast().expression());
+    return switch (params.size()) {
+      case 1 -> stringLiteral(params.getFirst().expression());
+      case INSERT_WITH_VALUE_ARITY -> params.getFirst().expression() != null
+        && (OpenDataObjectInference.literalKeyOf(params) == null || literal(params.getLast().expression()));
+      default -> false;
+    };
+  }
+
+  private static boolean stringLiteral(BSLParser.@Nullable ExpressionContext expression) {
+    return expression != null && expression.getText().startsWith("\"") && literal(expression);
   }
 
   private static boolean literal(BSLParser.@Nullable ExpressionContext expression) {
