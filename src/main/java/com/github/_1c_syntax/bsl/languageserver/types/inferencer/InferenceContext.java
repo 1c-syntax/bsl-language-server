@@ -97,6 +97,8 @@ final class InferenceContext {
   int depth;
   /** Самостоятельное решение ячеек, промежуточные типы которого остаются в запросе. */
   boolean preparingCells;
+  /** Стартовое доразрешение может подготовить ячейки после первого наполнения области. */
+  boolean resolvingDeferredReturns;
   /** Запрос начат публичным выводом выражения; вложенный расчёт потока всё равно не ждёт других владельцев. */
   boolean sharedRootFlow;
 
@@ -240,6 +242,7 @@ final class InferenceContext {
   InferenceContext forRefinement() {
     var result = new InferenceContext(documentContext, null, contextualReturns.forRefinement(), compilation);
     result.preparingCells = preparingCells;
+    result.resolvingDeferredReturns = resolvingDeferredReturns;
     return result;
   }
 
@@ -259,6 +262,7 @@ final class InferenceContext {
     result.depth = depth;
     result.refining = refining;
     result.preparingCells = preparingCells;
+    result.resolvingDeferredReturns = resolvingDeferredReturns;
     result.sharedRootFlow = sharedRootFlow;
     return result;
   }

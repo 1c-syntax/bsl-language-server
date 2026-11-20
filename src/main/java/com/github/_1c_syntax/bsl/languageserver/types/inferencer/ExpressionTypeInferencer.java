@@ -1490,6 +1490,7 @@ public class ExpressionTypeInferencer {
    */
   public MethodReturnTypeIndexer.ComputedReturnTypes computeReturnTypes(MethodSymbol method) {
     var ctx = contextFor(method.getOwner(), null);
+    ctx.resolvingDeferredReturns = methodReturnTypeIndexer.isResolvingDeferredReturns();
     // Метод помечается считающимся до разбора собственного тела: вызов самого себя должен
     // распознаться как рекурсия. Без этого он выглядит обычным вызовом и читает значение
     // метода из индекса, где его ещё нет, — то есть пустоту, и весь вклад рекурсивной
@@ -1892,7 +1893,7 @@ public class ExpressionTypeInferencer {
         callsOf.apply(target), kindsOf.apply(target), propertiesOf.apply(target)),
       narrowingCallback(owner),
       ctx::noteIncompleteCellInput,
-      workspacePopulated || ctx.preparingCells || ctx.executionContext == null
+      (workspacePopulated && !ctx.resolvingDeferredReturns) || ctx.preparingCells || ctx.executionContext == null
         ? null : pending -> prepareCells(ctx, pending)
     );
   }

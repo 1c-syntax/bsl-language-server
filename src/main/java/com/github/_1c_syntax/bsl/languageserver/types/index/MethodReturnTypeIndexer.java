@@ -298,6 +298,11 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     return indexed.contains(method) && !provisional.containsKey(method);
   }
 
+  /** Идёт ли доразрешение возвратов при запуске рабочей области. */
+  public boolean isResolvingDeferredReturns() {
+    return maintenance;
+  }
+
   /**
    * Пересчитывает методы документа, содержимое которого изменилось, и разносит изменение
    * по зависимым.
