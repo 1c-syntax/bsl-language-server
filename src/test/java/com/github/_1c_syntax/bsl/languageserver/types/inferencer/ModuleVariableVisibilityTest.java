@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
@@ -42,6 +43,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.util.AopTestUtils;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -50,11 +52,14 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.BooleanSupplier;
 import java.util.stream.Collectors;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.spy;
 
@@ -75,6 +80,8 @@ class ModuleVariableVisibilityTest extends AbstractServerContextAwareTest {
   private TypeRegistry typeRegistry;
   @Autowired
   private ConfigurationTypesProvider configurationTypes;
+  @Autowired
+  private ApplicationEventPublisher publisher;
 
   @BeforeEach
   void setUp() {
@@ -156,6 +163,85 @@ class ModuleVariableVisibilityTest extends AbstractServerContextAwareTest {
       new InferenceContext(document, ExecutionContext.SERVER), List.of(shared));
 
     assertThat(preparedCells(document)).doesNotContainKey(shared);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void deferredResolutionOnlySharesCompletePreparedCells(boolean complete) {
+    var configuration = Path.of("src/test/resources/metadata/commonModuleCalls");
+    initServerContext(configuration, false);
+    context.getConfiguration();
+    configurationTypes.tryRegister();
+    var consumer = configuration.resolve("CommonModules/КлиентСерверныйМодуль/Ext/Module.bsl").toUri();
+    var document = TestUtils.getDocumentContext(consumer, """
+      Перем Кэш;
+
+      Процедура Заполнить()
+        Кэш = Семя();
+      КонецПроцедуры
+
+      Функция Семя()
+        Возврат %s;
+      КонецФункции
+
+      Функция ПрочитатьКэш()
+        Возврат Кэш;
+      КонецФункции
+
+      Функция Вход1() Экспорт
+      #Если Сервер Тогда
+        Возврат ?(Истина, ПрочитатьКэш(), СерверныйМодуль.Маркер());
+      #КонецЕсли
+      КонецФункции
+
+      Функция Вход2() Экспорт
+      #Если Сервер Тогда
+        Возврат ?(Истина, ПрочитатьКэш(), СерверныйМодуль.Маркер());
+      #КонецЕсли
+      КонецФункции
+      """.formatted(complete ? "1" : "?(Истина, Семя(), 1)"), context);
+    var tree = document.getSymbolTree();
+    var shared = tree.getModuleVariableVisibleFromMethods("Кэш").orElseThrow();
+    var entryPoints = List.of(tree.getMethodSymbol("Вход1").orElseThrow(), tree.getMethodSymbol("Вход2").orElseThrow());
+    assertThat(entryPoints).noneMatch(indexer::isIndexed);
+
+    var supplier = configuration.resolve("CommonModules/СерверныйМодуль/Ext/Module.bsl").toUri();
+    TestUtils.getDocumentContext(supplier, """
+      Функция Маркер() Экспорт
+        Возврат "готово";
+      КонецФункции
+      """, context);
+    analyzer.clear(document.getUri());
+    var attempts = new AtomicInteger();
+    ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
+    VariableFlowAnalyzer flow = AopTestUtils.getUltimateTargetObject(analyzer);
+    var observed = spy(flow);
+    doAnswer(invocation -> {
+      List<VariableSymbol> variables = invocation.getArgument(1);
+      FlowInputs inputs = invocation.getArgument(2);
+      if (inputs.executionContext() == ExecutionContext.SERVER && variables.contains(shared)) {
+        attempts.incrementAndGet();
+      }
+      return invocation.callRealMethod();
+    }).when(observed).ensureCellsFor(eq(document), anyList(), any(FlowInputs.class), any(BooleanSupplier.class));
+    ReflectionTestUtils.setField(target, "variableFlowAnalyzer", observed);
+    try {
+      publisher.publishEvent(new ServerContextPopulatedEvent(context));
+    } finally {
+      ReflectionTestUtils.setField(target, "variableFlowAnalyzer", analyzer);
+    }
+
+    var expectedReturnTypes = complete ? List.of("Строка", "Число") : List.of("Строка");
+    assertThat(entryPoints).allSatisfy(method -> assertThat(typeService.getReturnTypes(method).refs())
+      .extracting(TypeRef::qualifiedName).containsAll(expectedReturnTypes));
+    if (complete) {
+      assertThat(attempts).hasValue(1);
+      assertThat(preparedCells(document)).hasEntrySatisfying(shared, types -> assertThat(types.refs())
+        .extracting(TypeRef::qualifiedName).contains("Число"));
+    } else {
+      assertThat(attempts.get()).isPositive();
+      assertThat(preparedCells(document)).doesNotContainKey(shared);
+    }
   }
 
   @ParameterizedTest

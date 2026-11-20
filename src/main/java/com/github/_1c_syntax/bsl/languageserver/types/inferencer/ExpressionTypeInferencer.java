@@ -1513,6 +1513,7 @@ public class ExpressionTypeInferencer {
    */
   public MethodReturnTypeIndexer.ComputedReturnTypes computeReturnTypes(MethodSymbol method) {
     var ctx = contextFor(method.getOwner(), null);
+    ctx.contextualReturns.resolvingDeferredReturns = methodReturnTypeIndexer.isResolvingDeferredReturns();
     // Метод помечается считающимся до разбора собственного тела: вызов самого себя должен
     // распознаться как рекурсия. Без этого он выглядит обычным вызовом и читает значение
     // метода из индекса, где его ещё нет, — то есть пустоту, и весь вклад рекурсивной
@@ -1933,7 +1934,10 @@ public class ExpressionTypeInferencer {
   }
 
   private @Nullable Consumer<List<VariableSymbol>> cellPreparationFor(InferenceContext ctx) {
-    if (workspacePopulated || ctx.contextualReturns.preparingCells || ctx.executionContext == null) {
+    if (workspacePopulated && !ctx.contextualReturns.resolvingDeferredReturns) {
+      return null;
+    }
+    if (ctx.contextualReturns.preparingCells || ctx.executionContext == null) {
       return null;
     }
     return pending -> prepareCells(ctx, pending);

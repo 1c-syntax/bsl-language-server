@@ -65,6 +65,8 @@ final class ContextualReturnCache {
   private @Nullable ContextualReturnCache preparationOwner;
   /** Самостоятельный расчёт ячеек. Его промежуточные результаты остаются внутри запроса. */
   boolean preparingCells;
+  /** Стартовое доразрешение может подготовить ячейки после первого наполнения области. */
+  boolean resolvingDeferredReturns;
 
   ContextualReturnCache() {
     revision = 0;
@@ -74,6 +76,7 @@ final class ContextualReturnCache {
     var result = new ContextualReturnCache();
     result.preparationOwner = preparationOwner == null ? this : preparationOwner;
     result.preparingCells = preparingCells;
+    result.resolvingDeferredReturns = resolvingDeferredReturns;
     return result;
   }
 
