@@ -23,8 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.types.index;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextConfigurationBindingChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextSymbolTreeRebuiltEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
@@ -167,7 +167,7 @@ public class SymbolTypeIndex {
   // их вид, — по старым записям их уже не найти. Порядок тот же, что у правки.
   @Order(200)
   @EventListener
-  public void handleEvent(DocumentContextConfigurationBindingChangedEvent event) {
+  public void handleEvent(DocumentContextSymbolTreeRebuiltEvent event) {
     var documentContext = event.getSource();
     clear(documentContext.getUri());
     reindexDeclared(documentContext);
@@ -1287,7 +1287,9 @@ public class SymbolTypeIndex {
 
   @Nullable
   private static MethodSymbol findLocalFunction(DocumentContext owner, String name) {
-    return owner.getSymbolTree().getMethods().stream()
+    // Без ожидания перестроения документа: ссылку разворачивают и из построения дерева другого
+    // документа (тип экспортной переменной в членах его self-типа) — ожидание замкнулось бы на встречное.
+    return owner.getSymbolTreeNoLock().getMethods().stream()
       .filter(candidate -> candidate.isFunction() && candidate.getName().equalsIgnoreCase(name))
       .findFirst()
       .orElse(null);

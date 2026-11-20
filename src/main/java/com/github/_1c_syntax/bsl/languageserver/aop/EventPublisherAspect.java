@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextConfigurationBindingChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextSymbolTreeRebuiltEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentAddedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
@@ -143,6 +144,10 @@ public class EventPublisherAspect {
     var documentContext = (DocumentContext) joinPoint.getThis();
     publishEvent(new DocumentContextContentChangedEvent(
       documentContext, documentContext.isContentChangedOnLastRebuild()));
+    // Тот же текст, но дерево построено заново: символы не равны прежним.
+    if (documentContext.isSymbolTreeRebuiltOnLastRebuild()) {
+      publishEvent(new DocumentContextSymbolTreeRebuiltEvent(documentContext));
+    }
   }
 
   @AfterReturning(
@@ -154,6 +159,19 @@ public class EventPublisherAspect {
     // правкой и пересчитает всё сам.
     if (symbolTreeRebuilt) {
       publishEvent(new DocumentContextConfigurationBindingChangedEvent(documentContext));
+    }
+  }
+
+  // Перехватывается метод документа, а не ServerContext.refreshSymbolTree: он возвращается, пока
+  // вызывающий ещё держит блокировку документа на запись, и слушатели, читающие дерево разбора,
+  // успевают отработать раньше, чем другой писатель освободит документ.
+  @AfterReturning(
+    pointcut = "Pointcuts.isDocumentContext() && Pointcuts.isRefreshSymbolTreeCall()",
+    returning = "symbolTreeRebuilt"
+  )
+  public void documentContextSymbolTreeRefreshed(JoinPoint joinPoint, boolean symbolTreeRebuilt) {
+    if (symbolTreeRebuilt) {
+      publishEvent(new DocumentContextSymbolTreeRebuiltEvent((DocumentContext) joinPoint.getThis()));
     }
   }
 

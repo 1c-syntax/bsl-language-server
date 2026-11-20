@@ -25,8 +25,8 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
 import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
-import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextConfigurationBindingChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextSymbolTreeRebuiltEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
@@ -124,12 +124,13 @@ public class ReferenceIndexFiller {
     fill(documentContext);
   }
 
-  // Вхождения документа записаны под его ссылкой на объект метаданных и типом модуля, а
-  // разрешение обращений опирается на них же. Порядок тот же, что у правки: после
-  // регистрации членов модуля.
+  // Дерево символов построено заново по прежнему тексту: вхождения записаны по его символам,
+  // а при смене привязки — ещё и под ссылкой документа на объект метаданных и типом модуля, на
+  // которые опирается разрешение обращений. Порядок тот же, что у правки: после регистрации
+  // членов модуля.
   @Order(200)
   @EventListener
-  public void handleEvent(DocumentContextConfigurationBindingChangedEvent event) {
+  public void handleEvent(DocumentContextSymbolTreeRebuiltEvent event) {
     fill(event.getSource());
   }
 
