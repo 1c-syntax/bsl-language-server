@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Test;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -41,7 +42,9 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -67,6 +70,8 @@ class DocumentChangeExecutorTest {
     when(documentContext.getUri()).thenReturn(TEST_URI);
     when(documentContext.getServerContext()).thenReturn(serverContext);
     when(serverContext.getWorkspaceUri()).thenReturn(WORKSPACE_URI);
+    var backgroundWork = new WorkspaceBackgroundWork();
+    when(serverContext.runBackgroundWork(any())).thenAnswer(invocation -> backgroundWork.run(invocation.getArgument(0)));
 
     // Create a map to store locks per URI, ensuring the same lock is returned for the same URI
     Map<URI, ReadWriteLock> lockMap = new ConcurrentHashMap<>();
@@ -99,6 +104,31 @@ class DocumentChangeExecutorTest {
       result = change.getText();
     }
     return result;
+  }
+
+  @Test
+  void stoppedWorkspaceCancelsWaitersWithoutApplyingChanges() throws Exception {
+    var tryingAdmission = new CompletableFuture<Void>();
+    var reject = new CompletableFuture<Void>();
+    doAnswer(invocation -> {
+      tryingAdmission.complete(null);
+      reject.get(5, TimeUnit.SECONDS);
+      return false;
+    }).when(serverContext).runBackgroundWork(any());
+
+    executor.submit(1, List.of(new TextDocumentContentChangeEvent("first")));
+    CompletableFuture<Void> waiter;
+    try {
+      tryingAdmission.get(5, TimeUnit.SECONDS);
+      waiter = executor.awaitLatest();
+      assertThat(waiter).isNotDone();
+    } finally {
+      reject.complete(null);
+    }
+
+    assertThatThrownBy(() -> waiter.get(5, TimeUnit.SECONDS)).isInstanceOf(CancellationException.class);
+    assertThat(executor.awaitLatest()).isCancelled();
+    assertThat(listenerCalls).hasValue(0);
   }
 
   @Test

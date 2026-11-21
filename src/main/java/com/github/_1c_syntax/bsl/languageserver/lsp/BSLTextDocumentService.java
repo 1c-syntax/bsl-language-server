@@ -1120,17 +1120,14 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     Integer version
   ) {
     var serverContext = documentContext.getServerContext();
-    if (serverContext.isBackgroundWorkStopped()) {
-      return;
-    }
-
     serverContext.rebuildDocument(
       documentContext,
       newContent,
       version
     );
 
-    if (configuration.getDiagnosticsOptions().getComputeTrigger() == ComputeTrigger.ONTYPE) {
+    if (!serverContext.isBackgroundWorkStopped()
+      && configuration.getDiagnosticsOptions().getComputeTrigger() == ComputeTrigger.ONTYPE) {
       validate(documentContext);
     }
   }

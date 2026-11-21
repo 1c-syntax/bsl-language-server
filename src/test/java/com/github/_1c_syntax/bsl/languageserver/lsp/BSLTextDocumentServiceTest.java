@@ -254,6 +254,50 @@ class BSLTextDocumentServiceTest {
     );
   }
 
+  @Test
+  void workspaceRemovalWaitsForDocumentChangeAlreadyInProgress() throws IOException {
+    var item = getTextDocumentItem();
+    textDocumentService.didOpen(new DidOpenTextDocumentParams(item));
+    var document = serverContextProvider.getDocumentUnsafe(item.getUri()).orElseThrow();
+    var context = document.getServerContext();
+    var entered = new CompletableFuture<Void>();
+    var resumeChange = new CompletableFuture<Void>();
+    var listener = GenericApplicationListener.forEventType(DocumentContextContentChangedEvent.class, event -> {
+      if (event.getSource() == document && event.isContentChanged()) {
+        entered.complete(null);
+        resumeChange.orTimeout(10, TimeUnit.SECONDS).join();
+      }
+    });
+    applicationContext.addApplicationListener(listener);
+
+    var folder = new WorkspaceFolder(context.getWorkspaceUri().toString(), "test-workspace");
+    CompletableFuture<Void> removal = null;
+    try {
+      var change = new DidChangeTextDocumentParams(
+        new VersionedTextDocumentIdentifier(item.getUri(), 2),
+        List.of(new TextDocumentContentChangeEvent("A = 1;"))
+      );
+      textDocumentService.didChange(change);
+      assertThat(entered).succeedsWithin(Duration.ofSeconds(10));
+
+      var pendingRemoval = CompletableFuture.runAsync(() -> serverContextProvider.removeWorkspace(folder));
+      removal = pendingRemoval;
+      await().atMost(Duration.ofSeconds(10)).until(context::isBackgroundWorkStopped);
+      await().during(Duration.ofMillis(300)).atMost(Duration.ofSeconds(2)).until(() -> !pendingRemoval.isDone());
+    } finally {
+      resumeChange.complete(null);
+      try {
+        if (removal != null) {
+          assertThat(removal).succeedsWithin(Duration.ofSeconds(10));
+        }
+      } finally {
+        applicationContext.removeApplicationListener(listener);
+      }
+    }
+
+    assertThat(context.getDocuments()).isEmpty();
+  }
+
   /**
    * Воспроизводит ScopeNotActiveException из Sentry:
    * didOpen вызывает openDocument → rebuildDocument синхронно на LSP-треде без workspace-контекста,
