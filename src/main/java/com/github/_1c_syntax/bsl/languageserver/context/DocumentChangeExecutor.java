@@ -72,6 +72,7 @@ public final class DocumentChangeExecutor {
   private final ConcurrentSkipListMap<Integer, CopyOnWriteArrayList<CompletableFuture<Void>>> versionWaiters
     = new ConcurrentSkipListMap<>();
   private volatile boolean running = true;
+  private volatile boolean changesCancelled;
   private @Nullable String pendingContent;
   private int pendingVersion = -1;
 
@@ -151,7 +152,8 @@ public final class DocumentChangeExecutor {
    *   как только рабочий поток применит соответствующую версию.
    * </p>
    *
-   * @return future, завершающийся после применения всех накопленных изменений.
+   * @return future, завершающийся после применения всех накопленных изменений или
+   *         отменяемый, если остановка области помешала их применить
    */
   public CompletableFuture<Void> awaitLatest() {
     int targetVersion = latestSubmittedVersion.get();
@@ -210,9 +212,15 @@ public final class DocumentChangeExecutor {
       return list;
     });
 
+    var cancelled = changesCancelled;
     if (version <= latestAppliedVersion.get()) {
-      completeWaitersUpTo(latestAppliedVersion.get());
+      future.complete(null);
+    } else if (cancelled) {
+      future.cancel(false);
+    } else {
+      return future;
     }
+    completeWaiters();
 
     return future;
   }
@@ -221,6 +229,10 @@ public final class DocumentChangeExecutor {
    * Накопить ещё одну задачу изменения, чтобы позже применить пакет изменений одним вызовом rebuild.
    */
   private void accumulate(ChangeTask task) {
+    if (changesCancelled) {
+      return;
+    }
+
     try {
       var baseContent = pendingContent == null ? documentContext.getContent() : pendingContent;
       pendingContent = changeApplier.apply(baseContent, task.contentChanges);
@@ -229,8 +241,12 @@ public final class DocumentChangeExecutor {
       LOGGER.error("Error while accumulating document change task: {}", e.getMessage(), e);
       pendingContent = null;
       pendingVersion = -1;
-      latestAppliedVersion.accumulateAndGet(task.version, Math::max);
-      completeWaitersUpTo(latestAppliedVersion.get());
+      if (documentContext.getServerContext().isBackgroundWorkStopped()) {
+        changesCancelled = true;
+      } else {
+        latestAppliedVersion.accumulateAndGet(task.version, Math::max);
+      }
+      completeWaiters();
     }
   }
 
@@ -238,41 +254,62 @@ public final class DocumentChangeExecutor {
    * Применяет накопленные изменения и уведомляет ожидающие запросы о доступности новой версии.
    */
   private void flushPendingChanges() {
-    if (pendingContent == null || pendingVersion < 0) {
+    var content = pendingContent;
+    var version = pendingVersion;
+    if (content == null || version < 0) {
       return;
     }
 
-    var lock = documentContext.getServerContext().getDocumentLock(documentContext.getUri());
-    lock.writeLock().lock();
-
     try {
-      var workspaceUri = documentContext.getServerContext().getWorkspaceUri();
-      try (var ignored = WorkspaceContextHolder.forUri(workspaceUri)) {
-        changeListener.onChange(documentContext, pendingContent, pendingVersion);
+      var context = documentContext.getServerContext();
+      if (context.runBackgroundWork(() -> applyChangeUnderLock(context, content, version))) {
+        latestAppliedVersion.accumulateAndGet(version, Math::max);
+      } else {
+        changesCancelled = true;
       }
-      latestAppliedVersion.accumulateAndGet(pendingVersion, Math::max);
-      completeWaitersUpTo(latestAppliedVersion.get());
+      completeWaiters();
     } catch (Exception e) {
       LOGGER.error("Error while applying accumulated document changes: {}", e.getMessage(), e);
     } finally {
-      lock.writeLock().unlock();
       pendingContent = null;
       pendingVersion = -1;
     }
   }
 
+  private void applyChangeUnderLock(ServerContext context, String content, int version) {
+    var lock = context.getDocumentLock(documentContext.getUri()).writeLock();
+    lock.lock();
+    try (var ignored = WorkspaceContextHolder.forUri(context.getWorkspaceUri())) {
+      changeListener.onChange(documentContext, content, version);
+    } finally {
+      lock.unlock();
+    }
+  }
+
   /**
-   * Завершает все ожидания, чей целевой номер версии оказался не больше указанного значения.
+   * Завершает ожидания применённых версий и отменяет остальные при остановке области.
    */
-  private void completeWaitersUpTo(int version) {
-    var iterator = versionWaiters.entrySet().iterator();
-    while (iterator.hasNext()) {
-      var entry = iterator.next();
-      if (entry.getKey() <= version) {
+  private void completeWaiters() {
+    while (true) {
+      var entry = versionWaiters.firstEntry();
+      if (entry == null) {
+        return;
+      }
+
+      // Сначала читаем отмену, чтобы при её наблюдении видеть все предшествующие применения.
+      var cancelled = changesCancelled;
+      var applied = entry.getKey() <= latestAppliedVersion.get();
+      if (!applied && !cancelled) {
+        return;
+      }
+      if (!versionWaiters.remove(entry.getKey(), entry.getValue())) {
+        continue;
+      }
+
+      if (applied) {
         entry.getValue().forEach(future -> future.complete(null));
-        iterator.remove();
       } else {
-        break;
+        entry.getValue().forEach(future -> future.cancel(false));
       }
     }
   }

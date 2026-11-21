@@ -154,7 +154,7 @@ public final class DiagnosticProvider {
     }
     var serverContext = serverContextProvider.getAllContexts().get(workspaceUri);
     if (serverContext != null) {
-      refreshDiagnostics(serverContext);
+      serverContext.runBackgroundWork(() -> refreshDiagnostics(serverContext));
     }
   }
 
@@ -197,8 +197,14 @@ public final class DiagnosticProvider {
    * {@code AnalyzeProjectOnStart} их обработает отдельно.
    */
   private void refreshDiagnostics(ServerContext serverContext) {
+    if (serverContext.isBackgroundWorkStopped()) {
+      return;
+    }
     var opened = serverContext.getOpenedDocuments();
     opened.forEach(DocumentContext::clearDiagnostics);
+    if (serverContext.isBackgroundWorkStopped()) {
+      return;
+    }
     if (clientSupportsRefresh) {
       clientHolder.execIfConnected((LanguageClient languageClient) -> {
         LOGGER.debug("Requesting diagnostic refresh from client ({} opened documents cleared)",
@@ -208,7 +214,12 @@ public final class DiagnosticProvider {
       return;
     }
     LOGGER.debug("Pushing recomputed diagnostics to {} opened document(s)", opened.size());
-    opened.forEach(this::computeAndPublishDiagnosticsUnderLock);
+    for (var document : opened) {
+      if (serverContext.isBackgroundWorkStopped()) {
+        break;
+      }
+      computeAndPublishDiagnosticsUnderLock(document);
+    }
   }
 
   /**
@@ -220,7 +231,9 @@ public final class DiagnosticProvider {
     var lock = documentContext.getServerContext().getDocumentLock(documentContext.getUri());
     lock.readLock().lock();
     try {
-      computeAndPublishDiagnostics(documentContext);
+      if (!documentContext.getServerContext().isBackgroundWorkStopped()) {
+        computeAndPublishDiagnostics(documentContext);
+      }
     } finally {
       lock.readLock().unlock();
     }

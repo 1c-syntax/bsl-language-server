@@ -59,6 +59,7 @@ import java.nio.file.Paths;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.function.Consumer;
 
 /**
  * Сервис обработки запросов, связанных с рабочей областью.
@@ -99,11 +100,11 @@ public class BSLWorkspaceService implements WorkspaceService {
       () -> {
         for (var fileEvent : params.getChanges()) {
           var uri = Absolute.uri(fileEvent.getUri());
-          runInWorkspaceContext(uri, () -> {
+          runInWorkspaceContext(uri, (ServerContext context) -> {
             switch (fileEvent.getType()) {
-              case Deleted -> handleDeletedFileEvent(uri);
-              case Created -> handleCreatedFileEvent(uri);
-              case Changed -> handleChangedFileEvent(uri);
+              case Deleted -> handleDeletedFileEvent(context, uri);
+              case Created -> handleCreatedFileEvent(context, uri);
+              case Changed -> handleChangedFileEvent(context, uri);
             }
           });
         }
@@ -128,7 +129,7 @@ public class BSLWorkspaceService implements WorkspaceService {
       () -> {
         for (var file : params.getFiles()) {
           var uri = Absolute.uri(file.getUri());
-          runInWorkspaceContext(uri, () -> handleCreatedFileEvent(uri));
+          runInWorkspaceContext(uri, (ServerContext context) -> handleCreatedFileEvent(context, uri));
         }
       },
       executor
@@ -151,7 +152,7 @@ public class BSLWorkspaceService implements WorkspaceService {
       () -> {
         for (var file : params.getFiles()) {
           var uri = Absolute.uri(file.getUri());
-          runInWorkspaceContext(uri, () -> handleDeletedFileEvent(uri));
+          runInWorkspaceContext(uri, (ServerContext context) -> handleDeletedFileEvent(context, uri));
         }
       },
       executor
@@ -175,8 +176,8 @@ public class BSLWorkspaceService implements WorkspaceService {
         for (var file : params.getFiles()) {
           var oldUri = Absolute.uri(file.getOldUri());
           var newUri = Absolute.uri(file.getNewUri());
-          runInWorkspaceContext(oldUri, () -> handleDeletedFileEvent(oldUri));
-          runInWorkspaceContext(newUri, () -> handleCreatedFileEvent(newUri));
+          runInWorkspaceContext(oldUri, (ServerContext context) -> handleDeletedFileEvent(context, oldUri));
+          runInWorkspaceContext(newUri, (ServerContext context) -> handleCreatedFileEvent(context, newUri));
         }
       },
       executor
@@ -188,13 +189,13 @@ public class BSLWorkspaceService implements WorkspaceService {
    * <p>
    * Резолвит контекст сервера и устанавливает workspace-контекст на текущем треде
    * (через {@link WorkspaceContextHolder}), чтобы workspace-scoped proxy beans корректно
-   * разрешались в {@code @EventListener}-методах. Если workspace для URI не найден,
-   * действие пропускается.
+   * разрешались в {@code @EventListener}-методах. Допуск фоновой работы удерживает
+   * выбранный контекст до конца обработки. Уведомления для остановленной области пропускаются.
    *
    * @param uri    URI файла или каталога
    * @param action действие, выполняемое в установленном workspace-контексте
    */
-  private void runInWorkspaceContext(URI uri, Runnable action) {
+  private void runInWorkspaceContext(URI uri, Consumer<ServerContext> action) {
     serverContextProvider.getServerContext(uri).ifPresentOrElse(
       context -> {
         var workspaceUri = context.getWorkspaceUri();
@@ -202,7 +203,7 @@ public class BSLWorkspaceService implements WorkspaceService {
           LOGGER.warn("No workspace URI for context, skipping file event: {}", uri);
           return;
         }
-        WorkspaceContextHolder.run(workspaceUri, action);
+        context.runBackgroundWork(() -> WorkspaceContextHolder.run(workspaceUri, () -> action.accept(context)));
       },
       () -> LOGGER.debug("No workspace found for file event, skipping: {}", uri)
     );
@@ -225,7 +226,7 @@ public class BSLWorkspaceService implements WorkspaceService {
         var event = params.getEvent();
 
         // Remove old workspace folders
-        event.getRemoved().forEach(serverContextProvider::removeWorkspace);
+        event.getRemoved().forEach(serverContextProvider::removeWorkspaceKeepingFallback);
 
         // Add new workspace folders
         event.getAdded().forEach((WorkspaceFolder folder) -> {
@@ -252,10 +253,10 @@ public class BSLWorkspaceService implements WorkspaceService {
    * клиенты (в т.ч. VS Code) при удалении каталога присылают одно событие Deleted с URI каталога
    * без событий по вложенным файлам.
    *
-   * @param uri URI удаленного файла или каталога
+   * @param context рабочая область, принявшая уведомление
+   * @param uri     URI удаленного файла или каталога
    */
-  private void handleDeletedFileEvent(URI uri) {
-    var context = getContextForDocument(uri);
+  private void handleDeletedFileEvent(ServerContext context, URI uri) {
     var documentContext = context.getDocument(uri);
     if (documentContext == null) {
       handleDeletedFolderEvent(context, uri);
@@ -284,6 +285,10 @@ public class BSLWorkspaceService implements WorkspaceService {
       .toList();
 
     for (var documentUri : deletedUris) {
+      if (context.isBackgroundWorkStopped()) {
+        break;
+      }
+
       var documentContext = context.getDocument(documentUri);
       if (documentContext != null) {
         removeDocument(context, documentUri, documentContext);
@@ -366,11 +371,10 @@ public class BSLWorkspaceService implements WorkspaceService {
    * Пути, попадающие под {@code excludePaths} из конфигурации, пропускаются.
    * Если файла к моменту обработки уже нет, событие обрабатывается как его удаление.
    *
-   * @param uri URI созданного файла
+   * @param context рабочая область, принявшая уведомление
+   * @param uri     URI созданного файла
    */
-  private void handleCreatedFileEvent(URI uri) {
-    var context = getContextForDocument(uri);
-
+  private void handleCreatedFileEvent(ServerContext context, URI uri) {
     var file = toFile(uri);
     if (file != null && file.isDirectory()) {
       handleCreatedFolderEvent(context, file);
@@ -378,7 +382,7 @@ public class BSLWorkspaceService implements WorkspaceService {
     }
     if (isGone(file)) {
       // Файл успели удалить, пока событие ждало очереди: для контекста это удаление.
-      handleDeletedFileEvent(uri);
+      handleDeletedFileEvent(context, uri);
       return;
     }
 
@@ -410,6 +414,10 @@ public class BSLWorkspaceService implements WorkspaceService {
     var files = BSLFiles.listBslFiles(folder.toPath(), excludePaths);
 
     for (var file : files) {
+      if (context.isBackgroundWorkStopped()) {
+        break;
+      }
+
       var fileUri = Absolute.uri(file.toURI());
       var documentContext = context.addDocument(fileUri);
 
@@ -458,16 +466,16 @@ public class BSLWorkspaceService implements WorkspaceService {
    * при этом пути из {@code excludePaths} пропускаются. Если файла к моменту обработки уже
    * нет, событие обрабатывается как его удаление.
    *
-   * @param uri URI измененного файла
+   * @param context рабочая область, принявшая уведомление
+   * @param uri     URI измененного файла
    */
-  private void handleChangedFileEvent(URI uri) {
+  private void handleChangedFileEvent(ServerContext context, URI uri) {
     if (isGone(toFile(uri))) {
       // Файл успели удалить, пока событие ждало очереди: для контекста это удаление.
-      handleDeletedFileEvent(uri);
+      handleDeletedFileEvent(context, uri);
       return;
     }
 
-    var context = getContextForDocument(uri);
     var documentContext = context.getDocument(uri);
     if (documentContext == null) {
       if (isExcludedPath(context, uri)) {
@@ -480,17 +488,6 @@ public class BSLWorkspaceService implements WorkspaceService {
     if (!isDocumentOpened) {
       rebuildOrRemove(context, uri, documentContext);
     }
-  }
-
-  /**
-   * Получить контекст сервера для документа.
-   *
-   * @param uri URI документа
-   * @return контекст сервера
-   */
-  private ServerContext getContextForDocument(URI uri) {
-    return serverContextProvider.getServerContext(uri)
-      .orElseThrow(() -> new IllegalStateException("No workspace found for document: " + uri));
   }
 
   /** Проверяет, входит ли путь по uri в excludePaths конфигурации workspace {@code context}. */

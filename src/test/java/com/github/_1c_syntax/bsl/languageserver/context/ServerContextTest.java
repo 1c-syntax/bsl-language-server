@@ -22,7 +22,13 @@
 package com.github._1c_syntax.bsl.languageserver.context;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.client.WorkDoneProgressHelper;
+import com.github._1c_syntax.bsl.languageserver.client.LanguageClientHolder;
+import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
+import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.ContextPropagatingExecutorService;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
@@ -44,6 +50,7 @@ import org.mockito.ArgumentMatchers;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.File;
 import java.io.IOException;
@@ -53,14 +60,29 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinWorkerThread;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Supplier;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.spy;
+import static org.junit.jupiter.api.Assertions.assertAll;
 
 @CleanupContextBeforeClassAndAfterEachTestMethod
 class ServerContextTest extends AbstractServerContextAwareTest {
@@ -72,6 +94,9 @@ class ServerContextTest extends AbstractServerContextAwareTest {
 
   @MockitoSpyBean(name = "computeConfigurationExecutor")
   private ExecutorService computeConfigurationExecutor;
+
+  @MockitoSpyBean
+  private WorkDoneProgressHelper workDoneProgressHelper;
 
   @Autowired
   private GlobalScopeProvider globalScopeProvider;
@@ -154,6 +179,34 @@ class ServerContextTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void populationCountsCompletedFilesAndDescribesTheActiveFile() throws Exception {
+    initServerContext(PATH_TO_METADATA);
+    var reporter = mock(WorkDoneProgressHelper.WorkDoneProgressReporter.class);
+    var activity = new AtomicReference<Supplier<String>>();
+    doReturn(reporter).when(workDoneProgressHelper).createProgress(ArgumentMatchers.anyInt(), ArgumentMatchers.anyString());
+    doAnswer(invocation -> {
+      activity.set(invocation.getArgument(0));
+      return true;
+    }).when(reporter).reportActivity(ArgumentMatchers.any());
+    var file = new File(PATH_TO_METADATA, PATH_TO_MODULE_FILE);
+    var lock = (ReentrantReadWriteLock) context.getDocumentLock(Absolute.uri(file.toURI()));
+    var workspace = context.getWorkspaceUri();
+    lock.writeLock().lock();
+    var populating = CompletableFuture.runAsync(() ->
+      WorkspaceContextHolder.run(workspace, () -> context.populateContext(List.of(file))));
+    try {
+      await().atMost(Duration.ofSeconds(10)).until(lock::hasQueuedThreads);
+      verify(reporter, never()).tick();
+      assertThat(activity.get()).isNotNull();
+      assertThat(activity.get().get()).contains("ПервыйОбщийМодуль", "Module.bsl");
+    } finally {
+      lock.writeLock().unlock();
+      populating.get(30, TimeUnit.SECONDS);
+    }
+    verify(reporter).tick();
+  }
+
+  @Test
   void testMdoRefs() {
     // given
     initServerContext(PATH_TO_METADATA);
@@ -217,6 +270,301 @@ class ServerContextTest extends AbstractServerContextAwareTest {
 
     // then
     assertThat(context.getDocuments()).hasSizeGreaterThan(0);
+  }
+
+  @Test
+  void populateAfterBackgroundWorkIsStoppedAddsNoDocuments() {
+    // given
+    initServerContext(PATH_TO_METADATA, false);
+    context.stopBackgroundWork();
+    clearInvocations(workDoneProgressHelper);
+
+    // when
+    context.populateContext();
+
+    // then
+    assertThat(context.getDocuments()).isEmpty();
+    verify(workDoneProgressHelper, never()).createProgress(ArgumentMatchers.anyInt(), ArgumentMatchers.anyString());
+  }
+
+  @Test
+  void stoppingDuringDiscoveryWaitsForDiscoveryToFinish() throws Exception {
+    initServerContext(PATH_TO_METADATA, false);
+    var reporter = mock(WorkDoneProgressHelper.WorkDoneProgressReporter.class);
+    doReturn(reporter).when(workDoneProgressHelper).createProgress(0, "");
+    var entered = new CountDownLatch(1);
+    var release = new CountDownLatch(1);
+    doAnswer(invocation -> {
+      entered.countDown();
+      awaitWithinTestTimeout(release);
+      return null;
+    }).when(reporter).beginProgress(ArgumentMatchers.anyString());
+    var workspace = context.getWorkspaceUri();
+    var population = CompletableFuture.runAsync(() -> WorkspaceContextHolder.run(workspace, context::populateContext));
+    try {
+      assertThat(entered.await(10, TimeUnit.SECONDS)).isTrue();
+      var stopping = CompletableFuture.runAsync(context::stopBackgroundWork);
+      await().atMost(Duration.ofSeconds(10)).until(context::isBackgroundWorkStopped);
+      assertThat(stopping).isNotDone();
+      release.countDown();
+      population.get(10, TimeUnit.SECONDS);
+      stopping.get(10, TimeUnit.SECONDS);
+      assertThat(context.getDocuments()).isEmpty();
+    } finally {
+      release.countDown();
+      population.get(10, TimeUnit.SECONDS);
+    }
+  }
+
+  @Test
+  void stoppingWhilePopulationWaitsForDocumentLockSkipsParsing() throws Exception {
+    initServerContext(PATH_TO_METADATA, false);
+    var file = new File(PATH_TO_METADATA, PATH_TO_MODULE_FILE);
+    var lock = (ReentrantReadWriteLock) context.getDocumentLock(Absolute.uri(file.toURI()));
+    var workspace = context.getWorkspaceUri();
+    lock.writeLock().lock();
+    try (var controls = java.util.concurrent.Executors.newSingleThreadExecutor()) {
+      var population = controls.submit(() ->
+        WorkspaceContextHolder.run(workspace, () -> context.populateContext(List.of(file))));
+      CompletableFuture<Void> stopping;
+      try {
+        await().atMost(Duration.ofSeconds(10)).until(lock::hasQueuedThreads);
+        stopping = CompletableFuture.runAsync(context::stopBackgroundWork);
+        await().atMost(Duration.ofSeconds(10)).until(context::isBackgroundWorkStopped);
+      } finally {
+        lock.writeLock().unlock();
+      }
+      population.get(10, TimeUnit.SECONDS);
+      stopping.get(10, TimeUnit.SECONDS);
+    }
+    assertThat(context.getDocuments()).isEmpty();
+  }
+
+  /** Закрытие области после появления индикатора отменяет загрузку файлов без сообщения об успехе. */
+  @Test
+  void stoppingPopulationAfterProgressStartsSkipsFilesAndDoesNotReportCompletion() throws Exception {
+    initServerContext(PATH_TO_METADATA, false);
+    var reporter = mock(WorkDoneProgressHelper.WorkDoneProgressReporter.class);
+    var stopping = new AtomicReference<CompletableFuture<Void>>();
+    var activity = new AtomicReference<Supplier<String>>();
+    doReturn(reporter).when(workDoneProgressHelper)
+      .createProgress(ArgumentMatchers.anyInt(), ArgumentMatchers.anyString());
+    doAnswer(invocation -> {
+      activity.set(invocation.getArgument(0));
+      stopping.set(CompletableFuture.runAsync(context::stopBackgroundWork));
+      await().atMost(Duration.ofSeconds(10)).until(context::isBackgroundWorkStopped);
+      return true;
+    }).when(reporter).reportActivity(ArgumentMatchers.any());
+
+    context.populateContext(List.of(new File(PATH_TO_METADATA, PATH_TO_MODULE_FILE)));
+
+    assertThat(stopping.get()).isNotNull();
+    stopping.get().get(10, TimeUnit.SECONDS);
+    assertThat(context.getDocuments()).isEmpty();
+    assertThat(activity.get()).isNotNull();
+    assertThat(activity.get().get()).isEmpty();
+    verify(reporter, never()).tick();
+    verify(reporter).endProgress("");
+  }
+
+  @Test
+  void stoppingWaitsForConfigurationTriggeredDiagnosticRefresh(@TempDir Path workspace) throws Exception {
+    initServerContext(workspace, false);
+    var document = context.addDocument(workspace.resolve("Module.bsl").toUri());
+    context.openDocument(document, "", 1);
+    var provider = spy(new DiagnosticProvider(
+      mock(LanguageClientHolder.class), mock(ClientCapabilitiesHolder.class), serverContextProvider));
+    var entered = new CountDownLatch(1);
+    var release = new CountDownLatch(1);
+    doAnswer(invocation -> {
+      entered.countDown();
+      awaitWithinTestTimeout(release);
+      return null;
+    }).when(provider).computeAndPublishDiagnostics(document);
+    var workspaceUri = context.getWorkspaceUri();
+    var refresh = CompletableFuture.runAsync(() -> WorkspaceContextHolder.run(workspaceUri, () ->
+      provider.handleConfigurationChangedEvent(
+        new LanguageServerConfigurationChangedEvent(context.getLanguageServerConfiguration()))));
+    CompletableFuture<Void> stopping = null;
+    try {
+      assertThat(entered.await(10, TimeUnit.SECONDS)).isTrue();
+      stopping = CompletableFuture.runAsync(context::stopBackgroundWork);
+      await().atMost(Duration.ofSeconds(10)).until(context::isBackgroundWorkStopped);
+      assertThat(stopping).failsWithin(200, TimeUnit.MILLISECONDS)
+        .withThrowableOfType(java.util.concurrent.TimeoutException.class);
+    } finally {
+      release.countDown();
+      var stoppingToAwait = stopping;
+      assertAll(
+        () -> refresh.get(10, TimeUnit.SECONDS),
+        () -> {
+          if (stoppingToAwait != null) {
+            stoppingToAwait.get(10, TimeUnit.SECONDS);
+          }
+        }
+      );
+    }
+  }
+
+  @Test
+  void interruptedPopulationKeepsWorkersTrackedUntilTheyFinish() {
+    initServerContext(PATH_TO_METADATA, false);
+    var file = new File(PATH_TO_METADATA, PATH_TO_MODULE_FILE);
+    var lock = (ReentrantReadWriteLock) context.getDocumentLock(Absolute.uri(file.toURI()));
+    var failure = new AtomicReference<RuntimeException>();
+    var interruptPreserved = new AtomicBoolean();
+    var workspace = context.getWorkspaceUri();
+    lock.writeLock().lock();
+    var population = Thread.ofPlatform().start(() -> WorkspaceContextHolder.run(workspace, () -> {
+      try {
+        context.populateContext(List.of(file));
+      } catch (RuntimeException e) {
+        failure.set(e);
+      } finally {
+        interruptPreserved.set(Thread.currentThread().isInterrupted());
+      }
+    }));
+    CompletableFuture<Void> stopping = null;
+    try {
+      await().atMost(Duration.ofSeconds(10)).until(lock::hasQueuedThreads);
+      population.interrupt();
+      stopping = CompletableFuture.runAsync(context::stopBackgroundWork);
+      await().atMost(Duration.ofSeconds(10)).until(context::isBackgroundWorkStopped);
+      assertThat(stopping).failsWithin(200, TimeUnit.MILLISECONDS)
+        .withThrowableOfType(java.util.concurrent.TimeoutException.class);
+    } finally {
+      lock.writeLock().unlock();
+      var stoppingToAwait = stopping;
+      assertAll(
+        () -> {
+          population.join(10000);
+          assertThat(population.isAlive()).isFalse();
+        },
+        () -> {
+          if (stoppingToAwait != null) {
+            stoppingToAwait.get(10, TimeUnit.SECONDS);
+          }
+        }
+      );
+    }
+    assertThat(failure.get()).isInstanceOf(IllegalStateException.class)
+      .hasCauseInstanceOf(InterruptedException.class);
+    assertThat(interruptPreserved).isTrue();
+    assertThat(context.getDocuments()).isEmpty();
+  }
+
+  @Test
+  void failedPopulationKeepsOtherWorkersTrackedUntilTheyFinish() throws Exception {
+    initServerContext(PATH_TO_METADATA, false);
+    var workspace = context.getWorkspaceUri();
+    var executorField = "populateContextExecutor";
+    var original = ReflectionTestUtils.getField(context, executorField);
+    assertThat(original).isInstanceOf(ExecutorService.class);
+    try (var pool = new ForkJoinPool(2, workers -> new ForkJoinWorkerThread(workers) {
+      @Override
+      protected void onStart() {
+        WorkspaceContextHolder.set(workspace);
+        super.onStart();
+      }
+    }, null, true);
+         var controlled = new ContextPropagatingExecutorService(pool)) {
+      ReflectionTestUtils.setField(context, executorField, controlled);
+      try {
+        assertFailedPopulationWaitsForOtherWorkers();
+      } finally {
+        ReflectionTestUtils.setField(context, executorField, original);
+      }
+    }
+  }
+
+  private void assertFailedPopulationWaitsForOtherWorkers() throws Exception {
+    var blocked = new File(PATH_TO_METADATA, PATH_TO_MODULE_FILE);
+    var failing = new File(PATH_TO_METADATA, PATH_TO_CATALOG_FILE);
+    var lock = (ReentrantReadWriteLock) context.getDocumentLock(Absolute.uri(blocked.toURI()));
+    var reporter = mock(WorkDoneProgressHelper.WorkDoneProgressReporter.class);
+    doReturn(reporter).when(workDoneProgressHelper)
+      .createProgress(ArgumentMatchers.anyInt(), ArgumentMatchers.anyString());
+    var entered = new CountDownLatch(1);
+    var fail = new CountDownLatch(1);
+    doAnswer(invocation -> {
+      entered.countDown();
+      awaitWithinTestTimeout(fail);
+      throw new IllegalStateException("population worker failed");
+    }).when(reporter).tick();
+    var failure = new AtomicReference<RuntimeException>();
+    var workspace = context.getWorkspaceUri();
+    lock.writeLock().lock();
+    var population = CompletableFuture.runAsync(() -> WorkspaceContextHolder.run(workspace, () -> {
+      try {
+        context.populateContext(List.of(blocked, failing));
+      } catch (RuntimeException e) {
+        failure.set(e);
+      }
+    }));
+    CompletableFuture<Void> stopping = null;
+    try {
+      assertThat(entered.await(10, TimeUnit.SECONDS)).isTrue();
+      await().atMost(Duration.ofSeconds(10)).until(lock::hasQueuedThreads);
+      fail.countDown();
+      stopping = CompletableFuture.runAsync(context::stopBackgroundWork);
+      await().atMost(Duration.ofSeconds(10)).until(context::isBackgroundWorkStopped);
+      assertThat(stopping).failsWithin(200, TimeUnit.MILLISECONDS)
+        .withThrowableOfType(java.util.concurrent.TimeoutException.class);
+    } finally {
+      fail.countDown();
+      lock.writeLock().unlock();
+      var stoppingToAwait = stopping;
+      assertAll(
+        () -> population.get(10, TimeUnit.SECONDS),
+        () -> {
+          if (stoppingToAwait != null) {
+            stoppingToAwait.get(10, TimeUnit.SECONDS);
+          }
+        }
+      );
+    }
+    assertThat(failure.get()).isInstanceOf(IllegalStateException.class)
+      .hasMessage("Error populating context");
+    verify(reporter).endProgress("");
+  }
+
+  @Test
+  void stoppingBackgroundWorkWaitsForWorkInProgress() throws Exception {
+    // given — фоновая работа идёт
+    initServerContext();
+    var entered = new CountDownLatch(1);
+    var release = new CountDownLatch(1);
+    var work = CompletableFuture.runAsync(() -> context.runBackgroundWork(() -> {
+      entered.countDown();
+      awaitWithinTestTimeout(release);
+    }));
+    assertThat(entered.await(10, TimeUnit.SECONDS)).isTrue();
+
+    // when
+    var stop = CompletableFuture.runAsync(context::stopBackgroundWork);
+
+    // then — остановка объявлена сразу, но ждёт конца идущей работы
+    await().atMost(Duration.ofSeconds(10)).until(context::isBackgroundWorkStopped);
+    assertThat(stop).failsWithin(300, TimeUnit.MILLISECONDS)
+      .withThrowableOfType(java.util.concurrent.TimeoutException.class);
+
+    release.countDown();
+    stop.get(10, TimeUnit.SECONDS);
+    work.get(10, TimeUnit.SECONDS);
+
+    // и новая работа уже не начинается
+    var started = new boolean[1];
+    assertThat(context.runBackgroundWork(() -> started[0] = true)).isFalse();
+    assertThat(started[0]).isFalse();
+  }
+
+  private static void awaitWithinTestTimeout(CountDownLatch latch) {
+    try {
+      assertThat(latch.await(10, TimeUnit.SECONDS)).isTrue();
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new IllegalStateException(e);
+    }
   }
 
   /** Каталоги, перечисленные в {@code excludePaths} конфигурации, не попадают в начальный контекст. */
@@ -441,7 +789,7 @@ class ServerContextTest extends AbstractServerContextAwareTest {
     serverContextProvider.clear();
     var finishReading = new CountDownLatch(1);
     doAnswer(invocation -> {
-      awaitUninterruptibly(finishReading);
+      awaitConfigurationReadRelease(finishReading);
       return invocation.callRealMethod();
     }).when(computeConfigurationExecutor).submit(ArgumentMatchers.<Callable<Object>>any());
     context = serverContextProvider.addWorkspace(Absolute.uri(Absolute.path(PATH_TO_METADATA).toUri()));
@@ -449,9 +797,11 @@ class ServerContextTest extends AbstractServerContextAwareTest {
     return finishReading;
   }
 
-  private static void awaitUninterruptibly(CountDownLatch latch) {
+  private static void awaitConfigurationReadRelease(CountDownLatch latch) {
     try {
-      latch.await();
+      if (!latch.await(30, TimeUnit.SECONDS)) {
+        throw new IllegalStateException("Metadata read was not released by the test");
+      }
     } catch (InterruptedException e) {
       Thread.currentThread().interrupt();
       throw new IllegalStateException(e);

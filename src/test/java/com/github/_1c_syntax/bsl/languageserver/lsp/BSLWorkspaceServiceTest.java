@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.lsp;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentAddedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.utils.Absolute;
@@ -57,6 +58,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.event.GenericApplicationListener;
 import org.springframework.context.event.SmartApplicationListener;
 import org.springframework.core.Ordered;
 
@@ -68,8 +70,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -985,6 +989,51 @@ class BSLWorkspaceServiceTest {
     // then
     assertThat(ctx.getDocument(objectModuleUri)).isNotNull();
     assertThat(ctx.getDocument(formModuleUri)).isNotNull();
+  }
+
+  @Test
+  void removingWorkspaceWaitsForFolderLoadAndSkipsRemainingFiles() throws IOException {
+    var context = workspaceServerContext();
+    var folder = tempDir.resolve("created");
+    var firstUri = Absolute.uri(createTestFile("created/First.bsl").toURI());
+    var secondUri = Absolute.uri(createTestFile("created/Second.bsl").toURI());
+
+    var added = new AtomicInteger();
+    var firstAdded = new CompletableFuture<Void>();
+    var resumeLoading = new CompletableFuture<Void>();
+    var listener = GenericApplicationListener.forEventType(ServerContextDocumentAddedEvent.class, event -> {
+      if (event.getSource() == context && (event.getUri().equals(firstUri) || event.getUri().equals(secondUri))
+        && added.incrementAndGet() == 1) {
+        firstAdded.complete(null);
+        assertThat(resumeLoading).succeedsWithin(Duration.ofSeconds(10));
+      }
+    });
+    applicationContext.addApplicationListener(listener);
+
+    var workspace = new WorkspaceFolder(context.getWorkspaceUri().toString(), "test-workspace");
+    CompletableFuture<Void> removal = null;
+    try {
+      var folderUri = Absolute.uri(folder.toUri());
+      workspaceService.didCreateFiles(new CreateFilesParams(List.of(new FileCreate(folderUri.toString()))));
+      assertThat(firstAdded).succeedsWithin(Duration.ofSeconds(10));
+
+      var pendingRemoval = CompletableFuture.runAsync(() -> serverContextProvider.removeWorkspace(workspace));
+      removal = pendingRemoval;
+      await().atMost(Duration.ofSeconds(10)).until(context::isBackgroundWorkStopped);
+      await().during(Duration.ofMillis(300)).atMost(Duration.ofSeconds(2)).until(() -> !pendingRemoval.isDone());
+    } finally {
+      resumeLoading.complete(null);
+      try {
+        if (removal != null) {
+          assertThat(removal).succeedsWithin(Duration.ofSeconds(10));
+        }
+      } finally {
+        applicationContext.removeApplicationListener(listener);
+      }
+    }
+
+    assertThat(added).hasValue(1);
+    assertThat(context.getDocuments()).isEmpty();
   }
 
   /**

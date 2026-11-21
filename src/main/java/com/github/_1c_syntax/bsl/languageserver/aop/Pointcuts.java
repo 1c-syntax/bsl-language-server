@@ -150,10 +150,10 @@ public class Pointcuts {
   }
 
   /**
-   * Это вызов метода populateContext.
+   * Это вызов метода populateDocuments — наполнения контекста документами.
    */
-  @Pointcut("isBSLLanguageServerScope() && execution(* populateContext(..))")
-  public void isPopulateContextCall() {
+  @Pointcut("isBSLLanguageServerScope() && execution(* populateDocuments(..))")
+  public void isPopulateDocumentsCall() {
     // no-op
   }
 
@@ -230,9 +230,9 @@ public class Pointcuts {
   }
 
   /**
-   * Это вызов метода removeWorkspace.
+   * Это удаление остановленной рабочей области.
    */
-  @Pointcut("isBSLLanguageServerScope() && execution(* removeWorkspace(..))")
+  @Pointcut("isBSLLanguageServerScope() && execution(* removeStoppedWorkspace(..))")
   public void isRemoveWorkspaceCall() {
     // no-op
   }

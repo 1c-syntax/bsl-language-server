@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
+import com.github._1c_syntax.bsl.languageserver.events.WorkspaceRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.jsonrpc.DiagnosticParams;
 import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
@@ -55,6 +56,7 @@ import org.eclipse.lsp4j.CompletionParams;
 import org.eclipse.lsp4j.DefinitionParams;
 import org.eclipse.lsp4j.DiagnosticCapabilities;
 import org.eclipse.lsp4j.DidChangeTextDocumentParams;
+import org.eclipse.lsp4j.DidChangeWorkspaceFoldersParams;
 import org.eclipse.lsp4j.DidCloseTextDocumentParams;
 import org.eclipse.lsp4j.DidOpenTextDocumentParams;
 import org.eclipse.lsp4j.DidSaveTextDocumentParams;
@@ -95,6 +97,7 @@ import org.eclipse.lsp4j.TypeHierarchySubtypesParams;
 import org.eclipse.lsp4j.TypeHierarchySupertypesParams;
 import org.eclipse.lsp4j.VersionedTextDocumentIdentifier;
 import org.eclipse.lsp4j.WorkspaceFolder;
+import org.eclipse.lsp4j.WorkspaceFoldersChangeEvent;
 import org.eclipse.lsp4j.jsonrpc.ResponseErrorException;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.jsonrpc.messages.ResponseErrorCode;
@@ -106,6 +109,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.event.GenericApplicationListener;
 import org.springframework.context.event.SmartApplicationListener;
 import org.springframework.core.Ordered;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
@@ -117,9 +121,11 @@ import java.time.Duration;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -127,6 +133,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.clearInvocations;
@@ -162,6 +169,8 @@ class BSLTextDocumentServiceTest {
   @Autowired
   private BSLTextDocumentService textDocumentService;
   @Autowired
+  private BSLWorkspaceService workspaceService;
+  @Autowired
   private ServerContextProvider serverContextProvider;
   @Autowired
   private ConfigurableApplicationContext applicationContext;
@@ -188,6 +197,159 @@ class BSLTextDocumentServiceTest {
 
   private static URI expectedWorkspaceUri() {
     return Absolute.uri(new File(WORKSPACE_PATH).getAbsoluteFile().toURI());
+  }
+
+  @Test
+  void opensDocumentsInFallbackWhileLastFolderIsBeingRemoved() throws IOException {
+    var workspaceUri = expectedWorkspaceUri();
+    var closing = serverContextProvider.getServerContext(workspaceUri).orElseThrow();
+    var item = getTextDocumentItem();
+    var uri = Absolute.uri(item.getUri());
+    WorkspaceContextHolder.run(workspaceUri, () -> closing.addDocument(uri));
+
+    var entered = new CompletableFuture<Void>();
+    var release = new CompletableFuture<Void>();
+    var removed = new CompletableFuture<Void>();
+    var listener = GenericApplicationListener.forEventType(WorkspaceRemovedEvent.class, event -> {
+      if (workspaceUri.equals(Absolute.uri(event.getWorkspaceUri()))) {
+        removed.complete(null);
+      }
+    });
+    applicationContext.addApplicationListener(listener);
+    var work = CompletableFuture.runAsync(() -> closing.runBackgroundWork(() -> {
+      entered.complete(null);
+      assertThat(release).succeedsWithin(Duration.ofSeconds(10));
+    }));
+
+    var folder = new WorkspaceFolder(workspaceUri.toString(), "test-workspace");
+    var change = new DidChangeWorkspaceFoldersParams(new WorkspaceFoldersChangeEvent(List.of(), List.of(folder)));
+    try {
+      assertThat(entered).succeedsWithin(Duration.ofSeconds(10));
+      workspaceService.didChangeWorkspaceFolders(change);
+      await().atMost(Duration.ofSeconds(10)).until(closing::isBackgroundWorkStopped);
+      assertThat(removed).isNotDone();
+
+      textDocumentService.didOpen(new DidOpenTextDocumentParams(item));
+      var document = serverContextProvider.getDocument(uri).orElseThrow();
+      assertThat(document.getServerContext().getWorkspaceUri()).isEqualTo(ServerContextProvider.DEFAULT_WORKSPACE_URI);
+
+      var untitled = new TextDocumentItem("untitled:DuringRemoval", "bsl", 1, "A = 0;");
+      textDocumentService.didOpen(new DidOpenTextDocumentParams(untitled));
+      var untitledDocument = serverContextProvider.getDocumentUnsafe(untitled.getUri()).orElseThrow();
+      assertThat(untitledDocument.getServerContext()).isSameAs(document.getServerContext());
+    } finally {
+      release.complete(null);
+      try {
+        assertThat(work).succeedsWithin(Duration.ofSeconds(10));
+        assertThat(removed).succeedsWithin(Duration.ofSeconds(10));
+      } finally {
+        applicationContext.removeApplicationListener(listener);
+      }
+    }
+
+    var changeParams = new DidChangeTextDocumentParams(
+      new VersionedTextDocumentIdentifier(item.getUri(), 2),
+      List.of(new TextDocumentContentChangeEvent("A = 1;"))
+    );
+    textDocumentService.didChange(changeParams);
+    await().atMost(Duration.ofSeconds(10)).untilAsserted(() ->
+      assertThat(serverContextProvider.getDocument(uri).orElseThrow().getVersion()).isEqualTo(2)
+    );
+  }
+
+  @Test
+  void workspaceRemovalWaitsForDocumentChangeAlreadyInProgress() throws IOException {
+    var item = getTextDocumentItem();
+    textDocumentService.didOpen(new DidOpenTextDocumentParams(item));
+    var document = serverContextProvider.getDocumentUnsafe(item.getUri()).orElseThrow();
+    var context = document.getServerContext();
+    var entered = new CompletableFuture<Void>();
+    var resumeChange = new CompletableFuture<Void>();
+    var listener = GenericApplicationListener.forEventType(DocumentContextContentChangedEvent.class, event -> {
+      if (event.getSource() == document && event.isContentChanged()) {
+        entered.complete(null);
+        resumeChange.orTimeout(10, TimeUnit.SECONDS).join();
+      }
+    });
+    applicationContext.addApplicationListener(listener);
+
+    var folder = new WorkspaceFolder(context.getWorkspaceUri().toString(), "test-workspace");
+    CompletableFuture<Void> removal = null;
+    try {
+      var change = new DidChangeTextDocumentParams(
+        new VersionedTextDocumentIdentifier(item.getUri(), 2),
+        List.of(new TextDocumentContentChangeEvent("A = 1;"))
+      );
+      textDocumentService.didChange(change);
+      assertThat(entered).succeedsWithin(Duration.ofSeconds(10));
+
+      var pendingRemoval = CompletableFuture.runAsync(() -> serverContextProvider.removeWorkspace(folder));
+      removal = pendingRemoval;
+      await().atMost(Duration.ofSeconds(10)).until(context::isBackgroundWorkStopped);
+      await().during(Duration.ofMillis(300)).atMost(Duration.ofSeconds(2)).until(() -> !pendingRemoval.isDone());
+    } finally {
+      resumeChange.complete(null);
+      try {
+        if (removal != null) {
+          assertThat(removal).succeedsWithin(Duration.ofSeconds(10));
+        }
+      } finally {
+        applicationContext.removeApplicationListener(listener);
+      }
+    }
+
+    assertThat(context.getDocuments()).isEmpty();
+  }
+
+  @Test
+  void workspaceRemovalWaitsUntilAnAcceptedChangeIsQueued() throws IOException {
+    var item = getTextDocumentItem();
+    textDocumentService.didOpen(new DidOpenTextDocumentParams(item));
+    var context = serverContextProvider.getDocumentUnsafe(item.getUri()).orElseThrow().getServerContext();
+
+    var copyingChanges = new CompletableFuture<Void>();
+    var resumeSubmission = new CompletableFuture<Void>();
+    var replacement = List.of(new TextDocumentContentChangeEvent("A = 2;"));
+    var changes = new AbstractList<TextDocumentContentChangeEvent>() {
+      @Override
+      public TextDocumentContentChangeEvent get(int index) {
+        copyingChanges.complete(null);
+        resumeSubmission.orTimeout(10, TimeUnit.SECONDS).join();
+        return replacement.get(index);
+      }
+
+      @Override
+      public int size() {
+        return replacement.size();
+      }
+    };
+    var notification = new DidChangeTextDocumentParams(
+      new VersionedTextDocumentIdentifier(item.getUri(), 2), changes
+    );
+    var change = CompletableFuture.runAsync(() -> textDocumentService.didChange(notification));
+    var folder = new WorkspaceFolder(context.getWorkspaceUri().toString(), "test-workspace");
+    CompletableFuture<Void> removal = null;
+    CompletableFuture<?> hover;
+    try {
+      assertThat(copyingChanges).succeedsWithin(Duration.ofSeconds(10));
+      hover = textDocumentService.hover(new HoverParams(getTextDocumentIdentifier(), new Position(0, 0)));
+      assertThat(hover).isNotDone();
+
+      var pendingRemoval = CompletableFuture.runAsync(() -> serverContextProvider.removeWorkspace(folder));
+      removal = pendingRemoval;
+
+      await().atMost(Duration.ofSeconds(10)).until(context::isBackgroundWorkStopped);
+      await().during(Duration.ofMillis(300)).atMost(Duration.ofSeconds(2)).until(() -> !pendingRemoval.isDone());
+    } finally {
+      resumeSubmission.complete(null);
+      assertThat(change).succeedsWithin(Duration.ofSeconds(10));
+      if (removal != null) {
+        assertThat(removal).succeedsWithin(Duration.ofSeconds(10));
+      }
+    }
+
+    assertThatThrownBy(() -> hover.get(10, TimeUnit.SECONDS)).hasCauseInstanceOf(CancellationException.class);
+    assertThat(context.getDocuments()).isEmpty();
   }
 
   /**
@@ -742,11 +904,6 @@ class BSLTextDocumentServiceTest {
         .isNotNull()
         .startsWith("// fresh change marker")
     );
-  }
-
-  @Test
-  void reset() {
-    textDocumentService.reset();
   }
 
   @Test
