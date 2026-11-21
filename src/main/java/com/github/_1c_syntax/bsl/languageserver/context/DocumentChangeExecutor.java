@@ -217,10 +217,10 @@ public final class DocumentChangeExecutor {
       future.complete(null);
     } else if (cancelled) {
       future.cancel(false);
+    } else {
+      return future;
     }
-    if (future.isDone()) {
-      completeWaiters();
-    }
+    completeWaiters();
 
     return future;
   }
