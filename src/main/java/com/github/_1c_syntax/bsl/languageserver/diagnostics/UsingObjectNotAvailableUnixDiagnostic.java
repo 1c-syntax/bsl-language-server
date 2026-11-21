@@ -26,7 +26,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
@@ -59,7 +58,7 @@ public class UsingObjectNotAvailableUnixDiagnostic extends AbstractVisitorDiagno
     if (isGetCOMObject(name) && documentContext.getSymbolTree().getMethodSymbol(name).isEmpty()
       && typeService.accessTargetsAt(documentContext, ctx.methodName().IDENTIFIER(), null).stream()
         .allMatch(member -> member.descriptor().standardLibrary())) {
-      if (!isFindIfBranchWithLinuxCondition(ctx)) {
+      if (!hasEnclosingPlatformCondition(ctx)) {
         diagnosticStorage.addDiagnostic(ctx, info.getMessage(name));
       }
     }
@@ -74,7 +73,7 @@ public class UsingObjectNotAvailableUnixDiagnostic extends AbstractVisitorDiagno
         .anyMatch(member -> member.descriptor().standardLibrary() && member.owner() != null
           && ("ОболочкаHTMLДокумента".equalsIgnoreCase(member.owner().qualifiedName())
           || "HTMLDocumentShell".equalsIgnoreCase(member.owner().qualifiedName())));
-      if (htmlShellCall && !isFindIfBranchWithLinuxCondition(ctx)) {
+      if (htmlShellCall && !hasEnclosingPlatformCondition(ctx)) {
         diagnosticStorage.addDiagnostic(ctx, info.getMessage(name));
       }
     }
@@ -94,8 +93,7 @@ public class UsingObjectNotAvailableUnixDiagnostic extends AbstractVisitorDiagno
   );
 
   /**
-   * Проверяем все объявления на тип COMОбъект или Почта. Если условие выше (обрабатывается вся
-   * цепочка) с проверкой ТипПлатформы = Linux не найдено в методе, то диагностика срабатывает.
+   * Проверяем создание COMОбъект или Почта, если окружающие условия не проверяют тип платформы.
    * Пример:
    * Компонента = Новый COMОбъект("System.Text.UTF8Encoding");
    */
@@ -106,25 +104,24 @@ public class UsingObjectNotAvailableUnixDiagnostic extends AbstractVisitorDiagno
       return super.visitNewExpression(ctx);
     }
     var matcherTypeName = patternNewExpression.matcher(typeNameContext.getText());
-    // ищем условие выше, пока не дойдем до null
-
-    if (matcherTypeName.find() && !isFindIfBranchWithLinuxCondition(ctx)) {
+    if (matcherTypeName.find() && !hasEnclosingPlatformCondition(ctx)) {
       diagnosticStorage.addDiagnostic(ctx, info.getMessage(typeNameContext.getText()));
     }
     return super.visitNewExpression(ctx);
   }
 
-  private static boolean isFindIfBranchWithLinuxCondition(ParserRuleContext element) {
-    ParserRuleContext ancestor = Trees.getAncestorByRuleIndex(element, BSLParser.RULE_ifBranch);
-    if (ancestor == null) {
-      return false;
+  private static boolean hasEnclosingPlatformCondition(ParserRuleContext element) {
+    for (var ancestor = element.getParent(); ancestor != null; ancestor = ancestor.getParent()) {
+      var condition = switch (ancestor) {
+        case BSLParser.IfBranchContext branch -> branch.expression();
+        case BSLParser.ElsifBranchContext branch -> branch.expression();
+        default -> null;
+      };
+      if (condition != null && patternTypePlatform.matcher(condition.getText()).find()) {
+        return true;
+      }
     }
-    String content = ancestor.getText();
-    var matcher = patternTypePlatform.matcher(content);
-    if (matcher.find()) {
-      return true;
-    }
-    return isFindIfBranchWithLinuxCondition(ancestor);
+    return false;
   }
 
 }
