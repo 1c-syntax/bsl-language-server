@@ -121,9 +121,11 @@ import java.time.Duration;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -131,6 +133,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.clearInvocations;
@@ -295,6 +298,57 @@ class BSLTextDocumentServiceTest {
       }
     }
 
+    assertThat(context.getDocuments()).isEmpty();
+  }
+
+  @Test
+  void workspaceRemovalWaitsUntilAnAcceptedChangeIsQueued() throws IOException {
+    var item = getTextDocumentItem();
+    textDocumentService.didOpen(new DidOpenTextDocumentParams(item));
+    var context = serverContextProvider.getDocumentUnsafe(item.getUri()).orElseThrow().getServerContext();
+
+    var copyingChanges = new CompletableFuture<Void>();
+    var resumeSubmission = new CompletableFuture<Void>();
+    var replacement = List.of(new TextDocumentContentChangeEvent("A = 2;"));
+    var changes = new AbstractList<TextDocumentContentChangeEvent>() {
+      @Override
+      public TextDocumentContentChangeEvent get(int index) {
+        copyingChanges.complete(null);
+        resumeSubmission.orTimeout(10, TimeUnit.SECONDS).join();
+        return replacement.get(index);
+      }
+
+      @Override
+      public int size() {
+        return replacement.size();
+      }
+    };
+    var notification = new DidChangeTextDocumentParams(
+      new VersionedTextDocumentIdentifier(item.getUri(), 2), changes
+    );
+    var change = CompletableFuture.runAsync(() -> textDocumentService.didChange(notification));
+    var folder = new WorkspaceFolder(context.getWorkspaceUri().toString(), "test-workspace");
+    CompletableFuture<Void> removal = null;
+    CompletableFuture<?> hover;
+    try {
+      assertThat(copyingChanges).succeedsWithin(Duration.ofSeconds(10));
+      hover = textDocumentService.hover(new HoverParams(getTextDocumentIdentifier(), new Position(0, 0)));
+      assertThat(hover).isNotDone();
+
+      var pendingRemoval = CompletableFuture.runAsync(() -> serverContextProvider.removeWorkspace(folder));
+      removal = pendingRemoval;
+
+      await().atMost(Duration.ofSeconds(10)).until(context::isBackgroundWorkStopped);
+      await().during(Duration.ofMillis(300)).atMost(Duration.ofSeconds(2)).until(() -> !pendingRemoval.isDone());
+    } finally {
+      resumeSubmission.complete(null);
+      assertThat(change).succeedsWithin(Duration.ofSeconds(10));
+      if (removal != null) {
+        assertThat(removal).succeedsWithin(Duration.ofSeconds(10));
+      }
+    }
+
+    assertThatThrownBy(() -> hover.get(10, TimeUnit.SECONDS)).hasCauseInstanceOf(CancellationException.class);
     assertThat(context.getDocuments()).isEmpty();
   }
 

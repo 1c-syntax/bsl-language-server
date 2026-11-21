@@ -761,10 +761,11 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       return;
     }
     var documentContext = maybeDocument.get();
-
-    var uri = documentContext.getUri();
     var serverContext = documentContext.getServerContext();
+    serverContext.runBackgroundWork(() -> enqueueDocumentChange(serverContext, documentContext.getUri(), params));
+  }
 
+  private void enqueueDocumentChange(ServerContext serverContext, URI uri, DidChangeTextDocumentParams params) {
     // Acquire read lock to ensure document is not being modified by addDocument/removeDocument
     var lock = serverContext.getDocumentLock(uri);
     lock.readLock().lock();
