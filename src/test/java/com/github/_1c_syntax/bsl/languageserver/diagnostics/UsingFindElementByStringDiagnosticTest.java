@@ -85,10 +85,15 @@ class UsingFindElementByStringDiagnosticTest extends AbstractDiagnosticTest<Usin
       """, context);
     var diagnostics = getDiagnostics(document);
     assertThat(diagnostics).hasSize(5);
-    org.assertj.core.api.Assertions.assertThat(diagnostics.stream().map(d -> d.getMessage().getLeft()).toList())
-      .filteredOn(message -> message.contains("ТочноеСоответствие")).hasSize(3);
-    org.assertj.core.api.Assertions.assertThat(diagnostics.stream().map(d -> d.getMessage().getLeft()).toList())
-      .filteredOn(message -> message.contains("дату интервала")).hasSize(2);
+    var info = diagnosticInstance.getInfo();
+    var exactMatch = info.getResourceString("missingExactMatch", "НайтиПоНаименованию");
+    var intervalDate = info.getResourceString("missingPeriod", "НайтиПоНомеру");
+    assertThat(diagnostics, true)
+      .hasMessageOnRange(exactMatch, 1, 26, 50)
+      .hasMessageOnRange(exactMatch, 2, 26, 54)
+      .hasMessageOnRange(exactMatch, 3, 26, 56)
+      .hasMessageOnRange(intervalDate, 6, 22, 42)
+      .hasMessageOnRange(intervalDate, 7, 22, 44);
   }
 
   @Test
@@ -108,7 +113,12 @@ class UsingFindElementByStringDiagnosticTest extends AbstractDiagnosticTest<Usin
         Unknown.FindByNumber(Number);
       EndProcedure
       """, context);
-    assertThat(getDiagnostics(document)).hasSize(2);
+    var diagnostics = getDiagnostics(document);
+    assertThat(diagnostics).hasSize(2);
+    var info = diagnosticInstance.getInfo();
+    assertThat(diagnostics, true)
+      .hasMessageOnRange(info.getResourceString("missingExactMatch", "FindByDescription"), 1, 23, 46)
+      .hasMessageOnRange(info.getResourceString("missingPeriod", "FindByNumber"), 2, 22, 42);
   }
 
   private void registerEnglishAlias(String ownerName, String nameRu, String nameEn) {
