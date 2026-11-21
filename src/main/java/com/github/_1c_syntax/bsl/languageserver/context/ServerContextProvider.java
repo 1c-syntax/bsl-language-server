@@ -47,6 +47,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Consumer;
 
 /**
  * Провайдер контекстов сервера для мульти-workspace окружения.
@@ -218,14 +219,33 @@ public class ServerContextProvider {
    * @param workspaceFolder информация о workspace folder
    */
   public synchronized void removeWorkspace(WorkspaceFolder workspaceFolder) {
+    removeWorkspace(workspaceFolder, false);
+  }
+
+  /**
+   * Удалить рабочую папку по уведомлению LSP, сохранив контекст для одиночных файлов.
+   *
+   * @param workspaceFolder удаляемая рабочая папка
+   */
+  public synchronized void removeWorkspaceKeepingFallback(WorkspaceFolder workspaceFolder) {
+    removeWorkspace(workspaceFolder, true);
+  }
+
+  private void removeWorkspace(WorkspaceFolder workspaceFolder, boolean keepFallback) {
     var uri = Absolute.uri(workspaceFolder.getUri());
+    var removed = contexts.get(uri);
+    if (removed == null) {
+      return;
+    }
+
+    if (keepFallback && !DEFAULT_WORKSPACE_URI.equals(uri) && contexts.size() == 1) {
+      registerDefaultWorkspace();
+    }
+
     // Новые внешние документы сразу направляются в оставшуюся рабочую область.
     repointPrimaryBeforeRemoval(uri);
-    var removed = contexts.get(uri);
-    if (removed != null) {
-      // Пока рабочая область на месте: фоновая работа может искать её в этой карте.
-      removed.stopBackgroundWork();
-    }
+    // Пока рабочая область на месте: фоновая работа может искать её в этой карте.
+    removed.stopBackgroundWork();
     removeStoppedWorkspace(workspaceFolder);
   }
 
@@ -289,14 +309,41 @@ public class ServerContextProvider {
       return Optional.of(indexed);
     }
 
-    // Fall back to URI-based lookup for new documents
-    // URI is already normalized by caller
+    return findWorkspaceForDocument(documentUri, false);
+  }
+
+  private Optional<ServerContext> findWorkspaceForDocument(URI documentUri, boolean onlyActive) {
     var documentUriString = documentUri.toString();
 
-    return contexts.keySet().stream()
-      .filter(workspaceUri -> documentUriString.startsWith(workspaceUri.toString()))
-      .findFirst()
-      .map(contexts::get);
+    return contexts.entrySet().stream()
+      .filter(entry -> documentUriString.startsWith(entry.getKey().toString()))
+      .map(Map.Entry::getValue)
+      .filter(context -> !onlyActive || !context.isBackgroundWorkStopped())
+      .findFirst();
+  }
+
+  /**
+   * Открыть документ в работающей области и удержать её до завершения открытия.
+   *
+   * @param documentUri нормализованный URI документа
+   * @param open действие открытия в выбранном контексте
+   */
+  public void runDocumentOpen(URI documentUri, Consumer<ServerContext> open) {
+    while (true) {
+      var context = Optional.ofNullable(documentIndex.get(documentUri))
+        .filter(indexed -> !indexed.isBackgroundWorkStopped())
+        .or(() -> findWorkspaceForDocument(documentUri, true))
+        .or(() -> Optional.ofNullable(primaryWorkspaceUri.get()).map(contexts::get)
+          .filter(primary -> !primary.isBackgroundWorkStopped()));
+      if (context.isEmpty()) {
+        return;
+      }
+
+      var target = context.get();
+      if (target.runBackgroundWork(() -> open.accept(target))) {
+        return;
+      }
+    }
   }
 
   /**
@@ -442,7 +489,8 @@ public class ServerContextProvider {
    */
   @EventListener
   public void onDocumentAdded(ServerContextDocumentAddedEvent event) {
-    documentIndex.put(event.getUri(), event.getSource());
+    var source = event.getSource();
+    documentIndex.compute(event.getUri(), (uri, owner) -> source.isBackgroundWorkStopped() ? owner : source);
   }
 
   /**
@@ -451,7 +499,7 @@ public class ServerContextProvider {
    */
   @EventListener
   public void onDocumentRemoved(ServerContextDocumentRemovedEvent event) {
-    documentIndex.remove(event.getUri());
+    documentIndex.remove(event.getUri(), event.getSource());
   }
 
   /**

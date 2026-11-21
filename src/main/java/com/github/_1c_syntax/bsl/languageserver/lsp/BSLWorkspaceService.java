@@ -225,7 +225,7 @@ public class BSLWorkspaceService implements WorkspaceService {
         var event = params.getEvent();
 
         // Remove old workspace folders
-        event.getRemoved().forEach(serverContextProvider::removeWorkspace);
+        event.getRemoved().forEach(serverContextProvider::removeWorkspaceKeepingFallback);
 
         // Add new workspace folders
         event.getAdded().forEach((WorkspaceFolder folder) -> {

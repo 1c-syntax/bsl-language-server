@@ -199,10 +199,13 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   @Qualifier("textDocumentServiceExecutor")
   private final AsyncTaskExecutor taskExecutor;
 
-  // Executors per document URI to serialize didChange operations and avoid race conditions
-  private final Map<URI, DocumentChangeExecutor> documentExecutors = new ConcurrentHashMap<>();
+  // Один URI может временно существовать и в удаляемой, и в оставшейся области.
+  private final Map<DocumentKey, DocumentChangeExecutor> documentExecutors = new ConcurrentHashMap<>();
 
   private boolean clientSupportsPullDiagnostics;
+
+  private record DocumentKey(ServerContext context, URI uri) {
+  }
 
   @PreDestroy
   private void onDestroy() {
@@ -709,34 +712,32 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
   public void didOpen(DidOpenTextDocumentParams params) {
     var textDocumentItem = params.getTextDocument();
     var uri = Absolute.uri(textDocumentItem.getUri());
-    var serverContext = getContextForDocument(textDocumentItem.getUri());
-    var lock = serverContext.getDocumentLock(uri);
-    lock.writeLock().lock();
 
-    try {
-      WorkspaceContextHolder.run(serverContext.getWorkspaceUri(), () -> {
-        var documentContext = serverContext.addDocument(uri);
+    serverContextProvider.runDocumentOpen(uri, serverContext -> {
+      var lock = serverContext.getDocumentLock(uri).writeLock();
+      lock.lock();
+      try {
+        WorkspaceContextHolder.run(serverContext.getWorkspaceUri(), () -> {
+          var documentContext = serverContext.addDocument(uri);
+          documentExecutors.computeIfAbsent(new DocumentKey(serverContext, uri), key ->
+            new DocumentChangeExecutor(
+              documentContext,
+              BSLTextDocumentService::applyTextDocumentChanges,
+              this::processDocumentChange,
+              "doc-" + documentContext.getUri() + "-"
+            )
+          );
 
-        // Create single-threaded executor for this document to serialize didChange operations
-        documentExecutors.computeIfAbsent(uri, key ->
-          new DocumentChangeExecutor(
-            documentContext,
-            BSLTextDocumentService::applyTextDocumentChanges,
-            this::processDocumentChange,
-            "doc-" + documentContext.getUri() + "-"
-          )
-        );
+          serverContext.openDocument(documentContext, textDocumentItem.getText(), textDocumentItem.getVersion());
 
-        serverContext.openDocument(documentContext, textDocumentItem.getText(), textDocumentItem.getVersion());
-
-        if (configuration.getDiagnosticsOptions().getComputeTrigger() != ComputeTrigger.NEVER) {
-          validate(documentContext);
-        }
-      });
-    } finally {
-      lock.writeLock().unlock();
-    }
-
+          if (configuration.getDiagnosticsOptions().getComputeTrigger() != ComputeTrigger.NEVER) {
+            validate(documentContext);
+          }
+        });
+      } finally {
+        lock.unlock();
+      }
+    });
   }
 
   @Override
@@ -749,14 +750,14 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     var documentContext = maybeDocument.get();
 
     var uri = documentContext.getUri();
-    var serverContext = getContextForDocument(params.getTextDocument().getUri());
+    var serverContext = documentContext.getServerContext();
 
     // Acquire read lock to ensure document is not being modified by addDocument/removeDocument
     var lock = serverContext.getDocumentLock(uri);
     lock.readLock().lock();
     try {
       // Get executor for this document
-      var executor = documentExecutors.get(uri);
+      var executor = documentExecutors.get(new DocumentKey(serverContext, uri));
       if (executor == null) {
         // Document not opened or already closed
         LOGGER.warn("Received didChange, but document executor is not created yet. uri={}", uri);
@@ -786,10 +787,10 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     var documentContext = maybeDocument.get();
 
     var uri = documentContext.getUri();
-    var serverContext = getContextForDocument(params.getTextDocument().getUri());
+    var serverContext = documentContext.getServerContext();
 
     // Remove and shutdown the executor for this document, waiting for all pending changes
-    var docExecutor = documentExecutors.remove(uri);
+    var docExecutor = documentExecutors.remove(new DocumentKey(serverContext, uri));
     if (docExecutor != null) {
       docExecutor.shutdown();
       try {
@@ -992,7 +993,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
    */
   @EventListener
   public void onDocumentRemoved(ServerContextDocumentRemovedEvent event) {
-    var docExecutor = documentExecutors.remove(event.getUri());
+    var docExecutor = documentExecutors.remove(new DocumentKey(event.getSource(), event.getUri()));
     if (docExecutor != null) {
       docExecutor.shutdown();
     }
@@ -1105,7 +1106,11 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     String newContent,
     Integer version
   ) {
-    var serverContext = getContextForDocument(documentContext.getUri().toString());
+    var serverContext = documentContext.getServerContext();
+    if (serverContext.isBackgroundWorkStopped()) {
+      return;
+    }
+
     serverContext.rebuildDocument(
       documentContext,
       newContent,
@@ -1135,7 +1140,8 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     DocumentContext documentContext,
     Supplier<T> supplier
   ) {
-    var executor = documentExecutors.get(documentContext.getUri());
+    var serverContext = documentContext.getServerContext();
+    var executor = documentExecutors.get(new DocumentKey(serverContext, documentContext.getUri()));
     CompletableFuture<Void> waitFuture;
     if (executor != null) {
       waitFuture = executor.awaitLatest();
@@ -1148,7 +1154,6 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
         taskExecutor,
         cancelChecker -> {
           cancelChecker.checkCanceled();
-          var serverContext = getContextForDocument(documentContext.getUri().toString());
           var lock = serverContext.getDocumentLock(documentContext.getUri());
           lock.readLock().lock();
           try (var workspaceContext = WorkspaceContextHolder.forUri(serverContext.getWorkspaceUri())) {
@@ -1193,14 +1198,4 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     ));
   }
 
-  /**
-   * Получить контекст сервера для документа.
-   *
-   * @param uriString строковое представление URI документа
-   * @return контекст сервера
-   */
-  private ServerContext getContextForDocument(String uriString) {
-    var uri = Absolute.uri(uriString);
-    return serverContextProvider.resolveContextForDocument(uri);
-  }
 }

@@ -41,7 +41,11 @@ final class WorkspaceBackgroundWork {
   }
 
   boolean run(Runnable work) {
-    lock.readLock().lock();
+    // Блокировку на запись берёт только остановка. Пока она идёт, новый вызов не допускается.
+    if (stopped || !lock.readLock().tryLock()) {
+      return false;
+    }
+
     try {
       if (stopped) {
         return false;

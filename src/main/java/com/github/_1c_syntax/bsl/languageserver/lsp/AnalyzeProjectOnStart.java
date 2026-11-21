@@ -141,7 +141,10 @@ public class AnalyzeProjectOnStart {
         return;
       }
       serverContext.rebuildDocument(document);
-      diagnosticProvider.computeAndPublishDiagnostics(document);
+
+      if (!cancelled.get() && !serverContext.isBackgroundWorkStopped()) {
+        diagnosticProvider.computeAndPublishDiagnostics(document);
+      }
       serverContext.tryClearDocument(document);
     } finally {
       lock.unlock();
