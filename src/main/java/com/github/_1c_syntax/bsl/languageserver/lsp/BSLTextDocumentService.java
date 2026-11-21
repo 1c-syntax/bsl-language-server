@@ -149,6 +149,7 @@ import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -204,7 +205,19 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   private boolean clientSupportsPullDiagnostics;
 
-  private record DocumentKey(ServerContext context, URI uri) {
+  /**
+   * Ключ упорядочивается по URI документа, затем по URI рабочей области.
+   * После повторной регистрации той же области порядок может считать ключи равными.
+   * В {@code equals} экземпляр контекста отличает такие ключи.
+   */
+  private record DocumentKey(ServerContext context, URI uri) implements Comparable<DocumentKey> {
+    private static final Comparator<DocumentKey> ORDER = Comparator.comparing(DocumentKey::uri)
+      .thenComparing((DocumentKey key) -> key.context().getWorkspaceUri(), Comparator.nullsFirst(Comparator.naturalOrder()));
+
+    @Override
+    public int compareTo(DocumentKey other) {
+      return ORDER.compare(this, other);
+    }
   }
 
   @PreDestroy
@@ -713,7 +726,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     var textDocumentItem = params.getTextDocument();
     var uri = Absolute.uri(textDocumentItem.getUri());
 
-    serverContextProvider.runDocumentOpen(uri, serverContext -> {
+    serverContextProvider.runDocumentOpen(uri, (ServerContext serverContext) -> {
       var lock = serverContext.getDocumentLock(uri).writeLock();
       lock.lock();
       try {
