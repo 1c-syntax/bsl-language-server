@@ -91,15 +91,27 @@ class UsingObjectNotAvailableUnixDiagnosticTest extends AbstractDiagnosticTest<U
         ИначеЕсли ЭтоWindowsКлиент() Тогда
           COM = GetCOMObject("", "Excel.Application");
         КонецЕсли;
+        Если ПолучитьCOMОбъект("", "WindowsInstaller.Installer") = Неопределено Тогда
+          Возврат;
+        ИначеЕсли ПолучитьCOMОбъект("", "WindowsInstaller.Installer") = Неопределено Тогда
+          Возврат;
+        КонецЕсли;
+        Если ЭтоWindowsКлиент() Тогда
+          Если GetCOMObject("", "Excel.Application") = Неопределено Тогда
+            Возврат;
+          КонецЕсли;
+        КонецЕсли;
         Неизвестный.ПолучитьCOMОбъект();
       КонецПроцедуры
       """, context);
     var diagnostics = getDiagnostics(document);
-    assertThat(diagnostics).hasSize(3);
+    assertThat(diagnostics).hasSize(5);
     assertThat(diagnostics, true)
       .hasRange(1, 8, 50)
       .hasRange(2, 8, 45)
-      .hasRange(7, 10, 61);
+      .hasRange(7, 10, 61)
+      .hasRange(11, 7, 58)
+      .hasRange(13, 12, 63);
   }
 
   @Test

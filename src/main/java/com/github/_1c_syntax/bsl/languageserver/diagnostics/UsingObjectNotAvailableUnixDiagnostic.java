@@ -111,10 +111,10 @@ public class UsingObjectNotAvailableUnixDiagnostic extends AbstractVisitorDiagno
   }
 
   private static boolean hasEnclosingPlatformCondition(ParserRuleContext element) {
-    for (var ancestor = element.getParent(); ancestor != null; ancestor = ancestor.getParent()) {
-      var condition = switch (ancestor) {
-        case BSLParser.IfBranchContext branch -> branch.expression();
-        case BSLParser.ElsifBranchContext branch -> branch.expression();
+    for (var child = element; child.getParent() != null; child = child.getParent()) {
+      var condition = switch (child.getParent()) {
+        case BSLParser.IfBranchContext branch -> child == branch.codeBlock() ? branch.expression() : null;
+        case BSLParser.ElsifBranchContext branch -> child == branch.codeBlock() ? branch.expression() : null;
         default -> null;
       };
       if (condition != null && patternTypePlatform.matcher(condition.getText()).find()) {
