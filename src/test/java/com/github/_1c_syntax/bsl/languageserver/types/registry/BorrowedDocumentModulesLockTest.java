@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextSymbolTreeRebuiltEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
@@ -41,6 +42,8 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.core.task.AsyncTaskExecutor;
+import org.springframework.test.util.AopTestUtils;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.nio.file.Files;
@@ -48,8 +51,11 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -84,6 +90,9 @@ class BorrowedDocumentModulesLockTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private ConfigurableApplicationContext applicationContext;
+
+  @Autowired
+  private ConfigurationModuleMembersProvider membersProvider;
 
   @Autowired
   private ReferenceIndex referenceIndex;
@@ -172,18 +181,35 @@ class BorrowedDocumentModulesLockTest extends AbstractServerContextAwareTest {
     var main = document(MAIN_OBJECT_MODULE);
     var extension = document(EXTENSION_OBJECT_MODULE);
     var extensionContent = extensionAssigningLateVariable();
-    buildExtensionWhileMainModuleRebuildsDeclaringLateVariable(main, extension, extensionContent);
+    // Перепроверки соседних модулей откладываются: дерево должно исправить само перечитывание.
+    var deferred = new CopyOnWriteArrayList<Runnable>();
+    ConfigurationModuleMembersProvider provider = AopTestUtils.getUltimateTargetObject(membersProvider);
+    var refreshExecutor = ReflectionTestUtils.getField(provider, "coSourceRefreshExecutor");
+    ReflectionTestUtils.setField(provider, "coSourceRefreshExecutor", deferringExecutor(deferred));
+    try {
+      buildExtensionWhileMainModuleRebuildsDeclaringLateVariable(main, extension, extensionContent);
 
-    // when: модуль расширения перечитан с тем же текстом, как во втором проходе analyze.
-    context.rebuildDocument(extension, extensionContent, 2);
+      // when: модуль расширения перечитан с тем же текстом, как во втором проходе analyze.
+      context.rebuildDocument(extension, extensionContent, 2);
 
-    // then: присваивание признано реквизитом типа — по дереву модуля основной конфигурации,
-    // достроенному после первого построения расширения, — и индекс ссылок собран по новому
-    // дереву. Дерево могла перестроить и перепроверка, начатая правкой основного модуля:
-    // тогда индекс заполняет её поток, и результат дожидается.
-    assertThat(extension.getSymbolTree().getBasis().bareSelfProperties()).contains(LATE_VARIABLE);
-    await().pollInSameThread().atMost(Duration.ofSeconds(30)).untilAsserted(() ->
-      assertLateVariableRefersToMainModule(extension, extensionContent));
+      // then: присваивание признано реквизитом типа — по дереву модуля основной конфигурации,
+      // достроенному после первого построения расширения, — и индекс ссылок собран по новому
+      // дереву, хотя ни одна перепроверка ещё не выполнялась.
+      assertThat(deferred).isNotEmpty();
+      assertThat(extension.getSymbolTree().getBasis().bareSelfProperties()).contains(LATE_VARIABLE);
+      assertLateVariableRefersToMainModule(extension, extensionContent);
+
+      // when: отложенные перепроверки выполнены — и те, что они начинают сами.
+      while (!deferred.isEmpty()) {
+        deferred.removeFirst().run();
+      }
+
+      // then: дерево перечитанного модуля годно, и перепроверка его не испортила.
+      assertThat(extension.getSymbolTree().getBasis().bareSelfProperties()).contains(LATE_VARIABLE);
+      assertLateVariableRefersToMainModule(extension, extensionContent);
+    } finally {
+      ReflectionTestUtils.setField(provider, "coSourceRefreshExecutor", refreshExecutor);
+    }
   }
 
   @Test
@@ -257,6 +283,61 @@ class BorrowedDocumentModulesLockTest extends AbstractServerContextAwareTest {
           .map(DocumentContextContentChangedEvent.class::cast)
           .noneMatch(DocumentContextContentChangedEvent::isContentChanged);
       });
+    }
+  }
+
+  @Test
+  void refreshOfReplacedModuleLeavesItsReplacementAlone() throws Exception {
+    // given: модуль расширения разобран при наполнении и освобождён; его освобождение после
+    // перепроверки отслеживается по экземпляру.
+    initServerContext(FIXTURE);
+    var main = document(MAIN_OBJECT_MODULE);
+    var extension = document(EXTENSION_OBJECT_MODULE);
+    var extensionUri = extension.getUri();
+    var staleRefreshCleared = new CountDownLatch(1);
+    ApplicationListener<ServerContextDocumentClearedEvent> listener = (ServerContextDocumentClearedEvent event) -> {
+      if (event.getDocumentContext() == extension) {
+        staleRefreshCleared.countDown();
+      }
+    };
+    applicationContext.addApplicationListener(listener);
+    var mainContent = "Перем " + LATE_VARIABLE + " Экспорт;\n"
+      + Files.readString(FIXTURE.resolve(MAIN_OBJECT_MODULE));
+    var extensionLock = computeLock(extension);
+    Future<DocumentContext> replacement;
+    try {
+      extensionLock.lock();
+      try {
+        // when: в основном модуле объявили переменную, и перепроверка модуля расширения уже
+        // убедилась, что он действующий, но ждёт построения его дерева.
+        context.rebuildDocument(main, mainContent, 1);
+        await().atMost(Duration.ofSeconds(30)).until(extensionLock::hasQueuedThreads);
+
+        // when: тем временем файл модуля расширения удалили и завели заново — с тем же URI, но
+        // другим экземпляром, — и перечитали.
+        replacement = executor.submit(() -> {
+          context.removeDocument(extensionUri);
+          var fresh = context.addDocument(extensionUri);
+          context.rebuildDocument(fresh);
+          return fresh;
+        });
+        try {
+          replacement.get(2, TimeUnit.SECONDS);
+        } catch (TimeoutException e) {
+          // удаление дожидается перепроверки
+        }
+      } finally {
+        extensionLock.unlock();
+      }
+      var fresh = replacement.get(30, TimeUnit.SECONDS);
+      assertThat(staleRefreshCleared.await(30, TimeUnit.SECONDS)).isTrue();
+
+      // then: перепроверка прежнего экземпляра не тронула новый: он действующий и разобран.
+      assertThat(fresh).isNotSameAs(extension);
+      assertThat(context.getDocument(extensionUri)).isSameAs(fresh);
+      assertThat(context.getDocumentState(fresh)).isEqualTo(DocumentState.WITH_CONTENT);
+    } finally {
+      applicationContext.removeApplicationListener(listener);
     }
   }
 
@@ -371,6 +452,11 @@ class BorrowedDocumentModulesLockTest extends AbstractServerContextAwareTest {
     };
     applicationContext.addApplicationListener(listener);
     return () -> applicationContext.removeApplicationListener(listener);
+  }
+
+  /** Исполнитель, который не выполняет задачи, а складывает их — их выполняет тест. */
+  private static AsyncTaskExecutor deferringExecutor(List<Runnable> deferred) {
+    return deferred::add;
   }
 
   /** Отметка о событии перестройки дерева, опубликованном без блокировки документа. */

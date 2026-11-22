@@ -419,19 +419,30 @@ public class ServerContext {
    * Удалить документ из контекста.
    * <p>
    * URI должен быть уже нормализован.
+   * <p>
+   * Удаление идёт под блокировкой документа на запись: писатель, который уже работает с
+   * документом под ней, доработает с действующим экземпляром, а не запишет состояние в
+   * экземпляр, заведённый по тому же URI после удаления. Сама блокировка снимается с URI,
+   * пока удаление её держит, поэтому вызывающий поток не должен держать её на чтение.
    *
    * @param uri нормализованный URI документа
    */
   public void removeDocument(URI uri) {
-    var documentContext = documents.get(uri);
-    if (openedDocuments.contains(documentContext)) {
-      throw new IllegalStateException("Document %s is opened".formatted(uri));
-    }
+    var lock = getDocumentLock(uri).writeLock();
+    lock.lock();
+    try {
+      var documentContext = documents.get(uri);
+      if (openedDocuments.contains(documentContext)) {
+        throw new IllegalStateException("Document %s is opened".formatted(uri));
+      }
 
-    removeDocumentMdoRefByUri(uri);
-    states.remove(documentContext);
-    documents.remove(uri);
-    documentLocks.remove(uri);
+      removeDocumentMdoRefByUri(uri);
+      states.remove(documentContext);
+      documents.remove(uri);
+      documentLocks.remove(uri);
+    } finally {
+      lock.unlock();
+    }
   }
 
   /**
