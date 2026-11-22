@@ -37,36 +37,28 @@ import java.util.List;
 /** Собирает диапазоны обращений к аннотациям и параметрам, не удерживая узлы AST в результате. */
 final class AnnotationPositionCollector extends BSLParserBaseVisitor<Void> {
   private final List<AnnotationPosition> positions = new ArrayList<>();
-  private int annotationDepth;
+  private final BSLParserBaseVisitor<Void> annotationTerminals = new BSLParserBaseVisitor<>() {
+    @Override
+    public Void visitTerminal(TerminalNode terminal) {
+      if (terminal.getParent() instanceof ParserRuleContext parent) {
+        var position = positionOf(terminal, parent);
+        if (position != null) {
+          positions.add(position);
+        }
+      }
+      return null;
+    }
+  };
 
-  private AnnotationPositionCollector() {
-  }
-
-  static List<AnnotationPosition> collect(ParseTree root) {
-    var collector = new AnnotationPositionCollector();
-    collector.visit(root);
-    return collector.positions;
+  List<AnnotationPosition> collect(ParseTree root) {
+    positions.clear();
+    visit(root);
+    return List.copyOf(positions);
   }
 
   @Override
   public Void visitAnnotation(BSLParser.AnnotationContext annotation) {
-    annotationDepth++;
-    try {
-      return visitChildren(annotation);
-    } finally {
-      annotationDepth--;
-    }
-  }
-
-  @Override
-  public Void visitTerminal(TerminalNode terminal) {
-    if (annotationDepth > 0 && terminal.getParent() instanceof ParserRuleContext parent) {
-      var position = positionOf(terminal, parent);
-      if (position != null) {
-        positions.add(position);
-      }
-    }
-    return null;
+    return annotationTerminals.visitChildren(annotation);
   }
 
   private static @Nullable AnnotationPosition positionOf(TerminalNode terminal, ParserRuleContext parent) {

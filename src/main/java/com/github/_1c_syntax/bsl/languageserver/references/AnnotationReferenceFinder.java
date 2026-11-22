@@ -121,7 +121,8 @@ public class AnnotationReferenceFinder implements ReferenceFinder {
 
   private void indexPositions(DocumentContext document) {
     if (document.getFileType() == FileType.OS) {
-      annotationPositionRepository.replace(document, AnnotationPositionCollector.collect(document.getAst()));
+      var collector = new AnnotationPositionCollector();
+      annotationPositionRepository.replace(document, collector.collect(document.getAst()));
     }
   }
 
