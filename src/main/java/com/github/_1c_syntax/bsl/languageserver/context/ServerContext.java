@@ -65,6 +65,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
@@ -216,14 +217,13 @@ public class ServerContext {
     // подготовки её не знает.
     WorkspaceContextHolder.run(workspaceUri, () -> {
       for (var documentContext : List.copyOf(createdWhilePreparing)) {
-        var lock = getDocumentLock(documentContext.getUri());
-        lock.writeLock().lock();
+        var lock = lockDocumentForWrite(documentContext.getUri());
         try {
           if (createdWhilePreparing.remove(documentContext)) {
             rebindDocument(documentContext);
           }
         } finally {
-          lock.writeLock().unlock();
+          lock.unlock();
         }
       }
     });
@@ -280,8 +280,7 @@ public class ServerContext {
           workDoneProgressReporter.tick();
 
           var uri = Absolute.uri(file.toURI());
-          var lock = getDocumentLock(uri);
-          lock.writeLock().lock();
+          var lock = lockDocumentForWrite(uri);
           try {
             var documentContext = documents.get(uri);
             if (documentContext == null) {
@@ -291,7 +290,7 @@ public class ServerContext {
               tryClearDocument(documentContext);
             }
           } finally {
-            lock.writeLock().unlock();
+            lock.unlock();
           }
         })
       ).get();
@@ -402,8 +401,7 @@ public class ServerContext {
    * @return Контекст документа
    */
   public DocumentContext addDocument(URI uri) {
-    var lock = getDocumentLock(uri);
-    lock.writeLock().lock();
+    var lock = lockDocumentForWrite(uri);
     try {
       var documentContext = documents.get(uri);
       if (documentContext == null) {
@@ -411,7 +409,7 @@ public class ServerContext {
       }
       return documentContext;
     } finally {
-      lock.writeLock().unlock();
+      lock.unlock();
     }
   }
 
@@ -428,8 +426,7 @@ public class ServerContext {
    * @param uri нормализованный URI документа
    */
   public void removeDocument(URI uri) {
-    var lock = getDocumentLock(uri).writeLock();
-    lock.lock();
+    var lock = lockDocumentForWrite(uri);
     try {
       var documentContext = documents.get(uri);
       if (openedDocuments.contains(documentContext)) {
@@ -506,6 +503,28 @@ public class ServerContext {
    */
   public ReadWriteLock getDocumentLock(URI uri) {
     return documentLocks.computeIfAbsent(uri, k -> new ReentrantReadWriteLock());
+  }
+
+  /**
+   * Взять блокировку документа на запись — ту, что действует для URI.
+   * <p>
+   * Удаление документа снимает его блокировку с URI. Поток, который дождался её уже после
+   * этого, держал бы блокировку, которую остальные писатели не видят: они берут новую, заведённую
+   * для URI заново. Такой поток отпускает снятую блокировку и берёт действующую.
+   *
+   * @param uri URI документа.
+   * @return взятая блокировка на запись; отпускает её вызывающий.
+   */
+  private Lock lockDocumentForWrite(URI uri) {
+    while (true) {
+      var documentLock = getDocumentLock(uri);
+      var writeLock = documentLock.writeLock();
+      writeLock.lock();
+      if (documentLocks.get(uri) == documentLock) {
+        return writeLock;
+      }
+      writeLock.unlock();
+    }
   }
 
   /**
@@ -615,8 +634,7 @@ public class ServerContext {
       return false;
     }
 
-    var lock = getDocumentLock(documentContext.getUri()).writeLock();
-    lock.lock();
+    var lock = lockDocumentForWrite(documentContext.getUri());
     try {
       // Документ могли открыть, пока очистка дожидалась активных читателей.
       if (openedDocuments.contains(documentContext)) {
@@ -640,8 +658,7 @@ public class ServerContext {
    * @param documentContext документ, который необходимо закрыть.
    */
   public void closeDocument(DocumentContext documentContext) {
-    var lock = getDocumentLock(documentContext.getUri()).writeLock();
-    lock.lock();
+    var lock = lockDocumentForWrite(documentContext.getUri());
     try {
       openedDocuments.remove(documentContext);
       states.put(documentContext, DocumentState.WITHOUT_CONTENT);
@@ -779,8 +796,7 @@ public class ServerContext {
    */
   public boolean rebindDocument(DocumentContext documentContext) {
     var uri = documentContext.getUri();
-    var lock = getDocumentLock(uri);
-    lock.writeLock().lock();
+    var lock = lockDocumentForWrite(uri);
     try {
       if (documents.get(uri) != documentContext) {
         return false;
@@ -790,7 +806,7 @@ public class ServerContext {
       addMdoRefByUri(uri, documentContext);
       return rebuilt;
     } finally {
-      lock.writeLock().unlock();
+      lock.unlock();
     }
   }
 
@@ -815,8 +831,7 @@ public class ServerContext {
    */
   public boolean refreshSymbolTree(DocumentContext documentContext) {
     var uri = documentContext.getUri();
-    var lock = getDocumentLock(uri);
-    lock.writeLock().lock();
+    var lock = lockDocumentForWrite(uri);
     try {
       if (documents.get(uri) != documentContext) {
         return false;
@@ -830,7 +845,7 @@ public class ServerContext {
       }
       return false;
     } finally {
-      lock.writeLock().unlock();
+      lock.unlock();
     }
   }
 
