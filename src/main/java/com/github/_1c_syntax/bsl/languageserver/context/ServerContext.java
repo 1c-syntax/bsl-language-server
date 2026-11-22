@@ -606,11 +606,14 @@ public class ServerContext {
 
     if (documentContext.rebuildFromFileSystem()) {
       states.put(documentContext, DocumentState.WITH_CONTENT);
+      rebuildSymbolTreeIfStale(documentContext);
     }
   }
 
   /**
    * Перестроить документ, используя новое содержимое.
+   * <p>
+   * Если текст прежний, а дерево символов устарело, оно строится заново по тому же тексту.
    *
    * @param documentContext документ, который необходимо перестроить.
    * @param content         новое содержимое документа.
@@ -619,6 +622,14 @@ public class ServerContext {
   public void rebuildDocument(DocumentContext documentContext, String content, Integer version) {
     documentContext.rebuild(content, version);
     states.put(documentContext, DocumentState.WITH_CONTENT);
+    rebuildSymbolTreeIfStale(documentContext);
+  }
+
+  private static void rebuildSymbolTreeIfStale(DocumentContext documentContext) {
+    // После правки текста дерево построено разбором заново и устареть не успело.
+    if (!documentContext.isContentChangedOnLastRebuild() && documentContext.isSymbolTreeStale()) {
+      documentContext.rebuildSymbolTree();
+    }
   }
 
   /**
@@ -807,7 +818,7 @@ public class ServerContext {
   /**
    * Построить дерево символов документа заново, если оно устарело без правки его текста:
    * классификаторы отвечают о методах и голых присваиваниях документа иначе, чем при
-   * построении дерева ({@link DocumentContext#refreshSymbolTree()}).
+   * построении дерева ({@link DocumentContext#isSymbolTreeStale()}).
    * <p>
    * У документа с текстом дерево строится по уже разобранному тексту. Документ, текст
    * которого освобождён, перечитывается из файла — разбор сам построит устаревшее дерево
@@ -829,13 +840,15 @@ public class ServerContext {
       if (documents.get(uri) != documentContext) {
         return false;
       }
+      if (!documentContext.isSymbolTreeStale()) {
+        return false;
+      }
       if (states.get(documentContext) == DocumentState.WITH_CONTENT) {
-        return documentContext.refreshSymbolTree();
+        documentContext.rebuildSymbolTree();
+        return true;
       }
-      if (documentContext.isSymbolTreeStale()) {
-        rebuildDocument(documentContext);
-        tryClearDocument(documentContext);
-      }
+      rebuildDocument(documentContext);
+      tryClearDocument(documentContext);
       return false;
     });
   }

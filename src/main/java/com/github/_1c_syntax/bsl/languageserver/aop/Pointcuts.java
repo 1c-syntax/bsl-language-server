@@ -142,10 +142,10 @@ public class Pointcuts {
   }
 
   /**
-   * Это вызов метода refreshSymbolTree.
+   * Это вызов метода rebuildSymbolTree.
    */
-  @Pointcut("isBSLLanguageServerScope() && execution(* refreshSymbolTree(..))")
-  public void isRefreshSymbolTreeCall() {
+  @Pointcut("isBSLLanguageServerScope() && execution(* rebuildSymbolTree(..))")
+  public void isRebuildSymbolTreeCall() {
     // no-op
   }
 

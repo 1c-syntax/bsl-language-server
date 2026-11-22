@@ -100,10 +100,12 @@ Spring `ApplicationEvent`: `ServerContextDocumentAdded/Removed/Closed/ClearedEve
 том же порядке, что и на правку; индексы на `AbstractDocumentLifecycleClearableIndex` сбрасывают
 по нему записи документа. Причины перестройки:
 - **дерево устарело** — его вид зависит от ответов классификаторов (`SelfMemberClassifier`,
-  `EventHandlerClassifier`), а те — от членов чужих модулей. Перечитывание того же текста такое
-  дерево строит заново (`SymbolTreeComputer.isUpToDate`): `DocumentContextContentChangedEvent`
-  уходит с `isContentChanged() == false`, а следом — событие перестройки
-  (`isSymbolTreeRebuiltOnLastRebuild()`). Если перечитывать документ некому, его дерево
+  `EventHandlerClassifier`), а те — от членов чужих модулей. Перечитывание того же текста
+  (`ServerContext.rebuildDocument`) такое дерево строит заново (`SymbolTreeComputer.isUpToDate`):
+  `DocumentContextContentChangedEvent` уходит с `isContentChanged() == false`, а следом —
+  событие перестройки. Сам `DocumentContext.rebuild` дерево по прежнему тексту не трогает:
+  устарело ли оно, решает `ServerContext` (`isSymbolTreeStale`) и перестраивает его
+  мутатором `rebuildSymbolTree`, на который и навешено событие. Если перечитывать документ некому, его дерево
   перепроверяет `ServerContext.refreshSymbolTree` — так `ConfigurationModuleMembersProvider` после
   изменения членов модуля перепроверяет другие модули того же типа (объект в основной
   конфигурации и в расширении);

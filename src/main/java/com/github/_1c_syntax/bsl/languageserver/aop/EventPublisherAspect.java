@@ -144,10 +144,6 @@ public class EventPublisherAspect {
     var documentContext = (DocumentContext) joinPoint.getThis();
     publishEvent(new DocumentContextContentChangedEvent(
       documentContext, documentContext.isContentChangedOnLastRebuild()));
-    // Тот же текст, но дерево построено заново: символы не равны прежним.
-    if (documentContext.isSymbolTreeRebuiltOnLastRebuild()) {
-      publishEvent(new DocumentContextSymbolTreeRebuiltEvent(documentContext));
-    }
   }
 
   @AfterReturning(
@@ -162,17 +158,9 @@ public class EventPublisherAspect {
     }
   }
 
-  // Перехватывается метод документа, а не ServerContext.refreshSymbolTree: он возвращается, пока
-  // вызывающий ещё держит блокировку документа на запись, и слушатели, читающие дерево разбора,
-  // успевают отработать раньше, чем другой писатель освободит документ.
-  @AfterReturning(
-    pointcut = "Pointcuts.isDocumentContext() && Pointcuts.isRefreshSymbolTreeCall()",
-    returning = "symbolTreeRebuilt"
-  )
-  public void documentContextSymbolTreeRefreshed(JoinPoint joinPoint, boolean symbolTreeRebuilt) {
-    if (symbolTreeRebuilt) {
-      publishEvent(new DocumentContextSymbolTreeRebuiltEvent((DocumentContext) joinPoint.getThis()));
-    }
+  @AfterReturning("Pointcuts.isDocumentContext() && Pointcuts.isRebuildSymbolTreeCall()")
+  public void documentContextSymbolTreeRebuilt(JoinPoint joinPoint) {
+    publishEvent(new DocumentContextSymbolTreeRebuiltEvent((DocumentContext) joinPoint.getThis()));
   }
 
   @AfterReturning("Pointcuts.isServerContext() && Pointcuts.isPopulateContextCall() && args(files)")
