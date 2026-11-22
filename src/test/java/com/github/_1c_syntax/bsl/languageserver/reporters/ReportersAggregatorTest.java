@@ -45,6 +45,7 @@ import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.Executors;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -126,7 +127,8 @@ class ReportersAggregatorTest {
     }
 
     private ReportersAggregator aggregatorWith(DiagnosticReporter... reporters) {
-      var localAggregator = new ReportersAggregator();
+      // запись не участвует: исполнитель не получит задач и не создаст потоков
+      var localAggregator = new ReportersAggregator(Executors.newSingleThreadExecutor());
       ReflectionTestUtils.setField(localAggregator, "filteredReporters", List.of(reporters));
       return localAggregator;
     }

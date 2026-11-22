@@ -34,6 +34,7 @@ import org.springframework.scheduling.annotation.EnableAsync;
 import java.net.URI;
 import java.util.Optional;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -165,6 +166,17 @@ public class ExecutorConfiguration {
   @WorkspaceScope(proxyMode = ScopedProxyMode.INTERFACES)
   public ExecutorService cliExecutor() {
     return createWorkspaceForkJoinPool("cli-");
+  }
+
+  // reportWriteExecutor — ровно один поток: задачи записи отчётов исполняются по порядку, и
+  // репортёры пишут в свои генераторы без синхронизации. Очередь не ограничена: постановка
+  // задачи не ждёт записи. Контекст workspace постановщика несёт ContextPropagatingExecutorService
+  // (per-task).
+  @Bean(destroyMethod = "shutdown")
+  public ExecutorService reportWriteExecutor() {
+    return new ContextPropagatingExecutorService(
+      Executors.newSingleThreadExecutor(new NamedThreadFactory("report-write-"))
+    );
   }
 
   private static AsyncTaskExecutor createVirtualThreadExecutor(

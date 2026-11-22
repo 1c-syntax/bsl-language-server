@@ -25,12 +25,13 @@ import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import org.jspecify.annotations.Nullable;
 
 import java.util.List;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Формирование отчётов активными репортёрами от начала анализа до его завершения.
  * <p>
  * Результаты передаются по одному через {@link #accept(FileInfo)} и раздаются всем репортёрам.
- * Запись выполняется в отдельном потоке: вызывающий не ждёт ввода-вывода, а {@link FileInfo}
+ * Запись выполняется однопоточным исполнителем: вызывающий не ждёт ввода-вывода, а {@link FileInfo}
  * освобождается сразу после того, как его записали все репортёры.
  * <p>
  * Отчёты считаются полными только после {@link #commit()}. Закрытие без фиксации — как и сбой
@@ -43,9 +44,13 @@ public final class ReportSession implements AutoCloseable {
 
   private boolean committed;
 
-  ReportSession(List<DiagnosticReporter> reporters) {
+  /**
+   * @param reporters     активные репортёры
+   * @param writeExecutor однопоточный исполнитель задач записи; задачи исполняются по порядку
+   */
+  ReportSession(List<DiagnosticReporter> reporters, ExecutorService writeExecutor) {
     this.reporters = List.copyOf(reporters);
-    this.writeQueue = new ReportWriteQueue("reporters");
+    this.writeQueue = new ReportWriteQueue(writeExecutor);
   }
 
   /**

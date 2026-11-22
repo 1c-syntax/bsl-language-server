@@ -33,6 +33,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.typo.WordStatus;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
+import jakarta.annotation.PostConstruct;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -119,6 +120,14 @@ public class TypoDiagnostic extends AbstractDiagnostic {
     type = Boolean.class
   )
   private Boolean caseInsensitive = false;
+
+  /**
+   * Собирает список слов для игнорирования из встроенного словаря исключений и текущих значений параметров.
+   */
+  @PostConstruct
+  public void init() {
+    wordsToIgnore = makeWordsToIgnore();
+  }
 
   @Override
   public void configure(Map<String, Object> configuration) {
