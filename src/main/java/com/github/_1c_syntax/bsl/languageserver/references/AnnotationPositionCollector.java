@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.jspecify.annotations.Nullable;
@@ -37,18 +38,6 @@ import java.util.List;
 /** Собирает диапазоны обращений к аннотациям и параметрам, не удерживая узлы AST в результате. */
 final class AnnotationPositionCollector extends BSLParserBaseVisitor<Void> {
   private final List<AnnotationPosition> positions = new ArrayList<>();
-  private final BSLParserBaseVisitor<Void> annotationTerminals = new BSLParserBaseVisitor<>() {
-    @Override
-    public Void visitTerminal(TerminalNode terminal) {
-      if (terminal.getParent() instanceof ParserRuleContext parent) {
-        var position = positionOf(terminal, parent);
-        if (position != null) {
-          positions.add(position);
-        }
-      }
-      return null;
-    }
-  };
 
   List<AnnotationPosition> collect(ParseTree root) {
     positions.clear();
@@ -58,7 +47,16 @@ final class AnnotationPositionCollector extends BSLParserBaseVisitor<Void> {
 
   @Override
   public Void visitAnnotation(BSLParser.AnnotationContext annotation) {
-    return annotationTerminals.visitChildren(annotation);
+    for (var node : Trees.getDescendants(annotation)) {
+      if (node instanceof TerminalNode terminal && !(terminal instanceof ErrorNode)
+        && terminal.getParent() instanceof ParserRuleContext parent) {
+        var position = positionOf(terminal, parent);
+        if (position != null) {
+          positions.add(position);
+        }
+      }
+    }
+    return null;
   }
 
   private static @Nullable AnnotationPosition positionOf(TerminalNode terminal, ParserRuleContext parent) {
