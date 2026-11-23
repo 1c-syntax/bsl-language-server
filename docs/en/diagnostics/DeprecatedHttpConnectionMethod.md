@@ -5,7 +5,7 @@
 
 In platform 8.3.21, `HTTPConnection` object methods are deprecated in client context. Use their asynchronous equivalents with the `Async` suffix instead.
 
-Asynchronous methods are only available on the client. The diagnostic determines the possible compilation contexts of a call (module kind and its metadata, method directive, preprocessor branch) and reports the call only when **all** of them are client-side. Otherwise the suggested replacement would not compile on the server side.
+Asynchronous methods are only available on the client. The diagnostic determines the possible compilation contexts of a call at its exact position (module kind and its metadata, method directive, preprocessor branch around the call) and reports the call only when **all** of them are client-side. Otherwise the suggested replacement would not compile on the server side.
 
 In practice this means:
 
