@@ -49,6 +49,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.net.URI;
 import java.util.ArrayList;
@@ -149,6 +150,57 @@ class MethodReturnTypeIndexerTest {
 
     returns(sourceMethod, TypeSet.EMPTY);
     returns(consumerMethod, TypeSet.EMPTY, sourceMethod);
+  }
+
+  @Test
+  void replacingAProvisionalDependencyAfterSnapshotKeepsItsConsumerProvisional() {
+    var component = List.of(source.getUri(), consumer.getUri());
+    var snapshot = snapshotOfProvisionalCycle(component);
+
+    // Другая публикация заменила запись зависимости между снимком и завершением цикла.
+    indexer.computeIfAbsent(sourceMethod, () -> new ComputedReturnTypes(NUMBER, Set.of(), true, null));
+    ReflectionTestUtils.invokeMethod(indexer, "finalizeComponent", component, snapshot);
+
+    assertThat(indexer.isIndexed(sourceMethod)).isFalse();
+    assertThat(indexer.isIndexed(consumerMethod)).isFalse();
+  }
+
+  @Test
+  void activePublicationKeepsItsConsumerProvisionalEvenBeforeTheMarkerChanges() throws Exception {
+    var component = List.of(source.getUri(), consumer.getUri());
+    var snapshot = snapshotOfProvisionalCycle(component);
+    var publishing = new CountDownLatch(1);
+    var finishPublication = new CountDownLatch(1);
+    doAnswer(invocation -> {
+      publishing.countDown();
+      assertThat(finishPublication.await(5, SECONDS)).isTrue();
+      return null;
+    }).when(symbolTypeIndex).putReturnTypes(sourceMethod, STRING);
+
+    try (var executor = Executors.newSingleThreadExecutor()) {
+      var publication = executor.submit(() -> indexer.computeIfAbsent(sourceMethod,
+        () -> new ComputedReturnTypes(STRING, Set.of(), false, null)));
+      try {
+        assertThat(publishing.await(5, SECONDS)).isTrue();
+        ReflectionTestUtils.invokeMethod(indexer, "finalizeComponent", component, snapshot);
+
+        assertThat(indexer.isIndexed(consumerMethod)).isFalse();
+      } finally {
+        finishPublication.countDown();
+      }
+      publication.get(5, SECONDS);
+    }
+    assertThat(indexer.isIndexed(sourceMethod)).isTrue();
+  }
+
+  private Map<?, ?> snapshotOfProvisionalCycle(List<URI> component) {
+    indexer.computeIfAbsent(sourceMethod, () ->
+      new ComputedReturnTypes(NUMBER, Set.of(consumerMethod), true, Set.of(consumerMethod)));
+    indexer.computeIfAbsent(consumerMethod, () ->
+      new ComputedReturnTypes(STRING, Set.of(sourceMethod), true, Set.of(sourceMethod)));
+    Map<?, ?> snapshot = ReflectionTestUtils.invokeMethod(indexer, "componentCandidates", component);
+    assertThat(snapshot).hasSize(2);
+    return snapshot;
   }
 
   @ParameterizedTest

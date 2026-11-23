@@ -160,6 +160,13 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   private final Map<MethodDeclarationKey, ProvisionalReturn> provisional = new ConcurrentHashMap<>();
 
   /**
+   * Защищает состояние публикации и завершение группы предварительных результатов.
+   * Расчёт типов и обращения к computedAt выполняются вне этого монитора.
+   */
+  private final Object publicationLock = new Object();
+  private final Set<MethodDeclarationKey> publishing = new HashSet<>();
+
+  /**
    * Часы, по которым видно, что чей расчёт застал, а что появилось уже после него. Своё
    * время, а не системное: сравниваются только порядковые отметки, и брать их надо в том
    * же порядке, в каком идут сами события.
@@ -201,9 +208,11 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       return;
     }
     supportThickClientFileMode = enabled;
-    pending.addAll(indexed);
-    indexed.clear();
-    provisional.clear();
+    synchronized (publicationLock) {
+      pending.addAll(indexed);
+      indexed.clear();
+      provisional.clear();
+    }
     computedAt.clear();
     changedAt.clear();
     symbolTypeIndex.clearInferredReturnTypes();
@@ -420,8 +429,10 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     var methods = methodsByUri.remove(uri);
     if (methods != null) {
       methods.forEach(method -> {
-        indexed.remove(method);
-        provisional.remove(new MethodDeclarationKey(method));
+        synchronized (publicationLock) {
+          indexed.remove(method);
+          provisional.remove(new MethodDeclarationKey(method));
+        }
         computedAt.remove(method);
       });
     }
@@ -525,18 +536,35 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     // Блокировка записи computedAt объединяет публикацию типа и признака неполноты.
     // Расчёт тела выполняется до её захвата: тело может вызывать другие функции.
     computedAt.compute(method, (MethodSymbol key, @Nullable Long publishedAt) -> {
-      if (onDemand && partial != null && isIndexed(key)) {
+      var declaration = new MethodDeclarationKey(key);
+      if (!beginPublication(declaration, onDemand && partial != null)) {
         return publishedAt;
       }
-      if (onDemand && !indexed.contains(key)) {
-        rememberMethodOfUri(key);
+      try {
+        if (onDemand && !indexed.contains(key)) {
+          rememberMethodOfUri(key);
+        }
+        link(key, computed.consulted());
+        schedulePending(key, computed);
+        changed.set(publishReturnType(declaration, computed.types(), startedAt, partial));
+        return startedAt;
+      } finally {
+        synchronized (publicationLock) {
+          publishing.remove(declaration);
+        }
       }
-      link(key, computed.consulted());
-      schedulePending(key, computed);
-      changed.set(publishReturnType(key, computed.types(), startedAt, partial));
-      return startedAt;
     });
     return changed.get();
+  }
+
+  private boolean beginPublication(MethodDeclarationKey declaration, boolean keepCompleted) {
+    synchronized (publicationLock) {
+      if (keepCompleted && isIndexed(declaration.method())) {
+        return false;
+      }
+      publishing.add(declaration);
+      return true;
+    }
   }
 
   private void schedulePending(MethodSymbol method, ComputedReturnTypes computed) {
@@ -572,16 +600,20 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     }
   }
 
-  private boolean publishReturnType(MethodSymbol method, TypeSet types, long startedAt,
+  private boolean publishReturnType(MethodDeclarationKey declaration, TypeSet types, long startedAt,
                                     @Nullable ProvisionalReturn partial) {
-    var declaration = new MethodDeclarationKey(method);
+    var method = declaration.method();
     // Признак неполноты виден до обновления типа и indexed.
     if (partial != null) {
-      provisional.put(declaration, partial);
+      synchronized (publicationLock) {
+        provisional.put(declaration, partial);
+      }
     }
     var previous = symbolTypeIndex.getReturnTypes(method);
     symbolTypeIndex.putReturnTypes(method, types);
-    indexed.add(method);
+    synchronized (publicationLock) {
+      indexed.add(method);
+    }
     var valueChanged = !symbolTypeIndex.getReturnTypes(method).equals(previous);
     if (valueChanged) {
       // Обе отметки берутся из одной точки — до расчёта. Строго полнее было бы отмечать
@@ -593,7 +625,9 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       valueChanges.incrementAndGet();
     }
     if (partial == null) {
-      provisional.remove(declaration);
+      synchronized (publicationLock) {
+        provisional.remove(declaration);
+      }
     }
     return valueChanged;
   }
@@ -1602,8 +1636,10 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    */
   private boolean recomputeEach(List<MethodSymbol> methods) {
     var before = methods.stream().map(symbolTypeIndex::getReturnTypes).toList();
-    methods.forEach(method -> provisional.put(new MethodDeclarationKey(method),
-      new ProvisionalReturn(UNSCOPED_INPUTS, null)));
+    synchronized (publicationLock) {
+      methods.forEach(method -> provisional.put(new MethodDeclarationKey(method),
+        new ProvisionalReturn(UNSCOPED_INPUTS, null)));
+    }
     for (var method : methods) {
       // Пометка «посчитан» не снимается: пересчёт и так идёт напрямую, а без пометки
       // соседний метод, читающий этот прямо сейчас, счёл бы его непосчитанным и снова
@@ -1701,19 +1737,35 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
 
   /** Завершить стабильные циклы, чья единственная недостающая информация находится внутри компоненты. */
   private void completeComponent(List<URI> component) {
+    // Снимок читает computedAt; во время публикации его слот уже удерживается.
+    finalizeComponent(component, componentCandidates(component));
+  }
+
+  private void finalizeComponent(List<URI> component, Map<MethodDeclarationKey, ProvisionalReturn> candidates) {
+    synchronized (publicationLock) {
+      removeCompletedCandidates(component, candidates);
+    }
+  }
+
+  private void removeCompletedCandidates(List<URI> component, Map<MethodDeclarationKey, ProvisionalReturn> candidates) {
     var members = Set.copyOf(component);
-    var candidates = componentCandidates(component);
     var dependents = new HashMap<MethodDeclarationKey, List<MethodDeclarationKey>>();
     var blocked = new ArrayDeque<MethodDeclarationKey>();
     for (var entry : candidates.entrySet()) {
+      var declaration = entry.getKey();
+      if (publishing.contains(declaration) || provisional.get(declaration) != entry.getValue()
+        || !indexed.contains(declaration.method())) {
+        blocked.add(declaration);
+      }
       for (var dependency : java.util.Objects.requireNonNull(entry.getValue().missingMethods)) {
         var key = new MethodDeclarationKey(dependency);
         var candidate = candidates.containsKey(key);
-        if (!members.contains(dependency.getOwner().getUri()) || (!candidate && !isIndexed(dependency))) {
-          blocked.add(entry.getKey());
+        if (!members.contains(dependency.getOwner().getUri()) || publishing.contains(key)
+          || (!candidate && !isIndexed(dependency))) {
+          blocked.add(declaration);
         }
         if (candidate) {
-          dependents.computeIfAbsent(key, ignored -> new ArrayList<>()).add(entry.getKey());
+          dependents.computeIfAbsent(key, ignored -> new ArrayList<>()).add(declaration);
         }
       }
     }
