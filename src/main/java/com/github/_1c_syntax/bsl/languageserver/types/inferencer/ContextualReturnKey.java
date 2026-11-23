@@ -22,8 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDeclarationKey;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.types.index.MethodDeclarationKey;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Comparator;

@@ -35,7 +35,6 @@ import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextCo
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDeclarationKey;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.index.AbstractDocumentLifecycleClearableIndex;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;

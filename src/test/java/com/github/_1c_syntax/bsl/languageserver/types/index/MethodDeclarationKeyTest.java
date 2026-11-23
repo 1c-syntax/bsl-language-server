@@ -19,10 +19,11 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.context.symbol;
+package com.github._1c_syntax.bsl.languageserver.types.index;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.RegularMethodSymbol;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
