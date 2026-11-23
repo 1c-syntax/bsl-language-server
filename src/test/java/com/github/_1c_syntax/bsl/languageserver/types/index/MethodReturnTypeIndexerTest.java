@@ -41,6 +41,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.utils.Absolute;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -102,6 +103,7 @@ class MethodReturnTypeIndexerTest {
 
   private ExpressionTypeInferencer inferencer;
   private SymbolTypeIndex symbolTypeIndex;
+  private InferredExpressionTypeIndex inferredExpressionTypeIndex;
   private MethodReturnTypeIndexer indexer;
   private ExecutorService resolveExecutor;
   private LanguageServerConfiguration languageConfiguration;
@@ -116,6 +118,7 @@ class MethodReturnTypeIndexerTest {
   void prepare() {
     inferencer = mock(ExpressionTypeInferencer.class);
     symbolTypeIndex = mock(SymbolTypeIndex.class);
+    inferredExpressionTypeIndex = new InferredExpressionTypeIndex();
     // Язык нужен настоящий: на нём индекс берёт тексты для индикатора хода работы.
     var configuration = mock(GlobalLanguageServerConfiguration.class);
     when(configuration.getLanguage()).thenReturn(Language.RU);
@@ -127,6 +130,7 @@ class MethodReturnTypeIndexerTest {
     indexer = new MethodReturnTypeIndexer(
       inferencer,
       symbolTypeIndex,
+      inferredExpressionTypeIndex,
       mock(WorkDoneProgressHelper.class, RETURNS_DEEP_STUBS),
       configuration,
       languageConfiguration, serverContextProvider,
@@ -241,13 +245,13 @@ class MethodReturnTypeIndexerTest {
           approximateStarted.countDown();
           await().atMost(10, SECONDS).until(() -> finishApproximate.getCount() == 0);
           return new ComputedReturnTypes(STRING, Set.of(), false);
-        }, true));
+        }, true, new Object()));
         assertThat(approximateStarted.await(10, SECONDS)).isTrue();
 
         finishComplete.countDown();
         complete.get(10, SECONDS);
         finishApproximate.countDown();
-        approximate.get(10, SECONDS);
+        assertThat(approximate.get(10, SECONDS)).isNull();
       } finally {
         finishComplete.countDown();
         finishApproximate.countDown();
@@ -336,6 +340,29 @@ class MethodReturnTypeIndexerTest {
     assertThat(indexer.computeIfAbsent(consumerMethod, () -> {
       throw new AssertionError("A nested calculation with the old generation must not start");
     }, false, new Object(), previous)).isNull();
+  }
+
+  @Test
+  void settingsResetClearsExpressionTypesAddedAfterTheEarlyInvalidation() {
+    indexer.captureCompilationSettings();
+    var event = new LanguageServerConfigurationChangedEvent(languageConfiguration);
+    inferredExpressionTypeIndex.handleConfigurationChanged(event);
+
+    var uri = source.getUri();
+    var node = mock(ParseTree.class);
+    var query = inferredExpressionTypeIndex.contextualQuery(uri, node, null);
+    var revision = inferredExpressionTypeIndex.inputRevision();
+    inferredExpressionTypeIndex.put(query, STRING, Set.of());
+    inferredExpressionTypeIndex.put(uri, node, STRING, Set.of(), revision);
+    assertThat(query.cached()).isEqualTo(STRING);
+    assertThat(inferredExpressionTypeIndex.get(uri, node)).isEqualTo(STRING);
+
+    changeCompilationSettings();
+    inferredExpressionTypeIndex.put(query, STRING, Set.of());
+    inferredExpressionTypeIndex.put(uri, node, STRING, Set.of(), revision);
+
+    assertThat(inferredExpressionTypeIndex.contextualQuery(uri, node, null).cached()).isNull();
+    assertThat(inferredExpressionTypeIndex.get(uri, node)).isNull();
   }
 
   @Test
@@ -899,8 +926,9 @@ class MethodReturnTypeIndexerTest {
     when(progressHelper.createProgress(anyInt(), anyString())).thenReturn(reporter);
     var configuration = mock(GlobalLanguageServerConfiguration.class);
     when(configuration.getLanguage()).thenReturn(Language.RU);
-    indexer = new MethodReturnTypeIndexer(inferencer, symbolTypeIndex, progressHelper, configuration,
-      new LanguageServerConfiguration(), mock(ServerContextProvider.class), resolveExecutor);
+    indexer = new MethodReturnTypeIndexer(inferencer, symbolTypeIndex, inferredExpressionTypeIndex,
+      progressHelper, configuration, new LanguageServerConfiguration(), mock(ServerContextProvider.class),
+      resolveExecutor);
     var ring = ring("cycle", 9);
     var documents = ring.documents();
     var methods = ring.methods();
@@ -1339,6 +1367,7 @@ class MethodReturnTypeIndexerTest {
     return new MethodReturnTypeIndexer(
       inferencer,
       symbolTypeIndex,
+      inferredExpressionTypeIndex,
       mock(WorkDoneProgressHelper.class, RETURNS_DEEP_STUBS),
       configuration,
       new LanguageServerConfiguration(),

@@ -116,6 +116,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
 
   private final ExpressionTypeInferencer inferencer;
   private final SymbolTypeIndex symbolTypeIndex;
+  private final InferredExpressionTypeIndex inferredExpressionTypeIndex;
 
   private final WorkDoneProgressHelper workDoneProgressHelper;
   private final GlobalLanguageServerConfiguration globalConfiguration;
@@ -213,8 +214,8 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     var interrupted = false;
     try {
       synchronized (publication) {
-        publication.generation.current = false;
-        publication.generation = ConfigurationGeneration.RESETTING;
+        configurationGeneration().current = false;
+        publication.generation.set(ConfigurationGeneration.RESETTING);
         // Принятые публикации закончат обновление SymbolTypeIndex до очистки.
         // Новые публикации и результаты прежнего поколения больше не принимаются.
         while (!publication.inProgress.isEmpty()) {
@@ -232,9 +233,11 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       computedAt.clear();
       changedAt.clear();
       symbolTypeIndex.clearInferredReturnTypes();
+      // За время между ранним сбросом выражений и закрытием публикации могли появиться новые записи.
+      inferredExpressionTypeIndex.clearAll();
     } finally {
       synchronized (publication) {
-        publication.generation = new ConfigurationGeneration(true);
+        publication.generation.set(new ConfigurationGeneration(true));
         publication.notifyAll();
       }
       if (interrupted) {
@@ -287,7 +290,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    */
   public @Nullable ComputedReturnTypes computeIfAbsent(MethodSymbol method, Supplier<ComputedReturnTypes> computation,
                                                        boolean approximate, Object inputs) {
-    return computeIfAbsent(method, computation, approximate, inputs, configurationGeneration());
+    return computeIfAbsent(method, computation, approximate, inputs, null);
   }
 
   /**
@@ -296,7 +299,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * @return токен текущего поколения либо токен временно закрытой публикации.
    */
   public ConfigurationGeneration configurationGeneration() {
-    return publication.generation;
+    return publication.generation.get();
   }
 
   /**
@@ -306,13 +309,14 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * @param computation вывод типа вне блокировок индекса.
    * @param approximate мог ли расчёт использовать промежуточные значения.
    * @param inputs      идентичность входов предварительного расчёта.
-   * @param generation  поколение, зафиксированное исходным запросом.
+   * @param requestedGeneration поколение исходного запроса либо {@code null} для нового запроса.
    * @return результат расчёта либо {@code null}, если расчёт не нужен или поколение уже сменилось.
    */
   public @Nullable ComputedReturnTypes computeIfAbsent(MethodSymbol method, Supplier<ComputedReturnTypes> computation,
                                                        boolean approximate, Object inputs,
-                                                       ConfigurationGeneration generation) {
-    if (generation == ConfigurationGeneration.RESETTING || generation != publication.generation
+                                                        @Nullable ConfigurationGeneration requestedGeneration) {
+    var generation = requestedGeneration == null ? configurationGeneration() : requestedGeneration;
+    if (generation == ConfigurationGeneration.RESETTING || generation != configurationGeneration()
       || !method.isFunction()) {
       return null;
     }
@@ -323,8 +327,8 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     }
     var startedAt = clock.incrementAndGet();
     var computed = computation.get();
-    store(method, computed, startedAt, provisionalResult(computed, approximate, inputs), true, generation);
-    return generation == publication.generation ? computed : null;
+    var result = store(method, computed, startedAt, provisionalResult(computed, approximate, inputs), true, generation);
+    return result != StoreResult.DISCARDED && generation == configurationGeneration() ? computed : null;
   }
 
   /**
@@ -570,12 +574,12 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   }
 
   private @Nullable ConfigurationGeneration awaitGeneration() {
-    var generation = publication.generation;
+    var generation = configurationGeneration();
     if (generation != ConfigurationGeneration.RESETTING) {
       return generation;
     }
     synchronized (publication) {
-      while ((generation = publication.generation) == ConfigurationGeneration.RESETTING) {
+      while ((generation = configurationGeneration()) == ConfigurationGeneration.RESETTING) {
         try {
           publication.wait();
         } catch (InterruptedException exception) {
@@ -636,7 +640,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   private boolean beginPublication(MethodDeclarationKey declaration, boolean keepCompleted,
                                    ConfigurationGeneration generation) {
     synchronized (publication) {
-      if (publication.generation != generation || (keepCompleted && isIndexed(declaration.method()))) {
+      if (configurationGeneration() != generation || (keepCompleted && isIndexed(declaration.method()))) {
         return false;
       }
       publication.inProgress.add(declaration);
@@ -650,7 +654,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
         publication.provisional.remove(declaration);
       }
       publication.inProgress.remove(declaration);
-      if (publication.generation == ConfigurationGeneration.RESETTING && publication.inProgress.isEmpty()) {
+      if (configurationGeneration() == ConfigurationGeneration.RESETTING && publication.inProgress.isEmpty()) {
         publication.notifyAll();
       }
     }
@@ -1725,7 +1729,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     }
     var before = methods.stream().map(symbolTypeIndex::getReturnTypes).toList();
     synchronized (publication) {
-      if (publication.generation == generation) {
+      if (configurationGeneration() == generation) {
         methods.forEach(method -> publication.provisional.put(new MethodDeclarationKey(method),
           new ProvisionalReturn(UNSCOPED_INPUTS, null)));
       }
@@ -1863,12 +1867,12 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   private void removeCompletedCandidates(Map<MethodDeclarationKey, ProvisionalReturn> candidates,
                                          ComponentDependencies dependencies) {
     var blocked = dependencies.blocked();
-    candidates.forEach((declaration, candidate) -> {
+    candidates.forEach((MethodDeclarationKey declaration, ProvisionalReturn candidate) -> {
       if (!isCurrentIndexedCandidate(declaration, candidate)) {
         blocked.add(declaration);
       }
     });
-    dependencies.externalInputs().forEach((input, dependents) -> {
+    dependencies.externalInputs().forEach((MethodDeclarationKey input, List<MethodDeclarationKey> dependents) -> {
       if (publication.inProgress.contains(input) || !isIndexed(input.method())) {
         blocked.addAll(dependents);
       }
@@ -1914,7 +1918,8 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
 
   private static final class ReturnPublication {
     /** Публикация открыта только для текущего токена, кроме маркера сброса. */
-    private volatile ConfigurationGeneration generation = new ConfigurationGeneration(true);
+    private final AtomicReference<ConfigurationGeneration> generation =
+      new AtomicReference<>(new ConfigurationGeneration(true));
 
     /** Предварительные результаты читаются также вне монитора. */
     private final Map<MethodDeclarationKey, ProvisionalReturn> provisional = new ConcurrentHashMap<>();

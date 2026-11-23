@@ -312,7 +312,7 @@ public class InferredExpressionTypeIndex extends AbstractDocumentLifecycleCleara
   }
 
   /** Сбросить и типы, и связи между документами. */
-  private synchronized void clearAll() {
+  synchronized void clearAll() {
     contextualRevision++;
     typesByUri.clear();
     contextualTypesByUri.clear();

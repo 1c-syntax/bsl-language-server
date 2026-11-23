@@ -51,7 +51,6 @@ final class InferenceContext {
   /** Общая для вложенных контекстов одного запроса карта завершённых результатов функций. */
   final ContextualReturnCache contextualReturns;
   final CompilationContextMemo compilation;
-  final @Nullable ConfigurationGeneration returnGeneration;
   final Set<SourceDefinedSymbol> visited;
   /**
    * Тип, накопленный к текущему моменту для символа, инференс которого ещё не
@@ -111,24 +110,21 @@ final class InferenceContext {
 
   InferenceContext(DocumentContext documentContext, @Nullable ExecutionContext executionContext,
                    CompilationContextMemo compilation, @Nullable ConfigurationGeneration returnGeneration) {
-    this(documentContext, executionContext, new ContextualReturnCache(), compilation, returnGeneration);
+    this(documentContext, executionContext, new ContextualReturnCache(returnGeneration), compilation);
   }
 
   private InferenceContext(DocumentContext documentContext, @Nullable ExecutionContext executionContext,
-                           ContextualReturnCache contextualReturns, CompilationContextMemo compilation,
-                           @Nullable ConfigurationGeneration returnGeneration) {
-    this(documentContext, executionContext, contextualReturns,
-      flowSessionFor(contextualReturns), compilation, returnGeneration);
+                           ContextualReturnCache contextualReturns, CompilationContextMemo compilation) {
+    this(documentContext, executionContext, contextualReturns, flowSessionFor(contextualReturns), compilation);
   }
 
   private InferenceContext(DocumentContext documentContext, @Nullable ExecutionContext executionContext,
                            ContextualReturnCache contextualReturns, VariableFlowAnalyzer.FlowSession flowSession,
-                           CompilationContextMemo compilation, @Nullable ConfigurationGeneration returnGeneration) {
+                           CompilationContextMemo compilation) {
     this.documentContext = documentContext;
     this.executionContext = executionContext;
     this.contextualReturns = contextualReturns;
     this.compilation = compilation;
-    this.returnGeneration = returnGeneration;
     this.flowSession = flowSession;
     this.visited = new HashSet<>();
     this.inProgress = new HashMap<>();
@@ -245,14 +241,14 @@ final class InferenceContext {
 
   /** Новый расчёт приближения с общими метаданными, но без прежних значений типов и потока. */
   InferenceContext forRefinement() {
-    return new InferenceContext(documentContext, null, new ContextualReturnCache(), compilation, returnGeneration);
+    return new InferenceContext(documentContext, null, compilation, contextualReturns.returnGeneration);
   }
 
   /** Состояние одного вложенного расчёта; признаки его неполноты не наследуются от соседних вызовов. */
   InferenceContext nested(DocumentContext owner, @Nullable ExecutionContext target) {
     var session = owner == documentContext && target == executionContext
       ? flowSession : flowSessionFor(contextualReturns);
-    var result = new InferenceContext(owner, target, contextualReturns, session, compilation, returnGeneration);
+    var result = new InferenceContext(owner, target, contextualReturns, session, compilation);
     if (session != flowSession) {
       session.contextTracking = flowSession.contextTracking;
       session.contextFreeDeclarations = flowSession.contextFreeDeclarations;

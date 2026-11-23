@@ -286,7 +286,7 @@ public class ExpressionTypeInferencer {
       values.add(types);
       result = result.union(types);
     }
-    if (complete) {
+    if (complete && hasCurrentReturnInputs(parent)) {
       inferredExpressionTypeIndex.putNeutralFromContexts(rootQuery, parts, values, result);
     }
     return result;
@@ -305,7 +305,12 @@ public class ExpressionTypeInferencer {
     if (ctx.cycleCut || ctx.bodyInFlowCut || ctx.depthCut) {
       return false;
     }
-    return !ctx.sawMissing() && !ctx.failed && !ctx.flowSession.computing();
+    return !ctx.sawMissing() && !ctx.failed && !ctx.flowSession.computing() && hasCurrentReturnInputs(ctx);
+  }
+
+  private static boolean hasCurrentReturnInputs(InferenceContext ctx) {
+    var generation = ctx.contextualReturns.returnGeneration;
+    return generation == null || generation.isCurrent();
   }
 
   /**
@@ -1133,14 +1138,11 @@ public class ExpressionTypeInferencer {
     var nested = ctx.nested(method.getOwner(), null);
     var inputs = reusable ? ctx.contextualReturns.approximationInputs(guard) : new Object();
     var approximate = ctx.flowSession.cellsComputing();
-    var generation = ctx.returnGeneration;
-    var computed = generation == null
-      ? methodReturnTypeIndexer.computeIfAbsent(method, () -> returnTypesOfBody(method, nested), approximate, inputs)
-      : methodReturnTypeIndexer.computeIfAbsent(method, () -> returnTypesOfBody(method, nested), approximate, inputs,
-        generation);
+    var computed = methodReturnTypeIndexer.computeIfAbsent(method, () -> returnTypesOfBody(method, nested),
+      approximate, inputs, ctx.contextualReturns.returnGeneration);
     var types = computed == null ? symbolTypeIndex.getReturnTypes(method)
       : symbolTypeIndex.getReturnTypes(method, computed.types());
-    if (generation != null && !generation.isCurrent()) {
+    if (!hasCurrentReturnInputs(ctx)) {
       nested.noteMissingData();
     }
     var result = returnSnapshot(types, nested);

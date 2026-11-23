@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
+import com.github._1c_syntax.bsl.languageserver.types.index.MethodReturnTypeIndexer.ConfigurationGeneration;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
@@ -49,6 +50,7 @@ import java.util.Set;
  * Результат, отсечённый ограничением глубины, сохраняет исходный бюджет вычисления.
  */
 final class ContextualReturnCache {
+  final @Nullable ConfigurationGeneration returnGeneration;
   private final Map<ContextualReturnKey, TypeSet> values = new HashMap<>();
   private final Map<Site, List<Entry>> guarded = new HashMap<>();
   /** Один завершённый результат на метод и режим, если расчёт не обращался к ячейкам. */
@@ -63,6 +65,11 @@ final class ContextualReturnCache {
   private long cellReads;
 
   ContextualReturnCache() {
+    this(null);
+  }
+
+  ContextualReturnCache(@Nullable ConfigurationGeneration returnGeneration) {
+    this.returnGeneration = returnGeneration;
     revision = 0;
   }
 
