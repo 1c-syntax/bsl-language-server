@@ -45,8 +45,7 @@ class MethodDeclarationKeyTest {
     var edited = key(editedDocument, "Run", 3, 9);
 
     assertThat(firstDocument).isNotEqualByComparingTo(editedDocument);
-    assertThat(first).isEqualTo(edited).hasSameHashCodeAs(edited);
-    assertThat(first).isEqualByComparingTo(edited);
+    assertThat(first).isEqualTo(edited).hasSameHashCodeAs(edited).isEqualByComparingTo(edited);
     assertThat(edited).isEqualByComparingTo(first);
   }
 
