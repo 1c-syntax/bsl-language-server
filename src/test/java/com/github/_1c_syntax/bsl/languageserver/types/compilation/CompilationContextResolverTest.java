@@ -389,6 +389,7 @@ class CompilationContextResolverTest {
   private static Configuration configuration(DocumentContext document) {
     var solution = mock(Solution.class);
     var configuration = mock(Configuration.class);
+    when(configuration.getStandaloneContent()).thenReturn(StandaloneConfigurationContent.EMPTY);
     when(solution.getMergedConfiguration()).thenReturn(configuration);
     when(document.getServerContext().getConfiguration()).thenReturn(solution);
     return configuration;

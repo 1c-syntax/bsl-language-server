@@ -170,7 +170,7 @@ class ModuleCompilationContexts {
     }
     if (contexts.contains(ExecutionContext.MOBILE_STANDALONE_SERVER)) {
       var standalone = configuration.getStandaloneContent();
-      if (standalone == null || standalone.isEmpty() || document.getMdObject()
+      if (standalone.isEmpty() || document.getMdObject()
         .map(MD::getMdoReference)
         .filter(ref -> !MdoReference.EMPTY.equals(ref))
         .filter(standalone::isIncluded)
