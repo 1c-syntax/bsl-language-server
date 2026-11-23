@@ -36,11 +36,15 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.bsl.mdclasses.Configuration;
+import com.github._1c_syntax.bsl.mdclasses.Solution;
+import com.github._1c_syntax.bsl.mdclasses.StandaloneConfigurationContent;
 import com.github._1c_syntax.bsl.mdo.Constant;
 import com.github._1c_syntax.bsl.mdo.Document;
 import com.github._1c_syntax.bsl.mdo.InformationRegister;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.types.ModuleType;
+import com.github._1c_syntax.bsl.types.MdoReference;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -224,10 +228,11 @@ class MemberAccessUnavailableConditionalTest
   }
 
   @ParameterizedTest
-  @CsvSource({"auto, false, 0", "on, false, 1", "off, false, 0",
-    "auto, true, 0", "on, true, 1", "off, true, 0"})
-  void standaloneServerIsCheckedOnlyWhenExplicitlyEnabled(String mode, boolean hasConfiguration, int expected) {
-    if (hasConfiguration) {
+  @CsvSource({"auto, NO_CONFIGURATION, 0", "on, NO_CONFIGURATION, 1", "off, NO_CONFIGURATION, 0",
+    "auto, NO_CONTENT, 0", "on, NO_CONTENT, 1", "off, NO_CONTENT, 0",
+    "auto, INCLUDED, 1", "auto, EXCLUDED, 0", "on, EXCLUDED, 1", "off, INCLUDED, 0"})
+  void standaloneServerRespectsCompositionAndExplicitMode(String mode, StandaloneScope scope, int expected) {
+    if (scope != StandaloneScope.NO_CONFIGURATION) {
       initServerContext("src/test/resources/metadata/commonModuleCalls");
     }
     diagnosticInstance.configure(Map.of("checkMobileStandaloneServer", mode));
@@ -243,7 +248,25 @@ class MemberAccessUnavailableConditionalTest
       КонецПроцедуры
       """, context));
     doReturn(ModuleType.FormModule).when(document).getModuleType();
+    if (scope == StandaloneScope.INCLUDED || scope == StandaloneScope.EXCLUDED) {
+      var formReference = MdoReference.create("Document.Order.Form.Editor");
+      var standalone = StandaloneConfigurationContent.builder().addUsedItem(MdoReference.create("Document.Order"));
+      if (scope == StandaloneScope.EXCLUDED) {
+        standalone.addUnusedItem(formReference);
+      }
+      var configuration = Configuration.builder().standaloneContent(standalone.build()).build();
+      var serverContext = spy(context);
+      doReturn(Solution.builder().mergedConfiguration(configuration).build()).when(serverContext).getConfiguration();
+      doReturn(serverContext).when(document).getServerContext();
+      var metadata = mock(MD.class);
+      when(metadata.getMdoReference()).thenReturn(formReference);
+      doReturn(Optional.of(metadata)).when(document).getMdObject();
+    }
     assertThat(getDiagnostics(document)).hasSize(expected);
+  }
+
+  private enum StandaloneScope {
+    NO_CONFIGURATION, NO_CONTENT, INCLUDED, EXCLUDED
   }
 
   @ParameterizedTest
