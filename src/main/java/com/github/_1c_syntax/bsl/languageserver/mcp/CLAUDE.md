@@ -59,7 +59,9 @@ Roots объявлены deprecated в спеке MCP 2026-07-28 (`roots/list_ch
 
 **Ошибки — часть API для агента.** Сообщение о незарегистрированной рабочей папке обязано перечислять
 доступные корни и называть инструмент регистрации: агент исправляется сам, без человека. Единый
-текст — `McpWorkspaceFolders.registrationHint`, не пиши свой.
+текст — `McpWorkspaceFolders.registrationHint`, не пиши свой. Заранее, в ответе на `initialize`, агент
+получает инструкции сервера — `spring.ai.mcp.server.instructions` в `application-mcp.properties`;
+переименовал инструмент или поменял порядок работы — поправь и их.
 
 ## Инструменты (`@McpTool`)
 
