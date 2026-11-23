@@ -35,6 +35,7 @@ import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextCo
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDeclarationKey;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.index.AbstractDocumentLifecycleClearableIndex;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
@@ -157,7 +158,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   private final Set<MethodSymbol> indexed = ConcurrentHashMap.newKeySet();
 
   /** Методы, значение которых посчитано по приближениям и ждёт пересчёта (см. computeIfAbsent). */
-  private final Map<MethodSymbol, ProvisionalReturn> provisional = new ConcurrentHashMap<>();
+  private final Map<MethodDeclarationKey, ProvisionalReturn> provisional = new ConcurrentHashMap<>();
 
   /**
    * Часы, по которым видно, что чей расчёт застал, а что появилось уже после него. Своё
@@ -262,7 +263,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       return null;
     }
     var known = indexed.contains(method);
-    var previousInputs = provisional.get(method);
+    var previousInputs = provisional.get(new MethodDeclarationKey(method));
     if (known && (previousInputs == null || (approximate && previousInputs.inputs == inputs))) {
       return null;
     }
@@ -295,7 +296,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * @return {@code true}, если типы возврата метода уже выводились и не по приближениям.
    */
   public boolean isIndexed(MethodSymbol method) {
-    return indexed.contains(method) && !provisional.containsKey(method);
+    return indexed.contains(method) && !provisional.containsKey(new MethodDeclarationKey(method));
   }
 
   /**
@@ -421,7 +422,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     if (methods != null) {
       methods.forEach(method -> {
         indexed.remove(method);
-        provisional.remove(method);
+        provisional.remove(new MethodDeclarationKey(method));
         computedAt.remove(method);
       });
     }
@@ -574,9 +575,10 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
 
   private boolean publishReturnType(MethodSymbol method, TypeSet types, long startedAt,
                                     @Nullable ProvisionalReturn partial) {
+    var declaration = new MethodDeclarationKey(method);
     // Признак неполноты виден до обновления типа и indexed.
     if (partial != null) {
-      provisional.put(method, partial);
+      provisional.put(declaration, partial);
     }
     var previous = symbolTypeIndex.getReturnTypes(method);
     symbolTypeIndex.putReturnTypes(method, types);
@@ -592,7 +594,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       valueChanges.incrementAndGet();
     }
     if (partial == null) {
-      provisional.remove(method);
+      provisional.remove(declaration);
     }
     return valueChanged;
   }
@@ -1601,7 +1603,8 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    */
   private boolean recomputeEach(List<MethodSymbol> methods) {
     var before = methods.stream().map(symbolTypeIndex::getReturnTypes).toList();
-    methods.forEach(method -> provisional.put(method, new ProvisionalReturn(UNSCOPED_INPUTS, null)));
+    methods.forEach(method -> provisional.put(new MethodDeclarationKey(method),
+      new ProvisionalReturn(UNSCOPED_INPUTS, null)));
     for (var method : methods) {
       // Пометка «посчитан» не снимается: пересчёт и так идёт напрямую, а без пометки
       // соседний метод, читающий этот прямо сейчас, счёл бы его непосчитанным и снова
@@ -1701,15 +1704,17 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   private void completeComponent(List<URI> component) {
     var members = Set.copyOf(component);
     var candidates = componentCandidates(component);
-    var dependents = new HashMap<MethodSymbol, List<MethodSymbol>>();
-    var blocked = new ArrayDeque<MethodSymbol>();
+    var dependents = new HashMap<MethodDeclarationKey, List<MethodDeclarationKey>>();
+    var blocked = new ArrayDeque<MethodDeclarationKey>();
     for (var entry : candidates.entrySet()) {
       for (var dependency : java.util.Objects.requireNonNull(entry.getValue().missingMethods)) {
-        if (blockedComponentInput(dependency, members, candidates)) {
+        var key = new MethodDeclarationKey(dependency);
+        var candidate = candidates.containsKey(key);
+        if (!members.contains(dependency.getOwner().getUri()) || (!candidate && !isIndexed(dependency))) {
           blocked.add(entry.getKey());
         }
-        if (candidates.containsKey(dependency)) {
-          dependents.computeIfAbsent(dependency, ignored -> new ArrayList<>()).add(entry.getKey());
+        if (candidate) {
+          dependents.computeIfAbsent(key, ignored -> new ArrayList<>()).add(entry.getKey());
         }
       }
     }
@@ -1722,27 +1727,22 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     candidates.forEach(provisional::remove);
   }
 
-  private Map<MethodSymbol, ProvisionalReturn> componentCandidates(List<URI> component) {
-    Map<MethodSymbol, ProvisionalReturn> candidates = new HashMap<>();
+  private Map<MethodDeclarationKey, ProvisionalReturn> componentCandidates(List<URI> component) {
+    Map<MethodDeclarationKey, ProvisionalReturn> candidates = new HashMap<>();
     for (var uri : component) {
       for (var method : methodsByUri.getOrDefault(uri, List.of())) {
         computedAt.computeIfPresent(method, (MethodSymbol key, Long startedAt) -> {
-          var observed = provisional.get(key);
+          var declaration = new MethodDeclarationKey(key);
+          var observed = provisional.get(declaration);
           if (indexed.contains(key) && observed != null && observed.missingMethods != null
             && !observed.missingMethods.isEmpty()) {
-            candidates.put(key, observed);
+            candidates.put(declaration, observed);
           }
           return startedAt;
         });
       }
     }
     return candidates;
-  }
-
-  private boolean blockedComponentInput(MethodSymbol method, Set<URI> component,
-                                         Map<MethodSymbol, ProvisionalReturn> candidates) {
-    return !component.contains(method.getOwner().getUri())
-      || (!candidates.containsKey(method) && !isIndexed(method));
   }
 
   /** Запись сравнивается по идентичности, чтобы завершение не снимало более новую предварительную версию. */

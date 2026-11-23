@@ -21,15 +21,29 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodDeclarationKey;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import org.jspecify.annotations.Nullable;
+
+import java.util.Comparator;
 
 /**
  * Ключ мемоизации возвращаемого типа внутри одного запроса вывода.
+ * Естественный порядок согласован с равенством ключей: сначала объявление, затем режим.
  *
  * @param method символ функции.
  * @param context контекст назначения вызова после перехода с клиента на сервер, если он нужен.
  */
-record ContextualReturnKey(MethodSymbol method, @Nullable ExecutionContext context) { }
+record ContextualReturnKey(MethodSymbol method, @Nullable ExecutionContext context)
+  implements Comparable<ContextualReturnKey> {
+
+  private static final Comparator<ExecutionContext> CONTEXT_ORDER = Comparator.nullsFirst(Comparator.naturalOrder());
+
+  @Override
+  public int compareTo(ContextualReturnKey other) {
+    var byDeclaration = new MethodDeclarationKey(method).compareTo(new MethodDeclarationKey(other.method));
+    return byDeclaration == 0 ? CONTEXT_ORDER.compare(context, other.context) : byDeclaration;
+  }
+}
 

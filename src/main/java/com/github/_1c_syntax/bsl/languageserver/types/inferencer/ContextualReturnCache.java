@@ -56,7 +56,7 @@ final class ContextualReturnCache {
   /** Найденные соответствия полным запросам, чтобы повторный запрос не перебирал совместимые записи. */
   private final Map<Guard, Result> matchedGuards = new HashMap<>();
   /** Непрозрачные ключи приближений: общий индекс не удерживает через них запрос или AST. */
-  private final Map<Guard, Object> approximationInputs = new HashMap<>();
+  private final Map<ContextualReturnKey, List<ApproximationInput>> approximationInputs = new HashMap<>();
   /** Связь тела с объявлением постоянна в пределах запроса и не зависит от приближений ячеек. */
   private final Map<BSLParser.CodeBlockContext, Optional<MethodSymbol>> bodyMethods = new HashMap<>();
   private long revision;
@@ -88,8 +88,18 @@ final class ContextualReturnCache {
   }
 
   Object approximationInputs(Guard guard) {
-    return approximationInputs.computeIfAbsent(guard, ignored -> new Object());
+    var entries = approximationInputs.computeIfAbsent(guard.key(), key -> new ArrayList<>());
+    for (var entry : entries) {
+      if (entry.guard().equals(guard)) {
+        return entry.input();
+      }
+    }
+    var input = new Object();
+    entries.add(new ApproximationInput(guard, input));
+    return input;
   }
+
+  private record ApproximationInput(Guard guard, Object input) { }
 
   /** Результат, вычисленный через изменение зависимостей, не становится актуальным задним числом. */
   void remember(ContextualReturnKey key, TypeSet value, long startedAtRevision) {
