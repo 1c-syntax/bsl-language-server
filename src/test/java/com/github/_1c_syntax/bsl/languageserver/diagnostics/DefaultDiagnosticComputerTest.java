@@ -180,7 +180,8 @@ class DefaultDiagnosticComputerTest {
     var interruptPreserved = new AtomicBoolean();
     var failure = new AtomicReference<RuntimeException>();
     var first = mock(BSLDiagnostic.class);
-    when(first.getInfo()).thenReturn(diagnosticInfoWithCode("First"));
+    var firstInfo = diagnosticInfoWithCode("First");
+    when(first.getInfo()).thenReturn(firstInfo);
     when(first.getDiagnostics(documentContext)).thenAnswer(ignored -> {
       running.countDown();
       try {
@@ -197,7 +198,8 @@ class DefaultDiagnosticComputerTest {
       return List.of();
     });
     var queued = mock(BSLDiagnostic.class);
-    when(queued.getInfo()).thenReturn(diagnosticInfoWithCode("Second"));
+    var queuedInfo = diagnosticInfoWithCode("Second");
+    when(queued.getInfo()).thenReturn(queuedInfo);
     when(queued.getDiagnostics(documentContext)).thenAnswer(ignored -> {
       queuedStarted.set(true);
       return List.of();
