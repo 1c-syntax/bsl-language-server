@@ -43,10 +43,10 @@ class MethodDeclarationKeyTest {
     var first = key(firstDocument, "Run", 3, 9);
     var edited = key(editedDocument, "Run", 3, 9);
 
-    assertThat(firstDocument.compareTo(editedDocument)).isNotZero();
+    assertThat(firstDocument).isNotEqualByComparingTo(editedDocument);
     assertThat(first).isEqualTo(edited).hasSameHashCodeAs(edited);
-    assertThat(first.compareTo(edited)).isZero();
-    assertThat(edited.compareTo(first)).isZero();
+    assertThat(first).isEqualByComparingTo(edited);
+    assertThat(edited).isEqualByComparingTo(first);
   }
 
   @Test
@@ -57,10 +57,8 @@ class MethodDeclarationKeyTest {
     var laterLine = key(document, "Run", 4, 9);
     var longerRange = key(document, "Run", 3, 10);
 
-    assertThat(first.compareTo(differentCase)).isNegative();
-    assertThat(first.compareTo(laterLine)).isNegative();
-    assertThat(first.compareTo(longerRange)).isNegative();
-    assertThat(longerRange.compareTo(first)).isPositive();
+    assertThat(first).isLessThan(differentCase).isLessThan(laterLine).isLessThan(longerRange);
+    assertThat(longerRange).isGreaterThan(first);
   }
 
   private static MethodDeclarationKey key(DocumentContext document, String name, int line, int endCharacter) {
