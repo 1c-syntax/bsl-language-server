@@ -133,6 +133,16 @@ class DeprecatedHttpConnectionMethodDiagnosticTest
   }
 
   @Test
+  void accountsForPreprocessorAtCallSite() {
+    var documentContext = formDocumentContext(getText("DeprecatedHttpConnectionMethodPreprocessor"));
+    var diagnostics = diagnosticWithOwners(HTTP_CONNECTION).getDiagnostics(documentContext);
+
+    // Срабатывает только вызов в клиентской ветке клиентского метода;
+    // #Если Сервер в клиентском методе и #Если Клиент в серверном — нет.
+    assertThat(diagnostics).hasSize(1);
+  }
+
+  @Test
   void doesNotFireForServerDirectives() {
     var documentContext = formDocumentContext(
       "&НаСервере\n" + CLIENT_METHOD_TEMPLATE.formatted("Получить"));

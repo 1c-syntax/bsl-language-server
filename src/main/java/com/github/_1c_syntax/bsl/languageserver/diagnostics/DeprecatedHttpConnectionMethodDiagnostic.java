@@ -30,6 +30,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.RequiredArgsConstructor;
@@ -103,7 +104,7 @@ public class DeprecatedHttpConnectionMethodDiagnostic extends AbstractVisitorDia
       return super.visitMethodCall(ctx);
     }
 
-    if (!executesOnClientsOnly(ctx)) {
+    if (!executesOnClientsOnly(methodName)) {
       return super.visitMethodCall(ctx);
     }
 
@@ -128,13 +129,17 @@ public class DeprecatedHttpConnectionMethodDiagnostic extends AbstractVisitorDia
    * Проверить, что вызов исполняется только на клиенте.
    * <p>
    * Асинхронные аналоги доступны только на клиенте, поэтому замена корректна,
-   * лишь когда клиентские все возможные контексты компиляции вызова. Пустое
-   * множество означает, что объявление исключено препроцессором.
+   * лишь когда клиентские все возможные контексты компиляции вызова в его
+   * конкретной позиции, включая ветку препроцессора. Пустое множество означает,
+   * что код исключён препроцессором; неизвестный контекст не подтверждает
+   * клиентское исполнение.
    */
-  private boolean executesOnClientsOnly(BSLParser.MethodCallContext ctx) {
-    var contexts = compilationContextResolver.possibleContexts(documentContext, ctx)
-      .orElse(ExecutionContext.forFileType(documentContext.getFileType()));
-    return !contexts.isEmpty() && ExecutionContext.CLIENTS.containsAll(contexts);
+  private boolean executesOnClientsOnly(BSLParser.MethodNameContext methodName) {
+    return compilationContextResolver.contextAt(documentContext, Ranges.create(methodName).getStart())
+      .map(profile -> profile.contexts())
+      .filter(contexts -> !contexts.isEmpty())
+      .map(ExecutionContext.CLIENTS::containsAll)
+      .orElse(false);
   }
 
 }
