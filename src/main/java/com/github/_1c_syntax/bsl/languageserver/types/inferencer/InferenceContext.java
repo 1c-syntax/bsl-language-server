@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.types.index.MethodReturnTypeIndexer.ConfigurationGeneration;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.jspecify.annotations.Nullable;
@@ -50,6 +51,7 @@ final class InferenceContext {
   /** Общая для вложенных контекстов одного запроса карта завершённых результатов функций. */
   final ContextualReturnCache contextualReturns;
   final CompilationContextMemo compilation;
+  final @Nullable ConfigurationGeneration returnGeneration;
   final Set<SourceDefinedSymbol> visited;
   /**
    * Тип, накопленный к текущему моменту для символа, инференс которого ещё не
@@ -99,27 +101,34 @@ final class InferenceContext {
   boolean sharedRootFlow;
 
   InferenceContext(DocumentContext documentContext, @Nullable ExecutionContext executionContext) {
-    this(documentContext, executionContext, new ContextualReturnCache(), new CompilationContextMemo());
+    this(documentContext, executionContext, new CompilationContextMemo(), null);
   }
 
   InferenceContext(DocumentContext documentContext, @Nullable ExecutionContext executionContext,
                    CompilationContextMemo compilation) {
-    this(documentContext, executionContext, new ContextualReturnCache(), compilation);
+    this(documentContext, executionContext, compilation, null);
+  }
+
+  InferenceContext(DocumentContext documentContext, @Nullable ExecutionContext executionContext,
+                   CompilationContextMemo compilation, @Nullable ConfigurationGeneration returnGeneration) {
+    this(documentContext, executionContext, new ContextualReturnCache(), compilation, returnGeneration);
   }
 
   private InferenceContext(DocumentContext documentContext, @Nullable ExecutionContext executionContext,
-                           ContextualReturnCache contextualReturns, CompilationContextMemo compilation) {
+                           ContextualReturnCache contextualReturns, CompilationContextMemo compilation,
+                           @Nullable ConfigurationGeneration returnGeneration) {
     this(documentContext, executionContext, contextualReturns,
-      flowSessionFor(contextualReturns), compilation);
+      flowSessionFor(contextualReturns), compilation, returnGeneration);
   }
 
   private InferenceContext(DocumentContext documentContext, @Nullable ExecutionContext executionContext,
                            ContextualReturnCache contextualReturns, VariableFlowAnalyzer.FlowSession flowSession,
-                           CompilationContextMemo compilation) {
+                           CompilationContextMemo compilation, @Nullable ConfigurationGeneration returnGeneration) {
     this.documentContext = documentContext;
     this.executionContext = executionContext;
     this.contextualReturns = contextualReturns;
     this.compilation = compilation;
+    this.returnGeneration = returnGeneration;
     this.flowSession = flowSession;
     this.visited = new HashSet<>();
     this.inProgress = new HashMap<>();
@@ -236,14 +245,14 @@ final class InferenceContext {
 
   /** Новый расчёт приближения с общими метаданными, но без прежних значений типов и потока. */
   InferenceContext forRefinement() {
-    return new InferenceContext(documentContext, null, new ContextualReturnCache(), compilation);
+    return new InferenceContext(documentContext, null, new ContextualReturnCache(), compilation, returnGeneration);
   }
 
   /** Состояние одного вложенного расчёта; признаки его неполноты не наследуются от соседних вызовов. */
   InferenceContext nested(DocumentContext owner, @Nullable ExecutionContext target) {
     var session = owner == documentContext && target == executionContext
       ? flowSession : flowSessionFor(contextualReturns);
-    var result = new InferenceContext(owner, target, contextualReturns, session, compilation);
+    var result = new InferenceContext(owner, target, contextualReturns, session, compilation, returnGeneration);
     if (session != flowSession) {
       session.contextTracking = flowSession.contextTracking;
       session.contextFreeDeclarations = flowSession.contextFreeDeclarations;

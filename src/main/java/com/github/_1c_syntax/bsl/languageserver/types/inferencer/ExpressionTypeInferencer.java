@@ -176,13 +176,14 @@ public class ExpressionTypeInferencer {
   private volatile boolean workspacePopulated;
 
   private InferenceContext contextFor(DocumentContext document, @Nullable ExecutionContext executionContext) {
+    var generation = methodReturnTypeIndexer.configurationGeneration();
     if (DiagnosticDeclarationSession.current() == null) {
-      return new InferenceContext(document, executionContext);
+      return new InferenceContext(document, executionContext, new CompilationContextMemo(), generation);
     }
     var compilation = DiagnosticDeclarationSession.compilationMemo(
       com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder.get(),
       inferredExpressionTypeIndex.inputRevision());
-    return new InferenceContext(document, executionContext, compilation);
+    return new InferenceContext(document, executionContext, compilation, generation);
   }
 
   /**
@@ -1131,10 +1132,17 @@ public class ExpressionTypeInferencer {
     var revision = ctx.contextualReturns.revision();
     var nested = ctx.nested(method.getOwner(), null);
     var inputs = reusable ? ctx.contextualReturns.approximationInputs(guard) : new Object();
-    var computed = methodReturnTypeIndexer.computeIfAbsent(method, () -> returnTypesOfBody(method, nested),
-      ctx.flowSession.cellsComputing(), inputs);
+    var approximate = ctx.flowSession.cellsComputing();
+    var generation = ctx.returnGeneration;
+    var computed = generation == null
+      ? methodReturnTypeIndexer.computeIfAbsent(method, () -> returnTypesOfBody(method, nested), approximate, inputs)
+      : methodReturnTypeIndexer.computeIfAbsent(method, () -> returnTypesOfBody(method, nested), approximate, inputs,
+        generation);
     var types = computed == null ? symbolTypeIndex.getReturnTypes(method)
       : symbolTypeIndex.getReturnTypes(method, computed.types());
+    if (generation != null && !generation.isCurrent()) {
+      nested.noteMissingData();
+    }
     var result = returnSnapshot(types, nested);
     inheritReturn(result, ctx);
     ctx.failed |= nested.failed;

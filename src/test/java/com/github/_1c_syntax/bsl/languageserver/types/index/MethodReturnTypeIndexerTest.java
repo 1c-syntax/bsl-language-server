@@ -304,6 +304,99 @@ class MethodReturnTypeIndexerTest {
   }
 
   @Test
+  void aResultFromThePreviousConfigurationCannotReplaceTheCurrentValue() throws Exception {
+    indexer.captureCompilationSettings();
+    var previous = indexer.configurationGeneration();
+    var started = new CountDownLatch(1);
+    var release = new CountDownLatch(1);
+
+    try (var executor = Executors.newSingleThreadExecutor()) {
+      var stale = executor.submit(() -> indexer.computeIfAbsent(sourceMethod, () -> {
+        started.countDown();
+        try {
+          assertThat(release.await(10, SECONDS)).isTrue();
+        } catch (InterruptedException exception) {
+          Thread.currentThread().interrupt();
+          throw new AssertionError(exception);
+        }
+        return new ComputedReturnTypes(STRING, Set.of(), false);
+      }, false, new Object()));
+      try {
+        assertThat(started.await(10, SECONDS)).isTrue();
+        changeCompilationSettings();
+        indexer.computeIfAbsent(sourceMethod, () -> new ComputedReturnTypes(NUMBER, Set.of(), false));
+      } finally {
+        release.countDown();
+      }
+      assertThat(stale.get(10, SECONDS)).isNull();
+    }
+
+    assertThat(symbolTypeIndex.getReturnTypes(sourceMethod)).isEqualTo(NUMBER);
+    assertThat(indexer.isIndexed(sourceMethod)).isTrue();
+    assertThat(indexer.computeIfAbsent(consumerMethod, () -> {
+      throw new AssertionError("A nested calculation with the old generation must not start");
+    }, false, new Object(), previous)).isNull();
+  }
+
+  @Test
+  void settingsResetWaitsForAnAcceptedPublicationAndClosesAdmission() throws Exception {
+    indexer.captureCompilationSettings();
+    var previous = indexer.configurationGeneration();
+    var publishing = new CountDownLatch(1);
+    var release = new CountDownLatch(1);
+    var cleared = new CountDownLatch(1);
+    var actual = new AtomicReference<>(TypeSet.EMPTY);
+    when(symbolTypeIndex.getReturnTypes(sourceMethod)).thenAnswer(invocation -> actual.get());
+    doAnswer(invocation -> {
+      publishing.countDown();
+      assertThat(release.await(10, SECONDS)).isTrue();
+      actual.set(invocation.getArgument(1));
+      return null;
+    }).when(symbolTypeIndex).putReturnTypes(sourceMethod, STRING);
+    doAnswer(invocation -> {
+      actual.set(TypeSet.EMPTY);
+      cleared.countDown();
+      return null;
+    }).when(symbolTypeIndex).clearInferredReturnTypes();
+
+    try (var executor = Executors.newFixedThreadPool(2)) {
+      var store = executor.submit(() ->
+        indexer.computeIfAbsent(sourceMethod, () -> new ComputedReturnTypes(STRING, Set.of(), false)));
+      try {
+        assertThat(publishing.await(10, SECONDS)).isTrue();
+        var reset = executor.submit(this::changeCompilationSettings);
+        try {
+          await().atMost(10, SECONDS).until(() -> indexer.configurationGeneration() != previous);
+          assertThat(previous.isCurrent()).isFalse();
+          assertThat(indexer.configurationGeneration().isCurrent()).isFalse();
+          assertThat(cleared.getCount()).isEqualTo(1);
+          assertThat(indexer.computeIfAbsent(consumerMethod, () -> {
+            throw new AssertionError("Publication must remain closed during reset");
+          }, false, new Object())).isNull();
+        } finally {
+          release.countDown();
+        }
+        store.get(10, SECONDS);
+        reset.get(10, SECONDS);
+      } finally {
+        release.countDown();
+      }
+    }
+
+    assertThat(cleared.getCount()).isZero();
+    assertThat(indexer.configurationGeneration().isCurrent()).isTrue();
+    assertThat(actual.get()).isEqualTo(TypeSet.EMPTY);
+    assertThat(indexer.isIndexed(sourceMethod)).isFalse();
+    indexer.computeIfAbsent(consumerMethod, () -> new ComputedReturnTypes(NUMBER, Set.of(), false));
+    assertThat(indexer.isIndexed(consumerMethod)).isTrue();
+  }
+
+  private void changeCompilationSettings() {
+    languageConfiguration.setSupportThickClientFileMode(!languageConfiguration.isSupportThickClientFileMode());
+    indexer.handleConfigurationChanged(new LanguageServerConfigurationChangedEvent(languageConfiguration));
+  }
+
+  @Test
   void settingsChangeWaitsForActivePassAndResolvesAgain() throws Exception {
     indexer.captureCompilationSettings();
     indexer.computeIfAbsent(sourceMethod, () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.of(), true));
