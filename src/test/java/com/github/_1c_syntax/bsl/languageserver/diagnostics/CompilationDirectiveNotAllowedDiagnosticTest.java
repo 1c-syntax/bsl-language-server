@@ -23,17 +23,21 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.mdo.Form;
+import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.bsl.mdo.support.FormType;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 import java.util.List;
 import java.util.Optional;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 class CompilationDirectiveNotAllowedDiagnosticTest extends AbstractDiagnosticTest<CompilationDirectiveNotAllowedDiagnostic> {
@@ -64,9 +68,24 @@ class CompilationDirectiveNotAllowedDiagnosticTest extends AbstractDiagnosticTes
 
   @Test
   void testOtherModule() {
-    List<Diagnostic> diagnostics = getDiagnostics(documentContextOf(ModuleType.CommonModule));
+    List<Diagnostic> diagnostics = getDiagnostics(documentContextOf(ModuleType.ObjectModule));
 
     assertThat(diagnostics).isEmpty();
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void unsupportedCommonModuleDirectivesDoNotDependOnMetadata(boolean metadataPresent) {
+    var document = documentContextOf(ModuleType.CommonModule);
+    when(document.getMdObject()).thenReturn(metadataPresent
+      ? Optional.of(mock(CommonModule.class)) : Optional.empty());
+
+    assertThat(getDiagnostics(document), true).hasSize(5)
+      .hasRange(8, 0, 8, 22)
+      .hasRange(12, 0, 12, 31)
+      .hasRange(16, 0, 16, 19)
+      .hasRange(20, 0, 20, 17)
+      .hasRange(24, 0, 24, 18);
   }
 
   @Test

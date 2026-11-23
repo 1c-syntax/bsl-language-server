@@ -23,9 +23,14 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics.info;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.CompilationDirectiveNeedLessDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.EmptyCodeBlockDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.LineLengthDiagnostic;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.utils.StringInterner;
@@ -121,6 +126,52 @@ class DiagnosticInfoOverrideTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void testMetadataOverrideKeepsNotOverriddenFieldsFromAnnotation() {
+    // given
+    File configurationFile = new File(PATH_TO_CONFIGURATION_FILE);
+    configuration.update(configurationFile);
+    var annotation = CompilationDirectiveNeedLessDiagnostic.class.getAnnotation(DiagnosticMetadata.class);
+
+    // when - only type, severity and lspSeverity are overridden in config
+    var diagnosticInfo = new DiagnosticInfo(
+      CompilationDirectiveNeedLessDiagnostic.class,
+      configuration,
+      stringInterner
+    );
+
+    // then - overridden fields are taken from config
+    assertThat(diagnosticInfo.getSeverity()).isEqualTo(DiagnosticSeverity.CRITICAL);
+    assertThat(diagnosticInfo.getLSPSeverity()).isEqualTo(org.eclipse.lsp4j.DiagnosticSeverity.Error);
+
+    // and - other fields keep values from the diagnostic annotation
+    assertThat(diagnosticInfo.getModules())
+      .isNotEmpty()
+      .containsExactlyInAnyOrder(annotation.modules());
+    assertThat(diagnosticInfo.getScope()).isEqualTo(DiagnosticScope.BSL);
+    assertThat(diagnosticInfo.getTags()).containsExactlyInAnyOrder(annotation.tags());
+    assertThat(diagnosticInfo.getMinutesToFix()).isEqualTo(annotation.minutesToFix());
+    assertThat(diagnosticInfo.isActivatedByDefault()).isEqualTo(annotation.activatedByDefault());
+    assertThat(diagnosticInfo.getCompatibilityMode()).isEqualTo(annotation.compatibilityMode());
+    assertThat(diagnosticInfo.canLocateOnProject()).isEqualTo(annotation.canLocateOnProject());
+    assertThat(diagnosticInfo.getExtraMinForComplexity()).isEqualTo(annotation.extraMinForComplexity());
+  }
+
+  @Test
+  void testMetadataOverrideKeepsAnnotationSeverityWhenOnlyMinutesToFixOverridden() {
+    // given
+    File configurationFile = new File(PATH_TO_CONFIGURATION_FILE);
+    configuration.update(configurationFile);
+
+    // when - LineLength has only minutesToFix and lspSeverity in config
+    var diagnosticInfo = new DiagnosticInfo(LineLengthDiagnostic.class, configuration, stringInterner);
+
+    // then - type, severity and tags come from the annotation
+    assertThat(diagnosticInfo.getType()).isEqualTo(DiagnosticType.CODE_SMELL);
+    assertThat(diagnosticInfo.getSeverity()).isEqualTo(DiagnosticSeverity.MINOR);
+    assertThat(diagnosticInfo.getTags()).contains(DiagnosticTag.STANDARD);
+  }
+
+  @Test
   void testNoOverrideWhenNotConfigured() {
     // given - Default configuration without overrides
     configuration.reset();
@@ -146,5 +197,43 @@ class DiagnosticInfoOverrideTest extends AbstractServerContextAwareTest {
     // then - Should use the explicit lspSeverity from config (Error)
     // This overrides both the default calculation and overrideMinimumLSPDiagnosticLevel
     assertThat(diagnosticInfo.getLSPSeverity()).isEqualTo(org.eclipse.lsp4j.DiagnosticSeverity.Error);
+  }
+
+  @Test
+  void testAnnotationLspSeverityIsUsedWhenNotOverridden() {
+    // given - Default configuration without overrides
+    configuration.reset();
+
+    // when
+    var diagnosticInfo = new DiagnosticInfo(AnnotatedLspSeverityDiagnostic.class, configuration, stringInterner);
+
+    // then - lspSeverity from the annotation is used
+    assertThat(diagnosticInfo.getLSPSeverity()).isEqualTo(org.eclipse.lsp4j.DiagnosticSeverity.Error);
+  }
+
+  @Test
+  void testMetadataOverrideEmptyLspSeverityClearsAnnotationValue() {
+    // given - config explicitly sets lspSeverity to "" for a diagnostic with lspSeverity = "Error" in annotation
+    File configurationFile = new File(PATH_TO_CONFIGURATION_FILE);
+    configuration.update(configurationFile);
+
+    // when
+    var diagnosticInfo = new DiagnosticInfo(AnnotatedLspSeverityDiagnostic.class, configuration, stringInterner);
+
+    // then - lspSeverity is calculated from type and severity (CODE_SMELL + INFO = Hint),
+    // then raised by overrideMinimumLSPDiagnosticLevel (Warning)
+    assertThat(diagnosticInfo.getLSPSeverity()).isEqualTo(org.eclipse.lsp4j.DiagnosticSeverity.Warning);
+  }
+
+  /**
+   * Тестовая диагностика с LSP-уровнем серьезности, заданным в аннотации.
+   * Абстрактная, чтобы не регистрироваться как бин при сканировании компонентов.
+   */
+  @DiagnosticMetadata(
+    type = DiagnosticType.CODE_SMELL,
+    severity = DiagnosticSeverity.INFO,
+    lspSeverity = "Error"
+  )
+  abstract static class AnnotatedLspSeverityDiagnostic implements BSLDiagnostic {
   }
 }

@@ -23,31 +23,21 @@ package com.github._1c_syntax.bsl.languageserver.codelenses;
 
 import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
-import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.Nullable;
-import org.springframework.cache.annotation.CacheConfig;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.event.EventListener;
 
 import java.net.URI;
-import java.nio.file.Path;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @RequiredArgsConstructor
-@CacheConfig(cacheNames = "testSources")
 public abstract class AbstractRunTestsCodeLensSupplier<T extends CodeLensData>
   implements CodeLensSupplier<T> {
 
   protected final LanguageServerConfiguration configuration;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
+  private final TestSourcesProvider testSourcesProvider;
 
   private boolean clientIsSupported;
 
@@ -59,22 +49,8 @@ public abstract class AbstractRunTestsCodeLensSupplier<T extends CodeLensData>
    * @param event Событие
    */
   @EventListener
-  @CacheEvict(allEntries = true)
   public void handleEvent(LanguageServerInitializedEvent event) {
     clientIsSupported = clientCapabilitiesHolder.isVsCodeLikeClient();
-  }
-
-  /**
-   * Обработчик события {@link LanguageServerConfigurationChangedEvent}.
-   * <p>
-   * Сбрасывает кеш при изменении конфигурации.
-   *
-   * @param event Событие
-   */
-  @EventListener
-  @CacheEvict(allEntries = true)
-  public void handleLanguageServerConfigurationChange(LanguageServerConfigurationChangedEvent event) {
-    // No-op. Служит для сброса кеша при изменении конфигурации
   }
 
   /**
@@ -83,39 +59,11 @@ public abstract class AbstractRunTestsCodeLensSupplier<T extends CodeLensData>
   @Override
   public boolean isApplicable(DocumentContext documentContext) {
     var uri = documentContext.getUri();
-    var testSources = getSelf().getTestSources(documentContext.getServerContext().getConfigurationRoot());
+    var testSources = testSourcesProvider.getTestSources(documentContext.getServerContext().getConfigurationRoot());
 
     return clientIsSupported
       && documentContext.getFileType() == FileType.OS
       && testSources.stream().anyMatch(testSource -> isInside(uri, testSource));
-  }
-
-  /**
-   * Получить self-injected экземпляр себя для работы механизмов кэширования.
-   *
-   * @return Управляемый Spring'ом экземпляр себя
-   */
-  protected abstract AbstractRunTestsCodeLensSupplier<T> getSelf();
-
-  /**
-   * Получить список каталогов с тестами с учетом корня рабочей области.
-   * <p>
-   * public для работы @Cachable.
-   *
-   * @param configurationRoot Корень конфигурации
-   * @return Список исходных файлов тестов
-   */
-  @Cacheable
-  public Set<URI> getTestSources(@Nullable Path configurationRoot) {
-    var configurationRootString = Optional.ofNullable(configurationRoot)
-      .map(Path::toString)
-      .orElse("");
-
-    return configuration.getCodeLensOptions().getTestRunnerAdapterOptions().getTestSources()
-      .stream()
-      .map(testDir -> Path.of(configurationRootString, testDir))
-      .map(path -> Absolute.path(path).toUri())
-      .collect(Collectors.toSet());
   }
 
   private static boolean isInside(URI childURI, URI parentURI) {

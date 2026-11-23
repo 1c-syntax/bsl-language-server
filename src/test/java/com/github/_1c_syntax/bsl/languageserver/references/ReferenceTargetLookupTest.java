@@ -35,6 +35,7 @@ import com.github._1c_syntax.bsl.languageserver.references.model.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrence;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrenceRepository;
 import com.github._1c_syntax.bsl.types.ModuleType;
+import com.github._1c_syntax.utils.GenericInterner;
 import com.github._1c_syntax.utils.StringInterner;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.SymbolKind;
@@ -62,8 +63,8 @@ class ReferenceTargetLookupTest {
   private final SymbolTree foreignTree = mock(SymbolTree.class);
   private final LocationRepository locations = mock(LocationRepository.class);
   private final SelfMemberResolver self = mock(SelfMemberResolver.class);
-  private final ReferenceIndex index = new ReferenceIndex(provider, mock(StringInterner.class), locations,
-    mock(SymbolOccurrenceRepository.class), self);
+  private final ReferenceIndex index = new ReferenceIndex(provider, mock(StringInterner.class), new GenericInterner<>(),
+    locations, mock(SymbolOccurrenceRepository.class), self);
 
   ReferenceTargetLookupTest() {
     when(provider.getServerContext(uri)).thenReturn(Optional.of(server));

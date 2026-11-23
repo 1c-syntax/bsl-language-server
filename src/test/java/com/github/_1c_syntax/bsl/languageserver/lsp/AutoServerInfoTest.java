@@ -21,9 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.lsp;
 
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -37,5 +42,43 @@ class AutoServerInfoTest {
   void testDataIsFilled() {
     assertThat(autoServerInfo.getName()).isNotBlank();
     assertThat(autoServerInfo.getVersion()).isNotBlank();
+  }
+
+  @Test
+  void testReadVersionWithoutManifest() {
+    var classLoader = new ManifestClassLoader(null);
+
+    assertThat(AutoServerInfo.readVersion(classLoader)).isEmpty();
+  }
+
+  @Test
+  void testReadVersionWithoutImplementationVersion() {
+    var classLoader = new ManifestClassLoader("Manifest-Version: 1.0\n");
+
+    assertThat(AutoServerInfo.readVersion(classLoader)).isEmpty();
+  }
+
+  @Test
+  void testReadVersionFromManifest() {
+    var classLoader = new ManifestClassLoader("Manifest-Version: 1.0\nImplementation-Version: 1.2.3\n");
+
+    assertThat(AutoServerInfo.readVersion(classLoader)).isEqualTo("1.2.3");
+  }
+
+  private static class ManifestClassLoader extends ClassLoader {
+    private final @Nullable String manifest;
+
+    ManifestClassLoader(@Nullable String manifest) {
+      super(null);
+      this.manifest = manifest;
+    }
+
+    @Override
+    public @Nullable InputStream getResourceAsStream(String name) {
+      if (manifest == null || !"META-INF/MANIFEST.MF".equals(name)) {
+        return null;
+      }
+      return new ByteArrayInputStream(manifest.getBytes(StandardCharsets.UTF_8));
+    }
   }
 }

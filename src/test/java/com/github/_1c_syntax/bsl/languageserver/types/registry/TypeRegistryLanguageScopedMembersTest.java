@@ -70,9 +70,9 @@ class TypeRegistryLanguageScopedMembersTest {
 
     // then
     assertThat(osMembers).extracting(MemberDescriptor::name)
-      .anyMatch("UTF8NoBOM"::equalsIgnoreCase);
+      .anyMatch("UTF8БезBOM"::equalsIgnoreCase);
     assertThat(bslMembers).extracting(MemberDescriptor::name)
-      .noneMatch("UTF8NoBOM"::equalsIgnoreCase);
+      .noneMatch("UTF8БезBOM"::equalsIgnoreCase);
   }
 
   @Test

@@ -33,6 +33,7 @@ import java.util.List;
  * @param kind Вид символа (имя {@code SymbolKind}: {@code Method}, {@code Variable}, ...).
  * @param detail Дополнительные сведения (например, сигнатура); {@code null}, если их нет.
  * @param range Диапазон символа в тексте.
+ * @param selectionRange Диапазон имени в объявлении.
  * @param children Вложенные дочерние символы.
  */
 public record SymbolDto(
@@ -40,6 +41,7 @@ public record SymbolDto(
   String kind,
   @Nullable String detail,
   RangeDto range,
+  RangeDto selectionRange,
   List<SymbolDto> children
 ) {
 
@@ -53,6 +55,7 @@ public record SymbolDto(
       symbol.getKind().name(),
       symbol.getDetail(),
       RangeDto.from(symbol.getRange()),
+      RangeDto.from(symbol.getSelectionRange()),
       children
     );
   }

@@ -26,14 +26,15 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.GitBlameComputer;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticsSelector;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.Diagnostic;
-import org.springframework.beans.factory.annotation.Lookup;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -53,13 +54,27 @@ import java.util.stream.Collectors;
 @Component
 @Slf4j
 @RequiredArgsConstructor
-public abstract class DefaultDiagnosticComputer implements DiagnosticComputer {
+public class DefaultDiagnosticComputer implements DiagnosticComputer {
 
   private final LanguageServerConfiguration configuration;
 
   @Qualifier("diagnosticComputerExecutor")
   private final ExecutorService executor;
 
+  private final DiagnosticsSelector diagnosticsSelector;
+
+  /**
+   * Параллельно вычисляет диагностики документа с учётом подавления замечаний и игнорируемых авторов.
+   * <p>
+   * Ошибка отдельного анализатора журналируется и даёт пустой результат этого анализатора.
+   * При ошибке отправки задач или сбое сбора результатов запрашивает отмену всех уже отправленных
+   * задач с прерыванием и передаёт исключение вызывающему коду. Если ожидание результата прервано,
+   * сохраняет флаг прерывания текущего потока.
+   *
+   * @param documentContext контекст анализируемого документа
+   * @return отфильтрованный список найденных замечаний
+   * @throws RuntimeException если не удалось отправить задачу или собрать результаты
+   */
   @Override
   public List<Diagnostic> compute(DocumentContext documentContext) {
     // Сбор через Future.get() обычного пула, а не parallelStream() на ForkJoinPool с блокирующим
@@ -72,25 +87,31 @@ public abstract class DefaultDiagnosticComputer implements DiagnosticComputer {
       ? GitBlameComputer.Data.empty()
       : new GitBlameComputer(documentContext.getUri(), ignoredAuthors).compute();
 
-    var diagnostics = diagnostics(documentContext);
+    var enabled = diagnosticsSelector.select(documentContext);
 
-    var nonSuppressibleCodes = diagnostics.stream()
+    var nonSuppressibleCodes = enabled.stream()
       .filter(diagnostic -> !diagnostic.getInfo().isSuppressible())
       .map(diagnostic -> diagnostic.getInfo().getCode().getStringValue())
       .collect(Collectors.toSet());
 
-    var futures = diagnostics.stream()
-      .map((BSLDiagnostic diagnostic) ->
-        executor.submit(() -> safeGetDiagnostics(diagnostic, documentContext)))
-      .toList();
+    var futures = new ArrayList<Future<List<Diagnostic>>>(enabled.size());
+    try {
+      for (var diagnostic : enabled) {
+        futures.add(executor.submit(() -> safeGetDiagnostics(diagnostic, documentContext)));
+      }
 
-    return futures.stream()
-      .map(DefaultDiagnosticComputer::getUninterruptibly)
-      .flatMap(List::stream)
-      .filter(diagnostic -> nonSuppressibleCodes.contains(DiagnosticCode.getStringValue(diagnostic.getCode()))
-        || !diagnosticIgnorance.diagnosticShouldBeIgnored(diagnostic))
-      .filter(Predicate.not(gitBlameIgnorance::diagnosticShouldBeIgnored))
-      .toList();
+      return futures.stream()
+        .map(DefaultDiagnosticComputer::getUninterruptibly)
+        .flatMap(List::stream)
+        .filter(diagnostic ->
+          nonSuppressibleCodes.contains(DiagnosticCode.getStringValue(diagnostic.getCode()))
+            || !diagnosticIgnorance.diagnosticShouldBeIgnored(diagnostic))
+        .filter(Predicate.not(gitBlameIgnorance::diagnosticShouldBeIgnored))
+        .toList();
+    } catch (RuntimeException exception) {
+      futures.forEach(future -> future.cancel(true));
+      throw exception;
+    }
   }
 
   private List<Diagnostic> safeGetDiagnostics(BSLDiagnostic diagnostic, DocumentContext documentContext) {
@@ -117,7 +138,4 @@ public abstract class DefaultDiagnosticComputer implements DiagnosticComputer {
       throw new IllegalStateException("Error computing diagnostics", e);
     }
   }
-
-  @Lookup("diagnostics")
-  protected abstract List<BSLDiagnostic> diagnostics(DocumentContext documentContext);
 }

@@ -59,11 +59,13 @@ final class MethodCompilationContexts {
       return Optional.empty();
     }
     var directive = CompilerDirectiveKind.of(kind.getTokenType());
-    if (kind != CompilerDirectiveKind.AT_CLIENT && kind != CompilerDirectiveKind.AT_SERVER) {
-      return Optional.of(new MethodContext(directive, Set.of()));
-    }
     restrictToDirective(contexts, kind);
     return Optional.of(new MethodContext(directive, Set.copyOf(contexts)));
+  }
+
+  /** Допустимость директивы общего модуля, не зависящая от его флагов и загруженных метаданных. */
+  static boolean supportsCommonDirective(CompilerDirectiveKind kind) {
+    return kind == CompilerDirectiveKind.AT_CLIENT || kind == CompilerDirectiveKind.AT_SERVER;
   }
 
   private static void restrictToDirective(Set<ExecutionContext> contexts, CompilerDirectiveKind directive) {

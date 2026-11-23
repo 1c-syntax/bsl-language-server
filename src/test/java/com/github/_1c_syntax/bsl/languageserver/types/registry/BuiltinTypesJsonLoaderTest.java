@@ -23,11 +23,14 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypePackProvider.TypeDecl;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.util.List;
 
@@ -43,6 +46,82 @@ class BuiltinTypesJsonLoaderTest {
     "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-oscript-platform-types.json";
   private static final String BSL_RESOURCE =
     "com/github/_1c_syntax/bsl/languageserver/types/registry/builtin-platform-types.json";
+
+  @Test
+  void oscriptStringPropertiesUseTheSameTypeAsStringLiterals() {
+    var name = oscriptType("Файл").members().stream().filter(member -> member.matches("Имя"))
+      .findFirst().orElseThrow();
+    var literal = new TypeRef(TypeKind.PRIMITIVE, "Строка");
+
+    assertThat(name.returnTypes().refs()).containsExactly(literal);
+    assertThat(name.returnTypes().union(TypeSet.of(literal)).refs())
+      .containsExactly(literal);
+  }
+
+  @Test
+  void primitiveStringRemainsMemberlessInBothJsonPacks() {
+    for (var type : List.of(bslType("Строка"), oscriptType("Строка"))) {
+      assertThat(type.kind()).isEqualTo(TypeKind.PRIMITIVE);
+      assertThat(type.members()).isEmpty();
+      assertThat(type.constructors()).isEmpty();
+    }
+  }
+
+  @ParameterizedTest
+  @CsvSource({"Файл, Exist, Существует", "HTTPЗапрос, SetBodyFromBinary, УстановитьТелоИзДвоичныхДанных",
+    "HTTPЗапрос, GetBodyAsBinary, ПолучитьТелоКакДвоичныеДанные"})
+  void oscriptDeprecatedNamesRemainAvailableWithoutDeprecatingThePrimaryMethod(String type, String alias,
+                                                                              String replacement) {
+    var declaration = oscriptType(type);
+    var old = member(declaration, alias);
+    assertThat(old.metadata().deprecatedSinceVersion()).isEqualTo("*");
+    assertThat(old.metadata().recommendedReplacements()).contains(replacement);
+    assertThat(old.signatures()).isNotEmpty();
+    assertThat(member(declaration, replacement).metadata().deprecatedSinceVersion()).isEmpty();
+  }
+
+  @Test
+  void oscriptNullableBooleanKeepsItsDocumentedPrimitiveType() {
+    var monopoly = member(oscriptType("ЧтениеТекста"), "Открыть").signatures().stream()
+      .flatMap(signature -> signature.parameters().stream())
+      .filter(parameter -> parameter.bilingualName().en().equals("monopoly")).findFirst().orElseThrow();
+    assertThat(monopoly.types().refs()).containsExactly(new TypeRef(TypeKind.PRIMITIVE, "Булево"));
+    assertThat(monopoly.optional()).isTrue();
+  }
+
+  @Test
+  void oscriptEnumPairsKeepCuratedDescriptionsAndCorrectEnglishNames() {
+    for (var name : List.of("ANSI", "OEM", "UTF16", "UTF8")) {
+      assertThat(member(oscriptType("КодировкаТекста"), name).displayName(Language.EN)).isEqualTo(name);
+    }
+    var all = member(oscriptType("ВидГруппыМоделиXS"), "Все");
+    assertThat(all.displayName(Language.EN)).isEqualTo("All");
+    assertThat(all.bilingualDescription().ru()).contains("без требования последовательности");
+    assertThat(member(oscriptType("КодировкаТекста"), "UTF8NoBOM").bilingualDescription().ru())
+      .contains("без BOM");
+  }
+
+  @Test
+  void oscriptHostMetadataRemainsInTheFallbackPack() {
+    assertThat(member(oscriptType("ВебЗапрос"), "ПолучитьТелоКакСтроку").signatures()).isNotEmpty();
+    assertThat(oscriptType("ДанныеPOSTЗапроса").constructors()).hasSize(2);
+    assertThat(member(oscriptType("ОписаниеФайлаPostЗапроса"), "Размер").returnTypes().refs())
+      .containsExactly(new TypeRef(TypeKind.PRIMITIVE, "Число"));
+  }
+
+  @Test
+  void oscriptVariadicConstructorsHaveBilingualTypedTails() {
+    for (var name : List.of("Массив", "Структура", "ФиксированнаяСтруктура")) {
+      var tails = oscriptType(name).constructors().stream()
+        .flatMap(signature -> signature.parameters().stream()).filter(ParameterDescriptor::variadic).toList();
+      assertThat(tails).as(name).isNotEmpty().allSatisfy(parameter -> {
+        assertThat(parameter.optional()).isTrue();
+        assertThat(parameter.bilingualName().ru()).isNotBlank();
+        assertThat(parameter.bilingualName().en()).isNotBlank();
+        assertThat(parameter.types()).isNotEqualTo(TypeSet.EMPTY);
+      });
+    }
+  }
 
   @Test
   void oscriptBilingualMemberIsSingleBilingualMember() {

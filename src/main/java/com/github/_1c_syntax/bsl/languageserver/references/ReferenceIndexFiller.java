@@ -34,6 +34,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymb
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
+import com.github._1c_syntax.bsl.languageserver.references.model.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrence;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
@@ -50,6 +51,7 @@ import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.types.ModuleType;
+import com.github._1c_syntax.utils.GenericInterner;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
@@ -236,9 +238,8 @@ public class ReferenceIndexFiller {
       batch.add(index.moduleReferenceOccurrence(uri, mdoRef, moduleType, range));
     }
 
-    void addVariableUsage(URI uri, String mdoRef, ModuleType moduleType, String methodName,
-                          String variableName, Range range, OccurrenceType occurrenceType) {
-      batch.add(index.variableOccurrence(uri, mdoRef, moduleType, methodName, variableName, range, occurrenceType));
+    void addVariableUsage(SymbolOccurrence occurrence) {
+      batch.add(occurrence);
     }
 
     void addSelfMemberUsage(URI uri, String mdoRef, ModuleType moduleType, SymbolKind symbolKind,
@@ -625,6 +626,7 @@ public class ReferenceIndexFiller {
     private final Map<String, String> variableToCommonModuleMap = new HashMap<>();
     /** variable name (lowercase) → URI .os-файла library-класса, на экземпляр которого переменная инициализирована. */
     private final Map<String, String> variableToLibraryClassUriMap = new HashMap<>();
+    private @Nullable GenericInterner<Symbol> localVariableInterner;
 
     private VariableSymbolReferenceIndexFinder(DocumentContext documentContext, BatchingSink sink) {
       this.documentContext = documentContext;
@@ -917,15 +919,29 @@ public class ReferenceIndexFiller {
         methodName = methodSymbol.get().getName();
       }
 
-      sink.addVariableUsage(
-        documentContext.getUri(),
-        documentContext.getMdoRef(),
-        documentContext.getModuleType(),
-        methodName,
-        variableName,
-        range,
-        usage ? OccurrenceType.REFERENCE : OccurrenceType.DEFINITION
-      );
+      sink.addVariableUsage(variableOccurrence(methodName, variableName, range,
+        usage ? OccurrenceType.REFERENCE : OccurrenceType.DEFINITION));
+    }
+
+    /** Канонизирует локальные ключи в пределах одного обхода переменных документа. */
+    private SymbolOccurrence variableOccurrence(String methodName, String variableName, Range range,
+                                                OccurrenceType occurrenceType) {
+      var uri = documentContext.getUri();
+      var mdoRef = documentContext.getMdoRef();
+      var moduleType = documentContext.getModuleType();
+      if (methodName.isEmpty()) {
+        return index.variableOccurrence(uri, mdoRef, moduleType, methodName, variableName, range, occurrenceType);
+      }
+
+      var interner = localVariableInterner;
+      if (interner == null) {
+        interner = new GenericInterner<>();
+        index.getLocalVariableKeys(uri).forEach(interner::intern);
+        localVariableInterner = interner;
+      }
+
+      var symbol = index.variableSymbol(mdoRef, moduleType, methodName, variableName);
+      return index.variableOccurrence(uri, symbol, range, occurrenceType, interner);
     }
 
     private void processCommonModuleMethodCalls(List<? extends BSLParser.ModifierContext> modifiers, String mdoRef) {

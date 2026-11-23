@@ -130,7 +130,7 @@ class MdoMemberFactory {
       if (name.isBlank()) {
         continue;
       }
-      result.add(property(BilingualString.of(name),
+      result.add(property(BilingualString.of(name, name),
         ValueTypes.resolve(typeRegistry, commonAttribute.getValueType())));
     }
     return result;
@@ -205,7 +205,7 @@ class MdoMemberFactory {
   /**
    * Двуязычное имя реквизита. Стандартные реквизиты (Дата/Номер/Ссылка/…) хранят оба
    * написания, поэтому член находится по любому из них, а completion показывает имя
-   * в нужной локали. У собственного реквизита конфигурации имя одно.
+   * в нужной локали. У собственного реквизита конфигурации имя одно и доступно в обеих локалях.
    *
    * @param attribute реквизит.
    * @return имя; {@link BilingualString#EMPTY}, если имени нет.
@@ -228,7 +228,7 @@ class MdoMemberFactory {
       }
     }
     var name = attribute.getName();
-    return name.isBlank() ? BilingualString.EMPTY : BilingualString.of(name);
+    return name.isBlank() ? BilingualString.EMPTY : BilingualString.of(name, name);
   }
 
   /**

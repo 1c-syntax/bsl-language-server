@@ -55,7 +55,7 @@ java -jar bsl-language-server.jar websocket --mcp --server.port=8080
 
 The terminology is LSP's: a **workspace folder** is a single project root directory, and the set of registered folders makes up the **workspace** this server serves. What gets registered and passed to the tools is a folder.
 
-Every analysis tool answers only inside a registered workspace folder — a 1C configuration or OneScript project whose sources are indexed. A file outside every registered folder is not analysed, and the tools that are not bound to a file (`type_info`, `global_member_info`, `global_member_search`) require an explicit `workspaceFolder` argument.
+Every analysis tool answers only inside a registered workspace folder — a 1C configuration or OneScript project whose sources are indexed. A file outside every registered folder is not analysed, and the tools that are not bound to a file (`type_info`, `global_member_info`, `global_member_search`, `workspace_folder_symbol_search`) require an explicit `workspaceFolder` argument.
 
 The client workflow:
 
@@ -64,6 +64,8 @@ The client workflow:
 3. `unregister_workspace_folder` — release the index when the project is no longer needed. Only folders registered over MCP can be removed: a folder that came from the LSP client is the editor's workspace folder and is left alone, because the client cannot get it back. A folder the client additionally declares as a root (see MCP roots below) stays indexed, which the result reports as `stillDeclaredByRoots`: the folder goes away once the last source releases it.
 
 The error messages are self-contained: for an unknown or missing `workspaceFolder` the server lists the registered folders and names the tool that registers a new one, so an agent can recover without asking a human.
+
+The `file` argument takes a path to the file (absolute or relative to the server process working directory) or a `file:` URI exactly as other tools return it in `uri` fields — for example, from a `definition` or `find_references` answer.
 
 Additional sources of workspace folders:
 
@@ -81,7 +83,8 @@ Additional sources of workspace folders:
 | `register_workspace_folder` | Register a project directory as a workspace folder and index its sources; the name can be given explicitly, otherwise the directory name is used |
 | `unregister_workspace_folder` | Remove a workspace folder and release its index |
 | `analyze_file` | Diagnostics for a file |
-| `document_symbols` | Symbol tree of a file (methods, regions, variables) |
+| `document_symbols` | Symbol tree of a file (methods, regions, variables). Each symbol has its whole range and the `selectionRange` of its name — a position for `definition`, `find_references` and `call_hierarchy` |
+| `symbol_text` | Source text of a symbol of a file — a region, method or `Перем`-declared variable, as in `document_symbols`: by name (case-insensitive), optionally narrowed by `scope` — a method name or `$module` for the module level, or by position (the symbol whose name is there, otherwise the innermost method or variable containing it). Each match tells its `scope`, where it is declared, and the `selectionRange` of its name; for methods the description comment above the declaration is included |
 | `find_references` | All references to the symbol at a position |
 | `call_hierarchy` | Incoming and outgoing calls of the method/procedure at a position |
 | `hover` | Hover info for a symbol (signature, type, documentation) |
@@ -90,6 +93,7 @@ Additional sources of workspace folders:
 | `global_member_info` | A global member looked up by name (e.g. `Сообщить`/`Message`) — function, property or system enum with signatures and metadata |
 | `global_member_search` | Search global context members — functions (`СтартовыйСценарий`/`StartupScript`), properties (`Метаданные`/`Metadata`) and system enums; fuzzy matching and relevance ranking like autocomplete, grouped by category, can be narrowed by categories |
 | `type_at_position` | Inferred type of the expression under the cursor and its available methods and properties |
+| `workspace_folder_symbol_search` | Search methods and module-level variables of a workspace folder (regions are not indexed): exact, prefix, camel-hump and word-start matches first; when `fuzzy` is true, substring-inside-word and subsequence matches follow; ranked like `workspace/symbol`, with `limit` bounding the answer; only symbols of the requested folder are returned |
 
 Positions (`line`, `character`) are zero-based, as in LSP.
 

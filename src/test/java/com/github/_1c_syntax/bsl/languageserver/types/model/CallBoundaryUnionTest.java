@@ -84,6 +84,28 @@ class CallBoundaryUnionTest extends AbstractServerContextAwareTest {
     }
   }
   @Test
+  void localDeclarationKeepsValuesBeforeCallsWithoutModuleVariables() {
+    initServerContext();
+    var source = """
+      Procedure Run()
+        Var Value;
+        Value = 1;
+        Message("");
+        Value = "ready";
+        Message("");
+      EndProcedure
+      """;
+    var document = TestUtils.getDocumentContext(source, context);
+    var method = document.getSymbolTree().getMethodSymbol("Run").orElseThrow();
+    var variable = document.getSymbolTree().getVariableSymbol("Value", method).orElseThrow();
+    var declaration = new Reference(variable, variable, document.getUri(), variable.getSelectionRange(),
+      OccurrenceType.DEFINITION);
+
+    assertThat(typeService.typesAt(declaration).refs()).extracting(TypeRef::qualifiedName)
+      .containsExactlyInAnyOrder("Число", "Строка");
+  }
+
+  @Test
   void callsAcrossBranchesAndLoopIterationsKeepIncomingAndResetValues() {
     var source = """
       Перем Общая;
