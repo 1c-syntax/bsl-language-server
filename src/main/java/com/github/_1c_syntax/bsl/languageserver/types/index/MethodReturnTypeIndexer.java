@@ -76,6 +76,8 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.concurrent.locks.Condition;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
@@ -157,7 +159,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   /** Методы, тела которых уже разбирались: пустой ответ у них значит «ничего не возвращает». */
   private final Set<MethodSymbol> indexed = ConcurrentHashMap.newKeySet();
 
-  /** Предварительные значения и общий монитор публикации и завершения циклов. */
+  /** Допуск публикаций и состояние предварительных результатов. */
   private final ReturnPublication publication = new ReturnPublication();
 
   /**
@@ -211,16 +213,18 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   }
 
   private void resetPublication() {
+    var exclusive = publication.gate.writeLock();
     var interrupted = false;
     try {
-      synchronized (publication) {
+      exclusive.lock();
+      try {
         configurationGeneration().current = false;
         publication.generation.set(ConfigurationGeneration.RESETTING);
         // Принятые публикации закончат обновление SymbolTypeIndex до очистки.
         // Новые публикации и результаты прежнего поколения больше не принимаются.
         while (!publication.inProgress.isEmpty()) {
           try {
-            publication.wait();
+            publication.changed.await();
           } catch (InterruptedException exception) {
             interrupted = true;
           }
@@ -228,17 +232,22 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
         pending.addAll(indexed);
         indexed.clear();
         publication.provisional.clear();
+      } finally {
+        exclusive.unlock();
       }
-      // store входит в publication из computedAt.compute; обратного порядка захвата нет.
+      // Слот computedAt берётся до допуска к публикации, поэтому очищаем карту без блокировки допуска.
       computedAt.clear();
       changedAt.clear();
       symbolTypeIndex.clearInferredReturnTypes();
       // За время между ранним сбросом выражений и закрытием публикации могли появиться новые записи.
       inferredExpressionTypeIndex.clearAll();
     } finally {
-      synchronized (publication) {
+      exclusive.lock();
+      try {
         publication.generation.set(new ConfigurationGeneration(true));
-        publication.notifyAll();
+        publication.changed.signalAll();
+      } finally {
+        exclusive.unlock();
       }
       if (interrupted) {
         Thread.currentThread().interrupt();
@@ -478,10 +487,14 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     changedAt.remove(uri);
     var methods = methodsByUri.remove(uri);
     if (methods != null) {
+      var exclusive = publication.gate.writeLock();
       methods.forEach(method -> {
-        synchronized (publication) {
+        exclusive.lock();
+        try {
           indexed.remove(method);
           publication.provisional.remove(new MethodDeclarationKey(method));
+        } finally {
+          exclusive.unlock();
         }
         computedAt.remove(method);
       });
@@ -578,16 +591,20 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     if (generation != ConfigurationGeneration.RESETTING) {
       return generation;
     }
-    synchronized (publication) {
+    var exclusive = publication.gate.writeLock();
+    exclusive.lock();
+    try {
       while ((generation = configurationGeneration()) == ConfigurationGeneration.RESETTING) {
         try {
-          publication.wait();
+          publication.changed.await();
         } catch (InterruptedException exception) {
           Thread.currentThread().interrupt();
           return null;
         }
       }
       return generation;
+    } finally {
+      exclusive.unlock();
     }
   }
 
@@ -639,23 +656,32 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
 
   private boolean beginPublication(MethodDeclarationKey declaration, boolean keepCompleted,
                                    ConfigurationGeneration generation) {
-    synchronized (publication) {
+    var admission = publication.gate.readLock();
+    admission.lock();
+    try {
       if (configurationGeneration() != generation || (keepCompleted && isIndexed(declaration.method()))) {
         return false;
       }
       publication.inProgress.add(declaration);
       return true;
+    } finally {
+      admission.unlock();
     }
   }
 
   private void finishPublication(MethodDeclarationKey declaration, boolean complete) {
-    synchronized (publication) {
-      if (complete) {
-        publication.provisional.remove(declaration);
-      }
-      publication.inProgress.remove(declaration);
-      if (configurationGeneration() == ConfigurationGeneration.RESETTING && publication.inProgress.isEmpty()) {
-        publication.notifyAll();
+    if (complete) {
+      publication.provisional.remove(declaration);
+    }
+    // После снятия отметки метод можно проверять при завершении компоненты.
+    publication.inProgress.remove(declaration);
+    if (configurationGeneration() == ConfigurationGeneration.RESETTING && publication.inProgress.isEmpty()) {
+      var exclusive = publication.gate.writeLock();
+      exclusive.lock();
+      try {
+        publication.changed.signalAll();
+      } finally {
+        exclusive.unlock();
       }
     }
   }
@@ -698,15 +724,11 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     var method = declaration.method();
     // Признак неполноты виден до обновления типа и indexed.
     if (partial != null) {
-      synchronized (publication) {
-        publication.provisional.put(declaration, partial);
-      }
+      publication.provisional.put(declaration, partial);
     }
     var previous = symbolTypeIndex.getReturnTypes(method);
     symbolTypeIndex.putReturnTypes(method, types);
-    synchronized (publication) {
-      indexed.add(method);
-    }
+    indexed.add(method);
     var valueChanged = !symbolTypeIndex.getReturnTypes(method).equals(previous);
     if (valueChanged) {
       // Обе отметки берутся из одной точки — до расчёта. Строго полнее было бы отмечать
@@ -1728,11 +1750,15 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       return false;
     }
     var before = methods.stream().map(symbolTypeIndex::getReturnTypes).toList();
-    synchronized (publication) {
+    var exclusive = publication.gate.writeLock();
+    exclusive.lock();
+    try {
       if (configurationGeneration() == generation) {
         methods.forEach(method -> publication.provisional.put(new MethodDeclarationKey(method),
           new ProvisionalReturn(UNSCOPED_INPUTS, null)));
       }
+    } finally {
+      exclusive.unlock();
     }
     for (var method : methods) {
       // Пометка «посчитан» не снимается: пересчёт и так идёт напрямую, а без пометки
@@ -1836,9 +1862,17 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   }
 
   private void finalizeComponent(List<URI> component, Map<MethodDeclarationKey, ProvisionalReturn> candidates) {
+    if (candidates.isEmpty()) {
+      return;
+    }
     var dependencies = componentDependencies(component, candidates);
-    synchronized (publication) {
+    var exclusive = publication.gate.writeLock();
+    exclusive.lock();
+    try {
+      // Новые публикации не начнутся. Активные методы пропускаем вместе с их потребителями.
       removeCompletedCandidates(candidates, dependencies);
+    } finally {
+      exclusive.unlock();
     }
   }
 
@@ -1917,15 +1951,16 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   }
 
   private static final class ReturnPublication {
-    /** Публикация открыта только для текущего токена, кроме маркера сброса. */
+    /** Разделяемый допуск публикаций, исключительный доступ для сброса и завершения компоненты. */
+    private final ReentrantReadWriteLock gate = new ReentrantReadWriteLock();
+    private final Condition changed = gate.writeLock().newCondition();
+
     private final AtomicReference<ConfigurationGeneration> generation =
       new AtomicReference<>(new ConfigurationGeneration(true));
-
-    /** Предварительные результаты читаются также вне монитора. */
     private final Map<MethodDeclarationKey, ProvisionalReturn> provisional = new ConcurrentHashMap<>();
 
-    /** Активные публикации читаются и меняются только под монитором этого объекта. */
-    private final Set<MethodDeclarationKey> inProgress = new HashSet<>();
+    /** Запись добавляется при допуске, снимается после последнего изменения результата. */
+    private final Set<MethodDeclarationKey> inProgress = ConcurrentHashMap.newKeySet();
   }
 
   /** Непрозрачный токен поколения настроек индекса. */
