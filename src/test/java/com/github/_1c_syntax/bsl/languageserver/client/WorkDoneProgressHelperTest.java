@@ -34,9 +34,11 @@ import org.eclipse.lsp4j.services.LanguageServer;
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 
+import java.time.Duration;
 import java.util.ArrayDeque;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.refEq;
@@ -238,6 +240,38 @@ class WorkDoneProgressHelperTest {
     progress.tick();
     assertThat(tasks).isEmpty();
     verifyNoInteractions(client);
+  }
+
+  @Test
+  void activityDoesNotSeeATickThatIsStillWaitingForPublication() throws InterruptedException {
+    var holder = getLanguageClientHolder();
+    var client = holder.getClient().orElseThrow();
+    var helper = new WorkDoneProgressHelper(holder, getClientCapabilitiesHolder(Boolean.TRUE));
+    helper.handleEvent(new ClientInitializedEvent(mock(LanguageServer.class)));
+    var progress = helper.createProgress(2, " files");
+    var tasks = new ArrayDeque<Runnable>();
+    progress.beginProgress("populate");
+    assertThat(progress.reportActivity(() -> "working", tasks::addLast)).isTrue();
+    clearInvocations(client);
+
+    var tick = new Thread(progress::tick);
+    try {
+      synchronized (progress) {
+        tick.start();
+        await().atMost(Duration.ofSeconds(5)).until(() -> tick.getState() == Thread.State.BLOCKED);
+        tasks.removeFirst().run();
+      }
+      assertThat(tick.join(Duration.ofSeconds(5))).isTrue();
+
+      var params = ArgumentCaptor.forClass(ProgressParams.class);
+      verify(client, times(2)).notifyProgress(params.capture());
+      assertThat(params.getAllValues())
+        .extracting(value -> ((WorkDoneProgressReport) value.getValue().getLeft()).getPercentage())
+        .containsExactly(0, 50);
+    } finally {
+      tick.join(5000);
+      progress.endProgress("");
+    }
   }
 
   @Test

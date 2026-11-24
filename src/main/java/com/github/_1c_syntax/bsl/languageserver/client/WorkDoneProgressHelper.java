@@ -180,7 +180,7 @@ public class WorkDoneProgressHelper {
       }
     }
 
-    public void tick() {
+    public synchronized void tick() {
       if (!isWorkDoneProgressSupported || ended) {
         return;
       }

@@ -287,7 +287,8 @@ class BSLLanguageServerTest {
     server.initialized(new InitializedParams());
 
     // then
-    assertThat(applicationEvents.stream(ClientInitializedEvent.class)).hasSize(1);
+    // Глобальное событие может попасть в запись через несколько тестовых Spring-контекстов.
+    assertThat(applicationEvents.stream(ClientInitializedEvent.class).distinct()).hasSize(1);
   }
 
   @Test

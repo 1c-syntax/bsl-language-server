@@ -48,6 +48,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.awaitility.Awaitility.await;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
@@ -160,6 +161,39 @@ class ServerContextProviderLifecycleTest {
     } finally {
       WorkspaceContextHolder.unregisterWorkspace(removedUri);
       WorkspaceContextHolder.unregisterWorkspace(remainingUri);
+    }
+  }
+
+  @Test
+  void opensAnUntitledDocumentWhenThePrimaryRetiresDuringSelection(@TempDir Path root) {
+    var retired = mock(ServerContext.class);
+    var remaining = mock(ServerContext.class);
+    var beans = new StaticListableBeanFactory();
+    beans.addBean("serverContext", retired);
+    var provider = new ServerContextProvider(beans.getBeanProvider(ServerContext.class),
+      mock(LanguageServerConfiguration.class), mock(WorkspaceBeanScope.class));
+    var retiredUri = Absolute.uri(root.resolve("retired").toUri());
+    var remainingUri = Absolute.uri(root.resolve("remaining").toUri());
+    var formerPrimary = new WorkspaceFolder(retiredUri.toString(), "retired");
+    provider.addWorkspace(formerPrimary);
+    beans.addBean("serverContext", remaining);
+    provider.addWorkspace(remainingUri);
+
+    doAnswer(invocation -> {
+      provider.removeWorkspace(formerPrimary);
+      return true;
+    }).when(retired).isBackgroundWorkStopped();
+    doAnswer(invocation -> {
+      invocation.getArgument(0, Runnable.class).run();
+      return true;
+    }).when(remaining).runBackgroundWork(any(Runnable.class));
+    var opened = new AtomicReference<ServerContext>();
+    try {
+      provider.runDocumentOpen(URI.create("untitled:DuringPrimaryChange"), opened::set);
+
+      assertThat(opened.get()).isSameAs(remaining);
+    } finally {
+      provider.clear();
     }
   }
 

@@ -44,6 +44,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
@@ -330,13 +331,17 @@ public class ServerContextProvider {
    */
   public void runDocumentOpen(URI documentUri, Consumer<ServerContext> open) {
     while (true) {
+      var primaryUri = primaryWorkspaceUri.get();
       var context = Optional.ofNullable(documentIndex.get(documentUri))
         .filter(indexed -> !indexed.isBackgroundWorkStopped())
         .or(() -> findWorkspaceForDocument(documentUri, true))
-        .or(() -> Optional.ofNullable(primaryWorkspaceUri.get()).map(contexts::get)
+        .or(() -> Optional.ofNullable(primaryUri).map(contexts::get)
           .filter(primary -> !primary.isBackgroundWorkStopped()));
       if (context.isEmpty()) {
-        return;
+        if (Objects.equals(primaryUri, primaryWorkspaceUri.get())) {
+          return;
+        }
+        continue;
       }
 
       var target = context.get();

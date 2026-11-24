@@ -187,7 +187,12 @@ public final class DocumentChangeExecutor {
     } catch (Exception e) {
       LOGGER.error("Unexpected error in document executor worker: {}", e.getMessage(), e);
     } finally {
-      flushPendingChanges();
+      try {
+        flushPendingChanges();
+      } finally {
+        changesCancelled = true;
+        completeWaiters();
+      }
     }
 
     if (interrupted) {
@@ -262,9 +267,15 @@ public final class DocumentChangeExecutor {
 
     try {
       var context = documentContext.getServerContext();
-      if (context.runBackgroundWork(() -> applyChangeUnderLock(context, content, version))) {
-        latestAppliedVersion.accumulateAndGet(version, Math::max);
-      } else {
+      var admitted = context.runBackgroundWork(() -> {
+        if (applyChangeUnderLock(context, content, version)) {
+          latestAppliedVersion.accumulateAndGet(version, Math::max);
+        } else {
+          changesCancelled = true;
+        }
+      });
+
+      if (!admitted) {
         changesCancelled = true;
       }
       completeWaiters();
@@ -276,11 +287,18 @@ public final class DocumentChangeExecutor {
     }
   }
 
-  private void applyChangeUnderLock(ServerContext context, String content, int version) {
+  private boolean applyChangeUnderLock(ServerContext context, String content, int version) {
     var lock = context.getDocumentLock(documentContext.getUri()).writeLock();
     lock.lock();
-    try (var ignored = WorkspaceContextHolder.forUri(context.getWorkspaceUri())) {
-      changeListener.onChange(documentContext, content, version);
+    try {
+      if (context.isBackgroundWorkStopped()) {
+        return false;
+      }
+
+      try (var ignored = WorkspaceContextHolder.forUri(context.getWorkspaceUri())) {
+        changeListener.onChange(documentContext, content, version);
+      }
+      return true;
     } finally {
       lock.unlock();
     }

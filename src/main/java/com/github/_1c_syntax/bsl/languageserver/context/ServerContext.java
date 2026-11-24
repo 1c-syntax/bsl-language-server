@@ -316,7 +316,8 @@ public class ServerContext {
     // нельзя: чтение идёт в другом ForkJoinPool, и ждущий его воркер пула заполнения
     // подхватывает чужие задачи заполнения. Те встают на блокировках документов, держатели
     // которых ждут эту же конфигурацию, — и ожидание замыкается.
-    var complete = false;
+    var workersCompleted = false;
+    boolean complete;
     var cancelled = new AtomicBoolean();
     var workers = new Phaser(1);
     try {
@@ -337,7 +338,7 @@ public class ServerContext {
         })
       );
       awaitPopulation(population, cancelled);
-      complete = !backgroundWork.isStopped();
+      workersCompleted = true;
     } catch (ExecutionException e) {
       throw new IllegalStateException("Error populating context", e);
     } finally {
@@ -345,10 +346,11 @@ public class ServerContext {
       // После снятия последнего допуска новые работники уже не зарегистрируются.
       cancelled.set(true);
       workers.awaitAdvance(workers.arriveAndDeregister());
+      complete = workersCompleted && !backgroundWork.isStopped();
       workDoneProgressReporter.endProgress(complete ? getMessage("populateContextPopulated") : "");
     }
 
-    if (backgroundWork.isStopped()) {
+    if (!complete) {
       // Часть файлов пропущена, и обрабатывать окончание наполнения незачем: рабочую
       // область закрывают.
       throw new CancellationException("Populating context stopped");
@@ -370,8 +372,9 @@ public class ServerContext {
       activeFiles.put(uri, System.nanoTime());
     }
     try {
-      populateDocument(uri, cancelled);
-      progress.tick();
+      if (populateDocument(uri, cancelled)) {
+        progress.tick();
+      }
     } finally {
       if (showActivity) {
         activeFiles.remove(uri);
@@ -402,12 +405,13 @@ public class ServerContext {
     }
   }
 
-  private void populateDocument(URI uri, AtomicBoolean cancelled) {
+  /** Обработать документ под блокировкой. Вернуть true, если он обработан или уже загружен. */
+  private boolean populateDocument(URI uri, AtomicBoolean cancelled) {
     var lock = getDocumentLock(uri);
     lock.writeLock().lock();
     try {
       if (cancelled.get() || backgroundWork.isStopped()) {
-        return;
+        return false;
       }
       var documentContext = documents.get(uri);
       if (documentContext == null) {
@@ -416,6 +420,7 @@ public class ServerContext {
         documentContext.freezeComputedData();
         tryClearDocument(documentContext);
       }
+      return true;
     } finally {
       lock.writeLock().unlock();
     }
