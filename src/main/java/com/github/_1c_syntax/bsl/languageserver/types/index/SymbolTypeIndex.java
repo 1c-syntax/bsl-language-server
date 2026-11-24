@@ -281,16 +281,17 @@ public class SymbolTypeIndex {
    */
   public ReturnTypeInputs returnTypeInputs(MethodSymbol method) {
     var inferred = inferredReturnTypes.getOrDefault(method, TypeSet.EMPTY);
-    return new ReturnTypeInputs(getDeclaredReturnTypes(method), inferred);
+    return new ReturnTypeInputs(method, getDeclaredReturnTypes(method), inferred);
   }
 
   /**
    * Источники типа возврата, по которым можно проверить актуальность результата.
    *
+   * @param method объявление, из которого взяты типы.
    * @param declared тип из описания метода.
    * @param inferred тип, выведенный по телу метода.
    */
-  public record ReturnTypeInputs(TypeSet declared, TypeSet inferred) {
+  public record ReturnTypeInputs(MethodSymbol method, TypeSet declared, TypeSet inferred) {
     /**
      * @param other источники, прочитанные другим обращением.
      * @return совпадают ли оба неизменяемых опубликованных значения по ссылкам.

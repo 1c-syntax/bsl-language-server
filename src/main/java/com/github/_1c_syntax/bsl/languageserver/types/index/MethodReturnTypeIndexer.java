@@ -1881,18 +1881,19 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     var blocked = new ArrayDeque<MethodDeclarationKey>();
     for (var entry : candidates.entrySet()) {
       var declaration = entry.getKey();
-      for (var dependency : java.util.Objects.requireNonNull(entry.getValue().missingMethods).entrySet()) {
-        var method = dependency.getKey();
+      for (var dependency : java.util.Objects.requireNonNull(entry.getValue().missingMethods)) {
+        var method = dependency.method();
         if (!members.contains(method.getOwner().getUri())) {
           blocked.add(declaration);
+          continue;
+        }
+
+        var key = new MethodDeclarationKey(method);
+        if (candidates.containsKey(key)) {
+          dependents.computeIfAbsent(key, ignored -> new ArrayList<>()).add(declaration);
         } else {
-          var key = new MethodDeclarationKey(method);
-          if (candidates.containsKey(key)) {
-            dependents.computeIfAbsent(key, ignored -> new ArrayList<>()).add(declaration);
-          } else {
-            externalInputs.computeIfAbsent(key, ignored -> new ArrayList<>())
-              .add(new ExternalReturnInput(declaration, dependency.getValue()));
-          }
+          externalInputs.computeIfAbsent(key, ignored -> new ArrayList<>())
+            .add(new ExternalReturnInput(declaration, dependency));
         }
       }
     }
@@ -1999,10 +2000,10 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   /** Запись сравнивается по идентичности, чтобы завершение не снимало более новую предварительную версию. */
   private static final class ProvisionalReturn {
     private final Object inputs;
-    private final @Nullable Map<MethodSymbol, ReturnTypeInputs> missingMethods;
+    private final @Nullable List<ReturnTypeInputs> missingMethods;
     private final @Nullable ReusedReturnTypes reused;
 
-    private ProvisionalReturn(Object inputs, @Nullable Map<MethodSymbol, ReturnTypeInputs> missingMethods,
+    private ProvisionalReturn(Object inputs, @Nullable List<ReturnTypeInputs> missingMethods,
                               @Nullable ReusedReturnTypes reused) {
       this.inputs = inputs;
       this.missingMethods = missingMethods;
@@ -2033,17 +2034,17 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    *                                 {@code null} сохраняет прочие либо неизвестные причины.
    */
   public record ComputedReturnTypes(TypeSet types, Set<MethodSymbol> consulted, boolean incomplete,
-                                    @Nullable Map<MethodSymbol, ReturnTypeInputs> incompleteMethodReturns)
+                                    @Nullable List<ReturnTypeInputs> incompleteMethodReturns)
     implements OnDemandReturnTypes {
     public ComputedReturnTypes {
       if (incompleteMethodReturns != null) {
-        incompleteMethodReturns = Map.copyOf(incompleteMethodReturns);
+        incompleteMethodReturns = List.copyOf(incompleteMethodReturns);
       }
     }
 
     /** Прежний контракт без уточнения причины неполноты не разрешает завершать цикл по предположению. */
     public ComputedReturnTypes(TypeSet types, Set<MethodSymbol> consulted, boolean incomplete) {
-      this(types, consulted, incomplete, incomplete ? null : Map.of());
+      this(types, consulted, incomplete, incomplete ? null : List.of());
     }
   }
 }

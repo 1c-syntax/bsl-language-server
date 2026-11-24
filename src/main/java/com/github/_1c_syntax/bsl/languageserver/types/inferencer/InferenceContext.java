@@ -25,14 +25,19 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.types.index.MethodDeclarationKey;
 import com.github._1c_syntax.bsl.languageserver.types.index.MethodReturnTypeIndexer.ConfigurationGeneration;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex.ReturnTypeInputs;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.jspecify.annotations.Nullable;
 
 import java.net.URI;
+import java.util.Collection;
+import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -145,10 +150,10 @@ final class InferenceContext {
     missingInputs().incompleteCell = true;
   }
 
-  void noteMissingMethod(MethodSymbol method, ReturnTypeInputs inputs) {
+  void noteMissingMethod(ReturnTypeInputs inputs) {
     var methods = missingInputs().methods;
     if (methods != null) {
-      var previous = methods.putIfAbsent(method, inputs);
+      var previous = methods.putIfAbsent(new MethodDeclarationKey(inputs.method()), inputs);
       if (previous != null && !previous.sameSources(inputs)) {
         noteMissingData();
       }
@@ -160,7 +165,7 @@ final class InferenceContext {
       nested.hasIncompleteCellInput());
   }
 
-  void inheritMissingInputs(@Nullable Map<MethodSymbol, ReturnTypeInputs> missing, boolean incompleteCell) {
+  void inheritMissingInputs(@Nullable Collection<ReturnTypeInputs> missing, boolean incompleteCell) {
     if (incompleteCell) {
       noteIncompleteCellInput();
     }
@@ -175,9 +180,9 @@ final class InferenceContext {
   }
 
   /** Снимок недостающих входов сохраняет причину неполноты при повторном чтении результата. */
-  @Nullable Map<MethodSymbol, ReturnTypeInputs> missingInputSnapshot() {
+  @Nullable List<ReturnTypeInputs> missingInputSnapshot() {
     var methods = missingMethodInputs();
-    return methods == null || flowSession.cellsIncomplete() ? null : Map.copyOf(methods);
+    return methods == null || flowSession.cellsIncomplete() ? null : List.copyOf(methods);
   }
 
   boolean sawMissing() {
@@ -193,8 +198,12 @@ final class InferenceContext {
     return methods == null || !methods.isEmpty();
   }
 
-  private @Nullable Map<MethodSymbol, ReturnTypeInputs> missingMethodInputs() {
-    return missingInputs == null ? Map.of() : missingInputs.methods;
+  private @Nullable Collection<ReturnTypeInputs> missingMethodInputs() {
+    if (missingInputs == null) {
+      return List.of();
+    }
+
+    return missingInputs.methods == null ? null : missingInputs.methods.values();
   }
 
   private MissingInputs missingInputs() {
@@ -211,9 +220,9 @@ final class InferenceContext {
   }
 
   /** Только перечисленные возвращаемые значения мешают завершению; null сохраняет прочую неполноту. */
-  @Nullable Map<MethodSymbol, ReturnTypeInputs> incompleteMethodReturns() {
+  @Nullable List<ReturnTypeInputs> incompleteMethodReturns() {
     if (!sawMissing() && !failed) {
-      return Map.of();
+      return List.of();
     }
     var methods = missingMethodInputs();
     if (hasIncompleteCellInput() || methods == null || failed || flowSession.cellsIncomplete()) {
@@ -222,12 +231,17 @@ final class InferenceContext {
     if (depthCut || bodyInFlowCut || methods.isEmpty()) {
       return null;
     }
-    return Map.copyOf(methods);
+    return List.copyOf(methods);
+  }
+
+  Optional<MethodSymbol> methodOfBody(BSLParser.CodeBlockContext body) {
+    BSLParser.SubContext sub = Trees.getAncestorByRuleIndex(body, BSLParser.RULE_sub);
+    return sub == null ? Optional.empty() : documentContext.getSymbolTreeNoLock().getMethodSymbol(sub);
   }
 
   private static final class MissingInputs {
     /** Недостающие возвраты. {@code null} также допускает другую причину неполноты. */
-    private @Nullable Map<MethodSymbol, ReturnTypeInputs> methods;
+    private @Nullable Map<MethodDeclarationKey, ReturnTypeInputs> methods;
     private boolean incompleteCell;
 
     private MissingInputs() {

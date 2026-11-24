@@ -35,8 +35,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 class InferenceContextMissingInputsTest {
-  private static final ReturnTypeInputs EMPTY_INPUT = new ReturnTypeInputs(TypeSet.EMPTY, TypeSet.EMPTY);
-
   @Test
   void missingMethodReturnsAreMergedWithoutLosingTheirCause() {
     var document = mock(DocumentContext.class);
@@ -44,13 +42,13 @@ class InferenceContextMissingInputsTest {
     var child = parent.nested(document, ExecutionContext.SERVER);
     var first = mock(MethodSymbol.class);
     var second = mock(MethodSymbol.class);
-    parent.noteMissingMethod(first, EMPTY_INPUT);
-    child.noteMissingMethod(second, EMPTY_INPUT);
+    parent.noteMissingMethod(emptyInput(first));
+    child.noteMissingMethod(emptyInput(second));
 
     parent.inheritMissingInputs(child);
 
     assertThat(parent.sawMissing()).isTrue();
-    assertThat(parent.incompleteMethodReturns()).containsOnlyKeys(first, second);
+    assertThat(parent.incompleteMethodReturns()).extracting(ReturnTypeInputs::method).containsExactlyInAnyOrder(first, second);
     child.noteMissingData();
     parent.inheritMissingInputs(child);
     assertThat(parent.incompleteMethodReturns()).isNull();
@@ -62,8 +60,8 @@ class InferenceContextMissingInputsTest {
     var parent = new InferenceContext(document, ExecutionContext.SERVER);
     var child = parent.nested(document, ExecutionContext.SERVER);
     var method = mock(MethodSymbol.class);
-    parent.noteMissingMethod(method, EMPTY_INPUT);
-    child.noteMissingMethod(method, new ReturnTypeInputs(TypeSet.EMPTY, TypeSet.of(TypeRef.UNDEFINED)));
+    parent.noteMissingMethod(emptyInput(method));
+    child.noteMissingMethod(new ReturnTypeInputs(method, TypeSet.EMPTY, TypeSet.of(TypeRef.UNDEFINED)));
 
     parent.inheritMissingInputs(child);
 
@@ -75,7 +73,7 @@ class InferenceContextMissingInputsTest {
   @ValueSource(strings = {"failed", "depth", "body"})
   void intrinsicCutsCannotBeFinalizedAsAMethodReturnCycle(String reason) {
     var inference = new InferenceContext(mock(DocumentContext.class), ExecutionContext.SERVER);
-    inference.noteMissingMethod(mock(MethodSymbol.class), EMPTY_INPUT);
+    inference.noteMissingMethod(emptyInput(mock(MethodSymbol.class)));
     switch (reason) {
       case "failed" -> inference.failed = true;
       case "depth" -> inference.depthCut = true;
@@ -89,7 +87,7 @@ class InferenceContextMissingInputsTest {
   @Test
   void aFreshRefinementDoesNotInheritPreviousMissingInputs() {
     var inference = new InferenceContext(mock(DocumentContext.class), ExecutionContext.SERVER);
-    inference.noteMissingMethod(mock(MethodSymbol.class), EMPTY_INPUT);
+    inference.noteMissingMethod(emptyInput(mock(MethodSymbol.class)));
     inference.noteMissingData();
 
     var fresh = inference.forRefinement();
@@ -97,5 +95,9 @@ class InferenceContextMissingInputsTest {
     assertThat(fresh.sawMissing()).isFalse();
     assertThat(fresh.incompleteMethodReturns()).isEmpty();
     assertThat(inference.incompleteMethodReturns()).isNull();
+  }
+
+  private static ReturnTypeInputs emptyInput(MethodSymbol method) {
+    return new ReturnTypeInputs(method, TypeSet.EMPTY, TypeSet.EMPTY);
   }
 }

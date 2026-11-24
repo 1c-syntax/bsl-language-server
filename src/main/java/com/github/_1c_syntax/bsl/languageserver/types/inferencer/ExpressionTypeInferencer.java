@@ -1113,7 +1113,7 @@ public class ExpressionTypeInferencer {
       result = neutralReturnTypes(method, ctx);
     } else if (method.isFunction() && !methodReturnTypeIndexer.isIndexed(method)) {
       var inputs = symbolTypeIndex.returnTypeInputs(method);
-      ctx.noteMissingMethod(method, inputs);
+      ctx.noteMissingMethod(inputs);
       result = inputs.types();
     } else {
       result = symbolTypeIndex.getReturnTypes(method);

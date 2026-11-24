@@ -151,7 +151,7 @@ class MethodReturnTypeIndexerTest {
     when(symbolTypeIndex.getReturnTypes(any()))
       .thenAnswer(invocation -> stored.getOrDefault(invocation.getArgument(0), TypeSet.EMPTY));
     when(symbolTypeIndex.returnTypeInputs(any()))
-      .thenAnswer(invocation -> new ReturnTypeInputs(TypeSet.EMPTY,
+      .thenAnswer(invocation -> new ReturnTypeInputs(invocation.getArgument(0), TypeSet.EMPTY,
         stored.getOrDefault(invocation.getArgument(0), TypeSet.EMPTY)));
     doAnswer(invocation -> stored.put(invocation.getArgument(0), invocation.getArgument(1)))
       .when(symbolTypeIndex).putReturnTypes(any(), any());
@@ -204,10 +204,10 @@ class MethodReturnTypeIndexerTest {
   private Map<?, ?> snapshotOfProvisionalCycle(List<URI> component) {
     indexer.computeIfAbsent(sourceMethod, () ->
       new ComputedReturnTypes(NUMBER, Set.of(consumerMethod), true,
-        Map.of(consumerMethod, symbolTypeIndex.returnTypeInputs(consumerMethod))));
+        List.of(symbolTypeIndex.returnTypeInputs(consumerMethod))));
     indexer.computeIfAbsent(consumerMethod, () ->
       new ComputedReturnTypes(STRING, Set.of(sourceMethod), true,
-        Map.of(sourceMethod, symbolTypeIndex.returnTypeInputs(sourceMethod))));
+        List.of(symbolTypeIndex.returnTypeInputs(sourceMethod))));
     Map<?, ?> snapshot = ReflectionTestUtils.invokeMethod(indexer, "componentCandidates", component);
     assertThat(snapshot).hasSize(2);
     return snapshot;
@@ -220,7 +220,7 @@ class MethodReturnTypeIndexerTest {
     indexer.computeIfAbsent(sourceMethod, () -> new ComputedReturnTypes(STRING, Set.of(), true, null));
     var observed = symbolTypeIndex.returnTypeInputs(sourceMethod);
     indexer.computeIfAbsent(consumerMethod, () -> new ComputedReturnTypes(observed.types(),
-      Set.of(sourceMethod), true, Map.of(sourceMethod, observed)));
+      Set.of(sourceMethod), true, List.of(observed)));
 
     Map<?, ?> snapshot = ReflectionTestUtils.invokeMethod(indexer, "componentCandidates", component);
     assertThat(snapshot).hasSize(1);
@@ -877,12 +877,12 @@ class MethodReturnTypeIndexerTest {
       var peer = ring.methods()[(i + 1) % size];
       var first = i == 0;
       when(inferencer.computeReturnTypes(ring.methods()[i])).thenAnswer(invocation -> {
-        Map<MethodSymbol, ReturnTypeInputs> missing = new HashMap<>();
+        List<ReturnTypeInputs> missing = new ArrayList<>();
         if (!indexer.isIndexed(peer)) {
-          missing.put(peer, symbolTypeIndex.returnTypeInputs(peer));
+          missing.add(symbolTypeIndex.returnTypeInputs(peer));
         }
         if (first && (blocker.equals("unindexed") || blocker.equals("provisional"))) {
-          missing.put(outside, symbolTypeIndex.returnTypeInputs(outside));
+          missing.add(symbolTypeIndex.returnTypeInputs(outside));
         }
         var intrinsic = first && blocker.equals("intrinsic");
         var consulted = first && !blocker.equals("none") ? Set.of(peer, outside) : Set.of(peer);
