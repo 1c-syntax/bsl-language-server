@@ -50,8 +50,11 @@ import com.github._1c_syntax.bsl.languageserver.types.model.Availability;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
@@ -374,6 +377,26 @@ class BslContextPlatformTypesProviderTest {
     assertThat(decl.members()).hasSize(1);
     assertThat(decl.members().iterator().next().returnType().qualifiedName())
       .isEqualTo("Картинка");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"", "String"})
+  void enumOfStringsReturnsThePrimitiveType(String valueTypeAlias) {
+    var stringType = primitive("Строка", "String");
+    var symbols = PlatformContextEnum.builder()
+      .name(new ContextName("Символы", "Chars"))
+      .values(List.of(new PlatformContextEnumValue(new ContextName("ПС", "LF"))))
+      .valueType(new ContextName("Строка", valueTypeAlias))
+      .build();
+    var provider = mock(ContextProvider.class);
+    when(provider.getContexts()).thenReturn(List.of(symbols, stringType));
+
+    var types = new BslContextPlatformTypesProvider(holderOf(provider)).getTypes();
+
+    assertThat(types.stream().filter(type -> type.qualifiedName().equals("Символы")).findFirst().orElseThrow()
+      .members()).singleElement()
+      .satisfies(symbol -> assertThat(symbol.returnTypes().refs())
+        .containsExactly(new TypeRef(TypeKind.PRIMITIVE, "Строка")));
   }
 
   @Test
