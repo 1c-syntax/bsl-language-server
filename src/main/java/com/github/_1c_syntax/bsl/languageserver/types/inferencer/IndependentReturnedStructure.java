@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.cfg.CfgVertex;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
@@ -47,9 +46,9 @@ final class IndependentReturnedStructure {
   private IndependentReturnedStructure() {
   }
 
-  static boolean localVariable(DocumentContext document, VariableSymbol variable) {
+  static boolean localVariable(VariableSymbol variable) {
     return switch (variable.getKind()) {
-      case DYNAMIC, LOCAL -> variable.getScope() instanceof MethodSymbol && document.getFileType() == FileType.BSL;
+      case DYNAMIC, LOCAL -> variable.getScope() instanceof MethodSymbol;
       default -> false;
     };
   }
@@ -70,7 +69,7 @@ final class IndependentReturnedStructure {
     selected.add(required);
     for (var node : Trees.findAllRuleNodes(body, BSLParser.RULE_returnStatement)) {
       var candidate = returnedVariable(document, body, (BSLParser.ReturnStatementContext) node, reachable);
-      if (candidate != null && !selected.contains(candidate) && localVariable(document, candidate)
+      if (candidate != null && !selected.contains(candidate) && localVariable(candidate)
         && supports(document, body, candidate, variables, vertices, inputs, reachable)) {
         selected.add(candidate);
       }

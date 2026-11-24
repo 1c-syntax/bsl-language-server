@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageSer
 import com.github._1c_syntax.bsl.languageserver.cfg.CfgBuildOptions;
 import com.github._1c_syntax.bsl.languageserver.cfg.PreprocessorFlow;
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
+import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraph;
 import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraphIndex;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
@@ -592,7 +593,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   /** Тип замкнуто строящейся локальной структуры; {@code null} требует полного прохода тела. */
   @Nullable TypeSet independentReturnTypeAt(DocumentContext document, ParserRuleContext use,
                                            VariableSymbol variable, FlowInputs inputs, BooleanSupplier complete) {
-    return ReturnedLocalFlow.typeAt(this, controlFlowGraphIndex, document, use, variable, inputs, complete);
+    return ReturnedLocalFlow.typeAt(this, document, use, variable, inputs, complete);
   }
 
   /**
@@ -1229,11 +1230,24 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     if (variables.variables().isEmpty()) {
       return new Facts(Map.of(), Map.of(), Map.of(), FlowEnvironment.EMPTY);
     }
-    var graph = controlFlowGraphIndex.graphOf(documentContext, body, CfgBuildOptions.defaults());
-    var compiled = inputs.compilationContexts().apply(body)
-      .map(contexts -> PreprocessorFlow.of(graph, contexts, documentContext.getFileType())).orElse(null);
-    var pass = new VariableFlowPass(this, documentContext, graph, layout, inputs, compiled, variables);
+    return computeFacts(documentContext, body, layout, inputs, variables, flowGraph(documentContext, body, inputs));
+  }
+
+  Facts computeFacts(DocumentContext document, CodeBlockContext body, FlowLayout layout,
+                     FlowInputs inputs, FlowVariables variables, FlowGraph flow) {
+    var pass = new VariableFlowPass(this, document, flow.graph(), layout, inputs, flow.compiled(), variables);
     return inputs.session().computeBodyFacts(body, pass);
+  }
+
+  record FlowGraph(ControlFlowGraph graph, @Nullable PreprocessorFlow compiled) { }
+
+  /** Подготовить один и тот же граф для полного прохода и его проекции. */
+  FlowGraph flowGraph(DocumentContext document, CodeBlockContext body, FlowInputs inputs) {
+    var graph = controlFlowGraphIndex.graphOf(document, body, CfgBuildOptions.defaults());
+    var compiled = inputs.compilationContexts().apply(body)
+      .map(contexts -> PreprocessorFlow.of(graph, contexts, document.getFileType())).orElse(null);
+
+    return new FlowGraph(graph, compiled);
   }
 
   /** Структура переменных тела для текущего дерева символов, общая для всех режимов расчёта. */

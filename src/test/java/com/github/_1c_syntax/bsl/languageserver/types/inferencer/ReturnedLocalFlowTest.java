@@ -47,6 +47,7 @@ import org.springframework.test.util.AopTestUtils;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.util.concurrent.atomic.AtomicInteger;
+import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -72,9 +73,13 @@ class ReturnedLocalFlowTest extends AbstractServerContextAwareTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"New Structure", "New Structure()", "Новый Структура", "Новый Структура()"})
-  void anIndependentReturnedStructureDoesNotEvaluateUnrelatedLocals(String constructor) {
-    var document = TestUtils.getDocumentContext("""
+  @CsvSource(value = {
+    "New Structure | bsl", "New Structure() | bsl", "Новый Структура | bsl", "Новый Структура() | bsl",
+    "New Structure() | os", "Новый Структура() | os"
+  }, delimiter = '|')
+  void anIndependentReturnedStructureDoesNotEvaluateUnrelatedLocals(String constructor, String extension) {
+    var uri = URI.create("file:///ReturnedStructure." + extension);
+    var document = TestUtils.getDocumentContext(uri, """
       Function Independent()
         Result = %s;
         Result.Insert("Status");
@@ -584,17 +589,19 @@ class ReturnedLocalFlowTest extends AbstractServerContextAwareTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {
-    "Result = 1;",
-    "Alias(Result);",
-    "If Result <> Undefined And Other <> Undefined Then Result.Insert(\"Status\"); EndIf;"
-  })
-  void inactiveCodeDoesNotInvalidateTheServerProjection(String clientCode) {
-    var document = TestUtils.getDocumentContext("""
+  @CsvSource(value = {
+    "Result = 1; | false", "Alias(Result); | false",
+    "If Result <> Undefined And Other <> Undefined Then Result.Insert(\"Status\"); EndIf; | false",
+    "Result = 1; | true", "Alias(Result); | true",
+    "If Result <> Undefined And Other <> Undefined Then Result.Insert(\"Status\"); EndIf; | true"
+  }, delimiter = '|')
+  void inactiveCodeDoesNotInvalidateProjection(String branchCode, boolean oneScript) {
+    var uri = URI.create(oneScript ? "file:///BranchStructure.os" : "file:///BranchStructure.bsl");
+    var document = TestUtils.getDocumentContext(uri, """
       Function Build()
         Result = New Structure;
         Other = 1;
-      #If Client Then
+      #If %s Then
         %s
       #EndIf
         Unused = Recursive();
@@ -605,7 +612,7 @@ class ReturnedLocalFlowTest extends AbstractServerContextAwareTest {
       EndFunction
       Procedure Alias(Value)
       EndProcedure
-      """.formatted(clientCode), context);
+      """.formatted(oneScript ? "Linux" : "Client", branchCode), context);
     var method = document.getSymbolTree().getMethodSymbol("Build").orElseThrow();
     var statement = (BSLParser.ReturnStatementContext) Trees.findAllRuleNodes(document.getAst(),
       BSLParser.RULE_returnStatement).iterator().next();
@@ -620,17 +627,19 @@ class ReturnedLocalFlowTest extends AbstractServerContextAwareTest {
     }).when(counted).of(any(), any(), any(), any());
     ReflectionTestUtils.setField(target, "returnTypeFromBodyInference", counted);
     try {
-      var server = new InferenceContext(document, ExecutionContext.SERVER);
+      var server = new InferenceContext(document,
+        oneScript ? ExecutionContext.OSCRIPT_WINDOWS : ExecutionContext.SERVER);
       server.visited.add(method);
       TypeSet serverTypes = ReflectionTestUtils.invokeMethod(target, "inferInternal", expression, server, false, true);
       assertThat(serverTypes.refs()).extracting(TypeRef::qualifiedName).containsExactly("Структура");
       assertThat(calls.get()).isZero();
 
-      var client = new InferenceContext(document, ExecutionContext.THIN_CLIENT);
+      var client = new InferenceContext(document,
+        oneScript ? ExecutionContext.OSCRIPT_LINUX : ExecutionContext.THIN_CLIENT);
       client.visited.add(method);
       TypeSet clientTypes = ReflectionTestUtils.invokeMethod(target, "inferInternal", expression, client, false, true);
       assertThat(clientTypes.refs()).extracting(TypeRef::qualifiedName)
-        .containsExactly(clientCode.equals("Result = 1;") ? "Число" : "Структура");
+        .containsExactly(branchCode.equals("Result = 1;") ? "Число" : "Структура");
       assertThat(calls.get()).isPositive();
     } finally {
       ReflectionTestUtils.setField(target, "returnTypeFromBodyInference", original);
