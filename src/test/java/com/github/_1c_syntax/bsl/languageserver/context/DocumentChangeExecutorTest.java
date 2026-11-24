@@ -135,7 +135,7 @@ class DocumentChangeExecutorTest {
   }
 
   @Test
-  void workspaceStopWhileWaitingForTheDocumentLockSkipsTheChange() throws Exception {
+  void workspaceStopWhileWaitingForTheDocumentLockSkipsTheChange() {
     var lock = new ReentrantReadWriteLock();
     when(serverContext.getDocumentLock(TEST_URI)).thenReturn(lock);
 
