@@ -39,13 +39,21 @@ import java.util.IdentityHashMap;
 import java.util.Set;
 import java.util.function.Predicate;
 
-/** Достаточные условия, при которых локальное возвращаемое значение можно вычислить отдельно. */
+/**
+ * Проверяет, можно ли посчитать возвращаемую переменную без остальных локальных значений тела.
+ * Проекция поддерживает построение пустой структуры с независимыми вставками и прямой вызов
+ * локальной функции без аргументов. Чтения и изменения проверяются на достижимых участках.
+ */
 final class IndependentReturnedStructure {
   private static final int INSERT_WITH_VALUE_ARITY = 2;
 
   private IndependentReturnedStructure() {
   }
 
+  /**
+   * @param variable символ переменной.
+   * @return относится ли объявленная или динамическая переменная к телу метода.
+   */
   static boolean localVariable(VariableSymbol variable) {
     return switch (variable.getKind()) {
       case DYNAMIC, LOCAL -> variable.getScope() instanceof MethodSymbol;
@@ -53,6 +61,19 @@ final class IndependentReturnedStructure {
     };
   }
 
+  /**
+   * Проверяет единственное начальное присваивание, независимость изменений и условий,
+   * а также отсутствие передачи переменной в аргументах вызовов.
+   *
+   * @param document документ тела.
+   * @param body тело метода.
+   * @param variable проверяемая локальная переменная.
+   * @param variables раскладка переменных и изменений.
+   * @param vertices доступные вершины графа.
+   * @param inputs входы текущего режима расчёта.
+   * @param reachable проверка достижимости синтаксического узла.
+   * @return можно ли включить переменную в сокращённое окружение.
+   */
   static boolean supports(DocumentContext document, BSLParser.CodeBlockContext body, VariableSymbol variable,
                           FlowVariables variables, Set<CfgVertex> vertices, VariableFlowAnalyzer.FlowInputs inputs,
                           Predicate<ParserRuleContext> reachable) {
@@ -61,7 +82,18 @@ final class IndependentReturnedStructure {
       && closedConditions(variable, vertices, inputs) && !escapes(document, body, variable, reachable);
   }
 
-  /** Собрать замкнутые локальные результаты для одного прохода, не добавляя остальные переменные тела. */
+  /**
+   * Собирает результаты, для которых можно выполнить один проход с сокращённым окружением.
+   *
+   * @param document документ тела.
+   * @param body тело метода.
+   * @param variables раскладка переменных и изменений.
+   * @param vertices доступные вершины графа.
+   * @param inputs входы текущего режима расчёта.
+   * @param required уже проверенный обязательный результат.
+   * @param reachable проверка достижимости синтаксического узла.
+   * @return обязательная переменная и остальные независимые переменные из операторов возврата.
+   */
   static Set<VariableSymbol> returnedLocals(DocumentContext document, BSLParser.CodeBlockContext body,
       FlowVariables variables, Set<CfgVertex> vertices, VariableFlowAnalyzer.FlowInputs inputs, VariableSymbol required,
       Predicate<ParserRuleContext> reachable) {

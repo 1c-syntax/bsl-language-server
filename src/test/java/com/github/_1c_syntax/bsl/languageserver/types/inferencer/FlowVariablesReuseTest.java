@@ -23,6 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -34,17 +36,39 @@ import org.junit.jupiter.api.TestReporter;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.CALLS_REAL_METHODS;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.when;
 
 class FlowVariablesReuseTest extends AbstractServerContextAwareTest {
   @Autowired
   private TypeService typeService;
+
+  @Test
+  void aModuleVariableRemainsVisibleInAProjectionWithOnlyLocals() {
+    var module = mock(VariableSymbol.class);
+    when(module.getKind()).thenReturn(VariableKind.MODULE);
+    var local = mock(VariableSymbol.class);
+    when(local.getKind()).thenReturn(VariableKind.DYNAMIC);
+    var variables = new FlowVariables(List.of(module, local), List.of(module, local),
+      Map.of(module, 0, local, 1), Map.of(), Set.of());
+
+    var localProjection = variables.forVariables(Set.of(local));
+
+    assertThat(localProjection.variables()).containsExactly(local);
+    assertThat(localProjection.hasVisibleModuleVariables()).isTrue();
+    assertThat(new FlowVariables(List.of(local), List.of(local), Map.of(local, 0), Map.of(), Set.of())
+      .hasVisibleModuleVariables()).isFalse();
+  }
 
   @Test
   void referencedModuleVariablesAreScannedOnceAcrossExecutionModes(TestReporter reporter) {

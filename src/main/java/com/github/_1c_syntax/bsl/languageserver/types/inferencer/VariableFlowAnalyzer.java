@@ -590,7 +590,14 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     return typeAt(documentContext, use, variable, inputs, null);
   }
 
-  /** Тип замкнуто строящейся локальной структуры; {@code null} требует полного прохода тела. */
+  /**
+   * @param document документ текущего дерева.
+   * @param use узел использования в операторе возврата.
+   * @param variable символ возвращаемой локальной переменной.
+   * @param inputs входы прохода и сессия вывода типов.
+   * @param complete проверка полноты результата перед сохранением.
+   * @return тип из сокращённого окружения или {@code null}, если нужен полный проход.
+   */
   @Nullable TypeSet independentReturnTypeAt(DocumentContext document, ParserRuleContext use,
                                            VariableSymbol variable, FlowInputs inputs, BooleanSupplier complete) {
     return ReturnedLocalFlow.typeAt(this, document, use, variable, inputs, complete);
@@ -614,12 +621,12 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
 
   private @Nullable TypeSet typeAt(DocumentContext documentContext, ParserRuleContext use,
                                    VariableSymbol variable, FlowInputs inputs, @Nullable BooleanSupplier sharedRoot) {
-    var body = enclosingBody(use);
+    var body = FlowLayout.enclosingBody(use);
     if (body == null) {
       return null;
     }
     var layout = layoutOf(documentContext, body);
-    var useStatement = enclosingStatement(use, layout);
+    var useStatement = layout.enclosingStatement(use);
     if (useStatement == null) {
       return null;
     }
@@ -1268,36 +1275,6 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
 
 
 
-
-  /**
-   * Тело метода или код модуля, которому принадлежит узел, — единица, по которой строится
-   * граф потока управления. Это самый внешний блок кода над узлом: вложенные блоки
-   * ветвлений и циклов частями графа не являются.
-   */
-  static BSLParser.@Nullable CodeBlockContext enclosingBody(ParserRuleContext node) {
-    ParserRuleContext current = node;
-    BSLParser.CodeBlockContext outermost = null;
-    while (current != null) {
-      if (current instanceof BSLParser.CodeBlockContext codeBlock) {
-        outermost = codeBlock;
-      }
-      current = current.getParent();
-    }
-    return outermost;
-  }
-
-  /** Ближайший оператор графа, внутри которого находится узел. */
-  @Nullable
-  static ParserRuleContext enclosingStatement(ParserRuleContext node, FlowLayout layout) {
-    ParserRuleContext current = node;
-    while (current != null) {
-      if (layout.hasStatement(current)) {
-        return current;
-      }
-      current = current.getParent();
-    }
-    return null;
-  }
 
   /**
    * Тело метода или код модуля, накрывающие позицию. Поиск идёт по упорядоченным

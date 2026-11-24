@@ -96,6 +96,27 @@ class ReturnedLocalFlowTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void aProjectedReturnLeavesTheOtherLocalAvailableToAPositionQuery() {
+    var document = TestUtils.getDocumentContext("""
+      Function Build()
+        Result = New Structure;
+        Result.Insert("Ready", True);
+        Other = 42;
+        Message(Other);
+        Return Result;
+      EndFunction
+      """, context);
+    var method = document.getSymbolTree().getMethodSymbol("Build").orElseThrow();
+    var returned = inferencer.computeReturnTypes(method);
+
+    assertThat(returned.types().refs()).extracting(TypeRef::qualifiedName).containsExactly("Структура");
+    assertThat(returned.types().localFields().values().stream().flatMap(fields -> fields.keySet().stream()))
+      .anyMatch(name -> name.equalsIgnoreCase("Ready"));
+    assertThat(typeService.expressionTypesAt(document, new Position(4, 11), ExecutionContext.SERVER).refs())
+      .extracting(TypeRef::qualifiedName).containsExactly("Число");
+  }
+
+  @Test
   void aLiteralFieldValueKeepsTheProjectionAndItsType() {
     var document = TestUtils.getDocumentContext("""
       Function Independent()

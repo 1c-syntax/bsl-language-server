@@ -532,7 +532,11 @@ public class OpenDataObjectInference {
     return new KeyedTypes(keyName, columnTypes.isEmpty() ? UNDEFINED : columnTypes);
   }
 
-  /** Имя ключа или колонки из первого аргумента — только строковым литералом. */
+  /**
+   * @param params непустой список аргументов вызова.
+   * @return имя из первого аргумента без окружающих пробелов или {@code null},
+   *     если ключ пропущен, пуст либо задан выражением.
+   */
   @Nullable
   static String literalKeyOf(List<? extends BSLParser.CallParamContext> params) {
     var keyName = Optional.ofNullable(params.get(0).expression())

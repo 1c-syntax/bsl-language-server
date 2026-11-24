@@ -37,8 +37,19 @@ import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
 
-/** Выбирает локальные переменные для штатного прохода с сокращённым окружением. */
+/**
+ * Вычисляет тип локальной переменной в операторе возврата функции. Сокращает
+ * окружение до проверенных независимых результатов и запускает обычный {@link VariableFlowPass}.
+ * Окружение проекции переиспользуется в пределах запроса и режима компиляции.
+ */
 final class ReturnedLocalFlow {
+  /**
+   * Ключ окружения проекции в текущем запросе.
+   *
+   * @param body тело функции.
+   * @param variable локальный результат.
+   * @param context режим компиляции или {@code null} для расчёта без выбранного режима.
+   */
   record Key(BSLParser.CodeBlockContext body, VariableSymbol variable, @Nullable ExecutionContext context) { }
 
   private record Projection(FlowGraph flow, FlowVariables inputVariables, Set<VariableSymbol> locals) { }
@@ -46,27 +57,47 @@ final class ReturnedLocalFlow {
   private ReturnedLocalFlow() {
   }
 
+  /**
+   * Читает тип переменной перед оператором возврата. При наличии готовых общих фактов
+   * использует их, иначе пробует построить сокращённое окружение.
+   *
+   * @param analyzer индекс графа и фактов в рабочей области.
+   * @param document документ текущего дерева.
+   * @param use узел использования переменной.
+   * @param variable символ возвращаемой переменной.
+   * @param inputs входы прохода и сессия вывода типов.
+   * @param complete проверка полноты результата перед сохранением в сессии.
+   * @return тип в точке возврата или {@code null}, если нужен полный расчёт.
+   */
   static @Nullable TypeSet typeAt(
     VariableFlowAnalyzer analyzer, DocumentContext document, ParserRuleContext use,
     VariableSymbol variable, FlowInputs inputs, BooleanSupplier complete
   ) {
     var body = IndependentReturnedStructure.localVariable(variable)
-      ? VariableFlowAnalyzer.enclosingBody(use) : null;
-    var session = inputs.session();
-    if (body == null || session.computing(body)) {
+      ? FlowLayout.enclosingBody(use) : null;
+    if (body == null || inputs.session().computing(body)) {
       return null;
     }
     var layout = analyzer.layoutOf(document, body);
-    var statement = VariableFlowAnalyzer.enclosingStatement(use, layout);
+    var statement = layout.enclosingStatement(use);
     if (statement == null) {
       return null;
     }
+
     inputs.activeBodyRead().accept(body);
     var key = new Key(body, variable, inputs.executionContext());
-    var cached = analyzer.cachedFacts(document.getUri(), body, inputs);
+    return typeBefore(factsForReturn(analyzer, document, layout, key, inputs, complete), statement, variable);
+  }
+
+  private static @Nullable Facts factsForReturn(
+    VariableFlowAnalyzer analyzer, DocumentContext document, FlowLayout layout, Key key,
+    FlowInputs inputs, BooleanSupplier complete
+  ) {
+    var session = inputs.session();
+    var cached = analyzer.cachedFacts(document.getUri(), key.body(), inputs);
     if (cached != null || session.hasIndependentFacts(key)) {
       session.noteCellInput();
-      return typeBefore(cached == null ? session.independentFacts(key) : cached, statement, variable);
+      return cached == null ? session.independentFacts(key) : cached;
     }
     var projection = plan(analyzer, document, layout, key, inputs);
     if (projection == null) {
@@ -76,11 +107,11 @@ final class ReturnedLocalFlow {
       return null;
     }
 
-    var facts = analyzer.computeFacts(document, body, layout, inputs, projection.inputVariables(), projection.flow());
+    var facts = analyzer.computeFacts(document, key.body(), layout, inputs, projection.inputVariables(), projection.flow());
     for (var local : projection.locals()) {
-      session.rememberIndependentFacts(new Key(body, local, key.context()), facts, inputs, complete);
+      session.rememberIndependentFacts(new Key(key.body(), local, key.context()), facts, inputs, complete);
     }
-    return typeBefore(facts, statement, variable);
+    return facts;
   }
 
   private static @Nullable Projection plan(
@@ -103,7 +134,7 @@ final class ReturnedLocalFlow {
   }
 
   private static boolean possiblyReachable(ParserRuleContext node, FlowLayout layout, Set<CfgVertex> vertices) {
-    var statement = VariableFlowAnalyzer.enclosingStatement(node, layout);
+    var statement = layout.enclosingStatement(node);
     return statement == null || vertices.contains(layout.vertexOf(statement));
   }
 
