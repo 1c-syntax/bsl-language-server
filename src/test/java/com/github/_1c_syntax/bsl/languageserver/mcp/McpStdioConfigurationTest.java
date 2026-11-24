@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.mcp;
 
 import io.modelcontextprotocol.json.jackson3.JacksonMcpJsonMapper;
-import io.modelcontextprotocol.server.transport.StdioServerTransportProvider;
 import io.modelcontextprotocol.spec.McpSchema;
 import io.modelcontextprotocol.spec.McpServerSession;
 import io.modelcontextprotocol.spec.McpServerTransport;
@@ -90,13 +89,12 @@ class McpStdioConfigurationTest {
 
   @Test
   void concurrentSendsAllReachOutput() throws Exception {
-    // given: сессия stdio-транспорта SDK, которой ответы отдают сразу несколько потоков — как на
-    // параллельные вызовы инструментов. До MCP Java SDK 2.1.0 одна из одновременных отправок
-    // получала отказ, и сессия умирала: https://github.com/modelcontextprotocol/java-sdk/issues/686
+    // given: сессия stdio-транспорта, которой ответы отдают сразу несколько потоков — как на
+    // параллельные вызовы инструментов.
     var output = new ByteArrayOutputStream();
     var stdin = new PipedOutputStream();
     var jsonMapper = JsonMapper.builder().build();
-    var provider = new StdioServerTransportProvider(
+    var provider = new McpStdioConfiguration.ConcurrentSendTransportProvider(
       new JacksonMcpJsonMapper(jsonMapper), new PipedInputStream(stdin), output);
     var sessionTransport = new AtomicReference<McpServerTransport>();
     provider.setSessionFactory(transport -> {
