@@ -36,6 +36,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.client.WorkDoneProgressHelper;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.types.index.MethodReturnTypeIndexer.ComputedReturnTypes;
+import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex.ReturnTypeInputs;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -149,6 +150,9 @@ class MethodReturnTypeIndexerTest {
     var stored = new ConcurrentHashMap<MethodSymbol, TypeSet>();
     when(symbolTypeIndex.getReturnTypes(any()))
       .thenAnswer(invocation -> stored.getOrDefault(invocation.getArgument(0), TypeSet.EMPTY));
+    when(symbolTypeIndex.returnTypeInputs(any()))
+      .thenAnswer(invocation -> new ReturnTypeInputs(TypeSet.EMPTY,
+        stored.getOrDefault(invocation.getArgument(0), TypeSet.EMPTY)));
     doAnswer(invocation -> stored.put(invocation.getArgument(0), invocation.getArgument(1)))
       .when(symbolTypeIndex).putReturnTypes(any(), any());
 
@@ -199,12 +203,32 @@ class MethodReturnTypeIndexerTest {
 
   private Map<?, ?> snapshotOfProvisionalCycle(List<URI> component) {
     indexer.computeIfAbsent(sourceMethod, () ->
-      new ComputedReturnTypes(NUMBER, Set.of(consumerMethod), true, Set.of(consumerMethod)));
+      new ComputedReturnTypes(NUMBER, Set.of(consumerMethod), true,
+        Map.of(consumerMethod, symbolTypeIndex.returnTypeInputs(consumerMethod))));
     indexer.computeIfAbsent(consumerMethod, () ->
-      new ComputedReturnTypes(STRING, Set.of(sourceMethod), true, Set.of(sourceMethod)));
+      new ComputedReturnTypes(STRING, Set.of(sourceMethod), true,
+        Map.of(sourceMethod, symbolTypeIndex.returnTypeInputs(sourceMethod))));
     Map<?, ?> snapshot = ReflectionTestUtils.invokeMethod(indexer, "componentCandidates", component);
     assertThat(snapshot).hasSize(2);
     return snapshot;
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void completesOnlyWhenAnInputOutsideTheCandidatesStillHasTheObservedType(boolean changed) {
+    var component = List.of(source.getUri(), consumer.getUri());
+    indexer.computeIfAbsent(sourceMethod, () -> new ComputedReturnTypes(STRING, Set.of(), true, null));
+    var observed = symbolTypeIndex.returnTypeInputs(sourceMethod);
+    indexer.computeIfAbsent(consumerMethod, () -> new ComputedReturnTypes(observed.types(),
+      Set.of(sourceMethod), true, Map.of(sourceMethod, observed)));
+
+    Map<?, ?> snapshot = ReflectionTestUtils.invokeMethod(indexer, "componentCandidates", component);
+    assertThat(snapshot).hasSize(1);
+    indexer.computeIfAbsent(sourceMethod, () -> new ComputedReturnTypes(changed ? NUMBER : STRING, Set.of(), false));
+    ReflectionTestUtils.invokeMethod(indexer, "finalizeComponent", component, snapshot);
+
+    assertThat(indexer.isIndexed(sourceMethod)).isTrue();
+    assertThat(indexer.isIndexed(consumerMethod)).isEqualTo(!changed);
   }
 
   @ParameterizedTest
@@ -853,12 +877,12 @@ class MethodReturnTypeIndexerTest {
       var peer = ring.methods()[(i + 1) % size];
       var first = i == 0;
       when(inferencer.computeReturnTypes(ring.methods()[i])).thenAnswer(invocation -> {
-        Set<MethodSymbol> missing = new java.util.HashSet<>();
+        Map<MethodSymbol, ReturnTypeInputs> missing = new HashMap<>();
         if (!indexer.isIndexed(peer)) {
-          missing.add(peer);
+          missing.put(peer, symbolTypeIndex.returnTypeInputs(peer));
         }
         if (first && (blocker.equals("unindexed") || blocker.equals("provisional"))) {
-          missing.add(outside);
+          missing.put(outside, symbolTypeIndex.returnTypeInputs(outside));
         }
         var intrinsic = first && blocker.equals("intrinsic");
         var consulted = first && !blocker.equals("none") ? Set.of(peer, outside) : Set.of(peer);

@@ -274,6 +274,38 @@ public class SymbolTypeIndex {
   }
 
   /**
+   * Прочитать источники предварительного типа, которым воспользуется расчёт.
+   *
+   * @param method метод, чьё значение используется.
+   * @return объявленные и выведенные типы, прочитанные для этого обращения.
+   */
+  public ReturnTypeInputs returnTypeInputs(MethodSymbol method) {
+    var inferred = inferredReturnTypes.getOrDefault(method, TypeSet.EMPTY);
+    return new ReturnTypeInputs(getDeclaredReturnTypes(method), inferred);
+  }
+
+  /**
+   * Источники типа возврата, по которым можно проверить актуальность результата.
+   *
+   * @param declared тип из описания метода.
+   * @param inferred тип, выведенный по телу метода.
+   */
+  public record ReturnTypeInputs(TypeSet declared, TypeSet inferred) {
+    /**
+     * @param other источники, прочитанные другим обращением.
+     * @return совпадают ли оба неизменяемых опубликованных значения по ссылкам.
+     */
+    public boolean sameSources(ReturnTypeInputs other) {
+      return declared == other.declared && inferred == other.inferred;
+    }
+
+    /** @return точный тип из этих источников по правилам объединения индекса. */
+    public TypeSet types() {
+      return combine(declared, inferred);
+    }
+  }
+
+  /**
    * Типы возвращаемого значения метода: объявленные в документирующем комментарии вместе
    * с рассчитанными по телу.
    * <p>

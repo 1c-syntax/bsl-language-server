@@ -41,6 +41,7 @@ import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex.ReturnTypeInputs;
 import com.github._1c_syntax.bsl.languageserver.types.registry.MemberLookupSession;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -1876,17 +1877,22 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     List<URI> component, Map<MethodDeclarationKey, ProvisionalReturn> candidates) {
     var members = Set.copyOf(component);
     var dependents = new HashMap<MethodDeclarationKey, List<MethodDeclarationKey>>();
-    var externalInputs = new HashMap<MethodDeclarationKey, List<MethodDeclarationKey>>();
+    var externalInputs = new HashMap<MethodDeclarationKey, List<ExternalReturnInput>>();
     var blocked = new ArrayDeque<MethodDeclarationKey>();
     for (var entry : candidates.entrySet()) {
       var declaration = entry.getKey();
-      for (var dependency : java.util.Objects.requireNonNull(entry.getValue().missingMethods)) {
-        if (!members.contains(dependency.getOwner().getUri())) {
+      for (var dependency : java.util.Objects.requireNonNull(entry.getValue().missingMethods).entrySet()) {
+        var method = dependency.getKey();
+        if (!members.contains(method.getOwner().getUri())) {
           blocked.add(declaration);
         } else {
-          var key = new MethodDeclarationKey(dependency);
-          var edges = candidates.containsKey(key) ? dependents : externalInputs;
-          edges.computeIfAbsent(key, ignored -> new ArrayList<>()).add(declaration);
+          var key = new MethodDeclarationKey(method);
+          if (candidates.containsKey(key)) {
+            dependents.computeIfAbsent(key, ignored -> new ArrayList<>()).add(declaration);
+          } else {
+            externalInputs.computeIfAbsent(key, ignored -> new ArrayList<>())
+              .add(new ExternalReturnInput(declaration, dependency.getValue()));
+          }
         }
       }
     }
@@ -1901,11 +1907,16 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
         blocked.add(declaration);
       }
     });
-    dependencies.externalInputs().forEach((MethodDeclarationKey input, List<MethodDeclarationKey> dependents) -> {
-      if (publication.inProgress.contains(input) || !isIndexed(input.method())) {
-        blocked.addAll(dependents);
+    for (var entry : dependencies.externalInputs().entrySet()) {
+      var input = entry.getKey();
+      var ready = !publication.inProgress.contains(input) && isIndexed(input.method());
+      var current = ready ? symbolTypeIndex.returnTypeInputs(input.method()) : null;
+      for (var dependent : entry.getValue()) {
+        if (current == null || !current.sameSources(dependent.observed())) {
+          blocked.add(dependent.declaration());
+        }
       }
-    });
+    }
     while (!blocked.isEmpty()) {
       var method = blocked.removeFirst();
       if (candidates.remove(method) != null) {
@@ -1922,10 +1933,12 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   }
 
   private record ComponentDependencies(Map<MethodDeclarationKey, List<MethodDeclarationKey>> dependents,
-                                       Map<MethodDeclarationKey, List<MethodDeclarationKey>> externalInputs,
+                                       Map<MethodDeclarationKey, List<ExternalReturnInput>> externalInputs,
                                        ArrayDeque<MethodDeclarationKey> blocked) {
   }
 
+  private record ExternalReturnInput(MethodDeclarationKey declaration, ReturnTypeInputs observed) {
+  }
 
   private Map<MethodDeclarationKey, ProvisionalReturn> componentCandidates(List<URI> component) {
     Map<MethodDeclarationKey, ProvisionalReturn> candidates = new HashMap<>();
@@ -1986,10 +1999,10 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   /** Запись сравнивается по идентичности, чтобы завершение не снимало более новую предварительную версию. */
   private static final class ProvisionalReturn {
     private final Object inputs;
-    private final @Nullable Set<MethodSymbol> missingMethods;
+    private final @Nullable Map<MethodSymbol, ReturnTypeInputs> missingMethods;
     private final @Nullable ReusedReturnTypes reused;
 
-    private ProvisionalReturn(Object inputs, @Nullable Set<MethodSymbol> missingMethods,
+    private ProvisionalReturn(Object inputs, @Nullable Map<MethodSymbol, ReturnTypeInputs> missingMethods,
                               @Nullable ReusedReturnTypes reused) {
       this.inputs = inputs;
       this.missingMethods = missingMethods;
@@ -2016,21 +2029,21 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    * @param consulted  методы, значения которых участвовали в расчёте.
    * @param incomplete расчёт обращался к методу, значение которого ещё не посчитано, —
    *                   значит его надо повторить, когда рабочая область будет наполнена.
-   * @param incompleteMethodReturns все незавершённые входы, если неполнота вызвана только возвратами
-   *                                этих функций; {@code null} сохраняет прочие либо неизвестные причины.
+   * @param incompleteMethodReturns источники типов незавершённых методов, если только они мешают расчёту;
+   *                                 {@code null} сохраняет прочие либо неизвестные причины.
    */
   public record ComputedReturnTypes(TypeSet types, Set<MethodSymbol> consulted, boolean incomplete,
-                                    @Nullable Set<MethodSymbol> incompleteMethodReturns)
+                                    @Nullable Map<MethodSymbol, ReturnTypeInputs> incompleteMethodReturns)
     implements OnDemandReturnTypes {
     public ComputedReturnTypes {
       if (incompleteMethodReturns != null) {
-        incompleteMethodReturns = Set.copyOf(incompleteMethodReturns);
+        incompleteMethodReturns = Map.copyOf(incompleteMethodReturns);
       }
     }
 
     /** Прежний контракт без уточнения причины неполноты не разрешает завершать цикл по предположению. */
     public ComputedReturnTypes(TypeSet types, Set<MethodSymbol> consulted, boolean incomplete) {
-      this(types, consulted, incomplete, incomplete ? null : Set.of());
+      this(types, consulted, incomplete, incomplete ? null : Map.of());
     }
   }
 }

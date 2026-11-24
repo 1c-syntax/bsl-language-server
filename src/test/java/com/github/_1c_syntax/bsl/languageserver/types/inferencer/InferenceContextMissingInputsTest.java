@@ -24,6 +24,9 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex.ReturnTypeInputs;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -32,6 +35,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
 class InferenceContextMissingInputsTest {
+  private static final ReturnTypeInputs EMPTY_INPUT = new ReturnTypeInputs(TypeSet.EMPTY, TypeSet.EMPTY);
+
   @Test
   void missingMethodReturnsAreMergedWithoutLosingTheirCause() {
     var document = mock(DocumentContext.class);
@@ -39,15 +44,30 @@ class InferenceContextMissingInputsTest {
     var child = parent.nested(document, ExecutionContext.SERVER);
     var first = mock(MethodSymbol.class);
     var second = mock(MethodSymbol.class);
-    parent.noteMissingMethod(first);
-    child.noteMissingMethod(second);
+    parent.noteMissingMethod(first, EMPTY_INPUT);
+    child.noteMissingMethod(second, EMPTY_INPUT);
 
     parent.inheritMissingInputs(child);
 
     assertThat(parent.sawMissing()).isTrue();
-    assertThat(parent.incompleteMethodReturns()).containsExactlyInAnyOrder(first, second);
+    assertThat(parent.incompleteMethodReturns()).containsOnlyKeys(first, second);
     child.noteMissingData();
     parent.inheritMissingInputs(child);
+    assertThat(parent.incompleteMethodReturns()).isNull();
+  }
+
+  @Test
+  void observingDifferentSourcesForOneMethodDoesNotAllowCycleCompletion() {
+    var document = mock(DocumentContext.class);
+    var parent = new InferenceContext(document, ExecutionContext.SERVER);
+    var child = parent.nested(document, ExecutionContext.SERVER);
+    var method = mock(MethodSymbol.class);
+    parent.noteMissingMethod(method, EMPTY_INPUT);
+    child.noteMissingMethod(method, new ReturnTypeInputs(TypeSet.EMPTY, TypeSet.of(TypeRef.UNDEFINED)));
+
+    parent.inheritMissingInputs(child);
+
+    assertThat(parent.sawMissing()).isTrue();
     assertThat(parent.incompleteMethodReturns()).isNull();
   }
 
@@ -55,7 +75,7 @@ class InferenceContextMissingInputsTest {
   @ValueSource(strings = {"failed", "depth", "body"})
   void intrinsicCutsCannotBeFinalizedAsAMethodReturnCycle(String reason) {
     var inference = new InferenceContext(mock(DocumentContext.class), ExecutionContext.SERVER);
-    inference.noteMissingMethod(mock(MethodSymbol.class));
+    inference.noteMissingMethod(mock(MethodSymbol.class), EMPTY_INPUT);
     switch (reason) {
       case "failed" -> inference.failed = true;
       case "depth" -> inference.depthCut = true;
@@ -69,7 +89,7 @@ class InferenceContextMissingInputsTest {
   @Test
   void aFreshRefinementDoesNotInheritPreviousMissingInputs() {
     var inference = new InferenceContext(mock(DocumentContext.class), ExecutionContext.SERVER);
-    inference.noteMissingMethod(mock(MethodSymbol.class));
+    inference.noteMissingMethod(mock(MethodSymbol.class), EMPTY_INPUT);
     inference.noteMissingData();
 
     var fresh = inference.forRefinement();

@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.types.index.MethodReturnTypeInde
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex.ReturnTypeInputs;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.jspecify.annotations.Nullable;
@@ -137,11 +138,11 @@ final class ContextualReturnCache {
   record Result(TypeSet types, Set<MethodSymbol> consulted, Set<URI> dependencies, Set<MethodSymbol> cutMethods,
                 Set<BSLParser.CodeBlockContext> flowBodiesRead,
                 boolean cycleCut, boolean bodyInFlowCut, boolean depthCut,
-                @Nullable Set<MethodSymbol> missingInputs, boolean incompleteCellInput) {
+                @Nullable Map<MethodSymbol, ReturnTypeInputs> missingInputs, boolean incompleteCellInput) {
     Result(TypeSet types, Set<MethodSymbol> consulted, Set<URI> dependencies, Set<MethodSymbol> cutMethods,
            Set<BSLParser.CodeBlockContext> flowBodiesRead,
            boolean cycleCut, boolean bodyInFlowCut, boolean depthCut) {
-      this(types, consulted, dependencies, cutMethods, flowBodiesRead, cycleCut, bodyInFlowCut, depthCut, Set.of(),
+      this(types, consulted, dependencies, cutMethods, flowBodiesRead, cycleCut, bodyInFlowCut, depthCut, Map.of(),
         false);
     }
   }
