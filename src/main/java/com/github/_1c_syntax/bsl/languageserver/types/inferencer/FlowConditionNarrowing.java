@@ -75,7 +75,7 @@ final class FlowConditionNarrowing {
   }
 
   /** Условие вершины-ветвления; {@code null}, если вершина условия не несёт. */
-  private static BSLParser.@Nullable ExpressionContext conditionOf(CfgVertex vertex) {
+  static BSLParser.@Nullable ExpressionContext conditionOf(CfgVertex vertex) {
     if (vertex instanceof ConditionalVertex conditional) {
       return conditional.getExpression();
     }
