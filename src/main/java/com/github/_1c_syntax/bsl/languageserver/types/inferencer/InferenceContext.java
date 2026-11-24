@@ -151,38 +151,30 @@ final class InferenceContext {
   }
 
   void noteMissingMethod(ReturnTypeInputs inputs) {
-    var methods = missingInputs().methods;
-    if (methods != null) {
-      var previous = methods.putIfAbsent(new MethodDeclarationKey(inputs.method()), inputs);
-      if (previous != null && !previous.sameSources(inputs)) {
-        noteMissingData();
-      }
-    }
+    missingInputs().record(inputs);
   }
 
   void inheritMissingInputs(InferenceContext nested) {
-    inheritMissingInputs(nested.flowSession.cellsIncomplete() ? null : nested.missingMethodInputs(),
-      nested.hasIncompleteCellInput());
+    if (nested.flowSession.cellsIncomplete()) {
+      inheritMissingInputs(null, nested.hasIncompleteCellInput());
+    } else if (nested.missingInputs != null) {
+      missingInputs().inherit(nested.missingInputs);
+    }
   }
 
-  void inheritMissingInputs(@Nullable Collection<ReturnTypeInputs> missing, boolean incompleteCell) {
-    if (incompleteCell) {
-      noteIncompleteCellInput();
+  void inheritMissingInputs(@Nullable List<ReturnTypeInputs> missing, boolean incompleteCell) {
+    if (missing == null || !missing.isEmpty() || incompleteCell) {
+      missingInputs().inherit(missing, incompleteCell);
     }
-    if (missing == null) {
-      noteMissingData();
-      return;
-    }
-    if (missing.isEmpty()) {
-      return;
-    }
-    missing.forEach(this::noteMissingMethod);
   }
 
   /** Снимок недостающих входов сохраняет причину неполноты при повторном чтении результата. */
   @Nullable List<ReturnTypeInputs> missingInputSnapshot() {
-    var methods = missingMethodInputs();
-    return methods == null || flowSession.cellsIncomplete() ? null : List.copyOf(methods);
+    if (flowSession.cellsIncomplete()) {
+      return null;
+    }
+
+    return missingInputs == null ? List.of() : missingInputs.snapshot();
   }
 
   boolean sawMissing() {
@@ -194,16 +186,7 @@ final class InferenceContext {
   }
 
   boolean hasOtherMissingInputs() {
-    var methods = missingMethodInputs();
-    return methods == null || !methods.isEmpty();
-  }
-
-  private @Nullable Collection<ReturnTypeInputs> missingMethodInputs() {
-    if (missingInputs == null) {
-      return List.of();
-    }
-
-    return missingInputs.methods == null ? null : missingInputs.methods.values();
+    return missingInputs != null && missingInputs.hasMissingMethods();
   }
 
   private MissingInputs missingInputs() {
@@ -224,14 +207,12 @@ final class InferenceContext {
     if (!sawMissing() && !failed) {
       return List.of();
     }
-    var methods = missingMethodInputs();
-    if (hasIncompleteCellInput() || methods == null || failed || flowSession.cellsIncomplete()) {
+    if (hasIncompleteCellInput() || failed || depthCut || bodyInFlowCut) {
       return null;
     }
-    if (depthCut || bodyInFlowCut || methods.isEmpty()) {
-      return null;
-    }
-    return List.copyOf(methods);
+
+    var methods = missingInputSnapshot();
+    return methods == null || methods.isEmpty() ? null : methods;
   }
 
   Optional<MethodSymbol> methodOfBody(BSLParser.CodeBlockContext body) {
@@ -246,6 +227,36 @@ final class InferenceContext {
 
     private MissingInputs() {
       methods = new HashMap<>();
+    }
+
+    private void record(ReturnTypeInputs inputs) {
+      if (methods != null) {
+        var previous = methods.putIfAbsent(new MethodDeclarationKey(inputs.method()), inputs);
+        if (previous != null && !previous.sameSources(inputs)) {
+          methods = null;
+        }
+      }
+    }
+
+    private void inherit(MissingInputs other) {
+      inherit(other.methods == null ? null : other.methods.values(), other.incompleteCell);
+    }
+
+    private void inherit(@Nullable Collection<ReturnTypeInputs> inherited, boolean incomplete) {
+      incompleteCell |= incomplete;
+      if (inherited == null) {
+        methods = null;
+      } else {
+        inherited.forEach(this::record);
+      }
+    }
+
+    private boolean hasMissingMethods() {
+      return methods == null || !methods.isEmpty();
+    }
+
+    private @Nullable List<ReturnTypeInputs> snapshot() {
+      return methods == null ? null : List.copyOf(methods.values());
     }
   }
 
