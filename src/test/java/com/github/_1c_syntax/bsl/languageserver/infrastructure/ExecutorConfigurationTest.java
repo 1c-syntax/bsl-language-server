@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -119,6 +120,61 @@ class ExecutorConfigurationTest {
       assertThat(name).matches("compute-configuration-\\d+");
     } finally {
       executor.shutdown();
+    }
+  }
+
+  /**
+   * Задачи записи отчётов исполняет ровно один поток: репортёры пишут в свои генераторы
+   * без синхронизации.
+   */
+  @Test
+  void reportWriteExecutor_runsAllTasksOnSingleThread() throws Exception {
+    var executor = new ExecutorConfiguration().reportWriteExecutor();
+    Set<String> threads = ConcurrentHashMap.newKeySet();
+
+    try {
+      var futures = IntStream.range(0, 200).parallel()
+        .mapToObj(i -> executor.submit(() -> threads.add(Thread.currentThread().getName())))
+        .toList();
+      for (var future : futures) {
+        future.get(TIMEOUT_SECONDS, TimeUnit.SECONDS);
+      }
+    } finally {
+      executor.shutdown();
+    }
+
+    assertThat(threads).singleElement().asString().startsWith("report-write-");
+  }
+
+  /**
+   * Задача записи видит workspace того потока, который её поставил, — иначе workspace-scoped
+   * бины (например, {@code DiagnosticInfos}) в потоке записи не резолвятся. Контекст переносится
+   * на каждую задачу отдельно: поток исполнителя общий.
+   */
+  @Test
+  void reportWriteExecutor_runsTaskInWorkspaceOfSubmitter() throws Exception {
+    var executor = new ExecutorConfiguration().reportWriteExecutor();
+    var otherWorkspace = Absolute.uri(URI.create("file:///other-workspace"));
+    // контекст потока теста мог остаться от предыдущих тестов этого форка
+    WorkspaceContextHolder.clear();
+    // переносится контекст только зарегистрированных workspace
+    WorkspaceContextHolder.registerWorkspace(WORKSPACE_URI, WORKSPACE_NAME);
+    WorkspaceContextHolder.registerWorkspace(otherWorkspace, "other");
+
+    try {
+      var inWorkspace = WorkspaceContextHolder.call(WORKSPACE_URI,
+        () -> executor.submit(WorkspaceContextHolder::get));
+      var inOtherWorkspace = WorkspaceContextHolder.call(otherWorkspace,
+        () -> executor.submit(WorkspaceContextHolder::get));
+      var withoutWorkspace = executor.submit(WorkspaceContextHolder::get);
+
+      assertThat(inWorkspace.get(TIMEOUT_SECONDS, TimeUnit.SECONDS)).isEqualTo(WORKSPACE_URI);
+      assertThat(inOtherWorkspace.get(TIMEOUT_SECONDS, TimeUnit.SECONDS)).isEqualTo(otherWorkspace);
+      assertThat(withoutWorkspace.get(TIMEOUT_SECONDS, TimeUnit.SECONDS)).isNull();
+    } finally {
+      executor.shutdown();
+      WorkspaceContextHolder.unregisterWorkspace(WORKSPACE_URI);
+      WorkspaceContextHolder.unregisterWorkspace(otherWorkspace);
     }
   }
 

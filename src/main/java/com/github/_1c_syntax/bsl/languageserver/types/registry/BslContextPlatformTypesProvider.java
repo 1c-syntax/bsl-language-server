@@ -135,12 +135,16 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
     for (var context : contexts) {
       var kind = mapKind(context);
       if (kind != null && context.name() != null) {
-        var ref = new TypeRef(kind, typeNames.apply(context));
+        var qualifiedName = typeNames.apply(context);
+        var ref = new TypeRef(kind, qualifiedName);
         var primary = safe(context.name().getName());
-        if (primary.equals(typeNames.apply(context))) {
+        if (!primary.isEmpty() && primary.equals(qualifiedName)) {
           typeRefs.put(primary.toLowerCase(Locale.ROOT), ref);
         }
-        typeRefs.put(safe(context.name().getAlias()).toLowerCase(Locale.ROOT), ref);
+        var alias = safe(context.name().getAlias());
+        if (!alias.isEmpty()) {
+          typeRefs.put(alias.toLowerCase(Locale.ROOT), ref);
+        }
       }
     }
     var result = new ArrayList<TypeDecl>(contexts.size());
@@ -353,10 +357,15 @@ public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
       var enumRef = new TypeRef(TypeKind.PLATFORM, typeNames.apply(context));
       // Тип элементов набора берётся из bsl-context (страница enum: значения
       // имеют такой-то тип). Если общий тип задан (как у библиотек картинок,
-      // стилей, цветов), значения возвращают его; иначе сам enumRef.
-      var valueRef = enumeration.valueType()
-        .map(n -> new TypeRef(TypeKind.PLATFORM, n.getName()))
-        .orElse(enumRef);
+      // стилей, цветов), значения возвращают его. В частности, Символы
+      // возвращают примитив Строка.
+      var valueRef = enumeration.valueType().map(name -> {
+        var type = typeRefs.get(safe(name.getAlias()).toLowerCase(Locale.ROOT));
+        if (type == null) {
+          type = typeRefs.get(name.getName().toLowerCase(Locale.ROOT));
+        }
+        return type == null ? new TypeRef(TypeKind.PLATFORM, name.getName()) : type;
+      }).orElse(enumRef);
       for (var value : values) {
         members.add(toMemberDescriptor(value, valueRef, enLookup));
       }

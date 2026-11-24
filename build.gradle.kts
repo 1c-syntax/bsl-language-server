@@ -21,11 +21,11 @@ plugins {
     id("com.github.ben-manes.versions") version "0.67.0"
     id("org.springframework.boot") version "4.1.2"
     id("io.spring.dependency-management") version "1.1.7"
-    id("io.sentry.jvm.gradle") version "6.26.0"
+    id("io.sentry.jvm.gradle") version "6.27.0"
     id("io.github.1c-syntax.bslls-dev-tools") version "0.8.2"
     id("ru.vyarus.pom") version "3.0.0"
     id("org.jreleaser") version "1.27.0"
-    id("org.sonarqube") version "7.5.0.8588"
+    id("org.sonarqube") version "7.6.0.18749"
     id("me.champeau.jmh") version "0.7.4"
     id("com.gorylenko.gradle-git-properties") version "4.0.1"
 }
@@ -90,15 +90,15 @@ dependencies {
     api("org.eclipse.lsp4j:org.eclipse.lsp4j.websocket.jakarta:1.0.0")
 
     // Spring AI MCP (Model Context Protocol) server starters.
-    // Spring AI 2.0 is the first line compatible with Spring Boot 4 (milestone at the time of writing).
+    // MCP server (Spring AI):
     // - core starter: STDIO transport (`mcp` subcommand);
-    // - webmvc starter: Streamable HTTP transport, served on the same servlet container as LSP-over-WS.
-    api(platform("org.springframework.ai:spring-ai-bom:2.0.2"))
+    // - webmvc starter: HTTP transports (Streamable HTTP and SSE) on the servlet container.
+    api(platform("org.springframework.ai:spring-ai-bom:2.1.0"))
     api("org.springframework.ai:spring-ai-starter-mcp-server")
     api("org.springframework.ai:spring-ai-starter-mcp-server-webmvc")
 
     // 1c-syntax
-    api("io.github.1c-syntax:bsl-parser:0.41.0")
+    api("io.github.1c-syntax:bsl-parser:0.41.1")
     api("io.github.1c-syntax:utils:0.10.1")
     api("io.github.1c-syntax:mdclasses:0.21.0")
     api("io.github.1c-syntax:bsl-common-library:0.12.5")
@@ -134,7 +134,7 @@ dependencies {
         exclude("commons-logging", "commons-logging")
     }
     implementation("commons-codec:commons-codec:1.23.0")
-    implementation("org.apache.commons:commons-lang3:3.21.0")
+    implementation("org.apache.commons:commons-lang3:3.22.0")
     implementation("org.apache.commons:commons-collections4:4.6.0")
     implementation("org.apache.commons:commons-exec:1.6.0")
 
@@ -457,7 +457,6 @@ publishing {
     publications {
         create<MavenPublication>("maven") {
             from(components["java"])
-            artifact(tasks["bootJar"])
 
             pom {
                 description.set("Language Server Protocol implementation for 1C (BSL) - 1C:Enterprise 8 and OneScript languages.")

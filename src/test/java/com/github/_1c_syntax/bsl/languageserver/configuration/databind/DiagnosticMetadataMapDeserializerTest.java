@@ -23,11 +23,13 @@ package com.github._1c_syntax.bsl.languageserver.configuration.databind;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadataOverrides;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.types.ModuleType;
+import io.leangen.geantyref.TypeFactory;
 import org.junit.jupiter.api.Test;
 import tools.jackson.databind.annotation.JsonDeserialize;
 import tools.jackson.databind.json.JsonMapper;
@@ -239,9 +241,18 @@ class DiagnosticMetadataMapDeserializerTest {
     assertThat(metadata.tags())
       .hasSize(2)
       .containsExactlyInAnyOrder(DiagnosticTag.DESIGN, DiagnosticTag.UNPREDICTABLE);
-    
-    // modules should use annotation default value (empty array)
-    assertThat(metadata.modules()).isEmpty();
+
+    // when applied to diagnostic metadata, not specified attributes keep diagnostic values
+    DiagnosticMetadata base = TypeFactory.annotation(DiagnosticMetadata.class, Map.of(
+      "severity", DiagnosticSeverity.MAJOR,
+      "modules", new ModuleType[]{ModuleType.CommonModule}
+    ));
+    DiagnosticMetadata merged = DiagnosticMetadataOverrides.applyTo(base, metadata);
+
+    assertThat(merged.tags())
+      .containsExactlyInAnyOrder(DiagnosticTag.DESIGN, DiagnosticTag.UNPREDICTABLE);
+    assertThat(merged.modules()).containsExactly(ModuleType.CommonModule);
+    assertThat(merged.severity()).isEqualTo(DiagnosticSeverity.MAJOR);
   }
 
   private Map<String, DiagnosticMetadata> deserializeMetadata(String json) throws Exception {

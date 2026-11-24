@@ -22,7 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.mcp;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.AnalyzeFileTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.CallHierarchyTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.DefinitionTool;
@@ -38,9 +40,12 @@ import com.github._1c_syntax.bsl.languageserver.mcp.tools.SymbolTextTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.TypeAtPositionTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.TypeInfoTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.tools.UnregisterWorkspaceFolderTool;
+import com.github._1c_syntax.bsl.languageserver.mcp.tools.WorkspaceFolderSymbolSearchTool;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.TypeMemberDto;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.SymbolTextDto;
+import com.github._1c_syntax.bsl.languageserver.mcp.dto.RangeDto;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.WorkspaceFolderDto;
+import com.github._1c_syntax.bsl.languageserver.mcp.dto.WorkspaceSymbolDto;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
@@ -56,6 +61,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
+import java.io.File;
 import java.net.URI;
 import java.time.Duration;
 import java.util.List;
@@ -94,6 +100,10 @@ class McpToolsTest {
   private static final int CALL_LINE = 1;
   private static final int CALL_CHARACTER = 15;
 
+  // OneScript-библиотека: Вызывающий.os вызывает метод модуля Помощник из lib.config.
+  private static final String CROSS_MODULE_DIR = "src/test/resources/oscript-libraries/cross-module-call";
+  private static final String CROSS_MODULE_CALLER = CROSS_MODULE_DIR + "/src/Вызывающий.os";
+
   @Autowired
   private McpWorkspaceBootstrap workspaceBootstrap;
   @Autowired
@@ -117,6 +127,8 @@ class McpToolsTest {
   @Autowired
   private GlobalMemberSearchTool globalMemberSearchTool;
   @Autowired
+  private WorkspaceFolderSymbolSearchTool workspaceFolderSymbolSearchTool;
+  @Autowired
   private ListWorkspaceFoldersTool listWorkspaceFoldersTool;
   @Autowired
   private RegisterWorkspaceFolderTool registerWorkspaceFolderTool;
@@ -128,6 +140,8 @@ class McpToolsTest {
   private McpRootsChangeConsumer rootsChangeConsumer;
   @Autowired
   private McpDocumentReader documentReader;
+  @Autowired
+  private ServerContextProvider serverContextProvider;
   @Autowired
   private TypeService typeService;
   @Autowired
@@ -197,6 +211,20 @@ class McpToolsTest {
   }
 
   @Test
+  void documentSymbolsSelectionRangeIsPositionForNavigationTools() {
+    // Строка 6 — «Функция ПерваяФункция()»: имя занимает символы 8–21.
+    var method = documentSymbolsTool.documentSymbols(FILE).symbols().stream()
+      .filter(symbol -> symbol.name().equals("ПерваяФункция"))
+      .findFirst()
+      .orElseThrow();
+
+    assertThat(method.selectionRange()).isEqualTo(new RangeDto(DECLARATION_LINE, 8, DECLARATION_LINE, 21));
+    var references = findReferencesTool.findReferences(
+      FILE, method.selectionRange().startLine(), method.selectionRange().startCharacter());
+    assertThat(references.referencesCount()).isPositive();
+  }
+
+  @Test
   void findReferencesResolvesMethodUsages() {
     var result = findReferencesTool.findReferences(FILE, DECLARATION_LINE, DECLARATION_CHARACTER);
 
@@ -224,6 +252,7 @@ class McpToolsTest {
     assertThat(match.kind()).isEqualTo("Method");
     assertThat(match.scope()).isEqualTo("$module");
     assertThat(match.range().startLine()).isEqualTo(DECLARATION_LINE);
+    assertThat(match.selectionRange()).isEqualTo(new RangeDto(DECLARATION_LINE, 8, DECLARATION_LINE, 21));
     assertThat(match.text()).startsWith("Функция ПерваяФункция()").endsWith("КонецФункции");
     assertThat(match.description()).isNull();
   }
@@ -346,6 +375,7 @@ class McpToolsTest {
       assertThat(match.name()).isEqualTo("А");
       assertThat(match.kind()).isEqualTo("Namespace");
       assertThat(match.range().startLine()).isEqualTo(15);
+      assertThat(match.selectionRange()).isEqualTo(new RangeDto(15, 9, 15, 10));
       // Диапазон области в дереве символов начинается после «#», как и в document_symbols.
       assertThat(match.text()).startsWith("Область А").endsWith("#КонецОбласти");
     });
@@ -442,11 +472,74 @@ class McpToolsTest {
   }
 
   @Test
+  void fileAcceptsUriReturnedByDefinition() {
+    var definition = definitionTool.definition(FILE, CALL_LINE, CALL_CHARACTER).definitions().get(0);
+
+    var symbols = documentSymbolsTool.documentSymbols(definition.uri());
+
+    assertThat(symbols.symbols()).extracting(symbol -> symbol.name()).contains("ПерваяФункция");
+  }
+
+  @Test
+  void fileAcceptsUriWithEncodedCyrillic() {
+    // Так uri документа приходит в ответах инструментов на macOS и Linux: кириллица пути закодирована.
+    // На Windows инструменты отдают её как есть, но клиент может прислать и закодированную форму.
+    var designerDir = "src/test/resources/metadata/designer";
+    registerWorkspaceFolderTool.registerWorkspaceFolder(Absolute.path(designerDir).toString(), null);
+    var moduleUri = Absolute.uri(new File(designerDir, "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl"))
+      .toASCIIString();
+    assertThat(moduleUri).contains("%D0%");
+
+    var symbols = documentSymbolsTool.documentSymbols(moduleUri);
+
+    assertThat(symbols.symbols()).extracting(symbol -> symbol.name()).contains("НеУстаревшаяПроцедура");
+  }
+
+  @Test
   void definitionResolvesToDeclaration() {
     var result = definitionTool.definition(FILE, CALL_LINE, CALL_CHARACTER);
 
     assertThat(result.definitions()).isNotEmpty();
     assertThat(result.definitions().get(0).selectionRange().startLine()).isEqualTo(DECLARATION_LINE);
+  }
+
+  @Test
+  void callHierarchyAtCallSiteOfAnotherModuleMethodReportsThatMethod() {
+    registerWorkspaceFolderTool.registerWorkspaceFolder(Absolute.path(CROSS_MODULE_DIR).toString(), null);
+
+    // Строка 1 — «    Помощник.Сделать();» в Вызывающий.os, позиция на «Сделать».
+    var result = callHierarchyTool.callHierarchy(CROSS_MODULE_CALLER, 1, 13);
+
+    assertThat(result.target()).isNotNull();
+    assertThat(result.target().name()).isEqualTo("Сделать");
+    assertThat(URI.create(result.target().uri()).getPath()).endsWith("/src/Помощник.os");
+    // Вызовы самого Сделать, а не метода, чьё имя стоит на тех же координатах в Вызывающий.os.
+    assertThat(result.incoming()).extracting(call -> call.item().name()).containsExactly("Выполнить");
+    assertThat(result.outgoing()).isEmpty();
+  }
+
+  @Test
+  void callHierarchyAtCallSiteOfAnotherModuleMethodInReleasedDocumentsReportsThatMethod() {
+    registerWorkspaceFolderTool.registerWorkspaceFolder(Absolute.path(CROSS_MODULE_DIR).toString(), null);
+    releaseDocument(CROSS_MODULE_CALLER);
+    releaseDocument(CROSS_MODULE_DIR + "/src/Помощник.os");
+
+    var result = callHierarchyTool.callHierarchy(CROSS_MODULE_CALLER, 1, 13);
+
+    // Элемент и его вызовы находятся по индексу ссылок и дереву символов, текст документов не нужен.
+    assertThat(result.target()).isNotNull();
+    assertThat(result.target().name()).isEqualTo("Сделать");
+    assertThat(result.incoming()).extracting(call -> call.item().name()).containsExactly("Выполнить");
+    assertThat(result.outgoing()).isEmpty();
+  }
+
+  // Индексация и так освобождает текст документа; явная очистка убирает зависимость теста от неё.
+  private void releaseDocument(String file) {
+    var uri = Absolute.uri(new File(file));
+    var serverContext = serverContextProvider.getServerContext(uri).orElseThrow();
+    var documentContext = serverContext.getDocument(uri);
+    serverContext.tryClearDocument(documentContext);
+    assertThat(serverContext.getDocumentState(documentContext)).isEqualTo(DocumentState.WITHOUT_CONTENT);
   }
 
   @Test
@@ -627,6 +720,89 @@ class McpToolsTest {
       globalMemberSearchTool.globalMemberSearch(FileType.BSL, null, null, null, null))
       .isInstanceOf(IllegalArgumentException.class)
       .hasMessageContaining("Workspace folder is required");
+  }
+
+  @Test
+  void workspaceFolderSymbolSearchFindsMethodsByPrefix() {
+    var result = workspaceFolderSymbolSearchTool.search("ПерваяФ", WORKSPACE_FOLDER, null, null);
+
+    assertThat(result.symbols())
+      .filteredOn(symbol -> symbol.name().equals("ПерваяФункция"))
+      .anySatisfy(symbol -> {
+        assertThat(symbol.kind()).isEqualTo("Method");
+        assertThat(symbol.location().uri()).endsWith("callHierarchy.bsl");
+      });
+  }
+
+  @Test
+  void workspaceFolderSymbolSearchAppendsFuzzyMatchesOnlyWithFuzzy() {
+    // «ваяФунк» — подстрока внутри слова «ПерваяФункция»: ни префиксом, ни началом слова, ни
+    // camel-hump она не совпадает, её находит только fuzzy-хвост.
+    var withFuzzy = workspaceFolderSymbolSearchTool.search("ваяФунк", WORKSPACE_FOLDER, true, null);
+    var withoutFuzzy = workspaceFolderSymbolSearchTool.search("ваяФунк", WORKSPACE_FOLDER, false, null);
+
+    assertThat(withFuzzy.symbols()).extracting(WorkspaceSymbolDto::name).contains("ПерваяФункция");
+    assertThat(withoutFuzzy.symbols()).extracting(WorkspaceSymbolDto::name).doesNotContain("ПерваяФункция");
+  }
+
+  @Test
+  void workspaceFolderSymbolSearchHonoursLimit() {
+    var result = workspaceFolderSymbolSearchTool.search("Перв", WORKSPACE_FOLDER, false, 1);
+
+    assertThat(result.symbols()).hasSize(1);
+    assertThat(result.symbolsCount()).isEqualTo(1);
+    assertThat(result.truncated()).isTrue();
+  }
+
+  @Test
+  void workspaceFolderSymbolSearchRejectsNonPositiveLimit() {
+    assertThatThrownBy(() -> workspaceFolderSymbolSearchTool.search("Перв", WORKSPACE_FOLDER, null, 0))
+      .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void workspaceFolderSymbolSearchReturnsOnlySymbolsOfRequestedFolder() {
+    // Индекс символов общий на все папки: вторая папка содержит метод «Тест» в types.bsl.
+    var otherDir = Absolute.path("src/test/resources/mcp");
+    registerWorkspaceFolderTool.registerWorkspaceFolder(otherDir.toString(), null);
+    var otherFolder = otherDir.toUri().toString();
+
+    var inOther = workspaceFolderSymbolSearchTool.search("Тест", otherFolder, false, null);
+    var inMain = workspaceFolderSymbolSearchTool.search("Тест", WORKSPACE_FOLDER, false, null);
+
+    assertThat(inOther.symbols())
+      .anySatisfy(symbol -> {
+        assertThat(symbol.name()).isEqualTo("Тест");
+        assertThat(symbol.location().uri()).endsWith("types.bsl");
+      })
+      .allSatisfy(symbol -> assertThat(symbol.location().uri()).startsWith(otherFolder));
+    // В providers/ тоже есть «Тест»: выдача не пуста, но вся из запрошенной папки.
+    assertThat(inMain.symbols())
+      .isNotEmpty()
+      .allSatisfy(symbol -> assertThat(symbol.location().uri()).startsWith(WORKSPACE_FOLDER));
+    assertThat(inMain.truncated()).isFalse();
+  }
+
+  @Test
+  void workspaceFolderSymbolSearchDistinguishesNestedFolders() {
+    // autumn-deadlock лежит внутри mcp: его документы входят в оба контекста, но сопоставление
+    // по префиксу пути отдало бы их произвольной из двух папок.
+    var outerDir = Absolute.path("src/test/resources/mcp");
+    var innerDir = Absolute.path("src/test/resources/mcp/autumn-deadlock");
+    registerWorkspaceFolderTool.registerWorkspaceFolder(outerDir.toString(), null);
+    registerWorkspaceFolderTool.registerWorkspaceFolder(innerDir.toString(), null);
+    var outerFolder = outerDir.toUri().toString();
+    var innerFolder = innerDir.toUri().toString();
+
+    var inInner = workspaceFolderSymbolSearchTool.search("ПолучитьЛоггер", innerFolder, false, null);
+    var inOuter = workspaceFolderSymbolSearchTool.search("ПолучитьЛоггер", outerFolder, false, null);
+
+    assertThat(inInner.symbols())
+      .isNotEmpty()
+      .allSatisfy(symbol -> assertThat(symbol.location().uri()).startsWith(innerFolder));
+    assertThat(inOuter.symbols())
+      .isNotEmpty()
+      .allSatisfy(symbol -> assertThat(symbol.location().uri()).startsWith(outerFolder));
   }
 
   @Test

@@ -76,6 +76,68 @@ class DocumentContextCompilationInferenceTest extends AbstractServerContextAware
   }
 
   @Test
+  void moduleCellsFindDependenciesThroughCalleesAndSeparateWriters() {
+    var root = Path.of("src/test/resources/metadata/commonModuleCalls");
+    initServerContext(root, false);
+    var document = context.addDocument(root.resolve("CommonModules/КлиентСерверныйМодуль/Ext/Module.bsl").toUri());
+    document.rebuild("""
+      Перем Первый, Второй;
+      Процедура ЗаполнитьПервый()
+        Первый = ВторойТип();
+      КонецПроцедуры
+      Процедура ЗаполнитьВторой()
+        Второй = Новый Структура("Ключ", 1);
+      КонецПроцедуры
+      Функция ВторойТип()
+        Возврат Второй;
+      КонецФункции
+      Функция ПервыйТип() Экспорт
+        Возврат Первый;
+      КонецФункции
+      &НаСервере
+      Процедура Проверка()
+        Б = ПервыйТип().Ключ;
+      КонецПроцедуры
+      """, 0);
+
+    assertThat(typesAt(document, "Б = ПервыйТип().Ключ;")).containsExactly("Число");
+  }
+
+  @Test
+  void discoveringCellDependenciesDoesNotConsumeTheFixedPointBudget() {
+    var root = Path.of("src/test/resources/metadata/commonModuleCalls");
+    initServerContext(root, false);
+    var document = context.addDocument(root.resolve("CommonModules/КлиентСерверныйМодуль/Ext/Module.bsl").toUri());
+    var source = new StringBuilder("Перем ");
+    for (var i = 0; i < 20; i++) {
+      source.append(i == 0 ? "" : ", ").append("V%02d".formatted(i));
+    }
+    source.append(";\n");
+    for (var i = 0; i < 20; i++) {
+      source.append("""
+        Процедура Заполнить%d()
+          V%02d = %s;
+        КонецПроцедуры
+        Функция Прочитать%d()
+          Возврат V%02d;
+        КонецФункции
+        """.formatted(i, i, i == 0 ? "Новый Структура(\"Ключ\", 1)" : "Прочитать%d()".formatted(i - 1), i, i));
+    }
+    source.append("""
+      Функция ПоследнийТип() Экспорт
+        Возврат V19;
+      КонецФункции
+      &НаСервере
+      Процедура Проверка()
+        Б = ПоследнийТип().Ключ;
+      КонецПроцедуры
+      """);
+    document.rebuild(source.toString(), 0);
+
+    assertThat(typesAt(document, "Б = ПоследнийТип().Ключ;")).containsExactly("Число");
+  }
+
+  @Test
   void growingModuleCellsInvalidateContextualFunctionResults() {
     var root = Path.of("src/test/resources/metadata/commonModuleCalls");
     initServerContext(root, false);

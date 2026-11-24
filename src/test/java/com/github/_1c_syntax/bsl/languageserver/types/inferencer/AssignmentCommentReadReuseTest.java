@@ -77,7 +77,7 @@ class AssignmentCommentReadReuseTest extends AbstractServerContextAwareTest {
     var index = mock(SymbolTypeIndex.class);
     when(index.linkAwaitsUnparsedModule("Remote.Factory", owner)).thenReturn(true);
     when(index.resolveSeeReference("Remote.Factory", owner, document.getFileType())).thenAnswer(call -> {
-      assertThat(calculation.sawMissing).isTrue();
+      assertThat(calculation.sawMissing()).isTrue();
       return number;
     });
     ExpressionTypeInferencer target = AopTestUtils.getUltimateTargetObject(inferencer);
@@ -90,7 +90,7 @@ class AssignmentCommentReadReuseTest extends AbstractServerContextAwareTest {
     ReflectionTestUtils.setField(target, "commentTypeResolver", new CommentTypeResolver(typeRegistry, index));
     try {
       assertThat((TypeSet) operation.invoke(target, owner, assignment, calculation)).isEqualTo(number);
-      assertThat(calculation.sawMissing).isTrue();
+      assertThat(calculation.sawMissing()).isTrue();
       assertThat(reads.get()).isEqualTo(1);
     } finally {
       ReflectionTestUtils.setField(target, "workspacePopulated", previousPopulation);
@@ -122,7 +122,7 @@ class AssignmentCommentReadReuseTest extends AbstractServerContextAwareTest {
     ReflectionTestUtils.setField(target, "workspacePopulated", populated);
     try {
       assertThat((TypeSet) operation.invoke(target, owner, assignment, calculation)).isEqualTo(TypeSet.EMPTY);
-      assertThat(calculation.sawMissing).isFalse();
+      assertThat(calculation.sawMissing()).isFalse();
       assertThat(reads.get()).isEqualTo(1);
     } finally {
       ReflectionTestUtils.setField(target, "workspacePopulated", previous);

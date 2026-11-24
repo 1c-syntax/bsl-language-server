@@ -751,6 +751,10 @@ public class ServerContext {
 
   /**
    * Попытаться очистить документ, если он не открыт.
+   * <p>
+   * Закрытый документ освобождается под блокировкой записи: активные читатели
+   * сохраняют AST и токены до завершения расчёта. Для открытого документа очистка
+   * пропускается без ожидания этой блокировки.
    *
    * @param documentContext документ, который необходимо попытаться закрыть.
    * @return {@code true}, если вторичные данные документа были реально освобождены;
@@ -761,21 +765,40 @@ public class ServerContext {
       return false;
     }
 
-    states.put(documentContext, DocumentState.WITHOUT_CONTENT);
-    documentContext.clearSecondaryData();
-    return true;
+    var lock = getDocumentLock(documentContext.getUri()).writeLock();
+    lock.lock();
+    try {
+      // Документ могли открыть, пока очистка дожидалась активных читателей.
+      if (openedDocuments.contains(documentContext)) {
+        return false;
+      }
+
+      states.put(documentContext, DocumentState.WITHOUT_CONTENT);
+      documentContext.clearSecondaryData();
+      return true;
+    } finally {
+      lock.unlock();
+    }
   }
 
 
   /**
    * Закрыть документ и очистить его содержимое.
+   * <p>
+   * Закрытие дожидается активных читателей под блокировкой записи документа.
    *
    * @param documentContext документ, который необходимо закрыть.
    */
   public void closeDocument(DocumentContext documentContext) {
-    openedDocuments.remove(documentContext);
-    states.put(documentContext, DocumentState.WITHOUT_CONTENT);
-    documentContext.clearSecondaryData();
+    var lock = getDocumentLock(documentContext.getUri()).writeLock();
+    lock.lock();
+    try {
+      openedDocuments.remove(documentContext);
+      states.put(documentContext, DocumentState.WITHOUT_CONTENT);
+      documentContext.clearSecondaryData();
+    } finally {
+      lock.unlock();
+    }
   }
 
   /**
