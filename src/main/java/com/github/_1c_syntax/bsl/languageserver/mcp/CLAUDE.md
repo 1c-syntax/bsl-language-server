@@ -17,8 +17,8 @@
      `EofSignalingInputStream`, `ConcurrentSendTransportProvider`); процесс блокируется до EOF stdin через
      `McpShutdownSignal`. Транспорт SDK ждёт занятый приёмник не дольше 100 мс (с 2.1.0), и под
      нагрузкой одновременная отправка всё равно получает отказ, а сессия умирает — поэтому транспорт
-     сессии обёрнут в `McpEnqueueRetryingTransport`, повторяющий отказанную отправку. Не удаляй его,
-     пока тест одновременной отправки не станет стабильно зелёным на голом транспорте SDK (на CI, в т.ч. Windows).
+     сессии обёрнут в `McpEnqueueRetryingTransport`, повторяющий отказанную отправку. Закрытый
+     java-sdk#686 — не повод его удалять; условие и способ проверки — в TODO у `McpEnqueueRetryingTransport`.
    - `sse` — `mcp,mcp-sse` (Server-Sent Events по HTTP); `streamable` — `mcp,mcp-streamable`
      (Streamable HTTP). HTTP-транспорты требуют servlet-контейнера, процесс жив за счёт веб-сервера.
 2. **Флаг `--mcp` к `lsp` (по умолчанию) или `websocket`** — поднимает MCP по **Streamable HTTP**
