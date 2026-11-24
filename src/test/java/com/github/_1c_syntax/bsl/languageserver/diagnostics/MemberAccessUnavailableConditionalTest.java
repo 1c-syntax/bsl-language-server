@@ -36,6 +36,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.mdclasses.Configuration;
 import com.github._1c_syntax.bsl.mdclasses.Solution;
 import com.github._1c_syntax.bsl.mdclasses.StandaloneConfigurationContent;
@@ -262,7 +263,16 @@ class MemberAccessUnavailableConditionalTest
       when(metadata.getMdoReference()).thenReturn(formReference);
       doReturn(Optional.of(metadata)).when(document).getMdObject();
     }
-    assertThat(getDiagnostics(document)).hasSize(expected);
+
+    var diagnostics = getDiagnostics(document);
+    assertThat(diagnostics).hasSize(expected);
+    if (expected == 1) {
+      assertThat(diagnostics).singleElement().satisfies(diagnostic -> {
+        assertThat(diagnostic.getRange()).isEqualTo(Ranges.create(7, 2, 6));
+        assertThat(diagnostic.getMessage().getLeft())
+          .isEqualTo("Метод \"Цель\" недоступен в контексте вызывающего метода (Мобильный автономный сервер)");
+      });
+    }
   }
 
   private enum StandaloneScope {
