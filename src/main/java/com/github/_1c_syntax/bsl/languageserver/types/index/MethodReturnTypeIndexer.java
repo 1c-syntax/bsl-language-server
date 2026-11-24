@@ -214,7 +214,6 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
 
   private void resetPublication() {
     var exclusive = publication.gate.writeLock();
-    var interrupted = false;
     try {
       exclusive.lock();
       try {
@@ -222,7 +221,10 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
         publication.generation.set(ConfigurationGeneration.RESETTING);
         // Принятые публикации закончат обновление SymbolTypeIndex до очистки.
         // Новые публикации и результаты прежнего поколения больше не принимаются.
-        interrupted = awaitPublications();
+        while (!publication.inProgress.isEmpty()) {
+          publication.changed.awaitUninterruptibly();
+        }
+
         pending.addAll(indexed);
         indexed.clear();
         publication.provisional.clear();
@@ -243,24 +245,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
       } finally {
         exclusive.unlock();
       }
-      if (interrupted) {
-        Thread.currentThread().interrupt();
-      }
     }
-  }
-
-  /** Дождаться принятых публикаций под исключительной блокировкой после закрытия допуска. */
-  private boolean awaitPublications() {
-    var interrupted = false;
-    while (!publication.inProgress.isEmpty()) {
-      try {
-        publication.changed.await();
-      } catch (InterruptedException exception) {
-        interrupted = true;
-      }
-    }
-
-    return interrupted;
   }
 
   /**

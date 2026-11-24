@@ -391,9 +391,15 @@ class MethodReturnTypeIndexerTest {
         indexer.computeIfAbsent(sourceMethod, () -> new ComputedReturnTypes(STRING, Set.of(), false)));
       try {
         assertThat(publishing.await(10, SECONDS)).isTrue();
-        var reset = executor.submit(this::changeCompilationSettings);
+        var resetThread = new AtomicReference<Thread>();
+        var reset = executor.submit(() -> {
+          resetThread.set(Thread.currentThread());
+          changeCompilationSettings();
+          return Thread.currentThread().isInterrupted();
+        });
         try {
           await().atMost(10, SECONDS).until(() -> indexer.configurationGeneration() != previous);
+          resetThread.get().interrupt();
           assertThat(previous.isCurrent()).isFalse();
           assertThat(indexer.configurationGeneration().isCurrent()).isFalse();
           assertThat(cleared.getCount()).isEqualTo(1);
@@ -404,7 +410,7 @@ class MethodReturnTypeIndexerTest {
           release.countDown();
         }
         store.get(10, SECONDS);
-        reset.get(10, SECONDS);
+        assertThat(reset.get(10, SECONDS)).isTrue();
       } finally {
         release.countDown();
       }
