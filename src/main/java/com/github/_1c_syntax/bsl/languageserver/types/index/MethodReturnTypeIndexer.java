@@ -315,16 +315,44 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   public @Nullable ComputedReturnTypes computeIfAbsent(MethodSymbol method, Supplier<ComputedReturnTypes> computation,
                                                        boolean approximate, Object inputs,
                                                         @Nullable ConfigurationGeneration requestedGeneration) {
+    var result = computeOrReuse(method, computation, approximate, inputs, requestedGeneration);
+    return result instanceof ComputedReturnTypes computed ? computed : null;
+  }
+
+  /**
+   * Возвращает собственный расчёт либо снимок предварительного значения с теми же входами.
+   * Ключ и тип читаются из одной записи. При готовом значении вызывающий обращается к общему индексу.
+   *
+   * @param method рассчитываемый метод.
+   * @param computation вывод типа вне блокировок индекса.
+   * @param approximate допускаются ли результаты расчёта по приближениям.
+   * @param inputs идентичность входов предварительного расчёта.
+   * @param requestedGeneration поколение исходного запроса либо {@code null} для нового запроса.
+   * @return снимок результата либо {@code null} для чтения общего индекса.
+   */
+  public @Nullable OnDemandReturnTypes computeOrReuse(MethodSymbol method, Supplier<ComputedReturnTypes> computation,
+                                                     boolean approximate, Object inputs,
+                                                     @Nullable ConfigurationGeneration requestedGeneration) {
     var generation = requestedGeneration == null ? configurationGeneration() : requestedGeneration;
-    if (generation == ConfigurationGeneration.RESETTING || generation != configurationGeneration()
+    if (!generation.isCurrent() || generation != configurationGeneration()
       || !method.isFunction()) {
       return null;
     }
-    var known = indexed.contains(method);
-    var previousInputs = publication.provisional.get(new MethodDeclarationKey(method));
-    if (known && (previousInputs == null || (approximate && previousInputs.inputs == inputs))) {
-      return null;
+    if (indexed.contains(method)) {
+      var previous = publication.provisional.get(new MethodDeclarationKey(method));
+      if (previous == null) {
+        return null;
+      }
+      var reused = approximate ? previous.estimateFor(inputs) : null;
+      if (reused != null) {
+        return generation.isCurrent() ? reused : null;
+      }
     }
+    return computeAndStore(method, computation, approximate, inputs, generation);
+  }
+
+  private @Nullable ComputedReturnTypes computeAndStore(MethodSymbol method,
+    Supplier<ComputedReturnTypes> computation, boolean approximate, Object inputs, ConfigurationGeneration generation) {
     var startedAt = clock.incrementAndGet();
     var computed = computation.get();
     var result = store(method, computed, startedAt, provisionalResult(computed, approximate, inputs), true, generation);
@@ -593,10 +621,11 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
 
   private static @Nullable ProvisionalReturn provisionalResult(ComputedReturnTypes computed, boolean approximate,
                                                                Object inputs) {
-    if (approximate) {
-      return new ProvisionalReturn(inputs, null);
+    if (approximate || computed.incomplete()) {
+      var missing = approximate ? null : computed.incompleteMethodReturns();
+      return new ProvisionalReturn(inputs, missing, new ReusedReturnTypes(computed.types()));
     }
-    return computed.incomplete() ? new ProvisionalReturn(inputs, computed.incompleteMethodReturns()) : null;
+    return null;
   }
 
   /**
@@ -1731,7 +1760,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     synchronized (publication) {
       if (configurationGeneration() == generation) {
         methods.forEach(method -> publication.provisional.put(new MethodDeclarationKey(method),
-          new ProvisionalReturn(UNSCOPED_INPUTS, null)));
+          new ProvisionalReturn(UNSCOPED_INPUTS, null, null)));
       }
     }
     for (var method : methods) {
@@ -1958,11 +1987,26 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
   private static final class ProvisionalReturn {
     private final Object inputs;
     private final @Nullable Set<MethodSymbol> missingMethods;
+    private final @Nullable ReusedReturnTypes reused;
 
-    private ProvisionalReturn(Object inputs, @Nullable Set<MethodSymbol> missingMethods) {
+    private ProvisionalReturn(Object inputs, @Nullable Set<MethodSymbol> missingMethods,
+                              @Nullable ReusedReturnTypes reused) {
       this.inputs = inputs;
       this.missingMethods = missingMethods;
+      this.reused = reused;
     }
+
+    private @Nullable ReusedReturnTypes estimateFor(Object inputs) {
+      return this.inputs == inputs ? reused : null;
+    }
+  }
+
+  /** Новый расчёт либо ранее опубликованное предварительное значение с совпавшим ключом. */
+  public sealed interface OnDemandReturnTypes permits ComputedReturnTypes, ReusedReturnTypes {
+    TypeSet types();
+  }
+
+  private record ReusedReturnTypes(TypeSet types) implements OnDemandReturnTypes {
   }
 
   /**
@@ -1976,7 +2020,8 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
    *                                этих функций; {@code null} сохраняет прочие либо неизвестные причины.
    */
   public record ComputedReturnTypes(TypeSet types, Set<MethodSymbol> consulted, boolean incomplete,
-                                    @Nullable Set<MethodSymbol> incompleteMethodReturns) {
+                                    @Nullable Set<MethodSymbol> incompleteMethodReturns)
+    implements OnDemandReturnTypes {
     public ComputedReturnTypes {
       if (incompleteMethodReturns != null) {
         incompleteMethodReturns = Set.copyOf(incompleteMethodReturns);
