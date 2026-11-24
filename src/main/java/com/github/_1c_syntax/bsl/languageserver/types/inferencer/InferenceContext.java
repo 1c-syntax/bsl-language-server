@@ -151,14 +151,19 @@ final class InferenceContext {
   }
 
   void noteMissingMethod(ReturnTypeInputs inputs) {
-    missingInputs().record(inputs);
+    missingInputs().remember(inputs);
   }
 
   void inheritMissingInputs(InferenceContext nested) {
     if (nested.flowSession.cellsIncomplete()) {
       inheritMissingInputs(null, nested.hasIncompleteCellInput());
-    } else if (nested.missingInputs != null) {
-      missingInputs().inherit(nested.missingInputs);
+      return;
+    }
+
+    var inherited = nested.missingInputs;
+    if (inherited != null) {
+      var methods = inherited.methods;
+      missingInputs().inherit(methods == null ? null : methods.values(), inherited.incompleteCell);
     }
   }
 
@@ -186,7 +191,12 @@ final class InferenceContext {
   }
 
   boolean hasOtherMissingInputs() {
-    return missingInputs != null && missingInputs.hasMissingMethods();
+    if (missingInputs == null) {
+      return false;
+    }
+
+    var methods = missingInputs.methods;
+    return methods == null || !methods.isEmpty();
   }
 
   private MissingInputs missingInputs() {
@@ -222,24 +232,18 @@ final class InferenceContext {
 
   private static final class MissingInputs {
     /** Недостающие возвраты. {@code null} также допускает другую причину неполноты. */
-    private @Nullable Map<MethodDeclarationKey, ReturnTypeInputs> methods;
+    private @Nullable Map<MethodDeclarationKey, ReturnTypeInputs> methods = new HashMap<>();
     private boolean incompleteCell;
 
-    private MissingInputs() {
-      methods = new HashMap<>();
-    }
-
-    private void record(ReturnTypeInputs inputs) {
-      if (methods != null) {
-        var previous = methods.putIfAbsent(new MethodDeclarationKey(inputs.method()), inputs);
-        if (previous != null && !previous.sameSources(inputs)) {
-          methods = null;
-        }
+    private void remember(ReturnTypeInputs inputs) {
+      if (methods == null) {
+        return;
       }
-    }
 
-    private void inherit(MissingInputs other) {
-      inherit(other.methods == null ? null : other.methods.values(), other.incompleteCell);
+      var previous = methods.putIfAbsent(new MethodDeclarationKey(inputs.method()), inputs);
+      if (previous != null && !previous.sameSources(inputs)) {
+        methods = null;
+      }
     }
 
     private void inherit(@Nullable Collection<ReturnTypeInputs> inherited, boolean incomplete) {
@@ -247,12 +251,8 @@ final class InferenceContext {
       if (inherited == null) {
         methods = null;
       } else {
-        inherited.forEach(this::record);
+        inherited.forEach(this::remember);
       }
-    }
-
-    private boolean hasMissingMethods() {
-      return methods == null || !methods.isEmpty();
     }
 
     private @Nullable List<ReturnTypeInputs> snapshot() {
