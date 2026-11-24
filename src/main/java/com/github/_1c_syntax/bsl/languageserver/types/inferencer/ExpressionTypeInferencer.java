@@ -344,8 +344,20 @@ public class ExpressionTypeInferencer {
     return inferInternal(node, ctx, useCallerContext, false);
   }
 
+  /**
+   * Выводит тип выражения с учётом контекста компиляции и ограничения глубины.
+   * Разрешение на сокращённый расчёт сохраняется при выборе режима компиляции для
+   * того же выражения. Операнды и аргументы вычисляются по общему пути.
+   *
+   * @param node выражение, если его удалось разобрать.
+   * @param ctx состояние текущего запроса вывода типов.
+   * @param useCallerContext наследовать контексты вызывающего метода.
+   * @param tryReturnedLocalProjection разрешить сокращённый расчёт, если корневое выражение
+   *     оператора {@code Возврат} является локальной переменной.
+   * @return тип выражения в выбранных режимах или пустой набор при отсутствии результата.
+   */
   private TypeSet inferInternal(@Nullable BslExpression node, InferenceContext ctx, boolean useCallerContext,
-                               boolean returnedValue) {
+                               boolean tryReturnedLocalProjection) {
     if (node == null) {
       return TypeSet.EMPTY;
     }
@@ -364,7 +376,7 @@ public class ExpressionTypeInferencer {
     }
     ctx.depth++;
     try {
-      var result = inferWithContexts(node, ctx, useCallerContext, returnedValue);
+      var result = inferWithContexts(node, ctx, useCallerContext, tryReturnedLocalProjection);
       if (cacheKey != null && completeRoot(ctx)) {
         inferredExpressionTypeIndex.put(uri, cacheKey, result, ctx.dependencies, revision);
       }
@@ -385,12 +397,13 @@ public class ExpressionTypeInferencer {
   }
 
   private TypeSet inferWithContexts(BslExpression node, InferenceContext ctx, boolean useCallerContext,
-                                   boolean returnedValue) {
+                                   boolean tryReturnedLocalProjection) {
     var narrowed = expressionContexts(node, ctx, useCallerContext);
     if (narrowed.isPresent()) {
-      return inferInContexts(narrowed.orElseThrow(), ctx, nested -> inferInternal(node, nested, false, returnedValue));
+      return inferInContexts(narrowed.orElseThrow(), ctx,
+        nested -> inferInternal(node, nested, false, tryReturnedLocalProjection));
     }
-    return inferNode(node, ctx, returnedValue);
+    return inferNode(node, ctx, tryReturnedLocalProjection);
   }
 
   private Optional<Set<ExecutionContext>> expressionContexts(BslExpression node, InferenceContext ctx,
@@ -410,13 +423,13 @@ public class ExpressionTypeInferencer {
     }
   }
 
-  private TypeSet inferNode(BslExpression node, InferenceContext ctx, boolean returnedValue) {
+  private TypeSet inferNode(BslExpression node, InferenceContext ctx, boolean tryReturnedLocalProjection) {
     if (node.getNodeType() == ExpressionNodeType.ERROR) {
       markContextSensitive(ctx);
     }
     return switch (node.getNodeType()) {
       case LITERAL -> inferLiteral(node);
-      case IDENTIFIER -> inferIdentifier(node, ctx, returnedValue);
+      case IDENTIFIER -> inferIdentifier(node, ctx, tryReturnedLocalProjection);
       case CALL -> inferCall(node, ctx);
       case BINARY_OP -> inferBinary((BinaryOperationNode) node, ctx);
       case UNARY_OP -> inferUnary((UnaryOperationNode) node);
@@ -464,13 +477,13 @@ public class ExpressionTypeInferencer {
     return TypeSet.EMPTY;
   }
 
-  private TypeSet inferIdentifier(BslExpression node, InferenceContext ctx, boolean returnedValue) {
+  private TypeSet inferIdentifier(BslExpression node, InferenceContext ctx, boolean tryReturnedLocalProjection) {
     var ast = node.getRepresentingAst();
     if (!(ast instanceof TerminalNode terminal)) {
       markContextSensitive(ctx);
       return TypeSet.EMPTY;
     }
-    return identifierType(terminal, ctx, returnedValue);
+    return identifierType(terminal, ctx, tryReturnedLocalProjection);
   }
 
   /**
@@ -487,7 +500,7 @@ public class ExpressionTypeInferencer {
    * {@code PROPERTY}: голый идентификатор без вызова не может ссылаться на метод (вызов
    * резолвится в inferCall).
    */
-  private TypeSet identifierType(TerminalNode terminal, InferenceContext ctx, boolean returnedValue) {
+  private TypeSet identifierType(TerminalNode terminal, InferenceContext ctx, boolean tryReturnedLocalProjection) {
     var maybeRef = referenceResolver.findTargetSymbol(ctx.documentContext.getUri(), terminal);
     if (maybeRef.isPresent()) {
       var target = maybeRef.get();
@@ -498,7 +511,7 @@ public class ExpressionTypeInferencer {
       // Переменная — её тип в этой точке кода, даже честно пустой: невыведенный тип
       // нельзя подменять self-свойством того же имени.
       if (target instanceof VariableSymbol variable) {
-        return referencedVariableType(variable, terminal, ctx, returnedValue);
+        return referencedVariableType(variable, terminal, ctx, tryReturnedLocalProjection);
       }
       if (target instanceof MethodSymbol method) {
         return methodReturnType(method, ctx);
@@ -523,12 +536,23 @@ public class ExpressionTypeInferencer {
       .orElseGet(() -> scopeMemberTypeResolver.globalPropertyType(ctx.documentContext, text));
   }
 
+  /**
+   * Выводит тип переменной в точке обращения. Для прямого возврата переменной из
+   * текущего документа сначала пробует сокращённый расчёт по подтверждённо независимым
+   * локальным значениям. Если он неприменим, тип выводится по полному потоку тела.
+   *
+   * @param variable символ, найденный по ссылке.
+   * @param terminal идентификатор в точке обращения.
+   * @param ctx состояние текущего запроса.
+   * @param tryReturnedLocalProjection разрешить проверку применимости проекции для прямого возврата.
+   * @return тип в точке обращения, включая известный пустой тип.
+   */
   private TypeSet referencedVariableType(VariableSymbol variable, TerminalNode terminal,
-                                         InferenceContext ctx, boolean returnedValue) {
+                                         InferenceContext ctx, boolean tryReturnedLocalProjection) {
     if (ctx.flowSession.contextTracking && !contextFreeLocal(variable, ctx)) {
       markContextSensitive(ctx);
     }
-    if (returnedValue && variable.getOwner() == ctx.documentContext
+    if (tryReturnedLocalProjection && variable.getOwner() == ctx.documentContext
       && terminal.getParent() instanceof ParserRuleContext use) {
       try {
         var independent = variableFlowAnalyzer.independentReturnTypeAt(ctx.documentContext, use, variable,
