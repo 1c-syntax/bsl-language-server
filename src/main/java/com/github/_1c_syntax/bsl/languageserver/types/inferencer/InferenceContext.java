@@ -179,7 +179,12 @@ final class InferenceContext {
       return null;
     }
 
-    return missingInputs == null ? List.of() : missingInputs.snapshot();
+    if (missingInputs == null) {
+      return List.of();
+    }
+
+    var methods = missingInputs.methods;
+    return methods == null ? null : List.copyOf(methods.values());
   }
 
   boolean sawMissing() {
@@ -232,8 +237,12 @@ final class InferenceContext {
 
   private static final class MissingInputs {
     /** Недостающие возвраты. {@code null} также допускает другую причину неполноты. */
-    private @Nullable Map<MethodDeclarationKey, ReturnTypeInputs> methods = new HashMap<>();
+    private @Nullable Map<MethodDeclarationKey, ReturnTypeInputs> methods;
     private boolean incompleteCell;
+
+    private MissingInputs() {
+      methods = new HashMap<>();
+    }
 
     private void remember(ReturnTypeInputs inputs) {
       if (methods == null) {
@@ -253,10 +262,6 @@ final class InferenceContext {
       } else {
         inherited.forEach(this::remember);
       }
-    }
-
-    private @Nullable List<ReturnTypeInputs> snapshot() {
-      return methods == null ? null : List.copyOf(methods.values());
     }
   }
 
