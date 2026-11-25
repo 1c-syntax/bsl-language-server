@@ -103,9 +103,15 @@ public class DefaultDiagnosticComputer implements DiagnosticComputer {
       return futures.stream()
         .map(DefaultDiagnosticComputer::getUninterruptibly)
         .flatMap(List::stream)
-        .filter(diagnostic ->
-          nonSuppressibleCodes.contains(DiagnosticCode.getStringValue(diagnostic.getCode()))
-            || !diagnosticIgnorance.diagnosticShouldBeIgnored(diagnostic))
+        .filter(diagnostic -> {
+          var code = DiagnosticCode.getStringValue(diagnostic.getCode());
+          if (nonSuppressibleCodes.contains(code)) {
+            // неподавляемая диагностика не подчиняется комментариям, но исключения
+            // неизменяемого кода расширений действуют для всех
+            return !diagnosticIgnorance.diagnosticShouldBeIgnoredInUnchangedExtensionCode(diagnostic);
+          }
+          return !diagnosticIgnorance.diagnosticShouldBeIgnored(diagnostic);
+        })
         .filter(Predicate.not(gitBlameIgnorance::diagnosticShouldBeIgnored))
         .toList();
     } catch (RuntimeException exception) {

@@ -70,7 +70,7 @@ class DefaultDiagnosticComputerTest {
 
     documentContext = mock(DocumentContext.class);
     when(documentContext.getDiagnosticIgnorance())
-      .thenReturn(new DiagnosticIgnoranceComputer.Data(Map.of(), List.of()));
+      .thenReturn(new DiagnosticIgnoranceComputer.Data(Map.of(), List.of(), List.of()));
     when(documentContext.getUri()).thenReturn(URI.create("file:///test.bsl"));
   }
 
@@ -142,6 +142,17 @@ class DefaultDiagnosticComputerTest {
     when(documentContext.getDiagnosticIgnorance()).thenReturn(ignoranceOf("Suppressible"));
 
     var result = computerWith(List.of(suppressible)).compute(documentContext);
+
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void keepsExtensionExclusionForNonSuppressibleDiagnostic() {
+    var hidden = diagnostic("NonSuppressible", "hidden");
+    var nonSuppressible = mockDiagnostic("NonSuppressible", false, List.of(hidden));
+    when(documentContext.getDiagnosticIgnorance()).thenReturn(extensionIgnoranceOf(0, 10));
+
+    var result = computerWith(List.of(nonSuppressible)).compute(documentContext);
 
     assertThat(result).isEmpty();
   }
@@ -256,7 +267,13 @@ class DefaultDiagnosticComputerTest {
 
   private static DiagnosticIgnoranceComputer.Data ignoranceOf(String code) {
     var range = org.apache.commons.lang3.Range.of(0, 10);
-    return new DiagnosticIgnoranceComputer.Data(Map.of(new DiagnosticCode(code), List.of(range)), List.of());
+    return new DiagnosticIgnoranceComputer.Data(
+      Map.of(new DiagnosticCode(code), List.of(range)), List.of(), List.of());
+  }
+
+  private static DiagnosticIgnoranceComputer.Data extensionIgnoranceOf(int start, int end) {
+    var range = org.apache.commons.lang3.Range.of(start, end);
+    return new DiagnosticIgnoranceComputer.Data(Map.of(), List.of(), List.of(range));
   }
 
   private static Diagnostic diagnostic(String code, String message) {

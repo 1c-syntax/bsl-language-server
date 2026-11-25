@@ -65,6 +65,8 @@ class DiagnosticIgnoranceComputerTest {
     // then
     assertThat(ignoredDiagnostics).allMatch(data::diagnosticShouldBeIgnored);
     assertThat(notIgnoredDiagnostics).noneMatch(data::diagnosticShouldBeIgnored);
+    // это подавления комментариями, а не неизменяемый код расширения
+    assertThat(ignoredDiagnostics).noneMatch(data::diagnosticShouldBeIgnoredInUnchangedExtensionCode);
   }
 
   @Test
@@ -90,6 +92,8 @@ class DiagnosticIgnoranceComputerTest {
     // then
     assertThat(ignoredDiagnostics).allMatch(data::diagnosticShouldBeIgnored);
     assertThat(notIgnoredDiagnostics).noneMatch(data::diagnosticShouldBeIgnored);
+    assertThat(ignoredDiagnostics).allMatch(data::diagnosticShouldBeIgnoredInUnchangedExtensionCode);
+    assertThat(notIgnoredDiagnostics).noneMatch(data::diagnosticShouldBeIgnoredInUnchangedExtensionCode);
 
   }
 

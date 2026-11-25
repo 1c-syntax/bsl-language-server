@@ -82,6 +82,7 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
   private final Map<DiagnosticCode, List<Range<Integer>>> diagnosticIgnorance = new HashMap<>();
   private final Map<DiagnosticCode, Deque<Integer>> ignoranceStack = new HashMap<>();
   private final List<SuppressionComment> suppressionComments = new ArrayList<>();
+  private final List<Range<Integer>> unchangedExtensionIgnorance = new ArrayList<>();
 
   public DiagnosticIgnoranceComputer(DocumentContext documentContext) {
     this.documentContext = documentContext;
@@ -93,18 +94,19 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
     diagnosticIgnorance.clear();
     ignoranceStack.clear();
     suppressionComments.clear();
+    unchangedExtensionIgnorance.clear();
 
     List<Token> codeTokens = documentContext.getTokensFromDefaultChannel();
     List<Token> comments = documentContext.getComments();
 
     if (codeTokens.isEmpty() && comments.isEmpty()) {
-      return new Data(diagnosticIgnorance, suppressionComments);
+      return new Data(diagnosticIgnorance, suppressionComments, unchangedExtensionIgnorance);
     }
 
     computeCommentsIgnorance(codeTokens, comments);
     computeExtensionIgnorance();
 
-    return new Data(diagnosticIgnorance, suppressionComments);
+    return new Data(diagnosticIgnorance, suppressionComments, unchangedExtensionIgnorance);
   }
 
   private void computeExtensionIgnorance() {
@@ -140,7 +142,7 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
         tokenLine = entry.getKey();
       } else {
         lastTokenLine = entry.getKey();
-        addIgnoredRange(ALL_DIAGNOSTICS_KEY, tokenLine, lastTokenLine);
+        addUnchangedExtensionIgnoredRange(tokenLine, lastTokenLine);
       }
 
     }
@@ -252,11 +254,18 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
     suppressionComments.add(new SuppressionComment(Ranges.create(comment), disabling, hasExplanation));
   }
 
+  private void addUnchangedExtensionIgnoredRange(int ignoreRangeStart, int ignoreRangeEnd) {
+    unchangedExtensionIgnorance.add(toIgnoranceRange(ignoreRangeStart, ignoreRangeEnd));
+  }
+
   private void addIgnoredRange(DiagnosticCode diagnosticKey, int ignoreRangeStart, int ignoreRangeEnd) {
-    // convert antlr4 line numbers (1..n) to lsp (0..n)
-    Range<Integer> ignoreRange = Range.of(ignoreRangeStart - 1, ignoreRangeEnd - 1);
     final List<Range<Integer>> ranges = diagnosticIgnorance.computeIfAbsent(diagnosticKey, s -> new ArrayList<>());
-    ranges.add(ignoreRange);
+    ranges.add(toIgnoranceRange(ignoreRangeStart, ignoreRangeEnd));
+  }
+
+  private static Range<Integer> toIgnoranceRange(int ignoreRangeStart, int ignoreRangeEnd) {
+    // convert antlr4 line numbers (1..n) to lsp (0..n)
+    return Range.of(ignoreRangeStart - 1, ignoreRangeEnd - 1);
   }
 
   private static DiagnosticCode getKey(Matcher matcher) {
@@ -287,6 +296,7 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
   public static class Data {
     private final Map<DiagnosticCode, List<Range<Integer>>> diagnosticIgnorance;
     private final List<SuppressionComment> suppressionComments;
+    private final List<Range<Integer>> unchangedExtensionIgnorance;
 
     /**
      * Распознанные в документе директивы подавления диагностик в порядке появления.
@@ -297,7 +307,19 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
       return suppressionComments;
     }
 
+    /**
+     * Признак того, что замечание нужно скрыть: его строка попадает либо в диапазон
+     * комментария подавления, либо в неизменяемый код расширения.
+     *
+     * @param diagnostic проверяемое замечание
+     * @return {@code true}, если замечание нужно скрыть
+     */
     public boolean diagnosticShouldBeIgnored(Diagnostic diagnostic) {
+      return diagnosticShouldBeIgnoredByComments(diagnostic)
+        || diagnosticShouldBeIgnoredInUnchangedExtensionCode(diagnostic);
+    }
+
+    private boolean diagnosticShouldBeIgnoredByComments(Diagnostic diagnostic) {
       if (diagnosticIgnorance.isEmpty()) {
         return false;
       }
@@ -314,6 +336,25 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
         .map(Map.Entry::getValue)
         .flatMap(Collection::stream)
         .anyMatch(range -> range.contains(line));
+    }
+
+    /**
+     * Признак попадания замечания в неизменяемый код расширения
+     * ({@code &ИзменениеИКонтроль} / {@code &ChangeAndValidate}).
+     * <p>
+     * Такие участки исключаются из анализа для всех диагностик, независимо от их подавляемости:
+     * автор расширения не может ни изменить этот код, ни заглушить замечание комментарием.
+     *
+     * @param diagnostic проверяемое замечание
+     * @return {@code true}, если замечание находится в неизменяемом коде расширения
+     */
+    public boolean diagnosticShouldBeIgnoredInUnchangedExtensionCode(Diagnostic diagnostic) {
+      if (unchangedExtensionIgnorance.isEmpty()) {
+        return false;
+      }
+
+      int line = diagnostic.getRange().getStart().getLine();
+      return unchangedExtensionIgnorance.stream().anyMatch(range -> range.contains(line));
     }
   }
 
