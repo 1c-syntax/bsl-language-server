@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 import com.github._1c_syntax.bsl.languageserver.types.index.MethodReturnTypeIndexer.ConfigurationGeneration;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
-import com.github._1c_syntax.bsl.languageserver.types.CommentTypeResolver.AssignmentComments;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -62,7 +61,6 @@ final class ContextualReturnCache {
   private final Map<ContextualReturnKey, List<ApproximationInput>> approximationInputs = new HashMap<>();
   /** Связь тела с объявлением постоянна в пределах запроса и не зависит от приближений ячеек. */
   private final Map<BSLParser.CodeBlockContext, Optional<MethodSymbol>> bodyMethods = new HashMap<>();
-  private @Nullable AssignmentComments assignmentComments;
   private long revision;
   private long cellReads;
 
@@ -73,20 +71,6 @@ final class ContextualReturnCache {
   ContextualReturnCache(@Nullable ConfigurationGeneration returnGeneration) {
     this.returnGeneration = returnGeneration;
     revision = 0;
-  }
-
-  /** Синтаксис комментариев общий для уточнений, результаты вывода остаются локальными. */
-  ContextualReturnCache forRefinement() {
-    var refinement = new ContextualReturnCache(returnGeneration);
-    refinement.assignmentComments = assignmentComments();
-    return refinement;
-  }
-
-  AssignmentComments assignmentComments() {
-    if (assignmentComments == null) {
-      assignmentComments = new AssignmentComments();
-    }
-    return assignmentComments;
   }
 
   @Nullable TypeSet get(ContextualReturnKey key) {

@@ -44,7 +44,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Optional;
 
@@ -159,7 +158,7 @@ public class CommentTypeResolver implements VariableTypeSource {
    */
   public TypeSet ofAssignment(DocumentContext owner, BSLParser.AssignmentContext assignment,
                               @Nullable Runnable onIncomplete,
-                              @Nullable AssignmentComments comments) {
+                              @Nullable AssignmentCommentCache comments) {
     var trailing = trailingOf(owner, assignment, comments);
     if (trailing == null) {
       return TypeSet.EMPTY;
@@ -217,61 +216,24 @@ public class CommentTypeResolver implements VariableTypeSource {
    * @return висячая часть описания; {@code null}, если комментария нет.
    */
   private static @Nullable VariableDescription trailingOf(DocumentContext owner, BSLParser.AssignmentContext assignment,
-                                                            @Nullable AssignmentComments comments) {
+                                                            @Nullable AssignmentCommentCache comments) {
     var tokens = owner.getTokens();
     var stop = assignment.getStop();
-    var trailing = Trees.getTrailingComment(tokens, stop);
-    if (trailing.isEmpty()) {
+    var comment = Trees.getTrailingComment(tokens, stop).orElse(null);
+    if (comment == null) {
       return null;
     }
+
     var index = stop.getTokenIndex();
     if (comments == null || index < 0 || index >= tokens.size() || tokens.get(index) != stop) {
-      return parseAssignmentComment(trailing);
+      return parseAssignmentComment(comment);
     }
-    return comments.read(tokens, stop, trailing);
+    return comments.read(tokens, stop, comment);
   }
 
-  private static @Nullable VariableDescription parseAssignmentComment(Optional<Token> trailing) {
-    return VariableDescription.create(Collections.emptyList(), trailing).getTrailingDescription().orElse(null);
-  }
-
-  /** Разобранный синтаксис одного запроса для одного актуального снимка токенов. */
-  public static final class AssignmentComments {
-    private static final int MAX_POSITIVE_COMMENTS = 64;
-    private @Nullable List<Token> snapshot;
-    private @Nullable IdentityHashMap<Token, Entry> parsed;
-
-    private @Nullable VariableDescription read(List<Token> tokens, Token stop, Optional<Token> trailing) {
-      var current = trailing.orElseThrow();
-      var entries = parsed;
-      if (entries != null) {
-        if (snapshot == tokens) {
-          var known = entries.get(stop);
-          if (known != null && known.comment() == current) {
-            return known.syntax();
-          }
-        } else {
-          entries.clear();
-          snapshot = null;
-        }
-      }
-
-      var syntax = parseAssignmentComment(trailing);
-      if (syntax != null) {
-        if (entries == null) {
-          entries = new IdentityHashMap<>();
-          parsed = entries;
-        }
-        if (entries.size() < MAX_POSITIVE_COMMENTS || entries.containsKey(stop)) {
-          snapshot = tokens;
-          entries.put(stop, new Entry(current, syntax));
-        }
-      }
-      return syntax;
-    }
-
-    private record Entry(Token comment, VariableDescription syntax) {
-    }
+  static @Nullable VariableDescription parseAssignmentComment(Token comment) {
+    return VariableDescription.create(Collections.emptyList(), Optional.of(comment))
+      .getTrailingDescription().orElse(null);
   }
 
   /**

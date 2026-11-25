@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.types.AssignmentCommentCache;
 import com.github._1c_syntax.bsl.languageserver.types.CommentTypeResolver;
 import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
@@ -74,7 +75,7 @@ class AssignmentCommentRequestLocalFastTest {
         assertThat(incomplete.get()).isEqualTo(1);
         return text;
       });
-    var comments = new ContextualReturnCache().assignmentComments();
+    var comments = new AssignmentCommentCache();
     var resolver = new CommentTypeResolver(mock(TypeRegistry.class), index);
 
     assertThat(resolver.ofAssignment(owner, assignment, incomplete::incrementAndGet, comments)).isEqualTo(number);
@@ -100,12 +101,12 @@ class AssignmentCommentRequestLocalFastTest {
     differentSnapshot.set(stop.getTokenIndex(), stop);
     var owner = mock(DocumentContext.class);
     when(owner.getFileType()).thenReturn(FileType.BSL);
-    when(owner.getTokens()).thenReturn(current, differentSnapshot);
+    when(owner.getTokens()).thenReturn(current).thenReturn(differentSnapshot);
     var types = mock(TypeRegistry.class);
     when(types.resolve("Число", FileType.BSL)).thenReturn(Optional.of(new TypeRef(TypeKind.PRIMITIVE, "Число")));
     when(types.resolve("Строка", FileType.BSL)).thenReturn(Optional.of(new TypeRef(TypeKind.PRIMITIVE, "Строка")));
     var resolver = new CommentTypeResolver(types, mock(SymbolTypeIndex.class));
-    var comments = new ContextualReturnCache().assignmentComments();
+    var comments = new AssignmentCommentCache();
 
     assertThat(resolver.ofAssignment(owner, assignment, null, comments).refs())
       .extracting(TypeRef::qualifiedName).containsExactly("Число");
@@ -124,16 +125,16 @@ class AssignmentCommentRequestLocalFastTest {
     var nested = request.nested(document, null);
     var refinement = nested.forRefinement();
     var grandchild = refinement.forRefinement();
-    var comments = request.contextualReturns.assignmentComments();
+    var comments = request.assignmentComments;
 
-    assertThat(nested.contextualReturns.assignmentComments()).isSameAs(comments);
-    assertThat(refinement.contextualReturns.assignmentComments()).isSameAs(comments);
-    assertThat(grandchild.contextualReturns.assignmentComments()).isSameAs(comments);
+    assertThat(nested.assignmentComments).isSameAs(comments);
+    assertThat(refinement.assignmentComments).isSameAs(comments);
+    assertThat(grandchild.assignmentComments).isSameAs(comments);
     assertThat(refinement.contextualReturns).isNotSameAs(request.contextualReturns);
     assertThat(refinement.flowSession).isNotSameAs(request.flowSession);
     request.contextualReturns.invalidate();
-    assertThat(request.contextualReturns.assignmentComments()).isSameAs(comments);
-    assertThat(InferenceContext.neutral(document).contextualReturns.assignmentComments()).isNotSameAs(comments);
+    assertThat(request.assignmentComments).isSameAs(comments);
+    assertThat(InferenceContext.neutral(document).assignmentComments).isNotSameAs(comments);
   }
 
   private static BSLParser.AssignmentContext assignmentOf(BSLTokenizer tokenizer) {

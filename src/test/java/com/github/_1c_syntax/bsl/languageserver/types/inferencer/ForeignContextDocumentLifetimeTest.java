@@ -30,8 +30,8 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
+import com.github._1c_syntax.bsl.languageserver.types.AssignmentCommentCache;
 import com.github._1c_syntax.bsl.languageserver.types.CommentTypeResolver;
-import com.github._1c_syntax.bsl.languageserver.types.CommentTypeResolver.AssignmentComments;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.index.InferredExpressionTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
@@ -253,7 +253,7 @@ class ForeignContextDocumentLifetimeTest extends AbstractServerContextAwareTest 
       beforeRead.accept(call.getArgument(0));
       return call.callRealMethod();
     }).when(intercepted).ofAssignment(any(DocumentContext.class), any(BSLParser.AssignmentContext.class),
-      nullable(Runnable.class), any(AssignmentComments.class));
+      nullable(Runnable.class), any(AssignmentCommentCache.class));
     ReflectionTestUtils.setField(target, "commentTypeResolver", intercepted);
     return () -> ReflectionTestUtils.setField(target, "commentTypeResolver", previous);
   }
