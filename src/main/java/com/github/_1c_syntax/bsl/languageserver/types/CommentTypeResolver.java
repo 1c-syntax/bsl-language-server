@@ -38,12 +38,15 @@ import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import com.github._1c_syntax.bsl.parser.description.VariableDescription;
 import com.github._1c_syntax.bsl.parser.description.support.Hyperlink;
 import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.Token;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Тип, объявленный автором в комментарии рядом с кодом — единый для обоих языков
@@ -128,11 +131,7 @@ public class CommentTypeResolver implements VariableTypeSource {
    *     не распознаны.
    */
   public TypeSet ofAssignment(DocumentContext owner, BSLParser.AssignmentContext assignment) {
-    var trailing = trailingOf(owner, assignment);
-    if (trailing == null) {
-      return TypeSet.EMPTY;
-    }
-    return typesOfComment(trailing.getTypes(), trailing.getLinks(), owner, owner.getFileType());
+    return ofAssignment(owner, assignment, null, null);
   }
 
   /**
@@ -146,14 +145,30 @@ public class CommentTypeResolver implements VariableTypeSource {
    */
   public TypeSet ofAssignment(DocumentContext owner, BSLParser.AssignmentContext assignment,
                               Runnable onIncomplete) {
-    var trailing = trailingOf(owner, assignment);
+    return ofAssignment(owner, assignment, onIncomplete, null);
+  }
+
+  /**
+   * Разрешить типы по актуальному комментарию, переиспользуя синтаксис в одном запросе.
+   *
+   * @param owner документ-владелец.
+   * @param assignment оператор, у которого ищется комментарий.
+   * @param onIncomplete уведомление перед выводом типов, если нужно проверять полноту.
+   * @param comments синтаксис положительных находок запроса или отсутствие кеша.
+   * @return объявленные типы либо пустой набор.
+   */
+  public TypeSet ofAssignment(DocumentContext owner, BSLParser.AssignmentContext assignment,
+                              @Nullable Runnable onIncomplete,
+                              @Nullable AssignmentComments comments) {
+    var trailing = trailingOf(owner, assignment, comments);
     if (trailing == null) {
       return TypeSet.EMPTY;
     }
-    if (anyLinkAwaitsUnparsedModule(trailing.getLinks(), owner)) {
+    var links = trailing.getLinks();
+    if (onIncomplete != null && anyLinkAwaitsUnparsedModule(links, owner)) {
       onIncomplete.run();
     }
-    return typesOfComment(trailing.getTypes(), trailing.getLinks(), owner, owner.getFileType());
+    return typesOfComment(trailing.getTypes(), links, owner, owner.getFileType());
   }
 
   /**
@@ -166,7 +181,7 @@ public class CommentTypeResolver implements VariableTypeSource {
    * @return {@code true}, если комментарий ссылается на ещё не разобранный модуль.
    */
   public boolean assignmentAwaitsUnparsedModule(DocumentContext owner, BSLParser.AssignmentContext assignment) {
-    var trailing = trailingOf(owner, assignment);
+    var trailing = trailingOf(owner, assignment, null);
     return trailing != null && anyLinkAwaitsUnparsedModule(trailing.getLinks(), owner);
   }
 
@@ -198,16 +213,65 @@ public class CommentTypeResolver implements VariableTypeSource {
    *
    * @param owner      документ с присваиванием.
    * @param assignment оператор присваивания.
+   * @param comments синтаксис положительных находок запроса или отсутствие кеша.
    * @return висячая часть описания; {@code null}, если комментария нет.
    */
-  private static @Nullable VariableDescription trailingOf(DocumentContext owner, BSLParser.AssignmentContext assignment) {
-    var trailingComment = Trees.getTrailingComment(owner.getTokens(), assignment.getStop());
-    if (trailingComment.isEmpty()) {
+  private static @Nullable VariableDescription trailingOf(DocumentContext owner, BSLParser.AssignmentContext assignment,
+                                                            @Nullable AssignmentComments comments) {
+    var tokens = owner.getTokens();
+    var stop = assignment.getStop();
+    var trailing = Trees.getTrailingComment(tokens, stop);
+    if (trailing.isEmpty()) {
       return null;
     }
-    return VariableDescription.create(Collections.emptyList(), trailingComment)
-      .getTrailingDescription()
-      .orElse(null);
+    var index = stop.getTokenIndex();
+    if (comments == null || index < 0 || index >= tokens.size() || tokens.get(index) != stop) {
+      return parseAssignmentComment(trailing);
+    }
+    return comments.read(tokens, stop, trailing);
+  }
+
+  private static @Nullable VariableDescription parseAssignmentComment(Optional<Token> trailing) {
+    return VariableDescription.create(Collections.emptyList(), trailing).getTrailingDescription().orElse(null);
+  }
+
+  /** Разобранный синтаксис одного запроса для одного актуального снимка токенов. */
+  public static final class AssignmentComments {
+    private static final int MAX_POSITIVE_COMMENTS = 64;
+    private @Nullable List<Token> snapshot;
+    private @Nullable IdentityHashMap<Token, Entry> parsed;
+
+    private @Nullable VariableDescription read(List<Token> tokens, Token stop, Optional<Token> trailing) {
+      var current = trailing.orElseThrow();
+      var entries = parsed;
+      if (entries != null) {
+        if (snapshot == tokens) {
+          var known = entries.get(stop);
+          if (known != null && known.comment() == current) {
+            return known.syntax();
+          }
+        } else {
+          entries.clear();
+          snapshot = null;
+        }
+      }
+
+      var syntax = parseAssignmentComment(trailing);
+      if (syntax != null) {
+        if (entries == null) {
+          entries = new IdentityHashMap<>();
+          parsed = entries;
+        }
+        if (entries.size() < MAX_POSITIVE_COMMENTS || entries.containsKey(stop)) {
+          snapshot = tokens;
+          entries.put(stop, new Entry(current, syntax));
+        }
+      }
+      return syntax;
+    }
+
+    private record Entry(Token comment, VariableDescription syntax) {
+    }
   }
 
   /**

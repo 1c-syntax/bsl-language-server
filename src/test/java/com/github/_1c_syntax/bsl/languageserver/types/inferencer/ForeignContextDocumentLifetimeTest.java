@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.types.CommentTypeResolver;
+import com.github._1c_syntax.bsl.languageserver.types.CommentTypeResolver.AssignmentComments;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.index.InferredExpressionTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
@@ -60,6 +61,7 @@ import java.util.function.Consumer;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.nullable;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.spy;
 
@@ -250,12 +252,8 @@ class ForeignContextDocumentLifetimeTest extends AbstractServerContextAwareTest 
     doAnswer(call -> {
       beforeRead.accept(call.getArgument(0));
       return call.callRealMethod();
-    }).when(intercepted).ofAssignment(any(DocumentContext.class), any(BSLParser.AssignmentContext.class));
-    doAnswer(call -> {
-      beforeRead.accept(call.getArgument(0));
-      return call.callRealMethod();
     }).when(intercepted).ofAssignment(any(DocumentContext.class), any(BSLParser.AssignmentContext.class),
-      any(Runnable.class));
+      nullable(Runnable.class), any(AssignmentComments.class));
     ReflectionTestUtils.setField(target, "commentTypeResolver", intercepted);
     return () -> ReflectionTestUtils.setField(target, "commentTypeResolver", previous);
   }

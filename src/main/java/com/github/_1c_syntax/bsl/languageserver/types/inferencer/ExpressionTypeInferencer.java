@@ -2306,10 +2306,8 @@ public class ExpressionTypeInferencer {
    */
   private TypeSet typesOfAssignmentComment(DocumentContext owner, BSLParser.AssignmentContext assignment,
                                            InferenceContext ctx) {
-    if (!workspacePopulated) {
-      return commentTypeResolver.ofAssignment(owner, assignment, ctx::noteMissingData);
-    }
-    return commentTypeResolver.ofAssignment(owner, assignment);
+    Runnable onIncomplete = workspacePopulated ? null : ctx::noteMissingData;
+    return commentTypeResolver.ofAssignment(owner, assignment, onIncomplete, ctx.contextualReturns.assignmentComments());
   }
 
   /**

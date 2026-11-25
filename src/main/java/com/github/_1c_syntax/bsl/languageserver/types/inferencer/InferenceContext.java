@@ -241,7 +241,7 @@ final class InferenceContext {
 
   /** Новый расчёт приближения с общими метаданными, но без прежних значений типов и потока. */
   InferenceContext forRefinement() {
-    return new InferenceContext(documentContext, null, compilation, contextualReturns.returnGeneration);
+    return new InferenceContext(documentContext, null, contextualReturns.forRefinement(), compilation);
   }
 
   /** Состояние одного вложенного расчёта; признаки его неполноты не наследуются от соседних вызовов. */
