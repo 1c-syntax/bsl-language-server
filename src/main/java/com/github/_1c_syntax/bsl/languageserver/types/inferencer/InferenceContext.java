@@ -51,8 +51,7 @@ final class InferenceContext {
   final @Nullable ExecutionContext executionContext;
   /** Общая для вложенных контекстов одного запроса карта завершённых результатов функций. */
   final ContextualReturnCache contextualReturns;
-  final AssignmentCommentCache assignmentComments;
-  final CompilationContextMemo compilation;
+  private final RequestCaches requestCaches;
   final Set<SourceDefinedSymbol> visited;
   /**
    * Тип, накопленный к текущему моменту для символа, инференс которого ещё не
@@ -112,29 +111,37 @@ final class InferenceContext {
 
   InferenceContext(DocumentContext documentContext, @Nullable ExecutionContext executionContext,
                    CompilationContextMemo compilation, @Nullable ConfigurationGeneration returnGeneration) {
-    this(documentContext, executionContext, new ContextualReturnCache(returnGeneration), compilation,
-      new AssignmentCommentCache());
+    this(documentContext, executionContext, new ContextualReturnCache(returnGeneration),
+      new RequestCaches(compilation, new AssignmentCommentCache()));
   }
 
   private InferenceContext(DocumentContext documentContext, @Nullable ExecutionContext executionContext,
-                           ContextualReturnCache contextualReturns, CompilationContextMemo compilation,
-                           AssignmentCommentCache assignmentComments) {
-    this(documentContext, executionContext, contextualReturns, flowSessionFor(contextualReturns), compilation,
-      assignmentComments);
+                           ContextualReturnCache contextualReturns, RequestCaches requestCaches) {
+    this(documentContext, executionContext, contextualReturns, flowSessionFor(contextualReturns), requestCaches);
   }
 
   private InferenceContext(DocumentContext documentContext, @Nullable ExecutionContext executionContext,
                            ContextualReturnCache contextualReturns, VariableFlowAnalyzer.FlowSession flowSession,
-                           CompilationContextMemo compilation, AssignmentCommentCache assignmentComments) {
+                           RequestCaches requestCaches) {
     this.documentContext = documentContext;
     this.executionContext = executionContext;
     this.contextualReturns = contextualReturns;
-    this.assignmentComments = assignmentComments;
-    this.compilation = compilation;
+    this.requestCaches = requestCaches;
     this.flowSession = flowSession;
     this.visited = new HashSet<>();
     this.inProgress = new HashMap<>();
     this.dependencies = new HashSet<>();
+  }
+
+  CompilationContextMemo compilation() {
+    return requestCaches.compilation();
+  }
+
+  AssignmentCommentCache assignmentComments() {
+    return requestCaches.assignmentComments();
+  }
+
+  private record RequestCaches(CompilationContextMemo compilation, AssignmentCommentCache assignmentComments) {
   }
 
   private static VariableFlowAnalyzer.FlowSession flowSessionFor(ContextualReturnCache cache) {
@@ -248,14 +255,14 @@ final class InferenceContext {
   /** Новый расчёт приближения с общими метаданными, но без прежних значений типов и потока. */
   InferenceContext forRefinement() {
     return new InferenceContext(documentContext, null, new ContextualReturnCache(contextualReturns.returnGeneration),
-      compilation, assignmentComments);
+      requestCaches);
   }
 
   /** Состояние одного вложенного расчёта; признаки его неполноты не наследуются от соседних вызовов. */
   InferenceContext nested(DocumentContext owner, @Nullable ExecutionContext target) {
     var session = owner == documentContext && target == executionContext
       ? flowSession : flowSessionFor(contextualReturns);
-    var result = new InferenceContext(owner, target, contextualReturns, session, compilation, assignmentComments);
+    var result = new InferenceContext(owner, target, contextualReturns, session, requestCaches);
     if (session != flowSession) {
       session.contextTracking = flowSession.contextTracking;
       session.contextFreeDeclarations = flowSession.contextFreeDeclarations;

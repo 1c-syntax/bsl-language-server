@@ -125,16 +125,16 @@ class AssignmentCommentRequestLocalFastTest {
     var nested = request.nested(document, null);
     var refinement = nested.forRefinement();
     var grandchild = refinement.forRefinement();
-    var comments = request.assignmentComments;
+    var comments = request.assignmentComments();
 
-    assertThat(nested.assignmentComments).isSameAs(comments);
-    assertThat(refinement.assignmentComments).isSameAs(comments);
-    assertThat(grandchild.assignmentComments).isSameAs(comments);
+    assertThat(nested.assignmentComments()).isSameAs(comments);
+    assertThat(refinement.assignmentComments()).isSameAs(comments);
+    assertThat(grandchild.assignmentComments()).isSameAs(comments);
     assertThat(refinement.contextualReturns).isNotSameAs(request.contextualReturns);
     assertThat(refinement.flowSession).isNotSameAs(request.flowSession);
     request.contextualReturns.invalidate();
-    assertThat(request.assignmentComments).isSameAs(comments);
-    assertThat(InferenceContext.neutral(document).assignmentComments).isNotSameAs(comments);
+    assertThat(request.assignmentComments()).isSameAs(comments);
+    assertThat(InferenceContext.neutral(document).assignmentComments()).isNotSameAs(comments);
   }
 
   private static BSLParser.AssignmentContext assignmentOf(BSLTokenizer tokenizer) {
