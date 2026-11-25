@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticCompu
 import com.github._1c_syntax.bsl.languageserver.context.computer.DiagnosticIgnoranceComputer;
 import com.github._1c_syntax.bsl.languageserver.context.computer.GitBlameComputer;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticsSelector;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.Diagnostic;
@@ -39,6 +40,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * Реализация {@link DiagnosticComputer} по умолчанию.
@@ -86,6 +88,12 @@ public class DefaultDiagnosticComputer implements DiagnosticComputer {
       : new GitBlameComputer(documentContext.getUri(), ignoredAuthors).compute();
 
     var enabled = diagnosticsSelector.select(documentContext);
+
+    var nonSuppressibleCodes = enabled.stream()
+      .filter(diagnostic -> !diagnostic.getInfo().isSuppressible())
+      .map(diagnostic -> diagnostic.getInfo().getCode().getStringValue())
+      .collect(Collectors.toSet());
+
     var futures = new ArrayList<Future<List<Diagnostic>>>(enabled.size());
     try {
       for (var diagnostic : enabled) {
@@ -95,7 +103,15 @@ public class DefaultDiagnosticComputer implements DiagnosticComputer {
       return futures.stream()
         .map(DefaultDiagnosticComputer::getUninterruptibly)
         .flatMap(List::stream)
-        .filter(Predicate.not(diagnosticIgnorance::diagnosticShouldBeIgnored))
+        .filter(diagnostic -> {
+          var code = DiagnosticCode.getStringValue(diagnostic.getCode());
+          if (nonSuppressibleCodes.contains(code)) {
+            // неподавляемая диагностика не подчиняется комментариям, но исключения
+            // неизменяемого кода расширений действуют для всех
+            return !diagnosticIgnorance.diagnosticShouldBeIgnoredInUnchangedExtensionCode(diagnostic);
+          }
+          return !diagnosticIgnorance.diagnosticShouldBeIgnored(diagnostic);
+        })
         .filter(Predicate.not(gitBlameIgnorance::diagnosticShouldBeIgnored))
         .toList();
     } catch (RuntimeException exception) {

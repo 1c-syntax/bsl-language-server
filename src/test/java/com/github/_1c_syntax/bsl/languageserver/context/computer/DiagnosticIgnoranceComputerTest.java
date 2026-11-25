@@ -65,6 +65,8 @@ class DiagnosticIgnoranceComputerTest {
     // then
     assertThat(ignoredDiagnostics).allMatch(data::diagnosticShouldBeIgnored);
     assertThat(notIgnoredDiagnostics).noneMatch(data::diagnosticShouldBeIgnored);
+    // это подавления комментариями, а не неизменяемый код расширения
+    assertThat(ignoredDiagnostics).noneMatch(data::diagnosticShouldBeIgnoredInUnchangedExtensionCode);
   }
 
   @Test
@@ -90,6 +92,8 @@ class DiagnosticIgnoranceComputerTest {
     // then
     assertThat(ignoredDiagnostics).allMatch(data::diagnosticShouldBeIgnored);
     assertThat(notIgnoredDiagnostics).noneMatch(data::diagnosticShouldBeIgnored);
+    assertThat(ignoredDiagnostics).allMatch(data::diagnosticShouldBeIgnoredInUnchangedExtensionCode);
+    assertThat(notIgnoredDiagnostics).noneMatch(data::diagnosticShouldBeIgnoredInUnchangedExtensionCode);
 
   }
 
@@ -154,6 +158,56 @@ class DiagnosticIgnoranceComputerTest {
     // then
     assertThat(ignoredDiagnostics).allMatch(data::diagnosticShouldBeIgnored);
 
+  }
+
+  @Test
+  void testSuppressionComments() {
+
+    // given
+    String filePath = "./src/test/resources/context/computer/DiagnosticIgnoranceComputerSuppressionCommentsTest.bsl";
+    final var documentContext = getDocumentContextFromFile(filePath);
+
+    // when
+    Computer<DiagnosticIgnoranceComputer.Data> diagnosticIgnoranceComputer =
+      new DiagnosticIgnoranceComputer(documentContext);
+    List<DiagnosticIgnoranceComputer.SuppressionComment> suppressions =
+      diagnosticIgnoranceComputer.compute().getSuppressionComments();
+
+    // then
+    assertThat(suppressions).hasSize(9);
+
+    assertThat(suppressions)
+      .filteredOn(suppression -> suppression.range().getStart().getLine() == 0)
+      .singleElement()
+      .satisfies(suppression -> {
+        assertThat(suppression.disabling()).isTrue();
+        assertThat(suppression.hasExplanation()).isFalse();
+        assertThat(suppression.range()).isEqualTo(Ranges.create(0, 0, 0, 12));
+      });
+
+    assertThat(suppressions)
+      .filteredOn(suppression -> suppression.range().getStart().getLine() == 2)
+      .singleElement()
+      .satisfies(suppression -> assertThat(suppression.hasExplanation()).isTrue());
+
+    // висячий комментарий: диапазон начинается с комментария, а не со строки
+    assertThat(suppressions)
+      .filteredOn(suppression -> suppression.range().getStart().getLine() == 12)
+      .singleElement()
+      .satisfies(suppression -> {
+        assertThat(suppression.disabling()).isTrue();
+        assertThat(suppression.hasExplanation()).isFalse();
+        assertThat(suppression.range()).isEqualTo(Ranges.create(12, 7, 12, 39));
+      });
+
+    // директива включения не является подавлением
+    assertThat(suppressions)
+      .filteredOn(suppression -> suppression.range().getStart().getLine() == 10)
+      .singleElement()
+      .satisfies(suppression -> {
+        assertThat(suppression.disabling()).isFalse();
+        assertThat(suppression.hasExplanation()).isFalse();
+      });
   }
 
   private static Diagnostic createDiagnostic(String code, int line) {

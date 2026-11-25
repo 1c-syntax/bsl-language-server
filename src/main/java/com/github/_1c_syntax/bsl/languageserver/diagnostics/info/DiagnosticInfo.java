@@ -253,6 +253,17 @@ public class DiagnosticInfo {
     return metadata.canLocateOnProject();
   }
 
+  /**
+   * Могут ли замечания диагностики быть подавлены комментариями {@code // BSLLS...}.
+   * <p>
+   * Значение задается только в коде диагностики и не переопределяется через конфигурацию.
+   *
+   * @return {@code false}, если диагностика неподавляема
+   */
+  public boolean isSuppressible() {
+    return diagnosticMetadata.suppressible();
+  }
+
   public double getExtraMinForComplexity() {
     return metadata.extraMinForComplexity();
   }

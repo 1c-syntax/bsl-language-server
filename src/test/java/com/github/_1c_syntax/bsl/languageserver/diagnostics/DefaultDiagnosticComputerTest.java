@@ -70,7 +70,7 @@ class DefaultDiagnosticComputerTest {
 
     documentContext = mock(DocumentContext.class);
     when(documentContext.getDiagnosticIgnorance())
-      .thenReturn(new DiagnosticIgnoranceComputer.Data(Map.of()));
+      .thenReturn(new DiagnosticIgnoranceComputer.Data(Map.of(), List.of(), List.of()));
     when(documentContext.getUri()).thenReturn(URI.create("file:///test.bsl"));
   }
 
@@ -81,13 +81,11 @@ class DefaultDiagnosticComputerTest {
 
   @Test
   void collectsResultsFromAllDiagnostics() {
-    var first = mock(BSLDiagnostic.class);
-    var firstDiagnostic = diagnostic("first");
-    when(first.getDiagnostics(documentContext)).thenReturn(List.of(firstDiagnostic));
+    var firstDiagnostic = diagnostic("First", "first");
+    var first = mockDiagnostic("First", true, List.of(firstDiagnostic));
 
-    var second = mock(BSLDiagnostic.class);
-    var secondDiagnostic = diagnostic("second");
-    when(second.getDiagnostics(documentContext)).thenReturn(List.of(secondDiagnostic));
+    var secondDiagnostic = diagnostic("Second", "second");
+    var second = mockDiagnostic("Second", true, List.of(secondDiagnostic));
 
     var computer = computerWith(List.of(first, second));
 
@@ -98,14 +96,13 @@ class DefaultDiagnosticComputerTest {
 
   @Test
   void skipsDiagnosticThatThrowsRuntimeException() {
-    var good = mock(BSLDiagnostic.class);
-    var expected = diagnostic("ok");
-    when(good.getDiagnostics(documentContext)).thenReturn(List.of(expected));
+    var expected = diagnostic("Good", "ok");
+    var good = mockDiagnostic("Good", true, List.of(expected));
 
     var bad = mock(BSLDiagnostic.class);
-    when(bad.getDiagnostics(documentContext)).thenThrow(new RuntimeException("boom"));
     var badInfo = diagnosticInfoWithCode("Bad");
     when(bad.getInfo()).thenReturn(badInfo);
+    when(bad.getDiagnostics(documentContext)).thenThrow(new RuntimeException("boom"));
 
     var computer = computerWith(List.of(good, bad));
 
@@ -117,12 +114,47 @@ class DefaultDiagnosticComputerTest {
   @Test
   void wrapsNonRuntimeFailureFromDiagnostic() {
     var bad = mock(BSLDiagnostic.class);
+    var badInfo = diagnosticInfoWithCode("Bad");
+    when(bad.getInfo()).thenReturn(badInfo);
     when(bad.getDiagnostics(documentContext)).thenThrow(new AssertionError("fatal"));
 
     var computer = computerWith(List.of(bad));
 
     assertThatThrownBy(() -> computer.compute(documentContext))
       .isInstanceOf(IllegalStateException.class);
+  }
+
+  @Test
+  void keepsNonSuppressibleDiagnosticIgnoredByComment() {
+    var expected = diagnostic("NonSuppressible", "kept");
+    var nonSuppressible = mockDiagnostic("NonSuppressible", false, List.of(expected));
+    when(documentContext.getDiagnosticIgnorance()).thenReturn(ignoranceOf("NonSuppressible"));
+
+    var result = computerWith(List.of(nonSuppressible)).compute(documentContext);
+
+    assertThat(result).containsExactly(expected);
+  }
+
+  @Test
+  void filtersSuppressibleDiagnosticIgnoredByComment() {
+    var suppressed = diagnostic("Suppressible", "hidden");
+    var suppressible = mockDiagnostic("Suppressible", true, List.of(suppressed));
+    when(documentContext.getDiagnosticIgnorance()).thenReturn(ignoranceOf("Suppressible"));
+
+    var result = computerWith(List.of(suppressible)).compute(documentContext);
+
+    assertThat(result).isEmpty();
+  }
+
+  @Test
+  void keepsExtensionExclusionForNonSuppressibleDiagnostic() {
+    var hidden = diagnostic("NonSuppressible", "hidden");
+    var nonSuppressible = mockDiagnostic("NonSuppressible", false, List.of(hidden));
+    when(documentContext.getDiagnosticIgnorance()).thenReturn(extensionIgnoranceOf(0, 10));
+
+    var result = computerWith(List.of(nonSuppressible)).compute(documentContext);
+
+    assertThat(result).isEmpty();
   }
 
   @Test
@@ -134,7 +166,9 @@ class DefaultDiagnosticComputerTest {
     var failure = new RejectedExecutionException("executor stopped");
     when(executor.submit(ArgumentMatchers.<Callable<List<Diagnostic>>>any()))
       .thenReturn(submitted).thenThrow(failure);
-    var computer = computerWith(List.of(mock(BSLDiagnostic.class), mock(BSLDiagnostic.class)));
+    var computer = computerWith(List.of(
+      mockDiagnostic("First", true, List.of()),
+      mockDiagnostic("Second", true, List.of())));
 
     // when
     var thrown = catchThrowable(() -> computer.compute(documentContext));
@@ -157,6 +191,8 @@ class DefaultDiagnosticComputerTest {
     var interruptPreserved = new AtomicBoolean();
     var failure = new AtomicReference<RuntimeException>();
     var first = mock(BSLDiagnostic.class);
+    var firstInfo = diagnosticInfoWithCode("First");
+    when(first.getInfo()).thenReturn(firstInfo);
     when(first.getDiagnostics(documentContext)).thenAnswer(ignored -> {
       running.countDown();
       try {
@@ -173,6 +209,8 @@ class DefaultDiagnosticComputerTest {
       return List.of();
     });
     var queued = mock(BSLDiagnostic.class);
+    var queuedInfo = diagnosticInfoWithCode("Second");
+    when(queued.getInfo()).thenReturn(queuedInfo);
     when(queued.getDiagnostics(documentContext)).thenAnswer(ignored -> {
       queuedStarted.set(true);
       return List.of();
@@ -217,13 +255,37 @@ class DefaultDiagnosticComputerTest {
     return new DefaultDiagnosticComputer(configuration, executor, diagnosticsSelector);
   }
 
-  private static Diagnostic diagnostic(String message) {
-    return new Diagnostic(new Range(new Position(0, 0), new Position(0, 1)), message);
+  private BSLDiagnostic mockDiagnostic(String code, boolean suppressible, List<Diagnostic> diagnostics) {
+    var info = diagnosticInfoWithCode(code);
+    when(info.isSuppressible()).thenReturn(suppressible);
+
+    var diagnostic = mock(BSLDiagnostic.class);
+    when(diagnostic.getInfo()).thenReturn(info);
+    when(diagnostic.getDiagnostics(documentContext)).thenReturn(diagnostics);
+    return diagnostic;
+  }
+
+  private static DiagnosticIgnoranceComputer.Data ignoranceOf(String code) {
+    var range = org.apache.commons.lang3.Range.of(0, 10);
+    return new DiagnosticIgnoranceComputer.Data(
+      Map.of(new DiagnosticCode(code), List.of(range)), List.of(), List.of());
+  }
+
+  private static DiagnosticIgnoranceComputer.Data extensionIgnoranceOf(int start, int end) {
+    var range = org.apache.commons.lang3.Range.of(start, end);
+    return new DiagnosticIgnoranceComputer.Data(Map.of(), List.of(), List.of(range));
+  }
+
+  private static Diagnostic diagnostic(String code, String message) {
+    var diagnostic = new Diagnostic(new Range(new Position(0, 0), new Position(0, 1)), message);
+    diagnostic.setCode(new DiagnosticCode(code));
+    return diagnostic;
   }
 
   private static DiagnosticInfo diagnosticInfoWithCode(String code) {
     var info = mock(DiagnosticInfo.class);
     when(info.getCode()).thenReturn(new DiagnosticCode(code));
+    when(info.isSuppressible()).thenReturn(true);
     return info;
   }
 }

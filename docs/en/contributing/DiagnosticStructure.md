@@ -52,8 +52,9 @@ At the time of this writing, the following properties are available:
 - Compatibility mode `compatibilityMode`, by which diagnostics are filtered when using metadata. The default is `UNDEFINED`.
 - List of module types `modules` for the ability to limit the area analyzed by diagnostics
 - Sign of the ability to set issues on the entire project `canLocateOnProject`. Used for diagnostics not related to the source code module. At the moment, the option is accepted only by SonarQube, other tools ignore it.
+- Diagnostic suppression capability `suppressible` (default `True`). The value `False` makes the diagnostic non-suppressable: `// BSLLS:Key-off` and `// BSLLS-off` comments do not affect its result. It is set only in the diagnostic source code and is not overridden by the configuration.
 - LSP severity level `lspSeverity` (by default empty string). Allows explicit control over the LSP severity level for the diagnostic. When set, this value takes priority over the calculated LSP severity. Supported values: `Error`, `Warning`, `Information`, `Hint`. This parameter can also be overridden in the configuration file.
-The last two can be omitted.
+The `canLocateOnProject`, `suppressible` and `lspSeverity` parameters can be omitted.
 
 Annotation example
 
