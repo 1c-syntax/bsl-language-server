@@ -81,10 +81,11 @@ class UsingFindElementByStringDiagnosticTest extends AbstractDiagnosticTest<Usin
         Документы.Документ1.НайтиПоНомеру(Номер, );
         Документы.Документ1.НайтиПоНомеру(Номер, Дата);
         Неизвестный.НайтиПоНаименованию(Имя);
+        Справочники.Справочник1.НайтиПоНаименованию("Текст", Истина);
       КонецПроцедуры
       """, context);
     var diagnostics = getDiagnostics(document);
-    assertThat(diagnostics).hasSize(5);
+    assertThat(diagnostics).hasSize(6);
     var info = diagnosticInstance.getInfo();
     var exactMatch = info.getResourceString("missingExactMatch", "НайтиПоНаименованию");
     var intervalDate = info.getResourceString("missingPeriod", "НайтиПоНомеру");
@@ -93,7 +94,8 @@ class UsingFindElementByStringDiagnosticTest extends AbstractDiagnosticTest<Usin
       .hasMessageOnRange(exactMatch, 2, 26, 54)
       .hasMessageOnRange(exactMatch, 3, 26, 56)
       .hasMessageOnRange(intervalDate, 6, 22, 42)
-      .hasMessageOnRange(intervalDate, 7, 22, 44);
+      .hasMessageOnRange(intervalDate, 7, 22, 44)
+      .hasMessageOnRange(info.getMessage("НайтиПоНаименованию"), 10, 26, 62);
   }
 
   @Test
