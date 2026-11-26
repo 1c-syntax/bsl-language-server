@@ -615,7 +615,7 @@ class ModuleVariableVisibilityTest extends AbstractServerContextAwareTest {
       assertThat(first.refs()).extracting(TypeRef::qualifiedName).containsExactly("Структура");
       assertThat(second).isEqualTo(first);
       verify(projections).readFacts(eq(document), any(), any(), any());
-      verify(projections, never()).readParameterBeforeLoop(eq(document), any(), any(), any(), any());
+      verify(projections, never()).readParameterBeforeLoop(eq(document), any(), any(), any(), any(), any(), any());
     } finally {
       ReflectionTestUtils.setField(reads, "projections", original);
     }

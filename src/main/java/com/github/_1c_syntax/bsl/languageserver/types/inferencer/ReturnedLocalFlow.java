@@ -39,6 +39,7 @@ import org.jspecify.annotations.Nullable;
 import java.util.ArrayDeque;
 import java.util.Collections;
 import java.util.IdentityHashMap;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.BooleanSupplier;
 import java.util.function.Predicate;
@@ -117,11 +118,10 @@ final class ReturnedLocalFlow {
 
   /** Посчитать вход параметра в заголовок обхода по вершинам, от которых он зависит. */
   @Nullable Facts readParameterBeforeLoop(DocumentContext document, FlowLayout layout,
-    Key key, CfgVertex loop, FlowInputs inputs) {
+    Key key, CfgVertex loop, FlowInputs inputs, Optional<Set<ExecutionContext>> contexts, TypeSet declared) {
     var body = key.body();
-    var flow = analyzer.flowGraph(document, body, inputs);
-    var graph = flow.graph();
-    var compiled = flow.compiled();
+    var graph = analyzer.graphOf(document, body);
+    var compiled = contexts.map(active -> PreprocessorFlow.of(graph, active, document.getFileType())).orElse(null);
     if (compiled != null && !compiled.vertices().contains(loop)) {
       return null;
     }
@@ -132,7 +132,8 @@ final class ReturnedLocalFlow {
         node -> possiblyReachable(node, layout, beforeLoop.vertices()), true)) {
       return null;
     }
-    var pass = new VariableFlowPass(analyzer, document, graph, layout, inputs, beforeLoop,
+    var selectedInputs = inputs.withDeclaredType(key.variable(), declared);
+    var pass = new VariableFlowPass(analyzer, document, graph, layout, selectedInputs, beforeLoop,
       variables.forVariables(Set.of(key.variable())));
     return inputs.session().computeBodyFacts(body, pass);
   }

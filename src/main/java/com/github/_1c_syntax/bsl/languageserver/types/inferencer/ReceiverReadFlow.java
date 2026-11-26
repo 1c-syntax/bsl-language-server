@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 import com.github._1c_syntax.bsl.languageserver.cfg.ForeachLoopVertex;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ReturnedLocalFlow.Key;
@@ -39,6 +40,8 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BooleanSupplier;
 
@@ -56,10 +59,24 @@ final class ReceiverReadFlow {
     }
   }
 
+  private record LoopSlice(LocalReadFacts read, Optional<Set<ExecutionContext>> contexts) {
+  }
+
+  private static final class LoopRead {
+    private final ForeachLoopVertex loop;
+    private volatile @Nullable LoopSlice facts;
+
+    private LoopRead(ForeachLoopVertex loop) {
+      this.loop = loop;
+    }
+  }
+
   private final VariableFlowAnalyzer analyzer;
   private final ReturnedLocalFlow projections;
   /** Окружения независимого локального значения по AST и точному режиму компиляции. */
   private final Map<URI, Map<Key, LocalReadFacts>> localReadFactsByUri = new ConcurrentHashMap<>();
+  /** Один срез заголовка на параметр, тело и режим. Другие позиции используют факты тела. */
+  private final Map<URI, Map<Key, LoopRead>> loopReadsByUri = new ConcurrentHashMap<>();
 
   ReceiverReadFlow(VariableFlowAnalyzer analyzer, ReturnedLocalFlow projections) {
     this.analyzer = analyzer;
@@ -68,10 +85,12 @@ final class ReceiverReadFlow {
 
   void clear(URI uri) {
     localReadFactsByUri.remove(uri);
+    loopReadsByUri.remove(uri);
   }
 
   void clear() {
     localReadFactsByUri.clear();
+    loopReadsByUri.clear();
   }
 
   static boolean ordinaryRead(FlowLayout layout, ParserRuleContext statement, @Nullable ParserRuleContext use,
@@ -130,17 +149,38 @@ final class ReceiverReadFlow {
     if (whole != null || !(vertex instanceof ForeachLoopVertex loop)) {
       return whole;
     }
+    return readLoopProjection(document, body, layout, inputs, complete, variable, loop);
+  }
+
+  private @Nullable Facts readLoopProjection(DocumentContext document, BSLParser.CodeBlockContext body,
+    FlowLayout layout, FlowInputs inputs, BooleanSupplier complete, VariableSymbol variable, ForeachLoopVertex loop) {
     if (!isBslParameter(document, variable) || inputs.externalDeclaration().test(variable)
       || inputs.sawMissing().getAsBoolean()) {
+      return null;
+    }
+    var key = new Key(body, variable, inputs.executionContext());
+    var byParameter = loopReadsByUri.computeIfAbsent(document.getUri(), ignored -> new ConcurrentHashMap<>());
+    var slot = byParameter.computeIfAbsent(key, ignored -> new LoopRead(loop));
+    // Не пересчитываем префикс для каждого соседнего цикла: их обслуживает обычный кеш тела.
+    if (slot.loop != loop) {
       return null;
     }
     var declared = inputs.declaredFact().apply(variable);
     if (inputs.sawMissing().getAsBoolean() || hasDeferredTypes(declared)) {
       return null;
     }
-    // Срез обслуживает одну точку. Обычный кеш хранит факты всего тела.
-    var key = new Key(body, variable, inputs.executionContext());
-    return projections.readParameterBeforeLoop(document, layout, key, loop, inputs);
+    var contexts = inputs.compilationContexts().apply(body).map(Set::copyOf);
+    var cached = slot.facts;
+    if (cached != null && cached.contexts().equals(contexts) && cached.read().matches(declared)
+      && complete.getAsBoolean() && !inputs.sawMissing().getAsBoolean()) {
+      return cached.read().facts();
+    }
+
+    var result = projections.readParameterBeforeLoop(document, layout, key, loop, inputs, contexts, declared);
+    if (result != null && complete.getAsBoolean() && !inputs.sawMissing().getAsBoolean()) {
+      slot.facts = new LoopSlice(new LocalReadFacts(declared, result), contexts);
+    }
+    return result;
   }
 
   private @Nullable Facts independentReadFacts(DocumentContext document, BSLParser.CodeBlockContext body,

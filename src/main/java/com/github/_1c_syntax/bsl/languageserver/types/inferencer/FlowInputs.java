@@ -100,6 +100,15 @@ record FlowInputs(
   @Nullable Consumer<List<VariableSymbol>> prepareCells, boolean preparingCells,
   Predicate<VariableSymbol> externalDeclaration
 ) {
+  /** Точечная проекция считает параметр с тем же объявленным типом, по которому проверен её кеш. */
+  FlowInputs withDeclaredType(VariableSymbol variable, TypeSet type) {
+    return new FlowInputs(session, activeBodyRead, cacheable, executionContext, compilationContexts, sawMissing,
+      variables, readModuleVariables, sharedWithOtherBodies,
+      current -> current == variable ? type : declaredFact.apply(current),
+      definitionPositions, mutationPositions, assigned, mutations, narrowing, noteIncompleteCellInput,
+      prepareCells, preparingCells, externalDeclaration);
+  }
+
   /** Входы без отдельного списка чтений сохраняют консервативный расчёт всех видимых переменных. */
   public FlowInputs(FlowSession session, Consumer<CodeBlockContext> activeBodyRead, boolean cacheable,
     @Nullable ExecutionContext executionContext,
