@@ -86,7 +86,6 @@ final class VariableFlowPass {
   VariableFlowPass(
     VariableFlowAnalyzer analyzer,
     DocumentContext documentContext,
-    ControlFlowGraph graph,
     FlowLayout layout,
     FlowInputs inputs,
     @Nullable PreprocessorFlow compiledFlow,
@@ -94,7 +93,7 @@ final class VariableFlowPass {
   ) {
     this.analyzer = analyzer;
     this.documentContext = documentContext;
-    this.graph = graph;
+    this.graph = layout.graph();
     this.layout = layout;
     this.inputs = inputs;
     this.compiledFlow = compiledFlow;
@@ -221,7 +220,7 @@ final class VariableFlowPass {
    */
   private FlowEnvironment joinOfPredecessors(CfgVertex vertex, Map<CfgVertex, FlowEnvironment> facts) {
     var joined = FlowEnvironment.EMPTY;
-    for (var edge : graph.incomingEdgesOf(vertex)) {
+    for (var edge : layout.incomingOf(vertex)) {
       if (compiledFlow != null && !compiledFlow.edges().contains(edge)) {
         continue;
       }

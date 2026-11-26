@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.cfg.CfgBuildOptions;
-import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraph;
 import com.github._1c_syntax.bsl.languageserver.cfg.PreprocessorFlow;
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraph;
@@ -959,14 +958,10 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     if (cached != null) {
       return cached;
     }
-    var graph = graphOf(documentContext, body);
+    var graph = controlFlowGraphIndex.graphOf(documentContext, body, CfgBuildOptions.defaults());
     var layout = FlowLayout.of(graph, body);
     var previous = byBody.putIfAbsent(body, layout);
     return previous == null ? layout : previous;
-  }
-
-  ControlFlowGraph graphOf(DocumentContext document, CodeBlockContext body) {
-    return controlFlowGraphIndex.graphOf(document, body, CfgBuildOptions.defaults());
   }
 
   /** Общая часть обоих входов: проверки применимости и чтение окружения. */
@@ -1214,23 +1209,19 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     if (variables.variables().isEmpty()) {
       return new Facts(Map.of(), Map.of(), Map.of(), FlowEnvironment.EMPTY);
     }
-    return computeFacts(documentContext, body, layout, inputs, variables, flowGraph(documentContext, body, inputs));
-  }
-
-  Facts computeFacts(DocumentContext document, CodeBlockContext body, FlowLayout layout,
-                     FlowInputs inputs, FlowVariables variables, FlowGraph flow) {
-    var pass = new VariableFlowPass(this, document, flow.graph(), layout, inputs, flow.compiled(), variables);
+    var compiled = compiledFlow(documentContext, body, layout, inputs);
+    var pass = new VariableFlowPass(this, documentContext, layout, inputs, compiled, variables);
     return inputs.session().computeBodyFacts(body, pass);
   }
 
-  record FlowGraph(ControlFlowGraph graph, @Nullable PreprocessorFlow compiled) { }
-
-  /** Подготовить один и тот же граф для полного прохода и его проекции. */
-  FlowGraph flowGraph(DocumentContext document, CodeBlockContext body, FlowInputs inputs) {
-    var indexedGraph = controlFlowGraphIndex.indexedGraphOf(document, body, CfgBuildOptions.defaults());
-    var compiled = inputs.compilationContexts().apply(body).map(indexedGraph::compiledFlow).orElse(null);
-
-    return new FlowGraph(indexedGraph.graph(), compiled);
+  /** Маска достижимости для полного и сокращённого прохода по графу тела. */
+  @Nullable PreprocessorFlow compiledFlow(DocumentContext document, CodeBlockContext body,
+                                          FlowLayout layout, FlowInputs inputs) {
+    return inputs.compilationContexts().apply(body).map(contexts -> {
+      var indexed = controlFlowGraphIndex.indexedGraphOf(document, body, CfgBuildOptions.defaults());
+      return indexed.graph() == layout.graph() ? indexed.compiledFlow(contexts)
+        : PreprocessorFlow.of(layout.graph(), contexts, document.getFileType());
+    }).orElse(null);
   }
 
   /** Структура переменных тела для текущего дерева символов, общая для всех режимов расчёта. */

@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
+import com.github._1c_syntax.bsl.languageserver.cfg.CfgVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraph;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
@@ -69,6 +70,30 @@ class VariableFlowPassTest {
     assertThat(server).contains(graph.getEntryPoint());
     assertThat(layout.bslReachableVertices(EnumSet.of(ExecutionContext.SERVER))).isSameAs(server);
     assertThat(layout.bslReachableVertices(Set.of())).isEmpty();
+  }
+
+  @Test
+  void retainsIncomingEdgesInGraphOrderIncludingBackEdges() {
+    var flowGraph = new ControlFlowGraph();
+    var entry = mock(CfgVertex.class);
+    var left = mock(CfgVertex.class);
+    var right = mock(CfgVertex.class);
+    var join = mock(CfgVertex.class);
+    List.of(entry, left, right, join).forEach(flowGraph::addVertex);
+    flowGraph.setEntryPoint(entry);
+    var entryToLeft = flowGraph.addEdge(entry, left);
+    flowGraph.addEdge(entry, right);
+    var rightToJoin = flowGraph.addEdge(right, join);
+    var leftToJoin = flowGraph.addEdge(left, join);
+    var nextIteration = flowGraph.addEdge(join, left);
+    flowGraph.addEdge(join, flowGraph.getExitPoint());
+
+    var flowLayout = emptyLayout(flowGraph);
+
+    assertThat(flowLayout.graph()).isSameAs(flowGraph);
+    assertThat(flowLayout.incomingOf(join)).containsExactly(rightToJoin, leftToJoin);
+    assertThat(flowLayout.incomingOf(left)).containsExactly(entryToLeft, nextIteration);
+    assertThat(flowLayout.incomingOf(entry)).isEmpty();
   }
 
   @Test
@@ -162,7 +187,7 @@ class VariableFlowPassTest {
     for (var i = 0; i < variables.size(); i++) {
       indexes.put(variables.get(i), i);
     }
-    return new VariableFlowPass(analyzer, document, graph, layout, inputs, null,
+    return new VariableFlowPass(analyzer, document, layout, inputs, null,
       new FlowVariables(variables, variables, indexes, Map.of(), Set.of()));
   }
 

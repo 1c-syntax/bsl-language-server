@@ -78,7 +78,7 @@ class IndependentReturnedStructureTest extends AbstractServerContextAwareTest {
     );
     var layout = analyzer.layoutOf(document, body);
     var variables = analyzer.variablesOf(document, body, layout, inputs);
-    var vertices = analyzer.flowGraph(document, body, inputs).graph().vertexSet();
+    var vertices = layout.graph().vertexSet();
     var reachable = new IndependentReturnedStructure.Reachability(vertices, node -> true);
 
     assertThat(IndependentReturnedStructure.supports(document, body, first, variables, inputs, reachable, true)).isTrue();
