@@ -34,6 +34,8 @@ import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
+import java.util.List;
+
 /**
  * Тип параметра метода, объявленный вне его тела.
  * <p>
@@ -99,6 +101,37 @@ public class DeclaredParameterTypeResolver implements VariableTypeSource {
       .map(parameter -> symbolTypeIndex.awaitsUnparsedModule(parameter, method.getOwner())
         || (!declaresTypes(parameter) && referencedMethodAwaitsUnparsedModule(method, name)))
       .orElse(false);
+  }
+
+  @Override
+  public boolean hasExternalTypeLinks(VariableSymbol variable) {
+    if (variable.getKind() != VariableKind.PARAMETER || !(variable.getScope() instanceof MethodSymbol method)) {
+      return false;
+    }
+    var name = variable.getName();
+    return method.getParameters().stream()
+      .filter(parameter -> parameter.getName().equalsIgnoreCase(name))
+      .findFirst()
+      .map(parameter -> symbolTypeIndex.parameterMayReadAnotherDocument(parameter, method.getOwner())
+        || referencedParameterMayReadAnotherDocument(method, name))
+      .orElse(false);
+  }
+
+  private boolean referencedParameterMayReadAnotherDocument(MethodSymbol method, String name) {
+    var links = method.getDescription().map(MethodDescription::getLinks).orElse(List.of());
+    var owner = method.getOwner();
+    for (var link : links) {
+      if (link.link().contains(".")) {
+        return true;
+      }
+      var target = localMethod(owner, link.link());
+      if (target != null && target.getParameters().stream()
+        .filter(parameter -> parameter.getName().equalsIgnoreCase(name))
+        .anyMatch(parameter -> symbolTypeIndex.parameterMayReadAnotherDocument(parameter, owner))) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /**

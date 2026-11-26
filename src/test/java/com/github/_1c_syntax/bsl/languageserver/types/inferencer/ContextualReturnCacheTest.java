@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -31,9 +32,28 @@ import org.junit.jupiter.api.Test;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
+import java.util.List;
 import java.util.Set;
 
 class ContextualReturnCacheTest {
+  @Test
+  void cellPreparationAttemptsAreSharedWithRefinementsButSeparateByModeAndRequest() {
+    var cache = new ContextualReturnCache();
+    var first = mock(VariableSymbol.class);
+    var second = mock(VariableSymbol.class);
+
+    assertThat(cache.cellPreparations().reserve(ExecutionContext.SERVER, List.of(first))).containsExactly(first);
+
+    var refinement = cache.forRefinement();
+    assertThat(refinement.cellPreparations().reserve(ExecutionContext.SERVER, List.of(first, second)))
+      .containsExactly(second);
+    assertThat(cache.cellPreparations().reserve(ExecutionContext.SERVER, List.of(second))).isEmpty();
+    assertThat(refinement.forRefinement().cellPreparations().reserve(ExecutionContext.THIN_CLIENT, List.of(first)))
+      .containsExactly(first);
+    assertThat(new ContextualReturnCache().cellPreparations().reserve(ExecutionContext.SERVER, List.of(first)))
+      .containsExactly(first);
+  }
+
   @Test
   void approximationInputsDoNotCrossQueryRevisionOrRecursionGuards() {
     var cache = new ContextualReturnCache();

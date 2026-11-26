@@ -251,7 +251,7 @@ class ReturnedLocalFlowTest extends AbstractServerContextAwareTest {
     var planning = new AtomicInteger();
     var assignments = new AtomicInteger();
     var session = new VariableFlowAnalyzer.FlowSession();
-    var inputs = new VariableFlowAnalyzer.FlowInputs(session, used -> {}, false, ExecutionContext.SERVER,
+    var inputs = new FlowInputs(session, used -> {}, false, ExecutionContext.SERVER,
       used -> {
         planning.incrementAndGet();
         return Optional.empty();
@@ -318,7 +318,7 @@ class ReturnedLocalFlowTest extends AbstractServerContextAwareTest {
     var use = ((BSLParser.ReturnStatementContext) Trees.findAllRuleNodes(body, BSLParser.RULE_returnStatement)
       .iterator().next()).expression();
     var structure = TypeSet.of(new TypeRef(TypeKind.PLATFORM, "Структура"));
-    var inputs = new VariableFlowAnalyzer.FlowInputs(new VariableFlowAnalyzer.FlowSession(), used -> {}, false,
+    var inputs = new FlowInputs(new VariableFlowAnalyzer.FlowSession(), used -> {}, false,
       ExecutionContext.SERVER, used -> Optional.of(Set.of(ExecutionContext.SERVER)), () -> false,
       used -> List.of(server, client), variable -> false, variable -> {
         assertThat(variable).as("inactive declarations are not needed for the selected return").isSameAs(server);
@@ -410,9 +410,9 @@ class ReturnedLocalFlowTest extends AbstractServerContextAwareTest {
     assertThat(assignments.get()).isGreaterThan(afterClient);
   }
 
-  private static VariableFlowAnalyzer.FlowInputs projectedInputs(VariableFlowAnalyzer.FlowSession session,
+  private static FlowInputs projectedInputs(VariableFlowAnalyzer.FlowSession session,
       VariableSymbol variable, ExecutionContext mode, AtomicInteger assignments) {
-    return new VariableFlowAnalyzer.FlowInputs(session, body -> {}, false, mode, body -> Optional.empty(), () -> false,
+    return new FlowInputs(session, body -> {}, false, mode, body -> Optional.empty(), () -> false,
       body -> List.of(variable), candidate -> false, candidate -> TypeSet.EMPTY,
       candidate -> List.of(new Position(1, 2)), candidate -> List.of(new Position(5, 2)),
       (candidate, statement, position) -> {
@@ -515,9 +515,9 @@ class ReturnedLocalFlowTest extends AbstractServerContextAwareTest {
     assertThat(checks.get()).isGreaterThan(afterFirst);
   }
 
-  private static VariableFlowAnalyzer.FlowInputs rejectionInputs(VariableFlowAnalyzer.FlowSession session,
+  private static FlowInputs rejectionInputs(VariableFlowAnalyzer.FlowSession session,
       VariableSymbol variable, ExecutionContext mode, VariableFlowAnalyzer.GuardNarrowing narrowing) {
-    return new VariableFlowAnalyzer.FlowInputs(session, body -> {}, true, mode, body -> Optional.empty(), () -> false,
+    return new FlowInputs(session, body -> {}, true, mode, body -> Optional.empty(), () -> false,
       body -> List.of(variable), candidate -> false, candidate -> TypeSet.EMPTY,
       candidate -> List.of(new Position(1, 2)), candidate -> List.of(),
       (candidate, statement, position) -> TypeSet.EMPTY, (candidate, position, incoming) -> incoming, narrowing);

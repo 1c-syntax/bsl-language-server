@@ -69,7 +69,7 @@ class IndependentReturnedStructureTest extends AbstractServerContextAwareTest {
       second, List.of(new Position(2, 2)),
       escaping, List.of(new Position(3, 2))
     );
-    var inputs = new VariableFlowAnalyzer.FlowInputs(
+    var inputs = new FlowInputs(
       new VariableFlowAnalyzer.FlowSession(), code -> {}, false, ExecutionContext.SERVER,
       code -> Optional.empty(), () -> false, code -> List.of(first, second, escaping),
       variable -> false, variable -> TypeSet.EMPTY, definitions::get, variable -> List.of(),

@@ -41,6 +41,7 @@ import com.github._1c_syntax.bsl.languageserver.types.registry.FormByNameResolve
 import com.github._1c_syntax.bsl.languageserver.types.registry.TemplateByNameResolver;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.languageserver.utils.DescriptionTypes;
 import com.github._1c_syntax.bsl.parser.description.CollectionTypeDescription;
 import com.github._1c_syntax.bsl.parser.description.MethodDescription;
 import com.github._1c_syntax.bsl.parser.description.ParameterDescription;
@@ -471,15 +472,44 @@ public class SymbolTypeIndex {
    */
   private boolean anyAwaitsUnparsedModule(@Nullable List<? extends TypeDescription> types, DocumentContext owner,
                                           Set<MethodSymbol> visited) {
-    return types != null && types.stream().anyMatch(type -> awaitsUnparsedModule(type, owner, visited));
+    return DescriptionTypes.linksOf(types).anyMatch(link -> linkAwaitsUnparsedModule(link, owner, visited));
   }
 
-  /** Ведёт ли в ещё не разобранный модуль ссылка одного описания типа, его элементов или полей. */
-  private boolean awaitsUnparsedModule(TypeDescription type, DocumentContext owner, Set<MethodSymbol> visited) {
-    return linkAwaitsUnparsedModule(linkOf(type), owner, visited)
-      || (type instanceof CollectionTypeDescription collection
-      && anyAwaitsUnparsedModule(collection.valueTypes(), owner, visited))
-      || anyFieldAwaitsUnparsedModule(type.fields(), owner, visited);
+  /** Может ли значение по ссылке зависеть от исходников вне документа со ссылкой. */
+  public boolean linkMayReadAnotherDocument(String link, DocumentContext owner) {
+    return linkMayReadAnotherDocument(link, owner, null);
+  }
+
+  /** Может ли значение из документации параметра зависеть от другого документа. */
+  public boolean parameterMayReadAnotherDocument(ParameterDefinition parameter, DocumentContext owner) {
+    return parameter.getDescription()
+      .map(description -> DescriptionTypes.linksOf(description.types())
+        .anyMatch(link -> linkMayReadAnotherDocument(link, owner)))
+      .orElse(false);
+  }
+
+  /** Может ли объявленный тип возврата зависеть от другого документа. */
+  public boolean returnMayReadAnotherDocument(MethodSymbol method) {
+    return returnMayReadAnotherDocument(method, null);
+  }
+
+  private boolean returnMayReadAnotherDocument(MethodSymbol method, @Nullable Set<MethodSymbol> visited) {
+    var returnedValue = method.getDescription().map(MethodDescription::getReturnedValue).orElse(List.of());
+    if (returnedValue.isEmpty()) {
+      return false;
+    }
+    Set<MethodSymbol> seen = visited == null ? new HashSet<>() : visited;
+    return seen.add(method)
+      && DescriptionTypes.linksOf(returnedValue).anyMatch(link -> linkMayReadAnotherDocument(link, method.getOwner(), seen));
+  }
+
+  private boolean linkMayReadAnotherDocument(String link, DocumentContext owner, @Nullable Set<MethodSymbol> visited) {
+    if (link.contains(".")) {
+      // Квалифицированная цепочка может читать типы других модулей и форм на любом шаге.
+      return true;
+    }
+    var local = findLocalFunction(owner, link);
+    return local != null && returnMayReadAnotherDocument(local, visited);
   }
 
   /**
@@ -530,24 +560,6 @@ public class SymbolTypeIndex {
       .map(MethodSymbol.class::cast)
       .map(function -> returnAwaitsUnparsedModule(function, visited))
       .orElse(false);
-  }
-
-  /**
-   * Ссылка {@code См.} описания типа: само описание-ссылка либо ссылка, уточняющая простой тип
-   * ({@code СтрокаТабличнойЧасти: См. …}).
-   */
-  private static @Nullable String linkOf(TypeDescription type) {
-    if (type.variant() == TypeDescription.Variant.HYPERLINK) {
-      return type.name();
-    }
-    var hyperlink = type.hyperlink();
-    return hyperlink == null ? null : hyperlink.link();
-  }
-
-  private boolean anyFieldAwaitsUnparsedModule(@Nullable List<ParameterDescription> fields, DocumentContext owner,
-                                               Set<MethodSymbol> visited) {
-    return fields != null
-      && fields.stream().anyMatch(field -> anyAwaitsUnparsedModule(field.types(), owner, visited));
   }
 
   /**
