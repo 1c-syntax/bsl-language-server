@@ -25,7 +25,7 @@
     
     
       
-        <title>Missing code in Raise block in "Try ... Raise ... EndTry" (MissingCodeTryCatchEx) - BSL Language Server Dev</title>
+        <title>Missing code in Except block in "Try ... Except ... EndTry" (MissingCodeTryCatchEx) - BSL Language Server Dev</title>
       
     
     
@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#Missing-code-in-Raise-block-in-Try--Raise--EndTry-MissingCodeTryCatchEx" class="md-skip">
+        <a href="#Missing-code-in-Except-block-in-Try--Except--EndTry-MissingCodeTryCatchEx" class="md-skip">
           Skip to content
         </a>
       
@@ -111,7 +111,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Missing code in Raise block in "Try ... Raise ... EndTry" (MissingCodeTryCatchEx)
+              Missing code in Except block in "Try ... Except ... EndTry" (MissingCodeTryCatchEx)
             
           </span>
         </div>
@@ -2227,7 +2227,7 @@
   
 
 
-<h1 id="Missing-code-in-Raise-block-in-Try--Raise--EndTry-MissingCodeTryCatchEx">Missing code in Raise block in "Try ... Raise ... EndTry" (MissingCodeTryCatchEx)<a class="headerlink" href="#Missing-code-in-Raise-block-in-Try--Raise--EndTry-MissingCodeTryCatchEx" title="Permanent link">&para;</a></h1>
+<h1 id="Missing-code-in-Except-block-in-Try--Except--EndTry-MissingCodeTryCatchEx">Missing code in Except block in "Try ... Except ... EndTry" (MissingCodeTryCatchEx)<a class="headerlink" href="#Missing-code-in-Except-block-in-Try--Except--EndTry-MissingCodeTryCatchEx" title="Permanent link">&para;</a></h1>
 <table>
 <thead>
 <tr>
@@ -2264,7 +2264,7 @@
 <tr>
 <td style="text-align: center;"><code>commentAsCode</code></td>
 <td style="text-align: center;"><code>Boolean</code></td>
-<td style="text-align: center;"><code>Treat comment in Raise section as code</code></td>
+<td style="text-align: center;"><code>Treat comment in Except section as code</code></td>
 <td style="text-align: center;"><code>false</code></td>
 </tr>
 </tbody>
@@ -2276,7 +2276,7 @@
 <div class="highlight"><pre><span></span><code><span class="k">Try</span>
     <span class="c1">// code causing exception</span>
     <span class="o">....</span>
-<span class="ne">Raise</span> <span class="c1">// catch any exception</span>
+<span class="k">Except</span> <span class="c1">// catch any exception</span>
 <span class="k">EndTry</span><span class="p">;</span>
 </code></pre></div>
 <p>As a rule, such a design hides a real problem, which is subsequently impossible to diagnose.</p>
@@ -2284,7 +2284,7 @@
 <div class="highlight"><pre><span></span><code><span class="k">Try</span>
     <span class="c1">// code causing exception</span>
     <span class="o">....</span>
-<span class="ne">Raise</span>
+<span class="k">Except</span>
     <span class="c1">// Explanation why catching all exceptions untraceable for enduser.</span>
     <span class="c1">// ....</span>
     <span class="c1">// Write to log for system administrator.</span>
