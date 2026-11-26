@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,12 +21,17 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references.model;
 
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import org.eclipse.lsp4j.Position;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
-import java.util.Collections;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.Map;
-import java.util.Set;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
@@ -34,30 +39,114 @@ import java.util.stream.Stream;
  * Хранилище расположений обращений к символам.
  */
 @Component
+@WorkspaceScope
 public class LocationRepository {
+
+  private static final SymbolOccurrence[] EMPTY_OCCURRENCES = new SymbolOccurrence[0];
+
   /**
-   * Список обращений к символу, сгруппированный по URI.
+   * Порядок вхождений по началу диапазона. Диапазоны вхождений непересекающиеся,
+   * поэтому порядок тотален и однозначен.
    */
-  private final Map<URI, Set<SymbolOccurrence>> locations = new ConcurrentHashMap<>();
+  private static final Comparator<SymbolOccurrence> BY_RANGE_START = Comparator
+    .comparingInt(SymbolOccurrence::startLine)
+    .thenComparingInt(SymbolOccurrence::startCharacter);
+
+  /**
+   * Вхождения документа, сгруппированные по URI.
+   * <p>
+   * Значение — неизменяемый массив {@code SymbolOccurrence[]}, а не concurrent-множество:
+   * вхождения одного документа пишутся одним потоком (перестроение документа сериализовано),
+   * а полный набор заменяется атомарным swap-ом ссылки ({@link #replaceOccurrences}), поэтому
+   * конкурентные читатели всегда видят согласованный снимок. Массив вместо
+   * {@code ConcurrentHashMap.newKeySet()} убирает ~1 Node на каждое вхождение (на больших
+   * проектах — миллионы узлов и сотни МБ).
+   * <p>
+   * Массив отсортирован по началу диапазона ({@link #BY_RANGE_START}): по нему же
+   * {@link #findByPosition} ищет вхождение бинарным поиском, без второй, отсортированной
+   * копии массива и без карты «строка → множество вхождений» (карта с per-строчными
+   * множествами на больших проектах доминировала в потреблении памяти индексом ссылок).
+   */
+  private final Map<URI, SymbolOccurrence[]> locations = new ConcurrentHashMap<>();
 
   /**
    * Получить все обращения к символам в указанном URI.
    *
    * @param uri URI документа, в котором необходимо найти обращения к символам.
-   * @return Список найденных обращений к символам.
+   * @return Обращения к символам в порядке начала их диапазонов.
    */
   public Stream<SymbolOccurrence> getSymbolOccurrencesByLocationUri(URI uri) {
-    return locations.getOrDefault(uri, Collections.emptySet()).stream();
+    return Arrays.stream(locations.getOrDefault(uri, EMPTY_OCCURRENCES));
   }
 
   /**
-   * Обновить данные о расположении обращения к символу.
+   * Найти вхождение к символу, чей диапазон накрывает позицию. Бинарный поиск
+   * по вхождениям документа, отсортированным по началу диапазона: диапазоны вхождений
+   * непересекающиеся, поэтому единственный кандидат — вхождение с наибольшим
+   * началом диапазона, не превосходящим позицию.
    *
-   * @param symbolOccurrence Обращение к символу.
+   * @param uri      URI документа.
+   * @param position позиция.
+   * @return вхождение в позиции либо empty.
    */
-  public void updateLocation(SymbolOccurrence symbolOccurrence) {
-    locations.computeIfAbsent(symbolOccurrence.getLocation().getUri(), uri -> ConcurrentHashMap.newKeySet())
-      .add(symbolOccurrence);
+  public Optional<SymbolOccurrence> findByPosition(URI uri, Position position) {
+    var sorted = locations.getOrDefault(uri, EMPTY_OCCURRENCES);
+    var index = lastStartingAtOrBefore(sorted, position);
+    if (index >= 0 && matches(sorted[index], position)) {
+      return Optional.of(sorted[index]);
+    }
+    return Optional.empty();
+  }
+
+  /**
+   * Индекс последнего вхождения, чей диапазон начинается не позже позиции,
+   * либо {@code -1}, если все вхождения начинаются позже.
+   */
+  private static int lastStartingAtOrBefore(SymbolOccurrence[] sorted, Position position) {
+    var low = 0;
+    var high = sorted.length - 1;
+    var found = -1;
+    while (low <= high) {
+      var mid = (low + high) >>> 1;
+      if (startsAfter(sorted[mid], position)) {
+        high = mid - 1;
+      } else {
+        found = mid;
+        low = mid + 1;
+      }
+    }
+    return found;
+  }
+
+  private static boolean startsAfter(SymbolOccurrence occurrence, Position position) {
+    return occurrence.startLine() > position.getLine()
+      || (occurrence.startLine() == position.getLine() && occurrence.startCharacter() > position.getCharacter());
+  }
+
+  private static boolean matches(SymbolOccurrence symbolOccurrence, Position position) {
+    return Ranges.containsPosition(
+      symbolOccurrence.startLine(), symbolOccurrence.startCharacter(),
+      symbolOccurrence.endLine(), symbolOccurrence.endCharacter(),
+      position);
+  }
+
+  /**
+   * Заменить полный набор вхождений документа. Основной путь записи: перестроение
+   * документа собирает набор в буфер и заменяет его целиком одним атомарным swap-ом.
+   *
+   * @param uri         URI документа.
+   * @param occurrences Новый набор вхождений документа (без дубликатов).
+   */
+  public void replaceOccurrences(URI uri, Collection<SymbolOccurrence> occurrences) {
+    if (occurrences.isEmpty()) {
+      locations.remove(uri);
+    } else {
+      var sorted = occurrences.toArray(EMPTY_OCCURRENCES);
+      // Набор собирают несколько обходов дерева разбора, каждый — почти по порядку текста,
+      // и сортировке слиянием остаётся слить эти серии.
+      Arrays.sort(sorted, BY_RANGE_START);
+      locations.put(uri, sorted);
+    }
   }
 
   /**
@@ -67,5 +156,12 @@ public class LocationRepository {
    */
   public void delete(URI uri) {
     locations.remove(uri);
+  }
+
+  /**
+   * Удалить расположения обращений к символам во всех документах.
+   */
+  public void clear() {
+    locations.clear();
   }
 }

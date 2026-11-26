@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,8 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
@@ -34,11 +32,10 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+import tools.jackson.dataformat.xml.XmlMapper;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -63,7 +60,7 @@ class JUnitReporterTest {
   }
 
   @Test
-  void report() throws IOException {
+  void report() {
 
     // given
     List<Diagnostic> diagnostics = new ArrayList<>();
@@ -92,7 +89,7 @@ class JUnitReporterTest {
     ));
 
     var documentContext = TestUtils.getDocumentContext(
-      Paths.get("./src/test/java/diagnostics/CanonicalSpellingKeywordsDiagnostic.bsl").toUri(),
+      Path.of("./src/test/java/diagnostics/CanonicalSpellingKeywordsDiagnostic.bsl").toUri(),
       ""
     );
     String sourceDir = ".";
@@ -102,13 +99,18 @@ class JUnitReporterTest {
     DiagnosticReporter reporter = new JUnitReporter();
 
     // when
-    reporter.report(analysisInfo, Path.of(sourceDir));
+    ReporterTestDriver.report(reporter, analysisInfo, Path.of(sourceDir));
 
     // then
-    ObjectMapper mapper = new XmlMapper();
+    var mapper = new XmlMapper();
     JUnitTestSuites report = mapper.readValue(file, JUnitTestSuites.class);
 
     assertThat(report).isNotNull();
 
+  }
+
+  @Test
+  void doesNotRequireMetricCalculation() {
+    assertThat(new JUnitReporter().isMetricCalculationRequired()).isFalse();
   }
 }

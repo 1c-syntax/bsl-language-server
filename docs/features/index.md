@@ -5,3 +5,4 @@
 * [Конфигурирование](ConfigurationFile.md)
 * [Экранирование кода от диагностик](DiagnosticIgnorance.md)
 * [Мониторинг и отправка ошибок](Monitoring.md)
+* [Запуск в режиме MCP](McpMode.md)

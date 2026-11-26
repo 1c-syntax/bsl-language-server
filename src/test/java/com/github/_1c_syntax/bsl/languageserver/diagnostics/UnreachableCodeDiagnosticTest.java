@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -38,7 +38,7 @@ class UnreachableCodeDiagnosticTest extends AbstractDiagnosticTest<UnreachableCo
   void test() {
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(15);
+    assertThat(diagnostics).hasSize(18);
     assertThat(diagnostics, true)
       .hasRange(12, 12, 20)
       .hasRange(21, 12, 20)
@@ -49,17 +49,26 @@ class UnreachableCodeDiagnosticTest extends AbstractDiagnosticTest<UnreachableCo
       .hasRange(67, 12, 69, 21)
       .hasRange(82, 16, 84, 25)
       .hasRange(93, 8, 16)
+      .hasRange(97, 12, 98, 20)
       .hasRange(102, 8, 17)
-      .hasRange(108, 16, 111, 29)
+      .hasRange(104, 8, 114, 19)
+      .hasRange(125, 4, 125, 12)
       .hasRange(138, 4, 16)
-      .hasRange(161, 4, 13)
-      .hasRange(166, 4, 168, 13)
-      .hasRange(172, 0, 9);
+      .hasRange(163, 4, 22)
+      .hasRange(171, 4, 13)
+      .hasRange(176, 4, 178, 13)
+      .hasRange(182, 0, 9);
   }
 
   @Test
   void testRegion() {
     List<Diagnostic> diagnostics = getDiagnostics("UnreachableCodeRegionDiagnostic");
+    assertThat(diagnostics).isEmpty();
+  }
+
+  @Test
+  void testParseError() {
+    List<Diagnostic> diagnostics = getDiagnostics("UnreachableCodeParseErrorDiagnostic");
     assertThat(diagnostics).isEmpty();
   }
 }

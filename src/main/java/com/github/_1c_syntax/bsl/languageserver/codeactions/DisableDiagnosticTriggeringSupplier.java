@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,15 +21,16 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.Resources;
+import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
+import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
+import org.eclipse.lsp4j.CodeActionTriggerKind;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
@@ -47,15 +48,19 @@ import java.util.stream.Collectors;
 import static com.github._1c_syntax.bsl.languageserver.providers.DiagnosticProvider.SOURCE;
 
 
+/**
+ * Поставщик code action для отключения срабатывания диагностики.
+ * <p>
+ * Добавляет комментарий для игнорирования конкретной диагностики
+ * в указанной строке кода.
+ */
 @Component
+@RequiredArgsConstructor
 public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
 
   private static final String ALL_DIAGNOSTIC_NAME = "";
-  private final LanguageServerConfiguration languageServerConfiguration;
 
-  public DisableDiagnosticTriggeringSupplier(LanguageServerConfiguration languageServerConfiguration) {
-    this.languageServerConfiguration = languageServerConfiguration;
-  }
+  private final Resources resources;
 
   /**
    * При необходимости создает {@code CodeAction} для создания служебного комментария отключающего срабатывание
@@ -74,7 +79,15 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
   public List<CodeAction> getCodeActions(CodeActionParams params, DocumentContext documentContext) {
     List<CodeAction> result = new ArrayList<>();
 
-    if (!params.getContext().getDiagnostics().isEmpty()) {
+    var diagnosticsPresent = !params.getContext().getDiagnostics().isEmpty();
+
+    // При автоматическом вызове (лампочка при движении курсора) предлагаем действия
+    // только если в контексте есть диагностики, иначе меню действий замусоривается на каждой строке.
+    if (isAutomaticTrigger(params) && !diagnosticsPresent) {
+      return result;
+    }
+
+    if (diagnosticsPresent) {
       if (params.getRange().getStart() != null && params.getRange().getEnd() != null) {
         var selectedLineNumber = params.getRange().getEnd().getLine() + 1;
 
@@ -113,6 +126,10 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
       )
     );
     return new ArrayList<>(result);
+  }
+
+  private static boolean isAutomaticTrigger(CodeActionParams params) {
+    return params.getContext().getTriggerKind() == CodeActionTriggerKind.Automatic;
   }
 
   private List<CodeAction> getDisableActionForLine(
@@ -182,7 +199,7 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
       params.getRange().getStart().getLine(),
       0
     );
-    TextEdit disableTextEdit = new TextEdit(disableRange, String.format("// BSLLS%s-off%n", diagnosticName));
+    TextEdit disableTextEdit = new TextEdit(disableRange, "// BSLLS%s-off%n".formatted(diagnosticName));
     edits.add(disableTextEdit);
 
     Range enableRange = Ranges.create(
@@ -191,7 +208,7 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
       params.getRange().getEnd().getLine(),
       last.getCharPositionInLine() + last.getText().length()
     );
-    TextEdit enableTextEdit = new TextEdit(enableRange, String.format("%n// BSLLS%s-on%n", diagnosticName));
+    TextEdit enableTextEdit = new TextEdit(enableRange, "%n// BSLLS%s-on%n".formatted(diagnosticName));
     edits.add(enableTextEdit);
     return edits;
   }
@@ -199,7 +216,7 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
   private List<TextEdit> createInFileTextEdits(String diagnosticName) {
     TextEdit textEdit = new TextEdit(
       Ranges.create(0, 0, 0, 0),
-      String.format("// BSLLS%s-off%n", diagnosticName)
+      "// BSLLS%s-off%n".formatted(diagnosticName)
     );
     return Collections.singletonList(textEdit);
   }
@@ -217,11 +234,11 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
   }
 
   private String getMessage(String key) {
-    return Resources.getResourceString(languageServerConfiguration.getLanguage(), this.getClass(), key);
+    return resources.getResourceString(this.getClass(), key);
   }
 
   private String getMessage(String key, Object... args) {
-    return Resources.getResourceString(languageServerConfiguration.getLanguage(), this.getClass(), key, args);
+    return resources.getResourceString(this.getClass(), key, args);
   }
 
   private static List<TextEdit> createInLineTextEdits(String diagnosticName, Token last, CodeActionParams params) {
@@ -232,7 +249,7 @@ public class DisableDiagnosticTriggeringSupplier implements CodeActionSupplier {
       last.getCharPositionInLine() + last.getText().length()
     );
 
-    TextEdit textEdit = new TextEdit(range, String.format(" // BSLLS%s-off", diagnosticName));
+    TextEdit textEdit = new TextEdit(range, " // BSLLS%s-off".formatted(diagnosticName));
     return Collections.singletonList(textEdit);
   }
 

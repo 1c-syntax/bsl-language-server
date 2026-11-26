@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,19 +21,25 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
-import com.github._1c_syntax.bsl.languageserver.reporters.databind.AnalysisInfoObjectMapper;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
+import com.github._1c_syntax.bsl.languageserver.reporters.databind.AnalysisInfoJsonMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.SequenceWriter;
 
-import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
+import java.time.format.DateTimeFormatter;
 
 @Slf4j
 @Component
 public class JsonReporter implements DiagnosticReporter {
+
+  private ReportFile reportFile;
+  private JsonGenerator generator;
+  private SequenceWriter writer;
+  private String sourceDir;
 
   @Override
   public String key() {
@@ -41,15 +47,47 @@ public class JsonReporter implements DiagnosticReporter {
   }
 
   @Override
-  public void report(AnalysisInfo analysisInfo, Path outputDir) {
-    ObjectMapper mapper = new AnalysisInfoObjectMapper();
+  public boolean isMetricCalculationRequired() {
+    return true;
+  }
 
-    try {
-      File reportFile = new File(outputDir.toFile(), "./bsl-json.json");
-      mapper.writeValue(reportFile, analysisInfo);
-      LOGGER.info("JSON report saved to {}", reportFile.getAbsolutePath());
-    } catch (IOException e) {
-      throw new RuntimeException(e);
+  @Override
+  public void beginReport(ReportContext context, Path outputDir) {
+    sourceDir = context.sourceDir();
+
+    var mapper = new AnalysisInfoJsonMapper();
+
+    reportFile = ReportFile.create(outputDir, "bsl-json.json");
+    generator = mapper.createGenerator(reportFile.stream());
+    generator.writeStartObject();
+    generator.writeName("date");
+    // формат совпадает с @JsonFormat на AnalysisInfo.date: аннотация компонента записи
+    // не применяется при потоковой записи поля, поэтому дату форматируем сами
+    generator.writeString(context.date().format(DateTimeFormatter.ofPattern(AnalysisInfo.DATE_PATTERN)));
+    generator.writeName("fileinfos");
+    writer = mapper.writerFor(FileInfo.class).writeValuesAsArray(generator);
+  }
+
+  @Override
+  public void accept(FileInfo fileInfo) {
+    writer.write(fileInfo);
+  }
+
+  @Override
+  public void endReport() {
+    writer.close();
+    generator.writeName("sourceDir");
+    generator.writeString(sourceDir);
+    generator.writeEndObject();
+    generator.close();
+    reportFile.commit();
+    LOGGER.info("JSON report saved to {}", reportFile.path().toAbsolutePath());
+  }
+
+  @Override
+  public void abortReport() {
+    if (reportFile != null) {
+      reportFile.close();
     }
   }
 }

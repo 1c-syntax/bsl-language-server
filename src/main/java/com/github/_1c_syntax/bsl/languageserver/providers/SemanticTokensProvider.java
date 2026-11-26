@@ -1,0 +1,588 @@
+/*
+ * This file is a part of BSL Language Server.
+ *
+ * Copyright (c) 2018-2026
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ *
+ * BSL Language Server is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3.0 of the License, or (at your option) any later version.
+ *
+ * BSL Language Server is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BSL Language Server.
+ */
+package com.github._1c_syntax.bsl.languageserver.providers;
+
+import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
+import com.github._1c_syntax.bsl.languageserver.client.LanguageClientHolder;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
+import com.github._1c_syntax.bsl.languageserver.semantictokens.SemanticTokenEntry;
+import com.github._1c_syntax.bsl.languageserver.semantictokens.SemanticTokensSupplier;
+import lombok.RequiredArgsConstructor;
+import org.eclipse.lsp4j.ClientCapabilities;
+import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SemanticTokens;
+import org.eclipse.lsp4j.SemanticTokensDelta;
+import org.eclipse.lsp4j.SemanticTokensDeltaParams;
+import org.eclipse.lsp4j.SemanticTokensEdit;
+import org.eclipse.lsp4j.SemanticTokensParams;
+import org.eclipse.lsp4j.SemanticTokensRangeParams;
+import org.eclipse.lsp4j.SemanticTokensWorkspaceCapabilities;
+import org.eclipse.lsp4j.WorkspaceClientCapabilities;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.eclipse.lsp4j.services.LanguageClient;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.event.EventListener;
+import org.springframework.stereotype.Component;
+
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.function.Function;
+
+/**
+ * Провайдер для предоставления семантических токенов.
+ * <p>
+ * Обрабатывает запросы {@code textDocument/semanticTokens/full}, {@code textDocument/semanticTokens/full/delta}
+ * и {@code textDocument/semanticTokens/range}.
+ *
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_semanticTokens">Semantic Tokens specification</a>
+ */
+@Component
+@RequiredArgsConstructor
+public class SemanticTokensProvider {
+
+  /**
+   * Порог количества токенов, при превышении которого используется параллельная обработка.
+   */
+  private static final int PARALLEL_PROCESSING_THRESHOLD = 1000;
+
+  private final List<SemanticTokensSupplier> suppliers;
+
+  @Qualifier("semanticTokensExecutor")
+  private final ExecutorService executor;
+
+  private final ClientCapabilitiesHolder clientCapabilitiesHolder;
+  private final LanguageClientHolder clientHolder;
+
+  /**
+   * Cache for storing previous token data by resultId.
+   * Key: resultId, Value: token data list
+   */
+  private final Map<String, CachedTokenData> tokenCache = new ConcurrentHashMap<>();
+
+  /**
+   * Cached semantic token data associated with a document.
+   *
+   * @param uri  URI of the document
+   * @param data token data as int array (more efficient than List<Integer>)
+   */
+  private record CachedTokenData(URI uri, int[] data) {
+  }
+
+  /**
+   * Получить семантические токены для всего документа.
+   *
+   * @param documentContext Контекст документа
+   * @param params          Параметры запроса
+   * @return Семантические токены в дельта-кодированном формате
+   */
+  public SemanticTokens getSemanticTokensFull(
+    DocumentContext documentContext,
+    @SuppressWarnings("unused") SemanticTokensParams params
+  ) {
+    // Collect tokens from all suppliers in parallel
+    var entries = collectTokens(documentContext);
+
+    // Build delta-encoded data as int array
+    int[] data = toDeltaEncodedArray(entries);
+
+    // Generate a unique resultId and cache the data
+    String resultId = generateResultId();
+    cacheTokenData(resultId, documentContext.getUri(), data);
+
+    return new SemanticTokens(resultId, toList(data));
+  }
+
+  /**
+   * Получить дельту семантических токенов относительно предыдущего результата.
+   *
+   * @param documentContext Контекст документа
+   * @param params          Параметры запроса с previousResultId
+   * @return Либо дельту токенов, либо полные токены, если предыдущий результат недоступен
+   */
+  public Either<SemanticTokens, SemanticTokensDelta> getSemanticTokensFullDelta(
+    DocumentContext documentContext,
+    SemanticTokensDeltaParams params
+  ) {
+    String previousResultId = params.getPreviousResultId();
+    CachedTokenData previousData = tokenCache.get(previousResultId);
+
+    // Collect tokens from all suppliers in parallel
+    var entries = collectTokens(documentContext);
+
+    // Build delta-encoded data as int array
+    int[] currentData = toDeltaEncodedArray(entries);
+
+    // Generate new resultId
+    String resultId = generateResultId();
+
+    // If previous data is not available or belongs to a different document, return full tokens
+    if (previousData == null || !previousData.uri().equals(documentContext.getUri())) {
+      cacheTokenData(resultId, documentContext.getUri(), currentData);
+      return Either.forLeft(new SemanticTokens(resultId, toList(currentData)));
+    }
+
+    // Compute delta edits
+    List<SemanticTokensEdit> edits = computeEdits(previousData.data(), currentData);
+
+    // Cache the new data
+    cacheTokenData(resultId, documentContext.getUri(), currentData);
+
+    // Remove the old cached data
+    tokenCache.remove(previousResultId);
+
+    var delta = new SemanticTokensDelta();
+    delta.setResultId(resultId);
+    delta.setEdits(edits);
+    return Either.forRight(delta);
+  }
+
+  /**
+   * Получить семантические токены для указанного диапазона документа.
+   *
+   * @param documentContext Контекст документа
+   * @param params          Параметры запроса с диапазоном
+   * @return Семантические токены для указанного диапазона в дельта-кодированном формате
+   */
+  public SemanticTokens getSemanticTokensRange(
+    DocumentContext documentContext,
+    SemanticTokensRangeParams params
+  ) {
+    Range range = params.getRange();
+
+    // Collect tokens from all suppliers in parallel, scoping expensive suppliers to the range
+    var entries = collectTokens(documentContext, range);
+
+    // Filter tokens that fall within the specified range
+    var filteredEntries = filterTokensByRange(entries, range);
+
+    // Build delta-encoded data as int array
+    int[] data = toDeltaEncodedArray(filteredEntries);
+
+    // Range requests do not use resultId caching as per LSP specification
+    return new SemanticTokens(toList(data));
+  }
+
+  /**
+   * Фильтрует токены, оставляя только те, которые попадают в указанный диапазон.
+   * <p>
+   * Токен считается попадающим в диапазон, если он хотя бы частично пересекается с ним.
+   * <p>
+   * Оптимизация: сначала выполняется быстрая фильтрация по строкам (простое сравнение целых чисел),
+   * затем для граничных строк проверяются позиции символов. Использует параллельную обработку
+   * для больших объемов данных.
+   *
+   * @param entries Список токенов
+   * @param range   Диапазон для фильтрации
+   * @return Отфильтрованный список токенов
+   */
+  private static List<SemanticTokenEntry> filterTokensByRange(List<SemanticTokenEntry> entries, Range range) {
+    int startLine = range.getStart().getLine();
+    int startChar = range.getStart().getCharacter();
+    int endLine = range.getEnd().getLine();
+    int endChar = range.getEnd().getCharacter();
+
+    // Use parallel stream for large collections to leverage multiple cores
+    var stream = entries.size() > PARALLEL_PROCESSING_THRESHOLD
+      ? entries.parallelStream()
+      : entries.stream();
+
+    return stream
+      // Quick line-based pre-filter (simple integer comparison)
+      .filter(token -> token.line() >= startLine && token.line() <= endLine)
+      // Detailed check for boundary lines only
+      .filter(token -> isTokenInRangeDetailed(token, startLine, startChar, endLine, endChar))
+      .toList();
+  }
+
+  /**
+   * Проверяет позицию символов для токенов на граничных строках.
+   * <p>
+   * Предполагается, что токен уже прошел проверку по строкам (находится между startLine и endLine).
+   */
+  private static boolean isTokenInRangeDetailed(
+    SemanticTokenEntry token,
+    int startLine,
+    int startChar,
+    int endLine,
+    int endChar
+  ) {
+    int tokenLine = token.line();
+    int tokenStart = token.start();
+    int tokenEnd = tokenStart + token.length();
+
+    // Token is on the start line - check if it ends after range start
+    if (tokenLine == startLine && tokenEnd <= startChar) {
+      return false;
+    }
+
+    // Token is on the end line - check if it starts before range end
+    return tokenLine != endLine || tokenStart < endChar;
+  }
+
+  /**
+   * Обрабатывает событие закрытия документа в контексте сервера.
+   * <p>
+   * При закрытии документа очищает кэшированные данные семантических токенов.
+   *
+   * @param event событие закрытия документа
+   */
+  @EventListener
+  public void handleDocumentClosed(ServerContextDocumentClosedEvent event) {
+    clearCache(event.getDocumentContext().getUri());
+  }
+
+  /**
+   * Обрабатывает событие удаления документа из контекста сервера.
+   * <p>
+   * При удалении документа очищает кэшированные данные семантических токенов.
+   *
+   * @param event событие удаления документа
+   */
+  @EventListener
+  public void handleDocumentRemoved(ServerContextDocumentRemovedEvent event) {
+    clearCache(event.getUri());
+  }
+
+  /**
+   * Обрабатывает событие завершения наполнения контекста сервера.
+   * <p>
+   * Часть сапплаеров (например, подсветка вызовов методов) опирается на индекс ссылок,
+   * который наполняется только после {@code populateContext}. Если клиент запросил токены
+   * до наполнения индекса, подсветка остаётся устаревшей до следующей правки файла.
+   * Поэтому по завершении наполнения контекста инициируется запрос
+   * {@code workspace/semanticTokens/refresh}.
+   *
+   * @param event Событие завершения наполнения контекста сервера.
+   */
+  @EventListener
+  public void handleServerContextPopulated(ServerContextPopulatedEvent event) {
+    refreshSemanticTokens();
+  }
+
+  /**
+   * Обрабатывает событие регистрации конфигурационных типов.
+   * <p>
+   * Self-члены модуля (реквизиты/платформенные методы объекта и т.п., которые
+   * {@code ReferenceIndexFiller} индексирует, а {@code SymbolsSemanticTokensSupplier}
+   * красит) резолвятся через self-тип из
+   * реестра типов, который конфигурационные провайдеры заполняют уже ПОСЛЕ
+   * {@link ServerContextPopulatedEvent}. Если клиент запросил токены до этой
+   * регистрации, подсветка остаётся устаревшей до следующей правки файла —
+   * поэтому по завершении регистрации типов тоже запрашивается
+   * {@code workspace/semanticTokens/refresh}.
+   *
+   * @param event Событие регистрации конфигурационных типов.
+   */
+  @EventListener
+  public void handleConfigurationTypesRegistered(ConfigurationTypesRegisteredEvent event) {
+    refreshSemanticTokens();
+  }
+
+  /**
+   * Отправить запрос на обновление семантических токенов.
+   * <p>
+   * Запрос отправляется только в случае поддержки клиентом возможности
+   * {@code workspace.semanticTokens.refreshSupport}.
+   */
+  public void refreshSemanticTokens() {
+    boolean refreshSupport = clientCapabilitiesHolder.getCapabilities()
+      .map(ClientCapabilities::getWorkspace)
+      .map(WorkspaceClientCapabilities::getSemanticTokens)
+      .map(SemanticTokensWorkspaceCapabilities::getRefreshSupport)
+      .orElse(Boolean.FALSE);
+
+    if (refreshSupport) {
+      clientHolder.execIfConnected(LanguageClient::refreshSemanticTokens);
+    }
+  }
+
+  /**
+   * Очищает кэшированные данные токенов для указанного документа.
+   *
+   * @param uri URI документа, для которого нужно очистить кэш
+   */
+  protected void clearCache(URI uri) {
+    tokenCache.entrySet().removeIf(entry -> entry.getValue().uri().equals(uri));
+  }
+
+  /**
+   * Generate a unique result ID for caching.
+   */
+  private static String generateResultId() {
+    return UUID.randomUUID().toString();
+  }
+
+  /**
+   * Cache token data with the given resultId.
+   */
+  private void cacheTokenData(String resultId, URI uri, int[] data) {
+    tokenCache.put(resultId, new CachedTokenData(uri, data));
+  }
+
+  /**
+   * Compute edits to transform previousData into currentData.
+   * <p>
+   * Учитывает структуру семантических токенов (группы по 5 элементов: deltaLine, deltaStart, length, type, modifiers)
+   * и смещение строк при вставке/удалении строк в документе.
+   */
+  private static List<SemanticTokensEdit> computeEdits(int[] prev, int[] curr) {
+    final int TOKEN_SIZE = 5;
+
+    int prevTokenCount = prev.length / TOKEN_SIZE;
+    int currTokenCount = curr.length / TOKEN_SIZE;
+
+    if (prevTokenCount == 0 && currTokenCount == 0) {
+      return List.of();
+    }
+
+    // Находим первый отличающийся токен и одновременно вычисляем сумму deltaLine для prefix
+    int firstDiffToken = 0;
+    int prefixAbsLine = 0;
+    int minTokens = Math.min(prevTokenCount, currTokenCount);
+
+    outer:
+    for (int i = 0; i < minTokens; i++) {
+      int base = i * TOKEN_SIZE;
+      for (int j = 0; j < TOKEN_SIZE; j++) {
+        if (prev[base + j] != curr[base + j]) {
+          firstDiffToken = i;
+          break outer;
+        }
+      }
+      prefixAbsLine += prev[base]; // накапливаем deltaLine
+      firstDiffToken = i + 1;
+    }
+
+    // Если все токены одинаковые
+    if (firstDiffToken == minTokens && prevTokenCount == currTokenCount) {
+      return List.of();
+    }
+
+    // Вычисляем смещение строк инкрементально от prefixAbsLine
+    int prevSuffixAbsLine = prefixAbsLine;
+    for (int i = firstDiffToken; i < prevTokenCount; i++) {
+      prevSuffixAbsLine += prev[i * TOKEN_SIZE];
+    }
+    int currSuffixAbsLine = prefixAbsLine;
+    for (int i = firstDiffToken; i < currTokenCount; i++) {
+      currSuffixAbsLine += curr[i * TOKEN_SIZE];
+    }
+    int lineOffset = currSuffixAbsLine - prevSuffixAbsLine;
+
+    // Находим последний отличающийся токен с учётом смещения строк
+    int suffixMatchTokens = findSuffixMatchWithOffset(prev, curr, firstDiffToken, lineOffset, TOKEN_SIZE);
+
+    // Вычисляем границы редактирования
+    int deleteEndToken = prevTokenCount - suffixMatchTokens;
+    int insertEndToken = currTokenCount - suffixMatchTokens;
+
+    int deleteStart = firstDiffToken * TOKEN_SIZE;
+    int deleteCount = (deleteEndToken - firstDiffToken) * TOKEN_SIZE;
+    int insertEnd = insertEndToken * TOKEN_SIZE;
+
+    if (deleteCount == 0 && deleteStart == insertEnd) {
+      return List.of();
+    }
+
+    // Создаём список для вставки из среза массива
+    List<Integer> insertData = toList(Arrays.copyOfRange(curr, deleteStart, insertEnd));
+
+    var edit = new SemanticTokensEdit();
+    edit.setStart(deleteStart);
+    edit.setDeleteCount(deleteCount);
+    if (!insertData.isEmpty()) {
+      edit.setData(insertData);
+    }
+
+    return List.of(edit);
+  }
+
+  /**
+   * Находит количество совпадающих токенов с конца, учитывая смещение строк.
+   * <p>
+   * При дельта-кодировании токены после точки вставки идентичны,
+   * кроме первого токена, у которого deltaLine смещён на lineOffset.
+   * При вставке текста без перевода строки (lineOffset == 0), первый токен
+   * может иметь смещённый deltaStart.
+   * <p>
+   * ВАЖНО: Граничный токен (с изменённым deltaLine при lineOffset != 0) НЕ включается
+   * в suffix match, чтобы клиент получил обновлённое значение deltaLine через edit.
+   * Это критично для случая, когда добавляются только пустые строки без нового кода.
+   */
+  private static int findSuffixMatchWithOffset(int[] prev,
+                                               int[] curr,
+                                               int firstDiffToken,
+                                               int lineOffset,
+                                               int tokenSize) {
+    final int DELTA_LINE_INDEX = 0;
+    final int DELTA_START_INDEX = 1;
+    
+    int prevTokenCount = prev.length / tokenSize;
+    int currTokenCount = curr.length / tokenSize;
+
+    int maxPrevSuffix = prevTokenCount - firstDiffToken;
+    int maxCurrSuffix = currTokenCount - firstDiffToken;
+    int maxSuffix = Math.min(maxPrevSuffix, maxCurrSuffix);
+
+    int suffixMatch = 0;
+    boolean foundBoundary = false;
+
+    for (int i = 0; i < maxSuffix; i++) {
+      int prevIdx = (prevTokenCount - 1 - i) * tokenSize;
+      int currIdx = (currTokenCount - 1 - i) * tokenSize;
+
+      // Для граничного токена при inline-редактировании (lineOffset == 0)
+      // разрешаем различие в deltaStart
+      int firstFieldToCheck = (!foundBoundary && lineOffset == 0) ? DELTA_START_INDEX + 1 : DELTA_START_INDEX;
+      
+      // Проверяем поля кроме deltaLine (и возможно deltaStart для граничного токена)
+      boolean otherFieldsMatch = true;
+      for (int j = firstFieldToCheck; j < tokenSize; j++) {
+        if (prev[prevIdx + j] != curr[currIdx + j]) {
+          otherFieldsMatch = false;
+          break;
+        }
+      }
+
+      if (!otherFieldsMatch) {
+        break;
+      }
+
+      // Теперь проверяем deltaLine
+      int prevDeltaLine = prev[prevIdx + DELTA_LINE_INDEX];
+      int currDeltaLine = curr[currIdx + DELTA_LINE_INDEX];
+
+      if (prevDeltaLine == currDeltaLine) {
+        // Если это потенциальный граничный токен при inline-редактировании, проверяем deltaStart
+        if (!foundBoundary && lineOffset == 0) {
+          int prevDeltaStart = prev[prevIdx + DELTA_START_INDEX];
+          int currDeltaStart = curr[currIdx + DELTA_START_INDEX];
+          if (prevDeltaStart != currDeltaStart) {
+            // Граничный токен при inline-редактировании.
+            // НЕ включаем его в suffix match, чтобы он попал в edit и клиент получил
+            // обновлённое значение deltaStart. Аналогично обработке граничного токена
+            // при lineOffset != 0.
+            foundBoundary = true;
+            continue;
+          }
+        }
+        // Полное совпадение
+        suffixMatch++;
+      } else if (!foundBoundary && currDeltaLine - prevDeltaLine == lineOffset) {
+        // Граничный токен при вставке/удалении строк.
+        // НЕ включаем его в suffix match, чтобы он попал в edit и клиент получил
+        // обновлённое значение deltaLine. Это критично для случая, когда добавляются
+        // только пустые строки без нового кода.
+        foundBoundary = true;
+      } else {
+        // Не совпадает
+        break;
+      }
+    }
+
+    return suffixMatch;
+  }
+
+  /**
+   * Собрать токены всех сапплаеров по всему документу (как для full-запроса).
+   * Package-private — используется регрессионным guard-тестом на пересечения.
+   */
+  List<SemanticTokenEntry> collectTokens(DocumentContext documentContext) {
+    return collectTokens(supplier -> supplier.getSemanticTokens(documentContext));
+  }
+
+  /**
+   * Собрать токены всех сапплаеров для запрошенного диапазона. Дорогие сапплаеры
+   * ограничивают тяжёлую работу диапазоном, дешёвые отдают полный набор (его
+   * затем триммит {@link #filterTokensByRange}).
+   */
+  private List<SemanticTokenEntry> collectTokens(DocumentContext documentContext, Range range) {
+    return collectTokens(supplier -> supplier.getSemanticTokens(documentContext, range));
+  }
+
+  private List<SemanticTokenEntry> collectTokens(
+    Function<SemanticTokensSupplier, List<SemanticTokenEntry>> invoker
+  ) {
+    return CompletableFuture
+      .supplyAsync(
+        () -> suppliers.parallelStream()
+          .map(invoker)
+          .flatMap(Collection::stream)
+          .toList(),
+        executor
+      )
+      .join();
+  }
+
+  private static int[] toDeltaEncodedArray(List<SemanticTokenEntry> entries) {
+    // de-dup and sort
+    Set<SemanticTokenEntry> uniq = new HashSet<>(entries);
+    List<SemanticTokenEntry> sorted = new ArrayList<>(uniq);
+    sorted.sort(Comparator
+      .comparingInt(SemanticTokenEntry::line)
+      .thenComparingInt(SemanticTokenEntry::start));
+
+    // Use int[] to avoid boxing overhead during computation
+    int[] data = new int[sorted.size() * 5];
+    var prevLine = 0;
+    var prevChar = 0;
+    var index = 0;
+    var first = true;
+
+    for (SemanticTokenEntry tokenEntry : sorted) {
+      int deltaLine = first ? tokenEntry.line() : (tokenEntry.line() - prevLine);
+      int prevCharOrZero = (deltaLine == 0) ? prevChar : 0;
+      int deltaStart = first ? tokenEntry.start() : (tokenEntry.start() - prevCharOrZero);
+
+      data[index++] = deltaLine;
+      data[index++] = deltaStart;
+      data[index++] = tokenEntry.length();
+      data[index++] = tokenEntry.type();
+      data[index++] = tokenEntry.modifiers();
+
+      prevLine = tokenEntry.line();
+      prevChar = tokenEntry.start();
+      first = false;
+    }
+
+    return data;
+  }
+
+  private static List<Integer> toList(int[] array) {
+    return Arrays.stream(array).boxed().toList();
+  }
+}

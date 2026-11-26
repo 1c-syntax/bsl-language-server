@@ -1,16 +1,36 @@
-# Lost variable (LostVariable)
+# Lost variable value (LostVariable)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
-<!-- Описание диагностики заполняется вручную. Необходимо понятным языком описать смысл и схему работу -->
+
+A value is lost when no path after the assignment reads it. Typical cases include repeated assignments, overwrites in every branch and a final assignment after the last read. The analysis follows loop back edges, `Continue` and exception handlers. The companion `UnusedLocalVariable` diagnostic covers a single assignment to an otherwise unused local.
+
+The diagnostic also highlights a loop iterator that reuses a module variable, an enclosing iterator or the variable holding the collection being iterated. The location points to the conflicting loop header.
+
+The optional `checkFormShadowing` setting checks method parameters and explicit local `Var` declarations in form modules against properties resolved for the owning form. It is disabled by default.
 
 ## Examples
-<!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
+
+```bsl
+StartDate = Order.StartDate; // this value is lost
+StartDate = Order.EndDate;
+FillPeriod(StartDate, EndDate);
+```
+
+Assign the second value to `EndDate`. When fixing a lost assignment, preserve any required side effects of evaluating its right-hand side.
+
+```bsl
+For Each Rows In Rows Do // overwrites Rows with an element
+    Process(Rows);
+EndDo;
+
+For Each Row In Rows Do
+    Process(Row);
+EndDo;
+```
+
+Assignments to form attributes or object properties update their owner. The analysis tracks variable bindings. In modules with loaded metadata the symbol tree separates implicit local variables from properties of their owner.
 
 ## Sources
-<!-- Необходимо указывать ссылки на все источники, из которых почерпнута информация для создания диагностики -->
-<!-- Примеры источников
 
-* Источник: [Стандарт: Тексты модулей](https://its.1c.ru/db/v8std#content:456:hdoc)
-* Полезная информация: [Отказ от использования модальных окон](https://its.1c.ru/db/metod8dev#content:5272:hdoc)
-* Источник: [Cognitive complexity, ver. 1.4](https://www.sonarsource.com/docs/CognitiveComplexity.pdf) -->
+* [Use cases and limitations](https://github.com/1c-syntax/bsl-language-server/issues/1088)

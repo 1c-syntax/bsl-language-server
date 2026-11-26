@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,16 +21,17 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
+import com.github._1c_syntax.bsl.languageserver.commands.complexity.AbstractToggleComplexityInlayHintsCommandSupplier;
+import com.github._1c_syntax.bsl.languageserver.commands.complexity.ToggleComplexityInlayHintsCommandArguments;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.utils.Resources;
+import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import lombok.Value;
 import org.eclipse.lsp4j.CodeLens;
-import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 import java.beans.ConstructorProperties;
@@ -49,28 +50,53 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
   implements CodeLensSupplier<AbstractMethodComplexityCodeLensSupplier.ComplexityCodeLensData> {
 
   private static final String TITLE_KEY = "title";
+  private static final String TOOLTIP_KEY = "tooltip";
   private static final int DEFAULT_COMPLEXITY_THRESHOLD = -1;
 
+  /**
+   * Конфигурация language server.
+   */
   protected final LanguageServerConfiguration configuration;
 
+  private final AbstractToggleComplexityInlayHintsCommandSupplier commandSupplier;
+
+  /**
+   * Локализованные ресурсы сервера.
+   */
+  private final Resources resources;
+
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public List<CodeLens> getCodeLenses(DocumentContext documentContext) {
     var complexityThreshold = getComplexityThreshold();
     var methodsComplexity = getMethodsComplexity(documentContext);
     return documentContext.getSymbolTree().getMethods().stream()
-      .filter(methodSymbol -> methodsComplexity.get(methodSymbol) >= complexityThreshold)
+      .filter(methodSymbol -> methodsComplexity.getOrDefault(methodSymbol, complexityThreshold - 1) >= complexityThreshold)
       .map(methodSymbol -> toCodeLens(methodSymbol, documentContext))
       .collect(Collectors.toList());
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, ComplexityCodeLensData data) {
     var methodName = data.getMethodName();
     var methodsComplexity = getMethodsComplexity(documentContext);
     documentContext.getSymbolTree().getMethodSymbol(methodName).ifPresent((MethodSymbol methodSymbol) -> {
       int complexity = methodsComplexity.get(methodSymbol);
-      var title = Resources.getResourceString(configuration.getLanguage(), getClass(), TITLE_KEY, complexity);
-      var command = new Command(title, "");
+
+      var title = resources.getResourceString(getClass(), TITLE_KEY, complexity);
+      var arguments = new ToggleComplexityInlayHintsCommandArguments(
+        data.getUri(),
+        commandSupplier.getId(),
+        data.getMethodName()
+      );
+
+      var command = commandSupplier.createCommand(title, arguments);
+      command.setTooltip(resources.getResourceString(getClass(), TOOLTIP_KEY));
 
       unresolved.setCommand(command);
     });
@@ -78,6 +104,9 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
     return unresolved;
   }
 
+  /**
+   * {@inheritDoc}
+   */
   @Override
   public Class<ComplexityCodeLensData> getCodeLensDataClass() {
     return ComplexityCodeLensData.class;
@@ -91,6 +120,11 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
    */
   protected abstract Map<MethodSymbol, Integer> getMethodsComplexity(DocumentContext documentContext);
 
+  /**
+   * Порог сложности из настроек линзы ({@code complexityThreshold}).
+   *
+   * @return Порог сложности; {@code -1} (показывать всегда), если не задан.
+   */
   private int getComplexityThreshold() {
     var parameters = configuration.getCodeLensOptions().getParameters().getOrDefault(getId(), Either.forLeft(true));
     if (parameters.isLeft()) {
@@ -100,6 +134,13 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
     }
   }
 
+  /**
+   * Построить неразрешённую линзу сложности по символу метода.
+   *
+   * @param methodSymbol    Символ метода.
+   * @param documentContext Контекст документа.
+   * @return Неразрешённая линза с данными для последующего резолва.
+   */
   private CodeLens toCodeLens(MethodSymbol methodSymbol, DocumentContext documentContext) {
     var data = new ComplexityCodeLensData(documentContext.getUri(), getId(), methodSymbol.getName());
 
@@ -121,6 +162,13 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
      */
     String methodName;
 
+    /**
+     * Конструктор для данных линз сложности.
+     *
+     * @param uri URI документа
+     * @param id Идентификатор поставщика линз
+     * @param methodName Имя метода
+     */
     @ConstructorProperties({"uri", "id", "methodName"})
     public ComplexityCodeLensData(URI uri, String id, String methodName) {
       super(uri, id);

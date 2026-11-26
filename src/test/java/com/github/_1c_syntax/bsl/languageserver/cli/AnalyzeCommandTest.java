@@ -1,0 +1,263 @@
+/*
+ * This file is a part of BSL Language Server.
+ *
+ * Copyright (c) 2018-2026
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ *
+ * BSL Language Server is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3.0 of the License, or (at your option) any later version.
+ *
+ * BSL Language Server is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BSL Language Server.
+ */
+package com.github._1c_syntax.bsl.languageserver.cli;
+
+import com.github._1c_syntax.bsl.languageserver.reporters.DiagnosticReporter;
+import com.github._1c_syntax.bsl.languageserver.reporters.JsonReporter;
+import com.github._1c_syntax.bsl.languageserver.reporters.ReportersAggregator;
+import com.github._1c_syntax.bsl.languageserver.reporters.ReportContext;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+@SpringBootTest
+@CleanupContextBeforeClassAndAfterEachTestMethod
+class AnalyzeCommandTest {
+
+  private static final String METADATA_PATH = Path.of(TestUtils.PATH_TO_METADATA).toAbsolutePath().toString();
+  private static final String CONFIG_PATH = resolveConfigPath();
+
+  @Autowired
+  private AnalyzeCommand analyzeCommand;
+
+  @Autowired
+  private ReportersAggregator aggregator;
+
+  @TempDir
+  Path tempDir;
+
+  /** Анализ с конфигом, содержащим excludePaths, отрабатывает успешно (исключённые файлы пропускаются). */
+  @Test
+  void callWithExcludePathsConfigFiltersFiles() {
+    // given
+    ReflectionTestUtils.setField(analyzeCommand, "srcDirOption", METADATA_PATH);
+    ReflectionTestUtils.setField(analyzeCommand, "workspaceDirOption", METADATA_PATH);
+    ReflectionTestUtils.setField(analyzeCommand, "outputDirOption", tempDir.toString());
+    ReflectionTestUtils.setField(analyzeCommand, "configurationOption", CONFIG_PATH);
+    ReflectionTestUtils.setField(analyzeCommand, "silentMode", true);
+
+    // when
+    var exitCode = analyzeCommand.call();
+
+    // then
+    assertThat(exitCode).isZero();
+  }
+
+  /** Несуществующий workspaceDir — команда возвращает код 1 (ошибка). */
+  @Test
+  void callReturnsOneWhenWorkspaceDirDoesNotExist() {
+    // given
+    var nonexistentWorkspace = tempDir.resolve("nonexistent_workspace").toAbsolutePath().toString();
+
+    ReflectionTestUtils.setField(analyzeCommand, "srcDirOption", METADATA_PATH);
+    ReflectionTestUtils.setField(analyzeCommand, "workspaceDirOption", nonexistentWorkspace);
+    ReflectionTestUtils.setField(analyzeCommand, "outputDirOption", tempDir.toString());
+    ReflectionTestUtils.setField(analyzeCommand, "configurationOption", CONFIG_PATH);
+    ReflectionTestUtils.setField(analyzeCommand, "silentMode", true);
+
+    // when
+    var exitCode = analyzeCommand.call();
+
+    // then
+    assertThat(exitCode).isOne();
+  }
+
+  /** Несуществующий outputDir создаётся до анализа, отчёт пишется в него. */
+  @Test
+  void callCreatesMissingOutputDirectoryAndWritesReport() {
+    // given
+    var missingOutputDir = tempDir.resolve("отчёты");
+    assertThat(missingOutputDir).doesNotExist();
+
+    ReflectionTestUtils.setField(analyzeCommand, "srcDirOption", METADATA_PATH);
+    ReflectionTestUtils.setField(analyzeCommand, "workspaceDirOption", METADATA_PATH);
+    ReflectionTestUtils.setField(analyzeCommand, "outputDirOption", missingOutputDir.toString());
+    ReflectionTestUtils.setField(analyzeCommand, "configurationOption", CONFIG_PATH);
+    ReflectionTestUtils.setField(analyzeCommand, "silentMode", true);
+    ReflectionTestUtils.setField(aggregator, "filteredReporters", List.of(new JsonReporter()));
+
+    // when
+    var exitCode = analyzeCommand.call();
+
+    // then
+    assertThat(exitCode).isZero();
+    assertThat(missingOutputDir.resolve("bsl-json.json")).exists();
+  }
+
+  /** outputDir указывает на файл, а не каталог — команда возвращает код 1 до анализа. */
+  @Test
+  void callReturnsOneWhenOutputDirIsAFile() throws Exception {
+    // given
+    var outputFile = tempDir.resolve("not-a-directory");
+    Files.writeString(outputFile, "это файл");
+
+    ReflectionTestUtils.setField(analyzeCommand, "srcDirOption", METADATA_PATH);
+    ReflectionTestUtils.setField(analyzeCommand, "workspaceDirOption", METADATA_PATH);
+    ReflectionTestUtils.setField(analyzeCommand, "outputDirOption", outputFile.toString());
+    ReflectionTestUtils.setField(analyzeCommand, "configurationOption", CONFIG_PATH);
+    ReflectionTestUtils.setField(analyzeCommand, "silentMode", true);
+
+    // when
+    var exitCode = analyzeCommand.call();
+
+    // then
+    assertThat(exitCode).isOne();
+  }
+
+  /** Несуществующий srcDir — команда возвращает код 1 (ошибка). */
+  @Test
+  void callReturnsOneWhenSrcDirDoesNotExist() {
+    // given
+    var nonexistentSrc = tempDir.resolve("nonexistent_src").toAbsolutePath().toString();
+
+    ReflectionTestUtils.setField(analyzeCommand, "srcDirOption", nonexistentSrc);
+    ReflectionTestUtils.setField(analyzeCommand, "workspaceDirOption", METADATA_PATH);
+    ReflectionTestUtils.setField(analyzeCommand, "outputDirOption", tempDir.toString());
+    ReflectionTestUtils.setField(analyzeCommand, "configurationOption", CONFIG_PATH);
+    ReflectionTestUtils.setField(analyzeCommand, "silentMode", true);
+
+    // when
+    var exitCode = analyzeCommand.call();
+
+    // then
+    assertThat(exitCode).isOne();
+  }
+
+  /** Без флага {@code silent} анализ выводит прогресс-бар и завершается успешно. */
+  @Test
+  void callWithoutSilentRunsWithProgressBar() {
+    // given
+    ReflectionTestUtils.setField(analyzeCommand, "srcDirOption", METADATA_PATH);
+    ReflectionTestUtils.setField(analyzeCommand, "workspaceDirOption", METADATA_PATH);
+    ReflectionTestUtils.setField(analyzeCommand, "outputDirOption", tempDir.toString());
+    ReflectionTestUtils.setField(analyzeCommand, "configurationOption", CONFIG_PATH);
+    ReflectionTestUtils.setField(analyzeCommand, "silentMode", false);
+
+    // when
+    var exitCode = analyzeCommand.call();
+
+    // then
+    assertThat(exitCode).isZero();
+  }
+
+  /** Активен репортер, требующий метрики (json) — метрики вычисляются для каждого файла. */
+  @Test
+  void metricsComputedWhenActiveReporterRequiresThem() {
+    // given: capturing (метрики не нужны) + json (метрики нужны) -> агрегатор требует метрики
+    var capturingReporter = new CapturingReporter();
+    prepareAnalysis(capturingReporter, new JsonReporter());
+
+    // when
+    var exitCode = analyzeCommand.call();
+
+    // then
+    assertThat(exitCode).isZero();
+    assertThat(capturingReporter.captured())
+      .isNotEmpty()
+      .allSatisfy(fileInfo -> assertThat(fileInfo.getMetrics()).isNotNull());
+  }
+
+  /** Активен только репортер, не требующий метрики — вычисление метрик пропускается. */
+  @Test
+  void metricsSkippedWhenNoActiveReporterRequiresThem() {
+    // given: только capturing (метрики не нужны)
+    var capturingReporter = new CapturingReporter();
+    prepareAnalysis(capturingReporter);
+
+    // when
+    var exitCode = analyzeCommand.call();
+
+    // then
+    assertThat(exitCode).isZero();
+    assertThat(capturingReporter.captured())
+      .isNotEmpty()
+      .allSatisfy(fileInfo -> assertThat(fileInfo.getMetrics()).isNull());
+  }
+
+  private void prepareAnalysis(DiagnosticReporter... activeReporters) {
+    ReflectionTestUtils.setField(analyzeCommand, "srcDirOption", METADATA_PATH);
+    ReflectionTestUtils.setField(analyzeCommand, "workspaceDirOption", METADATA_PATH);
+    ReflectionTestUtils.setField(analyzeCommand, "outputDirOption", tempDir.toString());
+    ReflectionTestUtils.setField(analyzeCommand, "configurationOption", CONFIG_PATH);
+    ReflectionTestUtils.setField(analyzeCommand, "silentMode", true);
+    // Бин filteredReporters ленивый и в тесте резолвится один раз, поэтому набор активных
+    // репортеров задаём агрегатору напрямую — детерминированно для каждого сценария.
+    ReflectionTestUtils.setField(aggregator, "filteredReporters", List.of(activeReporters));
+  }
+
+  /** Тестовый репортер: не требует метрик и сохраняет полученные {@link FileInfo} для проверок. */
+  private static class CapturingReporter implements DiagnosticReporter {
+
+    private final List<FileInfo> captured = new CopyOnWriteArrayList<>();
+
+    @Override
+    public String key() {
+      return "capturing";
+    }
+
+    @Override
+    public void beginReport(ReportContext context, Path outputDir) {
+      captured.clear();
+    }
+
+    @Override
+    public void accept(FileInfo fileInfo) {
+      captured.add(fileInfo);
+    }
+
+    @Override
+    public void endReport() {
+      // накопленного достаточно, файл не пишется
+    }
+
+    List<FileInfo> captured() {
+      return captured;
+    }
+  }
+
+  /** Возвращает абсолютный путь к тестовому конфигу с {@code excludePaths}. */
+  private static String resolveConfigPath() {
+    var resource = AnalyzeCommandTest.class.getResource("/.bsl-language-server-exclude-paths.json");
+    if (resource == null) {
+      return Path.of("src/test/resources/.bsl-language-server-exclude-paths.json").toAbsolutePath().toString();
+    }
+    try {
+      return Paths.get(resource.toURI()).toString();
+    } catch (URISyntaxException e) {
+      throw new IllegalStateException(e);
+    }
+  }
+}

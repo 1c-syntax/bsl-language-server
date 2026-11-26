@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,8 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
+import com.github._1c_syntax.bsl.languageserver.utils.Positions;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Position;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -33,6 +37,7 @@ import java.util.Optional;
  * Реализация поискового движка на основе поиска в {@link ReferenceIndex}.
  */
 @Component
+@Order(40)
 @RequiredArgsConstructor
 public class ReferenceIndexReferenceFinder implements ReferenceFinder {
 
@@ -41,5 +46,10 @@ public class ReferenceIndexReferenceFinder implements ReferenceFinder {
   @Override
   public Optional<Reference> findReference(URI uri, Position position) {
     return referenceIndex.getReference(uri, position);
+  }
+
+  @Override
+  public Optional<Symbol> findTargetSymbol(URI uri, TerminalNode terminal) {
+    return referenceIndex.getTargetSymbol(uri, Positions.create(terminal));
   }
 }

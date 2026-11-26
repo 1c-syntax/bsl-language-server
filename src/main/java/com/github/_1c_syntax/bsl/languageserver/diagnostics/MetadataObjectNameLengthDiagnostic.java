@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,17 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.Language;
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 
 import java.util.List;
 
@@ -42,13 +40,18 @@ import java.util.List;
   scope = DiagnosticScope.BSL,
   tags = {
     DiagnosticTag.STANDARD
-  }
+  },
+  canLocateOnProject = true
 )
 public class MetadataObjectNameLengthDiagnostic extends AbstractMetadataDiagnostic {
 
-  private final LanguageServerConfiguration serverConfiguration;
-
   private static final int MAX_METADATA_OBJECT_NAME_LENGTH = 80;
+
+  /**
+   * Все типы объектов метаданных, вычисленные один раз: {@link MDOType#values()} клонирует
+   * внутренний массив на каждый вызов, а диагностика создаётся на каждый документ.
+   */
+  private static final List<MDOType> ALL_MDO_TYPES = List.of(MDOType.values());
 
   @DiagnosticParameter(
     type = Integer.class,
@@ -56,15 +59,14 @@ public class MetadataObjectNameLengthDiagnostic extends AbstractMetadataDiagnost
   )
   private int maxMetadataObjectNameLength = MAX_METADATA_OBJECT_NAME_LENGTH;
 
-  MetadataObjectNameLengthDiagnostic(LanguageServerConfiguration serverConfiguration) {
-    super(List.of(MDOType.values()));
-    this.serverConfiguration = serverConfiguration;
+  MetadataObjectNameLengthDiagnostic() {
+    super(ALL_MDO_TYPES);
   }
 
   @Override
-  protected void checkMetadata(AbstractMDObjectBase mdo) {
+  protected void checkMetadata(MD mdo) {
     if (mdo.getName().length() > maxMetadataObjectNameLength) {
-      addAttributeDiagnostic(mdo);
+      addDiagnostic(info.getMessage(getMdoRefLocal(mdo), maxMetadataObjectNameLength));
     }
   }
 
@@ -76,19 +78,8 @@ public class MetadataObjectNameLengthDiagnostic extends AbstractMetadataDiagnost
       if (computeDiagnosticRange()) {
         documentContext.getMdObject().ifPresent(this::checkMetadata);
       }
-
     } else {
       super.check();
     }
-  }
-
-  private void addAttributeDiagnostic(AbstractMDObjectBase attribute) {
-    String mdoRef;
-    if (serverConfiguration.getLanguage() == Language.RU) {
-      mdoRef = attribute.getMdoReference().getMdoRefRu();
-    } else {
-      mdoRef = attribute.getMdoReference().getMdoRef();
-    }
-    addDiagnostic(info.getMessage(mdoRef, maxMetadataObjectNameLength));
   }
 }

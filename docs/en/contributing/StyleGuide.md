@@ -4,9 +4,27 @@ This document contains general guidelines for writing code in the BSL Language S
 
 Try to stick to them and the code review process will be simple.
 
-## General recommendations
+## Null values
 
 If a method can legally return `null`, it is recommended that you return `Optional<T>` instead of explicitly returning `null`. Exceptions (eg. high frequency or performance functions) are negotiated separately.
+
+The description of the `package-info.java` package must indicate that the NonNull API is used by default in the package.
+To do this, the annotation `@NullMarked` is added above the package name
+
+Example:
+```java
+// ...License...
+@NullMarked
+package com.github._1c_syntax.bsl.languageserver;
+
+import org.jspecify.annotations.NullMarked;
+```
+
+To explicitly indicate that a method can accept or return `null`, use the annotation `@org.jspecify.annotations.Nullable`.
+
+This avoids using the `@org.jspecify.annotations.NonNull` annotation.
+
+The `null` control annotations from the `javax.annotations`, `jetbrains.annotations` or `edu.umd.cs.findbugs.annotations` packages are not allowed.
 
 ## Formatting
 
@@ -56,6 +74,6 @@ To simplify the creation of a logger instance, it is recommended to use the `@lo
 1. Connecting new libraries to the implementation scope should be done carefully, with control over the increase in the size of the resulting jar file. If possible, "unnecessary" and unused sub-dependencies should be excluded through `exclude`.
 1. Explicit linking of the `com.google.guava`, `Google Collections` library or other parts of the Guava family of libraries is prohibited. **If absolutely necessary**, it is permissible to copy the implementation from `Guava` inside the BSL Language Server, subject to the terms of the Guava license. For everything else, there is Apache Commons.
 1. Import of `*.google.*` classes, as well as other parts of Guava libraries, is prohibited. With no exceptions.
-
+1. The `jsr305` package and its annotations should not be used in code. See section "Null values".
 
 > In the process...

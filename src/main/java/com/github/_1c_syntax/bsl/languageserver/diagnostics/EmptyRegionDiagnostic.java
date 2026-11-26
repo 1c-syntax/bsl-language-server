@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -26,7 +26,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -57,9 +56,9 @@ public class EmptyRegionDiagnostic extends AbstractListenerDiagnostic implements
 
   @Override
   public void enterEveryRule(ParserRuleContext ctx) {
-    if (ctx instanceof BSLParser.RegionStartContext) {
+    if (ctx instanceof BSLParser.RegionStartContext context) {
       currentRegionLevel++;
-      regions.push((BSLParser.RegionStartContext) ctx);
+      regions.push(context);
     } else if (!(ctx instanceof BSLParser.PreprocessorContext
       || ctx instanceof BSLParser.RegionNameContext
       || ctx instanceof BSLParser.RegionEndContext
@@ -106,7 +105,7 @@ public class EmptyRegionDiagnostic extends AbstractListenerDiagnostic implements
       })
       .ifPresent(lastRange -> textEdits.add(new TextEdit(lastRange, "")));
 
-    return CodeActionProvider.createCodeActions(
+    return QuickFixProvider.createCodeActions(
       textEdits,
       info.getResourceString("quickFixMessage"),
       documentContext.getUri(),

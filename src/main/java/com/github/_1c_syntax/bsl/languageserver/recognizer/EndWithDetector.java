@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,10 +21,22 @@
  */
 package com.github._1c_syntax.bsl.languageserver.recognizer;
 
+/**
+ * Детектор окончания строки заданными символами.
+ * <p>
+ * Проверяет, заканчивается ли строка одним из указанных символов
+ * (например, точкой с запятой).
+ */
 public class EndWithDetector extends AbstractDetector {
 
   private final char[] endOfLines;
 
+  /**
+   * Создать детектор окончаний строк.
+   *
+   * @param probability Вероятность обнаружения
+   * @param endOfLines Массив символов-окончаний
+   */
   public EndWithDetector(double probability, char... endOfLines) {
     super(probability);
     this.endOfLines = endOfLines.clone();

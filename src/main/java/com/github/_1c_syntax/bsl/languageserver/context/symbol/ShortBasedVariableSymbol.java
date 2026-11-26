@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,8 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.AccessLevel;
 import lombok.EqualsAndHashCode;
@@ -30,9 +28,9 @@ import lombok.Getter;
 import lombok.ToString;
 import lombok.Value;
 import lombok.experimental.NonFinal;
+import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 
-import java.util.List;
 import java.util.Optional;
 
 /**
@@ -54,21 +52,21 @@ public class ShortBasedVariableSymbol extends AbstractVariableSymbol {
   short endCharacter;
 
   @Getter(AccessLevel.NONE)
+  @EqualsAndHashCode.Include
   short variableNameLine;
+  @EqualsAndHashCode.Include
   @Getter(AccessLevel.NONE)
   short variableNameStartCharacter;
+  @EqualsAndHashCode.Include
   @Getter(AccessLevel.NONE)
   short variableNameEndCharacter;
 
   public ShortBasedVariableSymbol(
     String name,
     SourceDefinedSymbol scope,
-    DocumentContext owner,
     Optional<SourceDefinedSymbol> parent,
-    List<SourceDefinedSymbol> children,
     byte kind,
     boolean export,
-    Optional<VariableDescription> description,
     short startLine,
     short startCharacter,
     short endLine,
@@ -77,7 +75,7 @@ public class ShortBasedVariableSymbol extends AbstractVariableSymbol {
     short variableNameStartCharacter,
     short variableNameEndCharacter
   ) {
-    super(name, scope, owner, parent, children, kind, export, description);
+    super(name, scope, parent, kind, export);
 
     this.startLine = startLine;
     this.startCharacter = startCharacter;
@@ -94,7 +92,6 @@ public class ShortBasedVariableSymbol extends AbstractVariableSymbol {
   }
 
   @Override
-  @EqualsAndHashCode.Include
   public Range getVariableNameRange() {
     return Ranges.create(
       variableNameLine,
@@ -104,4 +101,23 @@ public class ShortBasedVariableSymbol extends AbstractVariableSymbol {
     );
   }
 
+  @Override
+  public int getVariableNameLine() {
+    return variableNameLine;
+  }
+
+  @Override
+  public int getVariableNameStartCharacter() {
+    return variableNameStartCharacter;
+  }
+
+  @Override
+  public int getVariableNameEndCharacter() {
+    return variableNameEndCharacter;
+  }
+
+  @Override
+  public boolean containsPosition(Position position) {
+    return Ranges.containsPosition(startLine, startCharacter, endLine, endCharacter, position);
+  }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -27,7 +27,9 @@ import lombok.Value;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 /**
- * Класс, представляющий унарное выражение
+ * Узел унарной операции в дереве выражений.
+ * <p>
+ * Представляет унарную операцию с одним операндом: -x, НЕ условие, +значение.
  */
 @Value
 @EqualsAndHashCode(callSuper = false)

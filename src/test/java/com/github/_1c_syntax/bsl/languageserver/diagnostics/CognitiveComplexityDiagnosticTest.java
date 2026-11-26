@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -45,7 +45,7 @@ class CognitiveComplexityDiagnosticTest extends AbstractDiagnosticTest<Cognitive
     assertThat(diagnostics).hasSize(1);
     assertThat(diagnostics, true)
       .hasRange(0, 8, 0, 32);
-    assertThat(diagnostics.get(0).getRelatedInformation()).hasSize(35);
+    assertThat(diagnostics.getFirst().getRelatedInformation()).hasSize(35);
   }
 
   @Test

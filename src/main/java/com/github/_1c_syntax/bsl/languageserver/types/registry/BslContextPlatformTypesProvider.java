@@ -1,0 +1,746 @@
+/*
+ * This file is a part of BSL Language Server.
+ *
+ * Copyright (c) 2018-2026
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ *
+ * BSL Language Server is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3.0 of the License, or (at your option) any later version.
+ *
+ * BSL Language Server is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BSL Language Server.
+ */
+package com.github._1c_syntax.bsl.languageserver.types.registry;
+
+import com.github._1c_syntax.bsl.context.platform.EnAttachments;
+import com.github._1c_syntax.bsl.context.platform.PlatformContextProvider;
+import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
+import com.github._1c_syntax.bsl.context.api.Context;
+import com.github._1c_syntax.bsl.context.api.ContextCollection;
+import com.github._1c_syntax.bsl.context.api.ContextConstructor;
+import com.github._1c_syntax.bsl.context.api.ContextEnum;
+import com.github._1c_syntax.bsl.context.api.ContextEnumValue;
+import com.github._1c_syntax.bsl.context.api.ContextEvent;
+import com.github._1c_syntax.bsl.context.api.ContextFormParameter;
+import com.github._1c_syntax.bsl.context.api.ContextMethod;
+import com.github._1c_syntax.bsl.context.api.ContextMethodSignature;
+import com.github._1c_syntax.bsl.context.api.ContextName;
+import com.github._1c_syntax.bsl.context.api.ContextProperty;
+import com.github._1c_syntax.bsl.context.api.ContextProvider;
+import com.github._1c_syntax.bsl.context.api.ContextSignatureParameter;
+import com.github._1c_syntax.bsl.context.api.ContextType;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
+import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.utils.Lazy;
+import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
+import org.springframework.stereotype.Component;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+/**
+ * Поставщик платформенных типов на основе синтакс-помощника установленной
+ * платформы 1С (через библиотеку {@code bsl-context}). Источник
+ * {@link ContextProvider} берётся из {@link BslContextHolder} — общий
+ * workspace-scoped кэш парсинга HBK.
+ * <p>
+ * Соответствие категорий bsl-context → {@link TypeKind} type-system v2:
+ * <ul>
+ *   <li>{@code PRIMITIVE_TYPE} → {@link TypeKind#PRIMITIVE} — примитивы языка
+ *       (Строка, Число, Дата, Булево, Тип, Null, Неопределено, Произвольный);</li>
+ *   <li>{@code TYPE} → {@link TypeKind#PLATFORM} — платформенные типы со
+ *       свойствами и методами;</li>
+ *   <li>{@code ENUM} → {@link TypeKind#PLATFORM} — системные перечисления;
+ *       значения публикуются как {@link MemberKind#PROPERTY} с типом самого
+ *       перечисления (для dot-completion'а);</li>
+ *   <li>{@code GLOBAL_CONTEXT} и {@code LANGUAGE_KEYWORD} — типами не являются,
+ *       пропускаются. Глобальный контекст и языковые keyword'ы потребляет
+ *       {@link GlobalScopeProvider}.</li>
+ * </ul>
+ * <p>
+ * События ({@code ContextType.events()}) публикуются как члены типа c
+ * {@link MemberKind#EVENT}; у событий нет возвращаемого значения
+ * (handler-контракт), сигнатура хранит только параметры. Из метаданных
+ * методов/свойств/конструкторов часть полей ({@code syntaxText},
+ * {@code defaultValue} и т.п.) пока не носится LS-дескрипторами — они
+ * доступны в bsl-context, см. {@code tmp/PLAN.md} в bsl-context.
+ */
+@Slf4j
+@Component
+@WorkspaceScope
+public class BslContextPlatformTypesProvider implements PlatformTypesProvider {
+
+  /**
+   * Пометка ключевого параметра формы. Признак {@link ContextFormParameter#isKey()}
+   * в {@link MemberDescriptor} переносить некуда, поэтому он живёт отдельным
+   * абзацем описания; потребители, которым нужен именно признак, а не текст,
+   * сверяются с этой константой.
+   */
+  public static final BilingualString KEY_PARAMETER_MARKER =
+    BilingualString.of("Ключевой параметр.", "Key parameter.");
+
+  private final BslContextHolder contextHolder;
+  private final Lazy<List<TypeDecl>> cached;
+
+  public BslContextPlatformTypesProvider(BslContextHolder contextHolder) {
+    this.contextHolder = contextHolder;
+    this.cached = new Lazy<>(() -> build(contextHolder.get().orElse(null)));
+  }
+
+  @Override
+  public Collection<TypeDecl> getTypes() {
+    return cached.getOrCompute();
+  }
+
+  @Override
+  public FileType getFileType() {
+    return FileType.BSL;
+  }
+
+  private static List<TypeDecl> build(@Nullable ContextProvider provider) {
+    if (provider == null) {
+      return List.of();
+    }
+    var enLookup = enLookupOf(provider);
+    var typeNames = typeNamesOf(provider);
+    var contexts = provider.getContexts();
+    Map<String, TypeRef> typeRefs = new HashMap<>();
+    for (var context : contexts) {
+      var kind = mapKind(context);
+      if (kind != null && context.name() != null) {
+        var qualifiedName = typeNames.apply(context);
+        var ref = new TypeRef(kind, qualifiedName);
+        var primary = safe(context.name().getName());
+        if (!primary.isEmpty() && primary.equals(qualifiedName)) {
+          typeRefs.put(primary.toLowerCase(Locale.ROOT), ref);
+        }
+        var alias = safe(context.name().getAlias());
+        if (!alias.isEmpty()) {
+          typeRefs.put(alias.toLowerCase(Locale.ROOT), ref);
+        }
+      }
+    }
+    var result = new ArrayList<TypeDecl>(contexts.size());
+    for (var context : contexts) {
+      var decl = toTypeDecl(context, enLookup, typeNames, typeRefs);
+      if (decl != null) {
+        result.add(decl);
+      }
+    }
+    return List.copyOf(result);
+  }
+
+  /**
+   * Возвращает функцию доступа к en-описаниям контекста. Для
+   * {@link com.github._1c_syntax.bsl.context.platform.PlatformContextProvider}
+   * — это {@code getDescriptionEn}; для других имплементаций — всегда пустая
+   * строка (en-HBK не загружен или используется внешний адаптер).
+   */
+  static Function<Object, EnAttachments> enLookupOf(ContextProvider provider) {
+    if (provider instanceof PlatformContextProvider pcp) {
+      return pcp::getEnAttachments;
+    }
+    return ctx -> EnAttachments.EMPTY;
+  }
+
+  /** Различает омонимы HBK по английскому имени, сохраняя привычные ключи остальных типов. */
+  static Function<Context, String> typeNamesOf(ContextProvider provider) {
+    Map<String, Set<String>> aliases = new HashMap<>();
+    for (var context : provider.getContexts()) {
+      if (mapKind(context) == null || context.name() == null) {
+        continue;
+      }
+      var name = context.name();
+      aliases.computeIfAbsent(safe(name.getName()).toLowerCase(Locale.ROOT), key -> new HashSet<>())
+        .add(safe(name.getAlias()).toLowerCase(Locale.ROOT));
+    }
+    var ambiguous = aliases.entrySet().stream().filter(entry -> entry.getValue().size() > 1)
+      .map(Map.Entry::getKey).collect(Collectors.toSet());
+    return (Context context) -> {
+      var name = context.name();
+      var primary = safe(name.getName());
+      var alias = safe(name.getAlias());
+      return ambiguous.contains(primary.toLowerCase(Locale.ROOT)) && !alias.isEmpty() ? alias : primary;
+    };
+  }
+
+  private static String primaryTypeName(Context context) {
+    return context.name().getName();
+  }
+
+  @Nullable
+  private static TypeDecl toTypeDecl(Context context, Function<Object, EnAttachments> enLookup,
+                                     Function<Context, String> typeNames, Map<String, TypeRef> typeRefs) {
+    var kind = mapKind(context);
+    if (kind == null) {
+      return null;
+    }
+    var name = bilingualName(context.name());
+    var members = collectMembers(context, enLookup, typeNames, typeRefs);
+    var en = enLookup.apply(context);
+    var description = BilingualString.of(safe(descriptionOf(context)), safe(en.description()));
+    var classRef = new TypeRef(kind, typeNames.apply(context));
+    var constructors = constructorsOf(context, classRef, enLookup, typeNames);
+    var defaultElementTypes = collectionElementTypes(context, typeNames);
+    var supportsForEach = context instanceof ContextCollection coll && coll.supportsForEach();
+    var supportsIndexAccess = context instanceof ContextCollection coll && coll.supportsIndexAccess();
+    var forEachRu = context instanceof ContextCollection coll ? coll.forEachDescription() : "";
+    var indexAccessRu = context instanceof ContextCollection coll ? coll.indexAccessDescription() : "";
+    var forEachDescription = BilingualString.of(safe(forEachRu), safe(en.forEachDescription()));
+    var indexAccessDescription = BilingualString.of(safe(indexAccessRu), safe(en.indexAccessDescription()));
+    var typeParameters = context.typeParameters();
+    var isEnum = context instanceof ContextEnum;
+    return new TypeDecl(kind, name, members,
+      description, constructors,
+      defaultElementTypes, supportsForEach, supportsIndexAccess,
+      forEachDescription, indexAccessDescription, typeParameters, isEnum,
+      metadataOf(context, en), typeNames.apply(context));
+  }
+
+  /**
+   * Извлечь типы элементов коллекции из bsl-context. Для не-коллекций возвращает
+   * пустой список — параметр {@code defaultElementTypes} тогда не несёт смысла.
+   * <p>
+   * Конкретные {@link TypeKind} элементов берутся через {@link #mapRefKind(Context)} —
+   * это устраняет риск рассинхронизации с маппингом, применяемым к самим типам.
+   */
+  private static List<TypeRef> collectionElementTypes(Context context, Function<Context, String> typeNames) {
+    if (!(context instanceof ContextCollection collection)) {
+      return List.of();
+    }
+    var elements = collection.collectionElementTypes();
+    if (elements == null || elements.isEmpty()) {
+      return List.of();
+    }
+    var refs = new ArrayList<TypeRef>(elements.size());
+    for (var element : elements) {
+      refs.add(new TypeRef(mapRefKind(element), typeNames.apply(element)));
+    }
+    return List.copyOf(refs);
+  }
+
+  /**
+   * Описание типа с главной страницы синтакс-помощника. Объявлено на самом
+   * {@link Context}, поэтому доступно и типам, и коллекциям, и системным
+   * перечислениям.
+   */
+  private static String descriptionOf(Context context) {
+    return context.description();
+  }
+
+  /**
+   * «Страничные» метаданные самого типа (не члена): доступность по видам
+   * клиента, версии появления/устаревания с рекомендуемыми заменами,
+   * «Замечание», «Пример», «См. также». En-сторона приходит из
+   * bilingual-merger'а тем же {@link EnAttachments}, что и описание типа.
+   * <p>
+   * {@code accessMode} и {@code returnValueDescription} для типа не имеют
+   * смысла — это свойства члена.
+   */
+  private static PlatformMetadata metadataOf(Context context, EnAttachments en) {
+    return new PlatformMetadata(
+      context.sinceVersion(),
+      context.deprecatedSinceVersion(),
+      context.recommendedReplacements(),
+      BslContextEnumMapping.mapAvailabilities(context.availabilities()),
+      null,
+      BilingualString.EMPTY,
+      BilingualString.of(safe(context.notes()), safe(en.notes())),
+      zipBilingual(context.examples(), en.examples()),
+      zipBilingual(context.seeAlso(), en.seeAlso())
+    );
+  }
+
+  /**
+   * Маппит конструкторы платформенного типа из bsl-context
+   * ({@link ContextConstructor}) в {@link SignatureDescriptor} type-system v2.
+   * Возвращаемый тип конструктора — сам тип ({@code classRef}); параметры —
+   * как у обычных методов.
+   */
+  private static List<SignatureDescriptor> constructorsOf(Context context, TypeRef classRef,
+                                                         Function<Object, EnAttachments> enLookup,
+                                                         Function<Context, String> typeNames) {
+    if (!(context instanceof ContextType type)) {
+      return List.of();
+    }
+    var ctors = type.constructors();
+    if (ctors == null || ctors.isEmpty()) {
+      return List.of();
+    }
+    var result = new ArrayList<SignatureDescriptor>(ctors.size());
+    for (var ctor : ctors) {
+      var parameters = new ArrayList<ParameterDescriptor>(ctor.parameters().size());
+      for (var parameter : ctor.parameters()) {
+        parameters.add(toParameterDescriptor(parameter, enLookup, typeNames));
+      }
+      var ctorDescBilingual = BilingualString.of(
+        safe(ctor.description()), safe(enLookup.apply(ctor).description()));
+      result.add(new SignatureDescriptor(
+        parameters, TypeSet.of(classRef), ctorDescBilingual, metadataOf(ctor, enLookup)));
+    }
+    return List.copyOf(result);
+  }
+
+  /**
+   * Помечает тип как «возможный ресивер dot-выражения через глобальное имя»
+   * по эвристике: внутри типа есть generic-property вида {@code <Имя X>}.
+   * Это резервный сигнал для LS — основной путь связывания
+   * {@code Справочники} ↔ {@code СправочникиМенеджер} идёт через
+   * {@link GlobalScopeProvider} из свойств глобального контекста.
+   */
+  @Nullable
+  private static TypeKind mapKind(Context context) {
+    return switch (context.kind()) {
+      case PRIMITIVE_TYPE -> TypeKind.PRIMITIVE;
+      case TYPE, COLLECTION, ENUM -> TypeKind.PLATFORM;
+      // GLOBAL_CONTEXT и LANGUAGE_KEYWORD типами не являются — обрабатываются
+      // отдельно (GlobalScopeProvider).
+      case GLOBAL_CONTEXT, LANGUAGE_KEYWORD -> null;
+    };
+  }
+
+  private static List<MemberDescriptor> collectMembers(Context context,
+                                                       Function<Object, EnAttachments> enLookup,
+                                                       Function<Context, String> typeNames,
+                                                       Map<String, TypeRef> typeRefs) {
+    if (context instanceof ContextType type) {
+      var members = new ArrayList<MemberDescriptor>(
+        type.methods().size() + type.properties().size() + type.events().size());
+      for (var property : type.properties()) {
+        var member = toMemberDescriptor(property, enLookup, typeNames);
+        // Сырая ссылка «ЭлементыФормы» в HBK неоднозначна. Подчинённые элементы
+        // управляемой группы/таблицы относятся к FormItems, а не к обычным Controls.
+        var preciseType = formCollectionPropertyType(context, property, typeRefs);
+        if (preciseType != null) {
+          member = member.withReturnTypes(TypeSet.of(preciseType));
+        }
+        members.add(member);
+      }
+      for (var method : type.methods()) {
+        members.add(toMemberDescriptor(method, enLookup, typeNames));
+      }
+      for (var event : type.events()) {
+        members.add(toMemberDescriptor(event, enLookup, typeNames));
+      }
+      return List.copyOf(members);
+    }
+    if (context instanceof ContextEnum enumeration) {
+      var values = enumeration.values();
+      var members = new ArrayList<MemberDescriptor>(values.size());
+      var enumRef = new TypeRef(TypeKind.PLATFORM, typeNames.apply(context));
+      // Тип элементов набора берётся из bsl-context (страница enum: значения
+      // имеют такой-то тип). Если общий тип задан (как у библиотек картинок,
+      // стилей, цветов), значения возвращают его. В частности, Символы
+      // возвращают примитив Строка.
+      var valueRef = enumeration.valueType().map(name -> {
+        var type = typeRefs.get(safe(name.getAlias()).toLowerCase(Locale.ROOT));
+        if (type == null) {
+          type = typeRefs.get(name.getName().toLowerCase(Locale.ROOT));
+        }
+        return type == null ? new TypeRef(TypeKind.PLATFORM, name.getName()) : type;
+      }).orElse(enumRef);
+      for (var value : values) {
+        members.add(toMemberDescriptor(value, valueRef, enLookup));
+      }
+      return List.copyOf(members);
+    }
+    return Collections.emptyList();
+  }
+
+  private static boolean matchesName(ContextName name, String value) {
+    return value.equalsIgnoreCase(name.getName()) || value.equalsIgnoreCase(name.getAlias());
+  }
+
+  private static @Nullable TypeRef formCollectionPropertyType(Context owner, ContextProperty property,
+                                                              Map<String, TypeRef> typeRefs) {
+    if ((matchesName(owner.name(), "FormGroup") || matchesName(owner.name(), "FormTable"))
+        && matchesName(property.name(), "ChildItems")) {
+      return typeRefs.get("formitems");
+    }
+    if (matchesName(owner.name(), "Form") && matchesName(property.name(), "Controls")) {
+      return typeRefs.get("controls");
+    }
+    return null;
+  }
+
+  static MemberDescriptor toMemberDescriptor(ContextProperty property,
+                                             Function<Object, EnAttachments> enLookup) {
+    return toMemberDescriptor(property, enLookup, BslContextPlatformTypesProvider::primaryTypeName);
+  }
+
+  static MemberDescriptor toMemberDescriptor(ContextProperty property,
+                                             Function<Object, EnAttachments> enLookup,
+                                             Function<Context, String> typeNames) {
+    var returnTypes = typeSet(property.types(), typeNames);
+    // Имя для primary берём ru-сторону — bilingualName ниже всё равно покрывает обе локали.
+    var name = property.name().getName();
+    MemberDescriptor descriptor;
+    if (property.isGeneric()) {
+      var firstRef = returnTypes.refs().stream().findFirst().orElse(TypeRef.UNKNOWN);
+      descriptor = MemberDescriptor.genericProperty(name, firstRef, property.description());
+    } else {
+      descriptor = MemberDescriptor.property(name, returnTypes, property.description());
+    }
+    return descriptor.withMetadata(metadataOf(property, enLookup))
+      .withBilingualName(bilingualName(property.name()))
+      .withBilingualDescription(BilingualString.of(
+        safe(property.description()), safe(enLookup.apply(property).description())))
+      .withStandardLibrary(true);
+  }
+
+  private static String safe(@Nullable String s) {
+    return s == null ? "" : s;
+  }
+
+  /** Backward-compatible overload (без en-описаний). */
+  static MemberDescriptor toMemberDescriptor(ContextProperty property) {
+    return toMemberDescriptor(property, ctx -> EnAttachments.EMPTY);
+  }
+
+  static MemberDescriptor toMemberDescriptor(ContextMethod method,
+                                             Function<Object, EnAttachments> enLookup) {
+    return toMemberDescriptor(method, enLookup, BslContextPlatformTypesProvider::primaryTypeName);
+  }
+
+  static MemberDescriptor toMemberDescriptor(ContextMethod method,
+                                             Function<Object, EnAttachments> enLookup,
+                                             Function<Context, String> typeNames) {
+    var returnTypes = typeSet(method.returnValues(), typeNames);
+    var primaryReturnType = returnTypes.refs().stream().findFirst().orElse(TypeRef.UNKNOWN);
+    var signatures = toSignatures(method.signatures(), primaryReturnType, enLookup, typeNames);
+    return new MemberDescriptor(
+      bilingualName(method.name()),
+      MemberKind.METHOD,
+      BilingualString.of(safe(method.description()), safe(enLookup.apply(method).description())),
+      returnTypes,
+      signatures,
+      null,
+      false,
+      metadataOf(method, enLookup),
+      method.isAsync()
+    ).withStandardLibrary(true);
+  }
+
+  /** Преобразует {@link ContextName} в {@link BilingualString}. */
+  private static BilingualString bilingualName(@Nullable ContextName name) {
+    if (name == null) {
+      return BilingualString.EMPTY;
+    }
+    return BilingualString.of(safe(name.getName()), safe(name.getAlias()));
+  }
+
+  /** Backward-compatible overload (без en-описаний). */
+  static MemberDescriptor toMemberDescriptor(ContextMethod method) {
+    return toMemberDescriptor(method, ctx -> EnAttachments.EMPTY);
+  }
+
+  /**
+   * Платформенное событие типа. У события нет возвращаемого значения (handler-контракт),
+   * поэтому {@code returnTypes = EMPTY}; сигнатуры — только параметры.
+   */
+  static MemberDescriptor toMemberDescriptor(ContextEvent event,
+                                             Function<Object, EnAttachments> enLookup) {
+    return toMemberDescriptor(event, enLookup, BslContextPlatformTypesProvider::primaryTypeName);
+  }
+
+  static MemberDescriptor toMemberDescriptor(ContextEvent event,
+                                             Function<Object, EnAttachments> enLookup,
+                                             Function<Context, String> typeNames) {
+    var signatures = toSignatures(event.signatures(), TypeRef.UNKNOWN, enLookup, typeNames);
+    return new MemberDescriptor(
+      bilingualName(event.name()),
+      MemberKind.EVENT,
+      BilingualString.of(safe(event.description()), safe(enLookup.apply(event).description())),
+      TypeSet.EMPTY,
+      signatures,
+      null,
+      event.isGeneric(),
+      metadataOf(event, enLookup),
+      false
+    ).withStandardLibrary(true);
+  }
+
+
+  /**
+   * Параметр формы — свойство структуры {@code Форма.Параметры}, а не член самого
+   * типа формы, поэтому дескриптор строится здесь, но на тип не вешается: его
+   * забирает {@link FormParametersResolver} для синтетического типа параметров
+   * конкретной формы.
+   * <p>
+   * Признак ключевого параметра ({@link ContextFormParameter#isKey()}) в
+   * {@link MemberDescriptor} переносить некуда, поэтому он остаётся в описании —
+   * помечаем его отдельной строкой.
+   */
+  static MemberDescriptor toMemberDescriptor(ContextFormParameter parameter,
+                                             Function<Object, EnAttachments> enLookup) {
+    return toMemberDescriptor(parameter, enLookup, BslContextPlatformTypesProvider::primaryTypeName);
+  }
+
+  static MemberDescriptor toMemberDescriptor(ContextFormParameter parameter,
+                                             Function<Object, EnAttachments> enLookup,
+                                             Function<Context, String> typeNames) {
+    var en = enLookup.apply(parameter);
+    return MemberDescriptor.property(parameter.name().getName(), typeSet(parameter.types(), typeNames), "")
+      .withBilingualName(bilingualName(parameter.name()))
+      .withBilingualDescription(BilingualString.of(
+        keyMarked(safe(parameter.description()), parameter.isKey(), KEY_PARAMETER_MARKER.ru()),
+        keyMarked(safe(en.description()), parameter.isKey(), KEY_PARAMETER_MARKER.en())))
+      .withMetadata(new PlatformMetadata(
+        parameter.sinceVersion(),
+        parameter.deprecatedSinceVersion(),
+        parameter.recommendedReplacements(),
+        Set.of(),
+        null,
+        BilingualString.EMPTY,
+        BilingualString.EMPTY,
+        List.of(),
+        List.of()))
+      .withStandardLibrary(true);
+  }
+
+  private static String keyMarked(String description, boolean key, String marker) {
+    if (!key) {
+      return description;
+    }
+    return description.isEmpty() ? marker : description + "\n\n" + marker;
+  }
+
+  private static MemberDescriptor toMemberDescriptor(ContextEnumValue value, TypeRef valueRef,
+                                                     Function<Object, EnAttachments> enLookup) {
+    var name = value.name().getName();
+    // generic-флаг приходит из bsl-context (ContextEnumValue#isGeneric()) —
+    // это шаблоны вроде БиблиотекаКартинок.<Имя картинки>, которые потом
+    // материализуются из конфигурации.
+    var descriptor = value.isGeneric()
+      ? MemberDescriptor.genericProperty(name, valueRef, value.description())
+      : MemberDescriptor.property(name, valueRef, value.description());
+    return descriptor.withMetadata(metadataOf(value))
+      .withBilingualName(bilingualName(value.name()))
+      .withBilingualDescription(BilingualString.of(
+        safe(value.description()), safe(enLookup.apply(value).description())))
+      .withStandardLibrary(true);
+  }
+
+  /**
+   * Извлекает платформенные метаданные из {@link ContextMethod} с учётом
+   * en-аттачментов из bilingual-merger'а. Каждое текст-поле упаковано в
+   * {@link BilingualString}, examples/seeAlso — в {@code List<BilingualString>}.
+   */
+  private static PlatformMetadata metadataOf(ContextMethod method,
+                                             Function<Object, EnAttachments> enLookup) {
+    var en = enLookup.apply(method);
+    return new PlatformMetadata(
+      method.sinceVersion(),
+      method.deprecatedSinceVersion(),
+      method.recommendedReplacements(),
+      BslContextEnumMapping.mapAvailabilities(method.availabilities()),
+      null,
+      BilingualString.of(safe(method.returnValueDescription()), safe(en.returnValueDescription())),
+      BilingualString.of(safe(method.notes()), safe(en.notes())),
+      zipBilingual(method.examples(), en.examples()),
+      zipBilingual(method.seeAlso(), en.seeAlso())
+    );
+  }
+
+  /** Compat overload — без en-аттачментов (одноязычные ru-поля). */
+  private static PlatformMetadata metadataOf(ContextMethod method) {
+    return metadataOf(method, ctx -> EnAttachments.EMPTY);
+  }
+
+  /**
+   * Парная упаковка ru- и en-списков в {@code List<BilingualString>}.
+   * Если en-список пуст или короче ru — соответствующая en-сторона пуста.
+   */
+  private static List<BilingualString> zipBilingual(List<String> ru, List<String> en) {
+    if (ru.isEmpty()) {
+      return List.of();
+    }
+    var out = new ArrayList<BilingualString>(ru.size());
+    for (int i = 0; i < ru.size(); i++) {
+      var ruItem = ru.get(i);
+      var enItem = i < en.size() ? en.get(i) : "";
+      out.add(BilingualString.of(safe(ruItem), safe(enItem)));
+    }
+    return List.copyOf(out);
+  }
+
+  /**
+   * Извлекает платформенные метаданные из {@link ContextConstructor} с учётом
+   * en-аттачментов. Возвращаемое значение конструктора — сам тип, отдельного
+   * описания у него нет, поэтому {@code returnValueDescription} пуст;
+   * блока «Замечание:» у конструкторов в синтакс-помощнике тоже нет.
+   */
+  private static PlatformMetadata metadataOf(ContextConstructor constructor,
+                                             Function<Object, EnAttachments> enLookup) {
+    var en = enLookup.apply(constructor);
+    return new PlatformMetadata(
+      constructor.sinceVersion(),
+      constructor.deprecatedSinceVersion(),
+      constructor.recommendedReplacements(),
+      Set.of(),
+      null,
+      BilingualString.EMPTY,
+      BilingualString.EMPTY,
+      zipBilingual(constructor.examples(), en.examples()),
+      zipBilingual(constructor.seeAlso(), en.seeAlso())
+    );
+  }
+
+  /**
+   * Извлекает платформенные метаданные из {@link ContextEvent} с учётом
+   * en-аттачментов. Возвращаемого значения у события нет (handler-контракт),
+   * поэтому {@code returnValueDescription} пуст.
+   */
+  private static PlatformMetadata metadataOf(ContextEvent event,
+                                             Function<Object, EnAttachments> enLookup) {
+    var en = enLookup.apply(event);
+    return new PlatformMetadata(
+      event.sinceVersion(),
+      event.deprecatedSinceVersion(),
+      event.recommendedReplacements(),
+      BslContextEnumMapping.mapAvailabilities(event.availabilities()),
+      null,
+      BilingualString.EMPTY,
+      BilingualString.of(safe(event.notes()), safe(en.notes())),
+      zipBilingual(event.examples(), en.examples()),
+      zipBilingual(event.seeAlso(), en.seeAlso())
+    );
+  }
+
+  /**
+   * Извлекает платформенные метаданные из {@link ContextProperty} с учётом
+   * en-аттачментов. Блок «Пример:» у свойств редок, но встречается.
+   */
+  private static PlatformMetadata metadataOf(ContextProperty property,
+                                             Function<Object, EnAttachments> enLookup) {
+    var en = enLookup.apply(property);
+    return new PlatformMetadata(
+      property.sinceVersion(),
+      property.deprecatedSinceVersion(),
+      property.recommendedReplacements(),
+      BslContextEnumMapping.mapAvailabilities(property.availabilities()),
+      BslContextEnumMapping.mapAccessMode(property.accessMode()),
+      BilingualString.EMPTY,
+      BilingualString.of(safe(property.notes()), safe(en.notes())),
+      zipBilingual(property.examples(), en.examples()),
+      zipBilingual(property.seeAlso(), en.seeAlso())
+    );
+  }
+
+  /**
+   * Извлекает платформенные метаданные из {@link ContextEnumValue}.
+   */
+  private static PlatformMetadata metadataOf(ContextEnumValue value) {
+    return new PlatformMetadata(
+      value.sinceVersion(),
+      value.deprecatedSinceVersion(),
+      value.recommendedReplacements(),
+      Set.of(),
+      null,
+      "",
+      "",
+      List.of(),
+      List.of()
+    );
+  }
+
+  static List<SignatureDescriptor> toSignatures(
+    List<ContextMethodSignature> signatures,
+    TypeRef returnType,
+    Function<Object, EnAttachments> enLookup
+  ) {
+    return toSignatures(signatures, returnType, enLookup, BslContextPlatformTypesProvider::primaryTypeName);
+  }
+
+  private static List<SignatureDescriptor> toSignatures(
+    List<ContextMethodSignature> signatures,
+    TypeRef returnType,
+    Function<Object, EnAttachments> enLookup,
+    Function<Context, String> typeNames
+  ) {
+    if (signatures.isEmpty()) {
+      return List.of();
+    }
+    var result = new ArrayList<SignatureDescriptor>(signatures.size());
+    for (var signature : signatures) {
+      var parameters = new ArrayList<ParameterDescriptor>(signature.parameters().size());
+      for (var parameter : signature.parameters()) {
+        parameters.add(toParameterDescriptor(parameter, enLookup, typeNames));
+      }
+      var sigDescBilingual = BilingualString.of(
+        safe(signature.description()), safe(enLookup.apply(signature).description()));
+      result.add(new SignatureDescriptor(parameters, TypeSet.of(returnType), sigDescBilingual));
+    }
+    return List.copyOf(result);
+  }
+
+  private static ParameterDescriptor toParameterDescriptor(ContextSignatureParameter parameter,
+                                                           Function<Object, EnAttachments> enLookup,
+                                                           Function<Context, String> typeNames) {
+    return new ParameterDescriptor(
+      bilingualName(parameter.name()),
+      typeSet(parameter.types(), typeNames),
+      !parameter.isRequired(),
+      BilingualString.of(safe(parameter.description()), safe(enLookup.apply(parameter).description())),
+      safe(parameter.defaultValue()),
+      parameter.isVariadic()
+    );
+  }
+
+  /**
+   * Набор типов из контекстов синтакс-помощника. Имя generic-контекста остаётся
+   * с плейсхолдером — подставляет его потребитель.
+   *
+   * @param contexts контексты-типы.
+   * @return набор типов; {@link TypeSet#EMPTY}, если контекстов нет.
+   */
+  static TypeSet typeSet(List<Context> contexts) {
+    return typeSet(contexts, BslContextPlatformTypesProvider::primaryTypeName);
+  }
+
+  private static TypeSet typeSet(List<Context> contexts, Function<Context, String> typeNames) {
+    if (contexts.isEmpty()) {
+      return TypeSet.EMPTY;
+    }
+    var refs = new ArrayList<TypeRef>(contexts.size());
+    for (var c : contexts) {
+      refs.add(new TypeRef(mapRefKind(c), typeNames.apply(c)));
+    }
+    return TypeSet.of(refs);
+  }
+
+  private static TypeKind mapRefKind(Context context) {
+    return switch (context.kind()) {
+      case PRIMITIVE_TYPE -> TypeKind.PRIMITIVE;
+      case TYPE, COLLECTION, ENUM -> TypeKind.PLATFORM;
+      case GLOBAL_CONTEXT, LANGUAGE_KEYWORD -> TypeKind.UNKNOWN;
+    };
+  }
+}

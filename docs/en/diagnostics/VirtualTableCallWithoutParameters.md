@@ -9,6 +9,8 @@ It is not recommended to refer to virtual tables using conditions in the WHERE s
 
 Such a query will return the correct (in terms of functionality) result, but it will be much more difficult for the DBMS to choose the optimal plan for its execution. In some cases, this can lead to errors in the DBMS optimizer and a significant slowdown in query performance.
 
+The `AccountingRegister.<RegisterName>.ExtDimensions` table (`РегистрБухгалтерии.<ИмяРегистра>.Субконто`) is not checked because the platform syntax does not provide parameters for it.
+
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 For example, a query uses the `WHERE` section to filter virtual table data:

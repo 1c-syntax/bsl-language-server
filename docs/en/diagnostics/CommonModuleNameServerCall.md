@@ -10,6 +10,8 @@ Common server modules for calling from the client contain server procedures and 
 
 Name common server modules to be called from the client according to general rules of naming metadata objects. Make sure they include the "ServerCall" (rus. "ВызовСервера") postfix.
 
+Adopted common modules in configuration extensions are not checked because their properties may be defined in the base configuration. Own common modules in extensions are checked as usual.
+
 ## Examples
 <!-- В данном разделе приводятся примеры, на которые диагностика срабатывает, а также можно привести пример, как можно исправить ситуацию -->
 

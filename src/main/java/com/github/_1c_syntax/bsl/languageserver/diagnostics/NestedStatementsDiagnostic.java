@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -30,11 +30,10 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
-import org.antlr.v4.runtime.tree.ParseTree;
+import jakarta.annotation.PostConstruct;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 
-import javax.annotation.PostConstruct;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -63,8 +62,8 @@ public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
   )
   private int maxAllowedLevel = MAX_ALLOWED_LEVEL;
 
-  private ParseTree lastCtx;
-  private final Deque<ParseTree> nestedParents = new ArrayDeque<>();
+  private ParserRuleContext lastCtx;
+  private final Deque<ParserRuleContext> nestedParents = new ArrayDeque<>();
 
   @PostConstruct
   public void init() {
@@ -121,12 +120,12 @@ public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
     exitNode(ctx);
   }
 
-  private void enterNode(BSLParserRuleContext ctx) {
+  private void enterNode(ParserRuleContext ctx) {
     lastCtx = ctx;
     nestedParents.push(ctx);
   }
 
-  private void exitNode(BSLParserRuleContext ctx) {
+  private void exitNode(ParserRuleContext ctx) {
 
     if (ctx == lastCtx && nestedParents.size() > maxAllowedLevel) {
       addRelatedInformationDiagnostic(ctx);
@@ -134,7 +133,7 @@ public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
     nestedParents.pop();
   }
 
-  private void addRelatedInformationDiagnostic(BSLParserRuleContext ctx) {
+  private void addRelatedInformationDiagnostic(ParserRuleContext ctx) {
     List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
     relatedInformation.add(
       RelatedInformation.create(
@@ -149,7 +148,7 @@ public class NestedStatementsDiagnostic extends AbstractListenerDiagnostic {
       .map(expressionContext ->
         RelatedInformation.create(
           documentContext.getUri(),
-          Ranges.create(((BSLParserRuleContext) expressionContext).getStart()),
+          Ranges.create(expressionContext.getStart()),
           relatedMessage
         )
       )

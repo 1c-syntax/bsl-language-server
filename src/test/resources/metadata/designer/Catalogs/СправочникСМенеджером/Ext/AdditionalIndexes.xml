@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<AdditionalIndexes xmlns="http://v8.1c.ru/8.1/data/ui" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+	<AdditionalIndex id="3f9b1b6e-0f1a-4a2c-9a1d-000000000001">
+		<Name>ИндексПоВладельцу</Name>
+		<Table>Catalog.СправочникСМенеджером</Table>
+		<IndexedFields>
+			<Field>Catalog.СправочникСМенеджером.StandardAttribute.Owner</Field>
+		</IndexedFields>
+		<AdditionalFields/>
+	</AdditionalIndex>
+</AdditionalIndexes>

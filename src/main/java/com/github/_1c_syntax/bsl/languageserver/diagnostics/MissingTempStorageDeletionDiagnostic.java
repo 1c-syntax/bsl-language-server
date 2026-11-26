@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -25,7 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.FileCodeBlockBeforeSubContext;
@@ -33,8 +32,8 @@ import com.github._1c_syntax.bsl.parser.BSLParser.FileCodeBlockContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.StatementContext;
 import com.github._1c_syntax.bsl.parser.BSLParser.SubContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Collection;
 import java.util.Collections;
@@ -209,6 +208,6 @@ public class MissingTempStorageDeletionDiagnostic extends AbstractFindMethodDiag
       .map(parseTree -> (BSLParser.GlobalMethodCallContext) parseTree)
       .filter(globalMethodCall -> DELETE_FROM_TEMP_STORAGE_PATTERN.matcher(globalMethodCall.methodName().getText())
         .matches())
-      .anyMatch(globalMethodCall -> DiagnosticHelper.equalNodes(sourceCallCtx, globalMethodCall.doCall()));
+      .anyMatch(globalMethodCall -> Trees.equalNodes(sourceCallCtx, globalMethodCall.doCall()));
   }
 }

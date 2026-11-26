@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -23,10 +23,12 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
-import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.CallHierarchyIncomingCall;
 import org.eclipse.lsp4j.CallHierarchyIncomingCallsParams;
@@ -34,20 +36,30 @@ import org.eclipse.lsp4j.CallHierarchyItem;
 import org.eclipse.lsp4j.CallHierarchyOutgoingCall;
 import org.eclipse.lsp4j.CallHierarchyOutgoingCallsParams;
 import org.eclipse.lsp4j.CallHierarchyPrepareParams;
-import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toCollection;
 
+/**
+ * Провайдер для построения иерархии вызовов методов и функций.
+ * <p>
+ * Обрабатывает запросы {@code textDocument/prepareCallHierarchy},
+ * {@code callHierarchy/incomingCalls} и {@code callHierarchy/outgoingCalls}.
+ *
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_prepareCallHierarchy">Call Hierarchy Request specification</a>
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#callHierarchy_incomingCalls">Call Hierarchy Incoming Calls specification</a>
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#callHierarchy_outgoingCalls">Call Hierarchy Outgoing Calls specification</a>
+ */
 @Component
 @RequiredArgsConstructor
 public class CallHierarchyProvider {
@@ -55,74 +67,116 @@ public class CallHierarchyProvider {
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
 
+  private final Comparator<CallHierarchyItem> callHierarchyItemComparator = Comparator
+    .comparing(CallHierarchyItem::getDetail)
+    .thenComparing(CallHierarchyItem::getSelectionRange, Ranges::compare);
+
+  /**
+   * Подготовить элементы иерархии вызовов для указанной позиции в документе.
+   *
+   * @param documentContext Контекст документа
+   * @param params          Параметры запроса
+   * @return Список элементов иерархии вызовов
+   */
   public List<CallHierarchyItem> prepareCallHierarchy(
     DocumentContext documentContext,
     CallHierarchyPrepareParams params
   ) {
-    Position position = params.getPosition();
+    var position = params.getPosition();
 
     return referenceResolver.findReference(documentContext.getUri(), position)
       .flatMap(Reference::getSourceDefinedSymbol)
       .map(CallHierarchyProvider::getCallHierarchyItem)
       .map(Collections::singletonList)
-      .orElse(Collections.emptyList())
-      ;
+      .orElse(Collections.emptyList());
   }
 
+  /**
+   * Получить входящие вызовы для элемента иерархии.
+   *
+   * @param documentContext Контекст документа
+   * @param params          Параметры запроса
+   * @return Список входящих вызовов
+   */
   public List<CallHierarchyIncomingCall> incomingCalls(
     DocumentContext documentContext,
     CallHierarchyIncomingCallsParams params
   ) {
 
-    URI uri = documentContext.getUri();
-    CallHierarchyItem item = params.getItem();
-    Position position = item.getSelectionRange().getStart();
+    var item = params.getItem();
 
-    return referenceResolver.findReference(uri, position)
-      .flatMap(Reference::getSourceDefinedSymbol)
+    return resolveSymbol(documentContext, item)
       .stream()
       .map(referenceIndex::getReferencesTo)
       .flatMap(Collection::stream)
       .collect(groupingBy(
-        Reference::getFrom,
-        mapping(Reference::getSelectionRange, toCollection(ArrayList::new)))
+        Reference::from,
+        mapping(Reference::selectionRange, toCollection(ArrayList::new)))
       )
       .entrySet()
       .stream()
       .map(entry -> new CallHierarchyIncomingCall(getCallHierarchyItem(entry.getKey()), entry.getValue()))
-      .collect(Collectors.toList());
-
+      .sorted((o1, o2) -> callHierarchyItemComparator.compare(o1.getFrom(), o2.getFrom()))
+      .toList();
   }
 
+  /**
+   * Получить исходящие вызовы для элемента иерархии.
+   *
+   * @param documentContext Контекст документа
+   * @param params          Параметры запроса
+   * @return Список исходящих вызовов
+   */
   public List<CallHierarchyOutgoingCall> outgoingCalls(
     DocumentContext documentContext,
     CallHierarchyOutgoingCallsParams params
   ) {
 
-    URI uri = documentContext.getUri();
-    Position position = params.getItem().getSelectionRange().getStart();
+    var item = params.getItem();
 
-    return referenceResolver.findReference(uri, position)
-      .flatMap(Reference::getSourceDefinedSymbol)
+    return resolveSymbol(documentContext, item)
       .stream()
       .map(referenceIndex::getReferencesFrom)
       .flatMap(Collection::stream)
       .filter(Reference::isSourceDefinedSymbolReference)
+      .filter(reference -> isSymbolSupported(reference.symbol()))
       .collect(groupingBy(
         reference -> reference.getSourceDefinedSymbol().orElseThrow(),
-        mapping(Reference::getSelectionRange, toCollection(ArrayList::new)))
+        mapping(Reference::selectionRange, toCollection(ArrayList::new)))
       )
       .entrySet()
       .stream()
       .map(entry -> new CallHierarchyOutgoingCall(getCallHierarchyItem(entry.getKey()), entry.getValue()))
-      .collect(Collectors.toList());
+      .sorted((o1, o2) -> callHierarchyItemComparator.compare(o1.getTo(), o2.getTo()))
+      .toList();
+  }
 
+  /**
+   * Разрешить символ, соответствующий элементу иерархии вызовов.
+   * <p>
+   * Для элементов-методов символ повторно резолвится по позиции {@code selectionRange.getStart()}
+   * через {@link ReferenceResolver}. Для элемента-модуля ({@link SymbolKind#Module}) символ модуля
+   * не находится по позиции (первый токен тела модуля не является ссылкой), поэтому он берётся
+   * напрямую из символьного дерева документа.
+   *
+   * @param documentContext Контекст документа, которому принадлежит элемент иерархии.
+   * @param item            Элемент иерархии вызовов.
+   * @return Символ, соответствующий элементу, либо пустое значение, если символ не найден.
+   */
+  private Optional<SourceDefinedSymbol> resolveSymbol(DocumentContext documentContext, CallHierarchyItem item) {
+    if (item.getKind() == SymbolKind.Module) {
+      return Optional.of(documentContext.getSymbolTree().getModule());
+    }
+
+    var position = item.getSelectionRange().getStart();
+    return referenceResolver.findReference(documentContext.getUri(), position)
+      .flatMap(Reference::getSourceDefinedSymbol);
   }
 
   private static CallHierarchyItem getCallHierarchyItem(SourceDefinedSymbol sourceDefinedSymbol) {
-    String detail = MdoRefBuilder.getMdoRef(sourceDefinedSymbol.getOwner());
+    var detail = sourceDefinedSymbol.getOwner().getMdoRef();
 
-    CallHierarchyItem item = new CallHierarchyItem();
+    var item = new CallHierarchyItem();
     item.setName(sourceDefinedSymbol.getName());
     item.setDetail(detail);
     item.setKind(sourceDefinedSymbol.getSymbolKind());
@@ -132,5 +186,11 @@ public class CallHierarchyProvider {
     item.setSelectionRange(sourceDefinedSymbol.getSelectionRange());
 
     return item;
+  }
+
+  private static boolean isSymbolSupported(Symbol symbol) {
+    // И обычные методы, и конструкторы OneScript-классов (ПриСозданииОбъекта)
+    // являются MethodSymbol, но имеют разные SymbolKind (Method и Constructor).
+    return symbol instanceof MethodSymbol;
   }
 }

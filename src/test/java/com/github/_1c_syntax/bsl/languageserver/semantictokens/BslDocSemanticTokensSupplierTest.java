@@ -1,0 +1,531 @@
+/*
+ * This file is a part of BSL Language Server.
+ *
+ * Copyright (c) 2018-2026
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ *
+ * BSL Language Server is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3.0 of the License, or (at your option) any later version.
+ *
+ * BSL Language Server is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BSL Language Server.
+ */
+package com.github._1c_syntax.bsl.languageserver.semantictokens;
+
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
+import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper;
+import com.github._1c_syntax.bsl.languageserver.util.SemanticTokensTestHelper.ExpectedToken;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.eclipse.lsp4j.SemanticTokenModifiers;
+import org.eclipse.lsp4j.SemanticTokenTypes;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+
+import java.util.List;
+import java.util.Set;
+
+@SpringBootTest
+@CleanupContextBeforeClassAndAfterEachTestMethod
+@Import(SemanticTokensTestHelper.class)
+class BslDocSemanticTokensSupplierTest {
+
+  @Autowired
+  private BslDocSemanticTokensSupplier supplier;
+
+  @Autowired
+  private SemanticTokensTestHelper helper;
+
+  @BeforeEach
+  void init() {
+    supplier.setMultilineTokenSupport(false);
+  }
+
+  @Test
+  void testMethodDescription() {
+    // given
+    String bsl = """
+      // Описание метода
+      Процедура Тест()
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then - Description should be Comment with Documentation modifier
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(0, 0, 18, SemanticTokenTypes.Comment,
+        Set.of(SemanticTokenModifiers.Documentation), "// Описание метода")
+    ));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testParametersKeyword(boolean multilineTokenSupport) {
+    supplier.setMultilineTokenSupport(multilineTokenSupport);
+    // given
+    String bsl = """
+      // Описание метода
+      // Параметры:
+      //  Параметр1 - Строка - описание параметра
+      Процедура Тест(Параметр1)
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then - comment tokens must not overlap the keyword, parameter or type.
+    helper.assertTokensMatch(decoded, List.of(
+      new ExpectedToken(0, 0, 18, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, "// Описание метода"),
+      new ExpectedToken(1, 0, 3, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, "// "),
+      new ExpectedToken(1, 3, 10, SemanticTokenTypes.Macro,
+        SemanticTokenModifiers.Documentation, "Параметры:"),
+      new ExpectedToken(2, 0, 4, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, "//  "),
+      new ExpectedToken(2, 4, 9, SemanticTokenTypes.Parameter,
+        SemanticTokenModifiers.Documentation, "Параметр1"),
+      new ExpectedToken(2, 13, 3, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, " - "),
+      new ExpectedToken(2, 16, 6, SemanticTokenTypes.Type,
+        SemanticTokenModifiers.Documentation, "Строка"),
+      new ExpectedToken(2, 22, 21, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, " - описание параметра")
+    ));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testParameterNames(boolean multilineTokenSupport) {
+    supplier.setMultilineTokenSupport(multilineTokenSupport);
+    // given
+    String bsl = """
+      // Описание метода
+      // Параметры:
+      //  Параметр1 - Строка - описание
+      Процедура Тест(Параметр1)
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then - Parameter name in description should be Parameter with Documentation modifier
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(2, 4, 9, SemanticTokenTypes.Parameter,
+        Set.of(SemanticTokenModifiers.Documentation), "Параметр1")
+    ));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testReturnsKeyword(boolean multilineTokenSupport) {
+    supplier.setMultilineTokenSupport(multilineTokenSupport);
+    // given
+    String bsl = """
+      // Описание функции
+      // Возвращаемое значение:
+      //  Строка - результат
+      Функция Тест()
+        Возврат "";
+      КонецФункции
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then - "Возвращаемое значение:" should be Macro with Documentation modifier
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 3, 22, SemanticTokenTypes.Macro,
+        Set.of(SemanticTokenModifiers.Documentation), "Возвращаемое значение:")
+    ));
+  }
+
+  @Test
+  void testMultilineCommentBetweenDescriptionElements() {
+    supplier.setMultilineTokenSupport(true);
+    String bsl = """
+      // Параметры:
+      //  Параметр - Строка - описание
+      //    Первая строка продолжения.
+      //    Вторая строка продолжения.
+      // Возвращаемое значение:
+      //  Число - результат
+      Функция Тест(Параметр)
+        Возврат 0;
+      КонецФункции
+      """;
+
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    helper.assertTokensMatch(decoded, List.of(
+      new ExpectedToken(0, 0, 3, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, "// "),
+      new ExpectedToken(0, 3, 10, SemanticTokenTypes.Macro,
+        SemanticTokenModifiers.Documentation, "Параметры:"),
+      new ExpectedToken(1, 0, 4, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, "//  "),
+      new ExpectedToken(1, 4, 8, SemanticTokenTypes.Parameter,
+        SemanticTokenModifiers.Documentation, "Параметр"),
+      new ExpectedToken(1, 12, 3, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, " - "),
+      new ExpectedToken(1, 15, 6, SemanticTokenTypes.Type,
+        SemanticTokenModifiers.Documentation, "Строка"),
+      new ExpectedToken(1, 21, 11, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, " - описание"),
+      new ExpectedToken(2, 0, 65, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, "//    Первая строка продолжения.\n//    Вторая строка продолжения."),
+      new ExpectedToken(4, 0, 3, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, "// "),
+      new ExpectedToken(4, 3, 22, SemanticTokenTypes.Macro,
+        SemanticTokenModifiers.Documentation, "Возвращаемое значение:"),
+      new ExpectedToken(5, 0, 4, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, "//  "),
+      new ExpectedToken(5, 4, 5, SemanticTokenTypes.Type,
+        SemanticTokenModifiers.Documentation, "Число"),
+      new ExpectedToken(5, 9, 12, SemanticTokenTypes.Comment,
+        SemanticTokenModifiers.Documentation, " - результат")
+    ));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testTypeNames(boolean multilineTokenSupport) {
+    supplier.setMultilineTokenSupport(multilineTokenSupport);
+    // given
+    String bsl = """
+      // Описание метода
+      // Параметры:
+      //  Параметр1 - Строка - описание
+      Процедура Тест(Параметр1)
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then - Type "Строка" should be Type with Documentation modifier
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(2, 16, 6, SemanticTokenTypes.Type,
+        Set.of(SemanticTokenModifiers.Documentation), "Строка")
+    ));
+  }
+
+  @Test
+  void testDeprecatedKeyword() {
+    // given
+    String bsl = """
+      // Устарела. Использовать НовыйМетод
+      Процедура СтарыйМетод()
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then - "Устарела." should be Macro with Documentation modifier
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(0, 3, 9, SemanticTokenTypes.Macro,
+        Set.of(SemanticTokenModifiers.Documentation), "Устарела.")
+    ));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testMultipleTypesOnSeparateLines(boolean multilineTokenSupport) {
+    supplier.setMultilineTokenSupport(multilineTokenSupport);
+    // given - parameter with multiple types on separate lines
+    String bsl = """
+      // Описание метода
+      // Параметры:
+      //  Параметр - СправочникСсылка
+      //                  - ДокументСсылка
+      //                  - ПеречислениеСсылка - описание параметра
+      Процедура Тест(Параметр)
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then - All three types should be Type with Documentation modifier
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(2, 15, 16, SemanticTokenTypes.Type,
+        Set.of(SemanticTokenModifiers.Documentation), "СправочникСсылка"),
+      new ExpectedToken(3, 22, 14, SemanticTokenTypes.Type,
+        Set.of(SemanticTokenModifiers.Documentation), "ДокументСсылка"),
+      new ExpectedToken(4, 22, 18, SemanticTokenTypes.Type,
+        Set.of(SemanticTokenModifiers.Documentation), "ПеречислениеСсылка")
+    ));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testMultipleReturnTypesOnSeparateLines(boolean multilineTokenSupport) {
+    supplier.setMultilineTokenSupport(multilineTokenSupport);
+    // given - return value with multiple types on separate lines
+    String bsl = """
+      // Описание функции
+      // Возвращаемое значение:
+      //  СправочникСсылка
+      //  - ДокументСсылка - результат
+      Функция Тест()
+        Возврат Неопределено;
+      КонецФункции
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then - Both types should be Type with Documentation modifier
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(2, 4, 16, SemanticTokenTypes.Type,
+        Set.of(SemanticTokenModifiers.Documentation), "СправочникСсылка"),
+      new ExpectedToken(3, 6, 14, SemanticTokenTypes.Type,
+        Set.of(SemanticTokenModifiers.Documentation), "ДокументСсылка")
+    ));
+  }
+
+  @Test
+  void testElementsInDescriptionStartingAtNonZeroColumn() {
+    // given - описание с отступом, то есть начинающееся не с начала строки.
+    String bsl = """
+          // Параметры:
+          //  Парам - Строка - описание
+          Процедура Тест(Парам)
+          КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then: ключевое слово подсвечивается по своей реальной позиции — с учётом отступа
+    // (столбец 7 = четыре пробела, «//» и пробел), а не со столбца 3.
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(0, 7, 10, SemanticTokenTypes.Macro,
+        Set.of(SemanticTokenModifiers.Documentation), "Параметры:")
+    ));
+  }
+
+  @Test
+  void testTypeRefinedByHyperlinkHighlightsBothParts() {
+    // given - тип, уточнённый ссылкой: подсвечиваются и голова описания, и сама ссылка,
+    // ровно как подсвечивается отдельно стоящая ссылка.
+    String bsl = """
+      // Параметры:
+      //  Объект - СтрокаТабличнойЧасти: См. Справочник.Справочник1.ТабличнаяЧасть1
+      Процедура Тест(Объект)
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 13, 20, SemanticTokenTypes.Type,
+        Set.of(SemanticTokenModifiers.Documentation), "СтрокаТабличнойЧасти"),
+      new ExpectedToken(1, 39, 38, SemanticTokenTypes.Type,
+        Set.of(SemanticTokenModifiers.Documentation), "Справочник.Справочник1.ТабличнаяЧасть1")
+    ));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testTrailingVariableDescriptionTypeHighlighting(boolean multilineTokenSupport) {
+    supplier.setMultilineTokenSupport(multilineTokenSupport);
+    // given - висячий (trailing) комментарий переменной с типом в начале (нотация «тип в начале»).
+    // Описание начинается не со столбца 0, поэтому проверяем сквозную работу:
+    // bsl-parser отдаёт TYPE_NAME-элемент в абсолютных координатах, а сапплаер подсвечивает его
+    // как тип ровно на позиции типа, без «съезжания» из-за отступа описания.
+    String bsl = """
+      Процедура Тест()
+          Перем Стр; // Строка - описание переменной
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then - "Строка" подсвечивается как тип на позиции 18 (а не со смещением на отступ описания).
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 18, 6, SemanticTokenTypes.Type,
+        Set.of(SemanticTokenModifiers.Documentation), "Строка")
+    ));
+  }
+
+  @Test
+  void testOsVariableDescriptionPrimitiveTypeHighlighting() {
+    // given - описание переменной OneScript-модуля с примитивом в начале. Примитивы объявлены
+    // только BSL-паком, поэтому при регистрации их видимости строго по языку пака
+    // TypeService.resolve в OS-файле не находил тип, и вся строка описания уезжала
+    // одним комментарием.
+    String os = """
+      // Строка - Ключ владельца, удерживающего блокировку записи.
+      Перем ВладелецЗаписи;
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokensForOs(os, supplier);
+
+    // then - «Строка» подсвечена как тип, ровно как в BSL-модуле
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(0, 3, 6, SemanticTokenTypes.Type,
+        Set.of(SemanticTokenModifiers.Documentation), "Строка")
+    ));
+  }
+
+  @Test
+  void testTrailingVariableDescriptionUnresolvedTypeNotHighlighted() {
+    // given - висячий комментарий, у которого первый токен (по нотации «тип в начале») — свободный
+    // текст, не резолвящийся в реальный тип.
+    String bsl = """
+      Процедура Тест()
+          Перем П; // привет - это не тип
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then - «привет» не подсвечивается как тип: весь висячий комментарий остаётся
+    // одним комментарием-документацией (не разрезается Type-токеном).
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 13, 22, SemanticTokenTypes.Comment,
+        Set.of(SemanticTokenModifiers.Documentation), "// привет - это не тип")
+    ));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testTrailingVariableCollectionTypeHighlighting(boolean multilineTokenSupport) {
+    supplier.setMultilineTokenSupport(multilineTokenSupport);
+    // given - висячий комментарий с типом-коллекцией «Массив из Число»: подсвечиваться должны
+    // и тип-голова (Массив), и тип-значение коллекции (Число), а не только голова.
+    String bsl = """
+      Процедура Тест()
+          Перем Контейнер Экспорт; // Массив из Число
+      КонецПроцедуры
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then - и «Массив», и «Число» подсвечены как тип («из» — разделитель, остаётся комментарием).
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 32, 6, SemanticTokenTypes.Type,
+        Set.of(SemanticTokenModifiers.Documentation), "Массив"),
+      new ExpectedToken(1, 42, 5, SemanticTokenTypes.Type,
+        Set.of(SemanticTokenModifiers.Documentation), "Число")
+    ));
+  }
+
+  @Test
+  void testMethodReturnCollectionTypeHighlighting() {
+    // given - описание возвращаемого значения метода с типом-коллекцией «Массив из Число».
+    // Парсер отдаёт TYPE_NAME-элементом только тип-голову (Массив), поэтому тип-значение (Число)
+    // подсвечивается из структурных аксессоров типов — иначе светилась бы только голова.
+    String bsl = """
+      // Возвращаемое значение:
+      //  Массив из Число - Массив тестовых чисел.
+      Функция ТестовыеЧисла() Экспорт
+      КонецФункции
+      """;
+
+    // when
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // then - и «Массив», и «Число» подсвечены как тип; второй «Массив» (в тексте описания)
+    // и разделители остаются комментарием.
+    helper.assertContainsTokens(decoded, List.of(
+      new ExpectedToken(1, 4, 6, SemanticTokenTypes.Type,
+        Set.of(SemanticTokenModifiers.Documentation), "Массив"),
+      new ExpectedToken(1, 14, 5, SemanticTokenTypes.Type,
+        Set.of(SemanticTokenModifiers.Documentation), "Число")
+    ));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testPlainVariableDescription(boolean multilineTokenSupport) {
+    supplier.setMultilineTokenSupport(multilineTokenSupport);
+
+    String bsl = """
+
+      // Описание переменной.
+      // Число - описание
+      Перем МояПеременная;
+      """;
+
+    var decoded = helper.getDecodedTokens(bsl, supplier);
+
+    // Тип переменной распознаётся только в начале описания: вторая строка остаётся текстом.
+    if (multilineTokenSupport) {
+      helper.assertTokensMatch(decoded, List.of(
+        new ExpectedToken(1, 0, 43, SemanticTokenTypes.Comment,
+          SemanticTokenModifiers.Documentation, "// Описание переменной.\n// Число - описание")
+      ));
+    } else {
+      helper.assertTokensMatch(decoded, List.of(
+        new ExpectedToken(1, 0, 23, SemanticTokenTypes.Comment,
+          SemanticTokenModifiers.Documentation, "// Описание переменной."),
+        new ExpectedToken(2, 0, 19, SemanticTokenTypes.Comment,
+          SemanticTokenModifiers.Documentation, "// Число - описание")
+      ));
+    }
+  }
+
+  @Test
+  void testMultilineSupport() {
+    // given
+    String bsl = """
+      // Первая строка описания
+      // Вторая строка описания
+      // Третья строка описания
+      Процедура Тест()
+      КонецПроцедуры
+      """;
+
+    var documentContext = TestUtils.getDocumentContext(bsl);
+
+    // Test without multiline support - should have 3 separate comment tokens (one per line)
+    supplier.setMultilineTokenSupport(false);
+    var tokensWithoutMultiline = helper.decodeFromEntries(supplier.getSemanticTokens(documentContext));
+
+    helper.assertContainsTokens(tokensWithoutMultiline, List.of(
+      new ExpectedToken(0, 0, 25, SemanticTokenTypes.Comment,
+        Set.of(SemanticTokenModifiers.Documentation), "// Первая строка описания"),
+      new ExpectedToken(1, 0, 25, SemanticTokenTypes.Comment,
+        Set.of(SemanticTokenModifiers.Documentation), "// Вторая строка описания"),
+      new ExpectedToken(2, 0, 25, SemanticTokenTypes.Comment,
+        Set.of(SemanticTokenModifiers.Documentation), "// Третья строка описания")
+    ));
+
+    // Test with multiline support - should merge consecutive lines into one token
+    supplier.setMultilineTokenSupport(true);
+    var tokensWithMultiline = helper.decodeFromEntries(supplier.getSemanticTokens(documentContext));
+
+    // With multiline support, all 3 lines are merged into single token starting at line 0
+    // Length is 77 (25 + 1 + 25 + 1 + 25 = 77 including newlines)
+    helper.assertContainsTokens(tokensWithMultiline, List.of(
+      new ExpectedToken(0, 0, 77, SemanticTokenTypes.Comment,
+        Set.of(SemanticTokenModifiers.Documentation), "// Первая строка описания...")
+    ));
+  }
+}

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -25,62 +25,36 @@ import com.github._1c_syntax.bsl.languageserver.codeactions.CodeActionSupplier;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.CodeAction;
-import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Command;
-import org.eclipse.lsp4j.Diagnostic;
-import org.eclipse.lsp4j.TextEdit;
-import org.eclipse.lsp4j.WorkspaceEdit;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.stereotype.Component;
 
-import java.net.URI;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+/**
+ * Провайдер для предоставления code actions (быстрых исправлений и рефакторингов).
+ * <p>
+ * Обрабатывает запросы {@code textDocument/codeAction}.
+ *
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_codeAction">Code Action Request specification</a>
+ */
 @Component
 @RequiredArgsConstructor
 public final class CodeActionProvider {
 
   private final List<CodeActionSupplier> codeActionSuppliers;
 
-  public static List<CodeAction> createCodeActions(
-    List<TextEdit> textEdits,
-    String title,
-    URI uri,
-    List<Diagnostic> diagnostics
-  ) {
-
-    if (diagnostics.isEmpty()) {
-      return Collections.emptyList();
-    }
-
-    WorkspaceEdit edit = new WorkspaceEdit();
-
-    Map<String, List<TextEdit>> changes = new HashMap<>();
-    changes.put(uri.toString(), textEdits);
-    edit.setChanges(changes);
-
-    if (diagnostics.size() > 1) {
-      title = "Fix all: " + title;
-    }
-
-    CodeAction codeAction = new CodeAction(title);
-    codeAction.setDiagnostics(diagnostics);
-    codeAction.setEdit(edit);
-    codeAction.setKind(CodeActionKind.QuickFix);
-    if (diagnostics.size() == 1) {
-      codeAction.setIsPreferred(Boolean.TRUE);
-    }
-
-    return Collections.singletonList(codeAction);
-
-  }
-
+  /**
+   * Получить список доступных Code Actions для указанного диапазона.
+   *
+   * @param params Параметры запроса
+   * @param documentContext Контекст документа
+   * @return Список Code Actions или команд
+   */
   public List<Either<Command, CodeAction>> getCodeActions(
     CodeActionParams params,
     DocumentContext documentContext

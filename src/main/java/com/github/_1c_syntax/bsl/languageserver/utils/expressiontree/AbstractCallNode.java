@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -25,18 +25,37 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+/**
+ * Абстрактный узел вызова в дереве выражений.
+ * <p>
+ * Базовый класс для представления вызовов методов и функций
+ * с поддержкой аргументов.
+ */
 public abstract class AbstractCallNode extends BslExpression {
 
   private final List<BslExpression> callArguments = new ArrayList<>();
 
+  /**
+   * Конструктор узла вызова.
+   */
   protected AbstractCallNode() {
     super(ExpressionNodeType.CALL);
   }
 
+  /**
+   * Добавляет аргумент вызова.
+   *
+   * @param argument добавляемый аргумент
+   */
   public void addArgument(BslExpression argument) {
     callArguments.add(argument);
   }
 
+  /**
+   * Возвращает неизменяемый список аргументов вызова.
+   *
+   * @return список аргументов вызова
+   */
   public List<BslExpression> arguments() {
     return Collections.unmodifiableList(callArguments);
   }

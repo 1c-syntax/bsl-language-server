@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -38,13 +38,56 @@ class VirtualTableCallWithoutParametersDiagnosticTest extends AbstractDiagnostic
 
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    assertThat(diagnostics).hasSize(4);
+    assertThat(diagnostics).hasSize(5);
     assertThat(diagnostics, true)
       .hasRange(5, 8, 43)
       .hasRange(48, 8, 42)
       .hasRange(58, 8, 44)
       .hasRange(78, 8, 51)
+      .hasRange(101, 7, 42)
     ;
 
   }
+
+  @Test
+  void testExtDimensionsWithoutParameters() {
+    var diagnostics = getDiagnostics("VirtualTableCallWithoutParametersExtDimensions");
+
+    assertThat(diagnostics).isEmpty();
+  }
+
+  @Test
+  void testTabularSectionNamedAsVirtualTable() {
+    var diagnostics = getDiagnostics("VirtualTableCallWithoutParametersTabularSection");
+
+    assertThat(diagnostics).hasSize(6);
+    assertThat(diagnostics, true)
+      .hasRange(112, 9, 50)
+      .hasRange(133, 9, 41)
+      .hasRange(143, 9, 52)
+      .hasRange(153, 9, 48)
+      .hasRange(163, 9, 43)
+      .hasRange(173, 9, 53)
+    ;
+  }
+
+  @Test
+  void testVirtualTableKinds() {
+    var diagnostics = getDiagnostics("VirtualTableCallWithoutParametersKinds");
+
+    assertThat(diagnostics).hasSize(10);
+    assertThat(diagnostics, true)
+      .hasRange(7, 9, 41)
+      .hasRange(21, 9, 48)
+      .hasRange(35, 9, 48)
+      .hasRange(49, 9, 56)
+      .hasRange(63, 9, 58)
+      .hasRange(77, 9, 52)
+      .hasRange(91, 9, 60)
+      .hasRange(105, 9, 48)
+      .hasRange(119, 9, 49)
+      .hasRange(133, 9, 45)
+    ;
+  }
+
 }

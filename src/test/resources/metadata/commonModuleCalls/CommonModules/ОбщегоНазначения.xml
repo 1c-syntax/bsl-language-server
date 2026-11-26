@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MetaDataObject xmlns="http://v8.1c.ru/8.3/MDClasses" version="2.17">
+  <CommonModule uuid="f91a5ce2-697a-4d81-bb2b-9d817e819370">
+    <Properties>
+      <Name>ОбщегоНазначения</Name>
+      <Global>false</Global>
+      <ClientManagedApplication>true</ClientManagedApplication>
+      <Server>true</Server>
+      <ExternalConnection>true</ExternalConnection>
+      <ClientOrdinaryApplication>true</ClientOrdinaryApplication>
+      <ServerCall>false</ServerCall>
+      <Privileged>false</Privileged>
+      <ReturnValuesReuse>DontUse</ReturnValuesReuse>
+    </Properties>
+  </CommonModule>
+</MetaDataObject>

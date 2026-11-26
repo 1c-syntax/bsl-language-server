@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -29,8 +29,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.jspecify.annotations.Nullable;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -68,7 +68,7 @@ public class SelectTopWithoutOrderByDiagnostic extends AbstractSDBLVisitorDiagno
     return super.visitSubquery(ctx);
   }
 
-  private void checkQuery(@Nullable SDBLParser.QueryContext ctx, boolean canTopOne) {
+  private void checkQuery(SDBLParser.@Nullable QueryContext ctx, boolean canTopOne) {
 
     if (ctx == null) {
       // для битых запросов, чтобы не ронять

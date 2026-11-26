@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,32 +22,29 @@
 package com.github._1c_syntax.bsl.languageserver.utils;
 
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.experimental.UtilityClass;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.misc.Predicate;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.antlr.v4.runtime.tree.Tree;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.util.Positions;
+import org.jspecify.annotations.Nullable;
 
-import javax.annotation.CheckForNull;
-import javax.annotation.Nullable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
+/**
+ * Утилитный класс для работы с синтаксическими деревьями ANTLR.
+ * <p>
+ * Предоставляет методы для навигации, поиска и анализа узлов
+ * в дереве разбора BSL-кода.
+ */
 @UtilityClass
 public final class Trees {
 
@@ -64,58 +61,27 @@ public final class Trees {
     BSLParser.AMPERSAND
   );
 
-  /**
+  /*
    * Обертки Trees
    */
 
-  public static Collection<ParseTree> findAllRuleNodes(ParseTree t, int ruleIndex) {
+  /**
+   * Найти все узлы указанного правила в дереве.
+   *
+   * @param t         Дерево разбора
+   * @param ruleIndex Индекс правила для поиска
+   * @return Коллекция найденных узлов
+   */
+  public static <T extends ParseTree> Collection<T> findAllRuleNodes(ParseTree t, int ruleIndex) {
     return org.antlr.v4.runtime.tree.Trees.findAllRuleNodes(t, ruleIndex);
   }
 
   /**
-   /**
-   * Находит только первый элемент дерева, подходящий по типу элемента.
-   * Поиск более ограничен в отличие от findAllRuleNodes, который всегда обегает все дерево
+   * Получить список дочерних узлов.
    *
-   * @param t узел дерева
-   * @param ruleIndex искомый тип элемент
-   * @return первый подходящий узел, если он найден
+   * @param t Узел дерева
+   * @return Список дочерних узлов
    */
-  public static Optional<BSLParserRuleContext> findNodeSuchThat(BSLParserRuleContext t, int ruleIndex) {
-    return findNodeSuchThat(t, node -> node.getRuleIndex() == ruleIndex);
-  }
-
-  /**
-   * Находит только первый элемент дерева, подходящий по условию поиска.
-   * Поиск более ограничен в отличие от findAllRuleNodes, который всегда обегает все дерево
-   *
-   * @param t узел дерева
-   * @param pred предикат-условие поиска
-   * @return первый подходящий узел, если он найден
-   */
-  public static Optional<BSLParserRuleContext> findNodeSuchThat(BSLParserRuleContext t, Predicate<BSLParserRuleContext> pred) {
-    return Optional.ofNullable(findNodeSuchThatInner(t, pred));
-  }
-
-  @Nullable
-  private static BSLParserRuleContext findNodeSuchThatInner(BSLParserRuleContext t, Predicate<BSLParserRuleContext> pred) {
-    if ( pred.eval(t) ) {
-      return t;
-    }
-
-    int n = t.getChildCount();
-    for (var i = 0 ; i < n ; i++){
-      final var child = t.getChild(i);
-      if (child instanceof BSLParserRuleContext) {
-        BSLParserRuleContext u = findNodeSuchThatInner((BSLParserRuleContext)child, pred);
-        if ( u != null) {
-          return u;
-        }
-      }
-    }
-    return null;
-  }
-
   public static List<Tree> getChildren(Tree t) {
     return org.antlr.v4.runtime.tree.Trees.getChildren(t);
   }
@@ -128,100 +94,42 @@ public final class Trees {
    * @param tree Дерево разбора
    * @return Список токенов
    */
-  public static List<Token> getTokens(ParseTree tree) {
-    if (tree instanceof BSLParserRuleContext) {
-      return ((BSLParserRuleContext) tree).getTokens();
-    }
-
-    if (tree instanceof TerminalNode) {
-      TerminalNode node = (TerminalNode) tree;
-      var token = node.getSymbol();
-      return List.of(token);
-    }
-
-    if (tree.getChildCount() == 0) {
+  public static List<Token> getTokens(@Nullable ParseTree tree) {
+    if (tree == null) {
       return Collections.emptyList();
     }
-
-    List<Token> results = new ArrayList<>();
-    getTokensFromParseTree(tree, results);
-    return Collections.unmodifiableList(results);
+    return org.antlr.v4.runtime.tree.Trees.getTokens(tree);
   }
 
-  private static void getTokensFromParseTree(ParseTree tree, List<Token> tokens) {
-    for (var i = 0; i < tree.getChildCount(); i++) {
-      ParseTree child = tree.getChild(i);
-      if (child instanceof TerminalNode) {
-        TerminalNode node = (TerminalNode) child;
-        var token = node.getSymbol();
-        tokens.add(token);
-      } else {
-        getTokensFromParseTree(child, tokens);
-      }
-    }
-  }
-
+  /**
+   * Найти все узлы указанного типа токена в дереве.
+   *
+   * @param t     Дерево разбора
+   * @param ttype Тип токена для поиска
+   * @return Коллекция найденных узлов
+   */
   public static Collection<ParseTree> findAllTokenNodes(ParseTree t, int ttype) {
     return org.antlr.v4.runtime.tree.Trees.findAllTokenNodes(t, ttype);
   }
 
-  public static List<ParseTree> getDescendants(ParseTree t) {
-    List<ParseTree> nodes = new ArrayList<>(t.getChildCount());
-    flatten(t, nodes);
-    return nodes;
-  }
-
-  private static void flatten(ParseTree t, List<ParseTree> flatList) {
-    flatList.add(t);
-
-    int n = t.getChildCount();
-    for (var i = 0; i < n; i++) {
-      flatten(t.getChild(i), flatList);
-    }
-  }
-
   /**
-   * Собственная реализация
+   * Получить список всех потомков узла (плоский список).
+   *
+   * @param t Узел дерева
+   * @return Список всех потомков
    */
-
-  private static int getRuleIndex(ParseTree node) {
-    if (node instanceof TerminalNode) {
-      return ((TerminalNode) node).getSymbol().getType();
-    } else {
-      return ((BSLParserRuleContext) node).getRuleIndex();
-    }
-  }
-
-  private static List<ParseTree> getDescendantsWithFilter(ParseTree parent, ParseTree tnc, int ruleindex) {
-    List<ParseTree> descendants;
-    if (getRuleIndex(tnc) == ruleindex) {
-      descendants = new ArrayList<>(org.antlr.v4.runtime.tree.Trees.findAllRuleNodes(parent, ruleindex));
-    } else {
-      descendants = org.antlr.v4.runtime.tree.Trees.getDescendants(parent)
-        .stream()
-        .filter(BSLParserRuleContext.class::isInstance)
-        .filter(node -> (node.equals(tnc)
-          || getRuleIndex(node) == ruleindex))
-        .collect(Collectors.toList());
-    }
-    return descendants;
+  public static List<ParseTree> getDescendants(ParseTree t) {
+    return org.antlr.v4.runtime.tree.Trees.getDescendants(t);
   }
 
   /**
    * Ищем предка элемента по указанному типу BSLParser
    * Пример:
-   * BSLParserRuleContext parent = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_statement);
+   * ParserRuleContext parent = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_statement);
    */
-  @CheckForNull
-  public static BSLParserRuleContext getAncestorByRuleIndex(BSLParserRuleContext element, int type) {
-    var parent = element.getParent();
-    if (parent == null) {
-      return null;
-    }
-    if (parent.getRuleIndex() == type) {
-      return parent;
-    }
-    return getAncestorByRuleIndex(parent, type);
+  @Nullable
+  public static <T extends ParserRuleContext> T getAncestorByRuleIndex(ParserRuleContext element, int type) {
+    return org.antlr.v4.runtime.tree.Trees.getAncestor(element, type);
   }
 
   /**
@@ -230,7 +138,7 @@ public final class Trees {
    * @return true - если есть узел с ошибкой
    */
   public static boolean treeContainsErrors(ParseTree tnc) {
-    return treeContainsErrors(tnc, true);
+    return org.antlr.v4.runtime.tree.Trees.treeContainsErrors(tnc);
   }
 
   /**
@@ -239,7 +147,7 @@ public final class Trees {
    * @return true - если есть узел с ошибкой
    */
   public static boolean nodeContainsErrors(ParseTree tnc) {
-    return treeContainsErrors(tnc, false);
+    return org.antlr.v4.runtime.tree.Trees.nodeContainsErrors(tnc);
   }
 
   /**
@@ -251,15 +159,7 @@ public final class Trees {
    * @return tnc - если предыдущая нода не найдена, вернет текущую
    */
   public static ParseTree getPreviousNode(ParseTree parent, ParseTree tnc, int ruleindex) {
-
-    List<ParseTree> descendants = getDescendantsWithFilter(parent, tnc, ruleindex);
-
-    int pos = descendants.indexOf(tnc);
-    if (pos > 0) {
-      return descendants.get(pos - 1);
-    }
-
-    return tnc;
+    return org.antlr.v4.runtime.tree.Trees.getPreviousNode(parent, tnc, ruleindex);
   }
 
   /**
@@ -269,19 +169,7 @@ public final class Trees {
    * @return предыдущий токен, если он был найден
    */
   public Optional<Token> getPreviousTokenFromDefaultChannel(List<Token> tokens, int tokenIndex, int tokenType) {
-    while (true) {
-      if (tokenIndex == 0) {
-        return Optional.empty();
-      }
-      var token = tokens.get(tokenIndex);
-      if (token.getChannel() != Token.DEFAULT_CHANNEL
-        || token.getType() != tokenType) {
-        tokenIndex = tokenIndex - 1;
-        continue;
-      }
-
-      return Optional.of(token);
-    }
+    return org.antlr.v4.runtime.tree.Trees.getPreviousTokenFromDefaultChannel(tokens, tokenIndex, tokenType);
   }
 
   /**
@@ -290,18 +178,7 @@ public final class Trees {
    * @return предыдущий токен, если он был найден
    */
   public static Optional<Token> getPreviousTokenFromDefaultChannel(List<Token> tokens, int tokenIndex) {
-    while (true) {
-      if (tokenIndex == 0) {
-        return Optional.empty();
-      }
-      var token = tokens.get(tokenIndex);
-      if (token.getChannel() != Token.DEFAULT_CHANNEL) {
-        tokenIndex = tokenIndex - 1;
-        continue;
-      }
-
-      return Optional.of(token);
-    }
+    return org.antlr.v4.runtime.tree.Trees.getPreviousTokenFromDefaultChannel(tokens, tokenIndex);
   }
 
   /**
@@ -313,46 +190,14 @@ public final class Trees {
    * @return tnc - если следующая нода не найдена, вернет текущую
    */
   public static ParseTree getNextNode(ParseTree parent, ParseTree tnc, int ruleindex) {
-
-    List<ParseTree> descendants = getDescendantsWithFilter(parent, tnc, ruleindex);
-
-    int pos = descendants.indexOf(tnc);
-    if (pos + 1 < descendants.size()) {
-      return descendants.get(pos + 1);
-    }
-
-    return tnc;
+    return org.antlr.v4.runtime.tree.Trees.getNextNode(parent, tnc, ruleindex);
   }
 
   /**
    * Рекурсивно находит самого верхнего родителя текущей ноды
    */
-  public static BSLParserRuleContext getRootParent(BSLParserRuleContext tnc) {
-    if (tnc.getParent() != null) {
-      return getRootParent(tnc.getParent());
-    }
-
-    return tnc;
-  }
-
-  /**
-   * Рекурсивно находит самого верхнего родителя текущей ноды нужного типа
-   *
-   * @param context - нода, для которой ищем родителя
-   * @param index- BSLParser.RULE_*
-   * @param klass - класс типа
-   * @param <T> - тип
-   * @return - если родитель не найден, вернет пустой Optional
-   */
-  public static <T extends BSLParserRuleContext> Optional<T> getRootNode(RuleNode context, int index, Class<T> klass) {
-    if (klass.isInstance(context)){
-      return Optional.of(klass.cast(context));
-    }
-    return Optional.of(context)
-      .map(BSLParserRuleContext.class::cast)
-      .map(node -> Trees.getRootParent(node, index))
-      .filter(klass::isInstance)
-      .map(klass::cast);
+  public static ParserRuleContext getRootParent(ParserRuleContext tnc) {
+    return org.antlr.v4.runtime.tree.Trees.getAncestor(tnc);
   }
 
   /**
@@ -362,18 +207,9 @@ public final class Trees {
    * @param ruleindex - BSLParser.RULE_*
    * @return tnc - если родитель не найден, вернет null
    */
-  @CheckForNull
-  public static BSLParserRuleContext getRootParent(BSLParserRuleContext tnc, int ruleindex) {
-    final var parent = tnc.getParent();
-    if (parent == null) {
-      return null;
-    }
-
-    if (getRuleIndex(parent) == ruleindex) {
-      return parent;
-    } else {
-      return getRootParent(parent, ruleindex);
-    }
+  @Nullable
+  public static ParserRuleContext getRootParent(ParserRuleContext tnc, int ruleindex) {
+    return org.antlr.v4.runtime.tree.Trees.getAncestor(tnc, ruleindex);
   }
 
   /**
@@ -383,26 +219,16 @@ public final class Trees {
    * @param indexes - Collection of BSLParser.RULE_*
    * @return tnc - если родитель не найден, вернет null
    */
-  @CheckForNull
-  public static BSLParserRuleContext getRootParent(BSLParserRuleContext tnc, Collection<Integer> indexes) {
-    final var parent = tnc.getParent();
-    if (parent == null) {
-      return null;
-    }
-
-    if (indexes.contains(getRuleIndex(parent))) {
-      return parent;
-    } else {
-      return getRootParent(parent, indexes);
-    }
+  @Nullable
+  public static ParserRuleContext getRootParent(ParserRuleContext tnc, Collection<Integer> indexes) {
+    return org.antlr.v4.runtime.tree.Trees.getAncestor(tnc, indexes);
   }
 
   /**
    * Получает детей с нужными типами
    */
-  public static List<BSLParserRuleContext> getChildren(Tree t, Integer... ruleIndex) {
-    return getChildrenStream(t, ruleIndex)
-      .collect(Collectors.toList());
+  public static List<ParserRuleContext> getChildren(Tree t, Integer... ruleIndex) {
+    return org.antlr.v4.runtime.tree.Trees.getChildren(t, ruleIndex);
   }
 
   /**
@@ -412,86 +238,63 @@ public final class Trees {
    * @param ruleIndex - arrays of BSLParser.RULE_*
    * @return child - если первый ребенок не найден, вернет Optional
    */
-  public static Optional<BSLParserRuleContext> getFirstChild(Tree t, Integer... ruleIndex) {
-    return getChildrenStream(t, ruleIndex)
-      .findFirst();
-  }
-
-  private static Stream<BSLParserRuleContext> getChildrenStream(Tree t, Integer[] ruleIndex) {
-    List<Integer> indexes = Arrays.asList(ruleIndex);
-    return IntStream.range(0, t.getChildCount())
-      .mapToObj(t::getChild)
-      .filter((Tree child) ->
-        child instanceof BSLParserRuleContext
-          && indexes.contains(((BSLParserRuleContext) child).getRuleIndex()))
-      .map(BSLParserRuleContext.class::cast);
+  public static Optional<ParserRuleContext> getFirstChild(Tree t, Integer... ruleIndex) {
+    return org.antlr.v4.runtime.tree.Trees.getFirstChild(t, ruleIndex);
   }
 
   /**
    * Получает дочерние ноды с нужными типами
    */
   public static Collection<ParserRuleContext> findAllRuleNodes(ParseTree t, Integer... index) {
-    return findAllRuleNodes(t, Arrays.asList(index));
+    return org.antlr.v4.runtime.tree.Trees.findAllRuleNodes(t, index);
   }
 
   /**
    * Получает дочерние ноды с нужными типами
    */
   public static Collection<ParserRuleContext> findAllRuleNodes(ParseTree t, Collection<Integer> indexes) {
-    List<ParserRuleContext> nodes = new ArrayList<>();
+    return org.antlr.v4.runtime.tree.Trees.findAllRuleNodes(t, indexes);
+  }
 
-    if (t instanceof ParserRuleContext
-      && indexes.contains(((ParserRuleContext) t).getRuleIndex())) {
-      nodes.add((ParserRuleContext) t);
-    }
-
-    IntStream.range(0, t.getChildCount())
-      .mapToObj(i -> findAllRuleNodes(t.getChild(i), indexes))
-      .forEachOrdered(nodes::addAll);
-
-    return nodes;
+  /**
+   * Получает "первые" дочерние ноды с нужными типами
+   * ВАЖНО: поиск вглубь найденной ноды с нужными индексами не выполняется
+   * Например, если указать RULE_codeBlock, то найдется только самый верхнеуровневый блок кода, все
+   * вложенные найдены не будут
+   * ВАЖНО: начальная нода не проверяется на условие, т.к. тогда она единственная и вернется в результате
+   *
+   * @param root    - начальный узел дерева
+   * @param indexes - коллекция индексов
+   * @return найденные узлы
+   */
+  public static Collection<ParserRuleContext> findAllTopLevelDescendantNodes(ParserRuleContext root,
+                                                                             Collection<Integer> indexes) {
+    return org.antlr.v4.runtime.tree.Trees.findAllTopLevelDescendantNodes(root, indexes);
   }
 
   /**
    * Проверяет наличие дочерней ноды с указанным типом
    */
   public static boolean nodeContains(ParseTree t, Integer... index) {
-    Set<Integer> indexes = new HashSet<>(Arrays.asList(index));
-
-    if (t instanceof ParserRuleContext
-      && indexes.contains(((ParserRuleContext) t).getRuleIndex())) {
-      return true;
-    }
-
-    return IntStream.range(0, t.getChildCount())
-      .anyMatch(i -> nodeContains(t.getChild(i), index));
+    return org.antlr.v4.runtime.tree.Trees.nodeContains(t, index);
   }
 
   /**
    * Проверяет наличие дочерней ноды с указанным типом исключая переданную
    */
   public static boolean nodeContains(ParseTree t, ParseTree exclude, Integer... index) {
-    Set<Integer> indexes = new HashSet<>(Arrays.asList(index));
-
-    if (t instanceof ParserRuleContext
-      && !t.equals(exclude)
-      && indexes.contains(((ParserRuleContext) t).getRuleIndex())) {
-      return true;
-    }
-
-    return IntStream.range(0, t.getChildCount())
-      .anyMatch(i -> nodeContains(t.getChild(i), exclude, index));
+    return org.antlr.v4.runtime.tree.Trees.nodeContains(t, exclude, index);
   }
 
   /**
-   * Получение терминальной ноды в дереве по позиции в документе.
+   * Получение ноды в дереве по позиции в документе.
    *
-   * @param tree - дерево, в котором ищем
+   * @param tree     - дерево, в котором ищем
    * @param position - искомая позиция
    * @return терминальная нода на указанной позиции, если есть
    */
-  public static Optional<TerminalNode> findTerminalNodeContainsPosition(BSLParserRuleContext tree, Position position) {
-
+  public static Optional<TerminalNode> findTerminalNodeContainsPosition(ParserRuleContext tree,
+                                                                        Position position) {
     if (tree.getTokens().isEmpty()) {
       return Optional.empty();
     }
@@ -506,14 +309,13 @@ public final class Trees {
     var children = Trees.getChildren(tree);
 
     for (Tree child : children) {
-      if (child instanceof TerminalNode) {
-        var terminalNode = (TerminalNode) child;
+      if (child instanceof TerminalNode terminalNode) {
         var token = terminalNode.getSymbol();
         if (tokenContainsPosition(token, position)) {
           return Optional.of(terminalNode);
         }
       } else {
-        Optional<TerminalNode> node = findTerminalNodeContainsPosition((BSLParserRuleContext) child, position);
+        var node = findTerminalNodeContainsPosition((ParserRuleContext) child, position);
         if (node.isPresent()) {
           return node;
         }
@@ -521,48 +323,6 @@ public final class Trees {
     }
 
     return Optional.empty();
-  }
-
-  /**
-   * Получение ноды в дереве по позиции в документе.
-   *
-   * @param tree - дерево, в котором ищем
-   * @param position - искомая позиция
-   * @return нода на указанной позиции, если есть
-   */
-  public static Optional<BSLParserRuleContext> findContextContainsPosition(BSLParserRuleContext tree, Position position) {
-    if (!nodeContainsPosition(tree, position)) {
-      return Optional.empty();
-    }
-    return Optional.ofNullable(findContextContainsPositionInner(tree, position));
-  }
-
-  private static @Nullable BSLParserRuleContext findContextContainsPositionInner(BSLParserRuleContext tree, Position position) {
-
-    var children = Trees.getChildren(tree);
-
-    var isOneElemSize = children.size() == 1;
-    for (Tree child : children) {
-      if ((child instanceof TerminalNode)
-        || (!isOneElemSize && !nodeContainsPosition((BSLParserRuleContext) child, position))) {
-        continue;
-      }
-      BSLParserRuleContext node = findContextContainsPositionInner((BSLParserRuleContext) child, position);
-      if (node != null) {
-        return node;
-      }
-    }
-    return tree;
-  }
-
-  private static boolean nodeContainsPosition(BSLParserRuleContext tree, Position position) {
-    var start = tree.getStart();
-    var stop = tree.getStop();
-    if (start == null || stop == null){
-      return false;
-    }
-
-    return positionIsAfterOrOnToken(position, start) && positionIsBeforeOrOnToken(position, stop);
   }
 
   /**
@@ -605,16 +365,13 @@ public final class Trees {
   }
 
   private static void fillCommentsCollection(List<Token> tokens, Token currentToken, List<Token> lines) {
-
     int index = currentToken.getTokenIndex();
-
     if (index == 0) {
       return;
     }
 
     var previousToken = tokens.get(index - 1);
-
-    if (abortSearchComments(previousToken, currentToken)) {
+    if (abortSearchComments(tokens, previousToken, currentToken)) {
       return;
     }
 
@@ -625,9 +382,35 @@ public final class Trees {
     }
   }
 
-  private static boolean abortSearchComments(Token previousToken, Token currentToken) {
+  private static boolean abortSearchComments(List<Token> tokens, Token previousToken, Token currentToken) {
     int type = previousToken.getType();
-    return !VALID_TOKEN_TYPES_FOR_COMMENTS_SEARCH.contains(type) || isBlankLine(previousToken, currentToken);
+    return !VALID_TOKEN_TYPES_FOR_COMMENTS_SEARCH.contains(type)
+      || isBlankLine(previousToken, currentToken)
+      || isTrailingComment(tokens, previousToken);
+  }
+
+  /**
+   * Дописан ли комментарий в конец строки с кодом. Такой комментарий принадлежит тому
+   * оператору, за которым стоит, и описанием следующего символа быть не может.
+   *
+   * @param tokens список токенов документа.
+   * @param token  проверяемый токен.
+   * @return {@code true}, если это висячий комментарий чужого оператора.
+   */
+  private static boolean isTrailingComment(List<Token> tokens, Token token) {
+    if (token.getType() != BSLParser.LINE_COMMENT) {
+      return false;
+    }
+    for (var index = token.getTokenIndex() - 1; index >= 0; index--) {
+      var previous = tokens.get(index);
+      if (previous.getLine() != token.getLine()) {
+        return false;
+      }
+      if (previous.getType() != BSLParser.WHITE_SPACE) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private static boolean isBlankLine(Token previousToken, Token currentToken) {
@@ -636,25 +419,10 @@ public final class Trees {
       || (previousToken.getLine() + 1) != currentToken.getLine());
   }
 
-  private static boolean treeContainsErrors(ParseTree tnc, boolean recursive) {
-    if (!(tnc instanceof BSLParserRuleContext)) {
-      return false;
-    }
-
-    BSLParserRuleContext ruleContext = (BSLParserRuleContext) tnc;
-
-    if (ruleContext.exception != null) {
-      return true;
-    }
-
-    return recursive
-      && ruleContext.children != null
-      && ruleContext.children.stream().anyMatch(Trees::treeContainsErrors);
-  }
-
   private static boolean tokenContainsPosition(Token token, Position position) {
-    var tokenRange = Ranges.create(token);
-    return Ranges.containsPosition(tokenRange, position);
+    var line = token.getLine() - 1;
+    var start = token.getCharPositionInLine();
+    return Ranges.containsPosition(line, start, line, start + token.getText().length(), position);
   }
 
   private static boolean positionIsBeforeOrOnToken(Position position, Token token) {
@@ -667,5 +435,42 @@ public final class Trees {
     var tokenRange = Ranges.create(token);
     var start = tokenRange.getStart();
     return Positions.isBefore(start, position) || start.equals(position);
+  }
+
+  /**
+   * Проверить равенство двух узлов синтаксического дерева.
+   *
+   * @param leftNode  Первый узел для сравнения
+   * @param rightNode Второй узел для сравнения
+   * @return true, если узлы эквивалентны
+   */
+  public static boolean equalNodes(Tree leftNode, Tree rightNode) {
+
+    if (leftNode.getChildCount() != rightNode.getChildCount()
+      || !leftNode.getClass().equals(rightNode.getClass())) {
+      return false;
+    }
+
+    if (leftNode instanceof TerminalNode node) {
+
+      int leftNodeType = node.getSymbol().getType();
+      int rightNodeType = ((TerminalNode) rightNode).getSymbol().getType();
+
+      if (leftNodeType != rightNodeType
+        || (leftNodeType == BSLParser.STRING
+        && !leftNode.toString().equals(rightNode.toString()))
+        || (!leftNode.toString().equalsIgnoreCase(rightNode.toString()))) {
+        return false;
+      }
+
+    }
+
+    for (int i = 0; i < leftNode.getChildCount(); i++) {
+      if (!equalNodes(leftNode.getChild(i), rightNode.getChild(i))) {
+        return false;
+      }
+    }
+
+    return true;
   }
 }

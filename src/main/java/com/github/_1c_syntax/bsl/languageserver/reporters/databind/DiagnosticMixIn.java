@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -23,13 +23,14 @@ package com.github._1c_syntax.bsl.languageserver.reporters.databind;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import tools.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.annotation.JsonSerialize;
+import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 /**
- * Mix-in класс для донастройки (де)сериализации {@link org.eclipse.lsp4j.Diagnostic} через Jackson ObjectMapper.
- * См. {@link com.fasterxml.jackson.databind.ObjectMapper#addMixIn(Class, Class)}
+ * Mix-in класс для донастройки (де)сериализации {@link org.eclipse.lsp4j.Diagnostic} через Jackson JsonMapper.
+ * См. {@link tools.jackson.databind.json.JsonMapper.Builder#addMixIn(Class, Class)}
  */
 public abstract class DiagnosticMixIn {
 
@@ -37,9 +38,19 @@ public abstract class DiagnosticMixIn {
   @JsonDeserialize(using = DiagnosticCodeDeserializer.class)
   private Either<String, Number> code;
 
+  @JsonSerialize(using = DiagnosticMessageSerializer.class)
+  @JsonDeserialize(using = DiagnosticMessageDeserializer.class)
+  private Either<String, MarkupContent> message;
+
   @JsonIgnore
   public abstract void setCode(String code);
 
   @JsonProperty
   public abstract void setCode(Either<String, Number> code);
+
+  @JsonIgnore
+  public abstract void setMessage(String message);
+
+  @JsonProperty
+  public abstract void setMessage(Either<String, MarkupContent> message);
 }

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -25,10 +25,22 @@ import java.util.StringJoiner;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Детектор на основе регулярных выражений.
+ * <p>
+ * Подсчитывает количество совпадений с заданными регулярными выражениями,
+ * характерными для кода BSL.
+ */
 public class PatternDetector extends AbstractDetector {
 
   private final Pattern patterns;
 
+  /**
+   * Создать детектор на основе паттернов.
+   *
+   * @param probability Вероятность обнаружения
+   * @param stringPatterns Массив строковых представлений регулярных выражений
+   */
   public PatternDetector(double probability, String... stringPatterns) {
     super(probability);
     StringJoiner stringJoiner = new StringJoiner("|");

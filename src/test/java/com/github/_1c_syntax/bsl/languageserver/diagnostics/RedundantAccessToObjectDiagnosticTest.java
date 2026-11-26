@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -24,8 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.bsl.mdo.support.ReturnValueReuse;
-import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
@@ -34,7 +34,6 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -86,7 +85,7 @@ class RedundantAccessToObjectDiagnosticTest extends AbstractDiagnosticTest<Redun
     );
 
     var configuration = context.getConfiguration();
-    var module = spy((MDCommonModule) configuration.getModulesByObject().get(documentContext.getUri()));
+    var module = spy((CommonModule) configuration.findChild(documentContext.getUri()).get());
 
     when(module.getReturnValuesReuse()).thenReturn(ReturnValueReuse.DURING_SESSION);
     when(documentContext.getMdObject()).thenReturn(Optional.of(module));
@@ -99,7 +98,7 @@ class RedundantAccessToObjectDiagnosticTest extends AbstractDiagnosticTest<Redun
   @SneakyThrows
   DocumentContext createDocumentContextFromFile(String pathToFile) {
     Path path = Absolute.path("src/test/resources/metadata/designer");
-    Path testFile = Paths.get(pathToFile).toAbsolutePath();
+    Path testFile = Path.of(pathToFile).toAbsolutePath();
 
     initServerContext(path);
     return spy(TestUtils.getDocumentContext(

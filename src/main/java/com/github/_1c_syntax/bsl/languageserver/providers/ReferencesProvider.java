@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,18 +22,28 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.ReferenceContext;
 import org.eclipse.lsp4j.ReferenceParams;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * Провайдер для поиска всех ссылок на символ.
+ * <p>
+ * Обрабатывает запросы {@code textDocument/references}.
+ *
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_references">Find References specification</a>
+ */
 @Component
 @RequiredArgsConstructor
 public class ReferencesProvider {
@@ -41,15 +51,53 @@ public class ReferencesProvider {
   private final ReferenceResolver referenceResolver;
   private final ReferenceIndex referenceIndex;
 
+  /**
+   * Получить список всех ссылок на символ.
+   *
+   * @param documentContext Контекст документа
+   * @param params Параметры запроса
+   * @return Список местоположений ссылок на символ
+   */
   public List<Location> getReferences(DocumentContext documentContext, ReferenceParams params) {
     var position = params.getPosition();
 
-    return referenceResolver.findReference(documentContext.getUri(), position)
-      .flatMap(Reference::getSourceDefinedSymbol)
-      .stream()
+    var maybeSymbol = referenceResolver.findReference(documentContext.getUri(), position)
+      .flatMap(Reference::getSourceDefinedSymbol);
+
+    List<Location> locations = maybeSymbol.stream()
       .map(referenceIndex::getReferencesTo)
       .flatMap(Collection::stream)
       .map(Reference::toLocation)
-      .collect(Collectors.toList());
+      .collect(Collectors.toCollection(ArrayList::new));
+
+    if (includeDeclaration(params)) {
+      maybeSymbol
+        .map(ReferencesProvider::declarationLocation)
+        .filter(declaration -> !locations.contains(declaration))
+        .ifPresent(locations::add);
+    }
+
+    return locations;
+  }
+
+  /**
+   * Определить, нужно ли включать в результат объявление символа.
+   *
+   * @param params Параметры запроса {@code textDocument/references}
+   * @return {@code true}, если контекст запроса присутствует и требует включения объявления
+   */
+  private static boolean includeDeclaration(ReferenceParams params) {
+    ReferenceContext context = params.getContext();
+    return context != null && context.isIncludeDeclaration();
+  }
+
+  /**
+   * Построить местоположение объявления символа по его {@code selectionRange}.
+   *
+   * @param symbol Символ, объявленный в исходном коде
+   * @return Местоположение строки объявления символа
+   */
+  private static Location declarationLocation(SourceDefinedSymbol symbol) {
+    return new Location(symbol.getOwner().getUri().toString(), symbol.getSelectionRange());
   }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
@@ -35,7 +36,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -49,7 +49,7 @@ class MethodSymbolComputerTest {
   private static final String PATH_TO_CATALOG_MODULE_FILE = "Catalogs/Справочник1/Ext/ObjectModule.bsl";
 
   @Autowired
-  private ServerContext serverContext;
+  private ServerContextProvider serverContextProvider;
 
   @Test
   void testMethodSymbolComputer() {
@@ -57,10 +57,10 @@ class MethodSymbolComputerTest {
     var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/MethodSymbolComputerTest.bsl");
     List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
 
-    assertThat(methods.size()).isEqualTo(24);
+    assertThat(methods.size()).isEqualTo(25);
 
-    assertThat(methods.get(0).getName()).isEqualTo("Один");
-    assertThat(methods.get(0).getDescription()).isNotPresent();
+    assertThat(methods.getFirst().getName()).isEqualTo("Один");
+    assertThat(methods.getFirst().getDescription()).isNotPresent();
     assertThat(methods.get(0).getRange()).isEqualTo(Ranges.create(1, 0, 3, 14));
     assertThat(methods.get(0).getSubNameRange()).isEqualTo(Ranges.create(1, 10, 1, 14));
 
@@ -93,9 +93,9 @@ class MethodSymbolComputerTest {
     assertThat(methodSymbol.getCompilerDirectiveKind()).isEmpty();
     var annotations = methodSymbol.getAnnotations();
     assertThat(annotations).hasSize(1);
-    assertThat(annotations.get(0).getKind()).isEqualTo(AnnotationKind.AFTER);
-    assertThat(annotations.get(0).getName()).isEqualTo("После");
-    assertThat(annotations.get(0).getParameters()).isEmpty();
+    assertThat(annotations.getFirst().getKind()).isEqualTo(AnnotationKind.AFTER);
+    assertThat(annotations.getFirst().getName()).isEqualTo("После");
+    assertThat(annotations.getFirst().getParameters()).isEmpty();
 
     methodSymbol = methods.get(10);
     assertThat(methodSymbol.getName()).isEqualTo("Метод11");
@@ -155,43 +155,43 @@ class MethodSymbolComputerTest {
     assertThat(methodSymbol.getName()).isEqualTo("Метод20");
     assertThat(methodSymbol.getCompilerDirectiveKind()).isEmpty();
     assertThat(methodSymbol.getAnnotations()).hasSize(1);
-    assertThat(methodSymbol.getAnnotations().get(0).getKind()).isEqualTo(AnnotationKind.CUSTOM);
+    assertThat(methodSymbol.getAnnotations().getFirst().getKind()).isEqualTo(AnnotationKind.CUSTOM);
 
-    var parameters = methodSymbol.getAnnotations().get(0).getParameters();
+    var parameters = methodSymbol.getAnnotations().getFirst().getParameters();
     assertThat(parameters).hasSize(3);
 
-    assertThat(parameters.get(0).getName()).isEqualTo("ДажеСПараметром");
-    assertThat(parameters.get(0).isOptional()).isTrue();
-    assertThat(parameters.get(0).getValue()).isEqualTo("Да");
+    assertThat(parameters.getFirst().name()).isEqualTo("ДажеСПараметром");
+    assertThat(parameters.get(0).optional()).isTrue();
+    assertThat(parameters.get(0).value().getLeft()).isEqualTo("Да");
 
-    assertThat(parameters.get(1).getName()).isEqualTo("СПараметромБезЗначения");
-    assertThat(parameters.get(1).isOptional()).isFalse();
-    assertThat(parameters.get(1).getValue()).isEmpty();
+    assertThat(parameters.get(1).name()).isEqualTo("СПараметромБезЗначения");
+    assertThat(parameters.get(1).optional()).isFalse();
+    assertThat(parameters.get(1).value().getLeft()).isEmpty();
 
-    assertThat(parameters.get(2).getName()).isEmpty();
-    assertThat(parameters.get(2).isOptional()).isTrue();
-    assertThat(parameters.get(2).getValue()).isEqualTo("Значение без параметра");
+    assertThat(parameters.get(2).name()).isEmpty();
+    assertThat(parameters.get(2).optional()).isTrue();
+    assertThat(parameters.get(2).value().getLeft()).isEqualTo("Значение без параметра");
 
     // BEFORE
     methodSymbol = methods.get(20);
     assertThat(methodSymbol.getName()).isEqualTo("Р_Перед");
-    assertThat(methodSymbol.getAnnotations().get(0).getName()).isEqualTo("Перед");
-    assertThat(methodSymbol.getAnnotations().get(0).getKind()).isEqualTo(AnnotationKind.BEFORE);
-    assertThat(methodSymbol.getAnnotations().get(0).getParameters().get(0).getValue()).isEqualTo("Перед");
+    assertThat(methodSymbol.getAnnotations().getFirst().getName()).isEqualTo("Перед");
+    assertThat(methodSymbol.getAnnotations().getFirst().getKind()).isEqualTo(AnnotationKind.BEFORE);
+    assertThat(methodSymbol.getAnnotations().getFirst().getParameters().getFirst().value().getLeft()).isEqualTo("Перед");
 
     // AFTER
     methodSymbol = methods.get(21);
     assertThat(methodSymbol.getName()).isEqualTo("Р_После");
-    assertThat(methodSymbol.getAnnotations().get(0).getName()).isEqualTo("После");
-    assertThat(methodSymbol.getAnnotations().get(0).getKind()).isEqualTo(AnnotationKind.AFTER);
-    assertThat(methodSymbol.getAnnotations().get(0).getParameters().get(0).getValue()).isEqualTo("После");
+    assertThat(methodSymbol.getAnnotations().getFirst().getName()).isEqualTo("После");
+    assertThat(methodSymbol.getAnnotations().getFirst().getKind()).isEqualTo(AnnotationKind.AFTER);
+    assertThat(methodSymbol.getAnnotations().getFirst().getParameters().getFirst().value().getLeft()).isEqualTo("После");
 
     // AROUND
     methodSymbol = methods.get(22);
     assertThat(methodSymbol.getName()).isEqualTo("Р_Вместо");
-    assertThat(methodSymbol.getAnnotations().get(0).getName()).isEqualTo("Вместо");
-    assertThat(methodSymbol.getAnnotations().get(0).getKind()).isEqualTo(AnnotationKind.AROUND);
-    assertThat(methodSymbol.getAnnotations().get(0).getParameters().get(0).getValue()).isEqualTo("Вместо");
+    assertThat(methodSymbol.getAnnotations().getFirst().getName()).isEqualTo("Вместо");
+    assertThat(methodSymbol.getAnnotations().getFirst().getKind()).isEqualTo(AnnotationKind.AROUND);
+    assertThat(methodSymbol.getAnnotations().getFirst().getParameters().getFirst().value().getLeft()).isEqualTo("Вместо");
   }
 
   @Test
@@ -202,8 +202,8 @@ class MethodSymbolComputerTest {
 
     List<ParameterDefinition> parameters = methods.get(2).getParameters();
     assertThat(parameters.size()).isEqualTo(4);
-    assertThat(parameters.get(0).getName()).isEqualTo("Парам");
-    assertThat(parameters.get(0).isByValue()).isFalse();
+    assertThat(parameters.getFirst().getName()).isEqualTo("Парам");
+    assertThat(parameters.getFirst().isByValue()).isFalse();
     assertThat(parameters.get(0).isOptional()).isFalse();
     assertThat(parameters.get(0).getRange()).isEqualTo(Ranges.create(14, 12, 17));
 
@@ -215,13 +215,13 @@ class MethodSymbolComputerTest {
     assertThat(parameters.get(2).getName()).isEqualTo("Парам3");
     assertThat(parameters.get(2).isByValue()).isFalse();
     assertThat(parameters.get(2).isOptional()).isTrue();
-    assertThat(parameters.get(2).getDefaultValue().getValue()).isEqualTo("0");
+    assertThat(parameters.get(2).getDefaultValue().value()).isEqualTo("0");
     assertThat(parameters.get(2).getRange()).isEqualTo(Ranges.create(14, 32, 38));
 
     assertThat(parameters.get(3).getName()).isEqualTo("Парам4");
     assertThat(parameters.get(3).isByValue()).isTrue();
     assertThat(parameters.get(3).isOptional()).isTrue();
-    assertThat(parameters.get(3).getDefaultValue().getValue()).isEqualTo("0");
+    assertThat(parameters.get(3).getDefaultValue().value()).isEqualTo("0");
     assertThat(parameters.get(3).getRange()).isEqualTo(Ranges.create(14, 49, 55));
 
     parameters = methods.get(23).getParameters();
@@ -231,6 +231,22 @@ class MethodSymbolComputerTest {
     assertThat(parameters.get(1).getDescription()).isEmpty();
     assertThat(parameters.get(2).getName()).isEqualTo("Парам3");
     assertThat(parameters.get(2).getDescription()).isPresent();
+
+    parameters = methods.get(24).getParameters();
+    assertThat(parameters.get(0).getName()).isEqualTo("Парам1");
+    assertThat(parameters.getFirst().getAnnotations()).hasSize(1);
+    assertThat(parameters.getFirst().getAnnotations().getFirst().getName()).isEqualTo("Повторяемый");
+    assertThat(parameters.get(0).getAnnotations().getFirst().getKind()).isEqualTo(AnnotationKind.CUSTOM);
+    assertThat(parameters.get(0).getAnnotations().getFirst().getParameters()).isEmpty();
+    assertThat(parameters.get(1).getName()).isEqualTo("Парам2");
+    assertThat(parameters.get(1).getAnnotations()).hasSize(1);
+    assertThat(parameters.get(1).getAnnotations().getFirst().getName()).isEqualTo("ДругаяАннотация");
+    assertThat(parameters.get(1).getAnnotations().getFirst().getKind()).isEqualTo(AnnotationKind.CUSTOM);
+    assertThat(parameters.get(1).getAnnotations().getFirst().getParameters()).hasSize(1);
+    assertThat(parameters.get(1).getAnnotations().getFirst().getParameters().getFirst().name()).isEmpty();
+    assertThat(parameters.get(1).getAnnotations().getFirst().getParameters().getFirst().value().getLeft()).isEqualTo("СПараметром");
+    assertThat(parameters.get(2).getName()).isEqualTo("Парам3");
+    assertThat(parameters.get(2).getAnnotations()).isEmpty();
 
   }
 
@@ -256,10 +272,16 @@ class MethodSymbolComputerTest {
 
   @Test
   @DirtiesContext
-  void testOwner() throws IOException {
+  void testOwner() {
 
     var path = Absolute.path(PATH_TO_METADATA);
+
+    // Create workspace for the path
+    serverContextProvider.clear();
+    var serverContext = serverContextProvider.addWorkspace(path.toUri());
+    serverContext.awaitPreparation();
     serverContext.setConfigurationRoot(path);
+
     checkModule(serverContext, PATH_TO_MODULE_FILE, 7);
     checkModule(serverContext, PATH_TO_CATALOG_FILE, 2);
     checkModule(serverContext, PATH_TO_CATALOG_MODULE_FILE, 1);
@@ -271,16 +293,161 @@ class MethodSymbolComputerTest {
     var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/MethodSymbolComputerTestParseError.bsl");
     List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
 
-    assertThat(methods.get(0).getName()).isEqualTo("Выполнить");
-    assertThat(methods.get(0).getSubNameRange()).isEqualTo(Ranges.create(0, 10, 0, 19));
+    assertThat(methods.getFirst().getName()).isEqualTo("Выполнить");
+    assertThat(methods.getFirst().getSubNameRange()).isEqualTo(Ranges.create(0, 10, 0, 19));
 
+  }
+
+  @Test
+  void testAsyncFunctionDescription() {
+    // given
+    var source = """
+      // Описание асинхронной функции.
+      //
+      // Параметры:
+      //   Желудь - Произвольный - первый параметр
+      //   ОпределениеЖелудя - Произвольный - второй параметр
+      //
+      // Возвращаемое значение:
+      //   Произвольный
+      Асинх Функция ОбработатьЖелудь(Желудь, ОпределениеЖелудя) Экспорт
+          Возврат Желудь;
+      КонецФункции
+      """;
+
+    // when
+    var documentContext = TestUtils.getDocumentContext(source);
+    var methods = documentContext.getSymbolTree().getMethods();
+
+    // then
+    assertThat(methods).hasSize(1);
+    var method = methods.getFirst();
+    assertThat(method.getName()).isEqualTo("ОбработатьЖелудь");
+    assertThat(method.isAsync()).isTrue();
+    assertThat(method.getDescription()).isPresent();
+    assertThat(method.getDescription().orElseThrow().getDescription())
+      .contains("Описание асинхронной функции");
+
+    var parameters = method.getParameters();
+    assertThat(parameters).hasSize(2);
+    assertThat(parameters.get(0).getName()).isEqualTo("Желудь");
+    assertThat(parameters.get(0).getDescription()).isPresent();
+    assertThat(parameters.get(1).getName()).isEqualTo("ОпределениеЖелудя");
+    assertThat(parameters.get(1).getDescription()).isPresent();
+  }
+
+  @Test
+  void testAsyncProcedureDescription() {
+    // given
+    var source = """
+      // Описание асинхронной процедуры.
+      //
+      // Параметры:
+      //   Парам1 - Произвольный - описание
+      Асинх Процедура ВыполнитьЧтоТо(Парам1) Экспорт
+      КонецПроцедуры
+      """;
+
+    // when
+    var documentContext = TestUtils.getDocumentContext(source);
+    var methods = documentContext.getSymbolTree().getMethods();
+
+    // then
+    assertThat(methods).hasSize(1);
+    var method = methods.getFirst();
+    assertThat(method.getName()).isEqualTo("ВыполнитьЧтоТо");
+    assertThat(method.isAsync()).isTrue();
+    assertThat(method.getDescription()).isPresent();
+    assertThat(method.getParameters()).hasSize(1);
+    assertThat(method.getParameters().getFirst().getDescription()).isPresent();
+  }
+
+  @Test
+  void testAsyncMethodWithAnnotation() {
+    // given
+    var source = """
+      // Описание async + аннотация.
+      //
+      // Параметры:
+      //   Парам1 - Произвольный - описание
+      &После
+      Асинх Процедура ОбработатьСобытие(Парам1) Экспорт
+      КонецПроцедуры
+      """;
+
+    // when
+    var documentContext = TestUtils.getDocumentContext(source);
+    var methods = documentContext.getSymbolTree().getMethods();
+
+    // then
+    assertThat(methods).hasSize(1);
+    var method = methods.getFirst();
+    assertThat(method.getName()).isEqualTo("ОбработатьСобытие");
+    assertThat(method.isAsync()).isTrue();
+    assertThat(method.getDescription()).isPresent();
+    assertThat(method.getParameters().getFirst().getDescription()).isPresent();
+    assertThat(method.getAnnotations()).hasSize(1);
+    assertThat(method.getAnnotations().getFirst().getKind()).isEqualTo(AnnotationKind.AFTER);
+    // у аннотации приоритет над Асинх: range начинается с AMPERSAND аннотации, а не с Асинх
+    assertThat(method.getRange()).isEqualTo(Ranges.create(4, 0, 6, 14));
+  }
+
+  @Test
+  void testAsyncMethodWithCompilerDirective() {
+    // given
+    var source = """
+      // Описание async + директива компиляции.
+      //
+      // Параметры:
+      //   Парам1 - Произвольный - описание
+      &НаКлиенте
+      Асинх Процедура ВыполнитьНаКлиенте(Парам1) Экспорт
+      КонецПроцедуры
+      """;
+
+    // when
+    var documentContext = TestUtils.getDocumentContext(source);
+    var methods = documentContext.getSymbolTree().getMethods();
+
+    // then
+    assertThat(methods).hasSize(1);
+    var method = methods.getFirst();
+    assertThat(method.getName()).isEqualTo("ВыполнитьНаКлиенте");
+    assertThat(method.isAsync()).isTrue();
+    assertThat(method.getDescription()).isPresent();
+    assertThat(method.getParameters().getFirst().getDescription()).isPresent();
+    assertThat(method.getCompilerDirectiveKind().orElse(null)).isEqualTo(CompilerDirectiveKind.AT_CLIENT);
+    // директивы компиляции исторически не входят в range; ASYNC задаёт начало range
+    assertThat(method.getRange()).isEqualTo(Ranges.create(5, 0, 6, 14));
+  }
+
+  @Test
+  void testNonAsyncMethodHasNoAsyncFlag() {
+    // given
+    var source = """
+      Процедура Обычная()
+      КонецПроцедуры
+
+      Функция ОбычнаяФункция()
+          Возврат 1;
+      КонецФункции
+      """;
+
+    // when
+    var documentContext = TestUtils.getDocumentContext(source);
+    var methods = documentContext.getSymbolTree().getMethods();
+
+    // then
+    assertThat(methods).hasSize(2);
+    assertThat(methods.get(0).isAsync()).isFalse();
+    assertThat(methods.get(1).isAsync()).isFalse();
   }
 
   private static void checkCompilerDirective_for_AtClient_AndAnnotation_After(MethodSymbol methodSymbol) {
     assertThat(methodSymbol.getCompilerDirectiveKind().orElse(null)).isEqualTo(CompilerDirectiveKind.AT_CLIENT);
     var annotations = methodSymbol.getAnnotations();
     assertThat(annotations).hasSize(1);
-    assertThat(annotations.get(0).getKind()).isEqualTo(AnnotationKind.AFTER);
+    assertThat(annotations.getFirst().getKind()).isEqualTo(AnnotationKind.AFTER);
   }
 
   private void checkModule(
@@ -294,7 +461,7 @@ class MethodSymbolComputerTest {
     serverContext.rebuildDocument(documentContext);
     List<MethodSymbol> methods = documentContext.getSymbolTree().getMethods();
     assertThat(methods.size()).isEqualTo(methodsCount);
-    assertThat(methods.get(0).getName()).isEqualTo("Тест");
-    assertThat(methods.get(0).getOwner()).isEqualTo(documentContext);
+    assertThat(methods.getFirst().getName()).isEqualTo("Тест");
+    assertThat(methods.getFirst().getOwner()).isEqualTo(documentContext);
   }
 }

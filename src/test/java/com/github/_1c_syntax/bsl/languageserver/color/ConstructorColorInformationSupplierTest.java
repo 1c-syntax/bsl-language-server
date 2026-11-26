@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -50,10 +50,9 @@ class ConstructorColorInformationSupplierTest {
 
     // then
     assertThatColorInformations(colorInformation)
-      .hasSize(5)
+      .hasSize(4)
       .hasColorAndRange(new Color(0, 0, 0, 1), Ranges.create(0, 4, 14))
       .hasColorAndRange(new Color(0.00392156862745098, 0.00784313725490196, 0.011764705882352941, 1), Ranges.create(1, 4, 23))
-      .hasColorAndRange(new Color(0, 0, 0, 1), Ranges.create(2, 4, 35))
       .hasColorAndRange(new Color(0.00392156862745098, 0.00784313725490196, 0.011764705882352941, 1), Ranges.create(3, 4, 26))
       .hasColorAndRange(new Color(0, 0, 0, 1), Ranges.create(4, 4, 17))
     ;

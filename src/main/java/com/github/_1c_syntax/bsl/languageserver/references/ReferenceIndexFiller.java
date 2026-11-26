@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,41 +21,70 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
+import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextConfigurationBindingChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
-import com.github._1c_syntax.bsl.languageserver.utils.MdoRefBuilder;
+import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
+import com.github._1c_syntax.bsl.languageserver.references.model.Symbol;
+import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrence;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
+import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
+import com.github._1c_syntax.bsl.languageserver.context.MdoRefBuilder;
+import com.github._1c_syntax.bsl.languageserver.utils.AttachedHandlers;
 import com.github._1c_syntax.bsl.languageserver.utils.Methods;
-import com.github._1c_syntax.bsl.languageserver.utils.Modules;
+import com.github._1c_syntax.bsl.languageserver.utils.ModuleReference;
+import com.github._1c_syntax.bsl.languageserver.context.Modules;
 import com.github._1c_syntax.bsl.languageserver.utils.NotifyDescription;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Strings;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import com.github._1c_syntax.utils.GenericInterner;
 import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.event.EventListener;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+/**
+ * Заполнитель индекса ссылок.
+ * <p>
+ * Обрабатывает события изменения контекста документов
+ * и обновляет индекс ссылок на символы.
+ */
 @Component
 @RequiredArgsConstructor
 public class ReferenceIndexFiller {
@@ -67,53 +96,196 @@ public class ReferenceIndexFiller {
   );
 
   private final ReferenceIndex index;
+  private final LanguageServerConfiguration configuration;
+  private final OScriptLibraryIndex oScriptLibraryIndex;
+  private final GlobalScopeProvider globalScopeProvider;
+  private final SelfMemberResolver selfMemberResolver;
 
+  /**
+   * Документы, для которых индексация дошла до конца. Незавершённая (упавшая на обходе)
+   * сюда не попадает, поэтому следующее событие по такому документу его переиндексирует,
+   * даже если содержимое с тех пор не менялось.
+   */
+  private final Set<URI> filled = ConcurrentHashMap.newKeySet();
+
+  // Порядок 200 — ПОСЛЕ ConfigurationModuleMembersProvider и OScriptModuleMembersProvider
+  // с порядком 100: они наполняют moduleTypeRefByUri, от которого зависит self-member проход
+  // SelfMemberReferenceIndexFinder. Синхронная ранняя регистрация конфигурации до клиентского
+  // didOpen гарантирует, что к моменту fill self-тип уже в кэше, а явный порядок закрепляет
+  // это в рамках одного события.
+  @Order(200)
   @EventListener
   public void handleEvent(DocumentContextContentChangedEvent event) {
     var documentContext = event.getSource();
-    if (documentContext.isComputedDataFrozen()) {
+    if (!event.isContentChanged() && filled.contains(documentContext.getUri())) {
+      // Тот же самый текст разобран заново, а вхождения по нему уже собраны — индекс актуален.
       return;
     }
     fill(documentContext);
   }
 
+  // Вхождения документа записаны под его ссылкой на объект метаданных и типом модуля, а
+  // разрешение обращений опирается на них же. Порядок тот же, что у правки: после
+  // регистрации членов модуля.
+  @Order(200)
+  @EventListener
+  public void handleEvent(DocumentContextConfigurationBindingChangedEvent event) {
+    fill(event.getSource());
+  }
+
+  /**
+   * Обрабатывает событие удаления документа из контекста сервера.
+   * <p>
+   * При удалении документа очищает все зарегистрированные в индексе ссылки,
+   * исходящие из этого документа (вызовы методов, использование переменных и т.д.).
+   * Если контекст очищается целиком, индекс очищается разом при первом таком событии.
+   *
+   * @param event событие удаления документа
+   */
+  @EventListener
+  public void handleEvent(ServerContextDocumentRemovedEvent event) {
+    if (event.getSource().isClearing()) {
+      // Следом уйдут все документы контекста, а поштучное удаление квадратично по популярным
+      // символам. В индекс пишет только этот класс, поэтому непустой набор наполненных
+      // документов — признак, что индекс ещё не очищен: очистка карт стоит их ёмкости даже
+      // пустыми, и повторять её на каждом документе нельзя.
+      if (!filled.isEmpty()) {
+        filled.clear();
+        index.clear();
+      }
+      return;
+    }
+    filled.remove(event.getUri());
+    index.clearReferences(event.getUri());
+  }
+
+  /**
+   * Переиндексирует self-члены документов после (пере)регистрации конфигурационных типов.
+   * <p>
+   * Проход self-членов в {@link #fill} резолвит их через {@code TypeRegistry}: документ,
+   * наполненный ДО регистрации типов (либо до их перерегистрации при будущем reload
+   * конфигурации), самих self-членов ещё не проиндексировал — здесь их подхватываем, чем
+   * и обеспечивается обещанное {@code SelfMemberResolverImpl}/{@code ReferenceIndex}
+   * восстановление подсветки/резолва. Перебираем только уже наполненные документы с
+   * self-типом.
+   * <p>
+   * Типы регистрируются в фоне, и к концу регистрации документы уже могут быть наполнены, а
+   * часть из них — и освобождена. Документ с текстом наполняется заново под своей блокировкой
+   * на чтение; у освобождённого снимается отметка о наполнении, чтобы следующий разбор, даже
+   * того же текста, наполнил его заново: перечитывать файл ради одних ссылок здесь не стоит.
+   *
+   * @param event событие успешной регистрации конфигурационных типов.
+   */
+  @EventListener
+  public void handleEvent(ConfigurationTypesRegisteredEvent event) {
+    var serverContext = event.getSource();
+    for (var documentContext : serverContext.getDocuments().values()) {
+      var uri = documentContext.getUri();
+      if (!filled.contains(uri) || globalScopeProvider.moduleTypeRefByUri(uri).isEmpty()) {
+        continue;
+      }
+      var lock = serverContext.getDocumentLock(uri);
+      lock.readLock().lock();
+      try {
+        if (serverContext.getDocumentState(documentContext) == DocumentState.WITH_CONTENT) {
+          fill(documentContext);
+        } else {
+          filled.remove(uri);
+        }
+      } finally {
+        lock.readLock().unlock();
+      }
+    }
+  }
+
+  /**
+   * Переиндексировать обращения к символам, расположенные в документе.
+   * <p>
+   * Новый набор вхождений собирается в буфер и применяется атомарной заменой
+   * ({@link ReferenceIndex#replaceReferences}): конкурентные читатели ни в какой момент
+   * не видят «пустой» индекс документа. Если обход AST завершился исключением,
+   * прежнее содержимое индекса остаётся нетронутым.
+   */
   public void fill(DocumentContext documentContext) {
-    index.clearReferences(documentContext.getUri());
-    BSLParser.FileContext documentContextAst = documentContext.getAst();
-    new MethodSymbolReferenceIndexFinder(documentContext).visitFile(documentContextAst);
-    new VariableSymbolReferenceIndexFinder(documentContext).visitFile(documentContextAst);
+    var batch = new ArrayList<SymbolOccurrence>();
+    var sink = new BatchingSink(batch);
+    var documentContextAst = documentContext.getAst();
+    new MethodSymbolReferenceIndexFinder(documentContext, sink).visitFile(documentContextAst);
+    new VariableSymbolReferenceIndexFinder(documentContext, sink).visitFile(documentContextAst);
+    // Неквалифицированные self-члены (реквизиты/платформенные методы self-типа модуля)
+    // индексируются только если у модуля вообще есть self-тип — иначе проход впустую.
+    if (globalScopeProvider.moduleTypeRefByUri(documentContext.getUri()).isPresent()) {
+      new SelfMemberReferenceIndexFinder(documentContext, sink).visitFile(documentContextAst);
+    }
+    index.replaceReferences(documentContext.getUri(), batch);
+    filled.add(documentContext.getUri());
+  }
+
+  /**
+   * Приёмник обращений к символам, найденных файндерами при обходе AST:
+   * копит построенные вхождения в буфер для последующей атомарной публикации.
+   */
+  @RequiredArgsConstructor
+  private final class BatchingSink {
+
+    private final List<SymbolOccurrence> batch;
+
+    void addMethodCall(URI uri, String mdoRef, ModuleType moduleType, String symbolName, Range range) {
+      batch.add(index.methodCallOccurrence(uri, mdoRef, moduleType, symbolName, range));
+    }
+
+    void addModuleReference(URI uri, String mdoRef, ModuleType moduleType, Range range) {
+      batch.add(index.moduleReferenceOccurrence(uri, mdoRef, moduleType, range));
+    }
+
+    void addVariableUsage(SymbolOccurrence occurrence) {
+      batch.add(occurrence);
+    }
+
+    void addSelfMemberUsage(URI uri, String mdoRef, ModuleType moduleType, SymbolKind symbolKind,
+                            String name, Range range) {
+      batch.add(index.selfMemberOccurrence(
+        uri, mdoRef, moduleType, symbolKind, name, range, OccurrenceType.REFERENCE));
+    }
   }
 
   @RequiredArgsConstructor
-  private class MethodSymbolReferenceIndexFinder extends BSLParserBaseVisitor<BSLParserRuleContext> {
+  private class MethodSymbolReferenceIndexFinder extends BSLParserBaseVisitor<ParserRuleContext> {
 
     private final DocumentContext documentContext;
+    private final BatchingSink sink;
     private Set<String> commonModuleMdoRefFromSubParams = Collections.emptySet();
 
     @Override
-    public BSLParserRuleContext visitProcDeclaration(BSLParser.ProcDeclarationContext ctx) {
+    public ParserRuleContext visitProcDeclaration(BSLParser.ProcDeclarationContext ctx) {
       commonModuleMdoRefFromSubParams = calcParams(ctx.paramList());
       return super.visitProcDeclaration(ctx);
     }
 
     @Override
-    public BSLParserRuleContext visitFuncDeclaration(BSLParser.FuncDeclarationContext ctx) {
+    public ParserRuleContext visitFuncDeclaration(BSLParser.FuncDeclarationContext ctx) {
       commonModuleMdoRefFromSubParams = calcParams(ctx.paramList());
       return super.visitFuncDeclaration(ctx);
     }
 
     @Override
-    public BSLParserRuleContext visitCallStatement(BSLParser.CallStatementContext ctx) {
-
+    public ParserRuleContext visitCallStatement(BSLParser.CallStatementContext ctx) {
       if (ctx.globalMethodCall() != null) {
         // see visitGlobalMethodCall
         return super.visitCallStatement(ctx);
       }
 
-      String mdoRef = MdoRefBuilder.getMdoRef(documentContext, ctx);
+      // Метод, вызванный у результата getter-а общего модуля: ОбщегоНазначения.ОбщийМодуль("Имя").Метод()
+      registerCommonModuleMethodOnGetter(ctx.IDENTIFIER(), null, ctx.modifier(), ctx.accessCall());
+
+      var mdoRef = MdoRefBuilder.getMdoRef(documentContext, ctx);
       if (mdoRef.isEmpty()) {
+        tryRegisterLibraryModuleCall(ctx.IDENTIFIER(), Methods.getMethodName(ctx));
         return super.visitCallStatement(ctx);
       }
+
+      // Добавляем ссылку на модуль по позиции идентификатора (только для общих модулей)
+      addModuleReferenceForCommonModuleIdentifier(ctx.IDENTIFIER());
 
       Methods.getMethodName(ctx).ifPresent(methodName -> checkCall(mdoRef, methodName));
 
@@ -121,21 +293,26 @@ public class ReferenceIndexFiller {
     }
 
     @Override
-    public BSLParserRuleContext visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
+    public ParserRuleContext visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
+      // Метод, вызванный у результата getter-а общего модуля: ОбщегоНазначения.ОбщийМодуль("Имя").Метод()
+      registerCommonModuleMethodOnGetter(ctx.IDENTIFIER(), ctx.globalMethodCall(), ctx.modifier(), null);
 
-      String mdoRef = MdoRefBuilder.getMdoRef(documentContext, ctx);
+      var mdoRef = MdoRefBuilder.getMdoRef(documentContext, ctx);
       if (mdoRef.isEmpty()) {
+        tryRegisterLibraryModuleCall(ctx.IDENTIFIER(), Methods.getMethodName(ctx));
         return super.visitComplexIdentifier(ctx);
       }
 
-      Methods.getMethodName(ctx).ifPresent(methodName -> checkCall(mdoRef, methodName));
+      // Добавляем ссылку на модуль по позиции идентификатора (только для общих модулей)
+      addModuleReferenceForCommonModuleIdentifier(ctx.IDENTIFIER());
 
+      Methods.getMethodName(ctx).ifPresent(methodName -> checkCall(mdoRef, methodName));
       return super.visitComplexIdentifier(ctx);
     }
 
     @Override
-    public BSLParserRuleContext visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
-      var mdoRef = MdoRefBuilder.getMdoRef(documentContext);
+    public ParserRuleContext visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
+      var mdoRef = documentContext.getMdoRef();
       var moduleType = documentContext.getModuleType();
       var methodName = ctx.methodName().getStart();
       var methodNameText = methodName.getText();
@@ -143,14 +320,43 @@ public class ReferenceIndexFiller {
       documentContext.getSymbolTree().getMethodSymbol(methodNameText)
         .ifPresent(methodSymbol -> addMethodCall(mdoRef, moduleType, methodNameText, Ranges.create(methodName)));
 
+      addHandlerAttachedByName(methodNameText, ctx.doCall());
+
       return super.visitGlobalMethodCall(ctx);
     }
 
     @Override
-    public BSLParserRuleContext visitNewExpression(BSLParser.NewExpressionContext ctx) {
+    public ParserRuleContext visitMethodCall(BSLParser.MethodCallContext ctx) {
+      // Обработчик, подключённый именем-строкой у объекта:
+      // `Элементы.Товары.УстановитьДействие("ПриИзменении", "ТоварыПриИзменении")`.
+      // Тип получателя здесь не нужен: имя вызова само по себе однозначно.
+      addHandlerAttachedByName(ctx.methodName().getText(), ctx.doCall());
+
+      return super.visitMethodCall(ctx);
+    }
+
+    /**
+     * Регистрирует ссылку на процедуру, подключаемую вызовом по имени-строке
+     * (см. {@link AttachedHandlers}). Без неё такая процедура выглядит никем не
+     * вызываемой, а переименование её не задевает.
+     */
+    private void addHandlerAttachedByName(String methodName, BSLParser.@Nullable DoCallContext doCall) {
+      var index = AttachedHandlers.handlerArgumentIndex(methodName);
+      if (index.isEmpty() || doCall == null || doCall.callParamList() == null) {
+        return;
+      }
+      var parameters = doCall.callParamList().callParam();
+      if (parameters.size() <= index.getAsInt()) {
+        return;
+      }
+      addCallbackMethodCall(parameters.get(index.getAsInt()), documentContext.getMdoRef());
+    }
+
+    @Override
+    public ParserRuleContext visitNewExpression(BSLParser.NewExpressionContext ctx) {
       if (NotifyDescription.isNotifyDescription(ctx)) {
         final var doCallContext = ctx.doCall();
-        if (doCallContext == null){
+        if (doCallContext == null) {
           return super.visitNewExpression(ctx);
         }
         var callParamList = doCallContext.callParamList().callParam();
@@ -172,17 +378,19 @@ public class ReferenceIndexFiller {
         return super.visitNewExpression(ctx);
       }
 
+      tryRegisterLibraryClassReference(ctx);
+
       return super.visitNewExpression(ctx);
     }
 
     @Override
-    public BSLParserRuleContext visitLValue(BSLParser.LValueContext ctx) {
+    public ParserRuleContext visitLValue(BSLParser.LValueContext ctx) {
       final var identifier = ctx.IDENTIFIER();
-      if (identifier != null){
+      if (identifier != null) {
         final List<? extends BSLParser.ModifierContext> modifiers = Optional.ofNullable(ctx.acceptor())
           .map(BSLParser.AcceptorContext::modifier)
           .orElseGet(Collections::emptyList);
-        String mdoRef = MdoRefBuilder.getMdoRef(documentContext, identifier, modifiers);
+        var mdoRef = MdoRefBuilder.getMdoRef(documentContext, identifier, modifiers);
         if (!mdoRef.isEmpty()) {
           Methods.getMethodName(ctx).ifPresent(methodName -> checkCall(mdoRef, methodName));
         }
@@ -192,28 +400,180 @@ public class ReferenceIndexFiller {
 
     private void checkCall(String mdoRef, Token methodName) {
       var methodNameText = Strings.trimQuotes(methodName.getText());
-      final var configuration = documentContext.getServerContext().getConfiguration();
-      Map<ModuleType, URI> modules = configuration.getModulesByMDORef(mdoRef);
+      final var mdoConfiguration = documentContext.getServerContext().getConfiguration();
+      var modules = mdoConfiguration.mdoModuleTypes(mdoRef);
       for (ModuleType moduleType : modules.keySet()) {
         if (!DEFAULT_MODULE_TYPES.contains(moduleType)
-            || (moduleType == ModuleType.CommonModule && commonModuleMdoRefFromSubParams.contains(mdoRef))) {
+          || (moduleType == ModuleType.CommonModule && commonModuleMdoRefFromSubParams.contains(mdoRef))) {
           continue;
         }
         addMethodCall(mdoRef, moduleType, methodNameText, Ranges.create(methodName));
       }
     }
 
+    /**
+     * Если в выражении {@code Новый MyClass(...)} имя типа соответствует
+     * зарегистрированному OneScript library-классу, регистрирует ссылку:
+     * <ul>
+     *   <li>на метод-конструктор класса ({@code ПриСозданииОбъекта} /
+     *   {@code OnObjectCreate}), если он явно объявлен — тогда go-to-def
+     *   ведёт сразу на тело конструктора, а hover показывает его сигнатуру;</li>
+     *   <li>на сам .os-файл класса (модуль), если конструктора в исходнике нет —
+     *   тогда go-to-def ведёт в файл целиком.</li>
+     * </ul>
+     */
+    private void tryRegisterLibraryClassReference(BSLParser.NewExpressionContext ctx) {
+      var typeName = ctx.typeName();
+      if (typeName == null || typeName.IDENTIFIER() == null) {
+        return;
+      }
+      var name = typeName.IDENTIFIER().getText();
+      var libUri = oScriptLibraryIndex.findClassUri(name);
+      if (libUri.isEmpty()) {
+        return;
+      }
+      var libMdoRef = libUri.get().toString();
+      var moduleType = actualLibraryModuleType(libUri.get(), ModuleType.OScriptClass);
+      var range = Ranges.create(typeName.IDENTIFIER());
+
+      var ctor = libraryClassConstructor(libUri.get());
+      if (ctor.isPresent()) {
+        sink.addMethodCall(
+          documentContext.getUri(),
+          libMdoRef,
+          moduleType,
+          ctor.get().getName(),
+          range
+        );
+      } else {
+        sink.addModuleReference(
+          documentContext.getUri(),
+          libMdoRef,
+          moduleType,
+          range
+        );
+      }
+    }
+
+    private Optional<ConstructorSymbol> libraryClassConstructor(URI libUri) {
+      // Без ожидания блокировки: индекс заполняется под записью своего документа, и два
+      // документа, ссылающихся друг на друга, встали бы каждый на блокировке другого.
+      // Нужно лишь дерево символов — у него своя блокировка внутри документа.
+      return Optional.ofNullable(documentContext.getServerContext().getDocumentNoLock(libUri))
+        .map(DocumentContext::getSymbolTree)
+        .flatMap(SymbolTree::getConstructor);
+    }
+
+    /**
+     * Если идентификатор соответствует имени зарегистрированного OneScript
+     * library-модуля, регистрирует:
+     * <ul>
+     *   <li>ссылку на сам идентификатор модуля (go-to-definition на имени модуля),</li>
+     *   <li>если в выражении присутствует вызов метода — ссылку на метод по его позиции.</li>
+     * </ul>
+     */
+    private void tryRegisterLibraryModuleCall(@Nullable TerminalNode identifier, Optional<Token> methodName) {
+      if (identifier == null) {
+        return;
+      }
+      var libUri = oScriptLibraryIndex.findModuleUri(identifier.getText());
+      if (libUri.isEmpty()) {
+        return;
+      }
+      var libMdoRef = libUri.get().toString();
+      var moduleType = actualLibraryModuleType(libUri.get(), ModuleType.OScriptModule);
+
+      // Ссылка на сам identifier модуля — нужна для go-to-definition без точки.
+      sink.addModuleReference(
+        documentContext.getUri(),
+        libMdoRef,
+        moduleType,
+        Ranges.create(identifier)
+      );
+
+      if (methodName.isPresent()) {
+        var methodNameToken = methodName.get();
+        addMethodCall(libMdoRef, moduleType, Strings.trimQuotes(methodNameToken.getText()),
+          Ranges.create(methodNameToken));
+      }
+    }
+
+    /**
+     * Возвращает фактический {@link ModuleType} документа библиотечного .os-файла.
+     * Один .os может быть зарегистрирован одновременно и как класс, и как модуль
+     * (см. {@link OScriptLibraryIndex}); чтобы ссылка корректно резолвилась через
+     * {@code ServerContext.getDocument(mdoRef, moduleType)}, используем тип
+     * фактически загруженного {@link DocumentContext}, а не «теоретический»
+     * тип из роли регистрации.
+     */
+    private ModuleType actualLibraryModuleType(java.net.URI libUri, ModuleType fallback) {
+      // Без ожидания блокировки — по той же причине, что в libraryClassConstructor.
+      var dc = documentContext.getServerContext().getDocumentNoLock(libUri);
+      return dc != null ? dc.getModuleType() : fallback;
+    }
+
+    /**
+     * Добавляет ссылку на модуль по позиции идентификатора, только если идентификатор является
+     * именем общего модуля. Для вызовов вида Справочники.Имя.Метод() ссылка не добавляется,
+     * так как "Справочники" - это тип MDO, а не имя модуля.
+     */
+    private void addModuleReferenceForCommonModuleIdentifier(@Nullable TerminalNode identifier) {
+      if (identifier == null) {
+        return;
+      }
+
+      var identifierText = identifier.getText();
+
+      documentContext.getServerContext()
+        .findCommonModule(identifierText)
+        .ifPresent(commonModule ->
+          sink.addModuleReference(
+            documentContext.getUri(),
+            commonModule.getMdoReference().getMdoRef(),
+            ModuleType.CommonModule,
+            Ranges.create(identifier)
+          )
+        );
+    }
+
     private void addMethodCall(String mdoRef, ModuleType moduleType, String methodName, Range range) {
-      index.addMethodCall(documentContext.getUri(), mdoRef, moduleType, methodName, range);
+      sink.addMethodCall(documentContext.getUri(), mdoRef, moduleType, methodName, range);
+    }
+
+    /**
+     * Регистрирует вызов метода у результата getter-а общего модуля
+     * ({@code ОбщегоНазначения.ОбщийМодуль("Имя").Метод(...)} или {@code ОбщийМодуль("Имя").Метод(...)}).
+     * <p>
+     * Сам getter-метод ({@code ОбщийМодуль}) регистрируется отдельно (через {@code checkCall}),
+     * а здесь добавляется ссылка на метод возвращённого общего модуля, чтобы он корректно
+     * разрешался и проверялся (см. #3974).
+     */
+    private void registerCommonModuleMethodOnGetter(
+      @Nullable TerminalNode baseIdentifier,
+      BSLParser.@Nullable GlobalMethodCallContext baseGlobalCall,
+      List<? extends BSLParser.ModifierContext> modifiers,
+      BSLParser.@Nullable AccessCallContext trailingCall
+    ) {
+      ModuleReference.extractMethodCallOnGetterModule(
+          baseIdentifier, baseGlobalCall, modifiers, trailingCall,
+          configuration.getReferencesOptions().getModuleAccessors())
+        .ifPresent(call -> documentContext.getServerContext()
+          .findCommonModule(call.moduleName())
+          .ifPresent(commonModule -> addMethodCall(
+            commonModule.getMdoReference().getMdoRef(),
+            ModuleType.CommonModule,
+            call.methodNameToken().getText(),
+            Ranges.create(call.methodNameToken())
+          )));
     }
 
     private void addCallbackMethodCall(BSLParser.CallParamContext methodName, String mdoRef) {
       // todo: move this out of method 
-      if (mdoRef.isEmpty()){
+      if (mdoRef.isEmpty()) {
         return;
       }
       Methods.getMethodName(methodName).ifPresent((Token methodNameToken) -> {
-        if (!mdoRef.equals(MdoRefBuilder.getMdoRef(documentContext))) {
+        if (!mdoRef.equals(documentContext.getMdoRef())) {
           checkCall(mdoRef, methodNameToken);
         }
 
@@ -231,44 +591,55 @@ public class ReferenceIndexFiller {
         .map(BSLParser.MemberContext::complexIdentifier)
         .filter(complexIdentifierContext -> complexIdentifierContext.IDENTIFIER() != null)
         .filter(complexIdentifierContext -> complexIdentifierContext.modifier().isEmpty());
-      if (complexIdentifierContext1.isEmpty()){
+      if (complexIdentifierContext1.isEmpty()) {
         return "";
       }
       return complexIdentifierContext1
         .filter(Predicate.not(Modules::isThisObject))
         .map(complexIdentifier -> MdoRefBuilder.getMdoRef(documentContext, complexIdentifier))
-        .orElse(MdoRefBuilder.getMdoRef(documentContext));
+        .orElse(documentContext.getMdoRef());
     }
 
-    private Set<String> calcParams(@Nullable BSLParser.ParamListContext paramList) {
+    private Set<String> calcParams(BSLParser.@Nullable ParamListContext paramList) {
       if (paramList == null) {
         return Collections.emptySet();
       }
-      final var configuration = documentContext.getServerContext().getConfiguration();
+      final var serverContext = documentContext.getServerContext();
       return paramList.param().stream()
         .map(BSLParser.ParamContext::IDENTIFIER)
         .filter(Objects::nonNull)
         .map(ParseTree::getText)
-        .map(configuration::getCommonModule)
+        .map(serverContext::findCommonModule)
         .filter(Optional::isPresent)
         .flatMap(Optional::stream)
-        .map(mdCommonModule -> mdCommonModule.getMdoReference().getMdoRef())
+        .map(MD::getMdoRef)
         .collect(Collectors.toSet());
     }
   }
 
-  @RequiredArgsConstructor
-  private class VariableSymbolReferenceIndexFinder extends BSLParserBaseVisitor<BSLParserRuleContext> {
+  private class VariableSymbolReferenceIndexFinder extends BSLParserBaseVisitor<ParserRuleContext> {
 
     private final DocumentContext documentContext;
-    private SourceDefinedSymbol currentScope;
+    private final BatchingSink sink;
+    @SuppressWarnings("NullAway.Init")
+    private @Nullable SourceDefinedSymbol currentScope;
+    private final Map<String, String> variableToCommonModuleMap = new HashMap<>();
+    /** variable name (lowercase) → URI .os-файла library-класса, на экземпляр которого переменная инициализирована. */
+    private final Map<String, String> variableToLibraryClassUriMap = new HashMap<>();
+    private @Nullable GenericInterner<Symbol> localVariableInterner;
+
+    private VariableSymbolReferenceIndexFinder(DocumentContext documentContext, BatchingSink sink) {
+      this.documentContext = documentContext;
+      this.sink = sink;
+    }
 
     @Override
-    public BSLParserRuleContext visitModuleVarDeclaration(BSLParser.ModuleVarDeclarationContext ctx) {
+    public ParserRuleContext visitModuleVarDeclaration(BSLParser.ModuleVarDeclarationContext ctx) {
       findVariableSymbol(ctx.var_name().getText()).ifPresent(s -> {
         if (notVariableInitialization(ctx, s)) {
+
           addVariableUsage(
-            s.getRootParent(SymbolKind.Method),
+            s.getRootParent(MethodSymbol.class),
             ctx.var_name().getText(),
             Ranges.create(ctx.var_name()),
             false
@@ -280,8 +651,12 @@ public class ReferenceIndexFiller {
     }
 
     @Override
-    public BSLParserRuleContext visitSub(BSLParser.SubContext ctx) {
+    public ParserRuleContext visitSub(BSLParser.SubContext ctx) {
       currentScope = documentContext.getSymbolTree().getModule();
+
+      // При входе в новый метод очищаем mappings только для локальных переменных.
+      // Модульные переменные должны сохраняться между методами.
+      clearLocalVariableMappings();
 
       if (!Trees.nodeContainsErrors(ctx)) {
         documentContext
@@ -290,13 +665,96 @@ public class ReferenceIndexFiller {
           .ifPresent(scope -> currentScope = scope);
       }
 
-      BSLParserRuleContext result = super.visitSub(ctx);
+      var result = super.visitSub(ctx);
       currentScope = documentContext.getSymbolTree().getModule();
       return result;
     }
 
+    /**
+     * Очищает mappings при входе в метод, сохраняя только переменные модуля, видимые из
+     * методов: объявленные {@code Перем}. Переменная, созданная присваиванием в теле модуля,
+     * из метода не видна, и одноимённое обращение в методе к её объекту не относится.
+     */
+    private void clearLocalVariableMappings() {
+      var moduleSymbolTree = documentContext.getSymbolTree();
+      variableToCommonModuleMap.keySet().removeIf((String variableKey) ->
+        moduleSymbolTree.getModuleVariableVisibleFromMethods(variableKey).isEmpty()
+      );
+      variableToLibraryClassUriMap.keySet().removeIf((String variableKey) ->
+        moduleSymbolTree.getModuleVariableVisibleFromMethods(variableKey).isEmpty()
+      );
+    }
+
     @Override
-    public BSLParserRuleContext visitLValue(BSLParser.LValueContext ctx) {
+    public ParserRuleContext visitAssignment(BSLParser.AssignmentContext ctx) {
+      // Detect pattern: Variable = ОбщегоНазначения.ОбщийМодуль("ModuleName") or Variable = ОбщийМодуль("ModuleName")
+      // Здесь мы только отслеживаем, что переменная теперь содержит ссылку на общий модуль,
+      // чтобы последующие вызовы методов через эту переменную могли быть разрезолвлены.
+      // Ссылки на модуль-аксессор (например, ОбщегоНазначения) добавляются в visitComplexIdentifier,
+      // когда он используется как самостоятельный идентификатор, а здесь мы лишь ведем mapping
+      // переменная → общий модуль для дальнейшего разрешения вызовов методов.
+      var lValue = ctx.lValue();
+      var expression = ctx.expression();
+
+      if (lValue != null && lValue.IDENTIFIER() != null && expression != null) {
+        var variableKey = lValue.IDENTIFIER().getText().toLowerCase(Locale.ENGLISH);
+        var libClassUri = extractLibraryClassUriFromExpression(expression);
+        if (libClassUri != null) {
+          variableToLibraryClassUriMap.put(variableKey, libClassUri);
+          variableToCommonModuleMap.remove(variableKey);
+        } else if (ModuleReference.isCommonModuleExpression(expression,
+          configuration.getReferencesOptions().getModuleAccessors())) {
+          var commonModuleOpt = ModuleReference.extractCommonModuleName(expression,
+              configuration.getReferencesOptions().getModuleAccessors())
+            .flatMap(moduleName -> documentContext.getServerContext()
+              .findCommonModule(moduleName));
+          if (commonModuleOpt.isPresent()) {
+            var mdoRef = commonModuleOpt.get().getMdoReference().getMdoRef();
+            variableToCommonModuleMap.put(variableKey, mdoRef);
+          } else {
+            // Модуль не найден - удаляем старый mapping если был
+            variableToCommonModuleMap.remove(variableKey);
+          }
+          variableToLibraryClassUriMap.remove(variableKey);
+        } else {
+          // Переменная переназначена на что-то другое - очищаем mapping
+          variableToCommonModuleMap.remove(variableKey);
+          variableToLibraryClassUriMap.remove(variableKey);
+        }
+      }
+
+      return super.visitAssignment(ctx);
+    }
+
+    /**
+     * Если выражение представляет собой {@code Новый MyLibClass(...)}, где
+     * {@code MyLibClass} зарегистрирован как OneScript library-класс, возвращает
+     * URI .os-файла этого класса в виде строки.
+     */
+    private @Nullable String extractLibraryClassUriFromExpression(BSLParser.ExpressionContext expression) {
+      var members = expression.member();
+      if (members == null || members.isEmpty()) {
+        return null;
+      }
+      var complexId = members.get(0).complexIdentifier();
+      if (complexId == null || !complexId.modifier().isEmpty()) {
+        return null;
+      }
+      var newExpression = complexId.newExpression();
+      if (newExpression == null) {
+        return null;
+      }
+      var typeName = newExpression.typeName();
+      if (typeName == null || typeName.IDENTIFIER() == null) {
+        return null;
+      }
+      return oScriptLibraryIndex.findClassUri(typeName.IDENTIFIER().getText())
+        .map(java.net.URI::toString)
+        .orElse(null);
+    }
+
+    @Override
+    public ParserRuleContext visitLValue(BSLParser.LValueContext ctx) {
       if (ctx.IDENTIFIER() == null) {
         return super.visitLValue(ctx);
       }
@@ -304,7 +762,7 @@ public class ReferenceIndexFiller {
       findVariableSymbol(ctx.IDENTIFIER().getText()).ifPresent((VariableSymbol s) -> {
         if (notVariableInitialization(ctx, s)) {
           addVariableUsage(
-            s.getRootParent(SymbolKind.Method),
+            s.getRootParent(MethodSymbol.class),
             ctx.IDENTIFIER().getText(),
             Ranges.create(ctx.IDENTIFIER()),
             ctx.acceptor() != null
@@ -316,31 +774,75 @@ public class ReferenceIndexFiller {
     }
 
     @Override
-    public BSLParserRuleContext visitCallStatement(BSLParser.CallStatementContext ctx) {
+    public ParserRuleContext visitCallStatement(BSLParser.CallStatementContext ctx) {
       if (ctx.IDENTIFIER() == null) {
         return super.visitCallStatement(ctx);
       }
 
       var variableName = ctx.IDENTIFIER().getText();
+      var variableKey = variableName.toLowerCase(Locale.ENGLISH);
+
+      // Только первое звено обращается к исходному модулю: остальные — к результату обращения.
+      var modifiers = ctx.modifier();
+      var accessCall = modifiers.isEmpty() ? ctx.accessCall() : modifiers.getFirst().accessCall();
+      if (accessCall != null) {
+        var commonModuleMdoRef = variableToCommonModuleMap.get(variableKey);
+        if (commonModuleMdoRef != null) {
+          processCommonModuleAccessCall(accessCall, commonModuleMdoRef);
+        }
+        var libClassUri = variableToLibraryClassUriMap.get(variableKey);
+        if (libClassUri != null) {
+          processLibraryClassAccessCall(accessCall, libClassUri);
+        }
+      }
+
       findVariableSymbol(variableName)
-        .ifPresent(s -> addVariableUsage(s.getRootParent(SymbolKind.Method), variableName, Ranges.create(ctx.IDENTIFIER()), true));
+        .ifPresent(s -> addVariableUsage(
+            s.getRootParent(MethodSymbol.class), variableName, Ranges.create(ctx.IDENTIFIER()), true
+          )
+        );
       return super.visitCallStatement(ctx);
     }
 
     @Override
-    public BSLParserRuleContext visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
+    public ParserRuleContext visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
       if (ctx.IDENTIFIER() == null) {
         return super.visitComplexIdentifier(ctx);
       }
 
       var variableName = ctx.IDENTIFIER().getText();
+      var variableKey = variableName.toLowerCase(Locale.ENGLISH);
+
+      // Check if we are inside a callStatement - if so, skip processing here to avoid duplication
+      var parentCallStatement = Trees.getRootParent(ctx, BSLParser.RULE_callStatement);
+      var isInsideCallStatement = false;
+      if (parentCallStatement instanceof BSLParser.CallStatementContext callStmt) {
+        isInsideCallStatement = callStmt.IDENTIFIER() != null
+          && callStmt.IDENTIFIER().getText().equalsIgnoreCase(variableName);
+      }
+
+      // Check if variable references a common module
+      var commonModuleMdoRef = variableToCommonModuleMap.get(variableKey);
+      if (commonModuleMdoRef != null && !ctx.modifier().isEmpty() && !isInsideCallStatement) {
+        // Process method calls on the common module variable
+        processCommonModuleMethodCalls(ctx.modifier(), commonModuleMdoRef);
+      }
+
+      var libClassUri = variableToLibraryClassUriMap.get(variableKey);
+      if (libClassUri != null && !ctx.modifier().isEmpty() && !isInsideCallStatement) {
+        processLibraryClassMethodCalls(ctx.modifier(), libClassUri);
+      }
+
       findVariableSymbol(variableName)
-        .ifPresent(s -> addVariableUsage(s.getRootParent(SymbolKind.Method), variableName, Ranges.create(ctx.IDENTIFIER()), true));
+        .ifPresent(s -> addVariableUsage(
+            s.getRootParent(MethodSymbol.class), variableName, Ranges.create(ctx.IDENTIFIER()), true
+          )
+        );
       return super.visitComplexIdentifier(ctx);
     }
 
     @Override
-    public BSLParserRuleContext visitForStatement(BSLParser.ForStatementContext ctx) {
+    public ParserRuleContext visitForStatement(BSLParser.ForStatementContext ctx) {
       if (ctx.IDENTIFIER() == null) {
         return super.visitForStatement(ctx);
       }
@@ -348,7 +850,7 @@ public class ReferenceIndexFiller {
       findVariableSymbol(ctx.IDENTIFIER().getText()).ifPresent((VariableSymbol s) -> {
         if (notVariableInitialization(ctx, s)) {
           addVariableUsage(
-            s.getRootParent(SymbolKind.Method),
+            s.getRootParent(MethodSymbol.class),
             ctx.IDENTIFIER().getText(),
             Ranges.create(ctx.IDENTIFIER()),
             false
@@ -360,7 +862,7 @@ public class ReferenceIndexFiller {
     }
 
     @Override
-    public BSLParserRuleContext visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
+    public ParserRuleContext visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
       if (ctx.IDENTIFIER() == null) {
         return super.visitForEachStatement(ctx);
       }
@@ -368,7 +870,7 @@ public class ReferenceIndexFiller {
       findVariableSymbol(ctx.IDENTIFIER().getText()).ifPresent((VariableSymbol s) -> {
         if (notVariableInitialization(ctx, s)) {
           addVariableUsage(
-            s.getRootParent(SymbolKind.Method),
+            s.getRootParent(MethodSymbol.class),
             ctx.IDENTIFIER().getText(),
             Ranges.create(ctx.IDENTIFIER()),
             false
@@ -380,22 +882,22 @@ public class ReferenceIndexFiller {
     }
 
     private Optional<VariableSymbol> findVariableSymbol(String variableName) {
-      var variableSymbol = documentContext.getSymbolTree()
-        .getVariableSymbol(variableName, currentScope);
-
-      if (variableSymbol.isPresent()) {
-        return variableSymbol;
+      var symbolTree = documentContext.getSymbolTree();
+      if (currentScope instanceof MethodSymbol method) {
+        var inMethod = symbolTree.getVariableSymbol(variableName, method);
+        // Из метода видны не все переменные модуля: созданная присваиванием в теле модуля
+        // живёт в нём одном.
+        return inMethod.isPresent() ? inMethod : symbolTree.getModuleVariableVisibleFromMethods(variableName);
       }
-
-      return documentContext.getSymbolTree()
-        .getVariableSymbol(variableName, documentContext.getSymbolTree().getModule());
+      return symbolTree.getVariableSymbol(variableName, symbolTree.getModule());
     }
 
     private boolean notVariableInitialization(BSLParser.LValueContext ctx, VariableSymbol variableSymbol) {
       return !Ranges.containsRange(variableSymbol.getRange(), Ranges.create(ctx));
     }
 
-    private boolean notVariableInitialization(BSLParser.ModuleVarDeclarationContext ctx, VariableSymbol variableSymbol) {
+    private boolean notVariableInitialization(BSLParser.ModuleVarDeclarationContext ctx,
+                                              VariableSymbol variableSymbol) {
       return !Ranges.containsRange(variableSymbol.getRange(), Ranges.create(ctx));
     }
 
@@ -411,23 +913,164 @@ public class ReferenceIndexFiller {
                                   String variableName,
                                   Range range,
                                   boolean usage) {
-      String methodName = "";
+      var methodName = "";
 
       if (methodSymbol.isPresent()) {
         methodName = methodSymbol.get().getName();
       }
 
-      index.addVariableUsage(
-        documentContext.getUri(),
-        MdoRefBuilder.getMdoRef(documentContext),
-        documentContext.getModuleType(),
-        methodName,
-        variableName,
-        range,
-        !usage
-      );
+      sink.addVariableUsage(variableOccurrence(methodName, variableName, range,
+        usage ? OccurrenceType.REFERENCE : OccurrenceType.DEFINITION));
     }
 
+    /** Канонизирует локальные ключи в пределах одного обхода переменных документа. */
+    private SymbolOccurrence variableOccurrence(String methodName, String variableName, Range range,
+                                                OccurrenceType occurrenceType) {
+      var uri = documentContext.getUri();
+      var mdoRef = documentContext.getMdoRef();
+      var moduleType = documentContext.getModuleType();
+      if (methodName.isEmpty()) {
+        return index.variableOccurrence(uri, mdoRef, moduleType, methodName, variableName, range, occurrenceType);
+      }
+
+      var interner = localVariableInterner;
+      if (interner == null) {
+        interner = new GenericInterner<>();
+        index.getLocalVariableKeys(uri).forEach(interner::intern);
+        localVariableInterner = interner;
+      }
+
+      var symbol = index.variableSymbol(mdoRef, moduleType, methodName, variableName);
+      return index.variableOccurrence(uri, symbol, range, occurrenceType, interner);
+    }
+
+    private void processCommonModuleMethodCalls(List<? extends BSLParser.ModifierContext> modifiers, String mdoRef) {
+      if (!modifiers.isEmpty()) {
+        var accessCall = modifiers.getFirst().accessCall();
+        if (accessCall != null) {
+          processCommonModuleAccessCall(accessCall, mdoRef);
+        }
+      }
+    }
+
+    private void processCommonModuleAccessCall(BSLParser.AccessCallContext accessCall, String mdoRef) {
+      var methodCall = accessCall.methodCall();
+      if (methodCall != null && methodCall.methodName() != null) {
+        var methodNameToken = methodCall.methodName().IDENTIFIER();
+        if (methodNameToken != null) {
+          sink.addMethodCall(
+            documentContext.getUri(),
+            mdoRef,
+            ModuleType.CommonModule,
+            methodNameToken.getText(),
+            Ranges.create(methodNameToken)
+          );
+        }
+      }
+    }
+
+    private void processLibraryClassMethodCalls(List<? extends BSLParser.ModifierContext> modifiers, String libClassUri) {
+      if (!modifiers.isEmpty()) {
+        var accessCall = modifiers.getFirst().accessCall();
+        if (accessCall != null) {
+          processLibraryClassAccessCall(accessCall, libClassUri);
+        }
+      }
+    }
+
+    private void processLibraryClassAccessCall(BSLParser.AccessCallContext accessCall, String libClassUri) {
+      var methodCall = accessCall.methodCall();
+      if (methodCall != null && methodCall.methodName() != null) {
+        var methodNameToken = methodCall.methodName().IDENTIFIER();
+        if (methodNameToken != null) {
+          sink.addMethodCall(
+            documentContext.getUri(),
+            libClassUri,
+            ModuleType.OScriptClass,
+            methodNameToken.getText(),
+            Ranges.create(methodNameToken)
+          );
+        }
+      }
+    }
   }
 
+  /**
+   * Индексирует неквалифицированные (без явного получателя) обращения к self-члену
+   * текущего модуля — реквизиту/платформенному методу self-типа — как ссылки на
+   * {@code PlatformMemberSymbol} (см. {@link ReferenceIndex#selfMemberOccurrence}).
+   * Благодаря этому их подсветку ведёт общий {@code SymbolsSemanticTokensSupplier} по
+   * индексу (а не отдельный сапплаер), а резолв/definition/hover — единым путём через
+   * {@link ReferenceIndex}. Затенение — как у резолва имени в BSL: локальный метод/
+   * переменная и глобальная функция/свойство перекрывают self-член.
+   */
+  private class SelfMemberReferenceIndexFinder extends BSLParserBaseVisitor<ParserRuleContext> {
+
+    private final DocumentContext documentContext;
+    private final BatchingSink sink;
+    private final SymbolTree symbolTree;
+    private final URI uri;
+    private final String mdoRef;
+    private final ModuleType moduleType;
+
+    SelfMemberReferenceIndexFinder(DocumentContext documentContext, BatchingSink sink) {
+      this.documentContext = documentContext;
+      this.sink = sink;
+      this.symbolTree = documentContext.getSymbolTree();
+      this.uri = documentContext.getUri();
+      this.mdoRef = documentContext.getMdoRef();
+      this.moduleType = documentContext.getModuleType();
+    }
+
+    @Override
+    public ParserRuleContext visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
+      var methodNameCtx = ctx.methodName();
+      if (methodNameCtx != null) {
+        var name = methodNameCtx.getStart().getText();
+        // Локальный метод и глобальная функция перекрывают self-метод — их ведут
+        // MethodSymbolReferenceIndexFinder / PlatformGlobalMethodSemanticTokensSupplier.
+        if (!name.isBlank()
+          && symbolTree.getMethodSymbol(name).isEmpty()
+          && globalScopeProvider.globalFunction(name, documentContext.getFileType()).isEmpty()
+          && selfMemberResolver.resolveSelfMember(documentContext, SymbolKind.Method, name).isPresent()) {
+          sink.addSelfMemberUsage(uri, mdoRef, moduleType, SymbolKind.Method, name, Ranges.create(methodNameCtx));
+        }
+      }
+      return super.visitGlobalMethodCall(ctx);
+    }
+
+    @Override
+    public ParserRuleContext visitComplexIdentifier(BSLParser.ComplexIdentifierContext ctx) {
+      processBareIdentifier(ctx.IDENTIFIER(), ctx);
+      return super.visitComplexIdentifier(ctx);
+    }
+
+    @Override
+    public ParserRuleContext visitCallStatement(BSLParser.CallStatementContext ctx) {
+      processBareIdentifier(ctx.IDENTIFIER(), ctx);
+      return super.visitCallStatement(ctx);
+    }
+
+    @Override
+    public ParserRuleContext visitLValue(BSLParser.LValueContext ctx) {
+      processBareIdentifier(ctx.IDENTIFIER(), ctx);
+      return super.visitLValue(ctx);
+    }
+
+    private void processBareIdentifier(@Nullable TerminalNode identifier, ParserRuleContext scopeNode) {
+      if (identifier == null) {
+        return;
+      }
+      var name = identifier.getText();
+      // Локальная переменная в области видимости и глобальное свойство перекрывают
+      // self-реквизит. Голое присваивание одноимённому реквизиту без Перем переменной
+      // не создаёт (SelfMemberClassifier), поэтому getVariableSymbolInScope для реквизита пуст.
+      if (!name.isBlank()
+        && symbolTree.getVariableSymbolInScope(scopeNode, name).isEmpty()
+        && globalScopeProvider.globalProperty(name, documentContext.getFileType()).isEmpty()
+        && selfMemberResolver.resolveSelfMember(documentContext, SymbolKind.Property, name).isPresent()) {
+        sink.addSelfMemberUsage(uri, mdoRef, moduleType, SymbolKind.Property, name, Ranges.create(identifier));
+      }
+    }
+  }
 }

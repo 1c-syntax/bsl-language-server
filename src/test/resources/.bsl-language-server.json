@@ -4,6 +4,12 @@
     "parameters": {
       "cognitiveComplexity": true,
       "cyclomaticComplexity": true
+    },
+    "testRunner": {
+      "annotations": [
+        "Test",
+        "Test2"
+      ]
     }
   },
   "diagnostics": {
@@ -16,6 +22,11 @@
         "maxLineLength": 140
       },
       "MethodSize": false
+    }
+  },
+  "capabilities": {
+    "textDocumentSync": {
+      "change": "Full"
     }
   },
   "useDevSite": true,

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,8 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
+import com.github._1c_syntax.bsl.languageserver.utils.BSLFiles;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -34,14 +38,16 @@ import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.DocumentFormattingParams;
 import org.eclipse.lsp4j.FormattingOptions;
 import org.eclipse.lsp4j.TextEdit;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import java.io.File;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.regex.Pattern;
 
 import static picocli.CommandLine.Command;
@@ -68,14 +74,19 @@ import static picocli.CommandLine.Option;
   aliases = {"-f", "--format"},
   description = "Format files in source directory",
   usageHelpAutoWidth = true,
-  footer = "@|green Copyright(c) 2018-2022|@")
+  footer = "@|green Copyright(c) 2018-2025|@")
 @Component
 @RequiredArgsConstructor
 public class FormatCommand implements Callable<Integer> {
 
   private static final Pattern COMMA_PATTERN = Pattern.compile(",");
-  private final ServerContext serverContext;
+  private final ServerContextProvider serverContextProvider;
   private final FormatProvider formatProvider;
+  private final LanguageServerConfiguration configuration;
+  @Qualifier("cliExecutor")
+  private final ExecutorService cliExecutor;
+
+  private ServerContext serverContext;
 
   @Option(
     names = {"-h", "--help"},
@@ -96,46 +107,67 @@ public class FormatCommand implements Callable<Integer> {
   private boolean silentMode;
 
   public Integer call() {
-    serverContext.clear();
+    serverContextProvider.clear();
 
     String[] filePaths = COMMA_PATTERN.split(srcDirOption);
 
-    List<File> files = findFilesForFormatting(filePaths);
-
-    if (files.isEmpty()) {
-      return 1;
+    // Create workspace based on first file path
+    var srcDir = Absolute.path(filePaths[0]);
+    if (!srcDir.toFile().isDirectory()) {
+      srcDir = srcDir.getParent();
     }
+    serverContext = serverContextProvider.addWorkspace(srcDir.toUri());
+    // Язык ключевых слов форматтер берёт из метаданных конфигурации, а до конца подготовки
+    // рабочая область выглядит как каталог без конфигурации.
+    serverContext.awaitPreparation();
 
-    if (silentMode) {
-      files.parallelStream().forEach(this::formatFile);
-    } else {
-      try (ProgressBar pb = new ProgressBarBuilder()
-        .setTaskName("Formatting files...")
-        .setInitialMax(files.size())
-        .setStyle(ProgressBarStyle.ASCII)
-        .build()) {
-        files.parallelStream()
-          .forEach((File file) -> {
-            pb.step();
-            formatFile(file);
-          });
+    try (var ctx = WorkspaceContextHolder.forUri(srcDir.toUri())) {
+      List<File> files = findFilesForFormatting(filePaths);
+      if (files.isEmpty()) {
+        return 1;
       }
-    }
 
-    return 0;
+      if (silentMode) {
+        cliExecutor.submit(() ->
+          files.parallelStream().forEach(this::formatFile)
+        ).get();
+      } else {
+        try (ProgressBar pb = new ProgressBarBuilder()
+          .setTaskName("Formatting files...")
+          .setInitialMax(files.size())
+          .setStyle(ProgressBarStyle.ASCII)
+          .build()) {
+          cliExecutor.submit(() ->
+            files.parallelStream()
+              .forEach((File file) -> {
+                pb.step();
+                formatFile(file);
+              })
+          ).get();
+        }
+      }
+
+      return 0;
+    } catch (ExecutionException e) {
+      throw new IllegalStateException("Error formatting files", e);
+    } catch (InterruptedException e) {
+      Thread.currentThread().interrupt();
+      throw new IllegalStateException("Interrupted while formatting files", e);
+    }
   }
 
   private List<File> findFilesForFormatting(String[] filePaths) {
+    var excludePaths = configuration.getExcludePaths();
     List<File> files = new ArrayList<>();
     for (String filePath : filePaths) {
-      Path srcDir = Absolute.path(filePath);
+      var srcDir = Absolute.path(filePath);
       if (!srcDir.toFile().exists()) {
         LOGGER.error("Source dir `{}` is not exists", srcDir);
         continue;
       }
 
-      if(srcDir.toFile().isDirectory()) {
-        files.addAll(FileUtils.listFiles(srcDir.toFile(), new String[]{"bsl", "os"}, true));
+      if (srcDir.toFile().isDirectory()) {
+        files.addAll(BSLFiles.listBslFiles(srcDir, excludePaths));
       } else {
         files.add(srcDir.toFile());
       }
@@ -146,7 +178,7 @@ public class FormatCommand implements Callable<Integer> {
 
   @SneakyThrows
   private void formatFile(File file) {
-    var uri = file.toURI();
+    var uri = Absolute.uri(file);
 
     var documentContext = serverContext.addDocument(uri);
     serverContext.rebuildDocument(documentContext);
@@ -164,7 +196,7 @@ public class FormatCommand implements Callable<Integer> {
       return;
     }
 
-    final TextEdit textEdit = formatting.get(0);
+    final TextEdit textEdit = formatting.getFirst();
     final String newText = textEdit.getNewText();
     FileUtils.writeStringToFile(file, newText, StandardCharsets.UTF_8);
   }

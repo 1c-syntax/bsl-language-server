@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,10 +21,48 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol.variable;
 
+/**
+ * Вид переменной в коде BSL.
+ */
 public enum VariableKind {
+  /**
+   * Динамическая переменная.
+   */
   DYNAMIC,
+  /**
+   * Локальная переменная.
+   */
   LOCAL,
+  /**
+   * Параметр метода/функции.
+   */
   PARAMETER,
+  /**
+   * Переменная уровня модуля.
+   */
   MODULE,
-  GLOBAL
+  /**
+   * Глобальная переменная.
+   */
+  GLOBAL;
+
+  /**
+   * Значения перечисления, вычисленные один раз.
+   * <p>
+   * {@link #values()} по контракту возвращает новый массив на каждый вызов (клон внутреннего),
+   * а вид переменной спрашивают на горячем пути — обход дерева символов, автодополнение,
+   * вывод типов, диагностики по переменным.
+   */
+  private static final VariableKind[] VALUES = values();
+
+  /**
+   * Значение перечисления по его порядковому номеру.
+   *
+   * @param ordinal порядковый номер значения ({@link #ordinal()}).
+   * @return значение перечисления с указанным порядковым номером.
+   * @throws ArrayIndexOutOfBoundsException если номер выходит за границы перечисления.
+   */
+  public static VariableKind byOrdinal(int ordinal) {
+    return VALUES[ordinal];
+  }
 }

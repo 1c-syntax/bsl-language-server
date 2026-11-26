@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,8 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
-
 /**
  * Режим для учета настроек правил.
  * <p>
@@ -36,8 +34,8 @@ public enum Mode {
   OFF,
 
   /**
-   * Все диагностики, включенные по умолчанию ({@link DiagnosticMetadata#activatedByDefault()}, считаются включенными.
-   * Остальные - в соответствии с конфигурацией настроек правил.
+   * Все диагностики, включенные по умолчанию (атрибут {@code activatedByDefault} в {@code @DiagnosticMetadata}),
+   * считаются включенными. Остальные - в соответствии с конфигурацией настроек правил.
    */
   ON,
 

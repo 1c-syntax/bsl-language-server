@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -23,9 +23,9 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.types.MdoReference;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import org.eclipse.lsp4j.SymbolKind;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -65,13 +65,13 @@ class ModuleSymbolComputerTest {
     var documentContext = spy(TestUtils.getDocumentContextFromFile("./src/test/resources/context/symbol/ModuleSymbol.bsl"));
     var computer = new ModuleSymbolComputer(documentContext);
 
-    var mdoReference = mock(MdoReference.class);
-    when(mdoReference.getMdoRef()).thenReturn("Document.Document1");
+    var mdoReference = MdoReference.create("Document.Document1");
 
-    AbstractMDObjectBase mdObject = mock(AbstractMDObjectBase.class);
+    var mdObject = mock(MD.class);
     when(mdObject.getMdoReference()).thenReturn(mdoReference);
 
     doReturn(Optional.of(mdObject)).when(documentContext).getMdObject();
+    doReturn(mdoReference.getMdoRef()).when(documentContext).getMdoRef();
 
     // when-then pairs:
 

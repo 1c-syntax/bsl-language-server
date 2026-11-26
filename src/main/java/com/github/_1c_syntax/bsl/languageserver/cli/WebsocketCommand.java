@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -44,6 +44,10 @@ import static picocli.CommandLine.Option;
  *                                      то будет использован порт по умолчанию, а именно 8025.
  *  --app.websocket.lsp-path          - Адрес, по которому открывается соединение. Если параметр опущен,
  *                                      то будет использован адрес по умолчанию, а именно /lsp.
+ *  --mcp                             - Дополнительно поднять MCP-сервер по Streamable HTTP (эндпоинт /mcp)
+ *                                      на том же servlet-контейнере, что и LSP-WebSocket. Рабочие
+ *                                      пространства приходят от клиентов (LSP workspace folders и MCP roots).
+ *  --mcp-path &lt;path&gt;            - Адрес MCP-эндпоинта (по умолчанию /mcp).
  * Выводимая информация:
  *  Данный режим используется для взаимодействия с клиентом по протоколу LSP через websocket.
  *
@@ -54,7 +58,7 @@ import static picocli.CommandLine.Option;
   aliases = {"-w", "--websocket"},
   description = "Websocket server mode",
   usageHelpAutoWidth = true,
-  footer = "@|green Copyright(c) 2018-2022|@")
+  footer = "@|green Copyright(c) 2018-2026|@")
 @Component
 @RequiredArgsConstructor
 public class WebsocketCommand implements Callable<Integer> {
@@ -85,12 +89,27 @@ public class WebsocketCommand implements Callable<Integer> {
     defaultValue = "/lsp")
   private String endpointPath;
 
-  private final LanguageServerConfiguration configuration;
+  @Option(
+    names = {"--mcp"},
+    description = "Also expose an MCP server over Streamable HTTP on the same port")
+  private boolean mcpEnabled;
+
+  @Option(
+    names = {"--mcp-path"},
+    description = "Path of the MCP Streamable HTTP endpoint. Default is /mcp",
+    paramLabel = "<path>",
+    defaultValue = "/mcp")
+  private String mcpPath;
+
+  private final GlobalLanguageServerConfiguration globalConfiguration;
 
   public Integer call() {
-    var configurationFile = new File(configurationOption);
-    if (configurationFile.exists()) {
-      configuration.update(configurationFile);
+    globalConfiguration.update(new File(configurationOption));
+
+    if (mcpEnabled) {
+      // Workspaces are provided by clients: LSP workspace folders and MCP roots
+      // (see McpRootsChangeConsumer), both feeding the shared ServerContextProvider.
+      LOGGER.info("MCP server enabled over Streamable HTTP at `{}`", mcpPath);
     }
 
     return -1;

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,7 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 import org.springframework.stereotype.Component;
 
@@ -49,9 +51,50 @@ public class ReferenceResolver {
    * @return данные ссылки.
    */
   public Optional<Reference> findReference(URI uri, Position position) {
-    return finders.stream()
-      .map(referenceFinder -> referenceFinder.findReference(uri, position))
-      .flatMap(Optional::stream)
-      .findFirst();
+    for (var finder : finders) {
+      var reference = finder.findReference(uri, position);
+      if (reference.isPresent()) {
+        return reference;
+      }
+    }
+    return Optional.empty();
+  }
+
+  /**
+   * Поиск символа по уже известному терминалу-идентификатору. Опрашивает
+   * {@link ReferenceFinder}'ы в том же порядке ({@code @Order}) и с той же
+   * семантикой первого совпадения, что и {@link #findReference(URI, Position)},
+   * но передаёт терминал — finder'ы с дорогим спуском по AST резолвят его
+   * подъёмом вверх, а не спуском от корня к позиции.
+   *
+   * @param uri      URI документа, в котором необходимо осуществить поиск.
+   * @param terminal терминал-идентификатор под курсором.
+   * @return данные ссылки.
+   */
+  public Optional<Reference> findReference(URI uri, TerminalNode terminal) {
+    for (var finder : finders) {
+      var reference = finder.findReference(uri, terminal);
+      if (reference.isPresent()) {
+        return reference;
+      }
+    }
+    return Optional.empty();
+  }
+
+  /**
+   * Найти только цель с тем же порядком поисковиков, что у терминальной ссылки.
+   *
+   * @param uri URI документа.
+   * @param terminal терминал обращения.
+   * @return первый найденный символ.
+   */
+  public Optional<Symbol> findTargetSymbol(URI uri, TerminalNode terminal) {
+    for (var finder : finders) {
+      var symbol = finder.findTargetSymbol(uri, terminal);
+      if (symbol.isPresent()) {
+        return symbol;
+      }
+    }
+    return Optional.empty();
   }
 }

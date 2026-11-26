@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MetaDataObject xmlns="http://v8.1c.ru/8.3/MDClasses" xmlns:app="http://v8.1c.ru/8.2/managed-application/core" xmlns:cfg="http://v8.1c.ru/8.1/data/enterprise/current-config" xmlns:cmi="http://v8.1c.ru/8.2/managed-application/cmi" xmlns:ent="http://v8.1c.ru/8.1/data/enterprise" xmlns:lf="http://v8.1c.ru/8.2/managed-application/logform" xmlns:style="http://v8.1c.ru/8.1/data/ui/style" xmlns:sys="http://v8.1c.ru/8.1/data/ui/fonts/system" xmlns:v8="http://v8.1c.ru/8.1/data/core" xmlns:v8ui="http://v8.1c.ru/8.1/data/ui" xmlns:web="http://v8.1c.ru/8.1/data/ui/colors/web" xmlns:win="http://v8.1c.ru/8.1/data/ui/colors/windows" xmlns:xen="http://v8.1c.ru/8.3/xcf/enums" xmlns:xpr="http://v8.1c.ru/8.3/xcf/predef" xmlns:xr="http://v8.1c.ru/8.3/xcf/readable" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="2.11">
+	<DocumentJournal uuid="7f1e7c2c-4d64-4a4a-9d5a-6ef2a6f3a1b0">
+		<InternalInfo>
+			<xr:GeneratedType name="DocumentJournalManager.ЖурналДокументов1" category="Manager">
+				<xr:TypeId>1a2b3c4d-5e6f-4a7b-8c9d-0e1f2a3b4c5d</xr:TypeId>
+				<xr:ValueId>2b3c4d5e-6f7a-4b8c-9d0e-1f2a3b4c5d6e</xr:ValueId>
+			</xr:GeneratedType>
+			<xr:GeneratedType name="DocumentJournalSelection.ЖурналДокументов1" category="Selection">
+				<xr:TypeId>3c4d5e6f-7a8b-4c9d-8e1f-2a3b4c5d6e7f</xr:TypeId>
+				<xr:ValueId>4d5e6f7a-8b9c-4d0e-9f2a-3b4c5d6e7f8a</xr:ValueId>
+			</xr:GeneratedType>
+			<xr:GeneratedType name="DocumentJournalList.ЖурналДокументов1" category="List">
+				<xr:TypeId>5e6f7a8b-9c0d-4e1f-8a3b-4c5d6e7f8a9b</xr:TypeId>
+				<xr:ValueId>6f7a8b9c-0d1e-4f2a-9b4c-5d6e7f8a9b0c</xr:ValueId>
+			</xr:GeneratedType>
+		</InternalInfo>
+		<Properties>
+			<Name>ЖурналДокументов1</Name>
+			<Synonym/>
+			<Comment/>
+			<UseStandardCommands>true</UseStandardCommands>
+			<DefaultForm>DocumentJournal.ЖурналДокументов1.Form.ФормаСписка</DefaultForm>
+			<AuxiliaryForm/>
+			<RegisteredDocuments>
+				<xr:Item xsi:type="xr:MDObjectRef">Document.Документ1</xr:Item>
+			</RegisteredDocuments>
+			<IncludeHelpInContents>false</IncludeHelpInContents>
+			<ListPresentation/>
+			<ExtendedListPresentation/>
+			<Explanation/>
+		</Properties>
+		<ChildObjects>
+			<Form>ФормаСписка</Form>
+		</ChildObjects>
+	</DocumentJournal>
+</MetaDataObject>

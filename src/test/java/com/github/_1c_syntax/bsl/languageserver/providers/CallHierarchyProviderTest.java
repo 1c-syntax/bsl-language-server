@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -52,7 +52,7 @@ class CallHierarchyProviderTest {
 
   private final Position firstProcedureDeclarationPosition = new Position(0, 15);
   private final Position firstFunctionCallPosition = new Position(1, 15);
-  private final Position secondFunctionDeclarationPosition = new Position(14, 15);
+  private final Position secondFunctionDeclarationPosition = new Position(16, 15);
   private final Position secondFunctionCallPosition = new Position(2, 15);
 
   @BeforeEach
@@ -210,6 +210,50 @@ class CallHierarchyProviderTest {
   }
 
   @Test
+  void testOutgoingCallsFromModuleEntryNode() {
+
+    // given
+    var methodItem = getCallHierarchyItem(secondFunctionDeclarationPosition);
+    var incomingParams = new CallHierarchyIncomingCallsParams(methodItem);
+    var moduleItem = provider.incomingCalls(documentContext, incomingParams).stream()
+      .map(CallHierarchyIncomingCall::getFrom)
+      .filter(item -> item.getKind().equals(SymbolKind.Module))
+      .findFirst()
+      .orElseThrow();
+    var params = new CallHierarchyOutgoingCallsParams(moduleItem);
+
+    // when
+    List<CallHierarchyOutgoingCall> outgoingCalls = provider.outgoingCalls(documentContext, params);
+
+    // then
+    assertThat(outgoingCalls)
+      .filteredOn(outgoingCall -> outgoingCall.getTo().getName().equals("ВтораяФункция"))
+      .flatExtracting(CallHierarchyOutgoingCall::getFromRanges)
+      .hasSize(1)
+    ;
+  }
+
+  @Test
+  void testIncomingCallsToModuleEntryNode() {
+
+    // given
+    var methodItem = getCallHierarchyItem(secondFunctionDeclarationPosition);
+    var incomingParams = new CallHierarchyIncomingCallsParams(methodItem);
+    var moduleItem = provider.incomingCalls(documentContext, incomingParams).stream()
+      .map(CallHierarchyIncomingCall::getFrom)
+      .filter(item -> item.getKind().equals(SymbolKind.Module))
+      .findFirst()
+      .orElseThrow();
+    var params = new CallHierarchyIncomingCallsParams(moduleItem);
+
+    // when
+    List<CallHierarchyIncomingCall> incomingCalls = provider.incomingCalls(documentContext, params);
+
+    // then
+    assertThat(incomingCalls).isEmpty();
+  }
+
+  @Test
   void testOutgoingCallsLocalMethodCall() {
 
     // given
@@ -267,6 +311,6 @@ class CallHierarchyProviderTest {
 
     List<CallHierarchyItem> items = provider.prepareCallHierarchy(documentContext, params);
 
-    return items.get(0);
+    return items.getFirst();
   }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,28 +22,26 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.mdclasses.Solution;
 import com.github._1c_syntax.bsl.mdo.support.UseMode;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.annotation.DirtiesContext;
 
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMessage;
 
 @DirtiesContext
 class UsingModalWindowsDiagnosticTest extends AbstractDiagnosticTest<UsingModalWindowsDiagnostic> {
-  @SpyBean
-  private ServerContext context;
 
   UsingModalWindowsDiagnosticTest() {
     super(UsingModalWindowsDiagnostic.class);
@@ -87,43 +85,46 @@ class UsingModalWindowsDiagnosticTest extends AbstractDiagnosticTest<UsingModalW
 
     assertThat(diagnostics).hasSize(12)
       .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(2, 12, 3, 57))
-        && diagnostic.getMessage().matches(".*(модального|modal).*Вопрос.*ПоказатьВопрос.*"))
+        && DiagnosticMessage.getStringValue(diagnostic.getMessage()).matches(".*(модального|modal).*Вопрос.*ПоказатьВопрос.*"))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(21, 4, 21, 84))
-        && diagnostic.getMessage().matches(".*(модального|modal).*Предупреждение.*ПоказатьПредупреждение.*"))
+        && DiagnosticMessage.getStringValue(diagnostic.getMessage()).matches(".*(модального|modal).*Предупреждение.*ПоказатьПредупреждение.*"))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(29, 4, 29, 26))
-        && diagnostic.getMessage().matches(".*(модального|modal).*ОткрытьЗначение.*ПоказатьЗначение.*"))
+        && DiagnosticMessage.getStringValue(diagnostic.getMessage()).matches(".*(модального|modal).*ОткрытьЗначение.*ПоказатьЗначение.*"))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(43, 9, 43, 58))
-        && diagnostic.getMessage().matches(".*(модального|modal).*ВвестиДату.*ПоказатьВводДаты.*"))
+        && DiagnosticMessage.getStringValue(diagnostic.getMessage()).matches(".*(модального|modal).*ВвестиДату.*ПоказатьВводДаты.*"))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(72, 9, 72, 67))
-        && diagnostic.getMessage().matches(".*(модального|modal).*ВвестиЗначение.*ПоказатьВводЗначения.*"))
+        && DiagnosticMessage.getStringValue(diagnostic.getMessage()).matches(".*(модального|modal).*ВвестиЗначение.*ПоказатьВводЗначения.*"))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(103, 9, 103, 50))
-        && diagnostic.getMessage().matches(".*(модального|modal).*ВвестиСтроку.*ПоказатьВводСтроки.*"))
+        && DiagnosticMessage.getStringValue(diagnostic.getMessage()).matches(".*(модального|modal).*ВвестиСтроку.*ПоказатьВводСтроки.*"))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(122, 9, 122, 61))
-        && diagnostic.getMessage().matches(".*(модального|modal).*ВвестиЧисло.*ПоказатьВводЧисла.*"))
+        && DiagnosticMessage.getStringValue(diagnostic.getMessage()).matches(".*(модального|modal).*ВвестиЧисло.*ПоказатьВводЧисла.*"))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(138, 4, 138, 50))
-        && diagnostic.getMessage().matches(".*(модального|modal).*УстановитьВнешнююКомпоненту.*НачатьУстановкуВнешнейКомпоненты.*"))
+        && DiagnosticMessage.getStringValue(diagnostic.getMessage()).matches(".*(модального|modal).*УстановитьВнешнююКомпоненту.*НачатьУстановкуВнешнейКомпоненты.*"))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(148, 4, 148, 33))
-        && diagnostic.getMessage().matches(".*(модального|modal).*ОткрытьФормуМодально.*ОткрытьФорму.*"))
+        && DiagnosticMessage.getStringValue(diagnostic.getMessage()).matches(".*(модального|modal).*ОткрытьФормуМодально.*ОткрытьФорму.*"))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(159, 20, 159, 56))
-        && diagnostic.getMessage().matches(".*(модального|modal).*УстановитьРасширениеРаботыСФайлами.*НачатьУстановкуРасширенияРаботыСФайлами.*"))
+        && DiagnosticMessage.getStringValue(diagnostic.getMessage()).matches(".*(модального|modal).*УстановитьРасширениеРаботыСФайлами.*НачатьУстановкуРасширенияРаботыСФайлами.*"))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(172, 20, 172, 62))
-        && diagnostic.getMessage().matches(".*(модального|modal).*УстановитьРасширениеРаботыСКриптографией.*НачатьУстановкуРасширенияРаботыСКриптографией.*"))
+        && DiagnosticMessage.getStringValue(diagnostic.getMessage()).matches(".*(модального|modal).*УстановитьРасширениеРаботыСКриптографией.*НачатьУстановкуРасширенияРаботыСКриптографией.*"))
       .anyMatch(diagnostic -> diagnostic.getRange().equals(Ranges.create(186, 4, 186, 88))
-        && diagnostic.getMessage().matches(".*(модального|modal).*ПоместитьФайл.*НачатьПомещениеФайла.*"));
+        && DiagnosticMessage.getStringValue(diagnostic.getMessage()).matches(".*(модального|modal).*ПоместитьФайл.*НачатьПомещениеФайла.*"));
 
   }
 
   private DocumentContext getDocumentContextWithUseFlag(UseMode useMode) {
     var path = Absolute.path(PATH_TO_METADATA);
-    var testFile = Paths.get(PATH_TO_MODULE_FILE).toAbsolutePath();
+    var testFile = Path.of(PATH_TO_MODULE_FILE).toAbsolutePath();
 
     initServerContext(path);
-    var configuration = spy(context.getConfiguration());
-    when(configuration.getModalityUseMode()).thenReturn(useMode);
-    when(context.getConfiguration()).thenReturn(configuration);
+    var serverContext = spy(context);
+    var mergedConfiguration = spy(serverContext.getConfiguration().getMergedConfiguration());
+    when(mergedConfiguration.getModalityUseMode()).thenReturn(useMode);
+    when(serverContext.getConfiguration())
+      .thenReturn(Solution.builder().mergedConfiguration(mergedConfiguration).build());
 
-    return TestUtils.getDocumentContext(testFile.toUri(), getText());
+    var documentContext = spy(TestUtils.getDocumentContext(testFile.toUri(), getText(), serverContext));
+    when(documentContext.getServerContext()).thenReturn(serverContext);
+
+    return documentContext;
   }
-
 }
-

@@ -1,0 +1,158 @@
+/*
+ * This file is a part of BSL Language Server.
+ *
+ * Copyright (c) 2018-2026
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ *
+ * BSL Language Server is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3.0 of the License, or (at your option) any later version.
+ *
+ * BSL Language Server is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BSL Language Server.
+ */
+package com.github._1c_syntax.bsl.languageserver.context.computer;
+
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
+import com.github._1c_syntax.bsl.languageserver.context.compilation.PreprocessorContexts;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SelfMemberClassifier;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.parser.BSLParser;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.eclipse.lsp4j.Range;
+
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+/**
+ * Вычислитель символов переменных и регионов за <b>один</b> обход AST.
+ * <p>
+ * И сбор переменных ({@link VariableSymbolComputer}), и сбор регионов обходили всё дерево вглубь
+ * (методы — вместе с телами), и при перестроении дерева символов на каждый keystroke это были два
+ * отдельных полных обхода 48k-строчного модуля (по профилю набора текста на больших модулях обход
+ * визиторами — заметная доля стоимости перестроения). Наборы перекрытых узлов у них не пересекаются
+ * (директивы {@code #Область}/{@code #КонецОбласти} против объявлений переменных/параметров/lvalue/
+ * циклов), поэтому сбор регионов добавляется поверх обхода переменных, и два полных обхода
+ * схлопываются в один.
+ * <p>
+ * {@link VariableSymbolComputer} остаётся самостоятельным (используется отдельно), а этот класс лишь
+ * расширяет его сбором регионов в том же {@code visitFile}.
+ * В этом же обходе отслеживаются ветки препроцессора у объявлений методов.
+ * Их условия сохраняются в символьном дереве без ссылок на AST и остаются доступны
+ * диагностике и выводу типов после выгрузки текста документа.
+ */
+public final class RegionVariableSymbolComputer extends VariableSymbolComputer {
+
+  private final DocumentContext documentContext;
+  private final Deque<RegionSymbol.RegionSymbolBuilder> regionStack = new ArrayDeque<>();
+  private final Set<RegionSymbol> regions = new HashSet<>();
+  private final PreprocessorContexts preprocessor;
+  // Ключи — неизменяемые в течение обхода диапазоны LSP; их порядок не используется.
+  private final Map<Range, Set<ExecutionContext>> methodConditions = new HashMap<>();
+
+  public RegionVariableSymbolComputer(DocumentContext documentContext,
+                                      ModuleSymbol module,
+                                      List<? extends MethodSymbol> methods,
+                                      SelfMemberClassifier selfMemberClassifier) {
+    super(documentContext, module, methods, selfMemberClassifier);
+    this.documentContext = documentContext;
+    preprocessor = new PreprocessorContexts(documentContext.getFileType());
+  }
+
+  @Override
+  public List<VariableSymbol> compute() {
+    regionStack.clear();
+    regions.clear();
+    preprocessor.clear();
+    methodConditions.clear();
+
+    // Единственный обход дерева: вместе с переменными собираем регионы и условия объявлений.
+    var variables = super.compute();
+
+    regionStack.clear();
+    return variables;
+  }
+
+  /**
+   * Собранные за тот же обход регионы. Вызывать после {@link #compute()}.
+   *
+   * @return список символов регионов модуля.
+   */
+  public List<RegionSymbol> getRegions() {
+    return new ArrayList<>(regions);
+  }
+
+  /**
+   * Получить снимок условий объявлений, собранных во время {@link #compute()}.
+   * <p>
+   * Ключ — диапазон имени метода. Безусловные объявления не включаются в карту;
+   * пустое множество обозначает недостижимую ветку, {@code null} — неизвестное условие.
+   * Снимок сохраняется в символьном дереве и не удерживает AST.
+   * Вызывать после завершения обхода; ключи-диапазоны изменять нельзя.
+   *
+   * @return неизменяемая карта с неизменяемыми множествами либо значениями {@code null}.
+   */
+  public Map<Range, Set<ExecutionContext>> getMethodConditions() {
+    return methodConditions.isEmpty() ? Map.of() : Collections.unmodifiableMap(new HashMap<>(methodConditions));
+  }
+
+  @Override
+  public ParseTree visitPreprocessor(BSLParser.PreprocessorContext ctx) {
+    return preprocessor.enter(ctx) ? ctx : super.visitPreprocessor(ctx);
+  }
+
+  @Override
+  public ParseTree visitSubName(BSLParser.SubNameContext ctx) {
+    var active = preprocessor.active();
+    if (active == null || !active.equals(ExecutionContext.forFileType(documentContext.getFileType()))) {
+      methodConditions.put(Ranges.create(ctx), active == null ? null : Set.copyOf(active));
+    }
+    return ctx;
+  }
+
+  @Override
+  public ParseTree visitRegionStart(BSLParser.RegionStartContext ctx) {
+    RegionSymbol.RegionSymbolBuilder builder = RegionSymbol.builder()
+      .owner(documentContext)
+      .name(ctx.regionName().getText().intern())
+      .regionNameRange(Ranges.create(ctx.regionName()))
+      .startRange(Ranges.create(ctx));
+
+    regionStack.push(builder);
+    return super.visitRegionStart(ctx);
+  }
+
+  @Override
+  public ParseTree visitRegionEnd(BSLParser.RegionEndContext ctx) {
+    if (regionStack.isEmpty()) {
+      return super.visitRegionEnd(ctx);
+    }
+
+    var builder = regionStack.pop();
+    builder.endRange(Ranges.create(ctx));
+
+    regions.add(builder.build());
+
+    return super.visitRegionEnd(ctx);
+  }
+}

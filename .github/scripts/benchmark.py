@@ -20,6 +20,8 @@ def some_func(arg):
     cmdArgs.append('-a')
     cmdArgs.append('-s')
     cmdArgs.append('ssl')
+    cmdArgs.append('-r')
+    cmdArgs.append('sarif')
     cmdArgs.append('-c')
     cmdArgs.append(pathToConfig)
     cmd = ' '.join(cmdArgs) 

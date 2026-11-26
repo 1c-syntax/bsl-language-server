@@ -1,0 +1,512 @@
+/*
+ * This file is a part of BSL Language Server.
+ *
+ * Copyright (c) 2018-2026
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ *
+ * BSL Language Server is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3.0 of the License, or (at your option) any later version.
+ *
+ * BSL Language Server is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BSL Language Server.
+ */
+package com.github._1c_syntax.bsl.languageserver.types.registry;
+
+import com.github._1c_syntax.bsl.context.api.Availability;
+import com.github._1c_syntax.bsl.context.api.ContextEvent;
+import com.github._1c_syntax.bsl.context.api.ContextName;
+import com.github._1c_syntax.bsl.context.api.ContextProvider;
+import com.github._1c_syntax.bsl.context.platform.PlatformGlobalContext;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.types.ModuleType;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyString;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.when;
+
+class EventHandlerResolverTest {
+
+  private final TypeRegistry typeRegistry = mock(TypeRegistry.class);
+  private final BslContextHolder bslContextHolder = mock(BslContextHolder.class);
+  private final EventHandlerResolver resolver = new EventHandlerResolver(typeRegistry, bslContextHolder);
+
+  @Test
+  void oscriptClassConstructorEventByRuName() {
+    var doc = oscriptClassDoc();
+
+    var contract = resolver.lookupContract(doc, "ПриСозданииОбъекта").orElseThrow();
+
+    assertThat(contract.kind()).isEqualTo(MemberKind.EVENT);
+    assertThat(contract.name()).isEqualTo("ПриСозданииОбъекта");
+    var param = contract.signatures().get(0).parameters().get(0);
+    assertThat(param.variadic()).isTrue();
+    assertThat(param.optional()).isTrue();
+  }
+
+  @Test
+  void oscriptClassConstructorEventByEnName() {
+    var doc = oscriptClassDoc();
+
+    var contract = resolver.lookupContract(doc, "OnObjectCreate").orElseThrow();
+
+    assertThat(contract.name()).isEqualTo("ПриСозданииОбъекта");
+  }
+
+  @Test
+  void oscriptClassPresentationGetProcessingHasTwoParameters() {
+    var doc = oscriptClassDoc();
+
+    var contract = resolver.lookupContract(doc, "ОбработкаПолученияПредставления").orElseThrow();
+    var params = contract.signatures().get(0).parameters();
+
+    assertThat(params).hasSize(2);
+    assertThat(params.get(0).bilingualName().ru()).isEqualTo("Представление");
+    assertThat(params.get(0).bilingualName().en()).isEqualTo("Presentation");
+    assertThat(params.get(0).types().refs()).singleElement()
+      .extracting(TypeRef::qualifiedName).isEqualTo("Строка");
+    assertThat(params.get(1).bilingualName().ru()).isEqualTo("СтандартнаяОбработка");
+    assertThat(params.get(1).bilingualName().en()).isEqualTo("StandardProcessing");
+    assertThat(params.get(1).types().refs()).singleElement()
+      .extracting(TypeRef::qualifiedName).isEqualTo("Булево");
+  }
+
+  @Test
+  void oscriptClassUnknownMethodIsNotEventHandler() {
+    var doc = oscriptClassDoc();
+
+    var contract = resolver.lookupContract(doc, "СлучайныйМетод");
+
+    assertThat(contract).isEmpty();
+  }
+
+  @Test
+  void typeRegistryNotUsedForOScriptClassModule() {
+    var doc = oscriptClassDoc();
+
+    resolver.lookupContract(doc, "ПриСозданииОбъекта");
+
+    verifyNoInteractions(typeRegistry);
+  }
+
+  @Test
+  void globalModuleWithoutHbkReturnsEmpty() {
+    when(bslContextHolder.get()).thenReturn(Optional.empty());
+    var doc = mock(DocumentContext.class);
+    when(doc.getModuleType()).thenReturn(ModuleType.SessionModule);
+
+    var contract = resolver.lookupContract(doc, "УстановкаПараметровСеанса");
+
+    assertThat(contract).isEmpty();
+  }
+
+  private static DocumentContext oscriptClassDoc() {
+    var doc = mock(DocumentContext.class);
+    when(doc.getModuleType()).thenReturn(ModuleType.OScriptClass);
+    return doc;
+  }
+
+  @Test
+  void globalModuleWithHbkResolvesEventByName() {
+    var event = stubEvent("ПередНачаломРаботыСистемы", "BeforeStart");
+    var globalContext = mock(PlatformGlobalContext.class);
+    when(globalContext.applicationEvents()).thenReturn(List.of(event));
+    when(globalContext.ordinaryApplicationEvents()).thenReturn(List.of());
+    when(globalContext.sessionModuleEvents()).thenReturn(List.of());
+    when(globalContext.externalConnectionModuleEvents()).thenReturn(List.of());
+    var provider = mock(ContextProvider.class);
+    when(provider.getGlobalContext()).thenReturn(globalContext);
+    when(bslContextHolder.get()).thenReturn(Optional.of(provider));
+
+    var doc = mock(DocumentContext.class);
+    when(doc.getModuleType()).thenReturn(ModuleType.ManagedApplicationModule);
+
+    // По ru-имени и по en-алиасу должны находить один и тот же контракт.
+    assertThat(resolver.lookupContract(doc, "ПередНачаломРаботыСистемы")).isPresent();
+    assertThat(resolver.lookupContract(doc, "BeforeStart")).isPresent();
+    // Чужое имя — пусто.
+    assertThat(resolver.lookupContract(doc, "Случайное")).isEmpty();
+  }
+
+  @Test
+  void globalEventsCachedAfterFirstBuild() {
+    var doc = mock(DocumentContext.class);
+    when(doc.getModuleType()).thenReturn(ModuleType.ManagedApplicationModule);
+
+    // 1) Провайдер доступен — карта глобальных событий собирается и кэшируется при первом обращении.
+    var event = stubEvent("ПередНачаломРаботыСистемы", "BeforeStart");
+    var globalContext = mock(PlatformGlobalContext.class);
+    when(globalContext.applicationEvents()).thenReturn(List.of(event));
+    when(globalContext.ordinaryApplicationEvents()).thenReturn(List.of());
+    when(globalContext.sessionModuleEvents()).thenReturn(List.of());
+    when(globalContext.externalConnectionModuleEvents()).thenReturn(List.of());
+    var provider = mock(ContextProvider.class);
+    when(provider.getGlobalContext()).thenReturn(globalContext);
+    when(bslContextHolder.get()).thenReturn(Optional.of(provider));
+
+    assertThat(resolver.allEvents(doc)).isNotEmpty();
+
+    // 2) Результат закэширован: даже если провайдер потом «пропадёт», ранее собранная карта
+    // остаётся (BslContextHolder в проде синхронно-мемоизирован и не меняется, поэтому кэшировать
+    // безусловно, включая пустоту, безопасно — см. EventHandlerResolver#globalEvents).
+    when(bslContextHolder.get()).thenReturn(Optional.empty());
+    assertThat(resolver.lookupContract(doc, "ПередНачаломРаботыСистемы")).isPresent();
+    assertThat(resolver.allEvents(doc)).isNotEmpty();
+  }
+
+  @Test
+  void globalModuleEmptyEventListReturnsEmpty() {
+    var globalContext = mock(PlatformGlobalContext.class);
+    when(globalContext.applicationEvents()).thenReturn(List.of());
+    when(globalContext.ordinaryApplicationEvents()).thenReturn(List.of());
+    when(globalContext.sessionModuleEvents()).thenReturn(List.of());
+    when(globalContext.externalConnectionModuleEvents()).thenReturn(List.of());
+    var provider = mock(ContextProvider.class);
+    when(provider.getGlobalContext()).thenReturn(globalContext);
+    when(bslContextHolder.get()).thenReturn(Optional.of(provider));
+
+    var doc = mock(DocumentContext.class);
+    when(doc.getModuleType()).thenReturn(ModuleType.OrdinaryApplicationModule);
+
+    assertThat(resolver.lookupContract(doc, "Что-то")).isEmpty();
+  }
+
+  @Test
+  void commandModuleResolvesViaFixedOwnerType() {
+    // Контракт берётся из платформенного типа модуля команды.
+    var commandRef = new TypeRef(TypeKind.PLATFORM, "Модуль команды");
+    when(typeRegistry.resolve("Модуль команды")).thenReturn(Optional.of(commandRef));
+    var eventDescriptor = MemberDescriptor.event(
+      "ОбработкаКоманды", "",
+      List.of(new SignatureDescriptor(List.of(), TypeSet.EMPTY, "")));
+    when(typeRegistry.getMembers(eq(commandRef), any()))
+      .thenReturn(List.of(eventDescriptor));
+
+    var doc = mock(DocumentContext.class);
+    when(doc.getModuleType()).thenReturn(ModuleType.CommandModule);
+    when(doc.getFileType()).thenReturn(FileType.BSL);
+
+    assertThat(resolver.lookupContract(doc, "ОбработкаКоманды")).isPresent();
+    assertThat(resolver.lookupContract(doc, "ЧтоТоЕщё")).isEmpty();
+  }
+
+  @Test
+  void webSocketModuleResolvesEventsFromItsPlatformType() {
+    var moduleRef = new TypeRef(TypeKind.PLATFORM, "Модуль WebSocket клиента");
+    when(typeRegistry.resolve(moduleRef.qualifiedName())).thenReturn(Optional.of(moduleRef));
+    var event = MemberDescriptor.event("ПриПолученииСообщения", "",
+      List.of(new SignatureDescriptor(List.of(), TypeSet.EMPTY, "")));
+    when(typeRegistry.getMembers(moduleRef, FileType.BSL)).thenReturn(List.of(event));
+    var doc = mock(DocumentContext.class);
+    when(doc.getModuleType()).thenReturn(ModuleType.WEBSocketClientModule);
+    when(doc.getFileType()).thenReturn(FileType.BSL);
+
+    assertThat(resolver.lookupContract(doc, "ПриПолученииСообщения")).contains(event);
+    assertThat(resolver.eventOwnerTypeRef(doc)).contains(moduleRef);
+    assertThat(resolver.allEvents(doc)).containsExactly(event);
+  }
+
+  @Test
+  void recalculationModuleResolvesEventsOfItsRecordSet() {
+    var moduleRef = new TypeRef(TypeKind.CONFIGURATION, "ПерерасчетНаборЗаписей.Начисления");
+    when(typeRegistry.resolve(moduleRef.qualifiedName())).thenReturn(Optional.of(moduleRef));
+    var event = MemberDescriptor.event("ПередЗаписью", "", List.of());
+    when(typeRegistry.getMembers(moduleRef, FileType.BSL)).thenReturn(List.of(event));
+    var md = com.github._1c_syntax.bsl.mdo.children.Recalculation.builder().name("Начисления").build();
+    var doc = mock(DocumentContext.class);
+    when(doc.getModuleType()).thenReturn(ModuleType.RecalculationModule);
+    when(doc.getMdObject()).thenReturn(Optional.of(md));
+    when(doc.getFileType()).thenReturn(FileType.BSL);
+
+    assertThat(resolver.lookupContract(doc, "ПередЗаписью")).contains(event);
+    assertThat(resolver.eventOwnerTypeRef(doc)).contains(moduleRef);
+  }
+
+  @Test
+  void webServiceModuleTakesContractOfItsOwnService() {
+    // given: у сервиса свой тип модуля, и контракт операции объявлен в нём.
+    var serviceRef = new TypeRef(TypeKind.PLATFORM, "Модуль Web-сервиса.Обмен");
+    when(typeRegistry.resolve("Модуль Web-сервиса.Обмен")).thenReturn(Optional.of(serviceRef));
+    when(typeRegistry.getMembers(eq(serviceRef), any())).thenReturn(List.of(
+      MemberDescriptor.event("Загрузить", "",
+        List.of(new SignatureDescriptor(List.of(), TypeSet.EMPTY, "")))));
+    // Общий тип вида объявляет операцию другого сервиса — брать её нельзя.
+    var genericRef = new TypeRef(TypeKind.PLATFORM, "Модуль Web-сервиса");
+    when(typeRegistry.resolve("Модуль Web-сервиса")).thenReturn(Optional.of(genericRef));
+    when(typeRegistry.getMembers(eq(genericRef), any())).thenReturn(List.of(
+      MemberDescriptor.event("Выгрузить", "",
+        List.of(new SignatureDescriptor(List.of(), TypeSet.EMPTY, "")))));
+
+    var doc = webServiceModuleDoc("Обмен");
+
+    // when, then
+    assertThat(resolver.lookupContract(doc, "Загрузить")).isPresent();
+    assertThat(resolver.lookupContract(doc, "Выгрузить")).isEmpty();
+  }
+
+  @Test
+  void webServiceModuleFallsBackToSharedTypeWhenServiceTypeIsAbsent() {
+    // given: типа сервиса нет — например, метаданные сервиса не прочитались.
+    var genericRef = new TypeRef(TypeKind.PLATFORM, "Модуль Web-сервиса");
+    when(typeRegistry.resolve("Модуль Web-сервиса.Обмен")).thenReturn(Optional.empty());
+    when(typeRegistry.resolve("Модуль Web-сервиса")).thenReturn(Optional.of(genericRef));
+    when(typeRegistry.getMembers(eq(genericRef), any())).thenReturn(List.of(
+      MemberDescriptor.event("Загрузить", "",
+        List.of(new SignatureDescriptor(List.of(), TypeSet.EMPTY, "")))));
+
+    var doc = webServiceModuleDoc("Обмен");
+
+    // when, then
+    assertThat(resolver.lookupContract(doc, "Загрузить")).isPresent();
+  }
+
+  @Test
+  void eventHandlersOfAnswersAsIsEventHandlerAndReadsMembersOnce() {
+    // given
+    var commandRef = new TypeRef(TypeKind.PLATFORM, "Модуль команды");
+    when(typeRegistry.resolve("Модуль команды")).thenReturn(Optional.of(commandRef));
+    when(typeRegistry.getMembers(eq(commandRef), any())).thenReturn(List.of(
+      MemberDescriptor.event("ОбработкаКоманды", "",
+        List.of(new SignatureDescriptor(List.of(), TypeSet.EMPTY, "")))));
+    var doc = mock(DocumentContext.class);
+    when(doc.getModuleType()).thenReturn(ModuleType.CommandModule);
+    when(doc.getFileType()).thenReturn(FileType.BSL);
+
+    // when
+    var eventHandlers = resolver.eventHandlersOf(doc);
+
+    // then: ответы те же, что у isEventHandler, а владелец и его члены найдены один раз на документ
+    assertThat(eventHandlers.test("ОбработкаКоманды")).isTrue();
+    assertThat(eventHandlers.test("ЧтоТоЕщё")).isFalse();
+    assertThat(eventHandlers.test("ОбработкаКоманды")).isTrue();
+    verify(typeRegistry, times(1)).getMembers(eq(commandRef), any());
+  }
+
+  @Test
+  void eventHandlersOfWebServiceModuleTakesItsOwnService() {
+    // given
+    var serviceRef = new TypeRef(TypeKind.PLATFORM, "Модуль Web-сервиса.Обмен");
+    when(typeRegistry.resolve("Модуль Web-сервиса.Обмен")).thenReturn(Optional.of(serviceRef));
+    when(typeRegistry.getMembers(eq(serviceRef), any())).thenReturn(List.of(
+      MemberDescriptor.event("Загрузить", "",
+        List.of(new SignatureDescriptor(List.of(), TypeSet.EMPTY, "")))));
+
+    // when
+    var eventHandlers = resolver.eventHandlersOf(webServiceModuleDoc("Обмен"));
+
+    // then
+    assertThat(eventHandlers.test("Загрузить")).isTrue();
+    assertThat(eventHandlers.test("Выгрузить")).isFalse();
+  }
+
+  @Test
+  void eventHandlersOfOScriptClassUsesFixedEvents() {
+    // given
+    var doc = mock(DocumentContext.class);
+    when(doc.getModuleType()).thenReturn(ModuleType.OScriptClass);
+
+    // when
+    var eventHandlers = resolver.eventHandlersOf(doc);
+
+    // then
+    assertThat(eventHandlers.test("ПриСозданииОбъекта")).isTrue();
+    assertThat(eventHandlers.test("СлучайныйМетод")).isFalse();
+  }
+
+  private static DocumentContext webServiceModuleDoc(String serviceName) {
+    var service = com.github._1c_syntax.bsl.mdo.WebService.builder().name(serviceName).build();
+    var doc = mock(DocumentContext.class);
+    when(doc.getModuleType()).thenReturn(ModuleType.WEBServiceModule);
+    when(doc.getMdObject()).thenReturn(Optional.of(service));
+    when(doc.getFileType()).thenReturn(FileType.BSL);
+    return doc;
+  }
+
+  @Test
+  void ownerTypeEventResolvesByEnglishAliasNotJustRuPrimaryName() {
+    var objectRef = new TypeRef(TypeKind.CONFIGURATION, "ДокументОбъект.Заказ");
+    when(typeRegistry.resolve("ДокументОбъект.Заказ")).thenReturn(Optional.of(objectRef));
+    var eventDescriptor = MemberDescriptor.event(
+        "ПередЗаписью", "",
+        List.of(new SignatureDescriptor(List.of(), TypeSet.EMPTY, "")))
+      .withBilingualName(BilingualString.of("ПередЗаписью", "BeforeWrite"));
+    when(typeRegistry.getMembers(eq(objectRef), any()))
+      .thenReturn(List.of(eventDescriptor));
+
+    var document = com.github._1c_syntax.bsl.mdo.Document.builder().name("Заказ").build();
+    var doc = mock(DocumentContext.class);
+    when(doc.getModuleType()).thenReturn(ModuleType.ObjectModule);
+    when(doc.getMdObject()).thenReturn(Optional.of(document));
+    when(doc.getFileType()).thenReturn(FileType.BSL);
+
+    assertThat(resolver.lookupContract(doc, "ПередЗаписью")).isPresent();
+    assertThat(resolver.lookupContract(doc, "BeforeWrite")).isPresent();
+    assertThat(resolver.lookupContract(doc, "beforewrite")).isPresent();
+    assertThat(resolver.lookupContract(doc, "СлучайноеИмя")).isEmpty();
+  }
+
+  @Test
+  void fixedOwnerTypeAbsentInRegistryReturnsEmpty() {
+    when(typeRegistry.resolve(anyString())).thenReturn(Optional.empty());
+    var doc = mock(DocumentContext.class);
+    when(doc.getModuleType()).thenReturn(ModuleType.HTTPServiceModule);
+
+    assertThat(resolver.lookupContract(doc, "ЛюбоеИмя")).isEmpty();
+  }
+
+  @Test
+  void mdoSpecificOwnerWithBlankNameReturnsEmpty() {
+    // mdoSpecificQualifiedName возвращает empty при пустом name MDO —
+    // строим реальный Catalog с пустым именем.
+    var catalog = com.github._1c_syntax.bsl.mdo.Catalog.builder().name("").build();
+    var doc = mock(DocumentContext.class);
+    when(doc.getModuleType()).thenReturn(ModuleType.ObjectModule);
+    when(doc.getMdObject()).thenReturn(Optional.of(catalog));
+
+    assertThat(resolver.lookupContract(doc, "ПриЗаписи")).isEmpty();
+  }
+
+  @Test
+  void mdoSpecificOwnerWithoutMdObjectReturnsEmpty() {
+    // ObjectModule → ищем mdObject; если его нет — empty.
+    var doc = mock(DocumentContext.class);
+    when(doc.getModuleType()).thenReturn(ModuleType.ObjectModule);
+    when(doc.getMdObject()).thenReturn(Optional.empty());
+
+    assertThat(resolver.lookupContract(doc, "ПриЗаписи")).isEmpty();
+  }
+
+  @Test
+  void unsupportedModuleTypeReturnsEmpty() {
+    var doc = mock(DocumentContext.class);
+    when(doc.getModuleType()).thenReturn(ModuleType.CommonModule);
+
+    assertThat(resolver.lookupContract(doc, "ПриЗаписи")).isEmpty();
+  }
+
+  /**
+   * Осознанное ограничение (не баг): обработчики форм не резолвятся. Форма — единственный
+   * {@link ModuleType}, у которого события декларируются не по имени, а в {@code Form.xml}
+   * (блок {@code <Events>}), это отдельная, не начатая задача (см. javadoc класса). Явный тест
+   * фиксирует контракт, чтобы отсутствие резолва для форм не осталось молчаливым и не
+   * воспринималось как забытый кейс при последующих правках.
+   */
+  @Test
+  void formModuleIsNotResolvedByDesign() {
+    var doc = mock(DocumentContext.class);
+    when(doc.getModuleType()).thenReturn(ModuleType.FormModule);
+
+    assertThat(resolver.lookupContract(doc, "ПриОткрытии")).isEmpty();
+    assertThat(resolver.allEvents(doc)).isEmpty();
+    verifyNoInteractions(typeRegistry);
+  }
+
+  @Test
+  void allEventsForOScriptClassReturnsBuiltinEvents() {
+    var doc = oscriptClassDoc();
+
+    var events = resolver.allEvents(doc);
+
+    assertThat(events)
+      .extracting(MemberDescriptor::name)
+      .containsExactlyInAnyOrder("ПриСозданииОбъекта", "ОбработкаПолученияПредставления");
+  }
+
+  @Test
+  void allEventsForGlobalModuleDedupsRuEnAliases() {
+    var event = stubEvent("ПередНачаломРаботыСистемы", "BeforeStart");
+    var globalContext = mock(PlatformGlobalContext.class);
+    when(globalContext.applicationEvents()).thenReturn(List.of(event));
+    when(globalContext.ordinaryApplicationEvents()).thenReturn(List.of());
+    when(globalContext.sessionModuleEvents()).thenReturn(List.of());
+    when(globalContext.externalConnectionModuleEvents()).thenReturn(List.of());
+    var provider = mock(ContextProvider.class);
+    when(provider.getGlobalContext()).thenReturn(globalContext);
+    when(bslContextHolder.get()).thenReturn(Optional.of(provider));
+
+    var doc = mock(DocumentContext.class);
+    when(doc.getModuleType()).thenReturn(ModuleType.ManagedApplicationModule);
+
+    // Событие лежит в карте под ru- и en-ключом на один и тот же объект — в allEvents() должно
+    // остаться единственное вхождение, а не два дубля.
+    assertThat(resolver.allEvents(doc))
+      .hasSize(1)
+      .extracting(MemberDescriptor::name)
+      .containsExactly("ПередНачаломРаботыСистемы");
+  }
+
+  @Test
+  void allEventsForGlobalModuleWithoutHbkReturnsEmpty() {
+    when(bslContextHolder.get()).thenReturn(Optional.empty());
+    var doc = mock(DocumentContext.class);
+    when(doc.getModuleType()).thenReturn(ModuleType.SessionModule);
+
+    assertThat(resolver.allEvents(doc)).isEmpty();
+  }
+
+  @Test
+  void allEventsForMdoSpecificOwnerFiltersByEventKind() {
+    var eventDescriptor = MemberDescriptor.event(
+      "ПриЗаписи", "", List.of(new SignatureDescriptor(List.of(), TypeSet.EMPTY, "")));
+    var methodDescriptor = MemberDescriptor.method("Записать");
+    var commandRef = new TypeRef(TypeKind.PLATFORM, "Модуль команды");
+    when(typeRegistry.resolve("Модуль команды")).thenReturn(Optional.of(commandRef));
+    when(typeRegistry.getMembers(eq(commandRef), any()))
+      .thenReturn(List.of(eventDescriptor, methodDescriptor));
+
+    var doc = mock(DocumentContext.class);
+    when(doc.getModuleType()).thenReturn(ModuleType.CommandModule);
+    when(doc.getFileType()).thenReturn(FileType.BSL);
+
+    assertThat(resolver.allEvents(doc))
+      .extracting(MemberDescriptor::name)
+      .containsExactly("ПриЗаписи");
+  }
+
+  @Test
+  void allEventsForUnsupportedModuleTypeReturnsEmpty() {
+    var doc = mock(DocumentContext.class);
+    when(doc.getModuleType()).thenReturn(ModuleType.CommonModule);
+
+    assertThat(resolver.allEvents(doc)).isEmpty();
+  }
+
+  private static ContextEvent stubEvent(String ru, String en) {
+    var event = mock(ContextEvent.class);
+    var name = new ContextName(ru, en);
+    when(event.name()).thenReturn(name);
+    when(event.signatures()).thenReturn(List.of());
+    when(event.description()).thenReturn("");
+    when(event.availabilities()).thenReturn(List.<Availability>of());
+    when(event.sinceVersion()).thenReturn("");
+    when(event.deprecatedSinceVersion()).thenReturn("");
+    when(event.recommendedReplacements()).thenReturn(List.of());
+    return event;
+  }
+}

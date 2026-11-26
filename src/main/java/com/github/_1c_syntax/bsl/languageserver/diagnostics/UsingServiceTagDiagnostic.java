@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -27,9 +27,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import org.antlr.v4.runtime.Token;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Map;
-import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -41,6 +41,8 @@ import java.util.regex.Pattern;
 )
 public class UsingServiceTagDiagnostic extends AbstractDiagnostic {
 
+  private static final Pattern NO_TAGS = Pattern.compile("(?!)");
+
   private static final String SERVICE_TAGS_DEFAULT = "todo|fixme|!!|mrg|@|отладка|debug|для\\s*отладки"
     + "|(\\{\\{|\\}\\})КОНСТРУКТОР_|(\\{\\{|\\}\\})MRG"
     + "|Вставить\\s*содержимое\\s*обработчика"
@@ -49,21 +51,40 @@ public class UsingServiceTagDiagnostic extends AbstractDiagnostic {
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + SERVICE_TAGS_DEFAULT
+    defaultValue = SERVICE_TAGS_DEFAULT
   )
   private String serviceTags = SERVICE_TAGS_DEFAULT;
+
+  @DiagnosticParameter(
+    type = String.class,
+    defaultValue = ""
+  )
+  private Pattern additionalServiceTags = NO_TAGS;
+
+  @DiagnosticParameter(
+    type = String.class,
+    defaultValue = ""
+  )
+  private Pattern excludedServiceTags = NO_TAGS;
+
   private Pattern pattern = getPatternSearch(SERVICE_TAGS_DEFAULT);
 
   @Override
   public void configure(Map<String, Object> configuration) {
     serviceTags = (String) configuration.getOrDefault("serviceTags", serviceTags);
     pattern = getPatternSearch(serviceTags);
+    additionalServiceTags = getOptionalPatternSearch((String) configuration.get("additionalServiceTags"));
+    excludedServiceTags = getOptionalPatternSearch((String) configuration.get("excludedServiceTags"));
+  }
+
+  private Pattern getOptionalPatternSearch(@Nullable String value) {
+    return value == null || value.isBlank() ? NO_TAGS : getPatternSearch(value);
   }
 
   public Pattern getPatternSearch(String value) {
     return Pattern.compile(
       "//\\s*+(" + value + ")",
-      Pattern.MULTILINE | Pattern.CASE_INSENSITIVE | Pattern.COMMENTS);
+      Pattern.MULTILINE | Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE | Pattern.COMMENTS);
   }
 
   @Override
@@ -71,15 +92,33 @@ public class UsingServiceTagDiagnostic extends AbstractDiagnostic {
     documentContext.getComments()
       .parallelStream()
       .forEach((Token token) -> {
-        Matcher matcher = pattern.matcher(token.getText());
-        if (!matcher.find()) {
+        var text = token.getText();
+        var tag = findUnexcludedTag(pattern, text);
+        if (tag == null) {
+          tag = findUnexcludedTag(additionalServiceTags, text);
+        }
+        if (tag == null) {
           return;
         }
         diagnosticStorage.addDiagnostic(
           token,
-          info.getMessage(matcher.group(0))
+          info.getMessage(tag)
         );
       });
+  }
+
+  private @Nullable String findUnexcludedTag(Pattern tags, String text) {
+    if (tags == NO_TAGS) {
+      return null;
+    }
+    var matcher = tags.matcher(text);
+    while (matcher.find()) {
+      if (excludedServiceTags == NO_TAGS
+        || !excludedServiceTags.matcher(text).region(matcher.start(), text.length()).lookingAt()) {
+        return matcher.group();
+      }
+    }
+    return null;
   }
 
 }

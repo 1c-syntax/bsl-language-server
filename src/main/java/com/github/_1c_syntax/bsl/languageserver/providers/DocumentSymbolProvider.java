@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,6 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
@@ -35,6 +37,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+/**
+ * Провайдер для получения структуры символов документа.
+ * <p>
+ * Обрабатывает запросы {@code textDocument/documentSymbol}.
+ *
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentSymbol">Document Symbols Request specification</a>
+ */
 @Component
 public final class DocumentSymbolProvider {
 
@@ -45,9 +54,16 @@ public final class DocumentSymbolProvider {
 
   private static final Set<VariableKind> supportedVariableKinds = EnumSet.of(
     VariableKind.MODULE,
+    VariableKind.LOCAL,
     VariableKind.GLOBAL
   );
 
+  /**
+   * Получить иерархическую структуру символов документа.
+   *
+   * @param documentContext Контекст документа
+   * @return Список символов верхнего уровня документа
+   */
   public List<DocumentSymbol> getDocumentSymbols(DocumentContext documentContext) {
     return documentContext.getSymbolTree().getChildren().stream()
       .filter(DocumentSymbolProvider::isSupported)
@@ -64,13 +80,31 @@ public final class DocumentSymbolProvider {
     );
 
     List<DocumentSymbol> children = symbol.getChildren().stream()
+      .filter(DocumentSymbolProvider::isSupported)
       .map(DocumentSymbolProvider::toDocumentSymbol)
       .collect(Collectors.toList());
 
     documentSymbol.setTags(symbol.getTags());
     documentSymbol.setChildren(children);
 
+    if (symbol instanceof MethodSymbol methodSymbol) {
+      documentSymbol.setDetail(buildMethodDetail(methodSymbol));
+    }
+
     return documentSymbol;
+  }
+
+  private static String buildMethodDetail(MethodSymbol methodSymbol) {
+    return methodSymbol.getParameters().stream()
+      .map(DocumentSymbolProvider::parameterSignature)
+      .collect(Collectors.joining(", ", "(", ")"));
+  }
+
+  private static String parameterSignature(ParameterDefinition parameter) {
+    if (parameter.isOptional()) {
+      return parameter.getName() + "?";
+    }
+    return parameter.getName();
   }
 
   public static boolean isSupported(Symbol symbol) {

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,9 +21,19 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
+/**
+ * Тип диагностики.
+ * <p>
+ * Определяет категорию проблемы, обнаруженной диагностикой:
+ * ошибка, code smell, уязвимость или точка повышенного внимания безопасности.
+ */
 public enum DiagnosticType {
+  /** Ошибка в коде, которая может привести к сбою или некорректной работе */
   ERROR,
+  /** Проблема качества кода (code smell), требующая рефакторинга */
   CODE_SMELL,
+  /** Уязвимость безопасности */
   VULNERABILITY,
+  /** Точка повышенного внимания безопасности (security hotspot) */
   SECURITY_HOTSPOT
 }

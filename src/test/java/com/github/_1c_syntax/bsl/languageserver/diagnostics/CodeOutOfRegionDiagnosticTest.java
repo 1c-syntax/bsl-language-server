@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -68,10 +68,10 @@ class CodeOutOfRegionDiagnosticTest extends AbstractDiagnosticTest<CodeOutOfRegi
     assertThat(diagnostics, true)
       .hasRange(4, 0, 5, 8)
     ;
-    assertThat(diagnostics.get(0).getRelatedInformation())
+    assertThat(diagnostics.getFirst().getRelatedInformation())
       .isNotNull()
       .isNotEmpty();
-    assertThat(diagnostics.get(0).getRelatedInformation().size()).isEqualTo(4);
+    assertThat(diagnostics.getFirst().getRelatedInformation().size()).isEqualTo(4);
   }
 
   @Test

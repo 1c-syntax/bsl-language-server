@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -28,15 +28,22 @@ import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.Map;
 
+/**
+ * Базовый класс для диагностик, анализирующих многоязычные строки НСтр.
+ */
 public abstract class AbstractMultilingualStringDiagnostic extends AbstractVisitorDiagnostic {
 
   private static final String DECLARED_LANGUAGES_DEFAULT = "ru";
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + DECLARED_LANGUAGES_DEFAULT
+    defaultValue = DECLARED_LANGUAGES_DEFAULT
   )
   private String declaredLanguages = DECLARED_LANGUAGES_DEFAULT;
+
+  /**
+   * Парсер для анализа многоязычных строк.
+   */
   protected MultilingualStringAnalyser parser = new MultilingualStringAnalyser(DECLARED_LANGUAGES_DEFAULT);
 
   @Override
@@ -56,6 +63,11 @@ public abstract class AbstractMultilingualStringDiagnostic extends AbstractVisit
 
   }
 
+  /**
+   * Дополнительная проверка после парсинга строки.
+   *
+   * @return {@code true} если проверка не прошла и нужно регистрировать замечание
+   */
   protected boolean check() {
     return false;
   }

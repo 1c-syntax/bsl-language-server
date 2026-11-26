@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -29,7 +29,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
@@ -95,7 +94,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
     var matcher = searchWords.matcher(ctx.getStart().getText());
     if (matcher.find()) {
       List<Token> list = ctx.expression().getTokens();
-      if (list.size() == 1 && isNotEmptyStringByToken(list.get(0))) {
+      if (list.size() == 1 && isNotEmptyStringByToken(list.getFirst())) {
         diagnosticStorage.addDiagnostic(ctx);
       }
     }
@@ -117,7 +116,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
 
     List<Token> list = ctx.expression().getTokens();
     if (list.size() == 1) {
-      processCheckAssignmentKey(ctx, list.get(0).getText());
+      processCheckAssignmentKey(ctx, list.getFirst().getText());
     }
     return super.visitAccessIndex(ctx);
   }
@@ -194,17 +193,17 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
     }
   }
 
-  private void processCheckAssignmentKey(BSLParserRuleContext ctx, String accessText) {
+  private void processCheckAssignmentKey(ParserRuleContext ctx, String accessText) {
     var matcher = searchWords.matcher(getClearString(accessText));
     if (matcher.find()) {
-      ParserRuleContext assignment = Trees.getAncestorByRuleIndex(
-        ctx.getRuleContext(),
+      var assignment = Trees.getAncestorByRuleIndex(
+        ctx,
         BSLParser.RULE_assignment
       );
       if (assignment != null
         && ((BSLParser.AssignmentContext) assignment).expression().getChildCount() == 1
         && isNotEmptyStringByToken(assignment.getStop())) {
-        diagnosticStorage.addDiagnostic((BSLParser.AssignmentContext) assignment, info.getMessage());
+        diagnosticStorage.addDiagnostic(assignment, info.getMessage());
       }
     }
   }
@@ -213,7 +212,7 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
     BSLParser.NewExpressionContext ctx,
     List<? extends BSLParser.CallParamContext> list
   ) {
-    String[] arr = list.get(0).getText().split(",");
+    String[] arr = list.getFirst().getText().split(",");
     for (var index = 0; index < arr.length; index++) {
       var matcher = searchWords.matcher(getClearString(arr[index]));
       if (matcher.find() && list.size() > index + 1 && isNotEmptyStringByToken(list.get(index + 1).getStart())) {
@@ -223,8 +222,8 @@ public class UsingHardcodeSecretInformationDiagnostic extends AbstractVisitorDia
     }
   }
 
-  private void addDiagnosticByAssignment(BSLParserRuleContext ctx, int type) {
-    BSLParserRuleContext assignment = Trees.getAncestorByRuleIndex(ctx.getRuleContext(), type);
+  private void addDiagnosticByAssignment(ParserRuleContext ctx, int type) {
+    var assignment = Trees.getAncestorByRuleIndex(ctx, type);
     if (assignment != null) {
       diagnosticStorage.addDiagnostic(assignment, info.getMessage());
     }

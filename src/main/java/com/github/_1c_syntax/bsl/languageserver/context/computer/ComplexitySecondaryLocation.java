@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,13 +21,16 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
-import lombok.AllArgsConstructor;
-import lombok.Value;
 import org.eclipse.lsp4j.Range;
 
-@Value
-@AllArgsConstructor
-public class ComplexitySecondaryLocation {
-  Range range;
-  String message;
+/**
+ * Вторичная локация для отображения сложности.
+ * <p>
+ * Содержит диапазон и сообщение для блока кода,
+ * увеличивающего сложность метода или файла.
+ *
+ * @param range    Диапазон в коде
+ * @param message  Сообщение о вкладе в сложность
+ */
+public record ComplexitySecondaryLocation(Range range, String message) {
 }

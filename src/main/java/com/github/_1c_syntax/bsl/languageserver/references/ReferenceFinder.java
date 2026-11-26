@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,6 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
+import com.github._1c_syntax.bsl.languageserver.utils.Positions;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 
 import java.net.URI;
@@ -29,6 +32,10 @@ import java.util.Optional;
 
 /**
  * Интерфейс поискового движка.
+ * <p>
+ * URI документа — тот, под которым документ зарегистрирован в контексте
+ * ({@link com.github._1c_syntax.bsl.languageserver.context.DocumentContext#getUri()}): поиск его
+ * не нормализует.
  */
 public interface ReferenceFinder {
   /**
@@ -39,4 +46,32 @@ public interface ReferenceFinder {
    * @return данные ссылки.
    */
   Optional<Reference> findReference(URI uri, Position position);
+
+  /**
+   * Поиск символа по уже известному терминалу-идентификатору — без спуска по AST
+   * от корня к позиции. Реализация по умолчанию делегирует в
+   * {@link #findReference(URI, Position)} по стартовой позиции терминала (полное
+   * поведенческое соответствие позиционному варианту). Finder'ы, чья стоимость —
+   * именно этот спуск ({@code findTerminalNodeContainsPosition} и аналоги),
+   * переопределяют метод на подъём вверх от {@code terminal}.
+   *
+   * @param uri      URI документа, в котором необходимо осуществить поиск.
+   * @param terminal терминал-идентификатор под курсором.
+   * @return данные ссылки.
+   */
+  default Optional<Reference> findReference(URI uri, TerminalNode terminal) {
+    return findReference(uri, Positions.create(terminal));
+  }
+
+  /**
+   * Целевой символ по терминалу без обязательного построения полной ссылки.
+   * По умолчанию сохраняет терминальный путь конкретного поисковика.
+   *
+   * @param uri URI документа.
+   * @param terminal терминал обращения.
+   * @return доступная цель ссылки.
+   */
+  default Optional<Symbol> findTargetSymbol(URI uri, TerminalNode terminal) {
+    return findReference(uri, terminal).map(Reference::symbol);
+  }
 }

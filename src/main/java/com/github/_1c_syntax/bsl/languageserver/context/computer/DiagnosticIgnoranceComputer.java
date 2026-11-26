@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -28,11 +28,11 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annot
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.AllArgsConstructor;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.lang3.Range;
 import org.eclipse.lsp4j.Diagnostic;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -50,6 +50,12 @@ import java.util.stream.Collectors;
 
 import static org.antlr.v4.runtime.Token.HIDDEN_CHANNEL;
 
+/**
+ * Вычислитель информации об игнорировании диагностик.
+ * <p>
+ * Анализирует комментарии в коде для определения,
+ * какие диагностики должны быть отключены для конкретных строк.
+ */
 public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnoranceComputer.Data> {
 
   private static final DiagnosticCode ALL_DIAGNOSTICS_KEY = new DiagnosticCode("all");
@@ -86,11 +92,13 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
     ignoranceStack.clear();
 
     List<Token> codeTokens = documentContext.getTokensFromDefaultChannel();
-    if (codeTokens.isEmpty()) {
+    List<Token> comments = documentContext.getComments();
+
+    if (codeTokens.isEmpty() && comments.isEmpty()) {
       return new Data(diagnosticIgnorance);
     }
 
-    computeCommentsIgnorance(codeTokens);
+    computeCommentsIgnorance(codeTokens, comments);
     computeExtensionIgnorance();
 
     return new Data(diagnosticIgnorance);
@@ -136,10 +144,8 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
 
   }
 
-  private void computeCommentsIgnorance(List<Token> codeTokens) {
+  private void computeCommentsIgnorance(List<Token> codeTokens, List<Token> comments) {
     Set<Integer> codeLines = codeTokens.stream().map(Token::getLine).collect(Collectors.toSet());
-
-    List<Token> comments = documentContext.getComments();
 
     for (Token comment : comments) {
 
@@ -153,7 +159,16 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
 
     }
 
-    int lastTokenLine = codeTokens.get(codeTokens.size() - 1).getLine();
+    int lastTokenLine;
+    if (codeTokens.isEmpty()) {
+      // File contains only comments
+      lastTokenLine = comments.isEmpty() ? 0 : comments.getLast().getLine();
+    } else {
+      int lastCodeTokenLine = codeTokens.getLast().getLine();
+      int lastCommentLine = comments.isEmpty() ? 0 : comments.getLast().getLine();
+      lastTokenLine = Math.max(lastCodeTokenLine, lastCommentLine);
+    }
+    
     ignoranceStack.forEach((DiagnosticCode diagnosticKey, Deque<Integer> ignoreRangeStarts) ->
       ignoreRangeStarts.forEach(ignoreRangeStart -> addIgnoredRange(diagnosticKey, ignoreRangeStart, lastTokenLine))
     );
@@ -227,7 +242,7 @@ public class DiagnosticIgnoranceComputer implements Computer<DiagnosticIgnorance
 
   private void addIgnoredRange(DiagnosticCode diagnosticKey, int ignoreRangeStart, int ignoreRangeEnd) {
     // convert antlr4 line numbers (1..n) to lsp (0..n)
-    Range<Integer> ignoreRange = Range.between(ignoreRangeStart - 1, ignoreRangeEnd - 1);
+    Range<Integer> ignoreRange = Range.of(ignoreRangeStart - 1, ignoreRangeEnd - 1);
     final List<Range<Integer>> ranges = diagnosticIgnorance.computeIfAbsent(diagnosticKey, s -> new ArrayList<>());
     ranges.add(ignoreRange);
   }

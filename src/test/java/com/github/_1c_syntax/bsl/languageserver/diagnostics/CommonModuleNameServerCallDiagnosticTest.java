@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -24,16 +24,18 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
+import com.github._1c_syntax.bsl.mdo.CommonModule;
+import com.github._1c_syntax.bsl.mdo.support.ObjectBelonging;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,7 +46,7 @@ import static org.mockito.Mockito.when;
 @CleanupContextBeforeClassAndAfterEachTestMethod
 class CommonModuleNameServerCallDiagnosticTest extends AbstractDiagnosticTest<CommonModuleNameServerCallDiagnostic> {
 
-  private MDCommonModule module;
+  private CommonModule module;
   private DocumentContext documentContext;
 
   CommonModuleNameServerCallDiagnosticTest() {
@@ -144,11 +146,36 @@ class CommonModuleNameServerCallDiagnosticTest extends AbstractDiagnosticTest<Co
 
   }
 
+  @ParameterizedTest
+  @CsvSource({
+    "ЗаимствованныйМодуль, ADOPTED, 0",
+    "СобственныйМодуль, OWN, 1",
+    "СобственныйМодульВызовСервера, OWN, 0"
+  })
+  @SneakyThrows
+  void testExtension(String moduleName, ObjectBelonging belonging, int diagnosticCount) {
+    var path = Absolute.path("src/test/resources/metadata/commonModuleNameServerCallExtension");
+    initServerContext(path);
+    var testFile = path.resolve("CommonModules").resolve(moduleName).resolve("Ext/Module.bsl");
+    var extensionDocument = TestUtils.getDocumentContext(
+      testFile.toUri(),
+      FileUtils.readFileToString(testFile.toFile(), StandardCharsets.UTF_8),
+      context
+    );
+    var extensionModule = (CommonModule) extensionDocument.getMdObject().orElseThrow();
+    assertThat(extensionModule.getObjectBelonging()).isEqualTo(belonging);
+    assertThat(extensionModule.isServer()).isTrue();
+    assertThat(extensionModule.isServerCall()).isTrue();
+
+    var diagnostics = diagnosticInstance.getDiagnostics(extensionDocument);
+
+    assertThat(diagnostics).hasSize(diagnosticCount);
+  }
+
   @SneakyThrows
   void getDocumentContextFromFile() {
-
     Path path = Absolute.path(PATH_TO_METADATA);
-    Path testFile = Paths.get(PATH_TO_MODULE_FILE).toAbsolutePath();
+    Path testFile = Path.of(PATH_TO_MODULE_FILE).toAbsolutePath();
 
     initServerContext(path);
     var configuration = context.getConfiguration();
@@ -157,9 +184,6 @@ class CommonModuleNameServerCallDiagnosticTest extends AbstractDiagnosticTest<Co
       FileUtils.readFileToString(testFile.toFile(), StandardCharsets.UTF_8),
       context
     ));
-
-
-    module = spy((MDCommonModule) configuration.getModulesByObject().get(documentContext.getUri()));
-
+    module = spy((CommonModule) configuration.findChild(documentContext.getUri()).get());
   }
 }

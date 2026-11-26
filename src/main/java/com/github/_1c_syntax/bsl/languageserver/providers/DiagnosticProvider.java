@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,18 +21,44 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import com.github._1c_syntax.bsl.languageserver.LanguageClientHolder;
+import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
+import com.github._1c_syntax.bsl.languageserver.client.LanguageClientHolder;
+import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.Diagnostic;
+import org.eclipse.lsp4j.DiagnosticWorkspaceCapabilities;
+import org.eclipse.lsp4j.DocumentDiagnosticReport;
 import org.eclipse.lsp4j.PublishDiagnosticsParams;
+import org.eclipse.lsp4j.RelatedFullDocumentDiagnosticReport;
+import org.eclipse.lsp4j.TextDocumentClientCapabilities;
+import org.eclipse.lsp4j.WorkspaceClientCapabilities;
+import org.eclipse.lsp4j.services.LanguageClient;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
+/**
+ * Провайдер для диагностических сообщений.
+ * <p>
+ * Отвечает за публикацию диагностик с использованием {@code textDocument/publishDiagnostics},
+ * предоставление диагностик по запросу {@code textDocument/diagnostic}
+ * и уведомление об обновлении диагностик через {@code workspace/diagnostic/refresh}.
+ *
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_publishDiagnostics">PublishDiagnostics Notification specification</a>
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#textDocument_diagnostic">Diagnostic Pull Request specification</a>
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/#diagnostic_refresh">Diagnostic Refresh Request specification</a>
+ */
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -41,13 +67,163 @@ public final class DiagnosticProvider {
   public static final String SOURCE = "bsl-language-server";
 
   private final LanguageClientHolder clientHolder;
+  private final ClientCapabilitiesHolder clientCapabilitiesHolder;
+  private final ServerContextProvider serverContextProvider;
 
+  private boolean clientSupportsRefresh;
+
+  /**
+   * Вычислить и опубликовать диагностики для документа.
+   *
+   * @param documentContext Контекст документа
+   */
   public void computeAndPublishDiagnostics(DocumentContext documentContext) {
     publishDiagnostics(documentContext, documentContext::getDiagnostics);
   }
 
+  /**
+   * Получить диагностики для документа (pull-модель).
+   *
+   * @param documentContext Контекст документа
+   * @return Отчет с диагностиками
+   */
+  public DocumentDiagnosticReport getDiagnostic(DocumentContext documentContext) {
+    var diagnostics = documentContext.getDiagnostics();
+    var report = new RelatedFullDocumentDiagnosticReport(diagnostics);
+    return new DocumentDiagnosticReport(report);
+  }
+
+  /**
+   * Проверить, поддерживает ли клиент pull-модель диагностик
+   * ({@code textDocument/diagnostic}).
+   * <p>
+   * Признаком поддержки считается наличие возможности
+   * {@code textDocument.diagnostic} в заявленных возможностях клиента.
+   * Для таких клиентов сервер не выполняет push-публикацию диагностик
+   * через {@code textDocument/publishDiagnostics}, а отдаёт их по запросу.
+   *
+   * @return {@code true}, если клиент поддерживает pull-модель диагностик,
+   *   иначе {@code false} (в том числе если клиент ещё не подключён).
+   */
+  public boolean supportsPullDiagnostics() {
+    return clientCapabilitiesHolder.getCapabilities()
+      .map(ClientCapabilities::getTextDocument)
+      .map(TextDocumentClientCapabilities::getDiagnostic)
+      .isPresent();
+  }
+
+  /**
+   * Опубликовать пустой список диагностик для документа.
+   *
+   * @param documentContext Контекст документа
+   */
   public void publishEmptyDiagnosticList(DocumentContext documentContext) {
     publishDiagnostics(documentContext, Collections::emptyList);
+  }
+
+  /**
+   * Обработчик события {@link LanguageServerInitializedEvent}.
+   * <p>
+   * Проверяет поддержку клиентом workspace/diagnostic/refresh.
+   *
+   * @param event Событие
+   */
+  @EventListener
+  public void handleInitializeEvent(LanguageServerInitializedEvent event) {
+    clientSupportsRefresh = clientCapabilitiesHolder.getCapabilities()
+      .map(ClientCapabilities::getWorkspace)
+      .map(WorkspaceClientCapabilities::getDiagnostics)
+      .map(DiagnosticWorkspaceCapabilities::getRefreshSupport)
+      .orElse(false);
+  }
+
+  /**
+   * Обработчик события {@link LanguageServerConfigurationChangedEvent}.
+   * <p>
+   * Отправляет клиенту запрос на обновление диагностик при изменении конфигурации.
+   *
+   * @param event Событие
+   */
+  @EventListener
+  public void handleConfigurationChangedEvent(LanguageServerConfigurationChangedEvent event) {
+    // LSC локальна для workspace, в момент публикации события WorkspaceContextHolder
+    // указывает на нужный — берём только его serverContext.
+    var workspaceUri = com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder.get();
+    if (workspaceUri == null) {
+      return;
+    }
+    var serverContext = serverContextProvider.getAllContexts().get(workspaceUri);
+    if (serverContext != null) {
+      refreshDiagnostics(serverContext);
+    }
+  }
+
+  /**
+   * Обработчик события {@link ServerContextPopulatedEvent}.
+   * <p>
+   * После наполнения контекста сервера межфайловые диагностики уже открытых документов
+   * (неиспользуемые методы, обращения к общим модулям и т.п.) могли устареть, поэтому
+   * pull-клиенту отправляется запрос на их повторный расчёт через
+   * {@code workspace/diagnostic/refresh}.
+   *
+   * @param event Событие наполнения контекста сервера
+   */
+  @EventListener
+  public void handleServerContextPopulatedEvent(ServerContextPopulatedEvent event) {
+    refreshDiagnostics(event.getSource());
+  }
+
+  /**
+   * Обработчик события {@link ConfigurationTypesRegisteredEvent}.
+   * <p>
+   * После регистрации конфигурационных типов diagnostic'и, опирающиеся на
+   * реестр типов (UnknownMember, EventHandler*, и т.п.), могут давать
+   * результат, отличный от того, что был вычислен до регистрации.
+   * Просим клиента перезапросить (pull) или push'им сами, если
+   * клиент не поддерживает refresh.
+   */
+  @EventListener
+  public void handleConfigurationTypesRegistered(ConfigurationTypesRegisteredEvent event) {
+    refreshDiagnostics(event.getSource());
+  }
+
+  /**
+   * Обновляет диагностики у клиента. Сначала чистит закэшированные диагностики у открытых
+   * документов: иначе при следующем {@code textDocument/diagnostic} (pull-режим) или
+   * {@code documentContext::getDiagnostics} (push) клиент получит закэшированное значение,
+   * вычисленное на ещё неполном контексте. Дальше — при поддержке клиентом pull-refresh
+   * отправляется {@code workspace/diagnostic/refresh}; иначе свежие диагностики push'атся
+   * самим сервером. Закрытые документы не трогаем — клиенту они сейчас не нужны,
+   * {@code AnalyzeProjectOnStart} их обработает отдельно.
+   */
+  private void refreshDiagnostics(ServerContext serverContext) {
+    var opened = serverContext.getOpenedDocuments();
+    opened.forEach(DocumentContext::clearDiagnostics);
+    if (clientSupportsRefresh) {
+      clientHolder.execIfConnected((LanguageClient languageClient) -> {
+        LOGGER.debug("Requesting diagnostic refresh from client ({} opened documents cleared)",
+          opened.size());
+        languageClient.refreshDiagnostics();
+      });
+      return;
+    }
+    LOGGER.debug("Pushing recomputed diagnostics to {} opened document(s)", opened.size());
+    opened.forEach(this::computeAndPublishDiagnosticsUnderLock);
+  }
+
+  /**
+   * Вычислить и опубликовать диагностики под read-локом документа: пересчёт не должен
+   * пересекаться с конкурентным перестроением документа и синхронной переиндексацией
+   * ссылок (писатели — didOpen, {@code DocumentChangeExecutor} — держат write-лок).
+   */
+  private void computeAndPublishDiagnosticsUnderLock(DocumentContext documentContext) {
+    var lock = documentContext.getServerContext().getDocumentLock(documentContext.getUri());
+    lock.readLock().lock();
+    try {
+      computeAndPublishDiagnostics(documentContext);
+    } finally {
+      lock.readLock().unlock();
+    }
   }
 
   private void publishDiagnostics(DocumentContext documentContext, Supplier<List<Diagnostic>> diagnostics) {

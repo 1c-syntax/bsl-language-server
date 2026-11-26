@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -25,12 +25,13 @@ import com.contrastsecurity.sarif.Location;
 import com.contrastsecurity.sarif.PhysicalLocation;
 import com.contrastsecurity.sarif.Result;
 import com.contrastsecurity.sarif.SarifSchema210;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfos;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.info.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
-import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.apache.commons.io.FileUtils;
@@ -42,25 +43,32 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-@CleanupContextBeforeClassAndAfterClass
-class SarifReporterTest {
+@CleanupContextBeforeClassAndAfterEachTestMethod
+class SarifReporterTest extends AbstractServerContextAwareTest {
+
+  private static final String SOURCE_DIR = ".";
 
   @Autowired
   private SarifReporter reporter;
+
   @Autowired
+  private DiagnosticInfos diagnosticInfosBean;
+
   private Collection<DiagnosticInfo> diagnosticInfos;
+
   @Autowired
   private LanguageServerConfiguration configuration;
 
@@ -68,6 +76,12 @@ class SarifReporterTest {
 
   @BeforeEach
   void setUp() {
+    // Workspace нужен только для резолва workspace-scoped бинов: отчёт строится из
+    // AnalysisInfo, а не из содержимого контекста. Пустой каталог вместо корня проекта —
+    // регистрация корня индексировала бы OneScript-библиотеки всего репозитория
+    // (чтение и разбор каждого .os) на каждый тест-метод.
+    initServerContext();
+    diagnosticInfos = diagnosticInfosBean.getByCode().values();
     FileUtils.deleteQuietly(file);
   }
 
@@ -78,7 +92,7 @@ class SarifReporterTest {
   }
 
   @Test
-  void report() throws IOException {
+  void report() {
 
     // given
     configuration.getDiagnosticsOptions().getParameters().put("Typo", Either.forLeft(false));
@@ -94,26 +108,25 @@ class SarifReporterTest {
     );
 
     var documentContext = TestUtils.getDocumentContext("");
-    String sourceDir = ".";
-    FileInfo fileInfo = new FileInfo(sourceDir, documentContext, Collections.singletonList(diagnostic));
-    AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), sourceDir);
+    FileInfo fileInfo = new FileInfo(SOURCE_DIR, documentContext, Collections.singletonList(diagnostic));
+    AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), SOURCE_DIR);
 
     // when
-    reporter.report(analysisInfo, Path.of(sourceDir));
+    ReporterTestDriver.report(reporter, analysisInfo, Path.of("."));
 
     // then
-    ObjectMapper mapper = new ObjectMapper();
+    var mapper = new JsonMapper();
     var report = mapper.readValue(file, SarifSchema210.class);
 
     assertThat(report).isNotNull();
 
-    var run = report.getRuns().get(0);
+    var run = report.getRuns().getFirst();
 
     assertThat(run.getTool().getDriver().getName()).isEqualTo("BSL Language Server");
     assertThat(run.getTool().getDriver().getRules())
       .hasSize(diagnosticInfos.size());
 
-    var invocation = run.getInvocations().get(0);
+    var invocation = run.getInvocations().getFirst();
     assertThat(invocation.getRuleConfigurationOverrides())
       .hasSizeGreaterThan(0)
       .anyMatch(configurationOverride -> configurationOverride.getDescriptor().getId().equals("Typo")
@@ -134,7 +147,7 @@ class SarifReporterTest {
       .matches(result -> result.getAnalysisTarget().getUri().equals(documentContext.getUri().toString()))
 
       .extracting(Result::getLocations)
-      .extracting(locations -> locations.get(0))
+      .extracting(List::getFirst)
       .extracting(Location::getPhysicalLocation)
       .extracting(PhysicalLocation::getRegion)
 
@@ -144,6 +157,11 @@ class SarifReporterTest {
       .matches(region -> region.getEndColumn().equals(diagnostic.getRange().getEnd().getCharacter() + 1))
     ;
 
+  }
+
+  @Test
+  void doesNotRequireMetricCalculation() {
+    assertThat(reporter.isMetricCalculationRequired()).isFalse();
   }
 
 }

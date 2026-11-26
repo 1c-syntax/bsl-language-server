@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,24 +21,245 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.types.registry.EventHandlerResolver;
+import com.github._1c_syntax.bsl.languageserver.util.EventHandlerResolverStubs;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import org.eclipse.lsp4j.DocumentSymbol;
 import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.SymbolTag;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentMatchers;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
+import static org.mockito.Mockito.when;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
-class DocumentSymbolProviderTest {
+class DocumentSymbolProviderTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private DocumentSymbolProvider documentSymbolProvider;
+
+  @MockitoBean
+  private EventHandlerResolver eventHandlerResolver;
+
+  @BeforeEach
+  void resetEventHandlerResolver() {
+    EventHandlerResolverStubs.delegateEventHandlersOfToIsEventHandler(eventHandlerResolver);
+    when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
+      .thenReturn(Optional.empty());
+  }
+
+  /**
+   * Регрессионный тест: незавершённое объявление переменной ({@code Перем} без имени)
+   * не должно порождать символ с «вывернутым» диапазоном и ломать весь ответ на
+   * запрос {@code textDocument/documentSymbol}.
+   */
+  @Test
+  void testIncompleteVariableDeclarationDoesNotBreakSelectionRange() {
+    // given - незавершённое объявление переменной без имени (Перем без идентификатора).
+    // Парсер восстанавливается, подставляя токен-ошибку, из-за чего диапазон объявления
+    // становится «вывернутым» и selectionRange перестаёт содержаться в range, что ломало
+    // весь ответ на запрос textDocument/documentSymbol.
+    var documentContext = TestUtils.getDocumentContext("""
+      Функция ЗначениеПеременной(ИмяПеременной) Экспорт
+      	Перем
+      КонецФункции""");
+
+    // when
+    List<DocumentSymbol> documentSymbols = documentSymbolProvider.getDocumentSymbols(documentContext);
+
+    var allSymbols = flatten(documentSymbols);
+
+    // then
+    assertThat(allSymbols)
+      // метод по-прежнему отдаётся в структуре документа
+      .anyMatch(documentSymbol -> documentSymbol.getKind() == SymbolKind.Method)
+      // каждый symbol (включая вложенные) имеет selectionRange внутри range
+      .allMatch(documentSymbol ->
+        Ranges.containsRange(documentSymbol.getRange(), documentSymbol.getSelectionRange())
+      )
+      // сломанный символ переменной без имени не попадает в структуру документа
+      .noneMatch(documentSymbol -> documentSymbol.getKind() == SymbolKind.Variable);
+  }
+
+  /**
+   * Detail метода-функции содержит сигнатуру с именами параметров,
+   * необязательные параметры помечаются знаком {@code =}.
+   */
+  @Test
+  void testMethodDetailContainsParameterNames() {
+    // given
+    var documentContext = TestUtils.getDocumentContext("""
+      Функция Сложить(Первое, Второе = 0) Экспорт
+      КонецФункции""");
+
+    // when
+    List<DocumentSymbol> documentSymbols = documentSymbolProvider.getDocumentSymbols(documentContext);
+
+    // then
+    assertThat(documentSymbols)
+      .filteredOn(documentSymbol -> documentSymbol.getKind() == SymbolKind.Method)
+      .hasSize(1)
+      .anyMatch(documentSymbol -> documentSymbol.getDetail().equals("(Первое, Второе?)"));
+  }
+
+  /**
+   * Detail метода без параметров равен пустым скобкам {@code ()}.
+   */
+  @Test
+  void testMethodWithoutParametersHasEmptyParenthesesDetail() {
+    // given
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура БезПараметров()
+      КонецПроцедуры""");
+
+    // when
+    List<DocumentSymbol> documentSymbols = documentSymbolProvider.getDocumentSymbols(documentContext);
+
+    // then
+    assertThat(documentSymbols)
+      .filteredOn(documentSymbol -> documentSymbol.getKind() == SymbolKind.Method)
+      .hasSize(1)
+      .allMatch(documentSymbol -> documentSymbol.getDetail().equals("()"));
+  }
+
+  /**
+   * Методы общего модуля (BSL) — это функции без состояния, не члены объекта,
+   * поэтому в структуре документа они отдаются как {@link SymbolKind#Function}.
+   */
+  @Test
+  void testCommonModuleMethodsReportedAsFunction() {
+    // given — общий модуль конфигурации (модуль без состояния)
+    initServerContextOnce(Path.of(TestUtils.PATH_TO_METADATA));
+    context.getConfiguration();
+    var documentContext = context
+      .getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule)
+      .orElseThrow();
+
+    // when
+    List<DocumentSymbol> documentSymbols = documentSymbolProvider.getDocumentSymbols(documentContext);
+
+    // then — методы общего модуля отдаются как Function, ни один не остаётся Method
+    var allSymbols = flatten(documentSymbols);
+    assertThat(allSymbols)
+      .anyMatch(documentSymbol -> documentSymbol.getName().equals("НеУстаревшаяПроцедура")
+        && documentSymbol.getKind() == SymbolKind.Function)
+      .anyMatch(documentSymbol -> documentSymbol.getName().equals("НеУстаревшаяФункция")
+        && documentSymbol.getKind() == SymbolKind.Function)
+      .noneMatch(documentSymbol -> documentSymbol.getKind() == SymbolKind.Method);
+  }
+
+  /**
+   * Методы модуля объекта (BSL) — члены объекта со состоянием,
+   * поэтому в структуре документа они остаются {@link SymbolKind#Method}.
+   */
+  @Test
+  void testObjectModuleMethodsStayMethod() {
+    // given — модуль объекта справочника (модуль со состоянием)
+    initServerContextOnce(Path.of(TestUtils.PATH_TO_METADATA));
+    context.getConfiguration();
+    var documentContext = context
+      .getDocument("Catalog.Справочник1", ModuleType.ObjectModule)
+      .orElseThrow();
+
+    // when
+    List<DocumentSymbol> documentSymbols = documentSymbolProvider.getDocumentSymbols(documentContext);
+
+    // then — метод модуля объекта остаётся Method, не превращается в Function
+    var allSymbols = flatten(documentSymbols);
+    assertThat(allSymbols)
+      .anyMatch(documentSymbol -> documentSymbol.getName().equals("Тест")
+        && documentSymbol.getKind() == SymbolKind.Method)
+      .noneMatch(documentSymbol -> documentSymbol.getKind() == SymbolKind.Function);
+  }
+
+  /**
+   * Методы модуля OneScript — функции без состояния,
+   * поэтому в структуре документа они отдаются как {@link SymbolKind#Function}.
+   */
+  @Test
+  void testOneScriptModuleMethodsReportedAsFunction() {
+    // given — модуль OneScript (.os, модуль без состояния)
+    var documentContext = TestUtils.getDocumentContext(
+      TestUtils.FAKE_OSCRIPT_DOCUMENT_URI,
+      """
+        Процедура Тест() Экспорт
+        КонецПроцедуры""");
+
+    // when
+    List<DocumentSymbol> documentSymbols = documentSymbolProvider.getDocumentSymbols(documentContext);
+
+    // then — метод модуля OneScript отдаётся как Function
+    assertThat(flatten(documentSymbols))
+      .anyMatch(documentSymbol -> documentSymbol.getName().equals("Тест")
+        && documentSymbol.getKind() == SymbolKind.Function)
+      .noneMatch(documentSymbol -> documentSymbol.getKind() == SymbolKind.Method);
+  }
+
+  /**
+   * Рекурсивно разворачивает иерархию символов документа в плоский список,
+   * включая всех вложенных потомков.
+   *
+   * @param documentSymbols Символы (как правило, верхнего уровня документа)
+   * @return Плоский список символов вместе со всеми вложенными
+   */
+  private static List<DocumentSymbol> flatten(List<DocumentSymbol> documentSymbols) {
+    List<DocumentSymbol> result = new ArrayList<>();
+    documentSymbols.forEach(documentSymbol -> {
+      result.add(documentSymbol);
+      var children = documentSymbol.getChildren();
+      if (children != null) {
+        result.addAll(flatten(children));
+      }
+    });
+    return result;
+  }
+
+  /**
+   * Метод-обработчик платформенного события регистрируется в дереве символов как
+   * {@link com.github._1c_syntax.bsl.languageserver.context.symbol.EventMethodSymbol}, и outline
+   * отдаёт для него {@link SymbolKind#Event} вместо {@link SymbolKind#Method}.
+   */
+  @Test
+  void testEventHandlerMethodMarkedAsEventKind() {
+    // given — резолвер стабится ДО создания документа: MethodSymbolComputer опрашивает
+    // классификатор синхронно при обходе AST, то есть уже во время TestUtils.getDocumentContext(...).
+    // Стабится именно isEventHandler, а не lookupContract: eventHandlerResolver — мок, а не spy,
+    // поэтому стаб lookupContract не заставит невыстабленный isEventHandler отработать "по-настоящему".
+    when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.eq("ПриЗаписи")))
+      .thenReturn(true);
+    when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.eq("ОбычнаяПроцедура")))
+      .thenReturn(false);
+
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ПриЗаписи(Отказ)
+      КонецПроцедуры
+      Процедура ОбычнаяПроцедура()
+      КонецПроцедуры""");
+
+    // when
+    var documentSymbols = documentSymbolProvider.getDocumentSymbols(documentContext);
+
+    // then
+    assertThat(documentSymbols)
+      .filteredOn(symbol -> symbol.getName().equals("ПриЗаписи"))
+      .hasSize(1)
+      .allMatch(symbol -> symbol.getKind() == SymbolKind.Event);
+    assertThat(documentSymbols)
+      .filteredOn(symbol -> symbol.getName().equals("ОбычнаяПроцедура"))
+      .hasSize(1)
+      .allMatch(symbol -> symbol.getKind() == SymbolKind.Method);
+  }
 
   @Test
   void testDocumentSymbol() {
@@ -107,14 +328,14 @@ class DocumentSymbolProviderTest {
       .allMatch(documentSymbol -> documentSymbol.getKind() == SymbolKind.Method)
     ;
 
-    DocumentSymbol method = externalRegion.getChildren().get(0);
+    DocumentSymbol method = externalRegion.getChildren().getFirst();
     assertThat(method.getChildren())
       .hasSize(1)
       .allMatch(documentSymbol -> documentSymbol.getKind() == SymbolKind.Namespace)
       .allMatch(documentSymbol -> documentSymbol.getName().equals("ВнутренняяОбласть1"))
     ;
 
-    DocumentSymbol internalRegion1 = method.getChildren().get(0);
+    DocumentSymbol internalRegion1 = method.getChildren().getFirst();
     assertThat(internalRegion1.getChildren())
       .hasSize(1)
       .allMatch(documentSymbol -> documentSymbol.getKind() == SymbolKind.Namespace)

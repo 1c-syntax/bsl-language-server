@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,9 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli.lsp;
 
-import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.jsonrpc.Launcher;
-import org.eclipse.lsp4j.launch.LSPLauncher;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.springframework.context.annotation.Bean;
@@ -36,18 +34,23 @@ import java.io.OutputStream;
  * Конфигурация для создания объектов из lsp4j-слоя.
  */
 @Configuration
-@Slf4j
 public class LanguageServerLauncherConfiguration {
 
   @Bean
   public Launcher<LanguageClient> launcher(
     LanguageServer server,
-    FileAwarePrintWriter printWriter
+    TraceAwareLauncherBuilder builder
   ) {
     InputStream in = System.in;
     OutputStream out = System.out;
 
-    return LSPLauncher.createServerLauncher(server, in, out, false, printWriter);
+    return builder
+      .setLocalService(server)
+      .setRemoteInterface(LanguageClient.class)
+      .setInput(in)
+      .setOutput(out)
+      .validateMessages(false)
+      .create();
 
   }
 

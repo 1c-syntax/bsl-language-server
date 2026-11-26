@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,12 +21,21 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references;
 
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
+import com.github._1c_syntax.bsl.languageserver.references.model.LocationRepository;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrenceRepository;
+import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrence;
+import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -36,6 +45,7 @@ import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationEventPublisher;
 
 import java.io.File;
 import java.io.IOException;
@@ -44,18 +54,77 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
-class ReferenceIndexFillerTest {
+class ReferenceIndexFillerTest extends AbstractServerContextAwareTest {
+
+  private static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
 
   @Autowired
   private ReferenceIndexFiller referenceIndexFiller;
   @Autowired
   private ReferenceIndex referenceIndex;
-
   @Autowired
-  private ServerContext serverContext;
+  private ApplicationEventPublisher eventPublisher;
+  @Autowired
+  private GlobalScopeProvider globalScopeProvider;
+  @Autowired
+  private LocationRepository locations;
+  @Autowired
+  private SymbolOccurrenceRepository occurrences;
+
+  @Test
+  void changedTextKeepsCanonicalLocalKeysInBothRepositories() {
+    // given
+    initServerContext(PATH_TO_METADATA);
+    var file = new File(PATH_TO_METADATA, "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
+    var source = """
+      Procedure Local()
+        LocalValue = 1;
+        Message(LocalValue);
+        Message(LocalValue);
+      EndProcedure
+      """;
+    var document = TestUtils.getDocumentContext(Absolute.uri(file), source, context);
+    referenceIndexFiller.fill(document);
+    var key = locations.getSymbolOccurrencesByLocationUri(document.getUri())
+      .map(SymbolOccurrence::symbol)
+      .filter(symbol -> symbol.symbolName().equals("localvalue"))
+      .findFirst().orElseThrow();
+
+    // when
+    context.rebuildDocument(document, "\n" + source, 1);
+    referenceIndexFiller.fill(document);
+
+    // then
+    var replacements = locations.getSymbolOccurrencesByLocationUri(document.getUri())
+      .filter(occurrence -> occurrence.symbol().equals(key)).toList();
+    assertThat(replacements).hasSize(2)
+      .allSatisfy(occurrence -> assertThat(occurrence.symbol()).isSameAs(key));
+    assertThat(occurrences.getAllBySymbol(key)).containsExactlyInAnyOrderElementsOf(replacements)
+      .allSatisfy(occurrence -> assertThat(occurrence.symbol()).isSameAs(key));
+  }
+
+  @Test
+  void configurationTypesRegisteredAfterDocumentIsReleasedDoesNotReadIt() {
+    // given: документ общего модуля наполнен и освобождён — так бывает, когда регистрация
+    // типов в фоне заканчивается после того, как документ уже прочитан и отпущен.
+    initServerContext(PATH_TO_METADATA);
+    var file = new File(PATH_TO_METADATA, "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
+    var documentContext = context.addDocument(Absolute.uri(file));
+    context.rebuildDocument(documentContext);
+    assertThat(globalScopeProvider.moduleTypeRefByUri(documentContext.getUri())).isPresent();
+    context.tryClearDocument(documentContext);
+
+    // when: событие не падает на документе без текста
+    eventPublisher.publishEvent(new ConfigurationTypesRegisteredEvent(context));
+
+    // then: и не перечитывает его ради ссылок
+    assertThat(context.getDocumentState(documentContext)).isEqualTo(DocumentState.WITHOUT_CONTENT);
+  }
 
   @Test
   void testFindCalledMethod() {
@@ -70,13 +139,52 @@ class ReferenceIndexFillerTest {
     assertThat(referencedSymbol).isPresent();
 
     assertThat(referencedSymbol).get()
-      .extracting(Reference::getSymbol)
+      .extracting(Reference::symbol)
       .extracting(Symbol::getName)
       .isEqualTo("Локальная");
 
     assertThat(referencedSymbol).get()
-      .extracting(Reference::getSelectionRange)
+      .extracting(Reference::selectionRange)
       .isEqualTo(Ranges.create(4, 0, 4, 9));
+  }
+
+  @Test
+  void rereadOfSameContentKeepsReferences() {
+    // given: документ проиндексирован.
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexFillerTest.bsl");
+    referenceIndexFiller.handleEvent(new DocumentContextContentChangedEvent(documentContext));
+    assertThat(referenceIndex.getReference(documentContext.getUri(), new Position(4, 0)))
+      .as("вхождения собраны первым разбором")
+      .isPresent();
+
+    // when: тот же самый текст разобран заново — обходить дерево незачем.
+    referenceIndexFiller.handleEvent(new DocumentContextContentChangedEvent(documentContext, false));
+
+    // then
+    assertThat(referenceIndex.getReference(documentContext.getUri(), new Position(4, 0))).isPresent();
+  }
+
+  @Test
+  void rereadOfSameContentIndexesAgainAfterDocumentWasRemoved() {
+    // given: документ проиндексирован, а затем удалён из рабочей области — вместе со
+    // вхождениями снят и признак «индексация дошла до конца».
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexFillerTest.bsl");
+    referenceIndexFiller.handleEvent(new DocumentContextContentChangedEvent(documentContext));
+    assertThat(referenceIndex.getReference(documentContext.getUri(), new Position(4, 0)))
+      .as("вхождения собраны первым разбором")
+      .isPresent();
+    referenceIndexFiller.handleEvent(
+      new ServerContextDocumentRemovedEvent(documentContext.getServerContext(), documentContext.getUri()));
+    assertThat(referenceIndex.getReference(documentContext.getUri(), new Position(4, 0))).isEmpty();
+
+    // when: тот же самый текст разобран заново.
+    referenceIndexFiller.handleEvent(new DocumentContextContentChangedEvent(documentContext, false));
+
+    // then: пропуск разрешён только когда вхождения уже собраны, иначе индекс остался бы
+    // пустым до следующей правки файла.
+    assertThat(referenceIndex.getReference(documentContext.getUri(), new Position(4, 0))).isPresent();
   }
 
   @Test
@@ -102,26 +210,59 @@ class ReferenceIndexFillerTest {
   }
 
   @Test
-  void testFindNotifyDescriptionConfiguration() throws IOException {
-    var path = Absolute.path("src/test/resources/metadata/designer");
-    serverContext.setConfigurationRoot(path);
+  void testFindHandlersAttachedByName() {
+    // Обработчик, подключённый именем-строкой, иначе выглядит никем не вызываемым:
+    // других обращений к нему в модуле нет.
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexAttachedHandlers.bsl");
+    referenceIndexFiller.fill(documentContext);
 
-    var file = new File("src/test/resources/metadata/designer",
+    assertThat(referencesTo(documentContext, "ОбработчикОжидания"))
+      .as("подключение и отключение — две ссылки")
+      .hasSize(2);
+    assertThat(referencesTo(documentContext, "ОбработчикАнглийский")).hasSize(1);
+    assertThat(referencesTo(documentContext, "ТоварыПриИзменении"))
+      .as("действие элемента формы — второй параметр вызова")
+      .hasSize(1);
+    assertThat(referencesTo(documentContext, "ЦенаПриИзменении")).hasSize(1);
+    assertThat(referencesTo(documentContext, "ДатаИзменена"))
+      .as("обработчик изменения данных — второй параметр, подключение и отключение")
+      .hasSize(2);
+
+    assertThat(referencesTo(documentContext, "ОбработчикИзПеременной"))
+      .as("имя собрано в переменной — статически неизвестно")
+      .isEmpty();
+    assertThat(referencesTo(documentContext, "ОбработчикСобытияПоИмениСобытия"))
+      .as("первый параметр УстановитьДействие — имя события, а не обработчика")
+      .isEmpty();
+  }
+
+  private List<Reference> referencesTo(DocumentContext documentContext, String methodName) {
+    var method = documentContext.getSymbolTree().getMethodSymbol(methodName);
+    assertThat(method).as("метод %s", methodName).isPresent();
+    return referenceIndex.getReferencesTo(method.get());
+  }
+
+  @Test
+  void testFindNotifyDescriptionConfiguration() throws IOException {
+    initServerContext(PATH_TO_METADATA);
+
+    var file = new File(PATH_TO_METADATA,
       "Documents/Документ1/Forms/ФормаДокумента/Ext/Form/Module.bsl");
     var uri = Absolute.uri(file);
     TestUtils.getDocumentContext(
       uri,
       FileUtils.readFileToString(file, StandardCharsets.UTF_8),
-      serverContext
+      context
     );
 
-    file = new File("src/test/resources/metadata/designer",
+    file = new File(PATH_TO_METADATA,
       "CommonModules/КлиентскийОбщийМодуль/Ext/Module.bsl");
     uri = Absolute.uri(file);
     var documentContext = TestUtils.getDocumentContext(
       uri,
       FileUtils.readFileToString(file, StandardCharsets.UTF_8),
-      serverContext
+      context
     );
 
     var method = documentContext.getSymbolTree().getMethodSymbol("ОбработчикОписаниеОповещения");
@@ -149,17 +290,17 @@ class ReferenceIndexFillerTest {
     assertThat(referencedSymbol).isPresent();
 
     assertThat(referencedSymbol).get()
-      .extracting(Reference::getSymbol)
+      .extracting(Reference::symbol)
       .extracting(Symbol::getName)
       .isEqualTo("Первая");
 
     assertThat(referencedSymbol).get()
-      .extracting(Reference::getFrom)
+      .extracting(Reference::from)
       .extracting(Symbol::getName)
       .isEqualTo("ТретийМетод");
 
     assertThat(referencedSymbol).get()
-      .extracting(Reference::getOccurrenceType)
+      .extracting(Reference::occurrenceType)
       .isEqualTo(OccurrenceType.REFERENCE);
 
     var scopeMethod = documentContext
@@ -169,7 +310,7 @@ class ReferenceIndexFillerTest {
     var references = referenceIndex.getReferencesFrom(scopeMethod.get());
     assertThat(references).hasSize(13);
 
-    var targetVariable = documentContext.getSymbolTree().getVariables().get(0);
+    var targetVariable = documentContext.getSymbolTree().getVariables().getFirst();
     var usage = referenceIndex.getReferencesTo(targetVariable);
     assertThat(usage).hasSize(5);
   }
@@ -203,11 +344,11 @@ class ReferenceIndexFillerTest {
 
     var referencedSymbol = referenceIndex.getReference(
       documentContext.getUri(),
-      new Position(33, 10)
+      new Position(33, 9)
     );
     assertThat(referencedSymbol).isPresent();
     assertThat(referencedSymbol).get()
-      .extracting(Reference::getSymbol)
+      .extracting(Reference::symbol)
       .extracting(Symbol::getName)
       .isEqualTo("Модуль");
 
@@ -231,7 +372,7 @@ class ReferenceIndexFillerTest {
     );
     assertThat(referencedSymbol).isPresent();
     assertThat(referencedSymbol).get()
-      .extracting(Reference::getSymbol)
+      .extracting(Reference::symbol)
       .extracting(Symbol::getName)
       .isEqualTo("Модуль");
 
@@ -256,12 +397,12 @@ class ReferenceIndexFillerTest {
     assertThat(referencedSymbol).isPresent();
 
     assertThat(referencedSymbol).get()
-      .extracting(Reference::getSymbol)
+      .extracting(Reference::symbol)
       .extracting(Symbol::getName)
       .isEqualTo("Запрос");
 
     assertThat(referencedSymbol).get()
-      .extracting(Reference::getOccurrenceType)
+      .extracting(Reference::occurrenceType)
       .isEqualTo(OccurrenceType.DEFINITION);
   }
 
@@ -285,5 +426,388 @@ class ReferenceIndexFillerTest {
 
     // then
     assertThat(referencesTo).hasSize(1);
+  }
+
+  @Test
+  void testFindCommonModuleVariableReferences() throws IOException {
+    initServerContext(PATH_TO_METADATA);
+
+
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexCommonModuleVariable.bsl"
+    );
+
+    // Load the common module that will be referenced
+    var file = new File(PATH_TO_METADATA,
+      "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
+    var uri = Absolute.uri(file);
+    var commonModuleContext = TestUtils.getDocumentContext(
+      uri,
+      FileUtils.readFileToString(file, StandardCharsets.UTF_8),
+      context
+    );
+
+    referenceIndexFiller.fill(documentContext);
+
+    // Check that exported methods from common module are referenced
+    var procMethod = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяПроцедура");
+    assertThat(procMethod).isPresent();
+    var referencesToProc = referenceIndex.getReferencesTo(procMethod.get());
+    // Filter to only references from our test document
+    var referencesToProcFromTest = referencesToProc.stream()
+      .filter(ref -> ref.uri().equals(documentContext.getUri()))
+      .toList();
+    assertThat(referencesToProcFromTest).hasSize(1);
+
+    var funcMethod = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяФункция");
+    assertThat(funcMethod).isPresent();
+    var referencesToFunc = referenceIndex.getReferencesTo(funcMethod.get());
+    // Filter to only references from our test document
+    var referencesToFuncFromTest = referencesToFunc.stream()
+      .filter(ref -> ref.uri().equals(documentContext.getUri()))
+      .toList();
+    // Должно быть 2 вызова: в assignment и в условии
+    assertThat(referencesToFuncFromTest).hasSize(2);
+  }
+
+  @Test
+  void testCommonModuleVariableReassignment() throws IOException {
+    initServerContext(PATH_TO_METADATA);
+
+
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexCommonModuleReassignment.bsl"
+    );
+
+    // Load the common module that will be referenced
+    var file = new File(PATH_TO_METADATA,
+      "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
+    var uri = Absolute.uri(file);
+    var commonModuleContext = TestUtils.getDocumentContext(
+      uri,
+      FileUtils.readFileToString(file, StandardCharsets.UTF_8),
+      context
+    );
+
+    referenceIndexFiller.fill(documentContext);
+
+    // В первой процедуре должна быть только одна ссылка на НеУстаревшаяПроцедура
+    // (до переназначения переменной на Неопределено)
+    var procMethod = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяПроцедура");
+    assertThat(procMethod).isPresent();
+    var referencesToProc = referenceIndex.getReferencesTo(procMethod.get());
+    var referencesToProcFromTest = referencesToProc.stream()
+      .filter(ref -> ref.uri().equals(documentContext.getUri()))
+      .toList();
+    // Должно быть 2 вызова: по одному из каждой процедуры (до переназначения)
+    assertThat(referencesToProcFromTest).hasSize(2);
+
+    // НеУстаревшаяФункция не должна индексироваться после переназначения на Неопределено
+    var funcMethod = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяФункция");
+    assertThat(funcMethod).isPresent();
+    var referencesToFunc = referenceIndex.getReferencesTo(funcMethod.get());
+    var referencesToFuncFromTest = referencesToFunc.stream()
+      .filter(ref -> ref.uri().equals(documentContext.getUri()))
+      .toList();
+    // Не должно быть ссылок, так как вызов после переназначения на Неопределено
+    assertThat(referencesToFuncFromTest).isEmpty();
+  }
+
+  @Test
+  void testCommonModuleModuleLevelVariable() throws IOException {
+    initServerContext(PATH_TO_METADATA);
+
+
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexCommonModuleLevel.bsl"
+    );
+
+    // Load the common module that will be referenced
+    var file = new File(PATH_TO_METADATA,
+      "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
+    var uri = Absolute.uri(file);
+    var commonModuleContext = TestUtils.getDocumentContext(
+      uri,
+      FileUtils.readFileToString(file, StandardCharsets.UTF_8),
+      context
+    );
+
+    referenceIndexFiller.fill(documentContext);
+
+    // Модульная переменная МодульУровняМодуля используется в двух процедурах
+    var procMethod = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяПроцедура");
+    assertThat(procMethod).isPresent();
+    var referencesToProc = referenceIndex.getReferencesTo(procMethod.get());
+    var referencesToProcFromTest = referencesToProc.stream()
+      .filter(ref -> ref.uri().equals(documentContext.getUri()))
+      .toList();
+    // Должно быть 2 вызова: из ПерваяПроцедура и из ТретьяПроцедура
+    assertThat(referencesToProcFromTest).hasSize(2);
+
+    var funcMethod = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяФункция");
+    assertThat(funcMethod).isPresent();
+    var referencesToFunc = referenceIndex.getReferencesTo(funcMethod.get());
+    var referencesToFuncFromTest = referencesToFunc.stream()
+      .filter(ref -> ref.uri().equals(documentContext.getUri()))
+      .toList();
+    // Должна быть 1 ссылка из ВтораяПроцедура (модульная переменная)
+    assertThat(referencesToFuncFromTest).hasSize(1);
+  }
+
+  /**
+   * Переменная тела модуля без {@code Перем} из методов не видна, поэтому её связь с общим
+   * модулем в метод не переносится, даже когда тело модуля стоит до методов.
+   */
+  @Test
+  void testCommonModuleMappingOfModuleBodyVariableDoesNotReachMethods() throws IOException {
+    initServerContext(PATH_TO_METADATA);
+
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexCommonModuleBodyBeforeMethods.bsl"
+    );
+
+    var file = new File(PATH_TO_METADATA,
+      "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
+    var uri = Absolute.uri(file);
+    var commonModuleContext = TestUtils.getDocumentContext(
+      uri,
+      FileUtils.readFileToString(file, StandardCharsets.UTF_8),
+      context
+    );
+
+    referenceIndexFiller.fill(documentContext);
+
+    // Вызов из тела модуля индексируется
+    var procMethod = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяПроцедура");
+    assertThat(procMethod).isPresent();
+    assertThat(referenceIndex.getReferencesTo(procMethod.get()))
+      .filteredOn(ref -> ref.uri().equals(documentContext.getUri()))
+      .hasSize(1);
+
+    // Одноимённое обращение из метода к объекту тела модуля не относится
+    var funcMethod = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяФункция");
+    assertThat(funcMethod).isPresent();
+    assertThat(referenceIndex.getReferencesTo(funcMethod.get()))
+      .filteredOn(ref -> ref.uri().equals(documentContext.getUri()))
+      .isEmpty();
+  }
+
+  @Test
+  void testCommonModuleVariableIsolationBetweenMethods() throws IOException {
+    initServerContext(PATH_TO_METADATA);
+
+
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexCommonModuleIsolation.bsl"
+    );
+
+    // Load the common module that will be referenced
+    var file = new File(PATH_TO_METADATA,
+      "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
+    var uri = Absolute.uri(file);
+    var commonModuleContext = TestUtils.getDocumentContext(
+      uri,
+      FileUtils.readFileToString(file, StandardCharsets.UTF_8),
+      context
+    );
+
+    referenceIndexFiller.fill(documentContext);
+
+    // В первой процедуре должна быть ссылка на НеУстаревшаяПроцедура
+    var procMethod = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяПроцедура");
+    assertThat(procMethod).isPresent();
+    var referencesToProc = referenceIndex.getReferencesTo(procMethod.get());
+    var referencesToProcFromTest = referencesToProc.stream()
+      .filter(ref -> ref.uri().equals(documentContext.getUri()))
+      .toList();
+    assertThat(referencesToProcFromTest).hasSize(1);
+
+    // Во второй процедуре НЕ должно быть ссылки на НеУстаревшаяФункция
+    // так как переменная Модуль там имеет другое значение (Неопределено)
+    var funcMethod = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяФункция");
+    assertThat(funcMethod).isPresent();
+    var referencesToFunc = referenceIndex.getReferencesTo(funcMethod.get());
+    var referencesToFuncFromTest = referencesToFunc.stream()
+      .filter(ref -> ref.uri().equals(documentContext.getUri()))
+      .toList();
+    assertThat(referencesToFuncFromTest).isEmpty();
+  }
+
+  @Test
+  void testHandleServerContextDocumentRemovedEvent() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile("./src/test/resources/references/ReferenceIndexFillerTest.bsl");
+    referenceIndexFiller.fill(documentContext);
+
+    var uri = documentContext.getUri();
+    var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("Локальная").orElseThrow();
+
+    // Проверяем, что ссылки есть
+    var referencesTo = referenceIndex.getReferencesTo(methodSymbol);
+    assertThat(referencesTo).hasSize(1);
+
+    var reference = referenceIndex.getReference(uri, new Position(4, 0));
+    assertThat(reference).isPresent();
+
+    // when - эмулируем удаление документа из контекста сервера
+    referenceIndexFiller.handleEvent(new ServerContextDocumentRemovedEvent(documentContext.getServerContext(), uri));
+
+    // then - все ссылки из этого документа должны быть удалены
+    referencesTo = referenceIndex.getReferencesTo(methodSymbol);
+    assertThat(referencesTo).isEmpty();
+
+    reference = referenceIndex.getReference(uri, new Position(4, 0));
+    assertThat(reference).isEmpty();
+  }
+
+  @Test
+  void removalWhileContextIsClearedDropsReferencesOfAllDocuments() {
+    // given: проиндексированы два документа
+    var first = TestUtils.getDocumentContextFromFile("./src/test/resources/references/ReferenceIndexFillerTest.bsl");
+    var second = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexFillerVariableTest.bsl");
+    referenceIndexFiller.fill(first);
+    referenceIndexFiller.fill(second);
+    assertThat(referenceIndex.getReference(second.getUri(), new Position(25, 24))).isPresent();
+    var clearing = mock(ServerContext.class);
+    when(clearing.isClearing()).thenReturn(true);
+
+    // when: контекст очищается целиком, и удалён первый документ
+    referenceIndexFiller.handleEvent(new ServerContextDocumentRemovedEvent(clearing, first.getUri()));
+
+    // then: индекс очищен разом — ссылок второго документа в нём тоже нет
+    assertThat(referenceIndex.getReference(first.getUri(), new Position(4, 0))).isEmpty();
+    assertThat(referenceIndex.getReference(second.getUri(), new Position(25, 24))).isEmpty();
+  }
+
+  @Test
+  void clearedContextIndexesDocumentsAgain() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexFillerTest.bsl");
+    referenceIndexFiller.fill(documentContext);
+    var serverContext = documentContext.getServerContext();
+    var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("Локальная").orElseThrow();
+
+    // when
+    serverContext.clear();
+
+    // then: ссылок не осталось, а признак очистки снят
+    assertThat(referenceIndex.getReferencesTo(methodSymbol)).isEmpty();
+    assertThat(serverContext.isClearing()).isFalse();
+
+    // when: тот же текст снова в контексте и разобран заново
+    var again = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexFillerTest.bsl", serverContext);
+    referenceIndexFiller.handleEvent(new DocumentContextContentChangedEvent(again, false));
+
+    // then: очистка сняла и признак «вхождения собраны», поэтому документ проиндексирован
+    assertThat(referenceIndex.getReference(again.getUri(), new Position(4, 0))).isPresent();
+  }
+
+  @Test
+  void testHandleServerContextDocumentRemovedEvent_WithVariables() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexFillerVariableTest.bsl"
+    );
+    referenceIndexFiller.fill(documentContext);
+
+    var uri = documentContext.getUri();
+    var targetVariable = documentContext.getSymbolTree().getVariables().getFirst();
+
+    // Проверяем, что ссылки на переменные есть
+    var usage = referenceIndex.getReferencesTo(targetVariable);
+    assertThat(usage).hasSize(5);
+
+    var reference = referenceIndex.getReference(uri, new Position(25, 24));
+    assertThat(reference).isPresent();
+
+    // when - эмулируем удаление документа из контекста сервера
+    referenceIndexFiller.handleEvent(new ServerContextDocumentRemovedEvent(documentContext.getServerContext(), uri));
+
+    // then - все ссылки на переменные из этого документа должны быть удалены
+    usage = referenceIndex.getReferencesTo(targetVariable);
+    assertThat(usage).isEmpty();
+
+    reference = referenceIndex.getReference(uri, new Position(25, 24));
+    assertThat(reference).isEmpty();
+  }
+
+  @Test
+  void testModuleReferenceRangeNotOverlapAccessorMethod() throws IOException {
+    // Тест для проверки поведения: при наведении на ОбщийМодуль() должно показываться описание метода,
+    // а не информация о модуле "ПервыйОбщийМодуль"
+    initServerContext(PATH_TO_METADATA);
+
+
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/references/ReferenceIndexCommonModuleVariable.bsl"
+    );
+
+    // Загружаем модуль ПервыйОбщийМодуль
+    var file = new File(PATH_TO_METADATA,
+      "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
+    var uri = Absolute.uri(file);
+    TestUtils.getDocumentContext(
+      uri,
+      FileUtils.readFileToString(file, StandardCharsets.UTF_8),
+      context
+    );
+
+    // Загружаем модуль ОбщегоНазначения с методом ОбщийМодуль
+    var commonFile = new File(PATH_TO_METADATA,
+      "CommonModules/ОбщегоНазначения/Ext/Module.bsl");
+    var commonUri = Absolute.uri(commonFile);
+    var commonModuleContext = TestUtils.getDocumentContext(
+      commonUri,
+      FileUtils.readFileToString(commonFile, StandardCharsets.UTF_8),
+      context
+    );
+
+    referenceIndexFiller.fill(documentContext);
+
+    // Строка 7 (индекс 6): МодульУправлениеДоступом = ОбщегоНазначения.ОбщийМодуль("ПервыйОбщийМодуль");
+    // Позиция 55 - это внутри имени метода "ОбщийМодуль"
+    // При наведении на метод ОбщийМодуль должен показываться референс на метод ОбщийМодуль модуля ОбщегоНазначения,
+    // а НЕ референс на модуль ПервыйОбщийМодуль (это была ошибка).
+    var referenceOnAccessorMethod = referenceIndex.getReference(
+      documentContext.getUri(),
+      new Position(6, 55)
+    );
+    // Должен быть референс на метод ОбщийМодуль модуля ОбщегоНазначения
+    assertThat(referenceOnAccessorMethod).isPresent();
+    var methodSymbol = commonModuleContext.getSymbolTree().getMethodSymbol("ОбщийМодуль");
+    assertThat(methodSymbol).isPresent();
+    assertThat(referenceOnAccessorMethod.get().getSourceDefinedSymbol()).contains(methodSymbol.get());
+
+    // Позиция 70 - это внутри строкового литерала "ПервыйОбщийМодуль"
+    // Строковый литерал - это просто данные, не ссылка на модуль. Референс добавлять не нужно.
+    var referenceOnModuleName = referenceIndex.getReference(
+      documentContext.getUri(),
+      new Position(6, 70)
+    );
+    // Не должно быть ссылки на модуль ПервыйОбщийМодуль, т.к. это строковый литерал - параметр метода
+    assertThat(referenceOnModuleName).isEmpty();
+  }
+
+  @Test
+  void testFindVariablesInModuleWithoutMethods() {
+    // given: код модуля без единого метода — область метода так и не появляется.
+    var documentContext = TestUtils.getDocumentContext("""
+      Перем Счетчик;
+      Счетчик = 1;
+      Сообщить(Счетчик);
+      """);
+
+    // when
+    referenceIndexFiller.fill(documentContext);
+
+    // then: обращение находит переменную модуля.
+    var referencedSymbol = referenceIndex.getReference(documentContext.getUri(), new Position(2, 10));
+    assertThat(referencedSymbol).get()
+      .extracting(Reference::symbol)
+      .extracting(Symbol::getName)
+      .isEqualTo("Счетчик");
   }
 }

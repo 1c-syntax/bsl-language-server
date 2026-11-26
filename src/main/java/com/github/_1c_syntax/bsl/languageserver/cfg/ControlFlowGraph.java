@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -25,16 +25,16 @@ import lombok.Getter;
 import lombok.Setter;
 import org.jgrapht.graph.DefaultDirectedGraph;
 
+@Getter
 public class ControlFlowGraph extends DefaultDirectedGraph<CfgVertex, CfgEdge> {
 
-  @Getter
   @Setter
+  @SuppressWarnings("NullAway.Init")
   private CfgVertex entryPoint;
 
-  @Getter
-  private ExitVertex exitPoint;
+  private final ExitVertex exitPoint;
 
-  ControlFlowGraph() {
+  public ControlFlowGraph() {
     super(CfgEdge.class);
     exitPoint = new ExitVertex();
     addVertex(exitPoint);
@@ -42,6 +42,26 @@ public class ControlFlowGraph extends DefaultDirectedGraph<CfgVertex, CfgEdge> {
 
   public void addEdge(CfgVertex source, CfgVertex target, CfgEdgeType type) {
     addEdge(source, target, new CfgEdge(type));
+  }
+
+  @Override
+  public CfgEdge addEdge(CfgVertex source, CfgVertex target) {
+    var edge = new CfgEdge(CfgEdgeType.DIRECT);
+
+    addEdge(source, target, edge);
+
+    return edge;
+  }
+
+  @Override
+  public boolean addEdge(CfgVertex source, CfgVertex target, CfgEdge edge) {
+    source.onConnectOutgoing(this, target, edge);
+
+    return super.addEdge(source, target, edge);
+  }
+
+  public String edgePresentation(CfgEdge edge) {
+    return getEdgeSource(edge) + "->" + getEdgeTarget(edge);
   }
 
 }

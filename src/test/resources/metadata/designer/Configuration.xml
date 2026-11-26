@@ -187,9 +187,11 @@
 			<Role>Роль1</Role>
 			<Role>Роль2</Role>
 			<Role>ПолныеПрава</Role>
+			<CommonTemplate>ДанныеПечатиРегистрСимволов</CommonTemplate>
 			<CommonModule>ПервыйОбщийМодуль</CommonModule>
 			<CommonModule>КлиентскийОбщийМодуль</CommonModule>
 			<CommonModule>ГлобальныйСерверныйМодуль</CommonModule>
+			<CommonModule>ОбщегоНазначения</CommonModule>
 			<WebService>WebСервис1</WebService>
 			<HTTPService>HTTPСервис1</HTTPService>
 			<EventSubscription>ВерсионированиеПриЗаписи</EventSubscription>
@@ -200,14 +202,21 @@
 			<EventSubscription>ПриУстановкеНовогоКода</EventSubscription>
 			<EventSubscription>РегистрацияИзмененийПередУдалением</EventSubscription>
 			<CommandGroup>ГруппаКоманд1</CommandGroup>
+			<CommonAttribute>ОбщийРеквизит1</CommonAttribute>
+			<DefinedType>ОпределяемыйТип1</DefinedType>
 			<Catalog>Справочник1</Catalog>
+			<Catalog>СправочникСМенеджером</Catalog>
+			<Catalog>СправочникБезГрупп</Catalog>
 			<InformationRegister>РегистрСведений1</InformationRegister>
+			<FilterCriterion>КритерийОтбора1</FilterCriterion>
 			<Document>Документ1</Document>
 			<ScheduledJob>РегламентноеЗадание1</ScheduledJob>
 			<ScheduledJob>РегламентноеЗадание2</ScheduledJob>
 			<ScheduledJob>РегламентноеЗаданиеНесуществующийМетод</ScheduledJob>
 			<ScheduledJob>РегламентноеЗаданиеПриватныйМетод</ScheduledJob>
 			<ScheduledJob>РегламентноеЗаданиеПредопределенноеНесколькоПараметров</ScheduledJob>
+			<ExternalDataSource>ВнешнийИсточникДанных1</ExternalDataSource>
+			<XDTOPackage>ПакетТест</XDTOPackage>
 		</ChildObjects>
 	</Configuration>
 </MetaDataObject>

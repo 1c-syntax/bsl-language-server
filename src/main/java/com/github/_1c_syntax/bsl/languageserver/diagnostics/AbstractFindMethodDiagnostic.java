@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,9 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import lombok.Getter;
 import lombok.Setter;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.regex.Pattern;
@@ -81,12 +81,12 @@ public abstract class AbstractFindMethodDiagnostic extends AbstractVisitorDiagno
    * первым параметром которого <b>всегда</b> будет имя метода.
    * В противном случае возвращается обычное сообщение без параметров.
    */
-  protected String getMessage(BSLParserRuleContext ctx) {
+  protected String getMessage(ParserRuleContext ctx) {
 
-    if (ctx instanceof BSLParser.GlobalMethodCallContext) {
-      return info.getMessage(((BSLParser.GlobalMethodCallContext) ctx).methodName().getText());
-    } else if (ctx instanceof BSLParser.MethodCallContext) {
-      return info.getMessage(((BSLParser.MethodCallContext) ctx).methodName().getText());
+    if (ctx instanceof BSLParser.GlobalMethodCallContext globalMethodCallContext) {
+      return info.getMessage(globalMethodCallContext.methodName().getText());
+    } else if (ctx instanceof BSLParser.MethodCallContext methodCallContext) {
+      return info.getMessage(methodCallContext.methodName().getText());
     } else {
       return info.getMessage();
     }

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,6 +21,17 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics.metadata;
 
+/**
+ * Область применения диагностики.
+ * <p>
+ * Определяет в каких типах файлов работает диагностика:
+ * только BSL, только OneScript или в обоих.
+ */
 public enum DiagnosticScope {
-  ALL, OS, BSL
+  /** Применяется ко всем типам файлов (BSL и OneScript) */
+  ALL,
+  /** Применяется только к OneScript файлам */
+  OS,
+  /** Применяется только к BSL файлам */
+  BSL
 }

@@ -1,0 +1,9 @@
+{
+  "language": "ru",
+  "formatting": {
+    "useOnTypeFormatting": false
+  },
+  "useDevSite": true,
+  "traceLog": "build/.trace.log",
+  "configurationRoot": "src/test/resources/metadata/designer"
+}

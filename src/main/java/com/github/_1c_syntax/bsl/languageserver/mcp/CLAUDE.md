@@ -1,0 +1,88 @@
+<!-- Nested CLAUDE.md: грузится лениво при работе с файлами этого каталога. Держи кратким и точным. -->
+
+# mcp/ — сервер Model Context Protocol
+
+Предоставляет анализ кода 1С внешним MCP-клиентам (ИИ-инструментам). **Это ещё одна «голова»
+поверх того же ядра LSP** — инструменты переиспользуют провайдеры и `ServerContextProvider`, а не
+дублируют логику. См. корневой [CLAUDE.md](../../../../../../../../../CLAUDE.md).
+
+## Способы запуска и транспорты
+
+Транспорт и Spring-профили выбирает **`MainApplication`** по аргументам **до** старта контекста
+(`getActiveProfiles`/`getWebApplicationType`/`applyMcpEndpointPath`); сам MCP-сервер поднимает
+автоконфигурация Spring AI. Два способа:
+
+1. **Отдельная подкоманда `mcp`** (`McpCommand`) — транспорт по `--protocol`:
+   - `stdio` (по умолчанию) — профили `mcp,mcp-stdio`; `McpStdioConfiguration` (общий `JsonMapper`,
+     `EofSignalingInputStream`, `ConcurrentSendTransportProvider`); процесс блокируется до EOF stdin через
+     `McpShutdownSignal`. Транспорт SDK ждёт занятый приёмник не дольше 100 мс (с 2.1.0), и под
+     нагрузкой одновременная отправка всё равно получает отказ, а сессия умирает — поэтому транспорт
+     сессии обёрнут в `McpEnqueueRetryingTransport`, повторяющий отказанную отправку. Закрытый
+     java-sdk#686 — не повод его удалять; условие и способ проверки — в TODO у `McpEnqueueRetryingTransport`.
+   - `sse` — `mcp,mcp-sse` (Server-Sent Events по HTTP); `streamable` — `mcp,mcp-streamable`
+     (Streamable HTTP). HTTP-транспорты требуют servlet-контейнера, процесс жив за счёт веб-сервера.
+2. **Флаг `--mcp` к `lsp` (по умолчанию) или `websocket`** — поднимает MCP по **Streamable HTTP**
+   рядом с LSP на том же процессе; эндпоинт `/mcp` (меняется `--mcp-path` → системное свойство
+   `spring.ai.mcp.server.streamable-http.mcp-endpoint`). Профили: `mcp` + `lsp-mcp` (LSP по stdio,
+   stdout занят каналом LSP) либо `mcp` + `websocket-mcp` (рядом с LSP-WebSocket, тот же порт).
+
+**Терминология — из LSP:** регистрируется *рабочая папка* (workspace folder) — один корень проекта;
+множество папок и есть *рабочая область* (workspace). В текстах для клиента и в javadoc пиши
+«рабочая папка», не «рабочее пространство» — иначе термины разъезжаются с протоколом.
+
+Папки клиент регистрирует **сам, инструментами** `register_workspace_folder`/`list_workspace_folders`/
+`unregister_workspace_folder` — это основной путь. Дополнительные источники: LSP workspace folders (при
+`--mcp` оба источника питают общий `ServerContextProvider`) и **MCP roots** (`McpRootsChangeConsumer`).
+Roots объявлены deprecated в спеке MCP 2026-07-28 (`roots/list_changed` оттуда уже удалён) —
+поддерживаются как совместимость, новую функциональность на них не завязывай.
+Методы-инструменты помечены `@McpTool`.
+
+Владение папками считает **только** `McpWorkspaceBootstrap`: у папки может быть несколько источников
+(явная регистрация инструментом, MCP roots), и она живёт, пока её держит хотя бы один. Своих копий
+этого состояния в других бинах заводить нельзя — разойдутся с фактическим набором папок.
+Удалять MCP вправе **только папки, созданные им самим**: workspace folder LSP-клиента забирать нельзя,
+иначе снесёшь рабочий контекст редактора без возможности восстановления.
+Идентичность папки — **URI из реестра**, а не путь: `Path.toUri()` даёт завершающий слэш только пока
+каталог существует, поэтому у удалённого каталога тот же `Path` превращается в другой URI. Тем же
+свойством обладает `Absolute.uri`, а `ServerContextProvider.removeWorkspace` прогоняет URI через него
+ещё раз — поэтому папку с уже удалённым каталогом адресовать для удаления нельзя: `remove` проверяет
+результат и честно падает, вместо того чтобы отчитаться об успехе и утечь контекстом.
+**Нормализацию значения от клиента делай только через `McpWorkspaceFolders.toWorkspaceFolderUri`** —
+там же живёт `normalizeWindowsFileUri` (windows-патология `file://D:/repo`, у которой `Absolute.uri`
+иначе съедает двоеточие); свой разбор мимо неё разъедется с путём roots.
+`Absolute.path`/`Absolute.uri` канонизируют путь через `getCanonicalFile()` и прокидывают
+**необъявленный `IOException`** — вокруг них ловится `Exception`, а не `RuntimeException`.
+
+Инфраструктура: `McpServerInfoConfigurer` (имя/версия из бина `ServerInfo`),
+`McpWorkspaceBootstrap` (регистрация + индексация каталога, владение папками), `McpWorkspaceResolver`
+(`workspaceFolder` → рабочая папка), `McpWorkspaceFolders` (нормализация `workspaceFolder`: URI или
+путь; общий текст подсказки о регистрации),
+`McpRootsBootstrapper`/`McpRootsChangeConsumer` (запрос/синхронизация `roots/list`),
+`McpDocumentReader` (единый доступ к документу: `read()` — из кэша, `analyze()` — свежий AST +
+диагностики).
+
+**Ошибки — часть API для агента.** Сообщение о незарегистрированной рабочей папке обязано перечислять
+доступные корни и называть инструмент регистрации: агент исправляется сам, без человека. Единый
+текст — `McpWorkspaceFolders.registrationHint`, не пиши свой. Заранее, в ответе на `initialize`, агент
+получает инструкции сервера — `spring.ai.mcp.server.instructions` в `application-mcp.properties`;
+переименовал инструмент или поменял порядок работы — поправь и их.
+
+## Инструменты (`@McpTool`)
+
+`ListWorkspaceFoldersTool`/`RegisterWorkspaceFolderTool`/`UnregisterWorkspaceFolderTool` (управление
+рабочими папками) · `AnalyzeFileTool` (диагностики файла) · `DocumentSymbolsTool` ·
+`SymbolTextTool` (текст символа по имени или позиции) · `TypeInfoTool` (тип по имени:
+члены, конструкторы, метаданные СП самого типа и его членов — `ApiMetadataDto`) ·
+`TypeAtPositionTool` (вывод типа в позиции) · `HoverTool` · `DefinitionTool` ·
+`FindReferencesTool` · `CallHierarchyTool` · `GlobalMemberInfoTool` · `GlobalMemberSearchTool`
+(нечёткий поиск по глобальному контексту) · `WorkspaceFolderSymbolSearchTool` (поиск символов по
+рабочей папке). DTO — в `mcp/dto/`.
+
+## Правки в этом каталоге
+
+- Новый инструмент = метод `@McpTool`, делегирующий в существующий провайдер/подсистему через
+  `McpDocumentReader`/`McpWorkspaceResolver`; бизнес-логику в `mcp/` не дублируй.
+- Инструментам, которым нужна рабочая папка, её выдаёт `McpWorkspaceResolver` — не полагайся на
+  «текущую» неявно.
+- Транспорт/профили задаёт `MainApplication` по аргументам — при добавлении транспорта правь и
+  выбор профиля там, и соответствующий `application-*-mcp.properties`.

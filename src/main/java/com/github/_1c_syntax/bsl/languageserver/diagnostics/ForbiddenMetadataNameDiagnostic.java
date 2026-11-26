@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,22 +21,16 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.Language;
-import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.types.MdoReference;
+import com.github._1c_syntax.bsl.mdo.AttributeOwner;
+import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectComplex;
-import com.github._1c_syntax.mdclasses.mdo.attributes.TabularSection;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import lombok.RequiredArgsConstructor;
 
-import java.util.Collection;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -54,9 +48,9 @@ import java.util.regex.Pattern;
     ModuleType.ValueManagerModule,
     ModuleType.SessionModule
   },
-  scope = DiagnosticScope.BSL
+  scope = DiagnosticScope.BSL,
+  canLocateOnProject = true
 )
-@RequiredArgsConstructor
 public class ForbiddenMetadataNameDiagnostic extends AbstractMetadataDiagnostic {
 
   // Запрещенные имена метаданных
@@ -128,38 +122,22 @@ public class ForbiddenMetadataNameDiagnostic extends AbstractMetadataDiagnostic 
 
   private static final Pattern FORBIDDEN_NAMES_PATTERN = CaseInsensitivePattern.compile(FORBIDDEN_NAMES);
 
-  private final LanguageServerConfiguration serverConfiguration;
-
   @Override
-  protected void checkMetadata(AbstractMDObjectBase mdo) {
+  protected void checkMetadata(MD mdo) {
 
     // проверка имени метаданного
-    checkName(mdo.getName(), mdo.getMdoReference());
+    checkName(mdo.getName(), mdo);
 
-    if (mdo instanceof AbstractMDObjectComplex) {
-      // проверка имен реквизитов и табличных частей
-      ((AbstractMDObjectComplex) mdo).getAttributes()
-        .forEach(attribute -> checkName(attribute.getName(), attribute.getMdoReference()));
-
-      // проверка имен реквизитов табличных частей
-      ((AbstractMDObjectComplex) mdo).getAttributes().stream()
-        .filter(TabularSection.class::isInstance)
-        .map(TabularSection.class::cast)
-        .map(TabularSection::getAttributes)
-        .flatMap(Collection::stream)
-        .forEach(attribute -> checkName(attribute.getName(), attribute.getMdoReference()));
+    // проверка имен реквизитов и табличных частей
+    if (mdo instanceof AttributeOwner childrenOwner) {
+      childrenOwner.getPlainStorageFields()
+        .forEach(child -> checkName(child.getName(), child));
     }
   }
 
-  private void checkName(String name, MdoReference mdoReference) {
+  private void checkName(String name, MD md) {
     if (FORBIDDEN_NAMES_PATTERN.matcher(name).matches()) {
-      String mdoRef;
-      if (serverConfiguration.getLanguage() == Language.RU) {
-        mdoRef = mdoReference.getMdoRefRu();
-      } else {
-        mdoRef = mdoReference.getMdoRef();
-      }
-      addDiagnostic(info.getMessage(name, mdoRef));
+      addDiagnostic(info.getMessage(name, getMdoRefLocal(md)));
     }
   }
 }

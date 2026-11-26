@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -34,20 +34,18 @@ import com.contrastsecurity.sarif.ReportingConfiguration;
 import com.contrastsecurity.sarif.ReportingDescriptor;
 import com.contrastsecurity.sarif.ReportingDescriptorReference;
 import com.contrastsecurity.sarif.Result;
-import com.contrastsecurity.sarif.Run;
 import com.contrastsecurity.sarif.SarifSchema210;
 import com.contrastsecurity.sarif.Tool;
 import com.contrastsecurity.sarif.ToolComponent;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
+import tools.jackson.core.JsonGenerator;
+import tools.jackson.databind.SerializationFeature;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfos;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
-import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.info.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.utils.Absolute;
-import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
@@ -55,11 +53,12 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.ServerInfo;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.SequenceWriter;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.io.File;
 import java.net.URI;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
@@ -67,6 +66,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMessage;
 
 /**
  * Репортер в формат SARIF.
@@ -74,9 +74,8 @@ import java.util.stream.Collectors;
  * @see <a href="https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html">SARIF specification</a>.
  */
 @Component
-@RequiredArgsConstructor
 @Slf4j
-public class SarifReporter implements DiagnosticReporter {
+public class SarifReporter extends AbstractDiagnosticReporter {
 
   private static final Map<DiagnosticSeverity, Result.Level> severityToResultLevel = Map.of(
     DiagnosticSeverity.Error, Result.Level.ERROR,
@@ -92,9 +91,23 @@ public class SarifReporter implements DiagnosticReporter {
     DiagnosticSeverity.Hint, ReportingConfiguration.Level.NONE
   );
 
-  private final LanguageServerConfiguration configuration;
-  private final Collection<DiagnosticInfo> diagnosticInfos;
   private final ServerInfo serverInfo;
+  private final LanguageServerConfiguration configuration;
+
+  private ReportFile reportFile;
+  private JsonGenerator generator;
+  private SequenceWriter writer;
+
+  public SarifReporter(
+    ServerContextProvider serverContextProvider,
+    DiagnosticInfos diagnosticInfos,
+    ServerInfo serverInfo,
+    LanguageServerConfiguration configuration
+  ) {
+    super(serverContextProvider, diagnosticInfos);
+    this.serverInfo = serverInfo;
+    this.configuration = configuration;
+  }
 
   @Override
   public String key() {
@@ -102,45 +115,73 @@ public class SarifReporter implements DiagnosticReporter {
   }
 
   @Override
-  @SneakyThrows
-  public void report(AnalysisInfo analysisInfo, Path outputDir) {
-    var report = createReport(analysisInfo);
+  public void beginReport(ReportContext context, Path outputDir) {
+    // Результаты (по одному на диагностику, на крупной конфигурации — миллионы) сериализуются
+    // по мере поступления и не удерживаются в памяти. Так исключается построение второго полного
+    // графа Result/Location/Region поверх уже вычисленных диагностик — главный источник пикового
+    // потребления памяти при генерации SARIF (см. issue #4248). Отступы (INDENT_OUTPUT) сохранены:
+    // файл на миллионы результатов иначе — одна строка на сотни МБ, которую не открыть в редакторе.
+    var mapper = JsonMapper.builder()
+      .enable(SerializationFeature.INDENT_OUTPUT)
+      .build();
 
-    var mapper = new ObjectMapper();
-    mapper.enable(SerializationFeature.INDENT_OUTPUT);
+    reportFile = ReportFile.create(outputDir, "bsl-ls.sarif");
+    generator = mapper.createGenerator(reportFile.stream());
 
-    var reportFile = new File(outputDir.toFile(), "./bsl-ls.sarif");
-    mapper.writeValue(reportFile, report);
-    LOGGER.info("SARIF report saved to {}", reportFile.getAbsolutePath());
+    generator.writeStartObject();
+    generator.writeName("$schema");
+    generator.writeString("https://json.schemastore.org/sarif-2.1.0.json");
+    generator.writeName("version");
+    generator.writePOJO(SarifSchema210.Version._2_1_0);
+    generator.writeName("runs");
+    generator.writeStartArray();
+
+    generator.writeStartObject();
+    generator.writeName("tool");
+    generator.writePOJO(createTool(configuration));
+    generator.writeName("invocations");
+    generator.writePOJO(List.of(createInvocation(configuration)));
+    generator.writeName("language");
+    generator.writeString(configuration.getLanguage().getLanguageCode());
+    generator.writeName("defaultEncoding");
+    generator.writeString("UTF-8");
+    generator.writeName("defaultSourceLanguage");
+    generator.writeString("BSL");
+    generator.writeName("results");
+    writer = mapper.writerFor(Result.class).writeValuesAsArray(generator);
   }
 
-  private SarifSchema210 createReport(AnalysisInfo analysisInfo) {
-    var schema = URI.create(
-      "https://json.schemastore.org/sarif-2.1.0.json"
-    );
-    var run = createRun(analysisInfo);
+  @Override
+  public void accept(FileInfo fileInfo) {
+    // uri вычисляется один раз на файл, а не на каждую диагностику
+    var uri = Absolute.uri(fileInfo.getPath().toUri()).toString();
 
-    return new SarifSchema210()
-      .with$schema(schema)
-      .withVersion(SarifSchema210.Version._2_1_0)
-      .withRuns(List.of(run));
+    var results = fileInfo.getDiagnostics().stream()
+      .map(diagnostic -> createResult(uri, diagnostic))
+      .toList();
+
+    writer.writeAll(results);
   }
 
-  private Run createRun(AnalysisInfo analysisInfo) {
-    var tool = createTool();
-    var invocation = createInvocation();
-    var results = createResults(analysisInfo);
-
-    return new Run()
-      .withTool(tool)
-      .withInvocations(List.of(invocation))
-      .withLanguage(configuration.getLanguage().getLanguageCode())
-      .withDefaultEncoding("UTF-8")
-      .withDefaultSourceLanguage("BSL")
-      .withResults(results);
+  @Override
+  public void endReport() {
+    writer.close();
+    generator.writeEndObject();
+    generator.writeEndArray();
+    generator.writeEndObject();
+    generator.close();
+    reportFile.commit();
+    LOGGER.info("SARIF report saved to {}", reportFile.path().toAbsolutePath());
   }
 
-  private Invocation createInvocation() {
+  @Override
+  public void abortReport() {
+    if (reportFile != null) {
+      reportFile.close();
+    }
+  }
+
+  private static Invocation createInvocation(LanguageServerConfiguration configuration) {
     Set<ConfigurationOverride> ruleConfigurationOverrides = new HashSet<>();
     var diagnosticsOptions = configuration.getDiagnosticsOptions();
     diagnosticsOptions.getParameters().forEach((String key, Either<Boolean, Map<String, Object>> option) -> {
@@ -169,13 +210,15 @@ public class SarifReporter implements DiagnosticReporter {
       ;
   }
 
-  private Tool createTool() {
+  private Tool createTool(LanguageServerConfiguration configuration) {
+    var diagnosticInfoValues = diagnosticInfos.getByCode().values();
+
     var name = serverInfo.getName();
     var organization = "1c-syntax";
     var version = serverInfo.getVersion();
     var informationUri = URI.create(configuration.getSiteRoot());
     var language = configuration.getLanguage().getLanguageCode();
-    var rules = diagnosticInfos.stream()
+    var rules = diagnosticInfoValues.stream()
       .map(SarifReporter::createReportingDescriptor)
       .collect(Collectors.toSet());
 
@@ -224,26 +267,14 @@ public class SarifReporter implements DiagnosticReporter {
       .withProperties(properties);
   }
 
-  private static List<Result> createResults(AnalysisInfo analysisInfo) {
-    var results = new ArrayList<Result>();
+  private static Result createResult(String uri, Diagnostic diagnostic) {
+    var messageText = DiagnosticMessage.getStringValue(diagnostic.getMessage());
 
-    analysisInfo.getFileinfos().forEach(fileInfo ->
-      fileInfo.getDiagnostics().stream()
-        .map(diagnostic -> createResult(fileInfo, diagnostic))
-        .collect(Collectors.toCollection(() -> results))
-    );
-
-    return results;
-  }
-
-  private static Result createResult(FileInfo fileInfo, Diagnostic diagnostic) {
-    var uri = Absolute.uri(fileInfo.getPath().toUri()).toString();
-
-    var message = new Message().withText(diagnostic.getMessage());
+    var message = new Message().withText(messageText);
     var ruleId = DiagnosticCode.getStringValue(diagnostic.getCode());
     var level = severityToResultLevel.get(diagnostic.getSeverity());
     var analysisTarget = new ArtifactLocation().withUri(uri);
-    var locations = List.of(createLocation(diagnostic.getMessage(), uri, diagnostic.getRange()));
+    var locations = List.of(createLocation(messageText, uri, diagnostic.getRange()));
     var relatedLocations = Optional.ofNullable(diagnostic.getRelatedInformation())
       .stream()
       .flatMap(Collection::stream)

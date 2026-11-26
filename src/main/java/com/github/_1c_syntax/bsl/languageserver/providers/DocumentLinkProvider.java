@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -32,13 +32,23 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Класс-провайдер для формирования списка ссылок на внешние источники информации.
+ * Провайдер для формирования списка ссылок на внешние источники информации.
+ * <p>
+ * Обрабатывает запросы {@code textDocument/documentLink}.
+ *
+ * @see <a href="https://microsoft.github.io/language-server-protocol/specifications/specification-current/#textDocument_documentLink">Document Link Request specification</a>
  */
 @Component
 @RequiredArgsConstructor
 public class DocumentLinkProvider {
   private final Collection<DocumentLinkSupplier> suppliers;
 
+  /**
+   * Получить список ссылок на внешние источники информации из документа.
+   *
+   * @param documentContext Контекст документа
+   * @return Список ссылок на документацию, справку и другие ресурсы
+   */
   public List<DocumentLink> getDocumentLinks(DocumentContext documentContext) {
     return suppliers.stream()
       .map(supplier -> supplier.getDocumentLinks(documentContext))

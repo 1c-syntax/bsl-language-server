@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
 import com.github._1c_syntax.bsl.languageserver.codelenses.AbstractMethodComplexityCodeLensSupplier.ComplexityCodeLensData;
+import com.github._1c_syntax.bsl.languageserver.commands.complexity.ToggleComplexityInlayHintsCommandArguments;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
@@ -66,7 +67,7 @@ class CognitiveComplexityCodeLensSupplierTest {
     );
 
     // then
-    Map<MethodSymbol, Integer> methodsComplexity = documentContext.getCognitiveComplexityData().getMethodsComplexity();
+    Map<MethodSymbol, Integer> methodsComplexity = documentContext.getCognitiveComplexityData().methodsComplexity();
 
     MethodSymbol firstMethod = documentContext.getSymbolTree().getMethods().get(0);
     MethodSymbol secondMethod = documentContext.getSymbolTree().getMethods().get(1);
@@ -75,11 +76,20 @@ class CognitiveComplexityCodeLensSupplierTest {
 
     assertThat(codeLenses)
       .hasSize(2)
-      .anyMatch(codeLens -> codeLens.getRange().equals(firstMethod.getSubNameRange()))
-      .anyMatch(codeLens -> codeLens.getCommand().getTitle().contains(String.valueOf(complexityFirstMethod)))
-      .anyMatch(codeLens -> codeLens.getRange().equals(secondMethod.getSubNameRange()))
-      .anyMatch(codeLens -> codeLens.getCommand().getTitle().contains(String.valueOf(complexitySecondMethod)))
-    ;
+      .anySatisfy(codeLens -> {
+        assertThat(codeLens.getRange()).isEqualTo(firstMethod.getSubNameRange());
+        assertThat(codeLens.getCommand().getTitle()).contains(String.valueOf(complexityFirstMethod));
+        assertThat(codeLens.getCommand().getTooltip()).isNotBlank();
+        assertThat(codeLens.getCommand().getCommand()).isEqualTo("toggleCognitiveComplexityInlayHints");
+        assertThat(((ToggleComplexityInlayHintsCommandArguments) codeLens.getCommand().getArguments().getFirst()).getMethodName()).isEqualTo(firstMethod.getName());
+      })
+      .anySatisfy(codeLens -> {
+        assertThat(codeLens.getRange()).isEqualTo(secondMethod.getSubNameRange());
+        assertThat(codeLens.getCommand().getTitle()).contains(String.valueOf(complexitySecondMethod));
+        assertThat(codeLens.getCommand().getTooltip()).isNotBlank();
+        assertThat(codeLens.getCommand().getCommand()).isEqualTo("toggleCognitiveComplexityInlayHints");
+        assertThat(((ToggleComplexityInlayHintsCommandArguments) codeLens.getCommand().getArguments().getFirst()).getMethodName()).isEqualTo(secondMethod.getName());
+      });
 
   }
 

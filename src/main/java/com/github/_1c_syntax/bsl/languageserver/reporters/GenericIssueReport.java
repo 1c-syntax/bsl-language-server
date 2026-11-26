@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,24 +22,21 @@
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.info.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
-import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import lombok.Getter;
 import lombok.Value;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
-import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 
 import java.net.URI;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMessage;
 
 public class GenericIssueReport {
 
@@ -58,20 +55,6 @@ public class GenericIssueReport {
     @JsonProperty("issues") List<GenericIssueEntry> issues
   ) {
     this.issues = new ArrayList<>(issues);
-  }
-
-  public GenericIssueReport(AnalysisInfo analysisInfo, Map<String, DiagnosticInfo> diagnosticInfos) {
-    issues = new ArrayList<>();
-    for (FileInfo fileInfo : analysisInfo.getFileinfos()) {
-      for (Diagnostic diagnostic : fileInfo.getDiagnostics()) {
-        GenericIssueEntry entry = new GenericIssueEntry(
-          fileInfo.getPath().toString(),
-          diagnostic,
-          diagnosticInfos.get(DiagnosticCode.getStringValue(diagnostic.getCode()))
-        );
-        issues.add(entry);
-      }
-    }
   }
 
   @Value
@@ -111,7 +94,7 @@ public class GenericIssueReport {
       primaryLocation = new Location(fileName, diagnostic);
       effortMinutes = diagnosticInfo.getMinutesToFix();
 
-      List<DiagnosticRelatedInformation> relatedInformation = diagnostic.getRelatedInformation();
+      var relatedInformation = diagnostic.getRelatedInformation();
       if (relatedInformation == null) {
         secondaryLocations = new ArrayList<>();
       } else {
@@ -140,14 +123,14 @@ public class GenericIssueReport {
     }
 
     public Location(String filePath, Diagnostic diagnostic) {
-      message = diagnostic.getMessage();
+      message = DiagnosticMessage.getStringValue(diagnostic.getMessage());
       this.filePath = filePath;
       textRange = new TextRange(diagnostic.getRange());
     }
 
     public Location(DiagnosticRelatedInformation relatedInformation) {
       message = relatedInformation.getMessage();
-      filePath = Paths.get(URI.create(relatedInformation.getLocation().getUri())).toString();
+      filePath = Path.of(URI.create(relatedInformation.getLocation().getUri())).toString();
       textRange = new TextRange(relatedInformation.getLocation().getRange());
     }
   }
@@ -172,8 +155,8 @@ public class GenericIssueReport {
     }
 
     public TextRange(Range range) {
-      Position startPosition = range.getStart();
-      Position endPosition = range.getEnd();
+      var startPosition = range.getStart();
+      var endPosition = range.getEnd();
 
       startLine = startPosition.getLine() + 1;
       startColumn = startPosition.getCharacter();

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,10 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli.lsp;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import com.github._1c_syntax.bsl.languageserver.configuration.events.GlobalLanguageServerConfigurationChangedEvent;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -46,7 +46,8 @@ import java.util.Objects;
 @Slf4j
 public class FileAwarePrintWriter extends PrintWriter {
 
-  private boolean isEmpty = true;
+  private volatile boolean isEmpty = true;
+  @Nullable
   private File file;
 
   /**
@@ -94,6 +95,17 @@ public class FileAwarePrintWriter extends PrintWriter {
 
   }
 
+  /** Включён ли вывод трассировки в открытый файл. */
+  public boolean isEnabled() {
+    return !isEmpty;
+  }
+
+  @Override
+  public void close() {
+    super.close();
+    isEmpty = true;
+  }
+
   @Override
   public void print(String s) {
     if (isEmpty) {
@@ -111,12 +123,12 @@ public class FileAwarePrintWriter extends PrintWriter {
   }
 
   /**
-   * Обработчик события {@link LanguageServerConfigurationChangedEvent}.
+   * Обработчик события {@link GlobalLanguageServerConfigurationChangedEvent}.
    *
    * @param event Событие
    */
   @EventListener
-  public void handleEvent(LanguageServerConfigurationChangedEvent event) {
+  public void handleEvent(GlobalLanguageServerConfigurationChangedEvent event) {
     setFile(event.getSource().getTraceLog());
   }
 

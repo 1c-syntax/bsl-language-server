@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,9 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
+import com.github._1c_syntax.bsl.languageserver.commands.ToggleCognitiveComplexityInlayHintsCommandSupplier;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -32,14 +35,26 @@ import java.util.Map;
  * Сапплаер линз, показывающий когнитивную сложность методов.
  */
 @Component
+@Order(4)
 public class CognitiveComplexityCodeLensSupplier extends AbstractMethodComplexityCodeLensSupplier {
 
-  public CognitiveComplexityCodeLensSupplier(LanguageServerConfiguration configuration) {
-    super(configuration);
+  /**
+   * Конструктор поставщика линз когнитивной сложности.
+   *
+   * @param configuration  Конфигурация language server.
+   * @param commandSupplier Поставщик команды переключения inlay-хинтов когнитивной сложности.
+   * @param resources      Локализованные ресурсы сервера.
+   */
+  public CognitiveComplexityCodeLensSupplier(
+    LanguageServerConfiguration configuration,
+    ToggleCognitiveComplexityInlayHintsCommandSupplier commandSupplier,
+    Resources resources
+  ) {
+    super(configuration, commandSupplier, resources);
   }
 
   @Override
   protected Map<MethodSymbol, Integer> getMethodsComplexity(DocumentContext documentContext) {
-    return documentContext.getCognitiveComplexityData().getMethodsComplexity();
+    return documentContext.getCognitiveComplexityData().methodsComplexity();
   }
 }

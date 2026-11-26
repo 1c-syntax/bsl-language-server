@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,12 +21,53 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
+/**
+ * Посетитель дерева символов.
+ * <p>
+ * Интерфейс для обхода иерархии символов модуля с использованием паттерна Visitor.
+ * Позволяет обрабатывать различные типы символов (модуль, регионы, методы, переменные).
+ */
 public interface SymbolTreeVisitor {
+  /**
+   * Посетить символ модуля.
+   *
+   * @param module Символ модуля
+   */
   void visitModule(ModuleSymbol module);
 
+  /**
+   * Посетить символ региона/области.
+   *
+   * @param region Символ региона
+   */
   void visitRegion(RegionSymbol region);
 
-  void visitMethod(MethodSymbol method);
+  /**
+   * Посетить обычный метод или функцию ({@link RegularMethodSymbol}).
+   *
+   * @param method Символ метода
+   */
+  void visitRegularMethod(RegularMethodSymbol method);
 
+  /**
+   * Посетить символ конструктора OneScript-класса
+   * ({@code ПриСозданииОбъекта} / {@code OnObjectCreate}).
+   *
+   * @param constructor Символ конструктора
+   */
+  void visitConstructor(ConstructorSymbol constructor);
+
+  /**
+   * Посетить символ переменной.
+   *
+   * @param variable Символ переменной
+   */
   void visitVariable(VariableSymbol variable);
+
+  /**
+   * Посетить символ метода-обработчика платформенного события.
+   *
+   * @param event Символ обработчика события
+   */
+  void visitEventMethod(EventMethodSymbol event);
 }

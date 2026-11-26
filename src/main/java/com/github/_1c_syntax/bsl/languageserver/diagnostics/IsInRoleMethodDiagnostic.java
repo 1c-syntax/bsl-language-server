@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -28,10 +28,10 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.jspecify.annotations.Nullable;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -124,7 +124,7 @@ public class IsInRoleMethodDiagnostic extends AbstractVisitorDiagnostic {
     }
   }
 
-  private static void addAssignedNameVar(BSLParserRuleContext assignmentNode, Set<String> nameVars) {
+  private static void addAssignedNameVar(ParserRuleContext assignmentNode, Set<String> nameVars) {
     var childNode = Trees.getFirstChild(assignmentNode, BSLParser.RULE_lValue);
     childNode.ifPresent(node -> nameVars.add(node.getText()));
   }
@@ -132,7 +132,7 @@ public class IsInRoleMethodDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitAssignment(BSLParser.AssignmentContext ctx) {
     var childNode = Trees.getFirstChild(ctx, BSLParser.RULE_lValue);
-    childNode.ifPresent((BSLParserRuleContext node) ->
+    childNode.ifPresent((ParserRuleContext node) ->
     {
       isInRoleVars.remove(node.getText());
       privilegedModeNameVars.remove(node.getText());
@@ -140,12 +140,12 @@ public class IsInRoleMethodDiagnostic extends AbstractVisitorDiagnostic {
     return super.visitAssignment(ctx);
   }
 
-  private boolean checkStatement(BSLParserRuleContext ctx) {
+  private boolean checkStatement(ParserRuleContext ctx) {
     var parentExpression = Trees.getRootParent(ctx, BSLParser.RULE_expression);
     return checkStatement(ctx, parentExpression);
   }
 
-  private boolean checkStatement(BSLParserRuleContext ctx, @Nullable BSLParserRuleContext parentExpression) {
+  private boolean checkStatement(ParserRuleContext ctx, @Nullable ParserRuleContext parentExpression) {
 
     if (parentExpression == null) {
       return false;
@@ -161,8 +161,8 @@ public class IsInRoleMethodDiagnostic extends AbstractVisitorDiagnostic {
     var nextGlobalMethodNode = Trees.getNextNode(parentExpression,
       ctx, BSLParser.RULE_globalMethodCall);
 
-    boolean hasPrivilegedModeCheck = (nextGlobalMethodNode instanceof BSLParser.GlobalMethodCallContext
-      && PRIVILEGED_MODE_NAME_PATTERN.matcher(((BSLParser.GlobalMethodCallContext) nextGlobalMethodNode)
+    boolean hasPrivilegedModeCheck = (nextGlobalMethodNode instanceof BSLParser.GlobalMethodCallContext globalMethodCall
+      && PRIVILEGED_MODE_NAME_PATTERN.matcher(globalMethodCall
       .methodName().getText()).matches());
 
     return !hasPrivilegedModeCheck;

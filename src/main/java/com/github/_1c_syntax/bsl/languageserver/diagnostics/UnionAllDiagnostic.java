@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -29,6 +29,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.parser.SDBLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.Optional;
+
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
   severity = DiagnosticSeverity.MINOR,
@@ -44,12 +46,7 @@ public class UnionAllDiagnostic extends AbstractSDBLVisitorDiagnostic {
 
   @Override
   public ParseTree visitUnion(SDBLParser.UnionContext ctx) {
-    if (ctx.UNION() != null && ctx.ALL() != null) {
-      return super.visitUnion(ctx);
-    }
-
-    diagnosticStorage.addDiagnostic(ctx.UNION());
+    Optional.ofNullable(ctx.UNION()).ifPresent(diagnosticStorage::addDiagnostic);
     return super.visitUnion(ctx);
   }
-
 }

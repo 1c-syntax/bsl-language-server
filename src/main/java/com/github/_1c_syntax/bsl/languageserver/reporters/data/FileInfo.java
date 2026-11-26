@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -24,17 +24,15 @@ package com.github._1c_syntax.bsl.languageserver.reporters.data;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.MetricStorage;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
+import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.AllArgsConstructor;
 import lombok.Value;
 import org.eclipse.lsp4j.Diagnostic;
 
-import java.net.URI;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 
 @Value
 @AllArgsConstructor
@@ -46,15 +44,11 @@ public class FileInfo {
   MetricStorage metrics;
 
   public FileInfo(String sourceDir, DocumentContext documentContext, List<Diagnostic> diagnostics) {
-    URI uri = documentContext.getUri();
+    var uri = documentContext.getUri();
     path = Absolute.path(sourceDir).relativize(Absolute.path(uri));
     this.diagnostics = new ArrayList<>(diagnostics);
     metrics = documentContext.getMetrics();
-    Optional<AbstractMDObjectBase> mdObjectBase = documentContext.getMdObject();
-    if (mdObjectBase.isPresent()) {
-      mdoRef = mdObjectBase.get().getMdoReference().getMdoRef();
-    } else {
-      mdoRef = "";
-    }
+    var mdo = documentContext.getMdObject();
+    mdoRef = mdo.map(MD::getMdoRef).orElse("");
   }
 }

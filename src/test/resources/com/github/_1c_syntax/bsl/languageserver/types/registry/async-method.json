@@ -1,0 +1,23 @@
+[
+  {
+    "kind": "TYPE",
+    "name": "ТипСАсинхМетодом",
+    "members": [
+      {
+        "name": "ИнициализироватьАсинх",
+        "kind": "METHOD",
+        "async": true,
+        "signatures": [
+          { "parameters": [] }
+        ]
+      },
+      {
+        "name": "Инициализировать",
+        "kind": "METHOD",
+        "signatures": [
+          { "parameters": [] }
+        ]
+      }
+    ]
+  }
+]

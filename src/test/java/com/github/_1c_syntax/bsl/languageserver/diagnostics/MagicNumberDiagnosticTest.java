@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,79 +21,81 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import org.eclipse.lsp4j.Diagnostic;
-import org.junit.jupiter.api.Test;
-
 import java.util.List;
 import java.util.Map;
 
-import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+import org.eclipse.lsp4j.Diagnostic;
+import org.junit.jupiter.api.Test;
 
+import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 
 class MagicNumberDiagnosticTest extends AbstractDiagnosticTest<MagicNumberDiagnostic> {
 
-  MagicNumberDiagnosticTest() {
-    super(MagicNumberDiagnostic.class);
-  }
-
   @Test
   void runTest() {
-    // when
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    // then
-    assertThat(diagnostics).hasSize(7);
+    assertThat(diagnostics).hasSize(12);
     assertThat(diagnostics, true)
-      .hasRange(3, 18, 3, 20)
-      .hasRange(3, 23, 3, 25)
-      .hasRange(7, 31, 7, 33)
-      .hasRange(11, 20, 11, 21)
-      .hasRange(20, 21, 20, 23)
-      .hasRange(23, 24, 23, 26)
-      .hasRange(27, 34, 27, 35);
+      .hasRange(3, 18, 20)
+      .hasRange(3, 23, 25)
+      .hasRange(7, 31, 33)
+      .hasRange(11, 20, 21)
+      .hasRange(20, 21, 23)
+      .hasRange(23, 24, 26)
+      .hasRange(27, 34, 35)
+      .hasRange(33, 37, 38)
+      .hasRange(34, 37, 38)
+      .hasRange(55, 16, 18)
+      .hasRange(59, 17, 19)
+      .hasRange(68, 27, 32);
   }
 
   @Test
   void testConfigure() {
-    // conf
-    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
-    configuration.put("authorizedNumbers", "-1,0,1,60,7");
-    diagnosticInstance.configure(configuration);
+    Map<String, Object> config = diagnosticInstance.getInfo().getDefaultConfiguration();
+    config.put("authorizedNumbers", "-1,0,1,60,7");
+    diagnosticInstance.configure(config);
 
-    // when
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    // then
-    assertThat(diagnostics).hasSize(4);
+    assertThat(diagnostics).hasSize(9);
     assertThat(diagnostics, true)
-      .hasRange(7, 31, 7, 33)
-      .hasRange(11, 20, 11, 21)
-      .hasRange(20, 21, 20, 23)
-      .hasRange(23, 24, 23, 26);
+      .hasRange(7, 31, 33)
+      .hasRange(11, 20, 21)
+      .hasRange(20, 21, 23)
+      .hasRange(23, 24, 26)
+      .hasRange(33, 37, 38)
+      .hasRange(34, 37, 38)
+      .hasRange(55, 16, 18)
+      .hasRange(59, 17, 19)
+      .hasRange(68, 27, 32);
   }
 
   @Test
   void testIndexes() {
-    // conf
-    Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
-    configuration.put("allowMagicIndexes", false);
-    diagnosticInstance.configure(configuration);
+    Map<String, Object> config = diagnosticInstance.getInfo().getDefaultConfiguration();
+    config.put("allowMagicIndexes", false);
+    diagnosticInstance.configure(config);
 
-    // when
     List<Diagnostic> diagnostics = getDiagnostics();
 
-    // then
-    assertThat(diagnostics).hasSize(9);
+    assertThat(diagnostics).hasSize(14);
     assertThat(diagnostics, true)
-      .hasRange(3, 18, 3, 20)
-      .hasRange(3, 23, 3, 25)
-      .hasRange(7, 31, 7, 33)
-      .hasRange(11, 20, 11, 21)
-      .hasRange(20, 21, 20, 23)
-      .hasRange(23, 24, 23, 26)
-      .hasRange(27, 34, 27, 35)
-      .hasRange(53, 32, 53, 34)
-      .hasRange(54, 18, 54, 20);
+      .hasRange(3, 18, 20)
+      .hasRange(3, 23, 25)
+      .hasRange(7, 31, 33)
+      .hasRange(11, 20, 21)
+      .hasRange(20, 21, 23)
+      .hasRange(23, 24, 26)
+      .hasRange(27, 34, 35)
+      .hasRange(33, 37, 38)
+      .hasRange(34, 37, 38)
+      .hasRange(49, 32, 34)
+      .hasRange(50, 18, 20)
+      .hasRange(55, 16, 18)
+      .hasRange(59, 17, 19)
+      .hasRange(68, 27, 32);
   }
 
 }

@@ -1,0 +1,13 @@
+<package xmlns="http://v8.1c.ru/8.1/xdto" xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" targetNamespace="http://www.example.org/test-package">
+	<valueType name="ТипИндекса" base="xs:decimal" variety="Atomic"/>
+	<objectType name="Адрес">
+		<property name="Страна" type="xs:string" lowerBound="0" form="Attribute"/>
+		<property name="Индекс" xmlns:d2p1="http://www.example.org/test-package" type="d2p1:ТипИндекса" lowerBound="0" form="Element"/>
+		<property name="Актуальный" type="xs:boolean" lowerBound="0" form="Attribute"/>
+		<property name="Состав" lowerBound="0" nillable="true"/>
+	</objectType>
+	<objectType name="КонтактнаяИнформация">
+		<property name="Представление" type="xs:string" lowerBound="0" form="Attribute"/>
+		<property name="Адрес" xmlns:d2p1="http://www.example.org/test-package" type="d2p1:Адрес" lowerBound="0" form="Element"/>
+	</objectType>
+</package>

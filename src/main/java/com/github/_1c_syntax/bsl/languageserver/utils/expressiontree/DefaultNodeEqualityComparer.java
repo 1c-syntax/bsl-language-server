@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,12 +21,15 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils.expressiontree;
 
-import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 
 import java.util.List;
 
 /**
- * Стандартный алгоритм сравнения выражений. Сравнивает выражения на идентичность.
+ * Стандартный алгоритм сравнения узлов дерева выражений.
+ * <p>
+ * Сравнивает выражения на структурную идентичность:
+ * типы узлов, операторы, значения литералов, имена идентификаторов.
  */
 public class DefaultNodeEqualityComparer implements NodeEqualityComparer {
 
@@ -40,30 +43,22 @@ public class DefaultNodeEqualityComparer implements NodeEqualityComparer {
       return false;
     }
 
-    switch (first.getNodeType()) {
-      case LITERAL:
-        return literalsEqual((TerminalSymbolNode) first, (TerminalSymbolNode) second);
-      case IDENTIFIER:
-        return identifiersEqual((TerminalSymbolNode) first, (TerminalSymbolNode) second);
-      case BINARY_OP:
-        return binaryOperationsEqual((BinaryOperationNode) first, (BinaryOperationNode) second);
-      case UNARY_OP:
-        return unaryOperationsEqual((UnaryOperationNode) first, (UnaryOperationNode) second);
-      case TERNARY_OP:
-        return ternaryOperatorsEqual((TernaryOperatorNode) first, (TernaryOperatorNode) second);
-      case SKIPPED_CALL_ARG:
-        return true;
-      case CALL:
-        return callStatementsEqual((AbstractCallNode) first, (AbstractCallNode) second);
-      default:
-        throw new IllegalStateException();
-    }
+    return switch (first.getNodeType()) {
+      case LITERAL -> literalsEqual((TerminalSymbolNode) first, (TerminalSymbolNode) second);
+      case IDENTIFIER -> identifiersEqual((TerminalSymbolNode) first, (TerminalSymbolNode) second);
+      case BINARY_OP -> binaryOperationsEqual((BinaryOperationNode) first, (BinaryOperationNode) second);
+      case UNARY_OP -> unaryOperationsEqual((UnaryOperationNode) first, (UnaryOperationNode) second);
+      case TERNARY_OP -> ternaryOperatorsEqual((TernaryOperatorNode) first, (TernaryOperatorNode) second);
+      case SKIPPED_CALL_ARG -> true;
+      case CALL -> callStatementsEqual((AbstractCallNode) first, (AbstractCallNode) second);
+      default -> throw new IllegalStateException();
+    };
 
   }
 
   protected boolean callStatementsEqual(AbstractCallNode first, AbstractCallNode second) {
-    if (first instanceof MethodCallNode) {
-      return methodCallsEqual((MethodCallNode) first, (MethodCallNode) second);
+    if (first instanceof MethodCallNode methodCallNode) {
+      return methodCallsEqual(methodCallNode, (MethodCallNode) second);
     } else {
       return constructorCallsEqual((ConstructorCallNode) first, (ConstructorCallNode) second);
     }
@@ -94,9 +89,9 @@ public class DefaultNodeEqualityComparer implements NodeEqualityComparer {
   }
 
   protected boolean ternaryOperatorsEqual(TernaryOperatorNode first, TernaryOperatorNode second) {
-    return areEqual(first.getCondition(), second.getCondition()) &&
-      areEqual(first.getTruePart(), second.getTruePart()) &&
-      areEqual(first.getFalsePart(), second.getFalsePart());
+    return areEqual(first.getCondition(), second.getCondition())
+      && areEqual(first.getTruePart(), second.getTruePart())
+      && areEqual(first.getFalsePart(), second.getFalsePart());
   }
 
   protected boolean unaryOperationsEqual(UnaryOperationNode first, UnaryOperationNode second) {
@@ -117,14 +112,13 @@ public class DefaultNodeEqualityComparer implements NodeEqualityComparer {
     }
 
     return areEqual(first.getLeft(), second.getLeft()) && areEqual(first.getRight(), second.getRight());
-
   }
 
   protected boolean identifiersEqual(TerminalSymbolNode first, TerminalSymbolNode second) {
-    return DiagnosticHelper.equalNodes(first.getRepresentingAst(), second.getRepresentingAst());
+    return Trees.equalNodes(first.getRepresentingAst(), second.getRepresentingAst());
   }
 
   protected boolean literalsEqual(TerminalSymbolNode first, TerminalSymbolNode second) {
-    return DiagnosticHelper.equalNodes(first.getRepresentingAst(), second.getRepresentingAst());
+    return Trees.equalNodes(first.getRepresentingAst(), second.getRepresentingAst());
   }
 }

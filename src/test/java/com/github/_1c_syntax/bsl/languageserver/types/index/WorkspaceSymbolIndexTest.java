@@ -1,0 +1,846 @@
+/*
+ * This file is a part of BSL Language Server.
+ *
+ * Copyright (c) 2018-2026
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ *
+ * BSL Language Server is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3.0 of the License, or (at your option) any later version.
+ *
+ * BSL Language Server is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BSL Language Server.
+ */
+package com.github._1c_syntax.bsl.languageserver.types.index;
+
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
+import com.github._1c_syntax.bsl.languageserver.types.registry.EventHandlerResolver;
+import com.github._1c_syntax.bsl.languageserver.util.EventHandlerResolverStubs;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.bsl.types.ModuleType;
+import org.eclipse.lsp4j.SymbolKind;
+import org.eclipse.lsp4j.jsonrpc.CancelChecker;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.mockito.ArgumentMatchers;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+
+import java.nio.file.Path;
+import java.util.Collections;
+import java.util.IdentityHashMap;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.CancellationException;
+
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+
+class WorkspaceSymbolIndexTest extends AbstractServerContextAwareTest {
+
+  private static final CancelChecker NO_CANCEL = () -> {
+    // no-op
+  };
+
+  @Autowired
+  private WorkspaceSymbolIndex index;
+
+  @Autowired
+  private ApplicationEventPublisher eventPublisher;
+
+  @MockitoBean
+  private EventHandlerResolver eventHandlerResolver;
+
+  @BeforeEach
+  void resetEventHandlerResolver() {
+    EventHandlerResolverStubs.delegateEventHandlersOfToIsEventHandler(eventHandlerResolver);
+    when(eventHandlerResolver.lookupContract(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
+      .thenReturn(Optional.empty());
+  }
+
+  @Test
+  void indexesSupportedSymbolsOnContentChangedEvent() {
+    // given
+    var documentContext = TestUtils.getDocumentContext("""
+      Перем МодульнаяПеременная Экспорт;
+      Процедура Тест()
+      КонецПроцедуры
+      """);
+
+    // when
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+
+    // then — метод и модульная переменная попали в индекс
+    var methods = index.search("Тест", NO_CANCEL);
+    assertThat(methods)
+      .anyMatch(entry -> entry.name().equals("Тест"));
+
+    var variables = index.search("МодульнаяПеременная", NO_CANCEL);
+    assertThat(variables)
+      .anyMatch(entry -> entry.name().equals("МодульнаяПеременная"));
+  }
+
+  @Test
+  void rereadOfSameContentKeepsEntries() {
+    // given: документ проиндексирован.
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Перечитанная()
+      КонецПроцедуры
+      """);
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    assertThat(index.search("Перечитанная", NO_CANCEL))
+      .as("записи собраны первым разбором")
+      .isNotEmpty();
+
+    // when: тот же самый текст разобран заново — записи переиндексировать незачем.
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext, false));
+
+    // then
+    assertThat(index.search("Перечитанная", NO_CANCEL))
+      .anyMatch(entry -> entry.name().equals("Перечитанная"));
+  }
+
+  @Test
+  void rereadOfSameContentIndexesAgainWhenEntriesAreGone() {
+    // given: документ проиндексирован, но записи по нему сняты — так поступает закрытие
+    // документа, унаследованным обработчиком.
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Забытая()
+      КонецПроцедуры
+      """);
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    assertThat(index.search("Забытая", NO_CANCEL))
+      .as("записи собраны первым разбором")
+      .isNotEmpty();
+    index.clear(documentContext.getUri());
+    assertThat(index.search("Забытая", NO_CANCEL)).isEmpty();
+
+    // when: тот же самый текст разобран заново.
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext, false));
+
+    // then: пропуск разрешён только когда записи на месте, иначе поиск по символам остался
+    // бы пустым до следующей правки файла.
+    assertThat(index.search("Забытая", NO_CANCEL))
+      .anyMatch(entry -> entry.name().equals("Забытая"));
+  }
+
+  @Test
+  void removalWhileContextIsClearedDropsEntriesOfAllDocumentsOfThatContext() {
+    // given: проиндексированы два документа очищаемого контекста и документ другого контекста
+    var first = TestUtils.getDocumentContext(
+      Path.of("./src/test/resources/types/index/ПерваяОчищаемая.bsl").toUri(), """
+      Процедура ПерваяОчищаемая()
+      КонецПроцедуры
+      """);
+    var second = TestUtils.getDocumentContext(
+      Path.of("./src/test/resources/types/index/ВтораяОчищаемая.bsl").toUri(), """
+      Процедура ВтораяОчищаемая()
+      КонецПроцедуры
+      """);
+    var foreign = TestUtils.getDocumentContext(
+      Path.of("./src/test/resources/types/index/ЧужаяОстающаяся.bsl").toUri(), """
+      Процедура ЧужаяОстающаяся()
+      КонецПроцедуры
+      """);
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(first));
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(second));
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(foreign));
+    assertThat(index.search("ВтораяОчищаемая", NO_CANCEL)).isNotEmpty();
+    assertThat(index.search("ЧужаяОстающаяся", NO_CANCEL)).isNotEmpty();
+    var clearing = mock(ServerContext.class);
+    when(clearing.isClearing()).thenReturn(true);
+    // первый документ из карты контекста уже удалён, второй ещё на месте
+    when(clearing.getDocuments()).thenReturn(Map.of(second.getUri(), second));
+
+    // when: контекст очищается целиком, и удалён первый документ
+    index.handleDocumentRemoved(new ServerContextDocumentRemovedEvent(clearing, first.getUri()));
+
+    // then: записи контекста сняты разом — записей второго документа в нём тоже нет
+    assertThat(index.search("ПерваяОчищаемая", NO_CANCEL)).isEmpty();
+    assertThat(index.search("ВтораяОчищаемая", NO_CANCEL)).isEmpty();
+    // then: записи документа другого контекста остались
+    assertThat(index.search("ЧужаяОстающаяся", NO_CANCEL))
+      .anyMatch(entry -> entry.name().equals("ЧужаяОстающаяся"));
+  }
+
+  @Test
+  void indexedEntryHasEventKindForEventHandlerMethod() {
+    // given — резолвер стабится ДО создания документа: MethodSymbolComputer опрашивает
+    // классификатор синхронно при обходе AST, то есть уже во время TestUtils.getDocumentContext(...).
+    // Стабится именно isEventHandler, а не lookupContract — см. аналогичный комментарий в
+    // MethodSymbolComputerEventClassificationTest.
+    when(eventHandlerResolver.isEventHandler(ArgumentMatchers.any(), ArgumentMatchers.eq("уникальноесобытие123")))
+      .thenReturn(true);
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура уникальноесобытие123(Отказ)
+      КонецПроцедуры
+      """);
+
+    // when
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+
+    // then
+    assertThat(index.search("уникальноесобытие123", NO_CANCEL))
+      .filteredOn(entry -> entry.name().equals("уникальноесобытие123"))
+      .hasSize(1)
+      .allMatch(entry -> entry.kind() == SymbolKind.Event);
+  }
+
+  @Test
+  void reindexingUnchangedContentIsNoOpAndReusesEntries() {
+    // given — документ уже проиндексирован (при batch-анализе он индексируется дважды:
+    // populateContext, затем rebuild на этапе диагностик через AnalyzeCommand.getFileInfoFromFile)
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ОбработкаПроведения() Экспорт
+      КонецПроцедуры
+      """);
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    var first = findByName("ОбработкаПроведения");
+
+    // when — повторная индексация ТОГО ЖЕ содержимого
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    var second = findByName("ОбработкаПроведения");
+
+    // then — набор записей не изменился, поэтому переиндексация не пересобирает индекс:
+    // возвращается тот же экземпляр Entry. При повторной clear+re-add (прежнее поведение)
+    // Entry создавалась бы заново, и проверка идентичности падала бы.
+    assertThat(second).isSameAs(first);
+  }
+
+  private Entry findByName(String name) {
+    return index.search(name, NO_CANCEL).stream()
+      .filter(entry -> entry.name().equals(name))
+      .findFirst()
+      .orElseThrow();
+  }
+
+  @Test
+  void findsSymbolByWordStartAndMultiWord() {
+    // given
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ОбработкаЗаполнения()
+      КонецПроцедуры
+      """);
+
+    // when
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+
+    // then — начало CamelCase-слова «Заполнения» (через trie word-start, не сканом)
+    assertThat(index.search("Заполнения", NO_CANCEL))
+      .anyMatch(entry -> entry.name().equals("ОбработкаЗаполнения"));
+
+    // then — многословный camel-hump: «Обр» — начало «Обработка», «Зап» — начало «Заполнения»
+    assertThat(index.search("ОбрЗап", NO_CANCEL))
+      .anyMatch(entry -> entry.name().equals("ОбработкаЗаполнения"));
+  }
+
+  @Test
+  void doesNotFindArbitrarySubsequenceMatch() {
+    // given — символ, где запрос совпадает лишь как разбросанная подпоследовательность
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ПровестиДокументОтбора()
+      КонецПроцедуры
+      """);
+
+    // when — «првдкотб» (один фрагмент): буквы встречаются по порядку, но не подряд и не с начала слов
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    var result = index.search("првдкотб", NO_CANCEL);
+
+    // then — подпоследовательность вразброс намеренно НЕ поддерживается: ничего не найдено
+    assertThat(result)
+      .noneMatch(entry -> entry.name().equals("ПровестиДокументОтбора"));
+  }
+
+  @Test
+  void doesNotFindMiddleOfWordSubstring() {
+    // given — символ со словом «Документ»; «кумен» — середина слова, не начало
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ПровестиДокумент()
+      КонецПроцедуры
+      """);
+
+    // when — «кумен» не является ни префиксом полного имени, ни началом какого-либо слова
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    var result = index.search("кумен", NO_CANCEL);
+
+    // then — произвольная подстрока ВНУТРИ слова намеренно НЕ поддерживается: ничего не найдено
+    assertThat(result)
+      .noneMatch(entry -> entry.name().equals("ПровестиДокумент"));
+  }
+
+  @Test
+  void ranksExactAndPrefixMatchesAboveWordStart() {
+    // given — три символа: точное имя, префикс полного имени, начало слова из середины имени
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Тест()
+      КонецПроцедуры
+      Процедура ТестДанных()
+      КонецПроцедуры
+      Процедура ПерезаписьТеста()
+      КонецПроцедуры
+      """);
+
+    // when
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    var result = index.search("Тест", NO_CANCEL);
+
+    // then — точное совпадение выше префикса полного имени, префикс выше начала слова из середины
+    var names = result.stream().map(Entry::name).toList();
+    assertThat(names.indexOf("Тест")).isLessThan(names.indexOf("ТестДанных"));
+    assertThat(names.indexOf("ТестДанных")).isLessThan(names.indexOf("ПерезаписьТеста"));
+  }
+
+  @Test
+  void returnsAllMatchesRankedByScore() {
+    // given — точное совпадение, совпадение по префиксу и совпадение по началу слова из середины
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Дата()
+      КонецПроцедуры
+      Процедура ДатаНачала()
+      КонецПроцедуры
+      Процедура НачалоДатаОтчёта()
+      КонецПроцедуры
+      """);
+
+    // when — все совпадения возвращаются без усечения, по убыванию релевантности
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    var result = index.search("Дата", NO_CANCEL);
+
+    // then — все три совпадения присутствуют, ранжированы: точное, затем префикс полного имени,
+    // затем начало слова из середины (порядок проверяется как подпоследовательность выдачи,
+    // т.к. индекс — общий бин на класс и может содержать символы соседних тестов)
+    var names = result.stream().map(Entry::name).toList();
+    assertThat(names)
+      .contains("Дата", "ДатаНачала", "НачалоДатаОтчёта")
+      .containsSubsequence("Дата", "ДатаНачала", "НачалоДатаОтчёта");
+  }
+
+  @Test
+  void prefixSearchViaTrieFindsAndRanksPrefixMatches() {
+    // given — несколько имён с общим префиксом и одно без него
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ПровестиДокумент()
+      КонецПроцедуры
+      Процедура ПроверитьЗаполнение()
+      КонецПроцедуры
+      Процедура Очистить()
+      КонецПроцедуры
+      """);
+
+    // when — префиксный путь через trie.prefixMap
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    var result = index.search("Про", NO_CANCEL);
+
+    // then — найдены оба префиксных совпадения, имя без префикса отсутствует;
+    // при равном скоре раньше идёт более короткое имя
+    var names = result.stream().map(Entry::name).toList();
+    assertThat(names)
+      .contains("ПровестиДокумент", "ПроверитьЗаполнение")
+      .doesNotContain("Очистить");
+    assertThat(names.indexOf("ПровестиДокумент")).isLessThan(names.indexOf("ПроверитьЗаполнение"));
+  }
+
+  /**
+   * Один символ должен находиться по разным формам древесного запроса: по началу CamelCase-слова из
+   * середины имени, по многословному camel-hump совпадению и по многословному совпадению не по
+   * порядку слов. Во всех случаях запись возвращается через дерево, без линейного скана.
+   *
+   * @param procedureName имя индексируемой процедуры
+   * @param query         поисковый запрос
+   * @param expectedName  имя символа, который должен быть найден
+   */
+  @ParameterizedTest
+  @CsvSource({
+    // начало CamelCase-слова «Документ» из середины имени (trie word-start, не скан)
+    "ПровестиДокумент, Документ, ПровестиДокумент",
+    // многословный camel-hump: «пр»,«док» пересекаются по словам через trie
+    "ПровестиДокумент, ПрДок, ПровестиДокумент",
+    // многословное совпадение не по порядку слов: запись всё равно возвращается
+    "ДокументПровести, ПрДок, ДокументПровести"
+  })
+  void findsSymbolViaTrieQueryForms(String procedureName, String query, String expectedName) {
+    // given — символ с заданным CamelCase-именем
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура %s()
+      КонецПроцедуры
+      """.formatted(procedureName));
+
+    // when — поиск по древесной форме запроса (word-start или многословное пересечение)
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    var result = index.search(query, NO_CANCEL);
+
+    // then — символ найден через дерево, без линейного скана
+    assertThat(result)
+      .anyMatch(entry -> entry.name().equals(expectedName));
+  }
+
+  @Test
+  void fullNamePrefixRanksAboveWordStartForSameQuery() {
+    // given — для одного запроса: префикс полного имени и начало слова из середины имени
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ДокументПолучить()
+      КонецПроцедуры
+      Процедура ПровестиДокумент()
+      КонецПроцедуры
+      """);
+
+    // when — запрос «Док»: «ДокументПолучить» совпадает как префикс полного имени,
+    // «ПровестиДокумент» — как начало слова «Документ» из середины имени
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    var result = index.search("Док", NO_CANCEL);
+    var names = result.stream().map(Entry::name).toList();
+
+    // then — оба найдены, но префикс полного имени идёт раньше начала слова из середины
+    assertThat(names)
+      .contains("ДокументПолучить", "ПровестиДокумент")
+      .containsSubsequence("ДокументПолучить", "ПровестиДокумент");
+  }
+
+  @Test
+  void inOrderMultiWordMatchRanksAboveUnordered() {
+    // given — два имени из тех же слов в разном порядке
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ПровестиДокумент()
+      КонецПроцедуры
+      Процедура ДокументПровести()
+      КонецПроцедуры
+      """);
+
+    // when — «ПрДок» (пр, док): для «ПровестиДокумент» — по порядку, для «ДокументПровести» — нет
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    var result = index.search("ПрДок", NO_CANCEL);
+    var names = result.stream().map(Entry::name).toList();
+
+    // then — оба найдены, но совпадение по порядку идёт раньше совпадения не по порядку
+    assertThat(names)
+      .contains("ПровестиДокумент", "ДокументПровести")
+      .containsSubsequence("ПровестиДокумент", "ДокументПровести");
+  }
+
+  @Test
+  void inOrderMultiWordMatchRanksAboveSingleWordPrefix() {
+    // given — для одного запроса: многословное in-order совпадение и префикс начала одиночного слова.
+    // «ПровестиДокумент»: слова Провести+Документ; «ОбработкаПрдЗначение»: слово «Прд» в середине,
+    // других слов на «д» нет, поэтому многословным оно не совпадёт — только как префикс слова.
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ПровестиДокумент()
+      КонецПроцедуры
+      Процедура ОбработкаПрдЗначение()
+      КонецПроцедуры
+      """);
+
+    // when — «ПрД» (пр, д): «ПровестиДокумент» — многословное in-order (пр→Провести, д→Документ),
+    // «ОбработкаПрдЗначение» — префикс начала одиночного слова «Прд»
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    var result = index.search("ПрД", NO_CANCEL);
+    var names = result.stream().map(Entry::name).toList();
+
+    // then — оба найдены, но многословное in-order совпадение идёт выше префикса одиночного слова
+    assertThat(names)
+      .contains("ПровестиДокумент", "ОбработкаПрдЗначение")
+      .containsSubsequence("ПровестиДокумент", "ОбработкаПрдЗначение");
+  }
+
+  @Test
+  void wordStartMatchDoesNotDuplicateEntry() {
+    // given — имя, которое лежит в дереве под несколькими ключами (полное имя и начало слова)
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ПровестиДокумент()
+      КонецПроцедуры
+      """);
+
+    // when
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    var result = index.search("Документ", NO_CANCEL);
+
+    // then — запись не дублируется, хотя лежит под несколькими ключами
+    var matches = result.stream().filter(entry -> entry.name().equals("ПровестиДокумент")).count();
+    assertThat(matches).isEqualTo(1L);
+  }
+
+  @Test
+  void clearRemovesSymbolFromAllWordStartKeys() {
+    // given — символ проиндексирован и по полному имени, и по началу слова
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура УникальноеПроведениеДокумента()
+      КонецПроцедуры
+      """);
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    assertThat(index.search("Документа", NO_CANCEL))
+      .anyMatch(entry -> entry.name().equals("УникальноеПроведениеДокумента"));
+
+    // when — событие жизненного цикла чистит индекс по URI
+    eventPublisher.publishEvent(
+      new ServerContextDocumentRemovedEvent(documentContext.getServerContext(), documentContext.getUri()));
+
+    // then — символ исчез из ВСЕХ ключей: и по полному имени, и по началу слова из середины
+    assertThat(index.search("УникальноеПроведениеДокумента", NO_CANCEL))
+      .noneMatch(entry -> entry.name().equals("УникальноеПроведениеДокумента"));
+    assertThat(index.search("Документа", NO_CANCEL))
+      .noneMatch(entry -> entry.name().equals("УникальноеПроведениеДокумента"));
+    assertThat(index.search("Проведение", NO_CANCEL))
+      .noneMatch(entry -> entry.name().equals("УникальноеПроведениеДокумента"));
+  }
+
+  @Test
+  void clearOnLifecycleEventRemovesDocumentSymbols() {
+    // given
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура УникальныйСимвол()
+      КонецПроцедуры
+      """);
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    assertThat(index.search("УникальныйСимвол", NO_CANCEL)).isNotEmpty();
+
+    // when — событие жизненного цикла чистит индекс по URI
+    eventPublisher.publishEvent(
+      new ServerContextDocumentRemovedEvent(documentContext.getServerContext(), documentContext.getUri()));
+
+    // then
+    assertThat(index.search("УникальныйСимвол", NO_CANCEL)).isEmpty();
+  }
+
+  @Test
+  void emptyQueryReturnsAllIndexedSymbols() {
+    // given
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Первая()
+      КонецПроцедуры
+      Процедура Вторая()
+      КонецПроцедуры
+      Процедура Третья()
+      КонецПроцедуры
+      """);
+
+    // when — пустой запрос возвращает все проиндексированные символы, без усечения
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    var result = index.search("", NO_CANCEL);
+
+    // then — символы этого документа присутствуют в полной выдаче пустого запроса
+    assertThat(result)
+      .extracting(Entry::name)
+      .contains("Первая", "Вторая", "Третья");
+  }
+
+  @Test
+  void searchFuzzyTailFindsMiddleOfWordSubstringThatTrieMisses() {
+    // given — символ со словом «Документ»; «кумен» — середина слова, не начало
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ПровестиДокумент()
+      КонецПроцедуры
+      """);
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+
+    // when — trie не находит подстроку в середине слова, fuzzy-хвост находит её
+    var trieResult = index.search("кумен", NO_CANCEL);
+    var fuzzyResult = index.searchFuzzyTail("кумен", emptyExclude(), NO_CANCEL);
+
+    // then — древесный поиск пуст по этому запросу (lock-in сохраняется), fuzzy-хвост возвращает символ
+    assertThat(trieResult)
+      .noneMatch(entry -> entry.name().equals("ПровестиДокумент"));
+    assertThat(fuzzyResult)
+      .anyMatch(entry -> entry.name().equals("ПровестиДокумент"));
+  }
+
+  @Test
+  void searchFuzzyTailRanksSubstringBeforeSubsequence() {
+    // given — для «кумен»: «ПровестиДокумент» содержит непрерывную подстроку «кумен» (До-кумен-т),
+    // а «КрасныйУзелМаленький» совпадает лишь как разбросанная подпоследовательность к-у-м-е-н
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ПровестиДокумент()
+      КонецПроцедуры
+      Процедура КрасныйУзелМаленький()
+      КонецПроцедуры
+      """);
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+
+    // when
+    var fuzzyResult = index.searchFuzzyTail("кумен", emptyExclude(), NO_CANCEL);
+    var names = fuzzyResult.stream().map(Entry::name).toList();
+
+    // then — оба найдены, но подстрочное совпадение идёт раньше подпоследовательностного
+    assertThat(names)
+      .contains("ПровестиДокумент", "КрасныйУзелМаленький")
+      .containsSubsequence("ПровестиДокумент", "КрасныйУзелМаленький");
+  }
+
+  @Test
+  void searchFuzzyTailFindsScatteredSubsequence() {
+    // given — символ, где запрос совпадает лишь как разбросанная подпоследовательность
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ПровестиДокументОтбора()
+      КонецПроцедуры
+      """);
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+
+    // when — «првдкотб»: буквы встречаются по порядку, но не подряд и не с начала слов
+    var trieResult = index.search("првдкотб", NO_CANCEL);
+    var fuzzyResult = index.searchFuzzyTail("првдкотб", emptyExclude(), NO_CANCEL);
+
+    // then — trie не находит, fuzzy-хвост возвращает как подпоследовательность
+    assertThat(trieResult)
+      .noneMatch(entry -> entry.name().equals("ПровестиДокументОтбора"));
+    assertThat(fuzzyResult)
+      .anyMatch(entry -> entry.name().equals("ПровестиДокументОтбора"));
+  }
+
+  @Test
+  void searchFuzzyTailExcludesEntriesFromExcludeSet() {
+    // given — «ПровестиДокумент» trie находит по началу слова «Документ»; «ОбработкаНеокумента»
+    // содержит подстроку «окумен» лишь в середине слова, поэтому в trie по «Документ» не попадает
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ПровестиДокумент()
+      КонецПроцедуры
+      Процедура ОбработкаНеокумента()
+      КонецПроцедуры
+      """);
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+
+    // when — «окумен» (середина слова): fuzzy-хвост находит оба символа по подстроке;
+    // в exclude кладём результат trie по «Документ» — туда попадает только «ПровестиДокумент»
+    var trieResult = index.search("Документ", NO_CANCEL);
+    Set<Entry> exclude = Collections.newSetFromMap(new IdentityHashMap<>());
+    exclude.addAll(trieResult);
+    var fuzzyResult = index.searchFuzzyTail("окумен", exclude, NO_CANCEL);
+
+    // then — fuzzy-хвост вернул не пустой результат, исключив записи из exclude,
+    // но сохранив прочие fuzzy-совпадения (нет дублей с быстрым путём, но хвост не пуст)
+    assertThat(fuzzyResult)
+      .isNotEmpty()
+      .anyMatch(entry -> entry.name().equals("ОбработкаНеокумента"))
+      .doesNotContainAnyElementsOf(exclude);
+  }
+
+  @Test
+  void searchFuzzyTailEmptyQueryReturnsEmpty() {
+    // given
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Первая()
+      КонецПроцедуры
+      """);
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+
+    // when — пустой запрос: fuzzy-хвост не нужен (полная выдача — это путь пустого запроса search)
+    var fuzzyResult = index.searchFuzzyTail("", emptyExclude(), NO_CANCEL);
+
+    // then
+    assertThat(fuzzyResult).isEmpty();
+  }
+
+  private static Set<Entry> emptyExclude() {
+    return Collections.newSetFromMap(new IdentityHashMap<>());
+  }
+
+  /**
+   * Методы общего модуля (BSL) — функции без состояния, поэтому в индексе рабочей
+   * области они получают вид {@link SymbolKind#Function}.
+   */
+  @Test
+  void indexesCommonModuleMethodsAsFunction() {
+    // given — общий модуль конфигурации (модуль без состояния)
+    initServerContext(TestUtils.PATH_TO_METADATA);
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "src/test/resources/metadata/designer/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl", context);
+
+    // when
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    var result = index.search("НеУстаревшаяФункция", NO_CANCEL);
+
+    // then — запись метода общего модуля проиндексирована как Function
+    // (фильтр по контейнеру: метод с тем же именем есть и в stateful-модуле менеджера)
+    assertThat(documentContext.getModuleType()).isEqualTo(ModuleType.CommonModule);
+    assertThat(result)
+      .filteredOn(entry -> entry.name().equals("НеУстаревшаяФункция")
+        && entry.containerName().contains("ПервыйОбщийМодуль"))
+      .isNotEmpty()
+      .allMatch(entry -> entry.kind() == SymbolKind.Function);
+  }
+
+  /**
+   * Методы модуля объекта (BSL) — члены объекта со состоянием, поэтому в индексе
+   * рабочей области они остаются {@link SymbolKind#Method}.
+   */
+  @Test
+  void indexesObjectModuleMethodsAsMethod() {
+    // given — модуль объекта справочника (модуль со состоянием)
+    initServerContext(TestUtils.PATH_TO_METADATA);
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "src/test/resources/metadata/designer/Catalogs/Справочник1/Ext/ObjectModule.bsl", context);
+
+    // when
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    var result = index.search("Тест", NO_CANCEL);
+
+    // then — запись метода модуля объекта остаётся Method
+    // (фильтр по контейнеру: метод с тем же именем есть и в stateless-модулях)
+    assertThat(documentContext.getModuleType()).isEqualTo(ModuleType.ObjectModule);
+    assertThat(result)
+      .filteredOn(entry -> entry.name().equals("Тест")
+        && entry.containerName().contains("Справочник1"))
+      .isNotEmpty()
+      .allMatch(entry -> entry.kind() == SymbolKind.Method);
+  }
+
+  /**
+   * Методы модуля OneScript — функции без состояния, поэтому в индексе рабочей
+   * области они получают вид {@link SymbolKind#Function}.
+   */
+  @Test
+  void indexesOneScriptModuleMethodsAsFunction() {
+    // given — модуль OneScript (.os, модуль без состояния)
+    var documentContext = TestUtils.getDocumentContext(
+      TestUtils.FAKE_OSCRIPT_DOCUMENT_URI,
+      """
+        Процедура УникальныйМетодОС() Экспорт
+        КонецПроцедуры""");
+
+    // when
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+    var result = index.search("УникальныйМетодОС", NO_CANCEL);
+
+    // then — запись метода модуля OneScript проиндексирована как Function
+    assertThat(result)
+      .filteredOn(entry -> entry.name().equals("УникальныйМетодОС"))
+      .isNotEmpty()
+      .allMatch(entry -> entry.kind() == SymbolKind.Function);
+  }
+
+  @Test
+  void cancelledCheckerInterruptsSearchEventually() {
+    // given — много символов, чтобы пройти порог проверки отмены
+    var builder = new StringBuilder();
+    for (var i = 0; i < 2000; i++) {
+      builder.append("Процедура Символ").append(i).append("()\nКонецПроцедуры\n");
+    }
+    var documentContext = TestUtils.getDocumentContext(builder.toString());
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+
+    CancelChecker cancelChecker = () -> {
+      throw new CancellationException();
+    };
+
+    // when / then
+    assertThatThrownBy(() -> index.search("Символ", cancelChecker))
+      .isInstanceOf(CancellationException.class);
+  }
+
+  @Test
+  void searchWithDocumentFilterAndLimitReturnsBestMatchesOfThatDocument() {
+    // given — точное совпадение есть в обоих документах, отбор оставляет первый
+    var requested = TestUtils.getDocumentContext(
+      Path.of("./src/test/resources/types/index/ОтборЗапрошенный.bsl").toUri(), """
+      Процедура НачалоДатаОтчёта()
+      КонецПроцедуры
+      Процедура ДатаНачала()
+      КонецПроцедуры
+      Процедура Дата()
+      КонецПроцедуры
+      """);
+    var other = TestUtils.getDocumentContext(
+      Path.of("./src/test/resources/types/index/ОтборДругой.bsl").toUri(), """
+      Процедура Дата()
+      КонецПроцедуры
+      """);
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(requested));
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(other));
+    var requestedUri = requested.getUri();
+
+    // when
+    var limited = index.search("Дата", uri -> uri.equals(requestedUri), 2, NO_CANCEL);
+
+    // then — два лучших совпадения запрошенного документа в том же порядке, что у полной выдачи
+    var fullOfRequested = index.search("Дата", NO_CANCEL).stream()
+      .filter(entry -> entry.uri().equals(requestedUri))
+      .limit(2)
+      .toList();
+    assertThat(limited)
+      .extracting(Entry::name)
+      .containsExactly("Дата", "ДатаНачала");
+    assertThat(limited).containsExactlyElementsOf(fullOfRequested);
+  }
+
+  @Test
+  void emptyQueryWithDocumentFilterAndLimitStopsAtLimit() {
+    // given
+    var requested = TestUtils.getDocumentContext(
+      Path.of("./src/test/resources/types/index/ОтборПустогоЗапроса.bsl").toUri(), """
+      Процедура Первая()
+      КонецПроцедуры
+      Процедура Вторая()
+      КонецПроцедуры
+      Процедура Третья()
+      КонецПроцедуры
+      """);
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(requested));
+    var requestedUri = requested.getUri();
+
+    // when
+    var limited = index.search("", uri -> uri.equals(requestedUri), 2, NO_CANCEL);
+
+    // then
+    assertThat(limited)
+      .hasSize(2)
+      .allMatch(entry -> entry.uri().equals(requestedUri));
+  }
+
+  @Test
+  void searchFuzzyTailWithDocumentFilterAndLimitKeepsBestOfThatDocument() {
+    // given — для «кумен» подстрочное совпадение ранжируется выше подпоследовательностного
+    var requested = TestUtils.getDocumentContext(
+      Path.of("./src/test/resources/types/index/ОтборХвостаЗапрошенный.bsl").toUri(), """
+      Процедура КрасныйУзелМаленький()
+      КонецПроцедуры
+      Процедура ПровестиДокумент()
+      КонецПроцедуры
+      """);
+    var other = TestUtils.getDocumentContext(
+      Path.of("./src/test/resources/types/index/ОтборХвостаДругой.bsl").toUri(), """
+      Процедура ПровестиДокумент()
+      КонецПроцедуры
+      """);
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(requested));
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(other));
+    var requestedUri = requested.getUri();
+
+    // when
+    var limited = index.searchFuzzyTail("кумен", emptyExclude(), uri -> uri.equals(requestedUri), 1, NO_CANCEL);
+
+    // then
+    assertThat(limited).singleElement().satisfies(entry -> {
+      assertThat(entry.name()).isEqualTo("ПровестиДокумент");
+      assertThat(entry.uri()).isEqualTo(requestedUri);
+    });
+  }
+
+  @Test
+  void searchWithZeroLimitReturnsNothing() {
+    // given
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура ДатаНулевогоЛимита()
+      КонецПроцедуры
+      """);
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(documentContext));
+
+    // when / then
+    assertThat(index.search("ДатаНулевогоЛимита", uri -> true, 0, NO_CANCEL)).isEmpty();
+    assertThat(index.search("", uri -> true, 0, NO_CANCEL)).isEmpty();
+    assertThat(index.searchFuzzyTail("нулевого", emptyExclude(), uri -> true, 0, NO_CANCEL)).isEmpty();
+  }
+}

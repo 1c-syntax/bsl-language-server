@@ -1,0 +1,280 @@
+/*
+ * This file is a part of BSL Language Server.
+ *
+ * Copyright (c) 2018-2026
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ *
+ * BSL Language Server is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3.0 of the License, or (at your option) any later version.
+ *
+ * BSL Language Server is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BSL Language Server.
+ */
+package com.github._1c_syntax.bsl.languageserver.types.registry;
+
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+
+import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
+import static org.assertj.core.api.Assertions.assertThat;
+
+@CleanupContextBeforeClassAndAfterClass
+class ConfigurationModuleMembersProviderTest extends AbstractServerContextAwareTest {
+
+  @Autowired
+  private TypeRegistry typeRegistry;
+
+  @Autowired
+  private GlobalScopeProvider globalScopeProvider;
+
+  @Autowired
+  private ApplicationEventPublisher eventPublisher;
+
+  @Test
+  void bslContentChangeInvalidatesOnlyEditedModuleType() {
+    // given — общий модуль прогрет; мемоизированы и его члены, и члены несвязанного
+    // платформенного типа (Массив)
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var moduleDoc = TestUtils.getDocumentContextFromFile(
+      "src/test/resources/metadata/designer/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
+
+    var moduleType = globalScopeProvider.globalMember("ПервыйОбщийМодуль", FileType.BSL)
+      .flatMap(member -> member.returnTypes().refs().stream().findFirst())
+      .orElseThrow();
+    var arrayType = typeRegistry.resolve("Массив").orElseThrow();
+
+    var moduleMembersBefore = typeRegistry.getMembers(moduleType, FileType.BSL);
+    assertThat(moduleMembersBefore)
+      .extracting(MemberDescriptor::name).contains("НеУстаревшаяПроцедура");
+    var arrayMembersBefore = typeRegistry.getMembers(arrayType, FileType.BSL);
+    assertThat(arrayMembersBefore).isNotEmpty();
+
+    // when — изменение содержимого модуля (как при rebuildDocument на анализе/правке)
+    eventPublisher.publishEvent(new DocumentContextContentChangedEvent(moduleDoc));
+
+    // then — memo несвязанного типа не тронуто (тот же экземпляр списка): инвалидация
+    // точечная, глобальная эпоха на BSL-правке не двигается (иначе Массив пересобрался бы)
+    assertThat(typeRegistry.getMembers(arrayType, FileType.BSL)).isSameAs(arrayMembersBefore);
+    // а memo самого отредактированного модуля именно пересобрано — новый экземпляр списка,
+    // а не тот же самый (проверка только по содержимому прошла бы и без инвалидации)
+    var moduleMembersAfter = typeRegistry.getMembers(moduleType, FileType.BSL);
+    assertThat(moduleMembersAfter).isNotSameAs(moduleMembersBefore);
+    assertThat(moduleMembersAfter)
+      .extracting(MemberDescriptor::name).contains("НеУстаревшаяПроцедура");
+  }
+
+  @Test
+  void commonModuleRereadWithSameTextKeepsGlobalMembersAndUsesCurrentTree() {
+    // given — общий модуль разобран, члены глобального контекста собраны
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var moduleDoc = TestUtils.getDocumentContextFromFile(
+      "src/test/resources/metadata/designer/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl", context);
+    var globalMembers = typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, FileType.BSL);
+    var moduleBefore = moduleDoc.getSymbolTree().getModule();
+    assertThat(globalScopeProvider.globalMember("ПервыйОбщийМодуль", FileType.BSL)
+      .flatMap(MemberDescriptor::getSourceSymbol)).containsSame(moduleBefore);
+
+    // when — тот же текст перечитан; актуальное дерево может быть переиспользовано
+    context.rebuildDocument(moduleDoc, moduleDoc.getContent(), moduleDoc.getVersion() + 1);
+
+    // then — члены глобального контекста не пересобраны, а член модуля ссылается на текущее дерево
+    assertThat(typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, FileType.BSL)).isSameAs(globalMembers);
+    assertThat(globalScopeProvider.globalMember("ПервыйОбщийМодуль", FileType.BSL)
+      .flatMap(MemberDescriptor::getSourceSymbol)).containsSame(moduleDoc.getSymbolTree().getModule());
+  }
+
+  @Test
+  void registersManagerModuleMembers() {
+    initServerContext(PATH_TO_METADATA);
+
+    // прогреваем lazy-конфигурацию и события документов
+    context.getConfiguration();
+
+    // СправочникСМенеджером (пустой ManagerModule.bsl/ObjectModule.bsl) — типы должны зарегистрироваться,
+    // даже если набор членов из модуля пустой (источник членов заведён, но
+    // добавил 0 элементов).
+    var managerRu = typeRegistry.resolve("СправочникМенеджер.Справочник1");
+    var managerEn = typeRegistry.resolve("CatalogManager.Справочник1");
+    var objectRu = typeRegistry.resolve("СправочникОбъект.Справочник1");
+    var objectEn = typeRegistry.resolve("CatalogObject.Справочник1");
+
+    assertThat(managerRu).isPresent();
+    assertThat(managerEn).isPresent();
+    assertThat(managerEn.get()).isEqualTo(managerRu.get());
+    assertThat(objectRu).isPresent();
+    assertThat(objectEn).isPresent();
+    assertThat(objectEn.get()).isEqualTo(objectRu.get());
+
+    // members могут быть пустыми (модуль пуст), но запрос не должен падать
+    assertThat(typeRegistry.getMembers(managerRu.get(), FileType.BSL)).isNotNull();
+  }
+
+  @Test
+  void registersCommonModuleAsNamespace() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+
+    // прогреваем DocumentContext общего модуля, чтобы провайдер получил событие
+    TestUtils.getDocumentContextFromFile("src/test/resources/metadata/designer/CommonModules/"
+      + "ПервыйОбщийМодуль/Ext/Module.bsl");
+
+    var ns = globalScopeProvider.globalMember("ПервыйОбщийМодуль", FileType.BSL)
+      .map(member -> member.returnTypes().refs().stream().findFirst().orElseThrow());
+    assertThat(ns).isPresent();
+
+    var members = typeRegistry.getMembers(ns.get(), FileType.BSL);
+    assertThat(members)
+      .extracting(m -> m.name())
+      .contains("НеУстаревшаяПроцедура", "НеУстаревшаяФункция", "УстаревшаяПроцедура", "УстаревшаяФункция");
+
+    // не-экспортные методы общего модуля наружу не выставляются
+    assertThat(members)
+      .extracting(m -> m.name())
+      .doesNotContain("Тест", "РегистрацияИзмененийПередУдалением");
+  }
+
+  @Test
+  void commonModuleThisObjectIsSpecializedToOwnTypeNotGenericCommonModule() {
+    // given: платформенный тип ОбщийМодуль (builtin-platform-types.json — или
+    // реальный HBK) даёт ЭтотОбъект с обобщённым returnType «ОбщийМодуль».
+    // ConfigurationModuleMembersProvider.commonModulePlatformMembers должен
+    // специализировать его на тип ЭТОГО КОНКРЕТНОГО модуля, иначе dot-completion
+    // после ЭтотОбъект. не показал бы собственные экспортные методы модуля.
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    TestUtils.getDocumentContextFromFile("src/test/resources/metadata/designer/CommonModules/"
+      + "ПервыйОбщийМодуль/Ext/Module.bsl");
+
+    var ownRef = globalScopeProvider.globalMember("ПервыйОбщийМодуль", FileType.BSL)
+      .map(member -> member.returnTypes().refs().stream().findFirst().orElseThrow())
+      .orElseThrow();
+
+    var members = typeRegistry.getMembers(ownRef, FileType.BSL);
+    var thisObject = members.stream()
+      .filter(m -> "ЭтотОбъект".equals(m.name()))
+      .findFirst()
+      .orElseThrow(() -> new AssertionError("ЭтотОбъект должен быть членом типа общего модуля"));
+
+    assertThat(thisObject.kind()).isEqualTo(MemberKind.PROPERTY);
+    assertThat(thisObject.returnType())
+      .as("ЭтотОбъект должен указывать на тип ЭТОГО модуля, а не на обобщённый ОбщийМодуль")
+      .isEqualTo(ownRef);
+
+    // generic-плейсхолдер <Имя процедуры или функции> отфильтрован — собственные
+    // экспортные методы модуля даёт другой источник (collectModuleMembers).
+    assertThat(members)
+      .extracting(m -> m.name())
+      .noneMatch(name -> name.contains("<"));
+  }
+
+  @Test
+  void registersCommonModuleAsGlobalContextMember() {
+    // given: workspace c общим модулем, его DocumentContext прогрет
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    TestUtils.getDocumentContextFromFile("src/test/resources/metadata/designer/CommonModules/"
+      + "ПервыйОбщийМодуль/Ext/Module.bsl");
+    typeRegistry.ensureInitialized();
+
+    // when: члены синтетического типа ГлобальныйКонтекст
+    var members = typeRegistry.getMembers(TypeRegistry.GLOBAL_CONTEXT, FileType.BSL);
+
+    // then: общий модуль — свойство-член контекста
+    assertThat(members)
+      .as("общий модуль должен быть свойством-членом ГлобальногоКонтекста")
+      .anyMatch(member -> member.kind() == MemberKind.PROPERTY && member.matches("ПервыйОбщийМодуль"));
+  }
+
+  @Test
+  void registersObjectModuleExportVariableAsTypedMember() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+
+    // прогреваем DocumentContext модуля объекта, чтобы провайдер получил событие
+    TestUtils.getDocumentContextFromFile("src/test/resources/metadata/designer/Catalogs/"
+      + "СправочникСМенеджером/Ext/ObjectModule.bsl");
+
+    var objectType = typeRegistry.resolve("СправочникОбъект.СправочникСМенеджером").orElseThrow();
+    var members = typeRegistry.getMembers(objectType, FileType.BSL);
+
+    // экспортная Перем модуля объекта выставляется как типизированный член
+    var member = members.stream()
+      .filter(m -> "Данные".equals(m.name()))
+      .findFirst()
+      .orElseThrow();
+    assertThat(member.kind()).isEqualTo(MemberKind.PROPERTY);
+
+    // тип выведен из `// см. СоздатьДанные` → возврат функции (Структура)
+    assertThat(member.returnType().qualifiedName()).isEqualTo("Структура");
+
+    // поля структуры из JsDoc-возврата перенесены (field-aware, как и в OneScript)
+    assertThat(member.returnTypes().getLocalFields(member.returnType()).keySet())
+      .contains("Код", "Наименование");
+  }
+
+  @Test
+  void resolvesObjectModuleExportVariableTypeFromQualifiedSeeReference() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+
+    // нужны оба модуля: общий (цель ссылки) и модуль объекта (носитель Перем)
+    TestUtils.getDocumentContextFromFile(
+      "src/test/resources/metadata/designer/CommonModules/ОбщегоНазначения/Ext/Module.bsl");
+    TestUtils.getDocumentContextFromFile("src/test/resources/metadata/designer/Catalogs/"
+      + "СправочникСМенеджером/Ext/ObjectModule.bsl");
+
+    var objectType = typeRegistry.resolve("СправочникОбъект.СправочникСМенеджером").orElseThrow();
+    var members = typeRegistry.getMembers(objectType, FileType.BSL);
+
+    // квалифицированная `// см. ОбщегоНазначения.ЗначениеВМассиве` разворачивается
+    // обходом членов: тип = возврат метода (Массив)
+    var member = members.stream()
+      .filter(m -> "ИтогРасчёта".equals(m.name()))
+      .findFirst()
+      .orElseThrow();
+    assertThat(member.kind()).isEqualTo(MemberKind.PROPERTY);
+    assertThat(member.returnType().qualifiedName()).isEqualTo("Массив");
+  }
+
+  @Test
+  void resolvesReturnTypeFromMethodDescription() {
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+
+    TestUtils.getDocumentContextFromFile(
+      "src/test/resources/metadata/designer/CommonModules/ОбщегоНазначения/Ext/Module.bsl");
+
+    var ns = globalScopeProvider.globalMember("ОбщегоНазначения", FileType.BSL).orElseThrow()
+      .returnTypes().refs().stream().findFirst().orElseThrow();
+    var members = typeRegistry.getMembers(ns, FileType.BSL);
+
+    var method = members.stream()
+      .filter(m -> "ЗначениеВМассиве".equals(m.name()))
+      .findFirst()
+      .orElseThrow();
+
+    // "Массив из Произвольный" → "Массив" → платформенный TypeRef
+    assertThat(method.returnType().qualifiedName()).isEqualTo("Массив");
+    assertThat(method.signatures()).isNotEmpty();
+    assertThat(method.signatures().get(0).returnType().qualifiedName()).isEqualTo("Массив");
+  }
+}

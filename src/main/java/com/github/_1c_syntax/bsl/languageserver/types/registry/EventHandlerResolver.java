@@ -1,0 +1,390 @@
+/*
+ * This file is a part of BSL Language Server.
+ *
+ * Copyright (c) 2018-2026
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ *
+ * BSL Language Server is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3.0 of the License, or (at your option) any later version.
+ *
+ * BSL Language Server is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BSL Language Server.
+ */
+package com.github._1c_syntax.bsl.languageserver.types.registry;
+
+import com.github._1c_syntax.bsl.context.api.ContextEvent;
+import com.github._1c_syntax.bsl.context.platform.EnAttachments;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.EventHandlerClassifier;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
+import com.github._1c_syntax.bsl.mdo.MD;
+import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.types.ModuleType;
+import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
+import org.springframework.stereotype.Component;
+
+import java.util.EnumMap;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+
+/**
+ * Сопоставляет user-метод модуля с платформенным событием типа-владельца
+ * модуля. Для object/manager/recordset-модулей конфигурации, для глобальных
+ * прикладных модулей и для OScript-классов платформа дёргает обработчики
+ * строго по имени, совпадающему с именем события, — поэтому сопоставление
+ * идёт по имени.
+ * <p>
+ * Результат кэшируется в {@link com.github._1c_syntax.bsl.languageserver.types.index.EventContractsIndex}.
+ * <p>
+ * Форма — единственный owner, у которого имя обработчика не совпадает с именем
+ * события: связка объявлена в {@code Form.xml}. Поиск здесь всё равно идёт по имени,
+ * потому что {@link FormTypesProvider} заранее вешает контракты событий на тип формы
+ * уже под объявленными именами обработчиков.
+ */
+@Component
+@WorkspaceScope
+@Slf4j
+public class EventHandlerResolver implements EventHandlerClassifier {
+
+  /**
+   * Модули, чей owner-тип — специализация по имени MDO:
+   * {@code <MdoFullName.ru><Суффикс>.<Имя>}. Например,
+   * {@code ДокументОбъект.Покупатели}, {@code РегистрСведенийНаборЗаписей.Курсы}.
+   */
+  private static final Map<ModuleType, String> MODULE_TYPE_TO_WRAPPER_RU = Map.of(
+    ModuleType.ManagerModule, "Менеджер",
+    ModuleType.ObjectModule, "Объект",
+    ModuleType.RecordSetModule, "НаборЗаписей",
+    ModuleType.ValueManagerModule, "МенеджерЗначения"
+  );
+
+  /**
+   * Глобальные модули прикладного решения. Их события — события объекта
+   * {@code ГлобальныйКонтекст} платформы; ищем их в типе-обёртке самого
+   * приложения, чьё qualifiedName совпадает с именем модуля.
+   */
+  private static final Set<ModuleType> GLOBAL_HOST_MODULES = EnumSet.of(
+    ModuleType.ManagedApplicationModule,
+    ModuleType.OrdinaryApplicationModule,
+    ModuleType.SessionModule,
+    ModuleType.ExternalConnectionModule
+  );
+
+  private static final TypeRef STRING = new TypeRef(TypeKind.PRIMITIVE, "Строка");
+  private static final TypeRef BOOLEAN = new TypeRef(TypeKind.PRIMITIVE, "Булево");
+
+  /** Ru-имя + en-алиас — каждое событие может занять до двух ключей в карте. */
+  private static final int NAME_ALIASES_PER_EVENT = 2;
+
+  /**
+   * Встроенные события OneScript-класса. {@code ПриСозданииОбъекта} —
+   * конструктор с переменным числом параметров; {@code ОбработкаПолученияПредставления} —
+   * callback для переопределения представления объекта при касте к строке.
+   */
+  private static final List<MemberDescriptor> OSCRIPT_CLASS_EVENTS = List.of(
+    MemberDescriptor.event(
+      "ПриСозданииОбъекта",
+      "Конструктор класса. Вызывается при инициализации экземпляра. "
+        + "Принимает переменное число параметров.",
+      List.of(new SignatureDescriptor(
+        List.of(new ParameterDescriptor(
+          BilingualString.of("Значение", "Value"),
+          TypeSet.EMPTY, true, BilingualString.EMPTY, "", true)),
+        TypeSet.EMPTY, ""))
+    ),
+    MemberDescriptor.event(
+      "ОбработкаПолученияПредставления",
+      "Вызывается при приведении объекта к строке и позволяет переопределить "
+        + "его представление. Установка {@code СтандартнаяОбработка = Ложь} отменяет "
+        + "стандартное поведение.",
+      List.of(new SignatureDescriptor(
+        List.of(
+          new ParameterDescriptor(
+            BilingualString.of("Представление", "Presentation"),
+            TypeSet.of(STRING), false, BilingualString.EMPTY, ""),
+          new ParameterDescriptor(
+            BilingualString.of("СтандартнаяОбработка", "StandardProcessing"),
+            TypeSet.of(BOOLEAN), false, BilingualString.EMPTY, "Истина")),
+        TypeSet.EMPTY, ""))
+    )
+  );
+
+  private static final Map<String, MemberDescriptor> OSCRIPT_CLASS_EVENTS_BY_NAME =
+    OSCRIPT_CLASS_EVENTS.stream()
+      .collect(Collectors.toMap(
+        m -> m.name().toLowerCase(Locale.ROOT),
+        Function.identity()));
+
+  private static final Map<String, String> OSCRIPT_CLASS_EVENT_ALIASES_EN_TO_RU = Map.of(
+    "onobjectcreate", "присозданииобъекта",
+    "presentationgetprocessing", "обработкаполученияпредставления"
+  );
+
+  private final TypeRegistry typeRegistry;
+  private final BslContextHolder bslContextHolder;
+
+  /**
+   * Карта глобальных событий: {@link ModuleType} → {@code lc(имя события)} → контракт. Источник —
+   * {@code ContextProvider.getGlobalContext()} (managed/ordinary/session/external). Собирается и
+   * кэшируется однократно при первом обращении (см. {@link #globalEvents()}); {@link BslContextHolder}
+   * синхронно-мемоизирован и позже не догружается, поэтому пустой результат (HBK недоступен)
+   * кэшируется наравне с полным.
+   */
+  private final AtomicReference<Map<ModuleType, Map<String, MemberDescriptor>>> globalEventsCache =
+    new AtomicReference<>();
+
+  public EventHandlerResolver(TypeRegistry typeRegistry, BslContextHolder bslContextHolder) {
+    this.typeRegistry = typeRegistry;
+    this.bslContextHolder = bslContextHolder;
+  }
+
+  /**
+   * Возвращает контракт платформенного события для пары
+   * {@code (документ, имя метода)} либо {@link Optional#empty()}, если
+   * метод не является обработчиком события owner-типа модуля.
+   * <p>
+   * Безопасно вызывать когда конфигурационные типы ещё не зарегистрированы —
+   * вернёт {@link Optional#empty()}.
+   */
+  public Optional<MemberDescriptor> lookupContract(DocumentContext documentContext, String methodName) {
+    var moduleType = documentContext.getModuleType();
+    if (moduleType == ModuleType.OScriptClass) {
+      return lookupOScriptClassEvent(methodName);
+    }
+    if (GLOBAL_HOST_MODULES.contains(moduleType)) {
+      return lookupGlobalEvent(moduleType, methodName);
+    }
+    var ownerTypeRef = resolveOwnerType(documentContext, moduleType);
+    if (ownerTypeRef.isEmpty()) {
+      return Optional.empty();
+    }
+    // events наследуются от generic-типа (например, ДокументОбъект.<Имя документа>)
+    // автоматически через MemberSource, который TypeRegistry.registerSpecialization
+    // регистрирует на специализированный TypeRef.
+    return typeRegistry.getMembers(ownerTypeRef.get(), documentContext.getFileType()).stream()
+      .filter(m -> m.kind() == MemberKind.EVENT)
+      .filter(m -> m.matches(methodName))
+      .findFirst();
+  }
+
+  /**
+   * Реализация {@link EventHandlerClassifier} для {@code
+   * context.computer.MethodSymbolComputer}: тонкая обёртка над {@link #lookupContract} —
+   * при обходе AST полный {@link MemberDescriptor} не нужен, важен только сам факт классификации.
+   */
+  @Override
+  public boolean isEventHandler(DocumentContext documentContext, String methodName) {
+    return lookupContract(documentContext, methodName).isPresent();
+  }
+
+  /**
+   * Тип-владелец модуля и его события находятся один раз на документ: у модуля объекта сотни
+   * методов, и на каждый из них заново собирать имя владельца и перебирать все его члены выходило
+   * дорого.
+   */
+  @Override
+  public Predicate<String> eventHandlersOf(DocumentContext documentContext) {
+    var moduleType = documentContext.getModuleType();
+    if (moduleType == ModuleType.OScriptClass || GLOBAL_HOST_MODULES.contains(moduleType)) {
+      return methodName -> isEventHandler(documentContext, methodName);
+    }
+    var events = resolveOwnerType(documentContext, moduleType)
+      .map(owner -> typeRegistry.getMembers(owner, documentContext.getFileType()).stream()
+        .filter(m -> m.kind() == MemberKind.EVENT)
+        .toList())
+      .orElse(List.of());
+    return methodName -> events.stream().anyMatch(event -> event.matches(methodName));
+  }
+
+  /**
+   * Возвращает все события платформенного owner-типа модуля документа — независимо от того,
+   * объявлен ли в документе метод-обработчик для каждого из них.
+   * <p>
+   * Используется для автодополнения заглушки ещё не объявленного обработчика (см.
+   * {@link com.github._1c_syntax.bsl.languageserver.types.index.EventContractsIndex#getAllContracts}).
+   * Безопасно вызывать когда конфигурационные типы ещё не зарегистрированы — вернёт пустой список.
+   */
+  public List<MemberDescriptor> allEvents(DocumentContext documentContext) {
+    return eventsFor(documentContext.getModuleType(),
+      eventOwnerTypeRef(documentContext).orElse(null),
+      documentContext.getFileType());
+  }
+
+  /**
+   * Owner-тип, чьи события предлагаются в модуле документа: платформенный тип объекта/менеджера
+   * (например, {@code СправочникОбъект.<Имя>}). Пусто для модулей-глобальных-хостов и .os-классов —
+   * их события не зависят от конфигурационного типа. Служит стабильным ключом восстановления
+   * событий в {@code completionItem/resolve} (см. {@link #eventsFor}).
+   */
+  public Optional<TypeRef> eventOwnerTypeRef(DocumentContext documentContext) {
+    var moduleType = documentContext.getModuleType();
+    if (moduleType == ModuleType.OScriptClass || GLOBAL_HOST_MODULES.contains(moduleType)) {
+      return Optional.empty();
+    }
+    return resolveOwnerType(documentContext, moduleType);
+  }
+
+  /**
+   * Все события источника, заданного парой {@code (moduleType, ownerTypeRef)} — без привязки к
+   * конкретному документу, чтобы набор можно было восстановить по ключу из
+   * {@code completionItem/resolve}. Для .os-класса и модулей-глобальных-хостов события фиксированы
+   * (owner-тип не нужен), для объектных/менеджерских модулей берутся с {@code ownerTypeRef}.
+   */
+  public List<MemberDescriptor> eventsFor(ModuleType moduleType, @Nullable TypeRef ownerTypeRef, FileType fileType) {
+    if (moduleType == ModuleType.OScriptClass) {
+      return OSCRIPT_CLASS_EVENTS;
+    }
+    if (GLOBAL_HOST_MODULES.contains(moduleType)) {
+      var byName = globalEvents().get(moduleType);
+      if (byName == null) {
+        return List.of();
+      }
+      // Одно событие лежит в карте под ru- и en-ключом на один и тот же объект — дедуп по identity/equals.
+      return byName.values().stream().distinct().toList();
+    }
+    if (ownerTypeRef == null) {
+      return List.of();
+    }
+    return typeRegistry.getMembers(ownerTypeRef, fileType).stream()
+      .filter(m -> m.kind() == MemberKind.EVENT)
+      .toList();
+  }
+
+  private static Optional<MemberDescriptor> lookupOScriptClassEvent(String methodName) {
+    var key = methodName.toLowerCase(Locale.ROOT);
+    var ruKey = OSCRIPT_CLASS_EVENT_ALIASES_EN_TO_RU.getOrDefault(key, key);
+    return Optional.ofNullable(OSCRIPT_CLASS_EVENTS_BY_NAME.get(ruKey));
+  }
+
+  private Optional<MemberDescriptor> lookupGlobalEvent(ModuleType moduleType, String methodName) {
+    var byName = globalEvents().get(moduleType);
+    if (byName == null) {
+      return Optional.empty();
+    }
+    return Optional.ofNullable(byName.get(methodName.toLowerCase(Locale.ROOT)));
+  }
+
+  private Map<ModuleType, Map<String, MemberDescriptor>> globalEvents() {
+    var cached = globalEventsCache.get();
+    if (cached != null) {
+      return cached;
+    }
+    // Собираем и кэшируем однократно, включая пустой результат. BslContextHolder — синхронный
+    // мемоизированный Lazy без повторных попыток (см. его javadoc): если HBK/bsl-context недоступен,
+    // get() остаётся пустым навсегда, поэтому «поздней подгрузки», ради которой стоило бы не
+    // кэшировать пустоту и пересобирать, не бывает. При пустом провайдере buildGlobalEvents() отдаёт
+    // Map.of(). Гонки нет: worst-case — идемпотентный двойной build с одинаковым содержимым,
+    // AtomicReference даёт безопасную публикацию.
+    var built = buildGlobalEvents();
+    globalEventsCache.set(built);
+    return built;
+  }
+
+  private Map<ModuleType, Map<String, MemberDescriptor>> buildGlobalEvents() {
+    var providerOpt = bslContextHolder.get();
+    if (providerOpt.isEmpty()) {
+      return Map.of();
+    }
+    var provider = providerOpt.get();
+    var globalContext = provider.getGlobalContext();
+    var enLookup = BslContextPlatformTypesProvider.enLookupOf(provider);
+    Map<ModuleType, Map<String, MemberDescriptor>> byModule = new EnumMap<>(ModuleType.class);
+    putEvents(byModule, ModuleType.ManagedApplicationModule, globalContext.applicationEvents(), enLookup);
+    putEvents(byModule, ModuleType.OrdinaryApplicationModule, globalContext.ordinaryApplicationEvents(), enLookup);
+    putEvents(byModule, ModuleType.SessionModule, globalContext.sessionModuleEvents(), enLookup);
+    putEvents(byModule, ModuleType.ExternalConnectionModule, globalContext.externalConnectionModuleEvents(), enLookup);
+    return Map.copyOf(byModule);
+  }
+
+  private static void putEvents(Map<ModuleType, Map<String, MemberDescriptor>> sink,
+                                ModuleType moduleType,
+                                List<ContextEvent> events,
+                                Function<Object, EnAttachments> enLookup) {
+    if (events.isEmpty()) {
+      return;
+    }
+    // Каждое событие может добавиться дважды (ru-имя и en-алиас), поэтому
+    // capacity на оба варианта.
+    Map<String, MemberDescriptor> byName = HashMap.newHashMap(events.size() * NAME_ALIASES_PER_EVENT);
+    for (var event : events) {
+      var descriptor = BslContextPlatformTypesProvider.toMemberDescriptor(event, enLookup);
+      byName.put(descriptor.name().toLowerCase(Locale.ROOT), descriptor);
+      // En-имя из bilingualName тоже как alias, чтобы lookup по English-имени работал.
+      var en = descriptor.bilingualName().en();
+      if (!en.isBlank()) {
+        byName.putIfAbsent(en.toLowerCase(Locale.ROOT), descriptor);
+      }
+    }
+    sink.put(moduleType, Map.copyOf(byName));
+  }
+
+  /**
+   * Owner-тип модуля: {@code ДокументОбъект.Покупатели},
+   * {@code СправочникМенеджер.Контрагенты}, {@code РегистрСведенийНаборЗаписей.Курсы},
+   * {@code КонстантаМенеджерЗначения.КодВалюты} — для MDO-specific обёрток.
+   * <p>
+   * У модулей сервисов имя типа в HBK не параметризовано, поэтому спрашивается сначала
+   * тип этого сервиса ({@code Модуль Web-сервиса.Обмен}, заводит
+   * {@link ServiceModuleEventRegistrar}), и только если его нет — общий тип вида.
+   * Обработчики объявлены в конкретном сервисе, и контракт надо брать у него: у разных
+   * сервисов одноимённые операции сплошь и рядом принимают разные параметры.
+   */
+  private Optional<TypeRef> resolveOwnerType(DocumentContext documentContext, ModuleType moduleType) {
+    if (moduleType == ModuleType.FormModule) {
+      return documentContext.getMdObject()
+        .flatMap(md -> ConfigurationModuleMembersProvider.selfTypeQualifiedName(moduleType, md))
+        .flatMap(typeRegistry::resolve);
+    }
+    var family = ModulePlatformTypeNames.familyName(moduleType);
+    if (family != null) {
+      return documentContext.getMdObject()
+        .map(md -> family + "." + md.getName())
+        .flatMap(typeRegistry::resolve)
+        .or(() -> typeRegistry.resolve(family));
+    }
+    var wrapperRu = MODULE_TYPE_TO_WRAPPER_RU.get(moduleType);
+    if (wrapperRu == null) {
+      return Optional.empty();
+    }
+    return documentContext.getMdObject()
+      .flatMap(md -> mdoSpecificQualifiedName(md, wrapperRu))
+      .flatMap(typeRegistry::resolve);
+  }
+
+  /** Сборка {@code <FullName.ru><Суффикс>.<Имя>} для MDO; пусто, если части не заполнены. */
+  private static Optional<String> mdoSpecificQualifiedName(MD mdObject, String wrapperRu) {
+    var fullName = mdObject.getMdoType().fullName().getRu();
+    var name = mdObject.getName();
+    if (fullName.isBlank() || name.isBlank()) {
+      return Optional.empty();
+    }
+    return Optional.of(fullName + wrapperRu + "." + name);
+  }
+}

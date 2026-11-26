@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,43 +21,70 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references;
 
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.references.model.LocationRepository;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.references.model.Symbol;
+import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrence;
+import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrenceRepository;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.types.ModuleType;
+import com.github._1c_syntax.utils.GenericInterner;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.SymbolKind;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.annotation.DirtiesContext;
 
-import javax.annotation.PostConstruct;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.stream.Collectors;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
 @CleanupContextBeforeClassAndAfterClass
-class ReferenceIndexTest {
+class ReferenceIndexTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private ReferenceIndex referenceIndex;
 
   @Autowired
-  private ServerContext serverContext;
+  private SymbolOccurrenceRepository symbolOccurrenceRepository;
+
+  @Autowired
+  private LocationRepository locationRepository;
+
+  @Autowired
+  private OScriptLibraryIndex oScriptLibraryIndex;
+  @Autowired
+  private ReferenceIndexFiller filler;
+  @Autowired
+  private GenericInterner<Symbol> workspaceSymbols;
 
   private static final String PATH_TO_FILE = "./src/test/resources/references/ReferenceIndex.bsl";
 
-  @PostConstruct
+  @BeforeEach
   void prepareServerContext() {
-    serverContext.setConfigurationRoot(Paths.get(PATH_TO_METADATA));
-    serverContext.populateContext();
+    initServerContextOnce(Path.of(PATH_TO_METADATA));
+  }
+
+  @Test
+  void directTargetsMatchIndexedFixtureReferences() {
+    var document = TestUtils.getDocumentContextFromFile(PATH_TO_FILE, context);
+    var references = referenceIndex.getReferencesFrom(document.getUri());
+    assertThat(references).isNotEmpty();
+    for (var reference : references) {
+      var position = reference.selectionRange().getStart();
+      assertThat(referenceIndex.getTargetSymbol(document.getUri(), position))
+        .as("indexed target at %s", position)
+        .isEqualTo(referenceIndex.getReference(document.getUri(), position).map(Reference::symbol));
+    }
   }
 
   @Test
@@ -80,9 +107,54 @@ class ReferenceIndexTest {
   }
 
   @Test
+  @DirtiesContext
+  void methodLocalKeysAreOwnedByTheDocumentBatch() {
+    // given
+    var uri = Path.of(PATH_TO_METADATA, "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl").toUri();
+    var document = TestUtils.getDocumentContext(uri, """
+      Procedure PrivateProbe()
+        PrivateProbeValue = 1;
+        Message(PrivateProbeValue);
+      EndProcedure
+      """, context);
+
+    // when
+    filler.fill(document);
+    var local = locationRepository.getSymbolOccurrencesByLocationUri(document.getUri())
+      .map(SymbolOccurrence::symbol)
+      .filter(symbol -> symbol.symbolName().equals("privateprobevalue"))
+      .findFirst().orElseThrow();
+    var independent = new Symbol(local.mdoRef(), local.moduleType(), local.scopeName(), local.symbolKind(),
+      local.symbolName());
+
+    // then
+    assertThat(workspaceSymbols.intern(independent)).isSameAs(independent);
+  }
+
+  @Test
+  void occurrencesOfOneSymbolShareOneKeyInstance() {
+    // given: параметр ПервыйОбщийМодуль и функции общего модуля упоминаются в документе по нескольку раз
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+
+    // when
+    var byKey = locationRepository.getSymbolOccurrencesByLocationUri(documentContext.getUri())
+      .collect(Collectors.groupingBy(SymbolOccurrence::symbol));
+
+    // then: у всех обращений документа к символу один экземпляр ключа, и он же — интернированный
+    assertThat(byKey.values()).anySatisfy(occurrences -> assertThat(occurrences).hasSizeGreaterThan(1));
+    byKey.forEach((key, occurrences) -> {
+      assertThat(occurrences)
+        .isNotEmpty()
+        .allSatisfy(occurrence -> assertThat(occurrence.symbol()).isSameAs(key));
+    });
+  }
+
+  @Test
   void getReferencesToLocalMethodFromFormModule() {
     // given
-    var documentContext = serverContext.getDocument("Catalog.Справочник1.Form.ФормаСписка", ModuleType.FormModule).orElseThrow();
+    var documentContext = context
+      .getDocument("Catalog.Справочник1.Form.ФормаСписка", ModuleType.FormModule)
+      .orElseThrow();
     var method = documentContext.getSymbolTree().getMethodSymbol("ЛокальнаяПроцедура").orElseThrow();
     var module = documentContext.getSymbolTree().getModule();
 
@@ -123,7 +195,7 @@ class ReferenceIndexTest {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("ИмяПроцедуры").orElseThrow();
-    var commonModuleContext = serverContext.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
+    var commonModuleContext = context.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
     var calledMethodSymbol = commonModuleContext.getSymbolTree().getMethodSymbol("УстаревшаяПроцедура").orElseThrow();
 
     var uri = documentContext.getUri();
@@ -140,11 +212,37 @@ class ReferenceIndexTest {
   }
 
   @Test
+  void commonModuleMethodIsFunctionAndItsCallsAreFound() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var callerMethod = documentContext.getSymbolTree().getMethodSymbol("ИмяПроцедуры").orElseThrow();
+
+    var commonModuleContext = context
+      .getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule)
+      .orElseThrow();
+    var calledMethod = commonModuleContext.getSymbolTree().getMethodSymbol("УстаревшаяПроцедура").orElseThrow();
+
+    var location = new Location(documentContext.getUri().toString(), Ranges.create(2, 22, 41));
+
+    // when
+    var references = referenceIndex.getReferencesTo(calledMethod);
+
+    // then
+    // метод общего модуля BSL — самостоятельная функция (SymbolKind.Function); его вызовы
+    // индексируются под каноническим SymbolKind.Method (ReferenceIndex#indexedKindOf), поэтому
+    // Find References/Rename находят их без приведения вида на месте вызова
+    assertThat(calledMethod.getSymbolKind()).isEqualTo(SymbolKind.Function);
+    assertThat(references)
+      .isNotEmpty()
+      .contains(Reference.of(callerMethod, calledMethod, location));
+  }
+
+  @Test
   void testGetReferenceToCommonModuleMethod() {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("ИмяПроцедуры").orElseThrow();
-    var commonModuleContext = serverContext.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
+    var commonModuleContext = context.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
     var calledMethodSymbol = commonModuleContext.getSymbolTree().getMethodSymbol("УстаревшаяПроцедура").orElseThrow();
 
     var uri = documentContext.getUri();
@@ -154,10 +252,10 @@ class ReferenceIndexTest {
     var reference = referenceIndex.getReference(uri, position).orElseThrow();
 
     // then
-    assertThat(reference.getFrom()).isEqualTo(methodSymbol);
-    assertThat(reference.getSymbol()).isEqualTo(calledMethodSymbol);
-    assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(2, 22, 41));
-    assertThat(reference.getUri()).isEqualTo(uri);
+    assertThat(reference.from()).isEqualTo(methodSymbol);
+    assertThat(reference.symbol()).isEqualTo(calledMethodSymbol);
+    assertThat(reference.selectionRange()).isEqualTo(Ranges.create(2, 22, 41));
+    assertThat(reference.uri()).isEqualTo(uri);
   }
 
   @Test
@@ -165,35 +263,35 @@ class ReferenceIndexTest {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("Тест_Присваивание").orElseThrow();
-    var commonModuleContext = serverContext.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
+    var commonModuleContext = context.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
     var calledMethodSymbol = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяФункция").orElseThrow();
 
     var uri = documentContext.getUri();
 
     // when
     final var referencesTo = referenceIndex.getReferencesTo(calledMethodSymbol).stream()
-      .filter(reference -> reference.getUri().equals(uri))
+      .filter(reference -> reference.uri().equals(uri))
       .filter(reference -> Ranges.containsRange(methodSymbol.getRange(), reference.toLocation().getRange()))
       .collect(Collectors.toList());
 
     // then
-    var reference = referencesTo.get(0);
-    assertThat(reference.getFrom()).isEqualTo(methodSymbol);
-    assertThat(reference.getSymbol()).isEqualTo(calledMethodSymbol);
-    assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(8, 26, 45));
-    assertThat(reference.getUri()).isEqualTo(uri);
+    var reference = referencesTo.getFirst();
+    assertThat(reference.from()).isEqualTo(methodSymbol);
+    assertThat(reference.symbol()).isEqualTo(calledMethodSymbol);
+    assertThat(reference.selectionRange()).isEqualTo(Ranges.create(8, 26, 45));
+    assertThat(reference.uri()).isEqualTo(uri);
 
     reference = referencesTo.get(1);
-    assertThat(reference.getFrom()).isEqualTo(methodSymbol);
-    assertThat(reference.getSymbol()).isEqualTo(calledMethodSymbol);
-    assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(9, 26, 45));
-    assertThat(reference.getUri()).isEqualTo(uri);
+    assertThat(reference.from()).isEqualTo(methodSymbol);
+    assertThat(reference.symbol()).isEqualTo(calledMethodSymbol);
+    assertThat(reference.selectionRange()).isEqualTo(Ranges.create(9, 26, 45));
+    assertThat(reference.uri()).isEqualTo(uri);
 
     reference = referencesTo.get(2);
-    assertThat(reference.getFrom()).isEqualTo(methodSymbol);
-    assertThat(reference.getSymbol()).isEqualTo(calledMethodSymbol);
-    assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(10, 22, 41));
-    assertThat(reference.getUri()).isEqualTo(uri);
+    assertThat(reference.from()).isEqualTo(methodSymbol);
+    assertThat(reference.symbol()).isEqualTo(calledMethodSymbol);
+    assertThat(reference.selectionRange()).isEqualTo(Ranges.create(10, 22, 41));
+    assertThat(reference.uri()).isEqualTo(uri);
 
     assertThat(referencesTo).hasSize(3);
   }
@@ -203,35 +301,35 @@ class ReferenceIndexTest {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("Тест_ВызовЧерезПолноеИмяОбъекта").orElseThrow();
-    var commonModuleContext = serverContext.getDocument("InformationRegister.РегистрСведений1", ModuleType.ManagerModule).orElseThrow();
+    var commonModuleContext = context.getDocument("InformationRegister.РегистрСведений1", ModuleType.ManagerModule).orElseThrow();
     var calledMethodSymbol = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяФункция").orElseThrow();
 
     var uri = documentContext.getUri();
 
     // when
     final var referencesTo = referenceIndex.getReferencesTo(calledMethodSymbol).stream()
-      .filter(reference -> reference.getUri().equals(uri))
+      .filter(reference -> reference.uri().equals(uri))
       .filter(reference -> Ranges.containsRange(methodSymbol.getRange(), reference.toLocation().getRange()))
       .collect(Collectors.toList());
 
     // then
-    var reference = referencesTo.get(0);
-    assertThat(reference.getFrom()).isEqualTo(methodSymbol);
-    assertThat(reference.getSymbol()).isEqualTo(calledMethodSymbol);
-    assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(22, 42, 61));
-    assertThat(reference.getUri()).isEqualTo(uri);
+    var reference = referencesTo.getFirst();
+    assertThat(reference.from()).isEqualTo(methodSymbol);
+    assertThat(reference.symbol()).isEqualTo(calledMethodSymbol);
+    assertThat(reference.selectionRange()).isEqualTo(Ranges.create(22, 42, 61));
+    assertThat(reference.uri()).isEqualTo(uri);
 
     reference = referencesTo.get(1);
-    assertThat(reference.getFrom()).isEqualTo(methodSymbol);
-    assertThat(reference.getSymbol()).isEqualTo(calledMethodSymbol);
-    assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(23, 42, 61));
-    assertThat(reference.getUri()).isEqualTo(uri);
+    assertThat(reference.from()).isEqualTo(methodSymbol);
+    assertThat(reference.symbol()).isEqualTo(calledMethodSymbol);
+    assertThat(reference.selectionRange()).isEqualTo(Ranges.create(23, 42, 61));
+    assertThat(reference.uri()).isEqualTo(uri);
 
     reference = referencesTo.get(2);
-    assertThat(reference.getFrom()).isEqualTo(methodSymbol);
-    assertThat(reference.getSymbol()).isEqualTo(calledMethodSymbol);
-    assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(24, 38, 57));
-    assertThat(reference.getUri()).isEqualTo(uri);
+    assertThat(reference.from()).isEqualTo(methodSymbol);
+    assertThat(reference.symbol()).isEqualTo(calledMethodSymbol);
+    assertThat(reference.selectionRange()).isEqualTo(Ranges.create(24, 38, 57));
+    assertThat(reference.uri()).isEqualTo(uri);
 
     assertThat(referencesTo).hasSize(3);
   }
@@ -243,7 +341,7 @@ class ReferenceIndexTest {
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("Тест_ИмяПараметр").orElseThrow();
 
     final var referencesFromLocationRepo = referenceIndex.getReferencesFrom(documentContext.getUri(), SymbolKind.Method).stream()
-      .filter(reference -> Ranges.containsRange(methodSymbol.getRange(), reference.getSelectionRange()))
+      .filter(reference -> Ranges.containsRange(methodSymbol.getRange(), reference.selectionRange()))
       .collect(Collectors.toList());
 
     assertThat(referencesFromLocationRepo).isEmpty();
@@ -255,7 +353,8 @@ class ReferenceIndexTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
 
     var uri = documentContext.getUri();
-    var position = new Position(4, 10);
+    // Position on "Тест" method name (non-export method)
+    var position = new Position(4, 24);
 
     // when
     var reference = referenceIndex.getReference(uri, position);
@@ -270,36 +369,70 @@ class ReferenceIndexTest {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
     var localMethodSymbol = documentContext.getSymbolTree().getMethodSymbol("ИмяПроцедуры").orElseThrow();
 
-    var commonModuleContext = serverContext.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
+    var commonModuleContext = context.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
     var commonModuleMethodSymbol = commonModuleContext.getSymbolTree().getMethodSymbol("УстаревшаяПроцедура").orElseThrow();
+    var commonModuleSymbol = commonModuleContext.getSymbolTree().getModule();
 
-    var managerModuleContext = serverContext.getDocument("InformationRegister.РегистрСведений1", ModuleType.ManagerModule).orElseThrow();
+    var managerModuleContext = context.getDocument("InformationRegister.РегистрСведений1", ModuleType.ManagerModule).orElseThrow();
     var managerModuleMethodSymbol = managerModuleContext.getSymbolTree().getMethodSymbol("УстаревшаяПроцедура").orElseThrow();
 
     var uri = documentContext.getUri().toString();
     var locationLocal = new Location(uri, Ranges.create(1, 4, 16));
+    var locationCommonModuleName1 = new Location(uri, Ranges.create(2, 4, 21)); // ПервыйОбщийМодуль on line 3
     var locationCommonModule = new Location(uri, Ranges.create(2, 22, 41));
     var locationManagerModule = new Location(uri, Ranges.create(3, 38, 57));
+    var locationCommonModuleName2 = new Location(uri, Ranges.create(4, 4, 21)); // ПервыйОбщийМодуль on line 5
 
     // when
     var references = referenceIndex.getReferencesFrom(localMethodSymbol);
 
     // then
+    // 5 references from ReferenceIndex.bsl:
+    // - line 2: local method call ИмяПроцедуры()
+    // - line 3: module name ПервыйОбщийМодуль
+    // - line 3: method УстаревшаяПроцедура in common module
+    // - line 4: method УстаревшаяПроцедура in manager module
+    // - line 5: module name ПервыйОбщийМодуль
     assertThat(references)
-      .hasSize(3)
+      .hasSize(5)
       .contains(Reference.of(localMethodSymbol, localMethodSymbol, locationLocal))
+      .contains(Reference.of(localMethodSymbol, commonModuleSymbol, locationCommonModuleName1))
       .contains(Reference.of(localMethodSymbol, commonModuleMethodSymbol, locationCommonModule))
       .contains(Reference.of(localMethodSymbol, managerModuleMethodSymbol, locationManagerModule))
+      .contains(Reference.of(localMethodSymbol, commonModuleSymbol, locationCommonModuleName2))
+    ;
+  }
+
+  @Test
+  void getReferencesToCommonModule() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("ИмяПроцедуры").orElseThrow();
+
+    var commonModuleContext = context.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
+    var commonModuleSymbol = commonModuleContext.getSymbolTree().getModule();
+
+    var uri = documentContext.getUri().toString();
+    var firstModuleNameLocation = new Location(uri, Ranges.create(2, 4, 21)); // ПервыйОбщийМодуль on line 3
+    var secondModuleNameLocation = new Location(uri, Ranges.create(4, 4, 21)); // ПервыйОбщийМодуль on line 5
+
+    // when
+    var references = referenceIndex.getReferencesTo(commonModuleSymbol);
+
+    // then
+    assertThat(references)
+      .contains(Reference.of(methodSymbol, commonModuleSymbol, firstModuleNameLocation))
+      .contains(Reference.of(methodSymbol, commonModuleSymbol, secondModuleNameLocation))
     ;
   }
 
   @Test
   void testGetReferencesFromCommonModule() {
     // given
-    var commonModuleContext = serverContext.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
+    var commonModuleContext = context.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
     var commonModuleMethodSymbol = commonModuleContext.getSymbolTree().getMethodSymbol("Тест").orElseThrow();
 
-    var managerModuleContext = serverContext.getDocument("InformationRegister.РегистрСведений1", ModuleType.ManagerModule).orElseThrow();
+    var managerModuleContext = context.getDocument("InformationRegister.РегистрСведений1", ModuleType.ManagerModule).orElseThrow();
     var managerModuleMethodSymbol = managerModuleContext.getSymbolTree().getMethodSymbol("УстаревшаяПроцедура").orElseThrow();
 
     var uri = commonModuleContext.getUri().toString();
@@ -315,21 +448,67 @@ class ReferenceIndexTest {
     ;
   }
 
-  @Test
-  @DirtiesContext
-  void clearReferences() {
-    // given
-    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+  /**
+   * Тесты, мутирующие ReferenceIndex (addMethodCall, clearReferences). Чтобы
+   * мутации не попадали в read-only тесты внешнего класса (которые делят
+   * workspace через {@link #initServerContextOnce}), вынесены в @Nested и
+   * получают свежий workspace на каждый метод через
+   * {@link #initServerContext(Path)} (это сбрасывает флаг cleanupAfterClass).
+   */
+  @Nested
+  class MutatingTests {
 
-    var uri = documentContext.getUri();
-    var position = new Position(1, 10);
+    @BeforeEach
+    void freshWorkspace() {
+      initServerContext(Path.of(PATH_TO_METADATA));
+    }
 
-    // when
-    referenceIndex.clearReferences(documentContext.getUri());
+    @Test
+    @DirtiesContext
+    void clearReferences() {
+      // given
+      var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
 
-    // then
-    var reference = referenceIndex.getReference(uri, position);
+      var uri = documentContext.getUri();
+      var position = new Position(1, 10);
 
-    assertThat(reference).isEmpty();
+      // when
+      referenceIndex.clearReferences(documentContext.getUri());
+
+      // then
+      var reference = referenceIndex.getReference(uri, position);
+
+      assertThat(reference).isEmpty();
+    }
+
+    @Test
+    @DirtiesContext
+    void crossWorkspaceIsolation() {
+      // given - workspace 1 is already initialized with PATH_TO_METADATA in @BeforeEach
+      // Manually add a reference to workspace 1's repos to verify isolation
+      var workspace1Uri = context.getDocuments().keySet().iterator().next();
+      var occurrence = referenceIndex.methodCallOccurrence(
+        workspace1Uri, "CommonModule.TestModule", ModuleType.CommonModule, "TestMethod",
+        Ranges.create(0, 0, 10)
+      );
+      referenceIndex.replaceReferences(workspace1Uri, java.util.List.of(occurrence));
+
+      // Build the same Symbol key used for both workspaces
+      var symbolDto = Symbol.builder()
+        .mdoRef("CommonModule.TestModule")
+        .moduleType(ModuleType.CommonModule)
+        .scopeName("")
+        .symbolKind(SymbolKind.Method)
+        .symbolName("testmethod")
+        .build();
+
+      // Workspace-scoped bean should contain the occurrence we just added
+      var occurrences = symbolOccurrenceRepository.getAllBySymbol(symbolDto);
+      assertThat(occurrences).hasSize(1);
+
+      // Verify clearing works
+      referenceIndex.clearReferences(workspace1Uri);
+      assertThat(symbolOccurrenceRepository.getAllBySymbol(symbolDto)).isEmpty();
+    }
   }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,25 +21,27 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.cfg.CfgBuildOptions;
+import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraphIndex;
+import com.github._1c_syntax.bsl.languageserver.cfg.ExitVertex;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Deque;
+import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -47,67 +49,110 @@ import java.util.stream.Collectors;
   minutesToFix = 10,
   tags = {
     DiagnosticTag.DESIGN,
-    DiagnosticTag.SUSPICIOUS
+    DiagnosticTag.SUSPICIOUS,
+    DiagnosticTag.UNUSED
   }
 )
+@RequiredArgsConstructor
 public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
+
+  /** Настройки построения графа: рёбра итераций циклов не нужны — недостижимость они не меняют. */
+  private static final CfgBuildOptions CFG_OPTIONS = CfgBuildOptions.defaults()
+    .withLoopIterations(false)
+    .withPreprocessorConditions(true)
+    .withAdjacentDeadCode(false);
+
+  private final ControlFlowGraphIndex controlFlowGraphIndex;
+  private final CompilationContextResolver compilationContextResolver;
 
   // кэш диапазонов зарегистрированных ошибок
   private final List<Range> errorRanges = new ArrayList<>();
 
   // диапазоны препроцессорных скобок
-  private final List<Range> preprocessorRanges = new ArrayList<>();
+  private List<Range> preprocessorRanges = List.of();
+
+  /** Содержимое заведомо исключённых веток, без ограничивающих их директив. */
+  private List<Range> unreachablePreprocessorRanges = List.of();
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
     errorRanges.clear();
-    preprocessorRanges.clear();
-
-    // получим все блоки препроцессора в файле
-    List<ParseTree> preprocessors = new ArrayList<>(Trees.findAllRuleNodes(ctx, BSLParser.RULE_preprocessor));
-
-    if (preprocessors.isEmpty()) {
-      return super.visitFile(ctx);
+    var preprocessor = PreprocessorDeadCode.collect(documentContext, compilationContextResolver, ctx);
+    preprocessorRanges = preprocessor.branches();
+    unreachablePreprocessorRanges = preprocessor.unreachable();
+    // Неполная структура не задаёт корректных веток и может нарушить построение CFG.
+    if (!preprocessor.wellFormed()) {
+      return ctx;
     }
+    super.visitFile(ctx);
+    appendUnreachablePreprocessorCode();
+    return ctx;
+  }
 
-    Deque<ParseTree> previousNodes = new ArrayDeque<>();
-    for (ParseTree node : preprocessors) {
+  /**
+   * Объединить пересекающиеся сообщения с диапазонами исключённых веток.
+   * Это также убирает сообщения после Возврат внутри уже целиком недостижимого блока.
+   */
+  private void appendUnreachablePreprocessorCode() {
+    if (unreachablePreprocessorRanges.isEmpty()) {
+      return;
+    }
+    var ranges = new ArrayList<>(unreachablePreprocessorRanges);
+    diagnosticStorage.getDiagnostics().forEach(diagnostic -> ranges.add(diagnostic.getRange()));
+    diagnosticStorage.clearDiagnostics();
+    Ranges.mergeOverlapping(ranges).forEach(diagnosticStorage::addDiagnostic);
+  }
 
-      // если это начало блока, просто закинем его в стэк
-      if (((BSLParser.PreprocessorContext) node).preproc_if() != null) {
-        previousNodes.push(node);
-      } else if ((((BSLParser.PreprocessorContext) node).preproc_else() != null
-        || ((BSLParser.PreprocessorContext) node).preproc_elsif() != null)) {
+  @Override
+  public ParseTree visitSubCodeBlock(BSLParser.SubCodeBlockContext ctx) {
+    errorRanges.clear();
+    super.visitSubCodeBlock(ctx);
+    var block = ctx.codeBlock();
+    // Незавершённая инструкция препроцессора может оставить subCodeBlock без тела.
+    if (block != null) {
+      appendUnreachableCode(block);
+    }
+    return ctx;
+  }
 
-        // для веток условия сначала фиксируем блок который уже прошли
-        // затем новую ноду добавим
-        savePreprocessorRange(previousNodes, (BSLParser.PreprocessorContext) node);
-        previousNodes.push(node);
+  @Override
+  public ParseTree visitFileCodeBlock(BSLParser.FileCodeBlockContext ctx) {
+    errorRanges.clear();
+    super.visitFileCodeBlock(ctx);
+    appendUnreachableCode(ctx.codeBlock());
+    return ctx;
+  }
 
-      } else {
-        // в конце условия просто зафиксим прошедший блок
-        savePreprocessorRange(previousNodes, (BSLParser.PreprocessorContext) node);
+  private void appendUnreachableCode(BSLParser.CodeBlockContext ctx) {
+    var graph = controlFlowGraphIndex.graphOf(documentContext, ctx, CFG_OPTIONS);
+    var deadCode = graph.vertexSet().stream()
+      .filter(vertex -> vertex != graph.getEntryPoint() && vertex.getClass() != ExitVertex.class)
+      .filter(vertex -> graph.inDegreeOf(vertex) == 0)
+      .flatMap(vertex -> vertex.getAst().stream())
+      .sorted(Comparator.comparingInt(ruleContext -> ruleContext.getStart().getLine()))
+      .map(Ranges::create)
+      .toList();
+
+
+    var newRanges = new ArrayList<Range>();
+    for (var range : deadCode) {
+      var alreadyDetected = false;
+      for (Range detectedRange : errorRanges) {
+        var pos = new Position(range.getStart().getLine(), range.getStart().getCharacter());
+        if (Ranges.containsPosition(detectedRange, pos)) {
+          alreadyDetected = true;
+          break;
+        }
+      }
+      if (!alreadyDetected) {
+        newRanges.add(range);
       }
     }
 
-    // сделано для поиска с конца, т.к. у нас есть вложенность, т.е. в большой вложен маленький
-    if (preprocessorRanges.size() > 1) {
-      Collections.reverse(preprocessorRanges);
+    for (var range : newRanges) {
+      diagnosticStorage.addDiagnostic(range);
     }
 
-    return super.visitFile(ctx);
-  }
-
-  private void savePreprocessorRange(Deque<ParseTree> nodes, BSLParser.PreprocessorContext node) {
-    if (!nodes.isEmpty()) {
-      BSLParser.PreprocessorContext previous = (BSLParser.PreprocessorContext) nodes.pop();
-      preprocessorRanges.add(
-        Ranges.create(
-          previous.getStop().getLine(),
-          previous.getStop().getCharPositionInLine() + previous.getStop().getText().length() + 1,
-          node.getStart().getLine(),
-          node.getStart().getCharPositionInLine() - 1));
-    }
   }
 
   @Override
@@ -140,7 +185,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
     return super.visitBreakStatement(ctx);
   }
 
-  private void findAndAddDiagnostic(BSLParserRuleContext ctx) {
+  private void findAndAddDiagnostic(ParserRuleContext ctx) {
 
     // если это вложенный в ранее обработанный блок, то исключим из проверки
     var pos = new Position(ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
@@ -165,7 +210,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
       return;
     }
 
-    List<BSLParserRuleContext> statements = Trees.getChildren(ppNodeParent, BSLParser.RULE_statement)
+    List<ParserRuleContext> statements = Trees.getChildren(ppNodeParent, BSLParser.RULE_statement)
       .stream()
       .filter(node ->
         node.getStart().getType() != BSLLexer.SEMICOLON
@@ -173,14 +218,12 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
           BSLParser.RULE_regionStart,
           BSLParser.RULE_regionEnd,
           BSLParser.RULE_preproc_endif))
-      .collect(Collectors.toList());
+      .toList().reversed();
 
     // если в блоке кода есть еще стейты кроме текущего
     if (statements.size() > 1) {
-      Collections.reverse(statements);
-
       // найдем последний блок
-      BSLParserRuleContext endCurrentBlockNode = getEndCurrentBlockNode(statements, pos);
+      ParserRuleContext endCurrentBlockNode = getEndCurrentBlockNode(statements, pos);
 
       // если последний стейт не текущий, значит он будет недостижим
       if (!ppNode.equals(endCurrentBlockNode)) {
@@ -194,23 +237,23 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
     }
   }
 
-  private BSLParserRuleContext getEndCurrentBlockNode(List<BSLParserRuleContext> statements, Position pos) {
+  private ParserRuleContext getEndCurrentBlockNode(List<ParserRuleContext> statements, Position pos) {
 
     // найдем блок препроцессора, в котором лежит наш стейт
     Range preprocRange = null;
-    for (Range range : preprocessorRanges) {
+    for (Range range : preprocessorRanges.reversed()) {
       if (Ranges.containsPosition(range, pos)) {
         preprocRange = range;
       }
     }
 
     // т.к. список реверснут, берем первый элемент
-    BSLParserRuleContext endCurrentBlockNode = statements.get(0);
+    ParserRuleContext endCurrentBlockNode = statements.getFirst();
 
     if (preprocRange != null) {
       // пройдем по всем стейтам (с конца идем) и ищем первый, находящийся в том же блоке
       // препроцессора, что и стейт прерывания
-      for (BSLParserRuleContext statement : statements) {
+      for (ParserRuleContext statement : statements) {
         var posStatement = new Position(
           statement.getStart().getLine(),
           statement.getStart().getCharPositionInLine());

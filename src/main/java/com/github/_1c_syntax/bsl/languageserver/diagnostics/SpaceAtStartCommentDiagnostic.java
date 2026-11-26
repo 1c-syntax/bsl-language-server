@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -27,10 +27,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticP
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.recognizer.BSLFootprint;
 import com.github._1c_syntax.bsl.languageserver.recognizer.CodeRecognizer;
-import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.CodeAction;
@@ -72,7 +70,7 @@ public class SpaceAtStartCommentDiagnostic extends AbstractDiagnostic implements
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + DEFAULT_COMMENTS_ANNOTATION
+    defaultValue = DEFAULT_COMMENTS_ANNOTATION
   )
   private Pattern commentsAnnotation = DiagnosticHelper.createPatternFromString(DEFAULT_COMMENTS_ANNOTATION);
 
@@ -116,7 +114,7 @@ public class SpaceAtStartCommentDiagnostic extends AbstractDiagnostic implements
 
     diagnostics.forEach((Diagnostic diagnostic) -> {
       var range = diagnostic.getRange();
-      String currentText = documentContext.getText(range);
+      var currentText = documentContext.getText(range);
 
       var textEdit = new TextEdit(
         range,
@@ -125,7 +123,7 @@ public class SpaceAtStartCommentDiagnostic extends AbstractDiagnostic implements
       textEdits.add(textEdit);
     });
 
-    return CodeActionProvider.createCodeActions(
+    return QuickFixProvider.createCodeActions(
       textEdits,
       info.getResourceString("quickFixMessage"),
       documentContext.getUri(),

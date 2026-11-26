@@ -1,0 +1,212 @@
+/*
+ * This file is a part of BSL Language Server.
+ *
+ * Copyright (c) 2018-2026
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ *
+ * BSL Language Server is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3.0 of the License, or (at your option) any later version.
+ *
+ * BSL Language Server is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BSL Language Server.
+ */
+package com.github._1c_syntax.bsl.languageserver.providers;
+
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
+import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.eclipse.lsp4j.SemanticTokenTypes;
+import org.eclipse.lsp4j.SemanticTokensLegend;
+import org.eclipse.lsp4j.SymbolKind;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import java.nio.file.Path;
+import java.util.List;
+
+import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
+import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * Guard: сапплаеры не должны выдавать пересекающиеся токены на одном участке кода.
+ * <p>
+ * Собирает токены тем же путём, что и провайдер ({@link SemanticTokensProvider#collectTokens}),
+ * на модуле из реальной конфигурации (с populateContext, чтобы работал инференс
+ * типов) и проверяет отсутствие конфликтов через {@link TokenOverlaps#findOverlaps}.
+ * Регрессионная защита: например, доступ {@code РегистрыСведений.РегистрСведений1}
+ * красится GlobalScope как {@code Class}, и сапплаер свойств не должен накладывать
+ * на тот же токен {@code Property}.
+ */
+@CleanupContextBeforeClassAndAfterClass
+class SemanticTokensOverlapGuardTest extends AbstractServerContextAwareTest {
+
+  private static final String MODULE =
+    PATH_TO_METADATA + "/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl";
+  private static final String ONESCRIPT_LIBRARY_WORKSPACE =
+    "src/test/resources/oscript-libraries/internal-classes-test";
+
+  @Autowired
+  private SemanticTokensProvider provider;
+
+  @Autowired
+  private ReferenceIndex referenceIndex;
+
+  @Autowired
+  private SemanticTokensLegend legend;
+
+  @Test
+  void suppliersDoNotProduceOverlappingTokens() {
+    // given — поднимаем конфигурацию с инференсом типов.
+    initServerContext(PATH_TO_METADATA);
+    var documentContext = TestUtils.getDocumentContextFromFile(MODULE, context);
+
+    // when — собираем токены тем же путём, что и провайдер для full-запроса.
+    var allTokens = provider.collectTokens(documentContext);
+    var lines = documentContext.getContentList();
+    var overlaps = TokenOverlaps.findOverlaps(allTokens,
+      line -> line >= 0 && line < lines.length ? lines[line].length() : 0);
+
+    // then — пересечений быть не должно.
+    assertThat(overlaps)
+      .as("Конфликты подсветки: %s", describe(overlaps, documentContext))
+      .isEmpty();
+  }
+
+  @ParameterizedTest(name = "{0}")
+  @ValueSource(strings = {
+    "/Catalogs/Справочник1/Ext/ObjectModule.bsl",
+    "/Catalogs/СправочникСМенеджером/Ext/ManagerModule.bsl",
+    "/Catalogs/СправочникСМенеджером/Ext/ObjectModule.bsl",
+    "/InformationRegisters/РегистрСведений1/Ext/ManagerModule.bsl",
+    "/InformationRegisters/РегистрСведений1/Ext/RecordSetModule.bsl"
+  })
+  void suppliersDoNotProduceOverlappingTokensAcrossModuleTypes(String relativeModulePath) {
+    // given — конфигурация с инференсом типов; проверяем модули РАЗНЫХ типов
+    // (объектный / менеджера / набора записей), где активны разные сапплаеры и
+    // по-разному ведут себя self-члены (в т.ч. Static-модификатор у методов static-модуля).
+    initServerContext(PATH_TO_METADATA);
+    var documentContext =
+      TestUtils.getDocumentContextFromFile(PATH_TO_METADATA + relativeModulePath, context);
+
+    // when — собираем токены тем же путём, что и провайдер для full-запроса.
+    var allTokens = provider.collectTokens(documentContext);
+    var lines = documentContext.getContentList();
+    var overlaps = TokenOverlaps.findOverlaps(allTokens,
+      line -> line >= 0 && line < lines.length ? lines[line].length() : 0);
+
+    // then — пересечений быть не должно ни в одном типе модуля.
+    assertThat(overlaps)
+      .as("Конфликты подсветки в %s: %s", relativeModulePath, describe(overlaps, documentContext))
+      .isEmpty();
+  }
+
+  @Test
+  void bareAssignmentToSelfAttributeDoesNotOverlapWithVariableToken() {
+    // Регрессия: бесскобочное обращение к одноимённому реквизиту без Перем.
+    // Раньше присваивание заводило фантомную DYNAMIC VariableSymbol (см.
+    // VariableSymbolComputer#visitLValue), которую SymbolsSemanticTokensSupplier красил
+    // как переменную, а тот же диапазон отдельный сапплаер красил как self-свойство —
+    // два токена на одном участке ломали дельта-кодированный поток (порча съезжала на
+    // все последующие токены файла). Теперь фантом не создаётся (SelfMemberClassifier),
+    // self-члены индексируются (ReferenceIndexFiller) и красятся единственный раз
+    // SymbolsSemanticTokensSupplier — пересечений быть не должно. Чтения ДО присваивания
+    // в сценарии — намеренно: именно такой порядок провоцировал артефакт.
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var uri = Path.of(
+      "./src/test/resources/metadata/designer/Catalogs/Справочник1/Ext/ObjectModule.bsl").toUri();
+    var content = """
+      Процедура ПриЗаписи(Отказ)
+        А = ВерсияДанных;
+        Б = Реквизит1;
+
+        ВерсияДанных = "1";
+        Реквизит1 = ТекущаяДатаСеанса();
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(uri, content, context);
+    try {
+      var allTokens = provider.collectTokens(documentContext);
+      var lines = documentContext.getContentList();
+      var overlaps = TokenOverlaps.findOverlaps(allTokens,
+        line -> line >= 0 && line < lines.length ? lines[line].length() : 0);
+
+      assertThat(overlaps)
+        .as("Конфликты подсветки: %s", describe(overlaps, documentContext))
+        .isEmpty();
+    } finally {
+      context.removeDocument(documentContext.getUri());
+    }
+  }
+
+  @Test
+  void libraryClassConstructorCallDoesNotOverlapWithTypeToken() {
+    // given — workspace OneScript с библиотекой в oscript_modules; у класса библиотеки
+    // есть конструктор ПриСозданииОбъекта, на который ссылается `Новый PublicEntity()`.
+    initServerContext(Path.of(ONESCRIPT_LIBRARY_WORKSPACE).toAbsolutePath(), false);
+    var content = """
+      #Использовать internal-classes-lib
+      Сущность = Новый PublicEntity();
+      """;
+    var documentContext =
+      TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
+
+    // when — собираем токены тем же путём, что и провайдер для full-запроса.
+    var allTokens = provider.collectTokens(documentContext);
+    var lines = documentContext.getContentList();
+    var overlaps = TokenOverlaps.findOverlaps(allTokens,
+      line -> line >= 0 && line < lines.length ? lines[line].length() : 0);
+
+    // then — библиотека подключилась: на `PublicEntity` есть ссылка на конструктор,
+    // иначе проверка пересечений прошла бы впустую.
+    assertThat(referenceIndex.getReferencesFrom(documentContext.getUri(), SymbolKind.Method))
+      .as("ссылка на конструктор библиотечного класса")
+      .anyMatch(reference -> reference.symbol() instanceof ConstructorSymbol);
+    // имя типа после `Новый` размечается ровно одним токеном Type.
+    var typeIndex = legend.getTokenTypes().indexOf(SemanticTokenTypes.Type);
+    assertThat(allTokens)
+      .filteredOn(token -> token.line() == 1 && token.start() == 17)
+      .as("токены на имени типа PublicEntity")
+      .singleElement()
+      .satisfies(token -> {
+        assertThat(token.length()).isEqualTo("PublicEntity".length());
+        assertThat(token.type()).isEqualTo(typeIndex);
+      });
+    assertThat(overlaps)
+      .as("Конфликты подсветки: %s", describe(overlaps, documentContext))
+      .isEmpty();
+  }
+
+  private String describe(List<TokenOverlaps.TokenOverlap> overlaps, DocumentContext documentContext) {
+    var lines = documentContext.getContentList();
+    var sb = new StringBuilder();
+    for (var overlap : overlaps) {
+      var a = overlap.first();
+      var b = overlap.second();
+      var src = a.line() < lines.length ? lines[a.line()].strip() : "";
+      sb.append(String.format("%nL%d c%d: %s/%d vs %s/%d | %s",
+        a.line() + 1, a.start(), typeName(a.type()), a.modifiers(),
+        typeName(b.type()), b.modifiers(), src));
+    }
+    return sb.toString();
+  }
+
+  private String typeName(int idx) {
+    var types = legend.getTokenTypes();
+    return idx >= 0 && idx < types.size() ? types.get(idx) : ("?" + idx);
+  }
+}

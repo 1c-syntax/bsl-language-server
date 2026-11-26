@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -25,10 +25,22 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.StringTokenizer;
 
+/**
+ * Детектор ключевых слов в строке.
+ * <p>
+ * Подсчитывает количество ключевых слов BSL,
+ * встречающихся в строке как отдельные токены.
+ */
 public class KeywordsDetector extends AbstractDetector {
 
   private final List<String> keywords;
 
+  /**
+   * Создать детектор ключевых слов.
+   *
+   * @param probability Вероятность обнаружения
+   * @param keywords Массив ключевых слов для поиска
+   */
   public KeywordsDetector(double probability, String... keywords) {
     super(probability);
     this.keywords = Arrays.asList(keywords);

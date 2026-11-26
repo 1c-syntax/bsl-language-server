@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticP
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.StringInterner;
@@ -45,6 +44,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMessage;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -85,19 +85,19 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + DEFAULT_LIST_FOR_CHECK_LEFT
+    defaultValue = DEFAULT_LIST_FOR_CHECK_LEFT
   )
   private String listForCheckLeft = DEFAULT_LIST_FOR_CHECK_LEFT;
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + DEFAULT_LIST_FOR_CHECK_RIGHT
+    defaultValue = DEFAULT_LIST_FOR_CHECK_RIGHT
   )
   private String listForCheckRight = DEFAULT_LIST_FOR_CHECK_RIGHT;
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + DEFAULT_LIST_FOR_CHECK_LEFT_AND_RIGHT
+    defaultValue = DEFAULT_LIST_FOR_CHECK_LEFT_AND_RIGHT
   )
   private String listForCheckLeftAndRight = DEFAULT_LIST_FOR_CHECK_LEFT_AND_RIGHT;
 
@@ -169,9 +169,7 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
         }
         addDiagnosticLeftRight(token, noSpaceLeft, noSpaceRight);
       }
-
     }
-
   }
 
   @Override
@@ -193,29 +191,25 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
     List<TextEdit> textEdits = new ArrayList<>();
 
     diagnostics.forEach((Diagnostic diagnostic) -> {
-      String diagnosticMessage = diagnostic.getMessage().toLowerCase(Locale.ENGLISH);
+      String diagnosticMessage = DiagnosticMessage.getStringValue(diagnostic.getMessage()).toLowerCase(Locale.ENGLISH);
 
       // TODO @YanSergey. Переделать после выполнения issue #371 'Доработки ядра. Хранение информации для квикфиксов'
-      boolean missedLeft = diagnosticMessage.contains("слева") || diagnosticMessage.contains("left");
-      boolean missedRight = diagnosticMessage.contains("справа") || diagnosticMessage.contains("right");
+      var missedLeft = diagnosticMessage.contains("слева") || diagnosticMessage.contains("left");
+      var missedRight = diagnosticMessage.contains("справа") || diagnosticMessage.contains("right");
 
       var range = diagnostic.getRange();
 
       if (missedLeft) {
-        var textEdit = new TextEdit(
-          new Range(range.getStart(), range.getStart()),
-          " ");
+        var textEdit = new TextEdit(new Range(range.getStart(), range.getStart()), " ");
         textEdits.add(textEdit);
       }
       if (missedRight) {
-        var textEdit = new TextEdit(
-          new Range(range.getEnd(), range.getEnd()),
-          " ");
+        var textEdit = new TextEdit(new Range(range.getEnd(), range.getEnd()), " ");
         textEdits.add(textEdit);
       }
     });
 
-    return CodeActionProvider.createCodeActions(
+    return QuickFixProvider.createCodeActions(
       textEdits,
       info.getResourceString("quickFixMessage"),
       documentContext.getUri(),
@@ -243,7 +237,9 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
   }
 
   private static boolean noSpaceLeft(List<Token> tokens, Token t) {
-
+    if (t.getTokenIndex() == 0) {
+      return false;
+    }
     var previousToken = tokens.get(t.getTokenIndex() - 1);
     return previousToken.getType() != BSLParser.LPAREN
       && !StringUtils.isWhitespace(previousToken.getText());
@@ -281,7 +277,7 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
     // Унарные + и -
     // Унарным считаем, если перед ним (пропуская пробельные символы) находим + - * / = % < > ( [ , Возврат <> <= >=
     int currentIndex = t.getTokenIndex() - 1;
-    while (currentIndex > 0) {
+    while (currentIndex >= 0) {
 
       if (!StringUtils.isWhitespace(tokens.get(currentIndex).getText())) {
         return setUnary.contains(tokens.get(currentIndex).getText());
@@ -293,7 +289,7 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
   }
 
   private String getErrorMessage(String formatString, String errorMessage, String tokenText) {
-    return stringInterner.intern(String.format(formatString, errorMessage, tokenText));
+    return stringInterner.intern(formatString.formatted(errorMessage, tokenText));
   }
 
   private static Set<Integer> computeKeywordsWithLeftRightSpace() {

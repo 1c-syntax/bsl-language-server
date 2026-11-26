@@ -6,7 +6,7 @@ Using `BSL Language Server` has some limitations, listed bellow
 
 `BSL Language Server` is a console Java application and requires the presence of a Java virtual machine on the computer.
 
-The minimum supported version is Java 11, but as part of the build pipelines, a health check is performed when using more recent versions. Java versions 11 and 17 are currently supported.
+The minimum supported version is Java 17, but as part of the build pipelines, a health check is performed when using more recent versions. Java versions 17, 21 and 23 are currently supported.
 
 JDK vendor is also interesting. Due to the changed licensing policy of Oracle, it is recommended to use open implementations of the `OpenJDK` virtual machine: AdoptOpenJDK, Liberica JDK.
 
@@ -14,6 +14,6 @@ JDK vendor is also interesting. Due to the changed licensing policy of Oracle, i
 
 `BSL Language Server` should work on all systems running modern desktop and server operating systems which supported Java. The most popular environments are tested as part of the build pipelines:
 
-- Windows 7/10, Windows server 2012 and higher supported
+- Windows 7/10/11, Windows server 2012 and higher supported
 - latest Linux OS supported.
 - latest MacOS supported

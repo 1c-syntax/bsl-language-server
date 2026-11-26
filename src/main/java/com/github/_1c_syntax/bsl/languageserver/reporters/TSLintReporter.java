@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,23 +21,21 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
-import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
-import org.eclipse.lsp4j.Diagnostic;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.SequenceWriter;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.databind.json.JsonMapper;
 
-import java.io.File;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.List;
 
 @Slf4j
 @Component
 public class TSLintReporter implements DiagnosticReporter {
+
+  private ReportFile reportFile;
+  private SequenceWriter writer;
 
   @Override
   public String key() {
@@ -45,21 +43,36 @@ public class TSLintReporter implements DiagnosticReporter {
   }
 
   @Override
-  @SneakyThrows
-  public void report(AnalysisInfo analysisInfo, Path outputDir) {
-    List<TSLintReportEntry> tsLintReport = new ArrayList<>();
-    for (FileInfo fileInfo : analysisInfo.getFileinfos()) {
-      for (Diagnostic diagnostic : fileInfo.getDiagnostics()) {
-        TSLintReportEntry entry = new TSLintReportEntry(fileInfo.getPath().toString(), diagnostic);
-        tsLintReport.add(entry);
-      }
+  public void beginReport(ReportContext context, Path outputDir) {
+    var mapper = JsonMapper.builder()
+      .enable(SerializationFeature.INDENT_OUTPUT)
+      .build();
+
+    reportFile = ReportFile.create(outputDir, "bsl-tslint.json");
+    writer = mapper.writerFor(TSLintReportEntry.class).writeValuesAsArray(reportFile.stream());
+  }
+
+  @Override
+  public void accept(FileInfo fileInfo) {
+    var path = fileInfo.getPath().toString();
+    var entries = fileInfo.getDiagnostics().stream()
+      .map(diagnostic -> new TSLintReportEntry(path, diagnostic))
+      .toList();
+
+    writer.writeAll(entries);
+  }
+
+  @Override
+  public void endReport() {
+    writer.close();
+    reportFile.commit();
+    LOGGER.info("TSLint report saved to {}", reportFile.path().toAbsolutePath());
+  }
+
+  @Override
+  public void abortReport() {
+    if (reportFile != null) {
+      reportFile.close();
     }
-
-    ObjectMapper mapper = new ObjectMapper();
-    mapper.enable(SerializationFeature.INDENT_OUTPUT);
-
-    File reportFile = new File(outputDir.toFile(), "./bsl-tslint.json");
-    mapper.writeValue(reportFile, tsLintReport);
-    LOGGER.info("TSLint report saved to {}", reportFile.getAbsolutePath());
   }
 }

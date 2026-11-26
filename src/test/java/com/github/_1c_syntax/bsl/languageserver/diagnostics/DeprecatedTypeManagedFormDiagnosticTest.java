@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -52,12 +52,12 @@ class DeprecatedTypeManagedFormDiagnosticTest extends AbstractDiagnosticTest<Dep
 
     final var documentContext = getDocumentContext();
     List<Diagnostic> diagnostics = getDiagnostics();
-    final Diagnostic ruDiagnostic = diagnostics.get(0);
+    final Diagnostic ruDiagnostic = diagnostics.getFirst();
 
     List<CodeAction> quickFixes = getQuickFixes(ruDiagnostic);
     assertThat(quickFixes).hasSize(1);
 
-    final CodeAction quickFix = quickFixes.get(0);
+    final CodeAction quickFix = quickFixes.getFirst();
 
     assertThat(quickFix)
       .of(diagnosticInstance)

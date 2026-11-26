@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -27,11 +27,10 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -112,7 +111,7 @@ public class NestedFunctionInParametersDiagnostic extends AbstractVisitorDiagnos
     return super.visitNewExpression(ctx);
   }
 
-  private boolean findNestedCall(BSLParserRuleContext ctx, BSLParser.DoCallContext ctxDoCall) {
+  private boolean findNestedCall(ParserRuleContext ctx, BSLParser.DoCallContext ctxDoCall) {
     // однострочники пропускаем сразу
     if (ctx.getStart().getLine() == ctx.getStop().getLine()) {
       return false;
@@ -133,7 +132,7 @@ public class NestedFunctionInParametersDiagnostic extends AbstractVisitorDiagnos
       .anyMatch(callParamContext -> callParamContext.getStop().getLine() > callParamContext.getStart().getLine());
   }
 
-  private void checkMethodCall(BSLParserRuleContext ctx,
+  private void checkMethodCall(ParserRuleContext ctx,
                                BSLParser.DoCallContext ctxDoCall,
                                BSLParser.MethodNameContext ctxMethodName) {
     if (findNestedCall(ctx, ctxDoCall)) {
@@ -147,12 +146,12 @@ public class NestedFunctionInParametersDiagnostic extends AbstractVisitorDiagnos
 
   private boolean containsForbiddenMethod(ParseTree t) {
     var needReturn = false;
-    if (t instanceof ParserRuleContext) {
-      if (BSLParser.RULE_methodCall == ((ParserRuleContext) t).getRuleIndex()) {
+    if (t instanceof ParserRuleContext context) {
+      if (BSLParser.RULE_methodCall == context.getRuleIndex()) {
         needReturn = true;
-      } else if (BSLParser.RULE_newExpression == ((ParserRuleContext) t).getRuleIndex()) {
+      } else if (BSLParser.RULE_newExpression == context.getRuleIndex()) {
         needReturn = !emptyCallParameterList(((BSLParser.NewExpressionContext) t).doCall());
-      } else if (BSLParser.RULE_globalMethodCall == ((ParserRuleContext) t).getRuleIndex()) {
+      } else if (BSLParser.RULE_globalMethodCall == context.getRuleIndex()) {
         needReturn = !allowedMethodNamesPattern.matcher(
           ((BSLParser.GlobalMethodCallContext) t).methodName().getText()).matches();
       } else {
@@ -168,7 +167,7 @@ public class NestedFunctionInParametersDiagnostic extends AbstractVisitorDiagnos
       .anyMatch(i -> containsForbiddenMethod(t.getChild(i)));
   }
 
-  private static boolean emptyCallParameterList(@Nullable BSLParser.DoCallContext ctxDoCall) {
+  private static boolean emptyCallParameterList(BSLParser.@Nullable DoCallContext ctxDoCall) {
     return ctxDoCall == null
       || ctxDoCall.callParamList() == null
       || ctxDoCall.callParamList().isEmpty();

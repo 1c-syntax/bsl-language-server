@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -35,6 +35,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.lang3.tuple.Pair;
@@ -70,12 +71,10 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
       .flatMap(RewriteMethodParameterDiagnostic::getParametersByValue)
       .flatMap(pair -> getVariableByParameter(pair.getLeft(), pair.getRight()))
       .map(this::isOverwrited)
-      .filter(Optional::isPresent)
-      .map(Optional::get)
+      .flatMap(Optional::stream)
       .forEach(variableSymbolReferenceListTriple -> fireIssue(variableSymbolReferenceListTriple.getLeft(),
         variableSymbolReferenceListTriple.getMiddle(),
         variableSymbolReferenceListTriple.getRight()));
-
   }
 
   private static Stream<Pair<MethodSymbol, ParameterDefinition>> getParametersByValue(MethodSymbol methodSymbol) {
@@ -84,7 +83,8 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
       .map(parameterDefinition -> Pair.of(methodSymbol, parameterDefinition));
   }
 
-  private static Stream<VariableSymbol> getVariableByParameter(MethodSymbol method, ParameterDefinition parameterDefinition) {
+  private static Stream<VariableSymbol> getVariableByParameter(MethodSymbol method,
+                                                               ParameterDefinition parameterDefinition) {
     return method.getChildren().stream()
       // в будущем могут появиться и другие символы, подчиненные методам
       .filter(sourceDefinedSymbol -> sourceDefinedSymbol.getSymbolKind() == SymbolKind.Variable)
@@ -103,7 +103,7 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
   private List<Reference> getSortedReferencesByLocation(VariableSymbol variable) {
     final var references = referenceIndex.getReferencesTo(variable);
     return references.stream()
-      .sorted((o1, o2) -> compare(o1.getSelectionRange(), o2.getSelectionRange()))
+      .sorted((o1, o2) -> compare(o1.selectionRange(), o2.selectionRange()))
       .collect(Collectors.toList());
   }
 
@@ -126,39 +126,36 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
   }
 
   private Optional<Reference> isOverwrited(List<Reference> references) {
-    if (!references.isEmpty()) {
-      final var firstDefIntoAssign = references.get(0);
-      if (firstDefIntoAssign.getOccurrenceType() == OccurrenceType.DEFINITION) {
-        if (references.size() == 1) {
-          return Optional.of(firstDefIntoAssign);
-        }
-        var refContextInsideDefAssign = getRefContextInsideDefAssign(firstDefIntoAssign, references.get(1));
-        if (refContextInsideDefAssign.isEmpty()) {
-          return Optional.of(firstDefIntoAssign);
-        }
-        var isSelfAssign = Boolean.TRUE.equals(refContextInsideDefAssign
-          .map(RewriteMethodParameterDiagnostic::isVarNameOnlyIntoExpression)
-          .orElseThrow());
-        if (isSelfAssign && references.size() > COUNT_OF_PAIR_FOR_SELF_ASSIGN) {
+    if (references.isEmpty() || references.get(0).occurrenceType() != OccurrenceType.DEFINITION) {
+      return Optional.empty();
+    }
+
+    final var firstDefIntoAssign = references.get(0);
+    if (references.size() > 1) {
+      var refContextInsideDefAssign = getRefContextInsideDefAssign(firstDefIntoAssign, references.get(1));
+      if (refContextInsideDefAssign.isPresent()) {
+        if (isVarNameOnlyIntoExpression(refContextInsideDefAssign.get())
+          && references.size() > COUNT_OF_PAIR_FOR_SELF_ASSIGN) {
           return isOverwrited(references.subList(COUNT_OF_PAIR_FOR_SELF_ASSIGN, references.size()));
         }
+        return Optional.empty();
       }
     }
-    return Optional.empty();
+    return Optional.of(firstDefIntoAssign);
   }
 
   private Optional<RuleNode> getRefContextInsideDefAssign(Reference defRef, Reference nextRef) {
     final var defNode = Trees.findTerminalNodeContainsPosition(documentContext.getAst(),
-      defRef.getSelectionRange().getStart());
+      defRef.selectionRange().getStart());
     final var assignment = defNode
       .map(TerminalNode::getParent)
       .filter(BSLParser.LValueContext.class::isInstance)
-      .map(RuleNode::getParent)
+      .map(ParseTree::getParent)
       .filter(BSLParser.AssignmentContext.class::isInstance)
       .map(BSLParser.AssignmentContext.class::cast);
 
     return assignment.flatMap(assignContext ->
-        Trees.findTerminalNodeContainsPosition(assignContext, nextRef.getSelectionRange().getStart()))
+        Trees.findTerminalNodeContainsPosition(assignContext, nextRef.selectionRange().getStart()))
       .map(TerminalNode::getParent);
   }
 
@@ -169,7 +166,7 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
       .filter(node -> node.getChildCount() == 1)
       .map(RuleNode::getParent)
       .filter(BSLParser.MemberContext.class::isInstance)
-      .map(RuleNode::getParent)
+      .map(ParseTree::getParent)
       .filter(expression -> expression.getChildCount() == 1)
       .filter(BSLParser.ExpressionContext.class::isInstance)
       .isPresent();
@@ -179,9 +176,9 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
     var refsForIssue = references.stream()
       .map(reference -> RelatedInformation.create(
         documentContext.getUri(),
-        reference.getSelectionRange(),
+        reference.selectionRange(),
         "+1"
-      )).collect(Collectors.toList());
+      )).toList();
     var resultRefs = new ArrayList<DiagnosticRelatedInformation>();
     resultRefs.add(RelatedInformation.create(
       documentContext.getUri(),
@@ -189,6 +186,6 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
       "0"));
     resultRefs.addAll(refsForIssue);
 
-    diagnosticStorage.addDiagnostic(nodeForIssue.getSelectionRange(), info.getMessage(variable.getName()), resultRefs);
+    diagnosticStorage.addDiagnostic(nodeForIssue.selectionRange(), info.getMessage(variable.getName()), resultRefs);
   }
 }

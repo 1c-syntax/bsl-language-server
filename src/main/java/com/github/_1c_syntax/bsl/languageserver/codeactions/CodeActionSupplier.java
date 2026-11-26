@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -27,6 +27,19 @@ import org.eclipse.lsp4j.CodeActionParams;
 
 import java.util.List;
 
+/**
+ * Интерфейс для поставщиков code actions (быстрых исправлений).
+ * <p>
+ * Реализации предоставляют конкретные типы code actions для различных ситуаций:
+ * быстрые исправления диагностик, рефакторинги, генерация кода и т.д.
+ */
 public interface CodeActionSupplier {
+  /**
+   * Получить список code actions для указанного диапазона в документе.
+   *
+   * @param params Параметры запроса code action
+   * @param documentContext Контекст документа
+   * @return Список доступных code actions
+   */
   List<CodeAction> getCodeActions(CodeActionParams params, DocumentContext documentContext);
 }

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,130 +21,53 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import lombok.AccessLevel;
-import lombok.Builder;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
-import lombok.Value;
-import lombok.experimental.NonFinal;
+import com.github._1c_syntax.bsl.parser.description.MethodDescription;
 import org.eclipse.lsp4j.Range;
-import org.eclipse.lsp4j.SymbolKind;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
-@Value
-@Builder
-@EqualsAndHashCode(onlyExplicitlyIncluded = true)
-@ToString(exclude = {"children", "parent"})
-public class MethodSymbol implements SourceDefinedSymbol, Exportable, Describable {
-  @EqualsAndHashCode.Include
-  String name;
+/**
+ * Символ метода или функции.
+ * <p>
+ * Представляет метод или функцию в модуле BSL с информацией о параметрах,
+ * аннотациях, экспортности и вложенных элементах.
+ */
+public interface MethodSymbol extends SourceDefinedSymbol, Exportable, Describable {
+  String getName();
 
-  @Builder.Default
-  SymbolKind symbolKind = SymbolKind.Method;
-
-  @EqualsAndHashCode.Include
-  DocumentContext owner;
-
-  @Getter(AccessLevel.NONE)
-  int startLine;
-  @Getter(AccessLevel.NONE)
-  int startCharacter;
-  @Getter(AccessLevel.NONE)
-  int endLine;
-  @Getter(AccessLevel.NONE)
-  int endCharacter;
-
-  @Getter(AccessLevel.NONE)
-  int subNameLine;
-  @Getter(AccessLevel.NONE)
-  int subNameStartCharacter;
-  @Getter(AccessLevel.NONE)
-  int subNameEndCharacter;
-
-  @Getter
-  @Setter
-  @Builder.Default
-  @NonFinal
-  Optional<SourceDefinedSymbol> parent = Optional.empty();
-
-  @Builder.Default
-  List<SourceDefinedSymbol> children = new ArrayList<>();
-
-  boolean function;
-  boolean export;
-  Optional<MethodDescription> description;
-
-  boolean deprecated;
-
-  @Builder.Default
-  List<ParameterDefinition> parameters = new ArrayList<>();
-
-  @Builder.Default
-  Optional<CompilerDirectiveKind> compilerDirectiveKind = Optional.empty();
-  @Builder.Default
-  List<Annotation> annotations = new ArrayList<>();
+  boolean isFunction();
 
   @Override
-  public Range getRange() {
-    return Ranges.create(startLine, startCharacter, endLine, endCharacter);
-  }
+  boolean isExport();
 
-  @EqualsAndHashCode.Include
-  public Range getSubNameRange() {
-    return Ranges.create(subNameLine, subNameStartCharacter, subNameLine, subNameEndCharacter);
-  }
+  boolean isDeprecated();
 
-  public Optional<RegionSymbol> getRegion() {
-    return getParent()
-      .filter(RegionSymbol.class::isInstance)
-      .map(RegionSymbol.class::cast);
-  }
+  /**
+   * Объявлен ли метод с ключевым словом {@code Асинх} ({@code Async}).
+   */
+  boolean isAsync();
+
+  List<ParameterDefinition> getParameters();
 
   @Override
-  public void accept(SymbolTreeVisitor visitor) {
-    visitor.visitMethod(this);
-  }
+  Optional<MethodDescription> getDescription();
 
-  @Override
-  public Range getSelectionRange() {
-    return getSubNameRange();
-  }
+  Optional<CompilerDirectiveKind> getCompilerDirectiveKind();
 
-  public static MethodSymbolBuilder builder() {
-    return new MethodSymbolBuilder();
-  }
+  List<Annotation> getAnnotations();
 
-  public static class MethodSymbolBuilder {
+  /**
+   * Диапазон имени метода/конструктора (без ключевых слов и параметров) —
+   * используется как selection-range и для матчинга позиции к символу.
+   */
+  Range getSubNameRange();
 
-    public MethodSymbolBuilder range(Range range) {
-      var start = range.getStart();
-      var end = range.getEnd();
-      startLine = start.getLine();
-      startCharacter = start.getCharacter();
-      endLine = end.getLine();
-      endCharacter = end.getCharacter();
-
-      return this;
-    }
-
-    public MethodSymbolBuilder subNameRange(Range range) {
-      var start = range.getStart();
-      var end = range.getEnd();
-      subNameLine = start.getLine();
-      subNameStartCharacter = start.getCharacter();
-      subNameEndCharacter = end.getCharacter();
-
-      return this;
-    }
-  }
+  /**
+   * Регион/область, в которой объявлен метод/конструктор, если он находится
+   * непосредственно внутри {@link RegionSymbol}.
+   */
+  Optional<RegionSymbol> getRegion();
 }

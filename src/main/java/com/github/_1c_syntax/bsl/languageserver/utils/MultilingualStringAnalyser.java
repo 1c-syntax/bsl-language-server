@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -24,31 +24,63 @@ package com.github._1c_syntax.bsl.languageserver.utils;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Анализатор многоязычных строк НСтр (NStr) и строковых шаблонов СтрШаблон (StrTemplate).
+ * <p>
+ * Проверяет наличие всех объявленных языков в многоязычных строках
+ * и анализирует использование в шаблонах.
+ * <p>
+ * Также предоставляет статические методы для поиска языковых ключей и плейсхолдеров
+ * в строках для целей семантической подсветки.
+ */
 public final class MultilingualStringAnalyser {
 
-  private static final String NSTR_METHOD_NAME = "^(НСтр|NStr)";
-  private static final String TEMPLATE_METHOD_NAME = "^(СтрШаблон|StrTemplate)";
+  private static final String NSTR_METHOD_NAME = "^(НСтр|NStr)$";
+  private static final String TEMPLATE_METHOD_NAME = "^(СтрШаблон|StrTemplate)$";
   private static final String NSTR_LANG_REGEX = "\\w+\\s*=\\s*['|\"{2}]";
   private static final String NSTR_LANG_CUT_REGEX = "\\s*=\\s*['|\"{2}]";
   private static final String WHITE_SPACE_REGEX = "\\s";
-  private static final Pattern NSTR_METHOD_NAME_PATTERN = CaseInsensitivePattern.compile(
+
+  /**
+   * Паттерн для распознавания вызова метода НСтр/NStr.
+   */
+  public static final Pattern NSTR_METHOD_NAME_PATTERN = CaseInsensitivePattern.compile(
     NSTR_METHOD_NAME
   );
-  private static final Pattern TEMPLATE_METHOD_NAME_PATTERN = CaseInsensitivePattern.compile(
+
+  /**
+   * Паттерн для распознавания вызова метода СтрШаблон/StrTemplate.
+   */
+  public static final Pattern TEMPLATE_METHOD_NAME_PATTERN = CaseInsensitivePattern.compile(
     TEMPLATE_METHOD_NAME
   );
-  private static final Pattern NSTR_LANG_PATTERN = CaseInsensitivePattern.compile(
+
+  /**
+   * Паттерн для поиска языковых ключей в строках НСтр (например, ru=', en=").
+   */
+  public static final Pattern NSTR_LANG_PATTERN = CaseInsensitivePattern.compile(
     NSTR_LANG_REGEX
   );
+
+  /**
+   * Паттерн для поиска плейсхолдеров в строках СтрШаблон (%1-%10 или %(1)-%(10)).
+   * Учитывает экранирование %%.
+   */
+  public static final Pattern STR_TEMPLATE_PLACEHOLDER_PATTERN = Pattern.compile(
+    "(?<!%)%(?:(10|[1-9])(?!\\d)|\\((10|[1-9])\\))"
+  );
+
   private static final Pattern NSTR_LANG_CUT_PATTERN = CaseInsensitivePattern.compile(
     NSTR_LANG_CUT_REGEX
   );
@@ -56,25 +88,98 @@ public final class MultilingualStringAnalyser {
     WHITE_SPACE_REGEX
   );
 
+  @SuppressWarnings("NullAway.Init")
   private BSLParser.GlobalMethodCallContext globalMethodCallContext;
   private boolean isParentTemplate;
-  private String variableName;
+  private @Nullable String variableName;
   private final ArrayList<String> expectedLanguages;
   private final Set<String> expandedMultilingualString = new HashSet<>();
   private ArrayList<String> missingLanguages = new ArrayList<>();
 
+  /**
+   * Создать анализатор многоязычных строк.
+   *
+   * @param declaredLanguages Строка с объявленными языками через запятую
+   */
   public MultilingualStringAnalyser(String declaredLanguages) {
-
     Matcher matcher = WHITE_SPACE_PATTERN.matcher(declaredLanguages);
     this.expectedLanguages = new ArrayList<>(Arrays.asList(matcher.replaceAll("").split(",")));
+  }
 
+
+  /**
+   * Запись для хранения позиции совпадения в строке.
+   *
+   * @param start  Начальная позиция совпадения
+   * @param length Длина совпадения
+   * @param value  Значение совпадения (языковой ключ или плейсхолдер)
+   */
+  public record MatchPosition(int start, int length, String value) {
+  }
+
+  /**
+   * Проверить, является ли вызов метода вызовом НСтр/NStr.
+   *
+   * @param ctx Контекст вызова глобального метода
+   * @return true, если это вызов НСтр/NStr
+   */
+  public static boolean isNStrCall(BSLParser.GlobalMethodCallContext ctx) {
+    return NSTR_METHOD_NAME_PATTERN.matcher(ctx.methodName().getText()).matches();
+  }
+
+  /**
+   * Проверить, является ли вызов метода вызовом СтрШаблон/StrTemplate.
+   *
+   * @param ctx Контекст вызова глобального метода
+   * @return true, если это вызов СтрШаблон/StrTemplate
+   */
+  public static boolean isStrTemplateCall(BSLParser.GlobalMethodCallContext ctx) {
+    return TEMPLATE_METHOD_NAME_PATTERN.matcher(ctx.methodName().getText()).matches();
+  }
+
+  /**
+   * Найти позиции всех языковых ключей в строке НСтр.
+   *
+   * @param text Текст строки
+   * @return Список позиций языковых ключей
+   */
+  public static List<MatchPosition> findLanguageKeyPositions(String text) {
+    List<MatchPosition> positions = new ArrayList<>();
+    Matcher matcher = NSTR_LANG_PATTERN.matcher(text);
+
+    while (matcher.find()) {
+      Matcher cutMatcher = NSTR_LANG_CUT_PATTERN.matcher(matcher.group());
+      String langKey = cutMatcher.replaceAll("");
+      int keyStart = matcher.start();
+      positions.add(new MatchPosition(keyStart, langKey.length(), langKey));
+    }
+
+    return positions;
+  }
+
+  /**
+   * Найти позиции всех плейсхолдеров в строке СтрШаблон.
+   *
+   * @param text Текст строки
+   * @return Список позиций плейсхолдеров
+   */
+  public static List<MatchPosition> findPlaceholderPositions(String text) {
+    List<MatchPosition> positions = new ArrayList<>();
+    Matcher matcher = STR_TEMPLATE_PLACEHOLDER_PATTERN.matcher(text);
+
+    while (matcher.find()) {
+      String placeholder = matcher.group();
+      positions.add(new MatchPosition(matcher.start(), placeholder.length(), placeholder));
+    }
+
+    return positions;
   }
 
   private static boolean isNotMultilingualString(BSLParser.GlobalMethodCallContext globalMethodCallContext) {
     String firstParameterMultilingualString = getMultilingualString(globalMethodCallContext);
 
     return !(firstParameterMultilingualString.isEmpty() || firstParameterMultilingualString.startsWith("\""))
-      || !NSTR_METHOD_NAME_PATTERN.matcher(globalMethodCallContext.methodName().getText()).find();
+      || !NSTR_METHOD_NAME_PATTERN.matcher(globalMethodCallContext.methodName().getText()).matches();
   }
 
   private static boolean hasTemplateInParents(ParserRuleContext globalMethodCallContext) {
@@ -84,7 +189,7 @@ public final class MultilingualStringAnalyser {
       return false;
     }
 
-    if (parent instanceof BSLParser.GlobalMethodCallContext && isTemplate((BSLParser.GlobalMethodCallContext) parent)) {
+    if (parent instanceof BSLParser.GlobalMethodCallContext context && isTemplate(context)) {
       return true;
     }
 
@@ -92,15 +197,14 @@ public final class MultilingualStringAnalyser {
   }
 
   private static boolean isTemplate(BSLParser.GlobalMethodCallContext parent) {
-    return TEMPLATE_METHOD_NAME_PATTERN.matcher(parent.methodName().getText()).find();
+    return TEMPLATE_METHOD_NAME_PATTERN.matcher(parent.methodName().getText()).matches();
   }
 
-  private static String getVariableName(BSLParser.GlobalMethodCallContext ctx) {
-    BSLParser.AssignmentContext assignment = (BSLParser.AssignmentContext)
-      Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_assignment);
+  private static @Nullable String getVariableName(BSLParser.GlobalMethodCallContext ctx) {
+    BSLParser.AssignmentContext assignment = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_assignment);
 
     if (assignment != null) {
-      BSLParser.LValueContext lValue = assignment.lValue();
+      var lValue = assignment.lValue();
       if (lValue != null) {
         return lValue.getText();
       }
@@ -109,16 +213,24 @@ public final class MultilingualStringAnalyser {
     return null;
   }
 
+  /**
+   * Разобрать вызов метода НСтр/NStr.
+   *
+   * @param ctx Контекст вызова глобального метода
+   * @return true, если это вызов НСтр/NStr и он успешно разобран
+   */
   public boolean parse(BSLParser.GlobalMethodCallContext ctx) {
+    Objects.requireNonNull(ctx);
+
     expandedMultilingualString.clear();
     missingLanguages.clear();
     isParentTemplate = false;
+    globalMethodCallContext = ctx;
 
     if (isNotMultilingualString(ctx)) {
       return false;
     }
 
-    globalMethodCallContext = ctx;
     isParentTemplate = hasTemplateInParents(ctx);
     variableName = getVariableName(ctx);
     expandMultilingualString();
@@ -155,24 +267,40 @@ public final class MultilingualStringAnalyser {
     }
   }
 
+  /**
+   * Проверить, что не все объявленные языки присутствуют в строке.
+   *
+   * @return true, если какие-то языки отсутствуют
+   */
   public boolean hasNotAllDeclaredLanguages() {
     return !missingLanguages.isEmpty();
   }
 
+  /**
+   * Получить список отсутствующих языков.
+   *
+   * @return Строковое представление списка отсутствующих языков
+   */
   public String getMissingLanguages() {
     return missingLanguages.toString();
   }
 
+  /**
+   * Проверить, используется ли строка в родительском шаблоне.
+   *
+   * @return true, если строка используется в шаблоне
+   */
   public boolean isParentTemplate() {
-    return isParentTemplate || istVariableUsingInTemplate();
+    Objects.requireNonNull(globalMethodCallContext, "Call parse method first");
+    return isParentTemplate || isVariableUsedInTemplate();
   }
 
-  private boolean istVariableUsingInTemplate() {
+  private boolean isVariableUsedInTemplate() {
     if (variableName == null) {
       return false;
     }
 
-    BSLParser.CodeBlockContext codeBlock = getCodeBlock();
+    var codeBlock = Trees.getAncestorByRuleIndex(globalMethodCallContext, BSLParser.RULE_codeBlock);
 
     if (codeBlock == null) {
       return false;
@@ -188,13 +316,6 @@ public final class MultilingualStringAnalyser {
       .map(BSLParser.CallParamListContext::callParam)
       .filter(cp -> !cp.isEmpty())
       .anyMatch(cp -> cp.stream().anyMatch(p -> p.getText().equalsIgnoreCase(variableName)));
-  }
-
-  private BSLParser.CodeBlockContext getCodeBlock() {
-    return (BSLParser.CodeBlockContext) Trees.getAncestorByRuleIndex(
-      globalMethodCallContext,
-      BSLParser.RULE_codeBlock
-    );
   }
 
 }

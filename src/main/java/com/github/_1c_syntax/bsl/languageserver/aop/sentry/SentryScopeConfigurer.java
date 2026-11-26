@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,16 +21,23 @@
  */
 package com.github._1c_syntax.bsl.languageserver.aop.sentry;
 
-import io.sentry.Scope;
+import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
+import io.sentry.IScope;
 import io.sentry.Sentry;
+import io.sentry.SentryOptions;
+import io.sentry.protocol.Geo;
 import io.sentry.protocol.User;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ServerInfo;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
-import org.springframework.context.annotation.DependsOn;
-import org.springframework.stereotype.Component;
+import org.jspecify.annotations.Nullable;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.event.EventListener;
 
-import javax.annotation.PostConstruct;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -38,23 +45,109 @@ import java.util.UUID;
  * <p>
  * Наполняет данные информацией о приложении и пользователе.
  */
-@Component
+@Configuration
 @RequiredArgsConstructor
-@ConditionalOnBean(name = "sentryHub")
-@DependsOn("sentryHub")
 public class SentryScopeConfigurer {
 
   private final ServerInfo serverInfo;
+  private final PermissionFilterBeforeSendCallback beforeSendCallback;
 
-  @PostConstruct
-  public void init() {
-    Sentry.configureScope((Scope scope) -> {
+  /**
+   * Конфигурирует опции Sentry до инициализации.
+   * Spring Boot Sentry автоматически применит эту конфигурацию.
+   */
+  @Bean
+  public Sentry.OptionsConfiguration<SentryOptions> sentryOptionsConfiguration() {
+    return options -> {
+      options.setEnvironment(getEnvironment());
+      options.setRelease(getVersion());
+      options.setAttachServerName(false);
+      options.setServerName(getServerName());
+      options.setBeforeSend(beforeSendCallback);
+      options.addInAppInclude("com.github._1c_syntax.bsl.languageserver");
+    };
+  }
+
+  /**
+   * Настраивает scope Sentry после полной инициализации приложения.
+   */
+  @EventListener(ApplicationReadyEvent.class)
+  public void onApplicationReady() {
+    Sentry.configureScope((IScope scope) -> {
       var user = new User();
       user.setId(UUID.randomUUID().toString());
+      user.setGeo(new Geo()); // empty geo to block calculating geolocation by ip
       scope.setUser(user);
-
-      scope.setTag("server.version", serverInfo.getVersion());
     });
   }
 
+  /**
+   * Обработчик события {@link LanguageServerInitializedEvent}.
+   * <p>
+   * Добавляет теги с именем и версией клиента в Sentry scope.
+   *
+   * @param event Событие инициализации языкового сервера
+   */
+  @EventListener
+  public void onLanguageServerInitialize(LanguageServerInitializedEvent event) {
+    var clientInfo = Optional.ofNullable(event.getParams().getClientInfo());
+    var clientName = clientInfo
+      .flatMap(info -> Optional.ofNullable(info.getName()))
+      .orElse("UNKNOWN");
+    var clientVersion = clientInfo
+      .flatMap(info -> Optional.ofNullable(info.getVersion()))
+      .orElse("UNKNOWN");
+
+    Sentry.configureScope((IScope scope) -> {
+      scope.setTag("client.name", clientName);
+      scope.setTag("client.version", clientVersion);
+    });
+  }
+
+  private String getEnvironment() {
+    var version = serverInfo.getVersion();
+    // Версия может быть null при запуске без манифеста (из IDE/исходников);
+    // resolveEnvironment ожидает не-null, поэтому неизвестную версию трактуем как feature.
+    return version == null ? "feature" : resolveEnvironment(version);
+  }
+
+  /**
+   * Сопоставляет строку версии сервера со значением environment для Sentry.
+   *
+   * @param version Строка версии сервера, например {@code 1.0.0}, {@code 1.0.0-rc.2} или
+   *                {@code develop-1234}
+   * @return Имя окружения Sentry: {@code production}, {@code pre-release}, {@code develop} или
+   *         {@code feature}
+   */
+  static String resolveEnvironment(String version) {
+    String environment;
+
+    if (version.matches("\\d+\\.\\d+\\.\\d+")) {
+      environment = "production";
+    } else if (version.matches("\\d+\\.\\d+\\.\\d+-r[ca]\\.?\\d+")) {
+      environment = "pre-release";
+    } else if (version.startsWith("develop-") && !version.contains("-DIRTY-")) {
+      environment = "develop";
+    } else {
+      environment = "feature";
+    }
+    return environment;
+  }
+
+  private String getVersion() {
+    return "bsl-language-server@" + serverInfo.getVersion();
+  }
+
+  @Nullable
+  private String getServerName() {
+    try {
+      String hostName = InetAddress.getLocalHost().getHostName();
+      return UUID.nameUUIDFromBytes(hostName.getBytes()).toString();
+    } catch (UnknownHostException e) {
+      // ignore
+      return null;
+    }
+  }
+
 }
+

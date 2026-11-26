@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,20 +21,24 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
-import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
-import lombok.SneakyThrows;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
+import tools.jackson.databind.SerializationFeature;
+import tools.jackson.dataformat.xml.XmlMapper;
+import tools.jackson.dataformat.xml.ser.ToXmlGenerator;
 
-import java.io.File;
+import javax.xml.namespace.QName;
 import java.nio.file.Path;
 
 @Slf4j
 @Component
 public class JUnitReporter implements DiagnosticReporter {
+
+  private static final String SUITE_ELEMENT = "testsuite";
+
+  private ReportFile reportFile;
+  private ToXmlGenerator generator;
 
   @Override
   public String key() {
@@ -42,16 +46,47 @@ public class JUnitReporter implements DiagnosticReporter {
   }
 
   @Override
-  @SneakyThrows
-  public void report(AnalysisInfo analysisInfo, Path outputDir) {
+  public void beginReport(ReportContext context, Path outputDir) {
+    var mapper = XmlMapper.builder()
+      .enable(SerializationFeature.INDENT_OUTPUT)
+      .build();
 
-    JUnitTestSuites jUnitReport = new JUnitTestSuites(analysisInfo);
+    reportFile = ReportFile.create(outputDir, "bsl-junit.xml");
+    // XmlMapper.writeValue сам раскрывает @JsonRootName; при потоковой записи корневой элемент
+    // и его атрибут задаются вручную
+    generator = (ToXmlGenerator) mapper.createGenerator(reportFile.stream());
+    generator.initGenerator();
+    generator.setNextName(new QName("testsuites"));
+    generator.writeStartObject();
+    generator.setNextIsAttribute(true);
+    generator.writeName("package");
+    generator.writeString("bsl-language-server");
+    generator.setNextIsAttribute(false);
+  }
 
-    ObjectMapper mapper = new XmlMapper();
-    mapper.enable(SerializationFeature.INDENT_OUTPUT);
+  @Override
+  public void accept(FileInfo fileInfo) {
+    if (fileInfo.getDiagnostics().isEmpty()) {
+      return;
+    }
 
-    File reportFile = new File(outputDir.toFile(), "./bsl-junit.xml");
-    mapper.writeValue(reportFile, jUnitReport);
-    LOGGER.info("JUnit report saved to {}", reportFile.getCanonicalPath());
+    var testSuite = new JUnitTestSuites.JUnitTestSuite(fileInfo);
+    generator.writeName(SUITE_ELEMENT);
+    generator.writePOJO(testSuite);
+  }
+
+  @Override
+  public void endReport() {
+    generator.writeEndObject();
+    generator.close();
+    reportFile.commit();
+    LOGGER.info("JUnit report saved to {}", reportFile.path().toAbsolutePath());
+  }
+
+  @Override
+  public void abortReport() {
+    if (reportFile != null) {
+      reportFile.close();
+    }
   }
 }

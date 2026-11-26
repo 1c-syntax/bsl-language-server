@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -28,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import java.util.List;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMessage;
 
 
 class IdenticalExpressionsDiagnosticTest extends AbstractDiagnosticTest<IdenticalExpressionsDiagnostic> {
@@ -67,23 +68,25 @@ class IdenticalExpressionsDiagnosticTest extends AbstractDiagnosticTest<Identica
 
   @Test
   void checkMessage() {
-    var code = "А = ТипДокумента = Тип(\"ДокументСсылка.ПриходнаяНакладная\")\n" +
-      "Или ТипДокумента = Тип(\"ДокументСсылка.СчетНаОплатуПоставщика\")\n" +
-      "Или ТипДокумента = Тип(\"ДокументСсылка.КорректировкаПоступления\")\n" +
-      "Или ТипДокумента = Тип(\"ДокументСсылка.ЗаказПоставщику\")\n" +
-      "Или ТипДокумента = Тип(\"ДокументСсылка.СчетНаОплатуПоставщика\")";
+    var code = """
+      А = ТипДокумента = Тип("ДокументСсылка.ПриходнаяНакладная")
+      Или ТипДокумента = Тип("ДокументСсылка.СчетНаОплатуПоставщика")
+      Или ТипДокумента = Тип("ДокументСсылка.КорректировкаПоступления")
+      Или ТипДокумента = Тип("ДокументСсылка.ЗаказПоставщику")
+      Или ТипДокумента = Тип("ДокументСсылка.СчетНаОплатуПоставщика")""";
 
     var context = TestUtils.getDocumentContext(code);
     var diagnostics = getDiagnostics(context);
     assertThat(diagnostics).hasSize(1);
-    assertThat(diagnostics.get(0).getMessage()).contains("\"ДокументСсылка.СчетНаОплатуПоставщика\"");
+    assertThat(DiagnosticMessage.getStringValue(diagnostics.getFirst().getMessage())).contains("\"ДокументСсылка.СчетНаОплатуПоставщика\"");
   }
 
   @Test
   void testThatPopularQuantificationSkipped() {
-    var code = "А = Байты / 1024 / 1024;\n" +
-      "В = Время / 24 / 60 / 60;\n" +
-      "Б = Байты = 1024 / \"1024\"";
+    var code = """
+      А = Байты / 1024 / 1024;
+      В = Время / 24 / 60 / 60;
+      Б = Байты = 1024 / "1024\"""";
 
     var context = TestUtils.getDocumentContext(code);
     var diagnostics = getDiagnostics(context);
@@ -93,9 +96,10 @@ class IdenticalExpressionsDiagnosticTest extends AbstractDiagnosticTest<Identica
 
   @Test
   void testThatConfiguredPopularQuantificationSkipped() {
-    var code = "А = Байты / 1024 / 1024;\n" +
-      "В = Время / 24 / 60 / 60;\n" +
-      "Б = Байты = 1024 / \"1024\"";
+    var code = """
+      А = Байты / 1024 / 1024;
+      В = Время / 24 / 60 / 60;
+      Б = Байты = 1024 / "1024\"""";
 
     // получение текущей конфигурации диагностики
     var configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
@@ -109,7 +113,7 @@ class IdenticalExpressionsDiagnosticTest extends AbstractDiagnosticTest<Identica
     var context = TestUtils.getDocumentContext(code);
     var diagnostics = getDiagnostics(context);
     assertThat(diagnostics).hasSize(1);
-    assertThat(diagnostics.get(0).getMessage()).contains("60");
+    assertThat(DiagnosticMessage.getStringValue(diagnostics.getFirst().getMessage())).contains("60");
 
   }
 

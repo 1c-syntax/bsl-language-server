@@ -17,21 +17,23 @@ jobs:
   build-deploy:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-
-    - name: Setup JDK
-      uses: actions/setup-java@v3
+    - uses: actions/checkout@v7
       with:
-        java-version: 17
-        distribution: 'temurin'
+        fetch-depth: 0
+    - name: Setup JDK
+      uses: actions/setup-java@v6
+      with:
+        java-version: 25
+        distribution: 'corretto'
+        cache: gradle
 
     - name: Build javadoc
       run: ./gradlew --no-daemon javadoc
 
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v7
       with:
-        python-version: '3.7.15'
+        python-version: '3.12'
         architecture: 'x64'
 
     - name: Install dependencies
@@ -39,10 +41,16 @@ jobs:
         pip install --upgrade pip
         pip install mkdocs mkdocs-material pygments-bsl
     
-    - name: Dowload latest GitHub Pages
+    - name: Download latest GitHub Pages
       run: |
-        wget https://github.com/${{ github.repository }}/archive/gh-pages.zip || true
-        unzip gh-pages.zip || true
+        wget --tries=3 --timeout=30 https://github.com/${{ github.repository }}/archive/gh-pages.zip
+        unzip gh-pages.zip
+        for page in index.html en/index.html dev/index.html dev/en/index.html dev/bench/index.html dev/bench/data.js; do
+          if [ ! -s "${GITHUB_REPOSITORY#*/}-gh-pages/$page" ]; then
+            echo "::error::Previous GitHub Pages is missing $page"
+            exit 1
+          fi
+        done
         mkdir tmp-bench
     
     - name: Save latest Develop
@@ -50,25 +58,27 @@ jobs:
       run: |
         mkdir public
         mkdir public/dev
-        cp -R ${GITHUB_REPOSITORY#*/}-gh-pages/dev/. public/dev || true
+        cp -R ${GITHUB_REPOSITORY#*/}-gh-pages/dev/. public/dev
         
     - name: Save latest Master
       if: github.ref == 'refs/heads/develop'
       run: |
         mkdir public
-        cp -R ${GITHUB_REPOSITORY#*/}-gh-pages/. public || true
-        rm -rf public/dev || true
+        cp -R ${GITHUB_REPOSITORY#*/}-gh-pages/. public
+        rm -rf public/dev
         mkdir public/dev
 
     - name: Backup benchmark (master)
       if: github.ref == 'refs/heads/master'
       run: |
-        cp -R ${GITHUB_REPOSITORY#*/}-gh-pages/bench/. tmp-bench || true
+        if [ -d "${GITHUB_REPOSITORY#*/}-gh-pages/bench" ]; then
+          cp -R ${GITHUB_REPOSITORY#*/}-gh-pages/bench/. tmp-bench
+        fi
 
     - name: Backup benchmark (develop)
       if: github.ref == 'refs/heads/develop'
       run: |
-        cp -R ${GITHUB_REPOSITORY#*/}-gh-pages/dev/bench/. tmp-bench || true
+        cp -R ${GITHUB_REPOSITORY#*/}-gh-pages/dev/bench/. tmp-bench
             
     - name: Patch Develop
       if: github.ref == 'refs/heads/develop'
@@ -144,8 +154,17 @@ jobs:
         mkdir public/dev/en
         cp -R temp/site/. public/dev/en
         
+    - name: Validate publication
+      run: |
+        for page in index.html en/index.html dev/index.html dev/en/index.html dev/bench/index.html dev/bench/data.js; do
+          if [ ! -s "public/$page" ]; then
+            echo "::error::GitHub Pages publication is missing $page"
+            exit 1
+          fi
+        done
+
     - name: Deploy
-      uses: peaceiris/actions-gh-pages@v3.9.0
+      uses: peaceiris/actions-gh-pages@v4.1.0
       with:
         deploy_key: ${{ secrets.ACTIONS_DEPLOY_KEY }}
         publish_branch: gh-pages

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,11 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.SkipSupport;
+import com.github._1c_syntax.bsl.mdo.MD;
+import com.github._1c_syntax.bsl.mdo.ModuleOwner;
+import com.github._1c_syntax.bsl.support.SupportVariant;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBSL;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectComplex;
-import com.github._1c_syntax.mdclasses.mdo.attributes.AbstractMDOAttribute;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,14 +33,13 @@ import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMessage;
 
 class ForbiddenMetadataNameDiagnosticTest extends AbstractDiagnosticTest<ForbiddenMetadataNameDiagnostic> {
   ForbiddenMetadataNameDiagnosticTest() {
@@ -58,33 +57,32 @@ class ForbiddenMetadataNameDiagnosticTest extends AbstractDiagnosticTest<Forbidd
   void testCatalog() {
     var documentContext = spy(getDocumentContext());
 
-    var mdObjectBase = spy(context.getConfiguration().getChildren().stream()
-      .filter(mdo -> mdo.getMdoReference().getMdoRefRu().equalsIgnoreCase("Справочник.Справочник1"))
-      .findFirst()
+    var spyCatalog = spy(context.getConfiguration()
+      .findCatalog(catalog -> catalog.getName().equalsIgnoreCase("Справочник1"))
       .get());
 
     when(documentContext.getModuleType()).thenReturn(ModuleType.ManagerModule);
-    when(mdObjectBase.getName()).thenReturn("Справочник");
+    when(spyCatalog.getName()).thenReturn("Справочник");
 
-    List<AbstractMDOAttribute> attributes = new ArrayList<>();
+    List<MD> children = new ArrayList<>();
+    spyCatalog.getPlainStorageFields()
+      .forEach(mdo -> {
+        var spyMDO = spy(mdo);
+        when(spyMDO.getName()).thenReturn("РегистрСведений");
+        var mdoRef = spy(mdo.getMdoReference());
+        when(mdoRef.getMdoRefRu())
+          .thenReturn(mdo.getMdoReference().getMdoRefRu().replace("." + mdo.getName(), ".РегистрСведений"));
+        when(spyMDO.getMdoReference()).thenReturn(mdoRef);
+        when(spyMDO.getName()).thenReturn("РегистрСведений");
+        children.add(spyMDO);
+      });
 
-    ((AbstractMDObjectComplex) mdObjectBase).getAttributes().forEach(mdo -> {
-      var spyMDO = spy(mdo);
-      when(spyMDO.getName()).thenReturn("РегистрСведений");
-      var mdoRef = spy(mdo.getMdoReference());
-      when(mdoRef.getMdoRefRu())
-        .thenReturn(mdo.getMdoReference().getMdoRefRu().replace("." + mdo.getName(), ".РегистрСведений"));
-      when(spyMDO.getMdoReference()).thenReturn(mdoRef);
-      when(spyMDO.getName()).thenReturn("РегистрСведений");
-      attributes.add(spyMDO);
-    });
-
-    when(((AbstractMDObjectComplex) mdObjectBase).getAttributes()).thenReturn(attributes);
-    when(documentContext.getMdObject()).thenReturn(Optional.of(mdObjectBase));
+    when(spyCatalog.getPlainStorageFields()).thenReturn(children);
+    when(documentContext.getMdObject()).thenReturn(Optional.of(spyCatalog));
 
     List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
 
-    assertThat(diagnostics).hasSize(5);
+    assertThat(diagnostics).hasSize(18);
     assertThat(diagnostics, true)
       .hasMessageOnRange("Запрещено использовать имя `Справочник` для `Справочник.Справочник1`", 0, 0, 9)
       .hasMessageOnRange(
@@ -100,7 +98,7 @@ class ForbiddenMetadataNameDiagnosticTest extends AbstractDiagnosticTest<Forbidd
   void testOtherMDO() {
     var documentContext = spy(getDocumentContext());
 
-    Set<AbstractMDObjectBase> children = new HashSet<>();
+    List<MD> children = new ArrayList<>();
 
     context.getConfiguration().getChildren().forEach(mdo -> {
       var spyMDO = spy(mdo);
@@ -110,41 +108,6 @@ class ForbiddenMetadataNameDiagnosticTest extends AbstractDiagnosticTest<Forbidd
         .thenReturn(mdo.getMdoReference().getMdoRefRu().replace("." + mdo.getName(), ".РегистрСведений"));
       when(spyMDO.getMdoReference()).thenReturn(mdoRef);
       when(spyMDO.getName()).thenReturn("РегистрСведений");
-      children.add(spyMDO);
-    });
-
-    var configuration = spy(context.getConfiguration());
-    when(configuration.getChildren()).thenReturn(children);
-    var context = spy(documentContext.getServerContext());
-    when(context.getConfiguration()).thenReturn(configuration);
-    when(documentContext.getServerContext()).thenReturn(context);
-    when(documentContext.getModuleType()).thenReturn(ModuleType.SessionModule);
-
-    List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
-
-    // должен отфильтроваться справочник, т.к. модули у него есть
-    assertThat(diagnostics)
-      .hasSize(1)
-      .noneMatch(diagnostic -> diagnostic.getMessage().contains("для `Справочник.Справочник1"));
-  }
-
-  @Test
-  void testAllMDO() {
-    var documentContext = spy(getDocumentContext());
-
-    Set<AbstractMDObjectBase> children = new HashSet<>();
-
-    context.getConfiguration().getChildren().forEach(mdo -> {
-      var spyMDO = spy(mdo);
-      when(spyMDO.getName()).thenReturn("РегистрСведений");
-      var mdoRef = spy(mdo.getMdoReference());
-      when(mdoRef.getMdoRefRu())
-        .thenReturn(mdo.getMdoReference().getMdoRefRu().replace("." + mdo.getName(), ".РегистрСведений"));
-      when(spyMDO.getMdoReference()).thenReturn(mdoRef);
-      when(spyMDO.getName()).thenReturn("РегистрСведений");
-      if (mdo instanceof AbstractMDObjectBSL) {
-        when(((AbstractMDObjectBSL) spyMDO).getModules()).thenReturn(Collections.emptyList());
-      }
       children.add(spyMDO);
     });
 
@@ -160,10 +123,90 @@ class ForbiddenMetadataNameDiagnosticTest extends AbstractDiagnosticTest<Forbidd
     // должен отфильтроваться справочник, т.к. модули у него есть
     assertThat(diagnostics)
       .hasSize(3)
-      .allMatch(diagnostic -> diagnostic.getMessage().contains("Запрещено использовать имя `РегистрСведений` для"))
-      .anyMatch(diagnostic -> diagnostic.getMessage().contains("для `Справочник.РегистрСведений"))
-      .anyMatch(diagnostic -> diagnostic.getMessage().contains("для `Документ.РегистрСведений"))
-      .anyMatch(diagnostic -> diagnostic.getMessage().contains("для `РегистрСведений.РегистрСведений"))
+      .noneMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).contains("для `Справочник.Справочник1"));
+  }
+
+  @Test
+  void testAllMDO() {
+    var documentContext = spy(getDocumentContext());
+
+    List<MD> children = new ArrayList<>();
+
+    context.getConfiguration().getChildren().forEach(mdo -> {
+      var spyMDO = spy(mdo);
+      when(spyMDO.getName()).thenReturn("РегистрСведений");
+      var mdoRef = spy(mdo.getMdoReference());
+      when(mdoRef.getMdoRefRu())
+        .thenReturn(mdo.getMdoReference().getMdoRefRu().replace("." + mdo.getName(), ".РегистрСведений"));
+      when(spyMDO.getMdoReference()).thenReturn(mdoRef);
+      when(spyMDO.getName()).thenReturn("РегистрСведений");
+      if (mdo instanceof ModuleOwner) {
+        when(((ModuleOwner) spyMDO).getModules()).thenReturn(Collections.emptyList());
+      }
+      children.add(spyMDO);
+    });
+
+    var configuration = spy(context.getConfiguration());
+    when(configuration.getChildren()).thenReturn(children);
+    var context = spy(documentContext.getServerContext());
+    when(context.getConfiguration()).thenReturn(configuration);
+    when(documentContext.getServerContext()).thenReturn(context);
+    when(documentContext.getModuleType()).thenReturn(ModuleType.SessionModule);
+
+    List<Diagnostic> diagnostics = diagnosticInstance.getDiagnostics(documentContext);
+
+    // должен отфильтроваться справочник, т.к. модули у него есть
+    assertThat(diagnostics)
+      .hasSize(6)
+      .allMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).contains("Запрещено использовать имя `РегистрСведений` для"))
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).contains("для `Справочник.РегистрСведений"))
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).contains("для `Документ.РегистрСведений"))
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).contains("для `РегистрСведений.РегистрСведений"))
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).contains("для `КритерийОтбора.РегистрСведений"))
     ;
+  }
+
+  @Test
+  void testSkipSupportLockedMdoInSessionModule() {
+    var docCtx = spy(getDocumentContext());
+
+    var mdoList = new ArrayList<MD>();
+
+    for (var originalMdo : context.getConfiguration().getChildren()) {
+      var mockedMdo = spy(originalMdo);
+      when(mockedMdo.getName()).thenReturn("РегистрСведений");
+
+      var ref = spy(originalMdo.getMdoReference());
+      var updatedRefRu = originalMdo.getMdoReference().getMdoRefRu()
+        .replace("." + originalMdo.getName(), ".РегистрСведений");
+      when(ref.getMdoRefRu()).thenReturn(updatedRefRu);
+      when(mockedMdo.getMdoReference()).thenReturn(ref);
+
+      if (originalMdo instanceof ModuleOwner) {
+        when(((ModuleOwner) mockedMdo).getModules()).thenReturn(Collections.emptyList());
+      }
+
+      // Mark every MDO as not editable (locked on support)
+      when(mockedMdo.getSupportVariant()).thenReturn(SupportVariant.NOT_EDITABLE);
+
+      mdoList.add(mockedMdo);
+    }
+
+    var spyConfig = spy(context.getConfiguration());
+    when(spyConfig.getChildren()).thenReturn(mdoList);
+
+    var spyServerCtx = spy(docCtx.getServerContext());
+    when(spyServerCtx.getConfiguration()).thenReturn(spyConfig);
+    when(docCtx.getServerContext()).thenReturn(spyServerCtx);
+
+    when(docCtx.getModuleType()).thenReturn(ModuleType.SessionModule);
+
+    // Enable skip support for locked MDOs
+    configuration.getDiagnosticsOptions().setSkipSupport(SkipSupport.WITH_SUPPORT_LOCKED);
+
+    List<Diagnostic> results = diagnosticInstance.getDiagnostics(docCtx);
+
+    // All MDOs are NOT_EDITABLE and skipSupport is WITH_SUPPORT_LOCKED, so none should produce diagnostics
+    assertThat(results).isEmpty();
   }
 }

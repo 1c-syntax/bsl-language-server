@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -27,6 +27,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import lombok.Value;
 
+/**
+ * Узел вызова конструктора в дереве выражений.
+ * <p>
+ * Представляет вызов конструктора типа: Новый Структура(), Новый("Структура").
+ */
 @Value
 @RequiredArgsConstructor(access = AccessLevel.PRIVATE)
 @EqualsAndHashCode(callSuper = true)

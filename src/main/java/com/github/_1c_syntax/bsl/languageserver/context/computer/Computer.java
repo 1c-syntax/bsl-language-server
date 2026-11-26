@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,6 +21,19 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
+/**
+ * Базовый интерфейс для вычислителей (компьютеров) контекстной информации.
+ * <p>
+ * Используется для отложенного вычисления различных данных контекста документа:
+ * символов, метрик сложности, диагностик и других аспектов анализа.
+ *
+ * @param <T> Тип вычисляемых данных
+ */
 public interface Computer<T> {
+  /**
+   * Выполнить вычисление данных.
+   *
+   * @return Вычисленные данные
+   */
   T compute();
 }

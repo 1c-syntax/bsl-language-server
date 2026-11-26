@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -23,39 +23,58 @@ package com.github._1c_syntax.bsl.languageserver.codeactions;
 
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.QuickFixProvider;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfos;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticObjectProvider;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.info.DiagnosticInfo;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.stereotype.Component;
 
-import java.util.Map;
 import java.util.Optional;
 
+/**
+ * Поставщик быстрых исправлений для диагностик.
+ * <p>
+ * Связывает коды диагностик с классами, предоставляющими quick fix для этих диагностик.
+ */
 @Component
 @RequiredArgsConstructor
 public class QuickFixSupplier {
 
-  private final Map<String, DiagnosticInfo> diagnosticInfos;
+  private final DiagnosticInfos diagnosticInfos;
   private final DiagnosticObjectProvider diagnosticObjectProvider;
 
   // TODO: Рефакторинг апи квик-фиксов.
   // Нужно как-то связать, что квик-фикс исправляет диагностику с таким-то кодом.
   // Возможно через аннотацию.
 
+  /**
+   * Получить класс провайдера быстрых исправлений для указанного кода диагностики.
+   *
+   * @param diagnosticCode Код диагностики
+   * @param <T> Тип кода диагностики (строка или число)
+   * @return Класс провайдера быстрых исправлений, если диагностика поддерживает quick fix
+   */
   @SuppressWarnings("unchecked")
   public <T extends Either<String, Integer>> Optional<Class<? extends QuickFixProvider>> getQuickFixClass(
     T diagnosticCode
   ) {
+    var diagnosticInfosByCode = diagnosticInfos.getByCode();
     return Optional.ofNullable(
-      diagnosticInfos.get(DiagnosticCode.getStringValue(diagnosticCode))
+      diagnosticInfosByCode.get(DiagnosticCode.getStringValue(diagnosticCode))
     )
       .map(DiagnosticInfo::getDiagnosticClass)
       .filter(QuickFixProvider.class::isAssignableFrom)
       .map(aClass -> (Class<? extends QuickFixProvider>) aClass);
   }
 
+  /**
+   * Получить экземпляр провайдера быстрых исправлений.
+   *
+   * @param quickFixProviderClass Класс провайдера быстрых исправлений
+   * @return Экземпляр провайдера быстрых исправлений
+   */
   @SuppressWarnings("unchecked")
   public QuickFixProvider getQuickFixInstance(Class<? extends QuickFixProvider> quickFixProviderClass) {
     final Class<? extends BSLDiagnostic> diagnosticClass = (Class<? extends BSLDiagnostic>) quickFixProviderClass;

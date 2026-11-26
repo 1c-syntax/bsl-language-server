@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -26,13 +26,17 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.mdo.ExternalDataSource;
+import com.github._1c_syntax.bsl.mdo.MD;
+import com.github._1c_syntax.bsl.mdo.children.ExternalDataSourceCube;
+import com.github._1c_syntax.bsl.mdo.children.ExternalDataSourceCubeDimensionTable;
 import com.github._1c_syntax.bsl.parser.SDBLParser;
 import com.github._1c_syntax.bsl.types.ConfigurationSource;
 import com.github._1c_syntax.bsl.types.MDOType;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
+import com.github._1c_syntax.bsl.types.MdoReference;
 import org.antlr.v4.runtime.tree.ParseTree;
 
-import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 @DiagnosticMetadata(
@@ -50,17 +54,14 @@ public class QueryToMissingMetadataDiagnostic extends AbstractSDBLVisitorDiagnos
 
   @Override
   public ParseTree visitQueryPackage(SDBLParser.QueryPackageContext ctx) {
-
     if (documentContext.getServerContext().getConfiguration().getConfigurationSource() == ConfigurationSource.EMPTY) {
       return ctx;
     }
-
     return super.visitQueryPackage(ctx);
   }
 
   @Override
   public ParseTree visitMdo(SDBLParser.MdoContext mdo) {
-
     if (nonMdoExists(mdo.type.getText(), mdo.tableName.getText())) {
       diagnosticStorage.addDiagnostic(mdo,
         info.getMessage(mdo.getText()));
@@ -68,17 +69,77 @@ public class QueryToMissingMetadataDiagnostic extends AbstractSDBLVisitorDiagnos
     return super.visitMdo(mdo);
   }
 
+  @Override
+  public ParseTree visitDataSources(SDBLParser.DataSourcesContext ctx) {
+    ctx.dataSource().stream()
+      .map(SDBLParser.DataSourceContext::externalDataSourceTable)
+      .filter(Objects::nonNull)
+      .filter(eds -> eds.cubeName != null)
+      .filter(eds -> eds.mdo() != null && eds.mdo().tableName != null)
+      .forEach((SDBLParser.ExternalDataSourceTableContext eds) -> {
+        if (nonCubeExists(eds)) {
+          diagnosticStorage.addDiagnostic(eds.cubeName, info.getMessage(eds.cubeName.getText()));
+        }
+
+        var cubeDimTable = eds.tableName;
+
+        if (cubeDimTable != null && nonCubeDimTableExists(eds)) {
+          diagnosticStorage.addDiagnostic(cubeDimTable, info.getMessage(eds.tableName.getText()));
+        }
+      });
+
+    return super.visitDataSources(ctx);
+  }
+
   private boolean nonMdoExists(String mdoType, String mdoName) {
     return getMdo(mdoType, mdoName).isEmpty();
   }
 
-  private Optional<AbstractMDObjectBase> getMdo(String mdoTypeName, String mdoName) {
+  private boolean nonCubeExists(SDBLParser.ExternalDataSourceTableContext eds) {
+    return getCube(eds).isEmpty();
+  }
+
+  private boolean nonCubeDimTableExists(SDBLParser.ExternalDataSourceTableContext eds) {
+    return getCubeDimTable(eds).isEmpty();
+  }
+
+  private Optional<MD> getMdo(String mdoTypeName, String mdoName) {
     return MDOType.fromValue(mdoTypeName).flatMap(mdoType ->
-      documentContext.getServerContext().getConfiguration().getChildrenByMdoRef().entrySet().stream()
-        .filter(entry -> entry.getKey().getType() == mdoType
-          && mdoName.equalsIgnoreCase(entry.getValue().getName()))
-        .map(Map.Entry::getValue)
-        .findFirst()
-    );
+      documentContext.getServerContext().getConfiguration().findChild(MdoReference.create(mdoType, mdoName)));
+  }
+
+  /**
+   * Returns the external data source with the given name, case-insensitive.
+   */
+  private Optional<ExternalDataSource> getExternalDataSource(String name) {
+    return documentContext.getServerContext().getConfiguration().getExternalDataSources()
+      .stream()
+      .filter(mdo -> name.equalsIgnoreCase(mdo.getName()))
+      .findFirst();
+  }
+
+  private Optional<ExternalDataSourceCube> getCube(SDBLParser.ExternalDataSourceTableContext eds) {
+
+    var mdoName = eds.mdo().tableName.getText();
+    var cubeName = eds.cubeName.getText();
+
+    return getExternalDataSource(mdoName)
+      .flatMap(mdo -> mdo.getCubes().stream()
+      .filter(cube -> cubeName.equalsIgnoreCase(cube.getName()))
+      .findFirst());
+  }
+
+  private Optional<ExternalDataSourceCubeDimensionTable> getCubeDimTable(SDBLParser.ExternalDataSourceTableContext eds) {
+
+    var mdoName = eds.mdo().tableName.getText();
+    var cubeName = eds.cubeName.getText();
+    var cubeDimTableName = eds.tableName.getText();
+
+    return getExternalDataSource(mdoName)
+      .flatMap(mdo -> mdo.getCubes().stream()
+        .filter(cube -> cubeName.equalsIgnoreCase(cube.getName()))
+        .flatMap(c -> c.getDimensionTables().stream())
+        .filter(table -> cubeDimTableName.equalsIgnoreCase(table.getName()))
+        .findFirst());
   }
 }

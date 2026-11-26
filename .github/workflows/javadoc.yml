@@ -6,6 +6,12 @@ on:
       - "translations_*"
   pull_request:
 
+# Для pull_request группа общая для всех запусков одного PR - новый коммит отменяет предыдущие запуски.
+# Для push (анализ ветки, например develop) в группу попадает уникальный run_id, поэтому запуски не отменяются.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
 jobs:
   gatekeeper:
     runs-on: ubuntu-latest
@@ -13,15 +19,33 @@ jobs:
     steps:
       - run: echo 'Open the Golden Gate'
 
-  build:
-    needs: gatekeeper
+  check-pr-exists:
+    runs-on: ubuntu-latest
+    outputs:
+      has_pr: ${{ steps.check.outputs.has_pr }}
+    steps:
+      - uses: actions/checkout@v7
+      - name: Check if PR exists for this branch
+        id: check
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          result=$(.github/scripts/check-pr-exists.sh "${{ github.event_name }}" "${{ github.ref_name }}" "${{ github.repository }}")
+          echo "has_pr=$result" >> $GITHUB_OUTPUT
+
+  build-javadoc:
+    needs: [gatekeeper, check-pr-exists]
+    if: needs.gatekeeper.result == 'success' && needs.check-pr-exists.outputs.has_pr != 'true'
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up JDK
-      uses: actions/setup-java@v3
+    - uses: actions/checkout@v7
       with:
-        java-version: 17
-        distribution: 'temurin'
+        fetch-depth: 0
+    - name: Set up JDK
+      uses: actions/setup-java@v6
+      with:
+        java-version: 25
+        distribution: 'corretto'
+        cache: gradle
     - name: Check javadoc build
       run: ./gradlew javadoc --stacktrace

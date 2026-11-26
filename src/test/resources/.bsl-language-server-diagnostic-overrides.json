@@ -1,0 +1,28 @@
+{
+  "diagnostics": {
+    "overrideMinimumLSPDiagnosticLevel": "Warning",
+    "metadata": {
+      "EmptyCodeBlock": {
+        "severity": "BLOCKER",
+        "type": "ERROR"
+      },
+      "LineLength": {
+        "minutesToFix": 10,
+        "lspSeverity": "Error"
+      },
+      "CompilationDirectiveNeedLess": {
+        "type": "CODE_SMELL",
+        "severity": "CRITICAL",
+        "lspSeverity": "Error"
+      },
+      "AnnotatedLspSeverity": {
+        "lspSeverity": ""
+      }
+    },
+    "parameters": {
+      "LineLength": {
+        "maxLineLength": 100
+      }
+    }
+  }
+}

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,19 +22,27 @@
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import lombok.AllArgsConstructor;
-import lombok.Value;
 
 import java.util.List;
 import java.util.Map;
 
-@Value
-@AllArgsConstructor
-public class ComplexityData {
-  int fileComplexity;
-  int fileCodeBlockComplexity;
-  List<ComplexitySecondaryLocation> fileBlockComplexitySecondaryLocations;
-
-  Map<MethodSymbol, Integer> methodsComplexity;
-  Map<MethodSymbol, List<ComplexitySecondaryLocation>> methodsComplexitySecondaryLocations;
+/**
+ * Данные о сложности кода.
+ * <p>
+ * Содержит значения когнитивной или цикломатической сложности
+ * для файла в целом и для каждого метода отдельно.
+ * 
+ * @param fileComplexity                          Сложность всего файла
+ * @param fileCodeBlockComplexity                 Сложность блока кода файла (без учета сложности вложенных методов)
+ * @param fileBlockComplexitySecondaryLocations   Вторичные локации для блоков, увеличивающих сложность файла
+ * @param methodsComplexity                       Карта сложности методов (метод -> сложность)
+ * @param methodsComplexitySecondaryLocations     Карта вторичных локаций для методов (метод -> список локаций)
+ */
+public record ComplexityData(
+  int fileComplexity,
+  int fileCodeBlockComplexity,
+  List<ComplexitySecondaryLocation> fileBlockComplexitySecondaryLocations,
+  Map<MethodSymbol, Integer> methodsComplexity,
+  Map<MethodSymbol, List<ComplexitySecondaryLocation>> methodsComplexitySecondaryLocations
+) {
 }

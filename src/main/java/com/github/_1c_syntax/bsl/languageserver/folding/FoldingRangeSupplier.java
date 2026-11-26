@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -29,9 +29,16 @@ import java.util.List;
 /**
  * Базовый интерфейс для наполнения {@link com.github._1c_syntax.bsl.languageserver.providers.FoldingRangeProvider}
  * данными о областях сворачивания.
+ * <p>
+ * Сапплаер всегда задаёт осмысленный текст-заглушку свёрнутого блока через
+ * {@link FoldingRange#setCollapsedText(String)} там, где это уместно. Решение о том, передавать ли
+ * этот текст клиенту, принимает {@link com.github._1c_syntax.bsl.languageserver.providers.FoldingRangeProvider}
+ * в зависимости от заявленных клиентом возможностей.
  */
 public interface FoldingRangeSupplier {
   /**
+   * Рассчитывает области сворачивания для документа.
+   *
    * @param documentContext Контекст документа, для которого надо рассчитать области сворачивания
    * @return Список областей сворачивания
    */

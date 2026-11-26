@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -49,10 +49,10 @@ class CyclomaticComplexityComputerTest {
     // when
     Computer<ComplexityData> cyclomaticComplexityComputer = computerObjectProvider.getObject(documentContext);
     ComplexityData data = cyclomaticComplexityComputer.compute();
-    final Map<MethodSymbol, Integer> methodsComplexity = data.getMethodsComplexity();
+    final Map<MethodSymbol, Integer> methodsComplexity = data.methodsComplexity();
 
     //then
-    MethodSymbol example1 = documentContext.getSymbolTree().getMethods().get(0);
+    MethodSymbol example1 = documentContext.getSymbolTree().getMethods().getFirst();
     Integer example1Complexity = methodsComplexity.get(example1);
     assertThat(example1Complexity).isEqualTo(12);
 

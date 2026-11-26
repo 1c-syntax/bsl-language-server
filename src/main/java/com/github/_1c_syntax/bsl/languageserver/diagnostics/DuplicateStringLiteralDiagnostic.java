@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -29,7 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.Trees;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
@@ -142,12 +142,12 @@ public class DuplicateStringLiteralDiagnostic extends AbstractVisitorDiagnostic 
    *
    * @param ctx Узел блока для анализа
    */
-  private void checkStringLiterals(BSLParserRuleContext ctx) {
+  private void checkStringLiterals(ParserRuleContext ctx) {
     Trees.findAllRuleNodes(ctx, BSLParser.RULE_string).stream()
-      .map(BSLParserRuleContext.class::cast)
+      .map(ParserRuleContext.class::cast)
       .filter(this::checkLiteral)
       .collect(Collectors.groupingBy(this::getLiteralText))
-      .forEach((String name, List<BSLParserRuleContext> literals) -> {
+      .forEach((String name, List<ParserRuleContext> literals) -> {
         if (literals.size() > allowedNumberCopies) {
           List<DiagnosticRelatedInformation> relatedInformation = literals.stream()
             .map(literal -> RelatedInformation.create(
@@ -156,13 +156,13 @@ public class DuplicateStringLiteralDiagnostic extends AbstractVisitorDiagnostic 
               literal.getText()
             )).collect(Collectors.toList());
 
-          var firstLiteral = literals.get(0);
+          var firstLiteral = literals.getFirst();
           diagnosticStorage.addDiagnostic(firstLiteral, info.getMessage(firstLiteral.getText()), relatedInformation);
         }
       });
   }
 
-  private String getLiteralText(BSLParserRuleContext literal) {
+  private String getLiteralText(ParserRuleContext literal) {
     if (caseSensitive) {
       return literal.getText();
     } else {
@@ -176,7 +176,7 @@ public class DuplicateStringLiteralDiagnostic extends AbstractVisitorDiagnostic 
    * @param literal Строковый литерал
    * @return Необходимо анализировать
    */
-  private boolean checkLiteral(BSLParserRuleContext literal) {
+  private boolean checkLiteral(ParserRuleContext literal) {
     return literal.getText().length() >= minTextLength;
   }
 }

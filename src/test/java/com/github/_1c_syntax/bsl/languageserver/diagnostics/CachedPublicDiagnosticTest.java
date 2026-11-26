@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -23,8 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.bsl.mdo.support.ReturnValueReuse;
-import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
@@ -34,7 +34,6 @@ import org.springframework.test.annotation.DirtiesContext;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
@@ -48,7 +47,7 @@ class CachedPublicDiagnosticTest extends AbstractDiagnosticTest<CachedPublicDiag
     super(CachedPublicDiagnostic.class);
   }
 
-  private MDCommonModule module;
+  private CommonModule module;
   private DocumentContext documentContext;
 
   private static final String PATH_TO_METADATA = "src/test/resources/metadata/designer";
@@ -60,7 +59,7 @@ class CachedPublicDiagnosticTest extends AbstractDiagnosticTest<CachedPublicDiag
   @Test
   void test() {
 
-    Path testFile = Paths.get(PATH_TO_MODULE_CONTENT).toAbsolutePath();
+    Path testFile = Path.of(PATH_TO_MODULE_CONTENT).toAbsolutePath();
     getDocumentContextFromFile(testFile);
 
     // given
@@ -82,7 +81,7 @@ class CachedPublicDiagnosticTest extends AbstractDiagnosticTest<CachedPublicDiag
   @Test
   void testSession() {
 
-    Path testFile = Paths.get(PATH_TO_MODULE_CONTENT).toAbsolutePath();
+    Path testFile = Path.of(PATH_TO_MODULE_CONTENT).toAbsolutePath();
     getDocumentContextFromFile(testFile);
 
     // given
@@ -105,7 +104,7 @@ class CachedPublicDiagnosticTest extends AbstractDiagnosticTest<CachedPublicDiag
   @Test
   void testNegative() {
 
-    Path testFile = Paths.get(PATH_TO_MODULE_CONTENT).toAbsolutePath();
+    Path testFile = Path.of(PATH_TO_MODULE_CONTENT).toAbsolutePath();
     getDocumentContextFromFile(testFile);
 
     // given
@@ -124,7 +123,7 @@ class CachedPublicDiagnosticTest extends AbstractDiagnosticTest<CachedPublicDiag
   @Test
   void testEmpty() {
 
-    Path testFile = Paths.get(PATH_TO_MODULE_EMPTY_CONTENT).toAbsolutePath();
+    Path testFile = Path.of(PATH_TO_MODULE_EMPTY_CONTENT).toAbsolutePath();
     getDocumentContextFromFile(testFile);
 
     // given
@@ -144,7 +143,7 @@ class CachedPublicDiagnosticTest extends AbstractDiagnosticTest<CachedPublicDiag
   void getDocumentContextFromFile(Path testFile) {
 
     Path path = Absolute.path(PATH_TO_METADATA);
-    Path moduleFile = Paths.get(PATH_TO_MODULE_FILE).toAbsolutePath();
+    Path moduleFile = Path.of(PATH_TO_MODULE_FILE).toAbsolutePath();
 
     initServerContext(path);
     var configuration = context.getConfiguration();
@@ -154,8 +153,6 @@ class CachedPublicDiagnosticTest extends AbstractDiagnosticTest<CachedPublicDiag
       context
     ));
 
-
-    module = spy((MDCommonModule) configuration.getModulesByObject().get(moduleFile.toUri()));
-
+    module = spy((CommonModule) configuration.findChild(moduleFile.toUri()).get());
   }
 }

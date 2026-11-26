@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,7 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
+import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -37,8 +37,22 @@ public class ConsoleReporter implements DiagnosticReporter {
   }
 
   @Override
-  public void report(AnalysisInfo analysisInfo, Path outputDir) {
-    LOGGER.info("Analysis date: {}", analysisInfo.getDate());
-    LOGGER.info("File info:\n{}", analysisInfo.getFileinfos());
+  public boolean isMetricCalculationRequired() {
+    return true;
+  }
+
+  @Override
+  public void beginReport(ReportContext context, Path outputDir) {
+    LOGGER.info("Analysis date: {}", context.date());
+  }
+
+  @Override
+  public void accept(FileInfo fileInfo) {
+    LOGGER.info("{}", fileInfo);
+  }
+
+  @Override
+  public void endReport() {
+    // вывод уже отправлен в лог по мере анализа
   }
 }

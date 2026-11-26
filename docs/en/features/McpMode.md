@@ -1,0 +1,144 @@
+# Run in MCP mode
+
+BSL Language Server can act as a [Model Context Protocol (MCP)](https://modelcontextprotocol.io/) server — exposing 1C (BSL) and OneScript code analysis to AI agents and tools that support MCP.
+
+MCP tools run on top of the same engine as the LSP mode: the same parsing, the same providers. Workspace folders are registered with the `register_workspace_folder`/`list_workspace_folders` tools — see the "Workspace folders" section below.
+
+!!! warning "Experimental feature"
+    The MCP mode is built on Spring AI 2.0 (a milestone version at the time of writing). The API and behavior may change.
+
+## Run modes
+
+MCP can be exposed in several ways.
+
+### Standalone MCP server (the `mcp` command)
+
+The transport is selected with `--protocol`: `stdio` (default), `sse` or `streamable`. LSP is not started.
+
+`stdio` — the standard way to connect local tools:
+
+```sh
+java -jar bsl-language-server.jar mcp
+# same as: java -jar bsl-language-server.jar mcp --protocol stdio
+```
+
+`sse` — Server-Sent Events over HTTP on a built-in web server (endpoint `/sse`, messages at `/mcp/message`):
+
+```sh
+java -jar bsl-language-server.jar mcp --protocol sse --server.port=8080
+```
+
+`streamable` — Streamable HTTP over HTTP on a built-in web server (endpoint `/mcp`):
+
+```sh
+java -jar bsl-language-server.jar mcp --protocol streamable --server.port=8080
+```
+
+### Next to LSP over stdio
+
+LSP stays on `stdio`, while MCP is additionally exposed over [Streamable HTTP](https://modelcontextprotocol.io/) on a built-in web server. Enabled with the `--mcp` flag. The `lsp` command is the default mode, so it can be omitted:
+
+```sh
+java -jar bsl-language-server.jar --mcp --server.port=8080
+# same as: java -jar bsl-language-server.jar lsp --mcp --server.port=8080
+```
+
+### Next to LSP over websocket
+
+LSP over websocket and MCP over Streamable HTTP on the same web server:
+
+```sh
+java -jar bsl-language-server.jar websocket --mcp --server.port=8080
+```
+
+## Workspace folders
+
+The terminology is LSP's: a **workspace folder** is a single project root directory, and the set of registered folders makes up the **workspace** this server serves. What gets registered and passed to the tools is a folder.
+
+Every analysis tool answers only inside a registered workspace folder — a 1C configuration or OneScript project whose sources are indexed. A file outside every registered folder is not analysed, and the tools that are not bound to a file (`type_info`, `global_member_info`, `global_member_search`, `workspace_folder_symbol_search`) require an explicit `workspaceFolder` argument.
+
+The client workflow:
+
+1. `list_workspace_folders` — see what is already registered and get the `uri` values.
+2. `register_workspace_folder` with the project directory — if the project is not in the list yet. Pass the folder root: the directory an editor opens and an LSP client sends as a workspace folder, not a sources subfolder. It holds the sources (`src/cf` of a configuration, the OneScript sources) and, when present, the [configuration file](ConfigurationFile.md) `.bsl-language-server.json`, which is only read from the folder root. The tool indexes the sources and returns the folder's `uri`; registering an already registered directory does not re-index it.
+3. `unregister_workspace_folder` — release the index when the project is no longer needed. Only folders registered over MCP can be removed: a folder that came from the LSP client is the editor's workspace folder and is left alone, because the client cannot get it back. A folder the client additionally declares as a root (see MCP roots below) stays indexed, which the result reports as `stillDeclaredByRoots`: the folder goes away once the last source releases it.
+
+The error messages are self-contained: for an unknown or missing `workspaceFolder` the server lists the registered folders and names the tool that registers a new one, so an agent can recover without asking a human.
+
+The `file` argument takes a path to the file (absolute or relative to the server process working directory) or a `file:` URI exactly as other tools return it in `uri` fields — for example, from a `definition` or `find_references` answer.
+
+Additional sources of workspace folders:
+
+- **LSP.** In the combined modes (`lsp --mcp`, `websocket --mcp`) workspace folders come from the LSP client into the same shared context — there is no need to register them over MCP, they show up in `list_workspace_folders` right away.
+- **MCP roots.** Roots declared by the client through [MCP roots](https://modelcontextprotocol.io/docs/concepts/roots) are still indexed automatically, including re-sync on `notifications/roots/list_changed`. This works as long as the server speaks the `2025-11-25` revision of the protocol — the one implemented by the MCP SDK it is built on — where roots are still active.
+
+!!! warning "MCP roots are deprecated"
+    In the [2026-07-28](https://modelcontextprotocol.io/specification/2026-07-28/changelog) revision of the specification the roots feature (together with sampling and logging) is marked deprecated, and the `notifications/roots/list_changed` notification is removed from the protocol. The suggested migration is to pass directories through tool parameters and server configuration — which is exactly what `register_workspace_folder`/`list_workspace_folders` do. Roots support is kept for compatibility with older clients; under the MCP feature lifecycle policy it cannot be removed earlier than twelve months after that revision, and this server will drop it when it moves to the new revision.
+
+## Available tools
+
+| Tool | Purpose |
+| --- | --- |
+| `list_workspace_folders` | Registered workspace folders: the `uri` for the other tools and the name |
+| `register_workspace_folder` | Register a project directory as a workspace folder and index its sources; the name can be given explicitly, otherwise the directory name is used |
+| `unregister_workspace_folder` | Remove a workspace folder and release its index |
+| `analyze_file` | Diagnostics for a file |
+| `document_symbols` | Symbol tree of a file (methods, regions, variables). Each symbol has its whole range and the `selectionRange` of its name — a position for `definition`, `find_references` and `call_hierarchy` |
+| `symbol_text` | Source text of a symbol of a file — a region, method or `Перем`-declared variable, as in `document_symbols`: by name (case-insensitive), optionally narrowed by `scope` — a method name or `$module` for the module level, or by position (the symbol whose name is there, otherwise the innermost method or variable containing it). Each match tells its `scope`, where it is declared, and the `selectionRange` of its name; for methods the description comment above the declaration is included |
+| `find_references` | All references to the symbol at a position |
+| `call_hierarchy` | Incoming and outgoing calls of the method/procedure at a position |
+| `hover` | Hover info for a symbol (signature, type, documentation) |
+| `definition` | Go to the symbol declaration |
+| `type_info` | Properties, methods, events and constructors of a type looked up by name (e.g. `Массив`/`Array`), with platform metadata of both the type itself and its members (since/deprecated versions, execution contexts, notes, examples, see-also) |
+| `global_member_info` | A global member looked up by name (e.g. `Сообщить`/`Message`) — function, property or system enum with signatures and metadata |
+| `global_member_search` | Search global context members — functions (`СтартовыйСценарий`/`StartupScript`), properties (`Метаданные`/`Metadata`) and system enums; fuzzy matching and relevance ranking like autocomplete, grouped by category, can be narrowed by categories |
+| `type_at_position` | Inferred type of the expression under the cursor and its available methods and properties |
+| `workspace_folder_symbol_search` | Search methods and module-level variables of a workspace folder (regions are not indexed): exact, prefix, camel-hump and word-start matches first; when `fuzzy` is true, substring-inside-word and subsequence matches follow; ranked like `workspace/symbol`, with `limit` bounding the answer; only symbols of the requested folder are returned |
+
+Positions (`line`, `character`) are zero-based, as in LSP.
+
+No tool modifies files on disk. The analysis tools are marked read-only (`readOnlyHint`), so a client should not ask for confirmation on every call. The workspace-folder management tools change server state and are therefore not read-only; `unregister_workspace_folder` is additionally marked destructive (`destructiveHint`) because it throws away the index that was built, so a client may reasonably ask for confirmation on that one.
+
+## Launch options
+
+| Option | Mode | Purpose |
+| --- | --- | --- |
+| `-c`, `--configuration` `<path>` | all | Path to the global configuration file (see [Configuration file](ConfigurationFile.md)) |
+| `--protocol` `<stdio\|sse\|streamable>` | `mcp` | Transport of the standalone MCP server: `stdio` (default), `sse` or `streamable` |
+| `--mcp` | `lsp` (default), `websocket` | Also expose MCP over Streamable HTTP |
+| `--mcp-path` `<path>` | `lsp --mcp`, `websocket --mcp` | MCP endpoint path (default `/mcp`) |
+| `--server.port=<port>` | `mcp --protocol sse\|streamable`, `lsp --mcp`, `websocket --mcp` | Port of the built-in web server |
+
+## Client configuration examples
+
+### stdio
+
+The client launches the server itself and talks to it over stdio (`mcpServers` format):
+
+```json
+{
+  "mcpServers": {
+    "bsl-language-server": {
+      "command": "java",
+      "args": ["-jar", "/path/to/bsl-language-server.jar", "mcp"]
+    }
+  }
+}
+```
+
+### Streamable HTTP
+
+The server is started separately (`--mcp` or `websocket --mcp`), and the client connects to the endpoint by URL:
+
+```json
+{
+  "mcpServers": {
+    "bsl-language-server": {
+      "type": "streamable-http",
+      "url": "http://localhost:8080/mcp"
+    }
+  }
+}
+```
+
+The default address is `http://<host>:<port>/mcp`; the path is changed with `--mcp-path`, the port with `--server.port`.

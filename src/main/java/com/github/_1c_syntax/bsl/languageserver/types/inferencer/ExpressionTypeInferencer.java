@@ -1,0 +1,2378 @@
+/*
+ * This file is a part of BSL Language Server.
+ *
+ * Copyright (c) 2018-2026
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ *
+ * BSL Language Server is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3.0 of the License, or (at your option) any later version.
+ *
+ * BSL Language Server is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BSL Language Server.
+ */
+package com.github._1c_syntax.bsl.languageserver.types.inferencer;
+
+import com.github._1c_syntax.bsl.languageserver.cfg.BasicBlockVertex;
+import com.github._1c_syntax.bsl.languageserver.cfg.CfgBuildOptions;
+import com.github._1c_syntax.bsl.languageserver.cfg.CfgVertex;
+import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraphIndex;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContentUnavailableException;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
+import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
+import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
+import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
+import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
+import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
+import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.types.CommentTypeResolver;
+import com.github._1c_syntax.bsl.languageserver.types.index.InferredExpressionTypeIndex;
+import com.github._1c_syntax.bsl.languageserver.types.index.MethodReturnTypeIndexer;
+import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex;
+import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbol;
+import com.github._1c_syntax.bsl.languageserver.types.model.LazyTypeSet;
+import com.github._1c_syntax.bsl.languageserver.types.model.LocalField;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.languageserver.types.registry.MemberLookupSession;
+import com.github._1c_syntax.bsl.languageserver.utils.Methods;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOperationNode;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ConstructorCallNode;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionTreeBuildingVisitor;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.MethodCallNode;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TernaryOperatorNode;
+import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.UnaryOperationNode;
+import com.github._1c_syntax.bsl.parser.BSLLexer;
+import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.mdo.CommonModule;
+import com.github._1c_syntax.utils.Lazy;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.TerminalNode;
+import org.eclipse.lsp4j.Position;
+import org.jspecify.annotations.Nullable;
+import org.springframework.context.event.EventListener;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
+import org.springframework.stereotype.Component;
+
+import java.net.URI;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Deque;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.function.Function;
+
+/**
+ * Ленивый инференсер типов выражений.
+ * <p>
+ * Работает поверх {@link BslExpression}; устойчив к битым/неполным выражениям
+ * (любая ошибка → {@link TypeSet#EMPTY} плюс {@code UNKNOWN}-семантика на
+ * верхнем уровне). Защита от циклов — стек посещённых символов в
+ * {@link InferenceContext}, ограниченный по глубине.
+ * <p>
+ * Резолв идентификаторов — через {@link ReferenceResolver}, который дёшев и
+ * накапливает finder'ы из всего проекта (variable, method, module и т.д.).
+ */
+@Component
+@WorkspaceScope
+@RequiredArgsConstructor
+@Slf4j
+public class ExpressionTypeInferencer {
+
+  private static final int MAX_DEPTH = 32;
+  private static final Set<String> MODE_INDEPENDENT_DATA_TYPES = Set.of("Структура", "ФиксированнаяСтруктура",
+    "Массив", "Соответствие", "ФиксированноеСоответствие", "ТаблицаЗначений", "СписокЗначений");
+
+  /**
+   * Сколько раз тело рекурсивной функции пересчитывается со своим же приближением.
+   * <p>
+   * Каждый проход добавляет к узлу поля, которых на прошлом приближении ещё не было:
+   * первый знает поля, заполненные не из рекурсии, второй — и те, что пришли из неё.
+   * Дальше набор имён перестаёт расти, и расчёт останавливается сам; предел нужен
+   * только как страховка.
+   */
+  private static final int MAX_REFINING_PASSES = 3;
+
+  /** Методная форма индексатора: {@code Коллекция.Получить(Индекс)} — это {@code Коллекция[Индекс]}. */
+  private static final String ELEMENT_GETTER = "Получить";
+
+  private static final TypeRef NUMBER = new TypeRef(TypeKind.PRIMITIVE, "Число");
+  private static final TypeRef STRING = new TypeRef(TypeKind.PRIMITIVE, "Строка");
+  private static final TypeRef BOOLEAN = new TypeRef(TypeKind.PRIMITIVE, "Булево");
+  private static final TypeRef DATE = new TypeRef(TypeKind.PRIMITIVE, "Дата");
+  private static final TypeRef UNDEFINED = new TypeRef(TypeKind.PRIMITIVE, "Неопределено");
+  private static final TypeRef NULL = new TypeRef(TypeKind.PRIMITIVE, "Null");
+
+  private final TypeRegistry typeRegistry;
+  private final CompilationContextResolver compilationContextResolver;
+  private final SymbolTypeIndex symbolTypeIndex;
+  private final InferredExpressionTypeIndex inferredExpressionTypeIndex;
+  private final TableCollectionInference tableCollectionInference;
+  private final OpenDataObjectInference openDataObjectInference;
+  private final FormExpressionInference formExpressionInference;
+  private final CommonModuleByNameInference commonModuleByNameInference;
+  private final PropertyMethodInference propertyMethodInference;
+  private final XdtoFactoryInference xdtoFactoryInference;
+  private final CommentTypeResolver commentTypeResolver;
+  private final VariableFlowAnalyzer variableFlowAnalyzer;
+  private final ControlFlowGraphIndex controlFlowGraphIndex;
+  private final GuardConditionNarrowing guardConditionNarrowing;
+  private final ReturnTypeFromBodyInference returnTypeFromBodyInference;
+  private final MethodReturnTypeIndexer methodReturnTypeIndexer;
+  private final ReferenceResolver referenceResolver;
+  private final ReferenceIndex referenceIndex;
+  private final ScopeMemberTypeResolver scopeMemberTypeResolver;
+  private final OScriptFrameworkTypeResolver oScriptFrameworkTypeResolver;
+
+  /**
+   * Источники типа, объявленного о переменной помимо кода её тела. Внедряются списком:
+   * новый вид объявления — новый бин, а не правка этого класса.
+   */
+  private final List<VariableTypeSource> variableTypeSources;
+
+  /**
+   * Рабочая область наполнена: каждый её файл разобран хотя бы раз. Бин живёт по экземпляру на
+   * рабочую область, поэтому и признак — её собственный.
+   */
+  private volatile boolean workspacePopulated;
+
+  private InferenceContext contextFor(DocumentContext document, @Nullable ExecutionContext executionContext) {
+    var generation = methodReturnTypeIndexer.configurationGeneration();
+    if (DiagnosticDeclarationSession.current() == null) {
+      return new InferenceContext(document, executionContext, new CompilationContextMemo(), generation);
+    }
+    var compilation = DiagnosticDeclarationSession.compilationMemo(
+      com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder.get(),
+      inferredExpressionTypeIndex.inputRevision());
+    return new InferenceContext(document, executionContext, compilation, generation);
+  }
+
+  /**
+   * Запоминает, что рабочая область наполнена.
+   *
+   * @param event событие окончания наполнения рабочей области.
+   */
+  // Раньше всех слушателей: по этому же событию считаются типы, и расчёт должен видеть
+  // область уже наполненной.
+  @Order(Ordered.HIGHEST_PRECEDENCE)
+  @EventListener
+  public void handleServerContextPopulated(ServerContextPopulatedEvent event) {
+    workspacePopulated = true;
+  }
+
+  /**
+   * Вывести типы выражения в контексте документа.
+   */
+  public TypeSet infer(BslExpression expression, DocumentContext documentContext) {
+    return infer(expression, documentContext, null);
+  }
+
+  /**
+   * Вывести тип выражения для выбранного контекста компиляции.
+   * <p>
+   * Недостижимые ветки препроцессора исключаются из расчёта переменных и возвращаемых значений.
+   * При переходе в другой метод учитывается его целевой контекст, включая серверный вызов.
+   * Полные корневые результаты после наполнения рабочей области сохраняются отдельно по режимам.
+   * Они не записываются в общий индекс возвращаемых типов; окружения потока также разделены по режимам.
+   * <p>
+   * Если AST вызываемой функции уже выгружен, используется известный индексу результат
+   * без ограничения контекста. Запрос не загружает её исходник заново ради уточнения.
+   *
+   * @param expression выражение из текущего AST документа.
+   * @param documentContext документ, которому принадлежит выражение.
+   * @param executionContext режим компиляции или {@code null} для возможных режимов в позиции выражения.
+   * @return выведенные типы; пустой набор при отсутствии результата или срыве расчёта.
+   *     Пустой набор сам по себе не доказывает недоступность вызова.
+   */
+  public TypeSet infer(BslExpression expression, DocumentContext documentContext,
+                       @Nullable ExecutionContext executionContext) {
+    var ast = expression == null ? null : expression.getRepresentingAst();
+    // Только внешний запрос после наполнения: вложенные вычисления сохраняют собственные
+    // стек рекурсии, бюджет глубины и меняющиеся ячейки потока.
+    var query = workspacePopulated && ast != null
+      ? inferredExpressionTypeIndex.contextualQuery(documentContext.getUri(), ast, executionContext) : null;
+    if (query != null) {
+      var cached = query.cached();
+      if (cached != null) {
+        return cached;
+      }
+    }
+    var ctx = contextFor(documentContext, executionContext);
+    ctx.sharedRootFlow = true;
+    if (workspacePopulated) {
+      variableFlowAnalyzer.startContextTracking(ctx.flowSession);
+      // declaredTypes получает только символ; значения параметров не зависят от режима запроса.
+      ctx.flowSession.contextFreeDeclarations = true;
+    }
+    try {
+      if (workspacePopulated && executionContext == null && ast != null) {
+        var cached = inferredExpressionTypeIndex.get(documentContext.getUri(), ast);
+        if (cached != null) {
+          return cached;
+        }
+        var contexts = expressionContexts(expression, ctx, true);
+        if (contexts.isPresent() && query != null) {
+          return inferExternalContexts(expression, ctx, ast, contexts.orElseThrow(), query);
+        }
+      }
+      return inferRootExpression(expression, ctx, query);
+    } catch (StackOverflowError | RuntimeException e) {
+      // Сорвавшийся расчёт отдаёт пустой тип — анализ из-за одного выражения падать не
+      // должен. Но молча это делать нельзя: снаружи пустой тип неотличим от честного
+      // «ничего не вывелось», и поломка выглядит как «типы просто не выводятся».
+      LOGGER.error("Вывод типа выражения сорвался: {}", documentContext.getUri(), e);
+      return TypeSet.EMPTY;
+    }
+  }
+
+  /** Только свежие внешние запросы; внутренний вывод не читает эти корневые результаты. */
+  private TypeSet inferExternalContexts(BslExpression expression, InferenceContext parent,
+                                        ParseTree ast, Set<ExecutionContext> contexts,
+                                        InferredExpressionTypeIndex.ContextualQuery rootQuery) {
+    var parts = new ArrayList<InferredExpressionTypeIndex.ContextualQuery>(contexts.size());
+    var values = new ArrayList<TypeSet>(contexts.size());
+    var result = TypeSet.EMPTY;
+    var complete = true;
+    for (var context : ExecutionContext.copyOf(contexts)) {
+      var query = inferredExpressionTypeIndex.contextualQuery(parent.documentContext.getUri(), ast, context);
+      var types = query.cached();
+      if (types == null) {
+        var nested = parent.nested(parent.documentContext, context);
+        // Сохраняется уровень прежнего нейтрального обхода перед переходом в режим.
+        nested.depth++;
+        types = inferRootExpression(expression, nested, query);
+        complete &= completeRoot(nested);
+      }
+      parts.add(query);
+      values.add(types);
+      result = result.union(types);
+    }
+    if (complete && hasCurrentReturnInputs(parent)) {
+      inferredExpressionTypeIndex.putNeutralFromContexts(rootQuery, parts, values, result);
+    }
+    return result;
+  }
+
+  private TypeSet inferRootExpression(BslExpression expression, InferenceContext ctx,
+                                      InferredExpressionTypeIndex.@Nullable ContextualQuery query) {
+    var result = inferInternal(expression, ctx, true);
+    if (query != null && completeRoot(ctx)) {
+      inferredExpressionTypeIndex.put(query, result, ctx.dependencies);
+    }
+    return result;
+  }
+
+  private static boolean completeRoot(InferenceContext ctx) {
+    if (ctx.cycleCut || ctx.bodyInFlowCut || ctx.depthCut) {
+      return false;
+    }
+    return !ctx.sawMissing() && !ctx.failed && !ctx.flowSession.computing() && hasCurrentReturnInputs(ctx);
+  }
+
+  private static boolean hasCurrentReturnInputs(InferenceContext ctx) {
+    var generation = ctx.contextualReturns.returnGeneration;
+    return generation == null || generation.isCurrent();
+  }
+
+  /**
+   * Получить возвращаемые типы метода в контексте его документа.
+   * <p>
+   * Непосчитанное тело рассчитывается тем же путём, что и при выводе типа вызова:
+   * с кешированием и общей защитой от рекурсии при обходе локальных функций.
+   *
+   * @param method метод, чей документ доступен для чтения тела.
+   * @return объявленные и выведенные типы возвращаемого значения.
+   */
+  public TypeSet inferReturnTypes(MethodSymbol method) {
+    return methodReturnType(method, contextFor(method.getOwner(), null));
+  }
+
+  // ---------------------------------------------------------------------------
+  // Core dispatch
+  // ---------------------------------------------------------------------------
+
+  private TypeSet inferInternal(@Nullable BslExpression node, InferenceContext ctx) {
+    return inferInternal(node, ctx, false);
+  }
+
+  /**
+   * Входной запрос наследует контекст вызывающего метода даже вне инструкций препроцессора.
+   * Индексация возвращаемых типов использует общий результат объявления; она не должна
+   * фиксировать его по контексту одного вызывающего. Кеш выражения остаётся общим для
+   * позиционных запросов, а вычисления внутри выбранного режима используют отдельные окружения.
+   */
+  private TypeSet inferInternal(@Nullable BslExpression node, InferenceContext ctx, boolean useCallerContext) {
+    if (node == null) {
+      return TypeSet.EMPTY;
+    }
+    if (ctx.depth >= MAX_DEPTH) {
+      ctx.depthCut = true;
+      return TypeSet.EMPTY;
+    }
+    var cacheKey = cacheKeyFor(node, ctx);
+    var uri = ctx.documentContext.getUri();
+    var revision = inferredExpressionTypeIndex.inputRevision();
+    if (cacheKey != null) {
+      var cached = inferredExpressionTypeIndex.get(uri, cacheKey);
+      if (cached != null) {
+        return cached;
+      }
+    }
+    ctx.depth++;
+    try {
+      var result = inferWithContexts(node, ctx, useCallerContext);
+      if (cacheKey != null && completeRoot(ctx)) {
+        inferredExpressionTypeIndex.put(uri, cacheKey, result, ctx.dependencies, revision);
+      }
+      return result;
+    } finally {
+      ctx.depth--;
+    }
+  }
+
+  /**
+   * Общий кеш принимает только корневой запрос без текущих приближений и ограничения режима.
+   * При рекурсии символов узел может принадлежать чужому документу, а во время расчёта потока
+   * тип переменной ещё меняется. Эти результаты нельзя сохранять под URI исходного запроса.
+   */
+  private static @Nullable ParseTree cacheKeyFor(BslExpression node, InferenceContext ctx) {
+    return ctx.executionContext == null && ctx.visited.isEmpty() && ctx.inProgress.isEmpty()
+      && !ctx.flowSession.computing() ? node.getRepresentingAst() : null;
+  }
+
+  private TypeSet inferWithContexts(BslExpression node, InferenceContext ctx, boolean useCallerContext) {
+    var narrowed = expressionContexts(node, ctx, useCallerContext);
+    if (narrowed.isPresent()) {
+      return inferInContexts(narrowed.orElseThrow(), ctx, nested -> inferInternal(node, nested));
+    }
+    return inferNode(node, ctx);
+  }
+
+  private Optional<Set<ExecutionContext>> expressionContexts(BslExpression node, InferenceContext ctx,
+                                                           boolean useCallerContext) {
+    var ast = node.getRepresentingAst();
+    if (ctx.executionContext != null || ast == null || node.getNodeType() == ExpressionNodeType.LITERAL) {
+      return Optional.empty();
+    }
+    var position = Ranges.create(ast).getStart();
+    return useCallerContext ? queryContextsAt(ctx, ast, position)
+      : compilationContextResolver.narrowedContextsAt(ctx.documentContext, ast, position);
+  }
+
+  private static void markContextSensitive(InferenceContext ctx) {
+    if (ctx.flowSession.contextTracking) {
+      ctx.flowSession.contextSensitive = true;
+    }
+  }
+
+  private TypeSet inferNode(BslExpression node, InferenceContext ctx) {
+    if (node.getNodeType() == ExpressionNodeType.ERROR) {
+      markContextSensitive(ctx);
+    }
+    return switch (node.getNodeType()) {
+      case LITERAL -> inferLiteral(node);
+      case IDENTIFIER -> inferIdentifier(node, ctx);
+      case CALL -> inferCall(node, ctx);
+      case BINARY_OP -> inferBinary((BinaryOperationNode) node, ctx);
+      case UNARY_OP -> inferUnary((UnaryOperationNode) node);
+      case TERNARY_OP -> inferTernary((TernaryOperatorNode) node, ctx);
+      case SKIPPED_CALL_ARG, ERROR -> TypeSet.EMPTY;
+    };
+  }
+
+  // ---------------------------------------------------------------------------
+  // Literals & identifiers
+  // ---------------------------------------------------------------------------
+
+  private TypeSet inferLiteral(BslExpression node) {
+    var ast = node.getRepresentingAst();
+    if (ast instanceof BSLParser.ConstValueContext constValue) {
+      return literalTypeOf(constValue);
+    }
+    if (ast instanceof TerminalNode terminal) {
+      return literalTypeOf(terminal);
+    }
+    return TypeSet.EMPTY;
+  }
+
+  private TypeSet literalTypeOf(BSLParser.ConstValueContext ctx) {
+    if (ctx.string() != null) return TypeSet.of(STRING);
+    if (ctx.numeric() != null) return TypeSet.of(NUMBER);
+    if (ctx.TRUE() != null || ctx.FALSE() != null) return TypeSet.of(BOOLEAN);
+    if (ctx.DATETIME() != null) return TypeSet.of(DATE);
+    if (ctx.UNDEFINED() != null) return TypeSet.of(UNDEFINED);
+    if (ctx.NULL() != null) return TypeSet.of(NULL);
+    return TypeSet.EMPTY;
+  }
+
+  private TypeSet literalTypeOf(TerminalNode terminal) {
+    var type = terminal.getSymbol().getType();
+    if (type == BSLParser.STRING || type == BSLParser.STRINGSTART
+      || type == BSLParser.STRINGPART || type == BSLParser.STRINGTAIL) {
+      return TypeSet.of(STRING);
+    }
+    if (type == BSLParser.TRUE || type == BSLParser.FALSE) return TypeSet.of(BOOLEAN);
+    if (type == BSLParser.UNDEFINED) return TypeSet.of(UNDEFINED);
+    if (type == BSLParser.NULL) return TypeSet.of(NULL);
+    if (type == BSLParser.DATETIME) return TypeSet.of(DATE);
+    if (type == BSLParser.FLOAT || type == BSLParser.DECIMAL) return TypeSet.of(NUMBER);
+    return TypeSet.EMPTY;
+  }
+
+  private TypeSet inferIdentifier(BslExpression node, InferenceContext ctx) {
+    var ast = node.getRepresentingAst();
+    if (!(ast instanceof TerminalNode terminal)) {
+      markContextSensitive(ctx);
+      return TypeSet.EMPTY;
+    }
+    return identifierType(terminal, ctx);
+  }
+
+  /**
+   * Тип голого идентификатора под терминалом — резолв и фоллбэк целиком внутри; вызывающий
+   * ({@link #inferIdentifier}) про фоллбэки не знает.
+   * <p>
+   * Если ссылка резолвится в переменную/метод/self-член — берём её тип целиком, даже честно
+   * пустой (локальная переменная без единого присваивания): подменять его self-свойством того
+   * же имени нельзя, иначе вернётся self-member-затенение.
+   * <p>
+   * Если же ссылки нет ИЛИ она указывает на не-типизируемый здесь вид символа (например,
+   * {@code ModuleSymbol} модуля-аксессора общего модуля) — тип выводит фоллбэк: неявное поле
+   * extends-родителя → self-свойство self-типа модуля → глобальное свойство. Только
+   * {@code PROPERTY}: голый идентификатор без вызова не может ссылаться на метод (вызов
+   * резолвится в inferCall).
+   */
+  private TypeSet identifierType(TerminalNode terminal, InferenceContext ctx) {
+    var maybeRef = referenceResolver.findTargetSymbol(ctx.documentContext.getUri(), terminal);
+    if (maybeRef.isPresent()) {
+      var target = maybeRef.get();
+      // Синтетический self-свойство/метод/глобал — тип напрямую из MemberDescriptor.
+      if (target instanceof PlatformMemberSymbol platformMember) {
+        return platformMember.getDescriptor().returnTypes();
+      }
+      // Переменная — её тип в этой точке кода, даже честно пустой: невыведенный тип
+      // нельзя подменять self-свойством того же имени.
+      if (target instanceof VariableSymbol variable) {
+        if (ctx.flowSession.contextTracking && (variable.getOwner() != ctx.documentContext
+          || !(variable.getScope() instanceof MethodSymbol)
+          || (variable.getKind() != VariableKind.DYNAMIC && variable.getKind() != VariableKind.LOCAL
+            && !(variable.getKind() == VariableKind.PARAMETER && ctx.flowSession.contextFreeDeclarations)))) {
+          markContextSensitive(ctx);
+        }
+        return flowTypeAt(variable, terminal, ctx);
+      }
+      if (target instanceof MethodSymbol method) {
+        return methodReturnType(method, ctx);
+      }
+      // Иначе вид символа здесь не типизируем — падаем на фоллбэк ниже.
+    }
+    if (!(maybeRef.orElse(null) instanceof ModuleSymbol)) {
+      markContextSensitive(ctx);
+    }
+    var text = terminal.getText();
+    if (text.isBlank()) {
+      return TypeSet.EMPTY;
+    }
+    var implicitParent = oScriptFrameworkTypeResolver.implicitParentFieldType(text, ctx.documentContext);
+    if (!implicitParent.isEmpty()) {
+      return implicitParent;
+    }
+    return scopeMemberTypeResolver.selfMemberType(ctx.documentContext, text, MemberKind.PROPERTY)
+      .orElseGet(() -> scopeMemberTypeResolver.globalPropertyType(ctx.documentContext, text));
+  }
+
+  // ---------------------------------------------------------------------------
+  // Calls (constructor / method)
+  // ---------------------------------------------------------------------------
+
+  private TypeSet inferCall(BslExpression node, InferenceContext ctx) {
+    if (node instanceof ConstructorCallNode constructor) {
+      return inferConstructor(constructor, ctx);
+    }
+    if (node instanceof MethodCallNode methodCall) {
+      return inferMethodCall(methodCall, ctx);
+    }
+    return TypeSet.EMPTY;
+  }
+
+  private TypeSet inferConstructor(ConstructorCallNode constructor, InferenceContext ctx) {
+    var typeName = extractTypeName(constructor);
+    if (typeName == null || typeName.isBlank()) {
+      markContextSensitive(ctx);
+      return TypeSet.EMPTY;
+    }
+    var base = typeRegistry.resolve(typeName, ctx.documentContext.getFileType())
+      .map(TypeSet::of)
+      .orElseGet(() -> TypeSet.of(typeRegistry.intern(TypeKind.USER, typeName)));
+    if (ctx.flowSession.contextTracking && (!constructor.isStaticallyTyped()
+      || base.refs().stream().anyMatch(ref -> ref.kind() != TypeKind.PLATFORM
+        || !MODE_INDEPENDENT_DATA_TYPES.contains(ref.qualifiedName())))) {
+      markContextSensitive(ctx);
+    }
+    base = attachDefaultElementTypes(base);
+    if (OpenDataObjectInference.isStructureLike(typeName)) {
+      base = openDataObjectInference.applyConstructorKeys(base, constructor, node -> inferInternal(node, ctx));
+    }
+    if (OpenDataObjectInference.isTypeDescriptionType(typeName)) {
+      base = openDataObjectInference.applyTypeDescriptionTypes(
+        base, constructor, ctx.documentContext.getFileType());
+    }
+    return base;
+  }
+
+  /**
+   * Прикрепить к каждому {@link TypeRef} в наборе элементы-по-умолчанию из
+   * {@link TypeRegistry#getOwnElementTypes(TypeRef)}. Это позволяет
+   * {@code Для Каждого X Из Коллекция Цикл} увидеть тип X (например,
+   * {@code КлючИЗначение} для {@code Соответствие}) без явных JsDoc-аннотаций.
+   * <p>
+   * Уточнение, добытое на месте, не перетирается: оно точнее реестрового умолчания.
+   * Так {@code Массив из Число} не превращается в {@code Массив из Число, Произвольный}
+   * (#4179), а {@code ТаблицаЗначений}, выгруженная из табличной части, сохраняет
+   * строку с её колонками вместо обобщённой {@code СтрокаТаблицыЗначений}. Отсюда же
+   * берётся заглушка «элемент любой»: реестр её не отдаёт, поэтому уточнению не с чем
+   * смешиваться и там, где уточнение приходит не сюда, а слиянием наборов.
+   */
+  private TypeSet attachDefaultElementTypes(TypeSet base) {
+    if (base.isEmpty()) {
+      return base;
+    }
+    var result = base;
+    for (var ref : base.refs()) {
+      if (!base.getElementTypes(ref).isEmpty()) {
+        continue;
+      }
+      var defaults = typeRegistry.getOwnElementTypes(ref);
+      if (!defaults.isEmpty()) {
+        result = result.withElement(ref, defaults);
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Уточнение типа члена, которое из объявления не выводится: члены табличных
+   * коллекций (зависят от колонок получателя и аргументов вызова) и
+   * {@code Получить(Индекс)} как методная форма индексатора.
+   *
+   * @param leftTypes  типы получателя.
+   * @param memberName имя члена.
+   * @param call       узел вызова, если член — метод; {@code null} для свойства.
+   * @param ctx        контекст инференса.
+   * @return уточнённый тип; {@code null}, если уточнять нечем и нужен общий путь.
+   */
+  @Nullable
+  private TypeSet refinedMemberTypes(TypeSet leftTypes, String memberName,
+                                     @Nullable MethodCallNode call, InferenceContext ctx) {
+    var tableTypes = tableCollectionInference.infer(
+      leftTypes, memberName, call, ctx.documentContext.getFileType());
+    if (tableTypes != null) {
+      return tableTypes;
+    }
+    if (call == null) {
+      return null;
+    }
+    var refinedCall = refinedCallTypes(leftTypes, memberName, call, ctx);
+    if (refinedCall != null) {
+      return refinedCall;
+    }
+    if (!ELEMENT_GETTER.equalsIgnoreCase(memberName)) {
+      return null;
+    }
+    var element = elementGetterTypes(leftTypes);
+    return element.isEmpty() ? null : element;
+  }
+
+  /**
+   * Уточнения, применимые только к вызову: значение описания типов, формы и фабрика XDTO.
+   *
+   * @param leftTypes  типы получателя.
+   * @param memberName имя вызванного метода.
+   * @param call       узел вызова.
+   * @param ctx        контекст инференса.
+   * @return уточнённый тип; {@code null}, если ни одно правило не сработало.
+   */
+  @Nullable
+  private TypeSet refinedCallTypes(TypeSet leftTypes, String memberName,
+                                   MethodCallNode call, InferenceContext ctx) {
+    var adjusted = openDataObjectInference.adjustedValueTypes(leftTypes, memberName);
+    if (adjusted != null) {
+      return adjusted;
+    }
+    var moduleByName = commonModuleByNameInference.refinedCallTypes(
+      leftTypes, memberName, call, ctx.documentContext.getFileType());
+    if (moduleByName != null) {
+      return moduleByName;
+    }
+    var formTypes = formExpressionInference.refinedCallTypes(
+      ctx.documentContext, leftTypes, memberName, call, node -> inferInternal(node, ctx));
+    if (formTypes != null) {
+      return formTypes;
+    }
+    return xdtoFactoryInference.refinedCallTypes(leftTypes, memberName, call,
+      node -> inferInternal(node, ctx), ctx.documentContext.getFileType());
+  }
+
+  /**
+   * Тип элемента для {@code Получить(Индекс)}. Платформа объявляет возврат как
+   * {@code Произвольный}, хотя это ровно то же, что даёт индексатор, — поэтому
+   * цепочка {@code …ВыгрузитьКолонку("КТУ").Получить(0)} без уточнения обрывалась.
+   * <p>
+   * KV-коллекции исключены: у {@code Соответствие.Получить(Ключ)} результат — значение,
+   * а элемент коллекции — {@code КлючИЗначение}, и подстановка элемента там была бы ошибкой.
+   *
+   * @param leftTypes типы получателя.
+   * @return типы элемента; {@link TypeSet#EMPTY}, если правило неприменимо.
+   */
+  private static TypeSet elementGetterTypes(TypeSet leftTypes) {
+    for (var ref : leftTypes.refs()) {
+      if (OpenDataObjectInference.isStructureOrMapLike(ref.qualifiedName())) {
+        return TypeSet.EMPTY;
+      }
+    }
+    var result = TypeSet.EMPTY;
+    for (var ref : leftTypes.refs()) {
+      result = result.union(leftTypes.getElementTypes(ref));
+    }
+    return result;
+  }
+
+  /**
+   * Имя типа, названное в конструкторе: идентификатором ({@code Новый Структура}) либо
+   * строковым литералом ({@code Новый("Структура")}).
+   * <p>
+   * Имя, которое вычисляется ({@code Новый("AddIn." + Имя)}, {@code Новый(ИмяТипа)}),
+   * статически неизвестно. Текст такого выражения именем типа не является — у конкатенации
+   * узел представлен знаком операции, и под именем «+» заводился бы несуществующий тип.
+   *
+   * @param constructor вызов конструктора.
+   * @return имя типа; {@code null}, если оно не названо литералом.
+   */
+  @Nullable
+  private static String extractTypeName(ConstructorCallNode constructor) {
+    if (constructor.getTypeName().getNodeType() != ExpressionNodeType.LITERAL) {
+      return null;
+    }
+    var ast = constructor.getTypeName().getRepresentingAst();
+    if (ast == null) {
+      return null;
+    }
+    return stripQuotes(ast.getText());
+  }
+
+  private static String stripQuotes(String s) {
+    if (s == null || s.isEmpty()) {
+      return s;
+    }
+    var first = s.charAt(0);
+    var last = s.charAt(s.length() - 1);
+    if ((first == '"' || first == '\'') && first == last) {
+      return s.substring(1, s.length() - 1);
+    }
+    return s;
+  }
+
+  private TypeSet inferMethodCall(MethodCallNode call, InferenceContext ctx) {
+    var name = call.getName();
+    if (name == null) {
+      return TypeSet.EMPTY;
+    }
+    // Терминал имени вызова уже под рукой — резолвим по нему, без спуска по AST
+    // от корня к позиции в reference-finder'ах. Для имени, не попавшего в
+    // индекс ссылок проекта (платформенная глобальная функция, неквалифицированный
+    // вызов self-метода модуля), reference остаётся пустым Optional — шаг 1
+    // ниже тогда пуст, и резолвинг продолжается шагами 2/3.
+    var reference = referenceResolver.findTargetSymbol(ctx.documentContext.getUri(), name);
+    // 1. Источник-источник в проекте — это MethodSymbol. Если ссылка резолвится
+    //    именно в него, доверяем результату целиком — даже честно пустому
+    //    (процедура или функция без объявленного типа возврата) — и НЕ падаем
+    //    дальше на глобальную функцию/self-член с тем же именем: совпадение
+    //    имени не делает их одним и тем же символом (см. identifierType — тот же
+    //    принцип для голых идентификаторов).
+    var localMethod = reference
+      .filter(MethodSymbol.class::isInstance)
+      .map(MethodSymbol.class::cast);
+    // 0. Общий модуль по имени: у вызова `ОбщийМодуль("Х")` объявленный возврат обобщённый —
+    //    «какой-то модуль», — а имя названо литералом, поэтому тип конкретного модуля точнее.
+    //    Проверяется до шага 1 по той же причине, что и открытие формы по имени: иначе
+    //    выиграл бы обобщённый возврат. Вызов у получателя (`ОбщегоНазначения.ОбщийМодуль("Х")`)
+    //    уточняется в refinedCallTypes — туда приходит тип получателя.
+    var moduleByName = commonModuleByNameInference.localCallTypes(
+      call, ctx.documentContext.getFileType());
+    if (moduleByName != null) {
+      return moduleByName;
+    }
+    if (localMethod.isPresent()) {
+      return methodReturnType(localMethod.get(), ctx);
+    }
+    // 2. Открытие формы по имени: тип конкретной формы точнее, чем обобщённый
+    //    возвращаемый тип платформенной функции, поэтому проверяется до шага 3.
+    var formType = formExpressionInference.openedFormType(ctx.documentContext, name.getText(), call);
+    if (formType != null) {
+      return formType;
+    }
+    // 2а. Обратное преобразование данных формы — та же причина: у обеих функций
+    //     объявленный возврат обобщённый (`Произвольный`), а прикладной тип известен
+    //     из аргументов вызова либо из объявления реквизита.
+    var convertedValue = formExpressionInference.convertedValueType(
+      ctx.documentContext, name.getText(), call, null, node -> inferInternal(node, ctx));
+    if (convertedValue != null) {
+      return convertedValue;
+    }
+    // 3. Платформенная глобальная функция (СтрНайти и т.п.) — через
+    //    GlobalScopeProvider (полный MemberDescriptor с TypeSet, включая union).
+    var globalReturn = scopeMemberTypeResolver.globalFunctionType(ctx.documentContext, name.getText());
+    if (!globalReturn.isEmpty()) {
+      return globalReturn;
+    }
+    // 4. Неквалифицированный вызов платформенного метода self-типа модуля.
+    //    Тот же self-тип, что и в inferIdentifier для свойств, здесь —
+    //    MemberKind.METHOD.
+    return scopeMemberTypeResolver.selfMemberType(ctx.documentContext, name.getText(), MemberKind.METHOD)
+      .orElse(TypeSet.EMPTY);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Binary, unary, ternary
+  // ---------------------------------------------------------------------------
+
+  private TypeSet inferBinary(BinaryOperationNode node, InferenceContext ctx) {
+    var op = node.getOperator();
+    if (op == BslOperator.DEREFERENCE) {
+      return inferDereference(node, ctx);
+    }
+    if (op == BslOperator.INDEX_ACCESS) {
+      return inferIndexAccess(node, ctx);
+    }
+    if (isLogical(op) || isComparison(op)) {
+      return TypeSet.of(BOOLEAN);
+    }
+    if (op == BslOperator.ADD) {
+      // Тип `+` определяется ЛЕВЫМ операндом — правый приводится к нему.
+      var left = inferInternal(node.getLeft(), ctx);
+      if (left.refs().contains(STRING)) {
+        return TypeSet.of(STRING);
+      }
+      if (left.refs().contains(DATE)) {
+        return TypeSet.of(DATE);
+      }
+      return TypeSet.of(NUMBER);
+    }
+    if (op == BslOperator.SUBTRACT || op == BslOperator.MULTIPLY
+      || op == BslOperator.DIVIDE || op == BslOperator.MODULO) {
+      return TypeSet.of(NUMBER);
+    }
+    return TypeSet.EMPTY;
+  }
+
+  /**
+   * Индексатор {@code coll[i]}. Семантика зависит от того, KV-коллекция перед нами
+   * или последовательностная:
+   * <ul>
+   *   <li>KV (Структура/Соответствие и Fixed-варианты): {@code coll[key]} — это
+   *       значение по ключу. Если индекс — строковый литерал, резолвим точно через
+   *       {@link TypeSet#getLocalFields(TypeRef)}; если индекс динамический —
+   *       union по всем известным значениям; если ключа нет — empty.</li>
+   *   <li>Sequence (Массив/ТЗ/СписокЗначений/коллекции колонок/etc.): возвращаем
+   *       элементы через {@link TypeSet#getElementTypes(TypeRef)} — это сразу
+   *       подхватывает динамические поля строки ТЗ и платформенные members
+   *       элемента.</li>
+   * </ul>
+   * KV-приоритет включается, если у левого типа есть прямые {@code localFields}
+   * (т.е. {@code .Вставить(...)} в скоупе уже наполнил карту ключей). Иначе —
+   * sequence-путь по умолчанию.
+   */
+  private TypeSet inferIndexAccess(BinaryOperationNode node, InferenceContext ctx) {
+    var leftTypes = inferInternal(node.getLeft(), ctx);
+    if (leftTypes.isEmpty()) {
+      return TypeSet.EMPTY;
+    }
+    var kvFields = OpenDataObjectInference.fieldsOf(leftTypes);
+    if (!kvFields.isEmpty()) {
+      var keyName = OpenDataObjectInference.stringLiteralOf(node.getRight());
+      if (keyName != null) {
+        var trimmed = keyName.trim();
+        TypeSet exact = TypeSet.EMPTY;
+        for (var entry : kvFields.entrySet()) {
+          if (entry.getKey().equalsIgnoreCase(trimmed)) {
+            exact = exact.union(entry.getValue());
+          }
+        }
+        return exact;
+      }
+      // Динамический индекс — union по всем известным value-типам.
+      TypeSet union = TypeSet.EMPTY;
+      for (var values : kvFields.values()) {
+        union = union.union(values);
+      }
+      return union;
+    }
+    var byName = formExpressionInference.memberByLiteralName(
+      ctx.documentContext, leftTypes, OpenDataObjectInference.stringLiteralOf(node.getRight()));
+    if (byName != null) {
+      return byName;
+    }
+    return elementsOfSequences(leftTypes);
+  }
+
+  /**
+   * Элементы последовательностных коллекций получателя.
+   * <p>
+   * Структуроподобные пропускаются: их индексатор даёт значение по ключу, а элемент
+   * соответствия — пара «ключ и значение», и её отдают только обходу {@code Для Каждого}.
+   * Состав ключей здесь уже известен пустым, то есть тип значения неизвестен; подставить
+   * вместо него пару значило бы объявить у значения чужие члены, а его собственные —
+   * несуществующими.
+   *
+   * @param leftTypes типы получателя.
+   * @return объединение типов элементов; {@link TypeSet#EMPTY}, если элементов нет.
+   */
+  private static TypeSet elementsOfSequences(TypeSet leftTypes) {
+    var result = TypeSet.EMPTY;
+    for (var ref : leftTypes.refs()) {
+      if (!OpenDataObjectInference.isStructureOrMapLike(ref.qualifiedName())) {
+        result = result.union(leftTypes.getElementTypes(ref));
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Типы, которые даёт один член получателя, если он тот самый.
+   *
+   * @param member       член типа-получателя.
+   * @param memberName   имя, которое ищется.
+   * @param expectedKind вид: метод или свойство.
+   * @param elementSet   элементы получателя — их поля прокидываются на строку, возвращённую
+   *                     методами вида {@code Добавить}/{@code Получить}.
+   * @param ctx          контекст расчёта.
+   * @return типы члена; {@link TypeSet#EMPTY}, если член не тот.
+   */
+  private TypeSet typesOfMember(MemberDescriptor member, String memberName, MemberKind expectedKind,
+                                TypeSet elementSet, InferenceContext ctx) {
+    if (member.kind() != expectedKind || !member.matches(memberName)) {
+      return TypeSet.EMPTY;
+    }
+    // Для метода проектного модуля (в т.ч. вызванного межмодульно как
+    // ОбщийМодуль.Метод()) берём полный тип возврата из индекса символов —
+    // с localFields структуры/ТЗ, объявленными в JsDoc. MemberDescriptor
+    // несёт лишь головной ref, поэтому без этого поля структуры терялись.
+    if (expectedKind == MemberKind.METHOD) {
+      var symbolReturn = member.getSourceSymbol()
+        .filter(MethodSymbol.class::isInstance)
+        .map(MethodSymbol.class::cast)
+        .map(sourceMethod -> methodReturnType(sourceMethod, ctx))
+        .filter(returned -> !returned.isEmpty());
+      if (symbolReturn.isPresent()) {
+        return symbolReturn.get();
+      }
+    }
+    // Возможные типы члена (union); UNKNOWN-ref'ы отбрасываем.
+    var result = TypeSet.EMPTY;
+    for (var ref : member.returnTypes().refs()) {
+      if (ref != null && ref.kind() != TypeKind.UNKNOWN) {
+        var returned = enrichReturnRefWithElementFields(ref, elementSet);
+        result = result.union(carryDeclaredDecorations(member.returnTypes(), ref, returned));
+      }
+    }
+    return result;
+  }
+
+  private TypeSet inferDereference(BinaryOperationNode node, InferenceContext ctx) {
+    var leftTypes = inferInternal(node.getLeft(), ctx);
+    if (leftTypes.isEmpty()) {
+      return TypeSet.EMPTY;
+    }
+    var right = node.getRight();
+    var methodCall = right instanceof MethodCallNode call ? call : null;
+    String memberName;
+    MemberKind expectedKind;
+    if (methodCall != null) {
+      var nameNode = methodCall.getName();
+      memberName = nameNode == null ? null : nameNode.getText();
+      expectedKind = MemberKind.METHOD;
+    } else {
+      var rightAst = right == null ? null : right.getRepresentingAst();
+      memberName = memberNameOf(rightAst);
+      expectedKind = MemberKind.PROPERTY;
+    }
+    if (memberName == null || memberName.isBlank()) {
+      return TypeSet.EMPTY;
+    }
+    var refined = refinedMemberTypes(leftTypes, memberName, methodCall, ctx);
+    if (refined != null) {
+      return refined;
+    }
+    if (expectedKind == MemberKind.PROPERTY) {
+      var fromLocalFields = OpenDataObjectInference.fieldTypes(leftTypes, memberName);
+      if (!fromLocalFields.isEmpty()) {
+        return fromLocalFields;
+      }
+    }
+    TypeSet result = TypeSet.EMPTY;
+    var unparsedModule = false;
+    // Когда рабочая область наполнена, разобрано всё, что вообще разбирается. Тип без членов
+    // из кода тогда — тип, у которого кода нет: элементы обычной формы, модуль без исходников.
+    var populating = !workspacePopulated;
+    for (var leftType : leftTypes.refs()) {
+      // Колонки/поля, накопленные на elementTypes левого типа (например, ТЗ с
+      // Колонки.Добавить("X")) должны прокидываться на строку, возвращённую
+      // методами вида .Добавить()/.Получить()/.Вставить(), у которых return-тип
+      // совпадает с element-ref'ом коллекции.
+      var elementSet = leftTypes.getElementTypes(leftType);
+      var members = typeRegistry.getMembers(leftType, ctx.documentContext.getFileType());
+      // Тип конфигурации, у которого нет ни одного члена из самой конфигурации, — модуль,
+      // чей файл ещё не разобран: типы объявлены заранее, а члены приносит разбор.
+      // Платформенные члены (у общего модуля это ЭтотОбъект) не в счёт: они приходят из
+      // синтакс-помощника и о разборе ничего не говорят — потому и различаются по
+      // standardLibrary. Пока область наполняется, обращение в такой модуль отвечает
+      // пустотой, ничем не отличимой от честной; расчёт придётся повторить.
+      unparsedModule = unparsedModule
+        || (populating
+        && leftType.kind() == TypeKind.CONFIGURATION
+        && members.stream().allMatch(MemberDescriptor::standardLibrary));
+      for (var member : MemberLookupSession.candidates(members, expectedKind, memberName)) {
+        result = result.union(typesOfMember(member, memberName, expectedKind, elementSet, ctx));
+      }
+    }
+    if (result.isEmpty() && unparsedModule) {
+      ctx.noteMissingData();
+    }
+    return attachDefaultElementTypes(result);
+  }
+
+  /**
+   * Если {@code ret} совпадает с одним из element-ref'ов коллекции на левом
+   * типе — построить TypeSet с этим ref'ом и его {@code localFields} из
+   * {@code elementSet} (то есть «передать» накопленные колонки/поля строки).
+   * Если же {@code ret} — коллекция, элемент которой и есть такая строка
+   * ({@code Дерево.Строки}), уточнение переезжает внутрь этой коллекции.
+   * Иначе — обычный {@link TypeSet#of(TypeRef[])}.
+   */
+  private TypeSet enrichReturnRefWithElementFields(TypeRef ret, TypeSet elementSet) {
+    if (elementSet.refs().contains(ret)) {
+      return TypeSet.of(ret).withFields(ret, elementSet.getLocalFields(ret));
+    }
+    var carried = TypeSet.EMPTY;
+    for (var elementRef : typeRegistry.getDefaultElementTypes(ret).refs()) {
+      if (elementSet.refs().contains(elementRef)) {
+        carried = carried.union(
+          TypeSet.of(elementRef).withFields(elementRef, elementSet.getLocalFields(elementRef)));
+      }
+    }
+    return carried.isEmpty() ? TypeSet.of(ret) : TypeSet.of(ret).withElement(ret, carried);
+  }
+
+  /**
+   * Переносит на выведенный тип уточнения, объявленные в самом
+   * {@link com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor}:
+   * тип элемента коллекции и поля «открытого» объекта. Голого набора ref'ов мало —
+   * возврат вида «{@code Массив} строк вот этой табличной части» весь смысл держит
+   * именно в уточнении, и без переноса оно терялось бы.
+   *
+   * @param declared объявленные типы возврата члена.
+   * @param ref      ref, для которого собирается результат.
+   * @param target   уже собранный результат по этому ref'у.
+   * @return результат с перенесёнными уточнениями.
+   */
+  private static TypeSet carryDeclaredDecorations(TypeSet declared, TypeRef ref, TypeSet target) {
+    var result = target;
+    var elements = declared.getElementTypes(ref);
+    if (!elements.isEmpty()) {
+      result = result.withElement(ref, elements);
+    }
+    return result.withFields(ref, declared.getLocalFields(ref));
+  }
+
+  @Nullable
+  private static String memberNameOf(ParseTree ast) {
+    if (ast instanceof TerminalNode terminal) {
+      return terminal.getText();
+    }
+    return ast.getText();
+  }
+
+  @SuppressWarnings("unused")
+  private TypeSet inferUnary(UnaryOperationNode node) {
+    var op = node.getOperator();
+    if (op == BslOperator.NOT) {
+      return TypeSet.of(BOOLEAN);
+    }
+    return TypeSet.of(NUMBER);
+  }
+
+  private TypeSet inferTernary(TernaryOperatorNode node, InferenceContext ctx) {
+    var truthy = inferInternal(node.getTruePart(), ctx);
+    var falsy = inferInternal(node.getFalsePart(), ctx);
+    return truthy.union(falsy);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Reference resolution
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Возвращаемые типы вызванного метода с защитой от цикла инференса. Результат всегда
+   * присутствует, даже если сам тип — пустой {@link TypeSet#EMPTY}: честно невыведенный
+   * тип нельзя подменять self-свойством того же имени.
+   */
+  private TypeSet methodReturnType(MethodSymbol method, InferenceContext ctx) {
+    var owner = method.getOwner();
+    var contextual = ctx.executionContext != null && (owner == ctx.documentContext
+      || owner.getServerContext().getDocumentState(owner) == DocumentState.WITH_CONTENT);
+    if (ctx.visited.contains(method)) {
+      ctx.cutMethods.add(method);
+      ctx.cycleCut = true;
+      return recursiveKnot(method, ctx);
+    }
+    if (bodyInFlow(method, ctx)) {
+      ctx.cutMethods.add(method);
+      // Тело считается не ради значения метода, поэтому приближения значения ни у кого
+      // нет, и отвечать ребру нечем. Уточняющий проход тут не поможет: он подставляет
+      // приближение методу из visited, а вызывающих пересчитывал бы в свежем контексте —
+      // заново проходя те же круги по ячейкам. Это дорого и в замечаниях ничего не меняло.
+      ctx.bodyInFlowCut = true;
+      return TypeSet.EMPTY;
+    }
+    // Чужой выгруженный модуль отвечает из общего индекса, одинаково во всех режимах.
+    if (ctx.flowSession.contextTracking && !ctx.flowSession.contextSensitive
+        && contextual && !hasModeIndependentModuleReturn(method, ctx)) {
+      markContextSensitive(ctx);
+    }
+    ctx.visited.add(method);
+    ctx.consulted.add(method);
+    if (owner != ctx.documentContext) {
+      ctx.dependencies.add(owner.getUri());
+    }
+    try {
+      // При первичном rebuild свой AST уже доступен, а ServerContext обновит состояние
+      // только после обработчиков события. Контекстный результат не должен попасть в общий индекс.
+      if (contextual) {
+        try {
+          return contextualReturnTypes(method, ctx, ctx.executionContext);
+        } catch (DocumentContentUnavailableException exception) {
+          LOGGER.debug("Document {} was released while inferring contextual return types", owner.getUri(), exception);
+          ctx.contextualReturns.noteCellRead();
+          // Документ мог закрыться после проверки состояния; известные типы остаются в индексе.
+          return symbolTypeIndex.getReturnTypes(method);
+        }
+      }
+      // Заранее посчитаны только экспортные функции. Неэкспортную, вызванную из её же
+      // документа, считаем на месте — дерево разбора здесь доступно. Документы сравниваются
+      // по ссылке: на URI в рабочей области приходится ровно один DocumentContext, а
+      // сравнение самих URI нормализует проценты и стоит заметно дороже.
+      return neutralReferenceType(method, ctx);
+    } finally {
+      ctx.visited.remove(method);
+    }
+  }
+
+  private TypeSet neutralReferenceType(MethodSymbol method, InferenceContext ctx) {
+    ctx.contextualReturns.noteCellRead();
+    TypeSet result;
+    if (method.getOwner() == ctx.documentContext) {
+      result = neutralReturnTypes(method, ctx);
+    } else {
+      if (method.isFunction() && !methodReturnTypeIndexer.isIndexed(method)) {
+        ctx.noteMissingMethod(method);
+      }
+      result = symbolTypeIndex.getReturnTypes(method);
+    }
+    // Объявленное значение ссылается на ещё не разобранный модуль. По самому типу
+    // этого не видно, но опиравшийся на него расчёт придётся повторить.
+    if (symbolTypeIndex.returnAwaitsUnparsedModule(method)) {
+      ctx.noteMissingData();
+    }
+    return result;
+  }
+
+  /** Повторный вызов с теми же входами переиспользует и неполный ответ только внутри этого запроса. */
+  private TypeSet neutralReturnTypes(MethodSymbol method, InferenceContext ctx) {
+    var guard = ctx.contextualReturns.guard(new ContextualReturnKey(method, null), ctx);
+    var reusable = canUseContextualReturns(ctx);
+    var previous = reusable ? ctx.contextualReturns.get(guard) : null;
+    if (previous != null) {
+      inheritReturn(previous, ctx);
+      return previous.types();
+    }
+    var revision = ctx.contextualReturns.revision();
+    var nested = ctx.nested(method.getOwner(), null);
+    var inputs = reusable ? ctx.contextualReturns.approximationInputs(guard) : new Object();
+    var approximate = ctx.flowSession.cellsComputing();
+    var computed = methodReturnTypeIndexer.computeIfAbsent(method, () -> returnTypesOfBody(method, nested),
+      approximate, inputs, ctx.contextualReturns.returnGeneration);
+    var types = computed == null ? symbolTypeIndex.getReturnTypes(method)
+      : symbolTypeIndex.getReturnTypes(method, computed.types());
+    if (!hasCurrentReturnInputs(ctx)) {
+      nested.noteMissingData();
+    }
+    var result = returnSnapshot(types, nested);
+    inheritReturn(result, ctx);
+    ctx.failed |= nested.failed;
+    if (computed != null && reusable && canUseContextualReturns(nested)) {
+      ctx.contextualReturns.remember(guard, result, revision);
+    }
+    return types;
+  }
+
+  private static void inheritReturn(ContextualReturnCache.Result result, InferenceContext ctx) {
+    ctx.inheritMissingInputs(result.missingInputs(), result.incompleteCellInput());
+    ctx.cycleCut |= result.cycleCut();
+    ctx.bodyInFlowCut |= result.bodyInFlowCut();
+    ctx.depthCut |= result.depthCut();
+    ctx.consulted.addAll(result.consulted());
+    ctx.cutMethods.addAll(result.cutMethods());
+    ctx.flowBodiesRead.addAll(result.flowBodiesRead());
+    ctx.dependencies.addAll(result.dependencies());
+  }
+
+  private static ContextualReturnCache.Result returnSnapshot(TypeSet types, InferenceContext ctx) {
+    return new ContextualReturnCache.Result(types, Set.copyOf(ctx.consulted), Set.copyOf(ctx.dependencies),
+      Set.copyOf(ctx.cutMethods), Set.copyOf(ctx.flowBodiesRead), ctx.cycleCut, ctx.bodyInFlowCut, ctx.depthCut,
+      ctx.missingInputSnapshot(), ctx.hasIncompleteCellInput());
+  }
+
+  /** Локальная функция без ограничений компиляции, возвращающая только имена общих модулей. */
+  private boolean hasModeIndependentModuleReturn(MethodSymbol method, InferenceContext ctx) {
+    var owner = method.getOwner();
+    if (owner != ctx.documentContext || !method.isFunction() || method.getCompilerDirectiveKind().isPresent()
+        || owner.getMdObject().filter(CommonModule.class::isInstance).isEmpty()
+        || !ExecutionContext.forFileType(owner.getFileType()).equals(owner.getSymbolTree().getMethodPreprocessorContexts(method))) {
+      return false;
+    }
+    var session = DiagnosticDeclarationSession.current();
+    return session != null && session.moduleReturnsOnly(method, inferredExpressionTypeIndex.inputRevision(), () -> {
+      var body = VariableFlowAnalyzer.bodyAt(owner, method.getSubNameRange().getStart());
+      if (body == null) return false;
+      var returns = Trees.findAllRuleNodes(body, BSLParser.RULE_returnStatement);
+      if (returns.isEmpty()) return false;
+      for (var statement : returns) {
+        var expression = DiagnosticDeclarationSession.expressionTree(((BSLParser.ReturnStatementContext) statement).expression());
+        if (expression == null || !isModuleReference(expression, owner)) return false;
+      }
+      return !VariableFlowAnalyzer.containsPreprocessor(body);
+    });
+  }
+
+  private boolean isModuleReference(BslExpression expression, DocumentContext owner) {
+    return expression.getNodeType() == ExpressionNodeType.IDENTIFIER
+      && expression.getRepresentingAst() instanceof TerminalNode terminal
+      && referenceResolver.findTargetSymbol(owner.getUri(), terminal).orElse(null) instanceof ModuleSymbol;
+  }
+
+  /**
+   * Вывести контекстный тип, сохраняя содержимое чужого документа на время расчёта.
+   * <p>
+   * Блокировка чужого документа берётся без ожидания: текущий расчёт уже может держать
+   * блокировку своего документа, а встречный вызов не должен замкнуть цикл ожидания.
+   * Занятый документ отвечает собранными типами, но такой ответ помечается неполным,
+   * чтобы временное приближение не закрепилось в кэше вместо контекстного результата.
+   *
+   * @param method вызываемый метод.
+   * @param ctx состояние текущего запроса вывода.
+   * @param context режим в точке вызова.
+   * @return контекстные типы либо собранные типы занятого или уже выгруженного документа.
+   */
+  private TypeSet contextualReturnTypes(MethodSymbol method, InferenceContext ctx, ExecutionContext context) {
+    var owner = method.getOwner();
+    if (owner == ctx.documentContext) {
+      return inferContextualReturnTypes(method, ctx, context);
+    }
+    ctx.contextualReturns.noteCellRead();
+
+    var serverContext = owner.getServerContext();
+    var lock = serverContext.getDocumentLock(owner.getUri()).readLock();
+    if (!lock.tryLock()) {
+      ctx.noteMissingData();
+      return symbolTypeIndex.getReturnTypes(method);
+    }
+    try {
+      if (serverContext.getDocumentState(owner) != DocumentState.WITH_CONTENT) {
+        return symbolTypeIndex.getReturnTypes(method);
+      }
+      return inferContextualReturnTypes(method, ctx, context);
+    } finally {
+      lock.unlock();
+    }
+  }
+
+  /**
+   * Определить контекст вызванного метода, если его объявление и ветка препроцессора доступны.
+   *
+   * @param method вызываемый метод.
+   * @param ctx состояние текущего запроса вывода.
+   * @param context режим в точке вызова.
+   * @return целевой контекст либо {@code null}, если вызов в нём недостижим.
+   */
+  private @Nullable ExecutionContext reachableReturnContext(MethodSymbol method, InferenceContext ctx,
+                                                            ExecutionContext context) {
+    var owner = method.getOwner();
+    var profile = ctx.compilation().methodContext(owner, method.getCompilerDirectiveKind(), compilationContextResolver);
+    var target = profile.map(value -> compilationContextResolver.targetContext(
+      ctx.documentContext, owner, value, context)).orElse(context);
+    var branch = owner.getSymbolTree().getMethodPreprocessorContexts(method);
+    if ((profile.isPresent() && !profile.get().contexts().contains(target))
+        || (branch != null && !branch.contains(target))) {
+      return null;
+    }
+    return target;
+  }
+
+  /**
+   * Вывести возвращаемый тип по доступному телу функции в контексте назначения вызова.
+   * <p>
+   * Известное отсутствие объявления в целевом режиме даёт пустой тип. Иначе результат тела
+   * соединяется с документирующим комментарием по правилам {@link SymbolTypeIndex}.
+   * Мемоизация действует только внутри текущего запроса: ключ включает метод и целевой режим.
+   * Отсечение рекурсии и недостающие данные запрещают запоминать результат. При уточнении
+   * ячеек переменных модуля кеш действителен только до следующего изменения их типов.
+   *
+   * @param method вызываемый метод с доступным AST.
+   * @param ctx состояние текущего запроса вывода.
+   * @param context режим в точке вызова до перехода в целевой метод.
+   * @return тип с учётом достижимых возвратов и документирующего комментария.
+   */
+  private TypeSet inferContextualReturnTypes(MethodSymbol method, InferenceContext ctx, ExecutionContext context) {
+    var target = reachableReturnContext(method, ctx, context);
+    if (target == null) {
+      return TypeSet.EMPTY;
+    }
+    var key = new ContextualReturnKey(method, target);
+    var sameFlow = method.getOwner() == ctx.documentContext && target == ctx.executionContext;
+    if (!sameFlow) {
+      ctx.contextualReturns.noteCellRead();
+    }
+    var reusable = canUseContextualReturns(ctx);
+    var remembered = reusable ? ctx.contextualReturns.get(key) : null;
+    if (remembered != null) {
+      return remembered;
+    }
+
+    var guard = ctx.contextualReturns.guard(key, ctx);
+    // Вне расчёта ячеек достаточно обычного чтения результата по ключу.
+    var allowIndependent = sameFlow && ctx.flowSession.cellsComputing();
+    var partial = reusable ? ctx.contextualReturns.get(guard, allowIndependent) : null;
+    if (partial != null) {
+      inheritReturn(partial, ctx);
+      return partial.types();
+    }
+    return computeContextualReturnTypes(method, target, ctx, guard, allowIndependent);
+  }
+
+  private TypeSet computeContextualReturnTypes(MethodSymbol method, ExecutionContext target, InferenceContext ctx,
+                                                ContextualReturnCache.Guard guard, boolean allowIndependent) {
+    var revision = ctx.contextualReturns.revision();
+    var cellReads = ctx.contextualReturns.cellReads();
+    var nested = ctx.nested(method.getOwner(), target);
+    var inferred = returnTypesInContext(method, nested, target);
+    ctx.inheritMissingInputs(nested);
+    ctx.failed |= nested.failed;
+    ctx.cycleCut |= nested.cycleCut;
+    ctx.bodyInFlowCut |= nested.bodyInFlowCut;
+    ctx.depthCut |= nested.depthCut;
+    ctx.dependencies.addAll(nested.dependencies);
+    ctx.consulted.addAll(nested.consulted);
+    ctx.cutMethods.addAll(nested.cutMethods);
+    ctx.flowBodiesRead.addAll(nested.flowBodiesRead);
+    var result = symbolTypeIndex.getReturnTypes(method, inferred);
+    if (canRememberReturn(nested)) {
+      if (allowIndependent && revision == ctx.contextualReturns.revision()
+          && cellReads == ctx.contextualReturns.cellReads()) {
+        ctx.contextualReturns.rememberWithoutCellInputs(guard, returnSnapshot(result, nested));
+      } else {
+        ctx.contextualReturns.remember(guard.key(), result, revision);
+      }
+      return result;
+    }
+    // Неполный вход ячейки живёт в сессии и может использоваться с той же защитой и ревизией.
+    if (!nested.hasOtherMissingInputs() && canUseContextualReturns(nested)) {
+      ctx.contextualReturns.remember(guard, returnSnapshot(result, nested), revision);
+    }
+    return result;
+  }
+
+  /** Только завершённые результаты без текущих приближений переживают вложенный вызов. */
+  private static boolean canRememberReturn(InferenceContext result) {
+    return !result.sawMissing() && !result.cycleCut && !result.bodyInFlowCut
+      && !result.depthCut && canUseContextualReturns(result);
+  }
+
+  /**
+   * У каждого прохода уточнения функции свой кеш. Её приближение в этом проходе неизменно,
+   * а его использование отмечает cycleCut. Приближения переменных могут меняться внутри
+   * прохода и не допускают повторного использования результата функции.
+   */
+  private static boolean canUseContextualReturns(InferenceContext ctx) {
+    return !ctx.failed && ctx.inProgress.keySet().stream().allMatch(MethodSymbol.class::isInstance);
+  }
+
+  /**
+   * Считается ли прямо сейчас тело метода в этом же выводе типов.
+   * <p>
+   * В расчёт тело попадает не только ради значения своего метода: круги по ячейкам
+   * переменных модуля считают каждое тело, где такая переменная меняется, и метода в
+   * {@link InferenceContext#visited} при этом нет. Спросить его значение изнутри такого
+   * расчёта — тот же повторный вход, что и через {@code visited}: выражения возврата
+   * читали бы окружение тела, до которого расчёт ещё не дошёл.
+   *
+   * @param method вызванный метод.
+   * @param ctx    контекст текущего инференса.
+   * @return {@code true}, если расчёт по телу метода начат и не завершён.
+   */
+  private static boolean bodyInFlow(MethodSymbol method, InferenceContext ctx) {
+    // Расчёт по потоку идёт только по телам документа, для которого ведётся вывод, — чужие
+    // тела в нём не считаются. Документы сравниваются по ссылке, как и везде здесь.
+    if (method.getOwner() != ctx.documentContext || !ctx.flowSession.computing()) {
+      return false;
+    }
+    var body = VariableFlowAnalyzer.bodyAt(ctx.documentContext, method.getSubNameRange().getStart());
+    return body != null && ctx.flowSession.computing(body);
+  }
+
+  /**
+   * Значение метода, вызвавшего сам себя, — ссылкой на него же, а не содержимым.
+   * <p>
+   * Функция, кладущая свой же результат в поле возвращаемой структуры (обход дерева:
+   * {@code Условие = Новый Структура("Узел, Аргумент", Условие.Узел,
+   * ЭтаЖеФункция(Условие.Аргумент))}), задаёт своим значением уравнение вида
+   * {@code T = Структура{Аргумент: T}}. Подставить в это ребро содержимое нельзя:
+   * каждая подстановка вкладывает известное на уровень глубже, и приближения не
+   * сходятся, сколько их ни делай. Поэтому набор берётся поверхностным — те же типы,
+   * те же имена полей, — а типы полей остаются ссылкой на метод и разрешаются на
+   * чтении ({@link LazyTypeSet}). Ссылка равна себе по ключу, поэтому неподвижная
+   * точка достигается, а разыменование выражения под курсором форсит по одному уровню.
+   *
+   * @param method метод, вызвавший сам себя.
+   * @param ctx    контекст расчёта: в нём может лежать первое приближение значения.
+   * @return поверхностный набор со ссылками вместо вложенных значений; пустой набор,
+   *     пока о значении метода ничего не известно.
+   */
+  private TypeSet recursiveKnot(MethodSymbol method, InferenceContext ctx) {
+    var approximation = ctx.inProgress.get(method);
+    // Приближения на руках нет — значит, метод считается прямо сейчас этим же расчётом, и
+    // о нём пока не известно ничего. Прочитать про него из индекса значит взять то, что
+    // успел положить туда чужой поток: результат стал бы зависеть от того, как далеко
+    // продвинулось наполнение области. Уточняющий проход поднимет значение снизу сам.
+    var known = approximation != null ? approximation : TypeSet.EMPTY;
+    if (known.isEmpty()) {
+      return TypeSet.EMPTY;
+    }
+    var knot = TypeSet.of(known.refs());
+    for (var ref : known.refs()) {
+      // Всюду читаются сырые карты, без склейки с ленивым: склейка форсирует ленивое, а
+      // ленивое здесь — этот же узел, и разворот пошёл бы до переполнения стека. Узел
+      // разрешает ровно один уровень, ради этого он и заведён.
+      if (!known.elementTypes().getOrDefault(ref, TypeSet.EMPTY).isEmpty()) {
+        knot = knot.withLazyElement(ref, new LazyTypeSet(List.of(method, ref),
+          () -> symbolTypeIndex.getReturnTypes(method).elementTypes()
+            .getOrDefault(ref, TypeSet.EMPTY)));
+      }
+      for (var field : known.localFields().getOrDefault(ref, Map.of()).entrySet()) {
+        knot = lazyFieldOf(knot, method, ref, field.getKey(), field.getValue().description());
+      }
+    }
+    return knot;
+  }
+
+  /**
+   * Поле узла: имя известно, а тип берётся у метода на чтении.
+   *
+   * @param knot        собираемый узел.
+   * @param method      рекурсивная функция.
+   * @param ref         тип-владелец поля.
+   * @param name        имя поля.
+   * @param description описание поля из документирующего комментария.
+   * @return узел с добавленным полем.
+   */
+  private TypeSet lazyFieldOf(TypeSet knot, MethodSymbol method, TypeRef ref, String name,
+                              String description) {
+    return knot.withLazyField(ref, name, new LazyTypeSet(List.of(method, ref, name),
+      () -> symbolTypeIndex.getReturnTypes(method).localFields()
+        .getOrDefault(ref, Map.of())
+        .getOrDefault(name, LocalField.of(TypeSet.EMPTY)).types()), description);
+  }
+
+  /**
+   * Типы, которые метод возвращает по своему телу, и методы, значения которых для этого
+   * понадобились.
+   * <p>
+   * Разбирается тело метода в его же документе, поэтому вызывать это можно только тогда,
+   * когда дерево разбора владельца доступно — то есть при построении его контекста.
+   * Значения вызванных методов читаются из {@link MethodReturnTypeIndexer} как есть: до
+   * неподвижной точки их доводит пересчёт по зависимым, а не рекурсия по стеку.
+   *
+   * @param method метод, чьё тело разбирается.
+   * @return рассчитанные типы и методы, участвовавшие в расчёте.
+   */
+  public MethodReturnTypeIndexer.ComputedReturnTypes computeReturnTypes(MethodSymbol method) {
+    var ctx = contextFor(method.getOwner(), null);
+    // Метод помечается считающимся до разбора собственного тела: вызов самого себя должен
+    // распознаться как рекурсия. Без этого он выглядит обычным вызовом и читает значение
+    // метода из индекса, где его ещё нет, — то есть пустоту, и весь вклад рекурсивной
+    // ветки теряется.
+    ctx.visited.add(method);
+    return returnTypesOfBody(method, ctx);
+  }
+
+  /**
+   * Типы, возвращаемые методом по телу, в рамках уже идущего расчёта.
+   * <p>
+   * Контекст передаётся тот же самый: у него общая защита от циклов и общая глубина, без
+   * которой цепочка вызовов внутри модуля уходила бы в рекурсию до переполнения стека.
+   *
+   * @param method метод, чьё тело разбирается.
+   * @param ctx    контекст расчёта.
+   * @return рассчитанные типы и методы, участвовавшие в расчёте.
+   */
+  private MethodReturnTypeIndexer.ComputedReturnTypes returnTypesOfBody(
+    MethodSymbol method,
+    InferenceContext ctx
+  ) {
+    if (ctx.depth >= MAX_DEPTH) {
+      ctx.depthCut = true;
+      return new MethodReturnTypeIndexer.ComputedReturnTypes(TypeSet.EMPTY, Set.of(), false);
+    }
+    try (var scope = MemberLookupSession.openIfAbsent()) {
+      var types = returnTypesInContext(method, ctx, null);
+      if (ctx.cycleCut && !types.isEmpty() && !ctx.inProgress.containsKey(method)
+          && needsOwnApproximation(method, ctx)) {
+        types = refinedByOwnValue(method, types, ctx);
+      }
+      return new MethodReturnTypeIndexer.ComputedReturnTypes(types, Set.copyOf(ctx.consulted),
+        ctx.sawMissing() || ctx.failed, ctx.incompleteMethodReturns());
+    } catch (StackOverflowError | RuntimeException e) {
+      // Пустое значение метода сохранится как окончательное, и все его вызывающие останутся
+      // ни с чем. Без записи в журнал это выглядит как «у метода не выводится тип», а не
+      // как сорвавшийся расчёт, и найти причину можно только замером на живой конфигурации.
+      LOGGER.error("Расчёт значения метода {} сорвался: {}", method.getName(),
+        method.getOwner().getUri(), e);
+      ctx.failed = true;
+      return new MethodReturnTypeIndexer.ComputedReturnTypes(TypeSet.EMPTY, Set.of(), true);
+    }
+  }
+
+  /**
+   * Вложенный расчёт может быть усечён защитой вызывающего. Самостоятельному запросу
+   * с полными входными данными собственное приближение нужно при повторном входе в этот метод.
+   * В проходе по ячейкам отсечённый вызов уточняет метод, на котором замкнулся цикл.
+   * Промежуточные методы используют это приближение при следующем обходе цикла.
+   */
+  private static boolean needsOwnApproximation(MethodSymbol method, InferenceContext ctx) {
+    if (ctx.flowSession.cellsComputing()) {
+      return ctx.cutMethods.contains(method);
+    }
+    return ctx.visited.size() > 1 || ctx.flowSession.computing() || ctx.sawMissing() || ctx.cutMethods.contains(method);
+  }
+
+  private TypeSet returnTypesInContext(MethodSymbol method, InferenceContext ctx, @Nullable ExecutionContext context) {
+    try (var scope = MemberLookupSession.openIfAbsent()) {
+      var result = returnTypeFromBodyInference.of(method, expression -> inferInternal(expression, ctx), context,
+        body -> ctx.compilation().possibleContexts(method.getOwner(), body, compilationContextResolver));
+      ctx.noteIncompleteCells();
+      return result;
+    }
+  }
+
+  /**
+   * Значение рекурсивной функции, пересчитанное по телу с её же первым приближением.
+   * <p>
+   * В первом проходе рекурсивное ребро отвечать нечем: значения метода ещё нет, и поле,
+   * заполняемое вызовом самого себя, теряется целиком. Второй проход идёт с приближением
+   * на руках, поэтому ребро отдаёт узел ({@link #recursiveKnot}) и поле остаётся — со
+   * ссылкой на метод вместо вложенного значения. Больше двух проходов не нужно: узел
+   * равен себе по ключу, поэтому третий дал бы то же самое.
+   *
+   * @param method        рекурсивная функция.
+   * @param approximation значение, посчитанное первым проходом.
+   * @param ctx           контекст расчёта; в него переносится всё, что увидел второй проход.
+   * @return уточнённое значение; приближение, если второй проход не дал ничего.
+   */
+  private TypeSet refinedByOwnValue(MethodSymbol method, TypeSet approximation, InferenceContext ctx) {
+    var current = approximation;
+    for (var pass = 0; pass < MAX_REFINING_PASSES; pass++) {
+      var refining = ctx.forRefinement();
+      refining.depth = ctx.depth + 1;
+      refining.refining = true;
+      refining.visited.add(method);
+      refining.inProgress.put(method, current);
+      var refined = returnTypesInContext(method, refining, null);
+      ctx.consulted.addAll(refining.consulted);
+      ctx.cutMethods.addAll(refining.cutMethods);
+      ctx.flowBodiesRead.addAll(refining.flowBodiesRead);
+      ctx.dependencies.addAll(refining.dependencies);
+      ctx.inheritMissingInputs(refining);
+      ctx.failed |= refining.failed;
+      ctx.depthCut |= refining.depthCut;
+      if (refined.isEmpty() || refined.equals(current)) {
+        return refined.isEmpty() ? current : refined;
+      }
+      current = refined;
+    }
+    return current;
+  }
+
+
+
+  /**
+   * Тип переменной в точке использования, рассчитанный по потоку управления тела:
+   * присваивание перекрывает прежний тип, в точках слияния путей типы объединяются.
+   *
+   * @param variable переменная.
+   * @param terminal терминал использования.
+   * @param ctx      контекст текущего инференса.
+   * @return тип в этой точке; пустой набор, если переменная не из этого документа либо
+   *     расчёт сорвался. Отсутствие присваиваний расчёту не мешает — тип такой переменной
+   *     есть входной факт по всему телу.
+   */
+  private TypeSet flowTypeAt(VariableSymbol variable, TerminalNode terminal, InferenceContext ctx) {
+    var owner = variable.getOwner();
+    // Сравнение по ссылке: на URI в рабочей области приходится ровно один DocumentContext,
+    // а сравнение самих URI нормализует проценты и стоит заметно дороже.
+    if (owner != ctx.documentContext) {
+      // Переменная из другого документа: чужое дерево разбора не читаем, берём
+      // объявленное о ней — оно есть в самом символе.
+      return declaredTypes(variable);
+    }
+    if (!(terminal.getParent() instanceof ParserRuleContext use)) {
+      return TypeSet.EMPTY;
+    }
+    // Повторный вход по той же переменной здесь не отсекается: у `Х = Х + 1` правая часть
+    // спрашивает тип посреди расчёта того же тела, и ответ у расчёта есть — окружение перед
+    // текущим оператором. Зацикливания не будет: строящееся окружение отвечает чтением из
+    // карты, не запуская расчёт заново.
+    try {
+      var inputs = flowInputs(variable, ctx);
+      var byFlow = ctx.sharedRootFlow
+        ? variableFlowAnalyzer.typeAtRoot(owner, use, variable, inputs,
+          () -> !ctx.cycleCut && !ctx.bodyInFlowCut && !ctx.depthCut)
+        : variableFlowAnalyzer.typeAt(owner, use, variable, inputs);
+      ctx.noteIncompleteCells();
+      if (byFlow == null) {
+        ctx.failed = true;
+        // Обращение к переменной есть, а расчёт его не разместил — это дефект расчёта, а не
+        // особенность кода 1С. Подменять ответ нечем: любая подмена скрыла бы дефект.
+        LOGGER.error("Обращение к переменной {} (объявлена {}) не размещено в расчёте по потоку: {} {}",
+          variable.getName(), at(variable.getSelectionRange().getStart()),
+          owner.getUri(), at(Ranges.create(use).getStart()));
+        return TypeSet.EMPTY;
+      }
+      return byFlow;
+    } catch (StackOverflowError | RuntimeException e) {
+      ctx.failed = true;
+      LOGGER.error("Расчёт типа по потоку сорвался на переменной {} (объявлена {}): {} {}",
+        variable.getName(), at(variable.getSelectionRange().getStart()),
+        owner.getUri(), at(Ranges.create(use).getStart()), e);
+      return TypeSet.EMPTY;
+    }
+  }
+
+  /**
+   * Тип переменной в точке, на которую указывает ссылка, — с учётом того, какие
+   * присваивания и изменения на месте уже случились на путях к ней.
+   *
+   * @param reference ссылка на переменную — несёт и документ, и позицию.
+   * @return тип в этой точке; пустой набор, если ссылка не на переменную своего документа
+   *     либо расчёт по потоку сорвался — тогда срыв пишется в журнал ошибкой.
+   */
+  public TypeSet inferVariableAt(Reference reference) {
+    return inferVariableAt(reference, null);
+  }
+
+  /**
+   * Вывести тип переменной в позиции ссылки в выбранном режиме компиляции.
+   *
+   * @param reference ссылка на переменную с документом, позицией и видом обращения.
+   * @param context режим для фильтрации присваиваний либо {@code null} для возможных режимов в позиции ссылки.
+   * @return типы в позиции; для чужого документа — объявленные типы без чтения его AST.
+   */
+  public TypeSet inferVariableAt(Reference reference, @Nullable ExecutionContext context) {
+    if (!(reference.getSourceDefinedSymbol().orElse(null) instanceof VariableSymbol variable)) {
+      return TypeSet.EMPTY;
+    }
+    if (!variable.getOwner().getUri().equals(reference.uri())) {
+      // Переменная объявлена в другом документе: считать её по коду означало бы читать
+      // чужое дерево разбора, а этого мы не делаем. Остаётся объявленное о ней — оно
+      // берётся из самого символа.
+      return declaredTypes(variable);
+    }
+    return inferVariableAt(
+      variable,
+      reference.selectionRange().getStart(),
+      // Ссылка на само присваивание спрашивает про тип после него, а не до.
+      reference.occurrenceType() == OccurrenceType.DEFINITION,
+      context
+    );
+  }
+
+  /**
+   * Тип переменной в указанной точке документа, которому она принадлежит.
+   * <p>
+   * Точка не обязана быть обращением к переменной: расчёт отвечает на вопрос, что
+   * переменная содержит в этом месте кода.
+   *
+   * @param variable переменная.
+   * @param position точка в теле, для которой нужен тип.
+   * @return тип в этой точке; пустой набор, если расчёт по потоку сорвался — тогда срыв
+   *     пишется в журнал ошибкой.
+   */
+  public TypeSet inferVariableAt(VariableSymbol variable, Position position) {
+    return inferVariableAt(variable, position, false, null);
+  }
+
+  /**
+   * Тип переменной в точке с уточнением, стоит ли точка на самом присваивании.
+   * <p>
+   * Точки исполнения в позиции может и не быть — так спрашивают про объявление
+   * ({@code Перем Кэш;} оператором не является). Тогда ответ даётся по всей области
+   * видимости переменной: то, с чем она эту область покидает.
+   *
+   * @param variable     переменная.
+   * @param position     точка в теле, для которой нужен тип.
+   * @param atDefinition стоит ли точка на присваивании: тогда берётся тип после него.
+   * @param context режим компиляции либо {@code null} для возможных режимов в запрошенной позиции.
+   * @return тип в этой точке; пустой набор, если расчёт по потоку сорвался — тогда срыв
+   *     пишется в журнал ошибкой.
+   */
+  private TypeSet inferVariableAt(VariableSymbol variable, Position position, boolean atDefinition,
+                                 @Nullable ExecutionContext context) {
+    var owner = variable.getOwner();
+    var ctx = contextFor(owner, context);
+    try {
+      var body = context == null ? VariableFlowAnalyzer.bodyAt(owner, position) : null;
+      var narrowed = body == null ? Optional.<Set<ExecutionContext>>empty()
+        : queryContextsAt(ctx, body, position);
+      return narrowed.isPresent()
+        ? inferInContexts(narrowed.get(), ctx, nested -> variableTypeAt(variable, position, atDefinition, nested))
+        : variableTypeAt(variable, position, atDefinition, ctx);
+    } catch (StackOverflowError | RuntimeException e) {
+      LOGGER.error("Расчёт типа по потоку сорвался на переменной {} (объявлена {}): {} {}",
+        variable.getName(), at(variable.getSelectionRange().getStart()),
+        owner.getUri(), at(position), e);
+      return TypeSet.EMPTY;
+    }
+  }
+
+  private TypeSet variableTypeAt(VariableSymbol variable, Position position, boolean atDefinition,
+                                InferenceContext ctx) {
+    var owner = variable.getOwner();
+    var inputs = flowInputs(variable, ctx);
+    var atPoint = variableFlowAnalyzer.typeAt(owner, position, atDefinition, variable, inputs);
+    var result = atPoint == null ? variableFlowAnalyzer.typesAcrossScope(owner, position, variable, inputs) : atPoint;
+    ctx.noteIncompleteCells();
+    return result;
+  }
+
+  /** Контексты запроса по модулю, методу и ветке; без метаданных остаются известные ограничения препроцессора. */
+  private Optional<Set<ExecutionContext>> queryContextsAt(InferenceContext ctx, ParseTree node, Position position) {
+    return ctx.compilation().contextAt(ctx.documentContext, position, compilationContextResolver)
+      .map(CompilationContextResolver.MethodContext::contexts)
+      .or(() -> compilationContextResolver.narrowedContextsAt(ctx.documentContext, node, position));
+  }
+
+  /**
+   * Объединить результаты только тех режимов, которые допускает ветка в точке запроса.
+   * <p>
+   * В каждом режиме используются существующие отдельные окружения потока. Общие результаты
+   * функций и выражений не подменяются результатом одной ветки; защита от рекурсии и сведения
+   * о неполном расчёте передаются между вложенным и исходным запросами.
+   */
+  private static TypeSet inferInContexts(Set<ExecutionContext> contexts, InferenceContext ctx,
+                                         Function<InferenceContext, TypeSet> inference) {
+    var result = TypeSet.EMPTY;
+    for (var context : ExecutionContext.copyOf(contexts)) {
+      var nested = ctx.nested(ctx.documentContext, context);
+      result = result.union(inference.apply(nested));
+      ctx.inheritMissingInputs(nested);
+      ctx.failed |= nested.failed;
+      ctx.cycleCut |= nested.cycleCut;
+      ctx.bodyInFlowCut |= nested.bodyInFlowCut;
+      ctx.depthCut |= nested.depthCut;
+      ctx.dependencies.addAll(nested.dependencies);
+      ctx.consulted.addAll(nested.consulted);
+      ctx.cutMethods.addAll(nested.cutMethods);
+      ctx.flowBodiesRead.addAll(nested.flowBodiesRead);
+    }
+    return result;
+  }
+
+  /**
+   * Позиция в записи «строка:колонка», считая от единицы, — как её показывает редактор.
+   *
+   * @param position позиция, считающая от нуля.
+   * @return запись позиции для журнала.
+   */
+  private static String at(Position position) {
+    return (position.getLine() + 1) + ":" + (position.getCharacter() + 1);
+  }
+
+  /**
+   * Исходные данные расчёта по потоку для переменной: что известно на входе в тело,
+   * где она меняется и как считать вклад каждого изменения.
+   *
+   * @param variable переменная.
+   * @param ctx      контекст текущего инференса.
+   * @return данные для {@link VariableFlowAnalyzer}.
+   */
+  private VariableFlowAnalyzer.FlowInputs flowInputs(VariableSymbol variable, InferenceContext ctx) {
+    var cacheable = ctx.visited.size() <= 1 && !ctx.refining;
+    var cached = ctx.flowInputs;
+    if (cached != null && cached.cacheable() == cacheable) {
+      return cached;
+    }
+    var computed = createFlowInputs(variable, ctx, cacheable);
+    ctx.flowInputs = computed;
+    return computed;
+  }
+
+  private VariableFlowAnalyzer.FlowInputs createFlowInputs(VariableSymbol variable, InferenceContext ctx,
+                                                           boolean cacheable) {
+    // Объявленное о переменной расчёт спрашивает многократно — на входе в тело, в точках
+    // слияния и при возврате к объединению по области видимости. У переменной модуля за
+    // ответом стоит обход индекса ссылок, поэтому он запоминается на время запроса.
+    Map<VariableSymbol, TypeSet> declaredByVariable = new HashMap<>();
+    var sharedDeclarations = workspacePopulated ? DiagnosticDeclarationSession.current() : null;
+    Function<VariableSymbol, TypeSet> declaredOf = (VariableSymbol target) -> {
+      var cached = declaredByVariable.get(target);
+      if (cached != null) {
+        return cached;
+      }
+      var revision = sharedDeclarations == null ? 0 : inferredExpressionTypeIndex.inputRevision();
+      if (sharedDeclarations != null) {
+        var shared = sharedDeclarations.get(target, revision);
+        if (shared != null) {
+          declaredByVariable.put(target, shared);
+          return shared;
+        }
+      }
+      var computed = declaredTypes(target);
+      if (declarationIncomplete(target)) {
+        // Объявление ведёт туда, что ещё не разобрано, и по самому ответу этого не видно:
+        // значение метода, посчитанное на нём, решил бы порядок наполнения. Такой расчёт
+        // проход после наполнения повторит.
+        ctx.noteMissingData();
+        return computed;
+      }
+      declaredByVariable.put(target, computed);
+      if (sharedDeclarations != null && revision == inferredExpressionTypeIndex.inputRevision()) {
+        sharedDeclarations.remember(target, revision, computed);
+      }
+      return computed;
+    };
+    // Операторы-мутаторы разбираются лениво и по одному разу на переменную: за ними стоит
+    // обход индекса вызовов, а при готовом окружении в кэше они не нужны вовсе.
+    Map<VariableSymbol, Lazy<Map<Position, BSLParser.CallStatementContext>>> callsByVariable = new HashMap<>();
+    Function<VariableSymbol, Map<Position, BSLParser.CallStatementContext>> callsOf = target ->
+      callsByVariable
+        .computeIfAbsent(target, key -> new Lazy<>(() -> openDataObjectInference.mutatorsOf(key)))
+        .getOrCompute();
+    // Присваивание вида элементу формы — тоже изменение типа на месте, только записанное
+    // не вызовом, а присваиванием свойству; разбирается так же лениво.
+    Map<VariableSymbol, Lazy<Map<Position, BSLParser.AssignmentContext>>> kindsByVariable = new HashMap<>();
+    Function<VariableSymbol, Map<Position, BSLParser.AssignmentContext>> kindsOf = target ->
+      kindsByVariable
+        .computeIfAbsent(target, key -> new Lazy<>(() -> formExpressionInference.kindAssignmentsOf(key)))
+        .getOrCompute();
+    // Чтение ключа через выходной параметр (`Стр.Свойство("Ключ", Приёмник)`) — тоже
+    // изменение типа на месте, только переменная тут не получатель вызова, а его аргумент.
+    Map<VariableSymbol, Lazy<Map<Position, BSLParser.MethodCallContext>>> propertiesByVariable = new HashMap<>();
+    Function<VariableSymbol, Map<Position, BSLParser.MethodCallContext>> propertiesOf = target ->
+      propertiesByVariable
+        .computeIfAbsent(target, key -> new Lazy<>(() -> propertyMethodInference.outParameterCallsOf(key)))
+        .getOrCompute();
+    var owner = variable.getOwner();
+    var variablesByBody = new IdentityHashMap<BSLParser.CodeBlockContext, BodyVariables>();
+    return new VariableFlowAnalyzer.FlowInputs(
+      ctx.flowSession,
+      ctx.flowBodiesRead::add,
+      // Тот же критерий, что у кэша выведенных типов переменных: вложенный расчёт
+      // (внутри инференса другой переменной) мог быть усечён защитой от циклов,
+      // и переиспользовать такой результат как самостоятельный нельзя. Уточняющий
+      // проход по рекурсивной функции не кэшируется и сам кэш не читает: иначе он
+      // получил бы окружения, посчитанные первым проходом, — то есть свой же вопрос.
+      cacheable,
+      ctx.executionContext,
+      body -> compilationContexts(body, owner, ctx),
+      () -> ctx.sawMissing() || ctx.failed || ctx.flowSession.cellsIncomplete(),
+      body -> variablesByBody.computeIfAbsent(body, key -> variablesOfBody(owner, key)).visible(),
+      body -> variablesByBody.computeIfAbsent(body, key -> variablesOfBody(owner, key)).readModuleVariables(),
+      target -> target.getKind() == VariableKind.MODULE,
+      declaredOf,
+      this::definitionPositions,
+      target -> mutationPositions(callsOf.apply(target), kindsOf.apply(target), propertiesOf.apply(target)),
+      (target, statement, position) ->
+        attachDefaultElementTypes(inferFromDefinition(owner, statement, position, ctx)),
+      (target, position, incoming) -> applyMutation(target, position, incoming, ctx,
+        callsOf.apply(target), kindsOf.apply(target), propertiesOf.apply(target)),
+      narrowingCallback(owner),
+      ctx::noteIncompleteCellInput
+    );
+  }
+
+  /**
+   * Определить возможные контексты тела для вывода типов, в том числе без запроса конкретного режима.
+   * <p>
+   * Применяются контексты модуля, директива метода и ветка его объявления. При недостатке
+   * данных тело сохраняется: неизвестное условие не означает отсутствия кода.
+   * Фильтрация веток внутри самого тела выполняется анализатором потока.
+   *
+   * @param body тело модуля или метода текущего документа.
+   * @param document документ, которому принадлежит тело.
+   * @param ctx состояние запроса с выбранным режимом и метаданными тел.
+   * @return контексты тела с учётом выбранного режима; пустой Optional для OneScript.
+   */
+  private Optional<Set<ExecutionContext>> compilationContexts(BSLParser.CodeBlockContext body,
+                                                              DocumentContext document,
+                                                              InferenceContext ctx) {
+    var context = ctx.executionContext;
+    return ctx.compilation().possibleContexts(document, body, compilationContextResolver)
+      .map((Set<ExecutionContext> contexts) -> {
+        if (context == null) {
+          return contexts;
+        }
+        return contexts.contains(context) ? Set.of(context) : Set.of();
+      });
+  }
+
+  /**
+   * Позиции всех изменений типа на месте — операторов-мутаторов, присваиваний вида и
+   * чтений ключа через выходной параметр.
+   *
+   * @param calls      мутаторы по позициям.
+   * @param kinds      присваивания вида по позициям.
+   * @param properties вызовы {@code Свойство} по позициям.
+   * @return объединение позиций без повторов.
+   */
+  private static Collection<Position> mutationPositions(Map<Position, ?> calls, Map<Position, ?> kinds,
+                                                        Map<Position, ?> properties) {
+    if (kinds.isEmpty() && properties.isEmpty()) {
+      return calls.keySet();
+    }
+    Collection<Position> positions = new LinkedHashSet<>(calls.keySet());
+    positions.addAll(kinds.keySet());
+    positions.addAll(properties.keySet());
+    return positions;
+  }
+
+  /**
+   * Вклад одного изменения на месте: по позиции определяется, какого оно вида.
+   *
+   * @param variable   переменная-получатель.
+   * @param position   позиция изменения.
+   * @param incoming   тип переменной перед ним.
+   * @param ctx        контекст текущего инференса.
+   * @param calls      мутаторы этой переменной по позициям.
+   * @param kinds      присваивания вида этой переменной по позициям.
+   * @param properties вызовы {@code Свойство}, типизирующие эту переменную, по позициям.
+   * @return изменённый тип; исходный, если по позиции ничего не нашлось.
+   */
+  private TypeSet applyMutation(VariableSymbol variable, Position position, TypeSet incoming, InferenceContext ctx,
+                                Map<Position, BSLParser.CallStatementContext> calls,
+                                Map<Position, BSLParser.AssignmentContext> kinds,
+                                Map<Position, BSLParser.MethodCallContext> properties) {
+    var call = calls.get(position);
+    if (call != null) {
+      return openDataObjectInference.apply(variable, call, incoming, node -> inferInternal(node, ctx));
+    }
+    var property = properties.get(position);
+    if (property != null) {
+      return propertyMethodInference.apply(variable, property, incoming, node -> inferInternal(node, ctx));
+    }
+    return formExpressionInference.applyKindAssignment(variable, kinds.get(position), incoming);
+  }
+
+  /** Видимые переменные тела и чтения общих ячеек, собранные одним обходом идентификаторов. */
+  private record BodyVariables(List<VariableSymbol> visible, Set<VariableSymbol> readModuleVariables) { }
+
+  /**
+   * Переменные, видимые в теле: расчёт по потоку считает их все разом, одним поиском
+   * неподвижной точки.
+   * <p>
+   * Это переменные области видимости самого тела (метода либо тела модуля) плюс переменные
+   * модуля, объявленные {@code Перем}, — они видны из любого метода. Набор зависит только
+   * от тела: окружение считается на всё тело сразу и переиспользуется всеми запросами,
+   * поэтому от того, про какую переменную спросили первой, он зависеть не может.
+   *
+   * @param owner документ с телом.
+   * @param body  тело, для которого идёт расчёт.
+   * @return видимые переменные тела и чтения общих ячеек.
+   */
+  private static BodyVariables variablesOfBody(DocumentContext owner, BSLParser.CodeBlockContext body) {
+    // Раскладку по областям видимости дерево символов уже держит готовой и ленивой —
+    // своего перебора всех переменных модуля на каждый расчёт тела не нужно.
+    var symbolTree = owner.getSymbolTree();
+    SourceDefinedSymbol module = symbolTree.getModule();
+    SourceDefinedSymbol scope = scopeOfBody(symbolTree, body)
+      .map(SourceDefinedSymbol.class::cast)
+      .orElse(module);
+    var visible = new ArrayList<VariableSymbol>(symbolTree.getVariablesOfScope(scope));
+    var moduleVariables = moduleVariablesOfBody(symbolTree, body);
+    if (scope != module) {
+      visible.addAll(moduleVariables.visible());
+    }
+    return new BodyVariables(visible, moduleVariables.readModuleVariables());
+  }
+
+  /**
+   * Найти переменные модуля, к которым обращаются из тела, и отдельно их чтения. Имена свойств и методов
+   * не являются обращениями к переменным; локальные объявления могут затенять общие.
+   * Набор не зависит от готовности индекса ссылок.
+   *
+   * @param symbolTree    дерево символов модуля.
+   * @param body          тело метода.
+   * @return обращения к переменным модуля и их чтения; простая запись не требует предыдущего значения.
+   */
+  private static BodyVariables moduleVariablesOfBody(SymbolTree symbolTree, BSLParser.CodeBlockContext body) {
+    if (symbolTree.getVariablesOfScope(symbolTree.getModule()).isEmpty()) {
+      return new BodyVariables(List.of(), Set.of());
+    }
+    Set<String> names = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+    Set<String> readNames = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
+    for (var identifier : Trees.findAllTokenNodes(body, BSLLexer.IDENTIFIER)) {
+      if (FlowVariables.isVariableIdentifier(identifier)) {
+        names.add(identifier.getText());
+        if (!isVariableWriteTarget(identifier)) {
+          readNames.add(identifier.getText());
+        }
+      }
+    }
+    Set<VariableSymbol> read = new HashSet<>();
+    var target = new ArrayList<VariableSymbol>();
+    for (var name : names) {
+      symbolTree.getVariableSymbolInScope(body, name)
+        .filter(variable -> variable.getKind() == VariableKind.MODULE)
+        .ifPresent((VariableSymbol variable) -> {
+          target.add(variable);
+          if (readNames.contains(name)) {
+            read.add(variable);
+          }
+        });
+    }
+    return new BodyVariables(target, read);
+  }
+
+  private static boolean isVariableWriteTarget(ParseTree identifier) {
+    if (!(identifier.getParent() instanceof ParserRuleContext parent)) {
+      return false;
+    }
+    if (parent instanceof BSLParser.ForStatementContext || parent instanceof BSLParser.ForEachStatementContext) {
+      return true;
+    }
+    BSLParser.LValueContext lValue = parent instanceof BSLParser.LValueContext value ? value
+      : Trees.getAncestorByRuleIndex(parent, BSLParser.RULE_lValue);
+    return lValue != null && lValue.getStart() == lValue.getStop()
+      && lValue.getParent() instanceof BSLParser.AssignmentContext;
+  }
+
+  /**
+   * Область видимости тела — метод, которому оно принадлежит.
+   *
+   * @param symbolTree дерево символов документа.
+   * @param body       тело.
+   * @return символ метода; пусто, если это тело модуля, а не метода.
+   */
+  private static Optional<MethodSymbol> scopeOfBody(SymbolTree symbolTree, BSLParser.CodeBlockContext body) {
+    BSLParser.SubContext sub = Trees.getAncestorByRuleIndex(body, BSLParser.RULE_sub);
+    return sub == null ? Optional.empty() : symbolTree.getMethodSymbol(sub);
+  }
+
+  /**
+   * Колбэк сужения по охраняющим условиям с запоминанием разбора: расчёт идёт проходами и
+   * спрашивает одни и те же условия многократно, а разбор тянет резолв переменной через
+   * индекс — самую дорогую часть шага.
+   *
+   * @param owner документ с условиями.
+   * @return колбэк для {@link VariableFlowAnalyzer}.
+   */
+  private VariableFlowAnalyzer.GuardNarrowing narrowingCallback(DocumentContext owner) {
+    return new VariableFlowAnalyzer.GuardNarrowing() {
+      @Override
+      public TypeSet narrow(
+        VariableSymbol variable,
+        BSLParser.ExpressionContext condition,
+        boolean whenTrue,
+        TypeSet incoming
+      ) {
+        return guardConditionNarrowing.compile(condition, owner).apply(variable, whenTrue, incoming);
+      }
+
+      @Override
+      public Set<? extends SourceDefinedSymbol> variablesOf(BSLParser.ExpressionContext condition) {
+        return guardConditionNarrowing.compile(condition, owner).variables();
+      }
+
+      @Override
+      public TypeSet narrowBefore(
+        VariableSymbol variable,
+        BSLParser.ExpressionContext condition,
+        Position position,
+        TypeSet incoming
+      ) {
+        return guardConditionNarrowing.compile(condition, owner).narrowBefore(variable, position, incoming);
+      }
+    };
+  }
+
+  /**
+   * Тип переменной до первого присваивания: то, что известно из объявления, а не из кода.
+   *
+   * @param variable переменная.
+   * @return типы из объявления; пустой набор, если ничего не объявлено.
+   */
+  private TypeSet declaredTypes(VariableSymbol variable) {
+    var entry = TypeSet.EMPTY;
+    for (var source : variableTypeSources) {
+      entry = entry.union(source.typesOf(variable));
+    }
+    if (entry.isEmpty() && declaredByVar(variable) && !assignedBeforeAnyUse(variable)) {
+      // Переменная, объявленная записью «Перем», до первого присваивания содержит
+      // «Неопределено» — это её значение, а не отсутствие сведений о типе. Дальше по телу
+      // присваивания его перекрывают, а в точке слияния путей он остаётся, если хотя бы
+      // один путь до присваивания не дошёл.
+      return TypeSet.of(UNDEFINED);
+    }
+    // Объявленному типу-коллекции нужен тип её элемента: «Для Каждого» по параметру,
+    // чей тип объявлен комментарием, иначе не знает, что за строку он перебирает.
+    return attachDefaultElementTypes(entry);
+  }
+
+  /**
+   * Может ли объявленное о переменной ещё пополниться — по мнению хоть одного источника.
+   *
+   * @param variable переменная.
+   * @return {@code true}, если объявление ссылается на то, что пока не известно.
+   */
+  private boolean declarationIncomplete(VariableSymbol variable) {
+    for (var source : variableTypeSources) {
+      if (source.isIncomplete(variable)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  /**
+   * Объявлена ли переменная записью {@code Перем} — в отличие от переменной, созданной
+   * первым присваиванием, и от параметра метода.
+   *
+   * @param variable переменная.
+   * @return {@code true}, если переменная объявлена записью {@code Перем}.
+   */
+  private static boolean declaredByVar(VariableSymbol variable) {
+    var kind = variable.getKind();
+    return kind == VariableKind.LOCAL || kind == VariableKind.MODULE || kind == VariableKind.GLOBAL;
+  }
+
+  /**
+   * Есть ли у переменной модуля присваивание, которое заведомо выполняется раньше любого
+   * обращения к ней.
+   * <p>
+   * Таким может быть тело, которое отрабатывает до всех прочих: тело модуля — раньше всех
+   * его процедур, конструктор — при создании объекта, до того как к его полям кто-то
+   * обратится. Но самого присваивания мало: оно должно случиться на любом пути через это
+   * тело. Присваивание в одной ветке условия может не выполниться, а в обеих — выполнится
+   * непременно, поэтому вопрос решается по графу потока управления, а не по вложенности
+   * оператора в тексте.
+   *
+   * @param variable переменная.
+   * @return {@code true}, если такое присваивание есть.
+   */
+  private boolean assignedBeforeAnyUse(VariableSymbol variable) {
+    if (variable.getKind() != VariableKind.MODULE) {
+      return false;
+    }
+    var owner = variable.getOwner();
+    var symbolTree = owner.getSymbolTree();
+    // Тела сравниваются по ссылке: узлы дерева разбора равенства по содержимому не имеют.
+    Map<BSLParser.CodeBlockContext, List<Position>> positionsByBody = new IdentityHashMap<>();
+    for (var position : definitionPositions(variable)) {
+      var enclosingMethod = enclosingMethod(symbolTree, position);
+      var runsBeforeAnyUse = enclosingMethod.isEmpty()
+        || Methods.isOscriptClassConstructorName(enclosingMethod.get().getName());
+      var body = runsBeforeAnyUse ? VariableFlowAnalyzer.bodyAt(owner, position) : null;
+      if (body != null) {
+        positionsByBody.computeIfAbsent(body, key -> new ArrayList<>()).add(position);
+      }
+    }
+    return positionsByBody.entrySet().stream()
+      .anyMatch(entry -> assignedOnEveryPath(owner, entry.getKey(), entry.getValue()));
+  }
+
+  /**
+   * Метод, в теле которого стоит позиция.
+   *
+   * @param symbolTree дерево символов документа.
+   * @param position   позиция в документе.
+   * @return метод; пусто, если позиция вне методов — то есть в теле модуля.
+   */
+  private static Optional<MethodSymbol> enclosingMethod(SymbolTree symbolTree, Position position) {
+    var symbol = symbolTree.getSymbolAtPosition(position);
+    if (symbol instanceof MethodSymbol method) {
+      return Optional.of(method);
+    }
+    return symbol.getRootParent(MethodSymbol.class).map(MethodSymbol.class::cast);
+  }
+
+  /**
+   * Присваивается ли переменная на любом пути через тело.
+   * <p>
+   * Считается обходом графа потока управления от выхода назад: вершины с присваиванием
+   * обход не проходит. Если так до входа добраться не удалось, значит всякий путь от входа
+   * к выходу присваивание задевает.
+   *
+   * @param owner     документ с телом.
+   * @param body      тело.
+   * @param positions позиции присваиваний в этом теле.
+   * @return {@code true}, если пути в обход присваиваний нет.
+   */
+  private boolean assignedOnEveryPath(
+    DocumentContext owner,
+    BSLParser.CodeBlockContext body,
+    List<Position> positions
+  ) {
+    var graph = controlFlowGraphIndex.graphOf(owner, body, CfgBuildOptions.defaults());
+    var entry = graph.getEntryPoint();
+    if (assigns(entry, positions)) {
+      return true;
+    }
+    Set<CfgVertex> visited = Collections.newSetFromMap(new IdentityHashMap<>());
+    Deque<CfgVertex> queue = new ArrayDeque<>();
+    queue.add(graph.getExitPoint());
+    visited.add(graph.getExitPoint());
+    while (!queue.isEmpty()) {
+      var vertex = queue.poll();
+      for (var edge : graph.incomingEdgesOf(vertex)) {
+        var previous = graph.getEdgeSource(edge);
+        if (assigns(previous, positions) || !visited.add(previous)) {
+          continue;
+        }
+        if (previous == entry) {
+          return false;
+        }
+        queue.add(previous);
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Присваивается ли переменная в этой вершине графа.
+   *
+   * @param vertex    вершина.
+   * @param positions позиции присваиваний.
+   * @return {@code true}, если хотя бы одно присваивание попадает в операторы вершины.
+   */
+  private static boolean assigns(@Nullable CfgVertex vertex, List<Position> positions) {
+    if (!(vertex instanceof BasicBlockVertex block)) {
+      return false;
+    }
+    return block.statements().stream()
+      .anyMatch(statement -> positions.stream()
+        .anyMatch(position -> Ranges.containsPosition(statement, position)));
+  }
+
+  /**
+   * Позиции всех присваиваний переменной: {@code DEFINITION}-вхождения из индекса ссылок
+   * плюс позиция самого символа — но только у переменной, созданной первым присваиванием,
+   * где объявления как отдельной записи нет (см. {@link #declarationIsAssignment}).
+   *
+   * @param variable переменная.
+   * @return позиции присваиваний без повторов.
+   */
+  private Collection<Position> definitionPositions(VariableSymbol variable) {
+    // Множество, а не список с проверкой contains: у переменной в длинном методе
+    // присваиваний бывают десятки, и отсев повторов перебором давал квадрат.
+    Set<Position> positions = new LinkedHashSet<>();
+    if (declarationIsAssignment(variable)) {
+      positions.add(variable.getSelectionRange().getStart());
+    }
+    for (var occurrence : referenceIndex.getReferencesTo(variable)) {
+      if (occurrence.occurrenceType() == OccurrenceType.DEFINITION) {
+        positions.add(occurrence.selectionRange().getStart());
+      }
+    }
+    return positions;
+  }
+
+  /**
+   * Совпадает ли объявление переменной с присваиванием.
+   * <p>
+   * У переменной, созданной первым присваиванием, объявления как отдельной записи нет —
+   * её позиция и есть позиция присваивания. У параметра это имя в подписи метода, у
+   * объявленной через {@code Перем} — сама эта запись; ни то, ни другое оператором графа
+   * не является, и выдавать их за присваивания нельзя: расчёт счёл бы, что присваивание
+   * потерялось, и отказался бы от переменной целиком. Что известно на входе в тело, и так
+   * даёт входной факт.
+   *
+   * @param variable переменная.
+   * @return {@code true}, если позиция символа указывает на присваивание.
+   */
+  private static boolean declarationIsAssignment(VariableSymbol variable) {
+    var kind = variable.getKind();
+    return kind != VariableKind.PARAMETER
+      && kind != VariableKind.LOCAL
+      && kind != VariableKind.MODULE;
+  }
+
+
+  /**
+   * Тип, присваиваемый переменной, когда оператор присваивания уже известен вызывающему.
+   * <p>
+   * Поиск присваивания по позиции — рекурсивный спуск по дереву разбора от корня файла,
+   * и на больших модулях он заметен в профиле. Расчёт по потоку знает оператор графа, в
+   * котором стоит присваивание, поэтому спуск ему не нужен.
+   *
+   * @param owner     документ с присваиванием.
+   * @param statement оператор графа, в котором стоит присваивание.
+   * @param position  позиция присваивания — на случай, если оператор не присваивание
+   *                  (тогда работает поиск по позиции, как раньше).
+   * @param ctx       контекст текущего инференса.
+   * @return присваиваемые типы; пустой набор, если вывести их не удалось.
+   */
+  private TypeSet inferFromDefinition(
+    DocumentContext owner,
+    ParserRuleContext statement,
+    Position position,
+    InferenceContext ctx
+  ) {
+    if (statement instanceof BSLParser.AssignmentContext assignment) {
+      var expression = DiagnosticDeclarationSession.expressionTree(assignment.expression());
+      var types = expression == null ? TypeSet.EMPTY : inferInternal(expression, ctx);
+      return types.union(typesOfAssignmentComment(owner, assignment, ctx));
+    }
+    if (statement instanceof BSLParser.ForStatementContext) {
+      // Счётчик «Для Сч = 1 По Граница» — всегда число: язык другого не допускает.
+      return TypeSet.of(NUMBER);
+    }
+    if (statement instanceof BSLParser.ForEachStatementContext forEach) {
+      // Связывание «Для Каждого Х Из Коллекция»: тип Х — тип элемента коллекции.
+      // Выражение коллекции лежит в самом заголовке, поэтому искать его по позиции
+      // спуском по дереву не нужно.
+      return elementTypesOfCollection(forEach.expression(), ctx);
+    }
+    return inferFromDefinitionPosition(owner, position, ctx);
+  }
+
+  /**
+   * Типы из висячего комментария в строке присваивания.
+   * <p>
+   * Ссылка {@code см.} в модуль, до разбора которого очередь ещё не дошла, пока рабочая
+   * область наполняется, не разрешается ни во что. Значение метода, посчитанное на таком
+   * ответе, решил бы порядок наполнения, поэтому расчёт помечается неполным: проход после
+   * наполнения его повторит.
+   *
+   * @param owner      документ с присваиванием.
+   * @param assignment оператор присваивания.
+   * @param ctx        контекст текущего инференса.
+   * @return типы из комментария; пустой набор, если комментария нет либо типы в нём не распознаны.
+   */
+  private TypeSet typesOfAssignmentComment(DocumentContext owner, BSLParser.AssignmentContext assignment,
+                                           InferenceContext ctx) {
+    Runnable onIncomplete = workspacePopulated ? null : ctx::noteMissingData;
+    return commentTypeResolver.ofAssignment(owner, assignment, onIncomplete, ctx.assignmentComments());
+  }
+
+  /**
+   * Типы элементов коллекции, по которой идёт обход.
+   *
+   * @param collection выражение коллекции; {@code null}, если его в заголовке нет.
+   * @param ctx        контекст текущего инференса.
+   * @return типы элементов; пустой набор, если коллекция не выводится.
+   */
+  private TypeSet elementTypesOfCollection(BSLParser.@Nullable ExpressionContext collection, InferenceContext ctx) {
+    if (collection == null) {
+      return TypeSet.EMPTY;
+    }
+    var collectionExpr = ExpressionTreeBuildingVisitor.buildExpressionTree(collection);
+    return collectionExpr == null ? TypeSet.EMPTY : inferInternal(collectionExpr, ctx).getElementTypes();
+  }
+
+  /**
+   * Тип, присваиваемый переменной в указанной позиции, когда оператор вызывающему неизвестен.
+   * <p>
+   * Оператор ищется спуском по дереву разбора от корня файла — этим путь и отличается от
+   * {@link #inferFromDefinition}, которому оператор известен заранее.
+   *
+   * @param owner    документ с присваиванием.
+   * @param position позиция присваивания либо связывания в цикле обхода.
+   * @param ctx      контекст текущего инференса.
+   * @return присваиваемые типы; пустой набор, если вывести их не удалось.
+   */
+  private TypeSet inferFromDefinitionPosition(
+    DocumentContext owner,
+    Position position,
+    InferenceContext ctx
+  ) {
+    var assignment = ExpressionAtPosition.findAssignment(owner, position);
+    TypeSet result = assignment.map(BSLParser.AssignmentContext::expression)
+      .map(ExpressionTreeBuildingVisitor::buildExpressionTree)
+      .map(expr -> inferInternal(expr, ctx))
+      .orElse(TypeSet.EMPTY);
+    if (assignment.isPresent()) {
+      result = result.union(typesOfAssignmentComment(owner, assignment.get(), ctx));
+      return result;
+    }
+    // Декларация переменной через «Для Каждого X Из Коллекция Цикл»:
+    // тип X — это объединение typeSets, объявленных как elementTypes
+    // коллекции.
+    var forEach = ExpressionAtPosition.findForEachBindingAt(owner, position);
+    if (forEach.isPresent()) {
+      result = result.union(elementTypesOfCollection(forEach.get().expression(), ctx));
+    }
+    return result;
+  }
+
+
+  // ---------------------------------------------------------------------------
+  // Helpers
+  // ---------------------------------------------------------------------------
+
+  private static boolean isComparison(BslOperator op) {
+    return op == BslOperator.EQUAL || op == BslOperator.NOT_EQUAL
+      || op == BslOperator.LESS || op == BslOperator.LESS_OR_EQUAL
+      || op == BslOperator.GREATER || op == BslOperator.GREATER_OR_EQUAL;
+  }
+
+  private static boolean isLogical(BslOperator op) {
+    return op == BslOperator.AND || op == BslOperator.OR || op == BslOperator.NOT;
+  }
+
+}

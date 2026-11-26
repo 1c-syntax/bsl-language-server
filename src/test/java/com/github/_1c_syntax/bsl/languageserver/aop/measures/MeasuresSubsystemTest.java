@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,14 +21,16 @@
  */
 package com.github._1c_syntax.bsl.languageserver.aop.measures;
 
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.util.List;
@@ -38,16 +40,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @ActiveProfiles("measures")
-class MeasuresSubsystemTest {
-
-  @Autowired
-  private ServerContext serverContext;
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+class MeasuresSubsystemTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private ConfigurableApplicationContext applicationContext;
 
   @Autowired
   private MeasureCollector measureCollector;
+
+  @BeforeEach
+  void setUp() {
+    var configurationRoot = Absolute.path(TestUtils.PATH_TO_METADATA);
+    initServerContext(configurationRoot, false);
+  }
 
   @AfterEach
   void afterAll() {
@@ -56,13 +62,9 @@ class MeasuresSubsystemTest {
 
   @Test
   void testMeasuresAreCollected() {
-    // given
-    var configurationRoot = Absolute.path(TestUtils.PATH_TO_METADATA);
-    serverContext.setConfigurationRoot(configurationRoot);
-
     // when
-    serverContext.populateContext();
-    var documentContext = TestUtils.getDocumentContext("Запрос = Новый Запрос(\"ВЫБРАТЬ 1 как а\");");
+    context.populateContext();
+    var documentContext = TestUtils.getDocumentContext("Запрос = Новый Запрос(\"ВЫБРАТЬ 1 как а\");", context);
     documentContext.getDiagnostics();
 
     // then

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,26 +22,31 @@
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.EventHandlerClassifier;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.EventMethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.RegularMethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition.ParameterType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationParameterDefinition;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotations;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.description.ParameterDescription;
+import com.github._1c_syntax.bsl.languageserver.utils.Methods;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import com.github._1c_syntax.bsl.parser.description.MethodDescription;
+import com.github._1c_syntax.bsl.parser.description.ParameterDescription;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Range;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -50,8 +55,15 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+/**
+ * Вычислитель символов методов и функций.
+ * <p>
+ * Анализирует AST и создает символы для всех методов и функций модуля,
+ * включая информацию о параметрах, аннотациях и описаниях.
+ */
 public final class MethodSymbolComputer
   extends BSLParserBaseVisitor<ParseTree>
   implements Computer<List<MethodSymbol>> {
@@ -61,14 +73,18 @@ public final class MethodSymbolComputer
     BSLParser.ANNOTATION_ATCLIENTATSERVER_SYMBOL);
 
   private final DocumentContext documentContext;
+  private final EventHandlerClassifier eventHandlerClassifier;
+  private @Nullable Predicate<String> eventHandlers;
   private final Set<MethodSymbol> methods = new HashSet<>();
 
-  public MethodSymbolComputer(DocumentContext documentContext) {
+  public MethodSymbolComputer(DocumentContext documentContext, EventHandlerClassifier eventHandlerClassifier) {
     this.documentContext = documentContext;
+    this.eventHandlerClassifier = eventHandlerClassifier;
   }
 
   @Override
   public List<MethodSymbol> compute() {
+    eventHandlers = null;
     methods.clear();
     visitFile(documentContext.getAst());
     return new ArrayList<>(methods);
@@ -78,26 +94,32 @@ public final class MethodSymbolComputer
   public ParseTree visitFunction(BSLParser.FunctionContext ctx) {
     BSLParser.FuncDeclarationContext declaration = ctx.funcDeclaration();
 
-    TerminalNode startNode = declaration.FUNCTION_KEYWORD();
+    TerminalNode functionKeyword = declaration.FUNCTION_KEYWORD();
     TerminalNode stopNode = ctx.ENDFUNCTION_KEYWORD();
 
-    if (startNode == null
-      || startNode instanceof ErrorNode
+    if (functionKeyword == null
+      || functionKeyword instanceof ErrorNode
       || stopNode == null
       || stopNode instanceof ErrorNode
     ) {
       return ctx;
     }
 
+    TerminalNode asyncKeyword = declaration.ASYNC_KEYWORD();
+    TerminalNode startNode = selectStartNode(declaration.annotation(), asyncKeyword, functionKeyword);
+    Token startOfMethod = asyncKeyword != null ? asyncKeyword.getSymbol() : functionKeyword.getSymbol();
+
     MethodSymbol methodSymbol = createMethodSymbol(
       startNode,
       stopNode,
+      startOfMethod,
       declaration.subName().getStart(),
       declaration.paramList(),
       true,
       declaration.EXPORT_KEYWORD() != null,
+      asyncKeyword != null,
       getCompilerDirective(declaration.compilerDirective()),
-      getAnnotations(declaration.annotation()));
+      Annotations.from(declaration.annotation()));
 
     methods.add(methodSymbol);
 
@@ -108,31 +130,58 @@ public final class MethodSymbolComputer
   public ParseTree visitProcedure(BSLParser.ProcedureContext ctx) {
     BSLParser.ProcDeclarationContext declaration = ctx.procDeclaration();
 
-    TerminalNode startNode = declaration.PROCEDURE_KEYWORD();
+    TerminalNode procedureKeyword = declaration.PROCEDURE_KEYWORD();
     TerminalNode stopNode = ctx.ENDPROCEDURE_KEYWORD();
 
-    if (startNode == null
-      || startNode instanceof ErrorNode
+    if (procedureKeyword == null
+      || procedureKeyword instanceof ErrorNode
       || stopNode == null
       || stopNode instanceof ErrorNode
     ) {
       return ctx;
     }
 
+    TerminalNode asyncKeyword = declaration.ASYNC_KEYWORD();
+    TerminalNode startNode = selectStartNode(declaration.annotation(), asyncKeyword, procedureKeyword);
+    Token startOfMethod = asyncKeyword != null ? asyncKeyword.getSymbol() : procedureKeyword.getSymbol();
+
     MethodSymbol methodSymbol = createMethodSymbol(
       startNode,
       stopNode,
+      startOfMethod,
       declaration.subName().getStart(),
       declaration.paramList(),
       false,
       declaration.EXPORT_KEYWORD() != null,
+      asyncKeyword != null,
       getCompilerDirective(declaration.compilerDirective()),
-      getAnnotations(declaration.annotation())
+      Annotations.from(declaration.annotation())
     );
 
     methods.add(methodSymbol);
 
     return ctx;
+  }
+
+  /**
+   * Выбирает токен начала символа метода в соответствии с грамматикой
+   * {@code (preprocessor | compilerDirective | annotation)* ASYNC_KEYWORD? PROCEDURE_KEYWORD|FUNCTION_KEYWORD}.
+   * Приоритет (от самой ранней позиции к самой поздней):
+   * первая аннотация → {@code Асинх} → ключевое слово {@code Процедура}/{@code Функция}.
+   * Препроцессоры и compiler-directive исторически не входят в range символа.
+   */
+  private static TerminalNode selectStartNode(
+    List<? extends BSLParser.AnnotationContext> annotations,
+    @Nullable TerminalNode asyncKeyword,
+    TerminalNode keywordNode
+  ) {
+    if (!annotations.isEmpty()) {
+      return annotations.getFirst().AMPERSAND();
+    }
+    if (asyncKeyword != null) {
+      return asyncKeyword;
+    }
+    return keywordNode;
   }
 
   // есть определенные предпочтения при использовании &НаКлиентеНаСервереБезКонтекста в модуле упр.формы
@@ -173,7 +222,7 @@ public final class MethodSymbolComputer
       .map(compilerDirectiveContext -> compilerDirectiveContext.getStop().getType())
       .filter(SPECIAL_COMPILER_DIRECTIVES_TOKEN_TYPES::contains)
       .findAny()
-      .orElseGet(() -> compilerDirectiveContexts.get(0).getStop().getType());
+      .orElseGet(() -> compilerDirectiveContexts.getFirst().getStop().getType());
 
     return CompilerDirectiveKind.of(tokenType);
 
@@ -182,31 +231,120 @@ public final class MethodSymbolComputer
   private MethodSymbol createMethodSymbol(
     TerminalNode startNode,
     TerminalNode stopNode,
+    Token startOfMethod,
     Token subName,
     BSLParser.ParamListContext paramList,
     boolean function,
     boolean export,
+    boolean async,
     Optional<CompilerDirectiveKind> compilerDirective,
     List<Annotation> annotations
   ) {
-    Optional<MethodDescription> description = createDescription(startNode.getSymbol());
+    Optional<MethodDescription> description = createDescription(startOfMethod)
+      .or(() -> createDescription(startNode.getSymbol()));
     boolean deprecated = description
       .map(MethodDescription::isDeprecated)
       .orElse(false);
 
-    return MethodSymbol.builder()
-      .name(subName.getText().intern())
+    var name = subName.getText().intern();
+    var range = Ranges.create(startNode, stopNode);
+    var subNameRange = Ranges.create(subName);
+    var parameters = createParameters(paramList, description);
+
+    if (isOscriptClassConstructor(name, function)) {
+      return ConstructorSymbol.builder()
+        .name(name)
+        .owner(documentContext)
+        .range(range)
+        .subNameRange(subNameRange)
+        .function(function)
+        .export(export)
+        .async(async)
+        .description(description)
+        .deprecated(deprecated)
+        .parameters(parameters)
+        .compilerDirectiveKind(compilerDirective)
+        .annotations(annotations)
+        .build();
+    }
+
+    // Конструктор проверяется ДО события: "ПриСозданииОбъекта" у OScript-класса совпадает
+    // и с контрактом события (см. EventHandlerResolver.OSCRIPT_CLASS_EVENTS), но остаётся
+    // ConstructorSymbol — отдельный, уже устоявшийся вид символа со своей семантикой в дереве
+    // символов, hover'е и ReferenceIndex, реклассификации не подлежит. Классификация по имени
+    // не смотрит на function/procedure (как и lookupContract) — платформа вызывает обработчик
+    // по имени независимо от того, что метод по ошибке объявлен функцией.
+    if (isEventHandler(name)) {
+      return EventMethodSymbol.builder()
+        .name(name)
+        .owner(documentContext)
+        .range(range)
+        .subNameRange(subNameRange)
+        .function(function)
+        .export(export)
+        .async(async)
+        .description(description)
+        .deprecated(deprecated)
+        .parameters(parameters)
+        .compilerDirectiveKind(compilerDirective)
+        .annotations(annotations)
+        .build();
+    }
+
+    return RegularMethodSymbol.builder()
+      .name(name)
       .owner(documentContext)
-      .range(Ranges.create(startNode, stopNode))
-      .subNameRange(Ranges.create(subName))
+      .standaloneFunction(isStatelessModule())
+      .range(range)
+      .subNameRange(subNameRange)
       .function(function)
       .export(export)
+      .async(async)
       .description(description)
       .deprecated(deprecated)
-      .parameters(createParameters(paramList, description))
+      .parameters(parameters)
       .compilerDirectiveKind(compilerDirective)
       .annotations(annotations)
       .build();
+  }
+
+  /**
+   * Проверить, что модуль не хранит состояние: общий модуль BSL
+   * ({@link ModuleType#CommonModule}) либо модуль OneScript (любой {@code .os}-файл,
+   * не являющийся классом).
+   * <p>
+   * Методы таких модулей — самостоятельные функции, а не члены объекта со
+   * состоянием, поэтому для них корректнее {@link org.eclipse.lsp4j.SymbolKind#Function}.
+   * Класс OneScript ({@link ModuleType#OScriptClass}) — это инстанцируемый объект
+   * со своим состоянием, поэтому его методы остаются
+   * {@link org.eclipse.lsp4j.SymbolKind#Method}. Отдельный {@code .os}-файл вне
+   * библиотеки имеет {@link ModuleType#UNKNOWN}, но по семантике OneScript это
+   * скрипт-модуль, а не класс, поэтому он также считается модулем без состояния.
+   *
+   * @return {@code true}, если модуль не хранит состояние
+   */
+  private boolean isStatelessModule() {
+    if (documentContext.getModuleType() == ModuleType.CommonModule) {
+      return true;
+    }
+    return documentContext.getFileType() == FileType.OS
+      && documentContext.getModuleType() != ModuleType.OScriptClass;
+  }
+
+  /**
+   * Конструктор OneScript-класса — это процедура с именем {@code ПриСозданииОбъекта}
+   * или {@code OnObjectCreate} в файле, обозначающем класс
+   * ({@link ModuleType#OScriptClass}). В {@link ModuleType#OScriptModule} такая
+   * процедура — обычный метод (в OScript-модулях нет конструкторов).
+   */
+  private boolean isOscriptClassConstructor(String name, boolean function) {
+    if (function) {
+      return false;
+    }
+    if (documentContext.getModuleType() != ModuleType.OScriptClass) {
+      return false;
+    }
+    return Methods.isOscriptClassConstructorName(name);
   }
 
   private Optional<MethodDescription> createDescription(Token token) {
@@ -215,11 +353,11 @@ public final class MethodSymbolComputer
       return Optional.empty();
     }
 
-    return Optional.of(new MethodDescription(comments));
+    return Optional.of(MethodDescription.create(comments));
   }
 
   private static List<ParameterDefinition> createParameters(
-    @Nullable BSLParser.ParamListContext paramList,
+    BSLParser.@Nullable ParamListContext paramList,
     Optional<MethodDescription> description
   ) {
     if (paramList == null) {
@@ -233,10 +371,11 @@ public final class MethodSymbolComputer
           .name(parameterName)
           .byValue(param.VAL_KEYWORD() != null)
           .defaultValue(getDefaultValue(param))
+          .annotations(Annotations.from(param.annotation()))
           .range(getParameterRange(param))
           .description(getParameterDescription(parameterName, description))
           .build();
-      }).collect(Collectors.toList());
+      }).toList();
   }
 
   private static ParameterDefinition.DefaultValue getDefaultValue(BSLParser.ParamContext param) {
@@ -305,55 +444,16 @@ public final class MethodSymbolComputer
     return description.map(MethodDescription::getParameters)
       .stream()
       .flatMap(Collection::stream)
-      .filter(parameterDescription -> parameterDescription.getName().equalsIgnoreCase(parameterName))
+      .filter(parameterDescription -> parameterDescription.name().equalsIgnoreCase(parameterName))
       .findFirst();
 
   }
 
-  private static List<Annotation> getAnnotations(List<? extends BSLParser.AnnotationContext> annotationContext) {
-    return annotationContext.stream()
-      .map(MethodSymbolComputer::createAnnotation)
-      .collect(Collectors.toList());
-  }
-
-  private static Annotation createAnnotation(BSLParser.AnnotationContext annotation) {
-    return Annotation.builder()
-      .name(annotation.annotationName().getText().intern())
-      .kind(AnnotationKind.of(annotation.annotationName().getStop().getType()))
-      .parameters(getAnnotationParameter(annotation.annotationParams()))
-      .build();
-  }
-
-  private static List<AnnotationParameterDefinition> getAnnotationParameter(
-    BSLParser.AnnotationParamsContext annotationParamsContext
-  ) {
-
-    if (annotationParamsContext == null) {
-      return Collections.emptyList();
+  /** Классификатор документа берётся один раз, при первом методе. */
+  private boolean isEventHandler(String name) {
+    if (eventHandlers == null) {
+      eventHandlers = eventHandlerClassifier.eventHandlersOf(documentContext);
     }
-
-    return annotationParamsContext.annotationParam().stream()
-      .map(MethodSymbolComputer::getAnnotationParam)
-      .collect(Collectors.toList());
-  }
-
-  private static AnnotationParameterDefinition getAnnotationParam(BSLParser.AnnotationParamContext o) {
-    var name = Optional.ofNullable(o.annotationParamName())
-      .map(BSLParserRuleContext::getText)
-      .orElse("");
-    var value = Optional.ofNullable(o.constValue())
-      .map(BSLParserRuleContext::getText)
-      .map(MethodSymbolComputer::excludeTrailingQuotes)
-      .orElse("");
-    var optional = o.constValue() != null;
-
-    return new AnnotationParameterDefinition(name, value, optional);
-  }
-
-  private static String excludeTrailingQuotes(String text) {
-    if (text.length() > 2 && text.charAt(0) == '\"') {
-      return text.substring(1, text.length() - 1);
-    }
-    return text;
+    return eventHandlers.test(name);
   }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,18 +21,17 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
-import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Regions;
-import com.github._1c_syntax.bsl.languageserver.utils.Resources;
-import com.github._1c_syntax.bsl.mdo.support.ScriptVariant;
-import com.github._1c_syntax.bsl.types.ConfigurationSource;
+import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
+import com.github._1c_syntax.bsl.types.ScriptVariant;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
+import org.eclipse.lsp4j.CodeActionTriggerKind;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
@@ -71,10 +70,20 @@ public class GenerateStandardRegionsSupplier implements CodeActionSupplier {
   @Override
   public List<CodeAction> getCodeActions(CodeActionParams params, DocumentContext documentContext) {
 
+    // Генерация областей предлагается только при явном вызове меню действий (Invoked либо устаревший
+    // клиент без triggerKind). При автоматическом вызове (лампочка при движении курсора) действие
+    // не предлагается, чтобы не замусоривать меню на каждой строке.
+    if (params.getContext().getTriggerKind() == CodeActionTriggerKind.Automatic) {
+      return Collections.emptyList();
+    }
+
     var moduleType = documentContext.getModuleType();
     var fileType = documentContext.getFileType();
 
-    ScriptVariant regionsLanguage = getRegionsLanguage(documentContext, fileType);
+    // Язык, на котором пишет проект, считает сам документ: у файла конфигурации — её
+    // ScriptVariant, у одиночного файла и у OneScript — язык интерфейса сервера.
+    var regionsLanguage = ScriptVariant.valueByName(
+      documentContext.getScriptVariantLanguage().getLanguageCode());
     Set<String> neededStandardRegions;
 
     if (fileType == FileType.BSL) {
@@ -96,7 +105,7 @@ public class GenerateStandardRegionsSupplier implements CodeActionSupplier {
       regionsLanguage == ScriptVariant.ENGLISH ? "#Region %s%n%n#EndRegion%n" : "#Область %s%n%n#КонецОбласти%n";
 
     String result = neededStandardRegions.stream()
-      .map(s -> String.format(regionFormat, s))
+      .map(regionFormat::formatted)
       .collect(Collectors.joining("\n"));
     var textEdit = new TextEdit(calculateFixRange(params.getRange()), result);
 
@@ -115,28 +124,6 @@ public class GenerateStandardRegionsSupplier implements CodeActionSupplier {
     codeAction.setKind(CodeActionKind.Refactor);
     codeAction.setEdit(edit);
     return List.of(codeAction);
-  }
-
-  private ScriptVariant getRegionsLanguage(DocumentContext documentContext, FileType fileType) {
-
-    ScriptVariant regionsLanguage;
-    var configuration = documentContext.getServerContext().getConfiguration();
-    if (configuration.getConfigurationSource() == ConfigurationSource.EMPTY || fileType == FileType.OS) {
-      regionsLanguage = getScriptVariantFromConfigLanguage();
-    } else {
-      regionsLanguage = documentContext.getServerContext().getConfiguration().getScriptVariant();
-    }
-    return regionsLanguage;
-  }
-
-  private ScriptVariant getScriptVariantFromConfigLanguage() {
-    ScriptVariant regionsLanguage;
-    if (languageServerConfiguration.getLanguage() == Language.EN) {
-      regionsLanguage = ScriptVariant.ENGLISH;
-    } else {
-      regionsLanguage = ScriptVariant.RUSSIAN;
-    }
-    return regionsLanguage;
   }
 
   private static Range calculateFixRange(Range range) {

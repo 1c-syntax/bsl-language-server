@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,11 +22,13 @@
 package com.github._1c_syntax.bsl.languageserver.aop.measures;
 
 import com.github._1c_syntax.bsl.languageserver.utils.ThrowingSupplier;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 
 import java.io.ByteArrayOutputStream;
@@ -38,6 +40,12 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @ActiveProfiles("measures")
+// Контекст с профилем "measures" вызывает автосвязывание MeasureCollector
+// в singleton-аспект MeasuresAspect (через AspectJ). Чтобы аспект не остался
+// «активным» для других тестов в той же JVM (что ломает диагностики,
+// созданные напрямую через new), очищаем кэш контекста после класса —
+// @PreDestroy у аспекта сбросит измеритель в null.
+@DirtiesContext(classMode = DirtiesContext.ClassMode.AFTER_CLASS)
 class MeasureCollectorTest {
 
   @Autowired
@@ -70,7 +78,7 @@ class MeasureCollectorTest {
     assertThat(measures)
       .containsKey("test")
       .extractingByKey("test")
-      .asList()
+      .asInstanceOf(InstanceOfAssertFactories.LIST)
       .isNotEmpty();
   }
 

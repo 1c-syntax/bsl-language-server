@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticP
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import org.antlr.v4.runtime.Token;
@@ -88,7 +87,7 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
   }
 
   private static int getEofTokenLine(List<Token> tokens) {
-    return tokens.get(tokens.size() - 1).getLine();
+    return tokens.getLast().getLine();
   }
 
   private void addIssue(int startEmptyLine, int lastEmptyLine) {
@@ -105,7 +104,7 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
       .map(diagnostic -> getQuickFixText(diagnostic, eofTokenLine))
       .collect(Collectors.toList());
 
-    return CodeActionProvider.createCodeActions(
+    return QuickFixProvider.createCodeActions(
       textEdits,
       info.getResourceString("quickFixMessage"),
       documentContext.getUri(),

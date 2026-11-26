@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Objects;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThatSelectionRanges;
+import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 class SelectionRangeProviderTest {
@@ -71,7 +72,7 @@ class SelectionRangeProviderTest {
   @Test
   void testStatementCapturesStatementBlockAfterStatement() {
     // given
-    var params = selection(4, 20);
+    var params = selection(4, 19);
 
     // when
     var selectionRanges = provider.getSelectionRange(documentContext, params);
@@ -89,7 +90,7 @@ class SelectionRangeProviderTest {
   @Test
   void testStatementCapturesStatementBlockBeforeStatement() {
     // given
-    var params = selection(6, 20);
+    var params = selection(6, 19);
 
     // when
     var selectionRanges = provider.getSelectionRange(documentContext, params);
@@ -107,7 +108,7 @@ class SelectionRangeProviderTest {
   @Test
   void testStatementCapturesStatementBlockAroundStatement() {
     // given
-    var params = selection(5, 20);
+    var params = selection(5, 19);
 
     // when
     var selectionRanges = provider.getSelectionRange(documentContext, params);
@@ -140,6 +141,43 @@ class SelectionRangeProviderTest {
       .extractParent() // sub
       .extractParent() // file
       .hasRange(documentContext.getSymbolTree().getModule().getRange())
+    ;
+  }
+
+  @Test
+  void caretRightAfterIdentifierBehavesLikeCaretInsideIdentifier() {
+    // given
+    var paramsInsideIdentifier = selection(18, 10);
+    var paramsAfterIdentifier = selection(18, 12);
+
+    // when
+    var rangesInsideIdentifier = provider.getSelectionRange(documentContext, paramsInsideIdentifier);
+    var rangesAfterIdentifier = provider.getSelectionRange(documentContext, paramsAfterIdentifier);
+
+    // then
+    assertThatSelectionRanges(rangesAfterIdentifier)
+      .hasSize(1)
+      .element(0)
+      .hasRange(18, 4, 12)
+      .hasParentWithRange(18, 4, 17)
+    ;
+    assertThat(rangesAfterIdentifier).isEqualTo(rangesInsideIdentifier);
+  }
+
+  @Test
+  void caretRightAfterLastTokenOnLineSelectsThatToken() {
+    // given
+    var params = selection(18, 17);
+
+    // when
+    var selectionRanges = provider.getSelectionRange(documentContext, params);
+
+    // then
+    assertThatSelectionRanges(selectionRanges)
+      .hasSize(1)
+      .element(0)
+      .hasRange(18, 16, 17)
+      .hasParentWithRange(18, 4, 17)
     ;
   }
 

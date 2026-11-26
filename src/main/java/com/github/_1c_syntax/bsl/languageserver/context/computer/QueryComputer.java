@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -34,6 +34,12 @@ import java.util.List;
 import java.util.StringJoiner;
 import java.util.regex.Pattern;
 
+/**
+ * Вычислитель запросов СДБЛ в коде.
+ * <p>
+ * Извлекает запросы на языке СДБЛ (язык запросов 1С) из строковых литералов
+ * и преобразует их в токенизированное представление.
+ */
 public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Computer<List<SDBLTokenizer>> {
 
   /**
@@ -92,7 +98,7 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
     var startLine = 0;
     var startEmptyLines = "";
     if (!ctx.getTokens().isEmpty()) {
-      startLine = ctx.getTokens().get(0).getLine();
+      startLine = ctx.getTokens().getFirst().getLine();
       startEmptyLines = "\n".repeat(startLine - 1);
     }
 
@@ -103,6 +109,7 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
     var partString = "";
     var strings = new StringJoiner("\n");
     var stringsBuff = new StringJoiner("\n");
+    var lineStartLine = startLine;
     for (Token token : ctx.getTokens()) {
 
       // бывает несколько токенов строки в одной строе файла
@@ -114,9 +121,14 @@ public class QueryComputer extends BSLParserBaseVisitor<ParseTree> implements Co
 
       // если новый токен строки находится на той же строке файла, что и предыдущий, то добавляем его к ней
       if (token.getLine() == prevTokenLine && prevTokenLine != -1) {
-        var newString = getString(startLine, token);
-        partString = newString.substring(partString.length());
+        var newString = getString(lineStartLine, token);
+        if (newString.length() > partString.length()) {
+          partString = newString.substring(partString.length());
+        } else {
+          partString = "";
+        }
       } else {
+        lineStartLine = startLine;
         partString = getString(startLine, token);
       }
 

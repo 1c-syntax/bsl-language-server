@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -26,23 +26,19 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticP
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.providers.FormatProvider;
+import com.github._1c_syntax.bsl.languageserver.formatting.BslFormatter;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.AbstractCallNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOperationNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslOperator;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionNodeType;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionParseTreeRewriter;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.NodeEqualityComparer;
-import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TernaryOperatorNode;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.TransitiveOperationsIgnoringComparer;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.UnaryOperationNode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.Token;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.FormattingOptions;
 
 import java.util.ArrayList;
@@ -62,7 +58,7 @@ import java.util.stream.Collectors;
   }
 )
 @RequiredArgsConstructor
-public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
+public class IdenticalExpressionsDiagnostic extends AbstractExpressionTreeDiagnostic {
 
   private static final int MIN_EXPRESSION_SIZE = 3;
   private static final String POPULAR_DIVISORS_DEFAULT_VALUE = "60, 1024";
@@ -72,8 +68,11 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
     defaultValue = POPULAR_DIVISORS_DEFAULT_VALUE
   )
   private Set<String> popularDivisors = parseCommaSeparatedSet(POPULAR_DIVISORS_DEFAULT_VALUE);
-  private final FormatProvider formatProvider;
-  
+  private final BslFormatter formatter;
+
+  private final List<BinaryOperationNode> binaryOperations = new ArrayList<>();
+  private BSLParser.ExpressionContext expressionContext;
+
   private static Set<String> parseCommaSeparatedSet(String values) {
     if (values.trim().isEmpty()) {
       return Collections.emptySet();
@@ -95,28 +94,41 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   @Override
-  public ParseTree visitExpression(BSLParser.ExpressionContext ctx) {
+  protected ExpressionVisitorDecision onExpressionEnter(BSLParser.ExpressionContext ctx) {
+    expressionContext = ctx;
+    return sufficientSize(ctx)? ExpressionVisitorDecision.SKIP : ExpressionVisitorDecision.ACCEPT;
+  }
 
-    if (sufficientSize(ctx)) {
-      return ctx;
-    }
-
-    var tree = ExpressionParseTreeRewriter.buildExpressionTree(ctx);
-
-    var binariesList = flattenBinaryOperations(tree);
-    if (binariesList.isEmpty()) {
-      return ctx;
-    }
+  @Override
+  protected void visitTopLevelExpression(BslExpression node) {
+    binaryOperations.clear();
+    super.visitTopLevelExpression(node);
 
     var comparer = new TransitiveOperationsIgnoringComparer();
     comparer.logicalOperationsAsTransitive(true);
-    binariesList
+    binaryOperations
       .stream()
       .filter(x -> checkEquality(comparer, x))
-      .forEach(x -> diagnosticStorage.addDiagnostic(ctx,
+      .forEach(x -> diagnosticStorage.addDiagnostic(expressionContext,
         info.getMessage(x.getRepresentingAst().getText(), getOperandText(x))));
+  }
 
-    return ctx;
+  @Override
+  protected void visitBinaryOperation(BinaryOperationNode node) {
+    var operator = node.getOperator();
+
+    // разыменования отбросим, хотя comparer их и не зачтет, но для производительности
+    // лучше выкинем их сразу
+    if (operator == BslOperator.DEREFERENCE || operator == BslOperator.INDEX_ACCESS) {
+      return;
+    }
+
+    // одинаковые умножения и сложения - не считаем, см. тесты
+    if (operator != BslOperator.ADD && operator != BslOperator.MULTIPLY) {
+      binaryOperations.add(node);
+    }
+
+    super.visitBinaryOperation(node);
   }
 
   private boolean checkEquality(NodeEqualityComparer comparer, BinaryOperationNode node) {
@@ -182,7 +194,7 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
     fillTokens(pairedOperand, tokens);
 
     // todo: очень плохое место для этого метода
-    return formatProvider.getNewText(
+    return formatter.getNewText(
       tokens, documentContext.getScriptVariantLocale(), Ranges.create(), 0, new FormattingOptions()).trim();
 
   }
@@ -212,52 +224,6 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
     }
   }
 
-  private static List<BinaryOperationNode> flattenBinaryOperations(BslExpression tree) {
-    var list = new ArrayList<BinaryOperationNode>();
-    gatherBinaryOperations(list, tree);
-    return list;
-  }
-
-  private static void gatherBinaryOperations(List<BinaryOperationNode> list, BslExpression tree) {
-    switch (tree.getNodeType()) {
-      case CALL:
-        for (var expr : tree.<AbstractCallNode>cast().arguments()) {
-          gatherBinaryOperations(list, expr);
-        }
-        break;
-      case UNARY_OP:
-        gatherBinaryOperations(list, tree.<UnaryOperationNode>cast().getOperand());
-        break;
-      case TERNARY_OP:
-        var ternary = (TernaryOperatorNode) tree;
-        gatherBinaryOperations(list, ternary.getCondition());
-        gatherBinaryOperations(list, ternary.getTruePart());
-        gatherBinaryOperations(list, ternary.getFalsePart());
-        break;
-      case BINARY_OP:
-        var binary = (BinaryOperationNode) tree;
-        var operator = binary.getOperator();
-
-        // разыменования отбросим, хотя comparer их и не зачтет, но для производительности
-        // лучше выкинем их сразу
-        if (operator == BslOperator.DEREFERENCE || operator == BslOperator.INDEX_ACCESS) {
-          return;
-        }
-
-        // одинаковые умножения и сложения - не считаем, см. тесты
-        if (operator != BslOperator.ADD && operator != BslOperator.MULTIPLY) {
-          list.add(binary);
-        }
-
-        gatherBinaryOperations(list, binary.getLeft());
-        gatherBinaryOperations(list, binary.getRight());
-        break;
-
-      default:
-        break; // для спокойствия сонара
-    }
-  }
-
   private static boolean isComplementary(BinaryOperationNode binary) {
     var operator = binary.getOperator();
     if ((operator == BslOperator.OR || operator == BslOperator.AND)
@@ -269,6 +235,6 @@ public class IdenticalExpressionsDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private static boolean sufficientSize(BSLParser.ExpressionContext ctx) {
-    return ctx.children.size() < MIN_EXPRESSION_SIZE;
+    return ctx.getChildCount() < MIN_EXPRESSION_SIZE;
   }
 }

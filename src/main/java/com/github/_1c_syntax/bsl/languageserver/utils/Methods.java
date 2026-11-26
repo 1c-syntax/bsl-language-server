@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -26,19 +26,55 @@ import lombok.experimental.UtilityClass;
 import org.antlr.v4.runtime.Token;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
+/**
+ * Утилитный класс для работы с методами в контексте AST.
+ * <p>
+ * Предоставляет методы для извлечения информации о вызовах методов
+ * из различных контекстов синтаксического дерева.
+ */
 @UtilityClass
 public class Methods {
 
+  /**
+   * Имена методов, которые в {@code .os}-файлах семантически являются
+   * конструктором OneScript-класса.
+   */
+  private static final Set<String> OSCRIPT_CLASS_CONSTRUCTOR_NAMES = Set.of(
+    "присозданииобъекта",
+    "onobjectcreate"
+  );
+
+  /**
+   * Регистронезависимая проверка: является ли это имя методом-конструктором
+   * OneScript-класса ({@code ПриСозданииОбъекта} / {@code OnObjectCreate}).
+   */
+  public static boolean isOscriptClassConstructorName(String methodName) {
+    if (methodName == null || methodName.isEmpty()) {
+      return false;
+    }
+    return OSCRIPT_CLASS_CONSTRUCTOR_NAMES.contains(methodName.toLowerCase(Locale.ROOT));
+  }
+
+  /**
+   * Получить имя метода из контекста вызова.
+   *
+   * @param ctx Контекст вызова метода
+   * @return Токен с именем метода, если найден
+   */
   public static Optional<Token> getMethodName(BSLParser.CallStatementContext ctx) {
     var modifiers = ctx.modifier();
     Optional<Token> methodName;
     if (ctx.globalMethodCall() != null) {
       methodName = getMethodName(ctx.globalMethodCall());
-    } else {
+    } else if (ctx.accessCall() != null) {
       methodName = getMethodName(ctx.accessCall());
+    } else {
+      methodName = Optional.empty();
     }
 
     if (modifiers.isEmpty()) {
@@ -48,18 +84,42 @@ public class Methods {
     }
   }
 
+  /**
+   * Получить имя метода из контекста глобального вызова метода.
+   *
+   * @param ctx Контекст глобального вызова метода
+   * @return Токен с именем метода
+   */
   public static Optional<Token> getMethodName(BSLParser.GlobalMethodCallContext ctx) {
     return Optional.of(ctx.methodName().getStart());
   }
 
+  /**
+   * Получить имя метода из контекста вызова метода через точку.
+   *
+   * @param ctx Контекст вызова метода через точку (accessCall)
+   * @return Токен с именем метода
+   */
   public static Optional<Token> getMethodName(BSLParser.AccessCallContext ctx) {
     return Optional.of(ctx.methodCall().methodName().getStart());
   }
 
+  /**
+   * Получить имя метода из контекста сложного идентификатора.
+   *
+   * @param ctx Контекст сложного идентификатора
+   * @return Токен с именем метода, если найден
+   */
   public static Optional<Token> getMethodName(BSLParser.ComplexIdentifierContext ctx) {
     return getMethodName(ctx.modifier());
   }
 
+  /**
+   * Получить имя метода из списка модификаторов.
+   *
+   * @param modifiers Список модификаторов
+   * @return Токен с именем метода, если найден
+   */
   public static Optional<Token> getMethodName(List<? extends BSLParser.ModifierContext> modifiers) {
     return modifiers.stream()
       .map(BSLParser.ModifierContext::accessCall)
@@ -69,6 +129,12 @@ public class Methods {
       .orElse(Optional.empty());
   }
 
+  /**
+   * Получить имя метода из контекста параметра вызова (для NotifyDescription).
+   *
+   * @param callParamContext Контекст параметра вызова
+   * @return Токен с именем метода, если найден
+   */
   public static Optional<Token> getMethodName(BSLParser.CallParamContext callParamContext) {
     return NotifyDescription.getFirstMember(callParamContext)
       .map(BSLParser.MemberContext::constValue)
@@ -76,6 +142,12 @@ public class Methods {
       .map(BSLParser.StringContext::getStart);
   }
 
+  /**
+   * Получить имя метода из контекста левого значения (lValue).
+   *
+   * @param lValueContext Контекст левого значения
+   * @return Токен с именем метода, если найден
+   */
   public static Optional<Token> getMethodName(BSLParser.LValueContext lValueContext) {
     return Optional.ofNullable(lValueContext.acceptor())
       .map(BSLParser.AcceptorContext::modifier)

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -25,8 +25,12 @@ import org.eclipse.lsp4j.ServerInfo;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import picocli.CommandLine;
+
+import java.io.PrintWriter;
+import java.io.StringWriter;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
@@ -35,7 +39,7 @@ import static org.mockito.Mockito.when;
 @DirtiesContext
 class VersionCommandTest {
 
-  @MockBean
+  @MockitoBean
   private ServerInfo serverInfo;
 
   @Autowired
@@ -54,14 +58,30 @@ class VersionCommandTest {
   }
 
   @Test
-  void testSuccessfulCall() {
+  void testNullVersion() {
     // given
-    when(serverInfo.getVersion()).thenReturn("0.0.0");
+    when(serverInfo.getVersion()).thenReturn(null);
 
     // when
     var call = command.call();
 
     // then
+    assertThat(call).isEqualTo(1);
+  }
+
+  @Test
+  void testSuccessfulCall() {
+    // given
+    when(serverInfo.getVersion()).thenReturn("0.0.0");
+    var out = new StringWriter();
+    var commandLine = new CommandLine(command);
+    commandLine.setOut(new PrintWriter(out));
+
+    // when
+    var call = commandLine.execute();
+
+    // then
     assertThat(call).isZero();
+    assertThat(out.toString()).contains("version: 0.0.0");
   }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -23,12 +23,12 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.description.MethodDescription;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.description.ParameterDescription;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.parser.description.MethodDescription;
+import com.github._1c_syntax.bsl.parser.description.ParameterDescription;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 
 import java.util.ArrayList;
@@ -82,7 +82,7 @@ public class MissingParameterDescriptionDiagnostic extends AbstractSymbolTreeDia
     }
 
     if (parametersDescriptions.isEmpty()) {
-      if (!description.get().getLink().isEmpty()) {
+      if (!description.get().getLinks().isEmpty()) {
         // пока считаем ссылку наличием описания всего и вся
         return;
       }
@@ -105,7 +105,7 @@ public class MissingParameterDescriptionDiagnostic extends AbstractSymbolTreeDia
     var descriptions = parametersDescriptions.stream()
       .collect(
         Collectors.toMap(
-          ParameterDescription::getName,
+          ParameterDescription::name,
           Function.identity(),
           (first, second) -> first,
           CaseInsensitiveMap::new));
@@ -120,7 +120,7 @@ public class MissingParameterDescriptionDiagnostic extends AbstractSymbolTreeDia
       }
 
       // параметр в описании есть, но нет типа и описания типа
-      if (description.getTypes().isEmpty()) {
+      if (description.types().isEmpty()) {
         addDiagnostic(parameter, "emptyDescription");
       }
 
@@ -139,7 +139,7 @@ public class MissingParameterDescriptionDiagnostic extends AbstractSymbolTreeDia
 
     if (!hasMissingDescription.get()) {
       var paramDescriptionString = parametersDescriptions.stream()
-        .map(ParameterDescription::getName).collect(Collectors.joining(",")).toLowerCase(Locale.ENGLISH);
+        .map(ParameterDescription::name).collect(Collectors.joining(",")).toLowerCase(Locale.ENGLISH);
       var paramString = parameters.stream()
         .map(ParameterDefinition::getName).collect(Collectors.joining(",")).toLowerCase(Locale.ENGLISH);
       // если строки не равны, значит порядок описаний не совпадает
@@ -155,7 +155,7 @@ public class MissingParameterDescriptionDiagnostic extends AbstractSymbolTreeDia
 
   private void addDiagnostic(MethodSymbol methodSymbol, List<ParameterDescription> parametersDescriptions) {
     var parametersString = parametersDescriptions.stream()
-      .map(ParameterDescription::getName).collect(Collectors.joining(", "));
+      .map(ParameterDescription::name).collect(Collectors.joining(", "));
     diagnosticStorage.addDiagnostic(
       methodSymbol.getSubNameRange(),
       info.getResourceString("missingInSignature", parametersString));

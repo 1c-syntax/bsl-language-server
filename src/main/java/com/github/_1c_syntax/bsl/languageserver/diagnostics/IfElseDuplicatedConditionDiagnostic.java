@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -25,14 +25,14 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import jakarta.annotation.PostConstruct;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 
-import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -40,6 +40,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
+ * Диагностика повторяющихся условий в синтаксической конструкции {@code Если…Тогда…ИначеЕсли…}.
+ *
  * @author Leon Chagelishvili &lt;lChagelishvily@gmail.com&gt;
  */
 @DiagnosticMetadata(
@@ -85,22 +87,20 @@ public class IfElseDuplicatedConditionDiagnostic extends AbstractVisitorDiagnost
   }
 
   private void checkExpression(List<BSLParser.ExpressionContext> expressionContexts, int i) {
-    BSLParser.ExpressionContext currentExpression = expressionContexts.get(i);
+    var currentExpression = expressionContexts.get(i);
 
-    List<BSLParser.ExpressionContext> identicalExpressions = expressionContexts.stream()
+    var identicalExpressions = expressionContexts.stream()
       .skip(i)
       .filter(expressionContext ->
         !expressionContext.equals(currentExpression)
-          && DiagnosticHelper.equalNodes(currentExpression, expressionContext))
-      .collect(Collectors.toList());
+          && Trees.equalNodes(currentExpression, expressionContext))
+      .toList();
 
     if (identicalExpressions.isEmpty()) {
       return;
     }
 
-    identicalExpressions.stream()
-      .collect(Collectors.toCollection(() -> checkedConditions));
-
+    identicalExpressions.stream().collect(Collectors.toCollection(() -> checkedConditions));
     List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
 
     relatedInformation.add(RelatedInformation.create(
@@ -121,6 +121,4 @@ public class IfElseDuplicatedConditionDiagnostic extends AbstractVisitorDiagnost
 
     diagnosticStorage.addDiagnostic(currentExpression, relatedInformation);
   }
-
 }
-

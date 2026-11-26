@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -27,16 +27,13 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.TerminalNode;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -51,25 +48,23 @@ import java.util.stream.Collectors;
   }
 
 )
-public class MagicDateDiagnostic extends AbstractVisitorDiagnostic {
+public class MagicDateDiagnostic extends AbstractMagicValueDiagnostic {
 
   private static final String DEFAULT_AUTHORIZED_DATES = "00010101,00010101000000,000101010000";
 
-  private static final Pattern methodPattern = CaseInsensitivePattern.compile(
-    "Дата|Date"
+  private static final Pattern PARAM_PATTERN = CaseInsensitivePattern.compile(
+    "\"[0123]{1}\\d{7}\"|\"[0123]{1}\\d{13}\""
   );
+  private static final Pattern ZERO_PATTERN = Pattern.compile("^0+");
 
-  private static final Pattern paramPattern = CaseInsensitivePattern.compile(
-    "\"\\d{8}.*"
-  );
-
-  private static final Pattern nonNumberPattern = CaseInsensitivePattern.compile(
+  private static final Pattern NON_NUMBER_PATTERN = CaseInsensitivePattern.compile(
     "\\D"
   );
+  public static final int MAX_YEAR_BY_1C = 9999;
 
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + DEFAULT_AUTHORIZED_DATES
+    defaultValue = DEFAULT_AUTHORIZED_DATES
   )
   private final Set<String> authorizedDates = new HashSet<>(Arrays.asList(DEFAULT_AUTHORIZED_DATES.split(",")));
 
@@ -84,50 +79,111 @@ public class MagicDateDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   @Override
-  public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
-    Optional.of(ctx)
-      .filter(it -> methodPattern.matcher(it.methodName().getText()).matches())
-      .map(BSLParser.GlobalMethodCallContext::doCall)
-      .map(BSLParser.DoCallContext::callParamList)
-      .filter(callParamList -> paramPattern.matcher(callParamList.getText()).matches())
-      .ifPresent(this::checkExclAddDiagnostic);
-
-    return super.visitGlobalMethodCall(ctx);
-  }
-
-  @Override
   public ParseTree visitConstValue(BSLParser.ConstValueContext ctx) {
-    TerminalNode tNode = ctx.DATETIME();
-    if (tNode != null) {
-      checkExclAddDiagnostic(ctx);
-    }
-
-    return ctx;
-  }
-
-  private void checkExclAddDiagnostic(BSLParserRuleContext ctx){
-    String checked = ctx.getText();
-    if (checked != null && !isExcluded(checked)) {
-      ParserRuleContext expression;
-      if (ctx instanceof BSLParser.CallParamListContext){
-        expression = ctx.getParent().getParent().getParent().getParent().getParent();
-      } else {
-        expression = ctx.getParent().getParent();
+    var tNode = ctx.DATETIME();
+    var sNode = ctx.string();
+    if ((tNode != null || sNode != null) && isAccepted(ctx)) {
+      if (sNode != null && !isValidDate(sNode)) {
+        return defaultResult();
       }
-      if (expression instanceof BSLParser.ExpressionContext
-        && (!isAssignExpression((BSLParser.ExpressionContext) expression))) {
-        diagnosticStorage.addDiagnostic(ctx.stop, info.getMessage(checked));
+
+      if (isInsideDefaultValue(ctx)) {
+        return defaultResult();
+      }
+
+      final var expressionContext = getExpression(ctx);
+      if (expressionContext.isPresent() && insideStructureOrCorrespondence(expressionContext.get())) {
+        return defaultResult();
+      }
+      var expr = expressionContext.orElse(null);
+      if (shouldAddDiagnostic(expr)) {
+        diagnosticStorage.addDiagnostic(ctx, info.getMessage(ctx.getText()));
       }
     }
+
+    return defaultResult();
   }
 
-  private boolean isExcluded(String sIn) {
-    String s = nonNumberPattern.matcher(sIn).replaceAll("");
+  private static boolean isInsideDefaultValue(BSLParser.ConstValueContext ctx) {
+    var current = ctx.getParent();
+    while (current != null) {
+      if (current instanceof BSLParser.DefaultValueContext) {
+        return true;
+      }
+      current = current.getParent();
+    }
+    return false;
+  }
+
+  private static boolean shouldAddDiagnostic(BSLParser.@Nullable ExpressionContext expressionContext) {
+    return !insideSimpleAssignment(expressionContext)
+      && !insideReturnStatement(expressionContext)
+      && !insideAssignmentWithDateMethodForSimpleDate(expressionContext);
+  }
+
+  private static boolean isValidDate(BSLParser.StringContext ctx) {
+    final var text = ctx.getText();
+    if (!PARAM_PATTERN.matcher(text).matches()) {
+      return false;
+    }
+    var strDate = text.substring(1, text.length() - 1);
+    return isValidDate(strDate);
+  }
+
+  private static boolean isValidDate(String strDate) {
+    var year = parseInt(strDate.substring(0, 4));
+    if (year < 1 || year > MAX_YEAR_BY_1C) {
+      return false;
+    }
+    var month = parseInt(strDate.substring(4, 6));
+    var day = parseInt(strDate.substring(6, 8));
+    if (month < 1 || month > 12 || day < 1 || day > 31) {
+      return false;
+    }
+    if (strDate.length() == 8) {
+      return true;
+    }
+    var hh = parseInt(strDate.substring(8, 10));
+    var mm = parseInt(strDate.substring(10, 12));
+    var ss = parseInt(strDate.substring(12, 14));
+    return hh <= 24 && mm <= 60 && ss <= 60;
+  }
+
+  private static int parseInt(String text) {
+    String s = ZERO_PATTERN.matcher(text).replaceAll("");
+    try {
+      return Integer.parseInt(s);
+    } catch (NumberFormatException e) {
+      return 0;
+    }
+  }
+
+  private boolean isAccepted(BSLParser.ConstValueContext ctx) {
+    String text = ctx.getText();
+    return text != null && !text.isEmpty() && !isExcluded(text);
+  }
+
+  private boolean isExcluded(String text) {
+    String s = NON_NUMBER_PATTERN.matcher(text).replaceAll("");
     return authorizedDates.contains(s);
   }
 
-  private static boolean isAssignExpression(BSLParser.ExpressionContext expression) {
-    return (expression.getChildCount() <= 1);
+  private static boolean insideAssignmentWithDateMethodForSimpleDate(BSLParser.@Nullable ExpressionContext expression) {
+    if (expression == null) {
+      return false;
+    }
+    var dateCallOpt = getEnclosingDateMethodCall(expression);
+    if (dateCallOpt.isEmpty()) {
+      return false;
+    }
+    // getEnclosingDateMethodCall гарантировал цепочку expression -> callParam -> callParamList
+    var callParamList = expression.getParent().getParent();
+    if (callParamList.getChildCount() != 1) {
+      return false;
+    }
+    // globalCall -> complexId -> member -> expression
+    var dateCallExpression = dateCallOpt.get().getParent().getParent().getParent();
+    return dateCallExpression.getChildCount() == 1
+      && dateCallExpression.getParent() instanceof BSLParser.AssignmentContext;
   }
-
 }

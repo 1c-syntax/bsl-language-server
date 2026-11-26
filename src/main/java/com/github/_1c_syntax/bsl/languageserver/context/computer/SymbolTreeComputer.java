@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,34 +22,62 @@
 package com.github._1c_syntax.bsl.languageserver.context.computer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.EventMethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.EventHandlerClassifier;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.RegionSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SelfMemberClassifier;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Predicate;
 
+/**
+ * Вычислитель дерева символов документа.
+ * <p>
+ * Создаёт иерархическую структуру символов документа (модуль, методы, регионы, переменные),
+ * правильно расставляя родительско-дочерние связи между символами.
+ * В дерево также передаются условия препроцессора для объявлений методов, собранные
+ * {@link RegionVariableSymbolComputer} в том же обходе, что переменные и регионы.
+ * Эти условия не удерживают AST и остаются доступны после выгрузки содержимого документа.
+ */
 public class SymbolTreeComputer implements Computer<SymbolTree> {
 
   private final DocumentContext documentContext;
+  private final SelfMemberClassifier selfMemberClassifier;
+  private final EventHandlerClassifier eventHandlerClassifier;
 
-  public SymbolTreeComputer(DocumentContext documentContext) {
+  public SymbolTreeComputer(DocumentContext documentContext, SelfMemberClassifier selfMemberClassifier,
+                            EventHandlerClassifier eventHandlerClassifier) {
     this.documentContext = documentContext;
+    this.selfMemberClassifier = selfMemberClassifier;
+    this.eventHandlerClassifier = eventHandlerClassifier;
   }
 
   @Override
   public SymbolTree compute() {
 
+    // Имя, признанное реквизитом, символа не получает: запомнить его можно только здесь.
+    var bareSelfProperties = new HashSet<String>();
+    var recordingClassifier = new RecordingSelfMemberClassifier(selfMemberClassifier, bareSelfProperties);
     ModuleSymbol moduleSymbol = new ModuleSymbolComputer(documentContext).compute();
-    List<MethodSymbol> methods = new MethodSymbolComputer(documentContext).compute();
-    List<RegionSymbol> regions = new RegionSymbolComputer(documentContext).compute();
-    List<VariableSymbol> variables = new VariableSymbolComputer(documentContext, moduleSymbol, methods).compute();
+    List<MethodSymbol> methods = new MethodSymbolComputer(documentContext, eventHandlerClassifier).compute();
+    // Переменные, регионы и условия препроцессора — за один общий обход дерева.
+    var regionVariableComputer =
+      new RegionVariableSymbolComputer(documentContext, moduleSymbol, methods, recordingClassifier);
+    List<VariableSymbol> variables = regionVariableComputer.compute();
+    List<RegionSymbol> regions = regionVariableComputer.getRegions();
 
     List<SourceDefinedSymbol> allOfThem = new ArrayList<>(methods);
     allOfThem.addAll(regions);
@@ -65,8 +93,81 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
     }
 
     collapseChildrenCollection(moduleSymbol);
+    var basis = new SymbolTree.Basis(documentContext.getModuleType(), documentContext.getMdoRef(),
+      bareSelfProperties, regionVariableComputer.getLoopVariables());
+    return new SymbolTree(moduleSymbol, regionVariableComputer.getMethodConditions(), basis);
+  }
 
-    return new SymbolTree(moduleSymbol);
+  /**
+   * Годно ли для документа дерево, построенное по тому же его тексту.
+   * <p>
+   * Кроме текста, дерево зависит от привязки документа к метаданным и от того, как
+   * классификаторы ответили на вопросы о его методах и голых присваиваниях, — а их ответы
+   * держатся на членах чужих модулей и типов. Дерево годно, если привязка та же и
+   * классификаторы отвечают то же самое. Голые присваивания переспрашиваются по
+   * переменным с неявным объявлением. Объявления циклов от классификатора реквизитов
+   * не зависят и в этой проверке не участвуют.
+   *
+   * @param symbolTree дерево, построенное по тому же тексту документа.
+   * @return {@code true}, если построение заново дало бы то же дерево.
+   */
+  public boolean isUpToDate(SymbolTree symbolTree) {
+    var basis = symbolTree.getBasis();
+    if (basis == SymbolTree.Basis.NONE
+      || basis.moduleType() != documentContext.getModuleType()
+      || !basis.mdoRef().equals(documentContext.getMdoRef())) {
+      return false;
+    }
+    var eventHandlers = eventHandlerClassifier.eventHandlersOf(documentContext);
+    var bareSelfProperty = selfMemberClassifier.bareSelfPropertiesOf(documentContext);
+    return basis.bareSelfProperties().stream().allMatch(bareSelfProperty)
+      && classifiedAsBefore(symbolTree.getModule(), eventHandlers, bareSelfProperty, basis.loopVariables());
+  }
+
+  /**
+   * Классифицируются ли потомки символа так же, как при построении дерева. Обход идёт по
+   * детям, а не по плоским спискам дерева: те строятся лениво, и проверка не должна их
+   * достраивать у документов, которые после неё сразу отпустят.
+   */
+  private static boolean classifiedAsBefore(SourceDefinedSymbol symbol, Predicate<String> eventHandlers,
+                                            Predicate<String> bareSelfProperty, Set<VariableSymbol> loopVariables) {
+    for (var child : symbol.getChildren()) {
+      if (child instanceof MethodSymbol method
+        && !(method instanceof ConstructorSymbol)
+        && method instanceof EventMethodSymbol != eventHandlers.test(method.getName())) {
+        return false;
+      }
+      if (child instanceof VariableSymbol variable
+        && variable.getKind() == VariableKind.DYNAMIC
+        && !loopVariables.contains(variable)
+        && bareSelfProperty.test(variable.getName())) {
+        return false;
+      }
+      if (!classifiedAsBefore(child, eventHandlers, bareSelfProperty, loopVariables)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Создает минимальное и пустое SymbolTree по контексту документа.
+   * <p>
+   * Дерево содержит только ModuleSymbol с пустыми диапазонами.
+   *
+   * @param documentContext Контекст документа
+   *
+   * @return Пустое дерево символов.
+   */
+  public static SymbolTree empty(DocumentContext documentContext) {
+    var module = ModuleSymbol.builder()
+      .owner(documentContext)
+      .range(Ranges.create())
+      .selectionRange(Ranges.create())
+      .name("empty")
+      .build();
+
+    return new SymbolTree(module, SymbolTree.Basis.NONE);
   }
 
   private static SourceDefinedSymbol placeSymbol(

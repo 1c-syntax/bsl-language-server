@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -26,8 +26,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.providers.CodeActionProvider;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
+import jakarta.annotation.PostConstruct;
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.CodeAction;
@@ -35,11 +35,11 @@ import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.TextEdit;
 
-import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMessage;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -112,7 +112,7 @@ public class InvalidCharacterInFileDiagnostic extends AbstractDiagnostic impleme
     List<TextEdit> textEdits = new ArrayList<>();
 
     diagnostics.stream()
-      .filter(diagnostic -> diagnostic.getMessage().equals(diagnosticMessageSpace))
+      .filter(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).equals(diagnosticMessageSpace))
       .forEach((Diagnostic diagnostic) -> {
         var range = diagnostic.getRange();
         var textEdit = new TextEdit(
@@ -124,7 +124,7 @@ public class InvalidCharacterInFileDiagnostic extends AbstractDiagnostic impleme
       });
 
     diagnostics.stream()
-      .filter(diagnostic -> diagnostic.getMessage().equals(diagnosticMessageDash))
+      .filter(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).equals(diagnosticMessageDash))
       .forEach((Diagnostic diagnostic) -> {
         var range = diagnostic.getRange();
         var textEdit = new TextEdit(
@@ -135,7 +135,7 @@ public class InvalidCharacterInFileDiagnostic extends AbstractDiagnostic impleme
         textEdits.add(textEdit);
       });
 
-    return CodeActionProvider.createCodeActions(
+    return QuickFixProvider.createCodeActions(
       textEdits,
       info.getResourceString("quickFixMessage"),
       documentContext.getUri(),

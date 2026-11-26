@@ -1,0 +1,162 @@
+/*
+ * This file is a part of BSL Language Server.
+ *
+ * Copyright (c) 2018-2026
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ *
+ * BSL Language Server is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3.0 of the License, or (at your option) any later version.
+ *
+ * BSL Language Server is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BSL Language Server.
+ */
+package com.github._1c_syntax.bsl.languageserver.types;
+
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.eclipse.lsp4j.Position;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * Trailing-комментарий типа у объявления {@code Перем} переменной (модуля или
+ * локальной) должен типизировать переменную.
+ */
+@CleanupContextBeforeClassAndAfterClass
+class PeremTypeCommentInferenceTest extends AbstractServerContextAwareTest {
+
+  @Autowired
+  private TypeService typeService;
+
+  @Test
+  void moduleVarWithDashedTypeComment() {
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/PeremTypeComment.bsl");
+
+    var types = inferAtMarker(documentContext, "А = ИдентификаторВыгрузки", "А = ".length());
+    assertThat(types.refs())
+      .as("Перем ... // Строка - resolved to Строка at usage site")
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Строка");
+  }
+
+  @Test
+  void moduleVarWithUnionTypeComment() {
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/PeremTypeComment.bsl");
+
+    var types = inferAtMarker(documentContext, "Б = КэшированныеЗначения", "Б = ".length());
+    assertThat(types.refs())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactlyInAnyOrder("Число", "Строка");
+  }
+
+  @Test
+  void moduleVarWithoutDash() {
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/PeremTypeComment.bsl");
+
+    var types = inferAtMarker(documentContext, "В = ПараметрыВызова", "В = ".length());
+    assertThat(types.refs())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Булево");
+  }
+
+  @Test
+  void localPeremWithTypeComment() {
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/PeremTypeComment.bsl");
+
+    var types = inferAtMarker(documentContext, "Г = ТекущаяСсылка", "Г = ".length());
+    assertThat(types.refs())
+      .as("local Перем ... // Число - resolved")
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Число");
+  }
+
+  @Test
+  void moduleVarWithoutCommentIsUndefined() {
+    // given: объявление без типизирующего комментария и без присваиваний.
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/PeremTypeComment.bsl");
+
+    // when
+    var types = inferAtMarker(documentContext, "Д = БезКомментария", "Д = ".length());
+
+    // then: «Перем» без иных сведений о типе даёт значение «Неопределено».
+    assertThat(types.refs())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Неопределено");
+  }
+
+  @Test
+  void localPeremWithoutCommentIsUndefined() {
+    // given / when
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/PeremTypeComment.bsl");
+    var types = inferAtMarker(documentContext, "Ж = БезТипа", "Ж = ".length());
+
+    // then
+    assertThat(types.refs())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Неопределено");
+  }
+
+  @Test
+  void moduleVarWithTypeCommentAboveDeclaration() {
+    // given: тип объявлен комментарием над записью «Перем», а не висячим.
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/PeremTypeComment.bsl");
+
+    // when
+    var types = inferAtMarker(documentContext, "З = СКомментариемСверху", "З = ".length());
+
+    // then
+    assertThat(types.refs())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Дата");
+  }
+
+  @Test
+  void moduleVarWithSeeRefCommentTakesConstructorType() {
+    // given: «Перем Х; // см. НовыйОбъектДанных» — ссылка на функцию того же модуля.
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/PeremTypeComment.bsl");
+
+    // when
+    var types = inferAtMarker(documentContext, "Е = СсылкаНаКонструктор", "Е = ".length());
+
+    // then: приходит тип из описания функции вместе с её полями.
+    assertThat(types.refs())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Структура");
+    var structureRef = types.refs().iterator().next();
+    assertThat(types.getLocalFields(structureRef).keySet())
+      .containsExactlyInAnyOrder("Ссылка", "Количество");
+  }
+
+  private TypeSet inferAtMarker(DocumentContext documentContext, String marker, int offsetInMarker) {
+    var content = documentContext.getContent();
+    int markerStart = content.indexOf(marker);
+    int targetOffset = markerStart + offsetInMarker;
+    int lineStart = content.lastIndexOf('\n', targetOffset) + 1;
+    int line = content.substring(0, targetOffset).split("\n").length - 1;
+    int charInLine = targetOffset - lineStart;
+    return typeService.expressionTypesAt(documentContext, new Position(line, charInLine + 1));
+  }
+}

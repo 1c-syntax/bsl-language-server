@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.mdclasses.Configuration;
 import com.github._1c_syntax.bsl.mdo.support.UseMode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
@@ -94,11 +95,11 @@ public class UsingModalWindowsDiagnostic extends AbstractVisitorDiagnostic {
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
-    var configuration = documentContext.getServerContext().getConfiguration();
-    // если использование модальных окон разрешено (без предупреждение) 
+    var configuration = documentContext.getServerContext().getConfiguration().getMergedConfiguration();
+    // если использование модальных окон разрешено (без предупреждения)
     // и не установлен флаг игнорирования использования модальных окон, то
     // ничего не диагностируется
-    if (!forceModalityMode && configuration.getModalityUseMode() == UseMode.USE) {
+    if (!forceModalityMode && configuration instanceof Configuration cf && cf.getModalityUseMode() == UseMode.USE) {
       return ctx;
     }
 

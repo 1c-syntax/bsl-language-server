@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,19 +21,24 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.diagnostics.SkipSupport;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.mdo.MD;
+import com.github._1c_syntax.bsl.mdo.ModuleOwner;
+import com.github._1c_syntax.bsl.support.SupportVariant;
 import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBSL;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
 import org.eclipse.lsp4j.Range;
+import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Objects;
 
 /**
- * Базовый класс для анализа объектов метаданных, когда диагностика региструется на первый токен модуля
+ * Базовый класс для анализа объектов метаданных, когда диагностика регистрируется на первый токен модуля
  */
 public abstract class AbstractMetadataDiagnostic extends AbstractDiagnostic {
 
@@ -57,12 +62,23 @@ public abstract class AbstractMetadataDiagnostic extends AbstractDiagnostic {
   /**
    * Область для регистрации замечания
    */
-  private Range diagnosticRange;
+  private @Nullable Range diagnosticRange;
 
+  @Autowired
+  private LanguageServerConfiguration languageServerConfiguration;
+
+  /**
+   * Конструктор с указанием типов объектов метаданных для проверки.
+   *
+   * @param types Список типов объектов метаданных для анализа
+   */
   protected AbstractMetadataDiagnostic(List<MDOType> types) {
     filterMdoTypes = new ArrayList<>(types);
   }
 
+  /**
+   * Конструктор по умолчанию. Проверяются основные типы объектов метаданных.
+   */
   protected AbstractMetadataDiagnostic() {
     filterMdoTypes = List.of(
       MDOType.ACCOUNTING_REGISTER,
@@ -95,32 +111,56 @@ public abstract class AbstractMetadataDiagnostic extends AbstractDiagnostic {
     }
   }
 
+  /**
+   * Вычислить диапазон для размещения замечания.
+   *
+   * @return {@code true} если диапазон успешно вычислен и не пуст
+   */
   protected boolean computeDiagnosticRange() {
     diagnosticRange = documentContext.getSymbolTree().getModule().getSelectionRange();
     return !Ranges.isEmpty(diagnosticRange);
   }
 
+  /**
+   * Добавить замечание диагностики.
+   *
+   * @param message Сообщение об ошибке
+   */
   protected void addDiagnostic(String message) {
+    Objects.requireNonNull(diagnosticRange);
     diagnosticStorage.addDiagnostic(diagnosticRange, message);
   }
 
-  protected abstract void checkMetadata(AbstractMDObjectBase mdo);
+  protected String getMdoRefLocal(MD mdo) {
+    return documentContext.getServerContext().getConfiguration().getMdoRefLocal(mdo);
+  }
+
+  /**
+   * Проверить объект метаданных.
+   *
+   * @param mdo Объект метаданных для анализа
+   */
+  protected abstract void checkMetadata(MD mdo);
 
   private void checkMetadataWithModules() {
     documentContext.getMdObject()
       .filter(mdo -> filterMdoTypes.contains(mdo.getMdoType()))
-      .filter(AbstractMDObjectBSL.class::isInstance)
+      .filter(ModuleOwner.class::isInstance)
+      .map(ModuleOwner.class::cast)
       .filter(this::haveMatchingModule)
       .ifPresent(this::checkMetadata);
   }
 
-  private boolean haveMatchingModule(AbstractMDObjectBase mdo) {
-    var modules = ((AbstractMDObjectBSL) mdo).getModules().stream()
-      .filter(mdoModule -> OBJECT_MODULES.contains(mdoModule.getModuleType()))
-      .collect(Collectors.toList());
+  private boolean haveMatchingModule(ModuleOwner mdo) {
+    // чтобы не анализировать несколько раз и не выдавать одинаковые результаты для разных модулей,
+    // выберем только один модуль, например модуль менеджера
+    if (documentContext.getModuleType() == ModuleType.ManagerModule) {
+      return true;
+    }
 
-    // чтобы не анализировать несколько раз, выберем только один модуль, например модуль менеджера
-    return modules.size() == 1 || documentContext.getModuleType() == ModuleType.ManagerModule;
+    return mdo.getModules().stream()
+      .filter(mdoModule -> OBJECT_MODULES.contains(mdoModule.getModuleType()))
+      .count() == 1;
   }
 
   /**
@@ -132,10 +172,26 @@ public abstract class AbstractMetadataDiagnostic extends AbstractDiagnostic {
    */
   private void checkMetadataWithoutModules() {
     documentContext.getServerContext().getConfiguration().getChildren().stream()
+      .filter(this::needToAnalyzeMdo)
       .filter(mdo -> filterMdoTypes.contains(mdo.getMdoType()))
-      .filter(mdo -> !(mdo instanceof AbstractMDObjectBSL)
-        || (((AbstractMDObjectBSL) mdo).getModules().stream()
+      .filter(mdo -> !(mdo instanceof ModuleOwner moduleOwner)
+        || (moduleOwner.getModules().stream()
         .noneMatch(module -> OBJECT_MODULES.contains(module.getModuleType()))))
       .forEach(this::checkMetadata);
+  }
+
+  private boolean needToAnalyzeMdo(MD mdo) {
+    var skipMode = languageServerConfiguration.getDiagnosticsOptions().getSkipSupport();
+    var variant = mdo.getSupportVariant();
+
+    if (variant == SupportVariant.NONE) {
+      return true;
+    }
+
+    return switch (skipMode) {
+      case NEVER -> true;
+      case WITH_SUPPORT -> false;
+      case WITH_SUPPORT_LOCKED -> variant != SupportVariant.NOT_EDITABLE;
+    };
   }
 }

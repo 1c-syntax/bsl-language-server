@@ -1,0 +1,9 @@
+{
+  "keywords": [
+    "not a map — отсеивается",
+    42,
+    null,
+    { "name": "Если", "alias": "If", "category": "STATEMENT",
+      "snippet": { "ru": "Если <?>", "en": "If <?>" } }
+  ]
+}

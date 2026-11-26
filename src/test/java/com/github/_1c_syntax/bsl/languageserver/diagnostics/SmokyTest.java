@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,9 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.BSLLSPLauncher;
+import com.github._1c_syntax.bsl.languageserver.MainApplication;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfos;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.info.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import lombok.SneakyThrows;
@@ -39,9 +41,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.io.File;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,16 +54,17 @@ import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 @SpringBootTest
 @Slf4j
 @CleanupContextBeforeClassAndAfterEachTestMethod
-class SmokyTest {
+class SmokyTest extends AbstractServerContextAwareTest {
 
   @Autowired
+  private DiagnosticInfos diagnosticInfosBean;
+
   private LanguageServerConfiguration configuration;
-
-  @Autowired
-  private Collection<DiagnosticInfo> diagnosticInfos;
 
   @BeforeEach
   void setUpStreams() {
+    initServerContext();
+    configuration = context.getLanguageServerConfiguration();
     new MockUp<System>() {
       @Mock
       public void exit(int value) {
@@ -72,13 +74,13 @@ class SmokyTest {
   }
 
   @Test
-  void test() throws Exception {
+  void test() {
 
     // given
     String[] args = new String[]{"--analyze", "--srcDir", "./src/test/resources/diagnostics"};
 
     // when-then
-    assertThatThrownBy(() -> BSLLSPLauncher.main(args))
+    assertThatThrownBy(() -> MainApplication.main(args))
       .isInstanceOf(RuntimeException.class)
       .hasMessage("0");
 
@@ -89,7 +91,7 @@ class SmokyTest {
 
     var srcDir = "./src/test/resources/";
     List<Diagnostic> diagnostics = new ArrayList<>();
-    FileUtils.listFiles(Paths.get(srcDir).toAbsolutePath().toFile(), new String[]{"bsl", "os"}, true)
+    FileUtils.listFiles(Path.of(srcDir).toAbsolutePath().toFile(), new String[]{"bsl", "os"}, true)
       .forEach(filePath -> {
         LOGGER.info(filePath.toString());
         var documentContext = TestUtils.getDocumentContextFromFile(filePath.toString());
@@ -118,6 +120,7 @@ class SmokyTest {
     var fixtures = FileUtils.listFiles(new File(srcDir), new String[]{"bsl", "os"}, true);
 
     // получим все возможные коды диагностик и положим в мапу "включенным"
+    var diagnosticInfos = diagnosticInfosBean.getByCode().values();
     Map<String, Either<Boolean, Map<String, Object>>> diagnostics = diagnosticInfos.stream()
       .map(DiagnosticInfo::getCode)
       .collect(Collectors.toMap(
@@ -133,7 +136,7 @@ class SmokyTest {
     Map<File, Exception> diagnosticErrors = new HashMap<>();
     fixtures.forEach(filePath -> {
       try {
-        var documentContext = TestUtils.getDocumentContextFromFile(filePath.toString());
+        var documentContext = TestUtils.getDocumentContextFromFile(filePath.toString(), context);
         documentContext.getDiagnostics();
       } catch (Exception e) {
         diagnosticErrors.put(filePath, e);
@@ -143,4 +146,14 @@ class SmokyTest {
     assertThat(diagnosticErrors).isEmpty();
   }
 
+  @Test
+  void testExtraMinForComplexity() {
+    // нельзя ставить отрицательное значение
+    var diagnosticInfos = diagnosticInfosBean.getByCode().values();
+    diagnosticInfos.forEach(diagnosticInfo ->
+      assertThat(diagnosticInfo.getExtraMinForComplexity())
+        .as(diagnosticInfo.getCode().getStringValue())
+        .isNotNegative()
+    );
+  }
 }

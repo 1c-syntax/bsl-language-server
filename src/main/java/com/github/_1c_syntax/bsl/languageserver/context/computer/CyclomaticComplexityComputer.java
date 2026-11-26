@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -27,8 +27,8 @@ import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseListener;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.StringInterner;
+import jakarta.annotation.PostConstruct;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
@@ -41,7 +41,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.PostConstruct;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -51,6 +50,13 @@ import java.util.Optional;
 import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
 
 // idea from https://pdepend.org/documentation/software-metrics/cyclomatic-complexity.html
+
+/**
+ * Вычислитель цикломатической сложности кода.
+ * <p>
+ * Вычисляет метрику цикломатической сложности (Cyclomatic Complexity)
+ * для файла и каждого метода с указанием вторичных локаций.
+ */
 @Component
 @Scope(SCOPE_PROTOTYPE)
 @RequiredArgsConstructor
@@ -60,7 +66,7 @@ public class CyclomaticComplexityComputer
 
   private final DocumentContext documentContext;
 
-  @Setter(onMethod = @__({@Autowired}), value = AccessLevel.PACKAGE)
+  @Setter(onMethod_ ={@Autowired}, value = AccessLevel.PACKAGE)
   private StringInterner stringInterner;
 
   private int fileComplexity;
@@ -201,7 +207,7 @@ public class CyclomaticComplexityComputer
 
   @Override
   public void enterGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
-    BSLParser.MethodNameContext methodNameContext = ctx.methodName();
+    var methodNameContext = ctx.methodName();
     if (methodNameContext != null && currentMethod != null) {
       String calledMethodName = methodNameContext.getText();
       if (currentMethod.getName().equalsIgnoreCase(calledMethodName)) {
@@ -234,15 +240,12 @@ public class CyclomaticComplexityComputer
 
     final List<Tree> children = Trees.getChildren(ctx);
     for (Tree tree : children) {
-      if (!(tree instanceof BSLParserRuleContext)) {
-        continue;
-      }
-
-      BSLParserRuleContext parserRule = ((BSLParserRuleContext) tree);
-      if (parserRule instanceof BSLParser.MemberContext) {
-        flattenMember(result, (BSLParser.MemberContext) parserRule);
-      } else if (parserRule instanceof BSLParser.OperationContext) {
-        flattenOperation(result, (BSLParser.OperationContext) parserRule);
+      if (tree instanceof BSLParser.MemberContext memberContext) {
+        flattenMember(result, memberContext);
+      } else if (tree instanceof BSLParser.OperationContext operationContext) {
+        flattenOperation(result, operationContext);
+      } else {
+        // no-op
       }
     }
 
@@ -264,7 +267,7 @@ public class CyclomaticComplexityComputer
     final BSLParser.UnaryModifierContext unaryModifier = member.unaryModifier();
 
     if (unaryModifier != null && unaryModifier.NOT_KEYWORD() != null) {
-      final CommonToken splitter = new CommonToken(-1);
+      final var splitter = new CommonToken(-1);
       result.add(splitter);
       result.addAll(nestedTokens);
       result.add(splitter);
@@ -304,7 +307,7 @@ public class CyclomaticComplexityComputer
 
   private void addSecondaryLocation(Range range) {
     String message;
-    message = String.format("+%d", 1);
+    message = "+%d".formatted(1);
     var secondaryLocation = new ComplexitySecondaryLocation(range, stringInterner.intern(message));
     List<ComplexitySecondaryLocation> locations;
     if (currentMethod != null) {

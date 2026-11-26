@@ -36,7 +36,9 @@
 			<CheckUnique>true</CheckUnique>
 			<Autonumbering>true</Autonumbering>
 			<Characteristics/>
-			<BasedOn/>
+			<BasedOn>
+				<xr:Item xsi:type="xr:MDObjectRef">Catalog.Справочник1</xr:Item>
+			</BasedOn>
 			<InputByString>
 				<xr:Field>Document.Документ1.StandardAttribute.Number</xr:Field>
 			</InputByString>

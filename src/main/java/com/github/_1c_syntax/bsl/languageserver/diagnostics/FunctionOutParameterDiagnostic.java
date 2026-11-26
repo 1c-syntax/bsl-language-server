@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -29,13 +29,12 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.apache.commons.collections4.map.CaseInsensitiveMap;
 
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -47,7 +46,6 @@ import java.util.stream.Collectors;
   tags = {
     DiagnosticTag.DESIGN
   }
-
 )
 public class FunctionOutParameterDiagnostic extends AbstractVisitorDiagnostic {
 
@@ -61,19 +59,18 @@ public class FunctionOutParameterDiagnostic extends AbstractVisitorDiagnostic {
       .map(MethodSymbol::getParameters)
       .flatMap(Collection::stream)
       .filter(param -> !param.isByValue())
-      .collect(Collectors.toList());
+      .toList();
 
     if (parameters.isEmpty()) {
       return ctx;
     }
 
-    Map<String, BSLParserRuleContext> lvalues = Trees
-      .findAllRuleNodes(ctx.subCodeBlock(), BSLParser.RULE_lValue)
+    var lvalues = Trees.findAllRuleNodes(ctx.subCodeBlock(), BSLParser.RULE_lValue)
       .stream()
       .collect(
         Collectors.toMap(
           ParseTree::getText,
-          BSLParserRuleContext.class::cast,
+          ParserRuleContext.class::cast,
           (existing, replacement) -> existing,
           CaseInsensitiveMap::new)
       );

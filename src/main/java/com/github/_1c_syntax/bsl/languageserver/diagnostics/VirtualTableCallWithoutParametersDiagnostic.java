@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -44,6 +44,19 @@ public class VirtualTableCallWithoutParametersDiagnostic extends AbstractSDBLVis
 
   @Override
   public ParseTree visitVirtualTable(SDBLParser.VirtualTableContext ctx) {
+    // Таблица субконто регистра бухгалтерии не имеет параметров.
+    if (ctx.EXT_DIMENSIONS_VT() != null) {
+      return super.visitVirtualTable(ctx);
+    }
+
+    // для критерия отбора параметр обязателен и имеет иную семантику (значение отбора, а не параметр ВТ):
+    // ошибкой считаем только отсутствие параметра
+    if (ctx.type != null) {
+      if (ctx.parameter() == null) {
+        diagnosticStorage.addDiagnostic(ctx);
+      }
+      return super.visitVirtualTable(ctx);
+    }
     var vtContext = ctx.virtualTableParameters;
     if (vtContext == null) {
       diagnosticStorage.addDiagnostic(ctx);

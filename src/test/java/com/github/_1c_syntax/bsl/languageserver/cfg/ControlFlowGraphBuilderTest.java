@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -24,7 +24,9 @@ package com.github._1c_syntax.bsl.languageserver.cfg;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.SneakyThrows;
+import org.antlr.v4.runtime.CommonToken;
 import org.apache.commons.io.IOUtils;
+import org.assertj.core.api.Assertions;
 import org.jgrapht.traverse.DepthFirstIterator;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -32,29 +34,84 @@ import org.springframework.boot.test.context.SpringBootTest;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 @SpringBootTest
 class ControlFlowGraphBuilderTest {
 
   @Test
+  void testBreakContinueOutsideLoop() {
+
+    var code = """
+      Если Истина Тогда
+        А = 1;
+        Прервать;
+        Б = 2;
+      КонецЕсли;
+      В = 1;
+      Продолжить;
+      Г = 7;
+      """;
+
+    var parseTree = parse(code);
+    var builder = new CfgBuildingParseTreeVisitor();
+    var graph = builder.buildGraph(parseTree);
+    var vertices = traverseToOrderedList(graph);
+    assertThat(vertices).isNotEmpty();
+
+    var walker = new ControlFlowGraphWalker(graph);
+    walker.start();
+    assertThat(walker.getCurrentNode()).isInstanceOf(ConditionalVertex.class);
+    walker.walkNext(CfgEdgeType.TRUE_BRANCH);
+    assertThat(walker.getCurrentNode()).isInstanceOf(BasicBlockVertex.class);
+    // Единый блок без разрыва в месте оператора перехода
+    assertThat(((BasicBlockVertex)walker.getCurrentNode()).statements()).hasSize(3);
+    walker.walkNext();
+    assertThat(walker.getCurrentNode()).isInstanceOf(BasicBlockVertex.class);
+    // Единый блок без разрыва в месте оператора перехода
+    assertThat(((BasicBlockVertex)walker.getCurrentNode()).statements()).hasSize(3);
+    walker.walkNext();
+
+    assertThat(walker.getCurrentNode()).isInstanceOf(ExitVertex.class);
+  }
+
+  @Test
+  void PreprocCanBeBuild() {
+
+    var code = """
+      Если А = 1 Тогда
+      #Если Сервер Тогда
+      ИначеЕсли А = 2 Тогда
+      #КонецЕсли
+      Иначе
+      КонецЕсли;""";
+
+    var parseTree = parse(code);
+    var builder = new CfgBuildingParseTreeVisitor();
+    var graph = builder.buildGraph(parseTree);
+    var vertices = traverseToOrderedList(graph);
+    assertThat(vertices).isNotEmpty(); // or empty...
+  }
+
+  @Test
   void linearBlockCanBeBuilt() {
 
-    var code = "А = 1; Б = 2; В = 3;";
+    var code = "А = 1; Б = 2.; В = 3;";
 
     var parseTree = parse(code);
     var builder = new CfgBuildingParseTreeVisitor();
     var graph = builder.buildGraph(parseTree);
 
     var vertices = traverseToOrderedList(graph);
-    assertThat(vertices.size()).isEqualTo(2);
+    assertThat(vertices).hasSize(2);
     assertThat(vertices.get(0)).isInstanceOf(BasicBlockVertex.class);
     assertThat(vertices.get(1)).isInstanceOf(ExitVertex.class);
 
     var outgoing = graph.outgoingEdgesOf(vertices.get(0));
-    assertThat(outgoing.size()).isEqualTo(1);
+    assertThat(outgoing).hasSize(1);
     var exitVertex = graph.getEdgeTarget((CfgEdge) (outgoing.toArray()[0]));
     assertThat(exitVertex).isEqualTo(vertices.get(1));
   }
@@ -62,10 +119,11 @@ class ControlFlowGraphBuilderTest {
   @Test
   void branchingWithOneBranch() {
 
-    var code = "А = 1;\n" +
-      "Если Б = 2 Тогда\n" +
-      "    В = 4;\n" +
-      "КонецЕсли;";
+    var code = """
+      А = 1;
+      Если Б = 2 Тогда
+          В = 4;
+      КонецЕсли;""";
 
     var parseTree = parse(code);
     var builder = new CfgBuildingParseTreeVisitor();
@@ -76,7 +134,7 @@ class ControlFlowGraphBuilderTest {
     assertThat(walker.getCurrentNode()).isInstanceOf(BasicBlockVertex.class);
     walker.walkNext();
     assertThat(walker.isOnBranch()).isTrue();
-    assertThat(walker.availableRoutes().size()).isEqualTo(2);
+    assertThat(walker.availableRoutes()).hasSize(2);
 
     var branch = walker.getCurrentNode();
     walker.walkNext(CfgEdgeType.TRUE_BRANCH);
@@ -85,24 +143,24 @@ class ControlFlowGraphBuilderTest {
 
     walker.walkNext();
     assertThat(walker.getCurrentNode()).isInstanceOf(ExitVertex.class);
-    assertThat(walker.availableRoutes().size()).isZero();
+    assertThat(walker.availableRoutes()).isEmpty();
 
     var exit = walker.getCurrentNode();
     walker.walkTo(branch);
     walker.walkNext(CfgEdgeType.FALSE_BRANCH);
     assertThat(walker.getCurrentNode()).isEqualTo(exit);
-    assertThat(graph.incomingEdgesOf(exit).size()).isEqualTo(2);
+    assertThat(graph.incomingEdgesOf(exit)).hasSize(2);
 
   }
 
   @Test
   void conditionWithElse() {
-    var code = "А = 1;\n" +
-      "Если Б = 2 Тогда\n" +
-      "    В = 4;\n" +
-      "Иначе\n" +
-      "    В = 5;" +
-      "КонецЕсли;";
+    var code = """
+      А = 1;
+      Если Б = 2 Тогда
+          В = 4;
+      Иначе
+          В = 5;КонецЕсли;""";
 
     var parseTree = parse(code);
     var builder = new CfgBuildingParseTreeVisitor();
@@ -129,15 +187,14 @@ class ControlFlowGraphBuilderTest {
 
   @Test
   void multipleConditionsTest() {
-    var code = "Если Б = 1 Тогда\n" +
-      "    В = 1;\n" +
-      "ИначеЕсли Б = 2 Тогда\n" +
-      "    В = 2;\n" +
-      "ИначеЕсли Б = 3 Тогда\n" +
-      "    В = 3;" +
-      "Иначе\n" +
-      "    В = 4;" +
-      "КонецЕсли;";
+    var code = """
+      Если Б = 1 Тогда
+          В = 1;
+      ИначеЕсли Б = 2 Тогда
+          В = 2;
+      ИначеЕсли Б = 3 Тогда
+          В = 3;Иначе
+          В = 4;КонецЕсли;""";
 
     var parseTree = parse(code);
     var builder = new CfgBuildingParseTreeVisitor();
@@ -181,10 +238,11 @@ class ControlFlowGraphBuilderTest {
 
   @Test
   void whileLoopTest() {
-    var code = "А = 1;\n" +
-      "Пока Б = 1 Цикл\n" +
-      "    В = 1;\n" +
-      "КонецЦикла;";
+    var code = """
+      А = 1;
+      Пока Б = 1 Цикл
+          В = 1;
+      КонецЦикла;""";
 
     var parseTree = parse(code);
     var builder = new CfgBuildingParseTreeVisitor();
@@ -218,19 +276,20 @@ class ControlFlowGraphBuilderTest {
   @Test
   void testInnerLoops() {
 
-    var code = "А = 1;\n" +
-      "Пока Б = 1 Цикл\n" +
-      "   В = 1;\n" +
-      "   Если А = 1 Тогда\n" +
-      "     Продолжить;\n" +
-      "   КонецЕсли;\n" +
-      "   Для Сч = 1 По 5 Цикл\n" +
-      "     Б = 1;\n" +
-      "     Прервать;\n" +
-      "     В = 2;\n" +
-      "   КонецЦикла;\n" +
-      "   Прервано = Истина;\n" +
-      "КонецЦикла;";
+    var code = """
+      А = 1;
+      Пока Б = 1 Цикл
+         В = 1;
+         Если А = 1 Тогда
+           Продолжить;
+         КонецЕсли;
+         Для Сч = 1 По 5 Цикл
+           Б = 1;
+           Прервать;
+           В = 2;
+         КонецЦикла;
+         Прервано = Истина;
+      КонецЦикла;""";
 
     var parseTree = parse(code);
     var builder = new CfgBuildingParseTreeVisitor();
@@ -265,7 +324,7 @@ class ControlFlowGraphBuilderTest {
     assertThat(graph.getEdge(secondLoopStart, secondLoopEnd).getType()).isEqualTo(CfgEdgeType.FALSE_BRANCH);
 
     // входящих - 2. переход из головы цикла и переход из блока до Прервать
-    assertThat(graph.incomingEdgesOf(secondLoopEnd).size()).isEqualTo(2);
+    assertThat(graph.incomingEdgesOf(secondLoopEnd)).hasSize(2);
     var edgeOfBreak = graph.incomingEdgesOf(secondLoopEnd)
       .stream()
       .filter(x -> x.getType() == CfgEdgeType.DIRECT)
@@ -274,10 +333,10 @@ class ControlFlowGraphBuilderTest {
     assertThat(edgeOfBreak).isPresent();
     walker.walkTo(secondLoopStart);
     walker.walkNext(CfgEdgeType.TRUE_BRANCH);
-    assertThat(graph.outgoingEdgesOf(walker.getCurrentNode()).contains(edgeOfBreak.get())).isTrue();
+    assertThat(graph.outgoingEdgesOf(walker.getCurrentNode())).contains(edgeOfBreak.get());
 
     // LOOP от мертвого куска существует
-    assertThat(graph.incomingEdgesOf(secondLoopStart).isEmpty()).isFalse();
+    assertThat(graph.incomingEdgesOf(secondLoopStart)).isNotEmpty();
 
     walker.walkTo(secondLoopEnd);
     walker.walkNext(CfgEdgeType.LOOP_ITERATION);
@@ -288,11 +347,12 @@ class ControlFlowGraphBuilderTest {
 
   @Test
   void tryHandlerFlowTest() {
-    var code = "Попытка\n" +
-      "   А = 1;\n" +
-      "Исключение\n" +
-      "   Б = 1;\n" +
-      "КонецПопытки";
+    var code = """
+      Попытка
+         А = 1;
+      Исключение
+         Б = 1;
+      КонецПопытки""";
 
     var parseTree = parse(code);
     var builder = new CfgBuildingParseTreeVisitor();
@@ -315,10 +375,11 @@ class ControlFlowGraphBuilderTest {
 
   @Test
   void linearBlockWithLabel() {
-    var code = "А = 1;\n" +
-      "Б = 2;\n" +
-      "~Прыг:\n" +
-      "В = 4;";
+    var code = """
+      А = 1;
+      Б = 2;
+      ~Прыг:
+      В = 4;""";
 
     var parseTree = parse(code);
     var builder = new CfgBuildingParseTreeVisitor();
@@ -339,12 +400,13 @@ class ControlFlowGraphBuilderTest {
 
   @Test
   void linearBlockWithJumpToLabel() {
-    var code = "А = 1;\n" +
-      "Б = 2;\n" +
-      "~Прыг:\n" +
-      "В = 4;\n" +
-      "Перейти ~Прыг;\n" +
-      "МертвыйКод = Истина;";
+    var code = """
+      А = 1;
+      Б = 2;
+      ~Прыг:
+      В = 4;
+      Перейти ~Прыг;
+      МертвыйКод = Истина;""";
 
     var parseTree = parse(code);
     var builder = new CfgBuildingParseTreeVisitor();
@@ -375,9 +437,9 @@ class ControlFlowGraphBuilderTest {
     assertThat(graph.vertexSet()).isNotEmpty();
 
     var list = graph.vertexSet().stream()
-      .filter(x -> x instanceof BasicBlockVertex)
-      .filter(x -> ((BasicBlockVertex) x).statements().size() == 0)
-      .collect(Collectors.toList());
+      .filter(BasicBlockVertex.class::isInstance)
+      .filter(x -> ((BasicBlockVertex) x).statements().isEmpty())
+      .toList();
 
     assertThat(list).isEmpty();
     assertThat(graph.vertexSet()).hasSize(18);
@@ -385,11 +447,12 @@ class ControlFlowGraphBuilderTest {
 
   @Test
   void preprocessorSingleIfBranching() {
-    var code = "А = 1;\n" +
-      "#Если Сервер Тогда\n" +
-      "   Б = 2;\n" +
-      "#КонецЕсли\n" +
-      "В = 3;";
+    var code = """
+      А = 1;
+      #Если Сервер Тогда
+         Б = 2;
+      #КонецЕсли
+      В = 3;""";
 
     var parseTree = parse(code);
     var builder = new CfgBuildingParseTreeVisitor();
@@ -414,13 +477,13 @@ class ControlFlowGraphBuilderTest {
 
   @Test
   void preprocessorIfWithElseBranching() {
-    var code = "А = 1;\n" +
-      "#Если Сервер Тогда\n" +
-      "   Б = 2;\n" +
-      "#Иначе\n" +
-      "   Б = 3;" +
-      "#КонецЕсли\n" +
-      "В = 3;";
+    var code = """
+      А = 1;
+      #Если Сервер Тогда
+         Б = 2;
+      #Иначе
+         Б = 3;#КонецЕсли
+      В = 3;""";
 
     var parseTree = parse(code);
     var builder = new CfgBuildingParseTreeVisitor();
@@ -447,17 +510,17 @@ class ControlFlowGraphBuilderTest {
 
   @Test
   void preprocessorIfWithElseIfBranching() {
-    var code = "А = 1;\n" +
-      "#Если Сервер Тогда\n" +
-      "   Б = 2;\n" +
-      "#ИначеЕсли ВебКлиент Тогда\n" +
-      "   Б = 3;\n" +
-      "#ИначеЕсли МобильныйКлиент Тогда\n" +
-      "   Б = 4;\n" +
-      "#Иначе\n" +
-      "   Б = 5;" +
-      "#КонецЕсли\n" +
-      "В = 3;";
+    var code = """
+      А = 1;
+      #Если Сервер Тогда
+         Б = 2;
+      #ИначеЕсли ВебКлиент Тогда
+         Б = 3;
+      #ИначеЕсли МобильныйКлиент Тогда
+         Б = 4;
+      #Иначе
+         Б = 5;#КонецЕсли
+      В = 3;""";
 
     var parseTree = parse(code);
     var builder = new CfgBuildingParseTreeVisitor();
@@ -501,6 +564,370 @@ class ControlFlowGraphBuilderTest {
 
   }
 
+  @Test
+  void test_shouldConnectTopLevelPreprocToSingleFileCodeBlock() {
+    var code = """
+      #Если Не ВебКлиент Тогда
+        Возврат ПустойМассив;
+      #КонецЕсли
+      """;
+
+    var parseTree = parse(code);
+    var builder = new CfgBuildingParseTreeVisitor();
+    builder.producePreprocessorConditions(true);
+    var graph = builder.buildGraph(parseTree);
+
+    var walker = new ControlFlowGraphWalker(graph);
+    walker.start();
+
+    assertThat(walker.isOnBranch()).isTrue();
+  }
+
+  @Test
+  void test_shouldIgnoreTopLevelPreprocOfVariablesSection() {
+    var code = """
+      #Если Не ВебКлиент Тогда
+      #КонецЕсли
+      
+      Перем А;
+      
+      А = 8;
+      """;
+
+    var parseTree = parse(code);
+    var builder = new CfgBuildingParseTreeVisitor();
+    builder.producePreprocessorConditions(true);
+    var graph = builder.buildGraph(parseTree);
+
+    var walker = new ControlFlowGraphWalker(graph);
+    walker.start();
+
+    assertThat(walker.isOnBranch()).isFalse();
+  }
+
+  @Test
+  void test_shouldHandleModuleBodyFirstPreprocessor() {
+    var code = """
+      Процедура А()
+         #Если Не ВебКлиент Тогда
+              М = 1;
+          #КонецЕсли
+      КонецПроцедуры
+      """;
+
+    var dContext = TestUtils.getDocumentContext(code);
+    var parseTree = dContext.getAst().subs().sub(0).procedure().subCodeBlock().codeBlock();
+
+    var builder = new CfgBuildingParseTreeVisitor();
+    builder.producePreprocessorConditions(true);
+    var graph = builder.buildGraph(parseTree);
+
+    var walker = new ControlFlowGraphWalker(graph);
+    walker.start();
+
+    assertThat(walker.isOnBranch()).isTrue();
+    walker.walkNext(CfgEdgeType.TRUE_BRANCH);
+    assertThat(textOfCurrentNode(walker)).isEqualTo("М=1");
+  }
+
+  @Test
+  void preprocessorTestBranchingWithExiting()
+  {
+    var code = """
+      #Если Не ВебКлиент Тогда
+        Массив = Новый Массив;
+        Если Условие Тогда
+            Возврат Массив;
+        КонецЕсли;
+        Возврат ПустойМассив;
+      #Иначе
+        ВызватьИсключение "Упс";
+      #КонецЕсли
+      """;
+
+    var parseTree = parse(code);
+    var builder = new CfgBuildingParseTreeVisitor();
+    builder.producePreprocessorConditions(true);
+    var graph = builder.buildGraph(parseTree);
+
+    var walker = new ControlFlowGraphWalker(graph);
+    walker.start();
+
+    assertThat(walker.isOnBranch()).isTrue();
+    var preprocIfNode = walker.getCurrentNode();
+
+    walker.walkNext(CfgEdgeType.TRUE_BRANCH);
+    assertThat(textOfCurrentNode(walker)).isEqualTo("Массив=НовыйМассив");
+    walker.walkNext();
+    assertThat(walker.isOnBranch()).isTrue();
+    var ifNode = walker.getCurrentNode();
+    walker.walkNext(CfgEdgeType.TRUE_BRANCH);
+    assertThat(textOfCurrentNode(walker)).isEqualTo("ВозвратМассив");
+    walker.walkNext();
+    assertThat(walker.getCurrentNode()).isSameAs(graph.getExitPoint());
+
+    walker.walkTo(ifNode);
+    walker.walkNext(CfgEdgeType.FALSE_BRANCH);
+    assertThat(textOfCurrentNode(walker)).isEqualTo("ВозвратПустойМассив");
+    walker.walkNext();
+    assertThat(walker.getCurrentNode()).isSameAs(graph.getExitPoint());
+
+    walker.walkTo(preprocIfNode);
+    walker.walkNext(CfgEdgeType.FALSE_BRANCH);
+    assertThat(textOfCurrentNode(walker)).isEqualTo("ВызватьИсключение\"Упс\"");
+    walker.walkNext();
+    assertThat(walker.getCurrentNode()).isSameAs(graph.getExitPoint());
+
+    // Нет посторонних связей у входной ветки препроцессора
+    assertThat(graph.edgesOf(preprocIfNode)).hasSize(2);
+  }
+
+  @Test
+  void test_cannotAddSameEdgeTwice() {
+    var graph = new ControlFlowGraph();
+    var block1 = new BasicBlockVertex();
+    var block2 = new BasicBlockVertex();
+
+    graph.addVertex(block1);
+    graph.addVertex(block2);
+
+    graph.addEdge(block1, block2);
+    Assertions.assertThatExceptionOfType(FlowGraphLinkException.class)
+      .isThrownBy(() -> graph.addEdge(block1, block2));
+  }
+
+  @Test
+  void test_cannotAddDirectEdgeToBranch() {
+    var graph = new ControlFlowGraph();
+
+    var fakeContext = mock(BSLParser.IfBranchContext.class);
+    when(fakeContext.getStart()).thenReturn(new CommonToken(BSLParser.RULE_ifStatement));
+    when(fakeContext.getStop()).thenReturn(new CommonToken(BSLParser.RULE_ifStatement));
+
+    var ifBlock = new ConditionalVertex(fakeContext);
+    var truePart = new BasicBlockVertex();
+
+    graph.addVertex(ifBlock);
+    graph.addVertex(truePart);
+
+    Assertions.assertThatExceptionOfType(FlowGraphLinkException.class)
+      .isThrownBy(() -> graph.addEdge(ifBlock, truePart));
+  }
+
+  @Test
+  void test_preprocessorInsideIfBlockShouldNotCrash() {
+    // Test for ClassCastException fix when preprocessor is inside if block
+    var code = """
+      Если Условие1 Тогда
+          #Если Сервер Тогда
+              Возврат 1;
+          #Иначе
+              Возврат 2;
+          #КонецЕсли
+      ИначеЕсли Условие2 Тогда
+          Возврат 3;
+      КонецЕсли;
+      """;
+
+    var parseTree = parse(code);
+    var builder = new CfgBuildingParseTreeVisitor();
+    builder.producePreprocessorConditions(true);
+    
+    // Should not throw ClassCastException
+    var graph = builder.buildGraph(parseTree);
+    
+    // Verify the graph is built correctly
+    assertThat(graph).isNotNull();
+    assertThat(graph.vertexSet()).isNotEmpty();
+    
+    var walker = new ControlFlowGraphWalker(graph);
+    walker.start();
+    assertThat(walker.isOnBranch()).isTrue();
+    
+    var outerIf = walker.getCurrentNode();
+    assertThat(outerIf).isInstanceOf(ConditionalVertex.class);
+    
+    // Walk through true branch (contains preprocessor)
+    walker.walkNext(CfgEdgeType.TRUE_BRANCH);
+    assertThat(walker.isOnBranch()).isTrue();
+    assertThat(walker.getCurrentNode()).isInstanceOf(PreprocessorConditionVertex.class);
+  }
+
+  @Test
+  void test_nestedPreprocessorAndIfStatements() {
+    // Test complex nesting of preprocessor and if statements
+    var code = """
+      #Если Сервер Тогда
+          Если Условие1 Тогда
+              #Если НЕ ВебКлиент Тогда
+                  Если Условие2 Тогда
+                      Возврат 1;
+                  Иначе
+                      Возврат 2;
+                  КонецЕсли;
+              #Иначе
+                  Возврат 3;
+              #КонецЕсли
+          Иначе
+              Возврат 4;
+          КонецЕсли;
+      #Иначе
+          Возврат 5;
+      #КонецЕсли
+      """;
+
+    var parseTree = parse(code);
+    var builder = new CfgBuildingParseTreeVisitor();
+    builder.producePreprocessorConditions(true);
+    
+    // Should not throw ClassCastException
+    var graph = builder.buildGraph(parseTree);
+    
+    assertThat(graph).isNotNull();
+    assertThat(graph.vertexSet()).isNotEmpty();
+    
+    var walker = new ControlFlowGraphWalker(graph);
+    walker.start();
+    
+    // Should start with preprocessor condition
+    assertThat(walker.isOnBranch()).isTrue();
+    assertThat(walker.getCurrentNode()).isInstanceOf(PreprocessorConditionVertex.class);
+  }
+
+  @Test
+  void test_preprocessorInElsifBranch() {
+    // Test preprocessor inside elsif branch
+    var code = """
+      Если Условие1 Тогда
+          Возврат 1;
+      ИначеЕсли Условие2 Тогда
+          #Если Сервер Тогда
+              Если ВнутреннееУсловие Тогда
+                  А = 1;
+              КонецЕсли;
+          #КонецЕсли
+          Возврат 2;
+      Иначе
+          Возврат 3;
+      КонецЕсли;
+      """;
+
+    var parseTree = parse(code);
+    var builder = new CfgBuildingParseTreeVisitor();
+    builder.producePreprocessorConditions(true);
+    
+    // Should not throw ClassCastException
+    var graph = builder.buildGraph(parseTree);
+    
+    assertThat(graph).isNotNull();
+    assertThat(graph.vertexSet()).isNotEmpty();
+    
+    var walker = new ControlFlowGraphWalker(graph);
+    walker.start();
+    assertThat(walker.isOnBranch()).isTrue();
+    
+    var outerIf = walker.getCurrentNode();
+    walker.walkNext(CfgEdgeType.FALSE_BRANCH);
+    
+    // Should be elsif condition
+    assertThat(walker.isOnBranch()).isTrue();
+    assertThat(walker.getCurrentNode()).isInstanceOf(ConditionalVertex.class);
+  }
+
+  @Test
+  void test_realWorldPatternWithPreprocessorInElsifBranch() {
+    // Test with real-world pattern that caused ClassCastException
+    // https://github.com/1c-syntax/bsl-language-server/issues/3740
+    // Extracted from НастраиваемыйОтчет/Ext/ObjectModule.bsl
+    var code = """
+      Процедура ПриКопировании(ОбъектКопирования)
+        
+        Если ТипЗнч(Основание) = Тип("ДокументСсылка.ЗаявкаНаВводДанных") Тогда
+          ВидОтчета=Основание.ВидОтчета;
+          
+          Если НЕ ЗначениеЗаполнено(ПравилоОбработки) Тогда
+            #Если Клиент Тогда
+              ноПредупреждение(НСтр("ru = 'Настройки по умолчанию не определены.'"));
+            #КонецЕсли
+          КонецЕсли;
+          
+        ИначеЕсли ТипЗнч(Основание) = Тип("СправочникСсылка.ВидыОтчетов") Тогда
+          ВидОтчета=Основание;
+          
+          Если НЕ ЗначениеЗаполнено(ПравилоОбработки) Тогда
+            #Если Клиент Тогда
+              ноПредупреждение(НСтр("ru = 'Настройки не определены.'"));
+            #КонецЕсли
+          КонецЕсли;
+          
+        ИначеЕсли ТипЗнч(Основание) = Тип("СправочникСсылка.ХранимыеФайлы") Тогда
+          
+          Если Основание.ЭтоГруппа Тогда
+            #Если Клиент Тогда
+              ноПредупреждение(НСтр("ru = 'Нельзя вводить на основании группы.'"));
+            #КонецЕсли
+            Возврат;
+          КонецЕсли;
+          
+          Если НЕ ЗначениеЗаполнено(ПравилоОбработки) Тогда
+            #Если Клиент Тогда
+              ноПредупреждение(НСтр("ru = 'Настройки не определены.'"));
+            #КонецЕсли
+          КонецЕсли;
+          
+        КонецЕсли;
+        
+      КонецПроцедуры
+      """;
+
+    var dContext = TestUtils.getDocumentContext(code);
+    var ast = dContext.getAst();
+    
+    assertThat(ast.subs()).isNotNull();
+    var subs = ast.subs().sub();
+    assertThat(subs).hasSize(1);
+    
+    // Build CFG - should not throw ClassCastException
+    var sub = subs.getFirst();
+    var codeBlock = sub.procedure().subCodeBlock().codeBlock();
+    
+    var builder = new CfgBuildingParseTreeVisitor();
+    builder.producePreprocessorConditions(true);
+    
+    // Should not throw ClassCastException when processing elsif branches with preprocessor directives
+    var graph = builder.buildGraph(codeBlock);
+    assertThat(graph).isNotNull();
+    assertThat(graph.vertexSet()).isNotEmpty();
+    
+    // Also run diagnostics to ensure all code blocks are covered
+    var diagnostics = dContext.getDiagnostics();
+    assertThat(diagnostics).isNotNull();
+  }
+
+  @Test
+  void test_danglingTopLevelPreprocessorBeforeLoopShouldNotCrash() {
+    // https://1c-syntax.sentry.io/issues/7468655563
+    // IllegalArgumentException: no such vertex in graph: <empty block>
+    // Оторванный top-level препроцессор (#Иначе/#ИначеЕсли/#КонецЕсли) не должен взводить
+    // флаг top-level препроцессора и протекать на вложенный #Если без парного #КонецЕсли.
+    var code = """
+      #Иначе
+      Пока А Цикл
+      #Если Сервер Тогда
+      КонецЦикла;
+      """;
+
+    var parseTree = parse(code);
+    var builder = new CfgBuildingParseTreeVisitor();
+    builder.producePreprocessorConditions(true);
+
+    // Should not throw IllegalArgumentException
+    var graph = builder.buildGraph(parseTree);
+
+    assertThat(graph).isNotNull();
+    assertThat(graph.vertexSet()).isNotEmpty();
+  }
+
   @SneakyThrows
   private String getResourceFile(String name) {
 
@@ -529,6 +956,6 @@ class ControlFlowGraphBuilderTest {
 
   private String textOfCurrentNode(ControlFlowGraphWalker walker) {
     var block = (BasicBlockVertex) walker.getCurrentNode();
-    return block.statements().get(0).getText();
+    return block.statements().getFirst().getText();
   }
 }

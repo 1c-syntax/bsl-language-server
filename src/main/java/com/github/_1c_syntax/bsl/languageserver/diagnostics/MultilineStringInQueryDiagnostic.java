@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -41,7 +41,7 @@ import org.antlr.v4.runtime.tree.ParseTree;
   scope = DiagnosticScope.BSL
 )
 public class MultilineStringInQueryDiagnostic extends AbstractSDBLVisitorDiagnostic {
-  private static final int MULTI_STRING_MIN_SIZE = 2; // see SDBLParser grammar
+  private static final int MULTI_STRING_MIN_SIZE = 1; // see SDBLParser grammar
 
   @Override
   public ParseTree visitMultiString(SDBLParser.MultiStringContext ctx) {

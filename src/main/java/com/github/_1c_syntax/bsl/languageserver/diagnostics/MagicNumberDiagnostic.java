@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -26,7 +26,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticP
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.DiagnosticHelper;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -44,15 +43,14 @@ import java.util.Map;
     DiagnosticTag.BADPRACTICE
   }
 )
-public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
+public class MagicNumberDiagnostic extends AbstractMagicValueDiagnostic {
 
   private static final String DEFAULT_AUTHORIZED_NUMBERS = "-1,0,1";
   private static final boolean DEFAULT_ALLOW_MAGIC_NUMBER = true;
 
-
   @DiagnosticParameter(
     type = String.class,
-    defaultValue = "" + DEFAULT_AUTHORIZED_NUMBERS
+    defaultValue = DEFAULT_AUTHORIZED_NUMBERS
   )
   private final List<String> authorizedNumbers = new ArrayList<>(Arrays.asList(DEFAULT_AUTHORIZED_NUMBERS.split(",")));
 
@@ -75,37 +73,92 @@ public class MagicNumberDiagnostic extends AbstractVisitorDiagnostic {
     }
   }
 
+  private static boolean isNumericExpression(BSLParser.ExpressionContext expression) {
+    return (expression.getChildCount() <= 1);
+  }
+
+  private static boolean insideCallParam(BSLParser.ExpressionContext expression) {
+    return expression.getParent() instanceof BSLParser.CallParamContext;
+  }
+
+  /**
+   * Плоское число — аргумент вызова Дата(...)/Date(...) — это компонента даты
+   * (год, месяц, день, час, минута, секунда), а не магическое число, поэтому не считается
+   * замечанием в любом контексте. Расчёты и сложные выражения внутри Дата(...) остаются замечанием.
+   */
+  private static boolean isDateComponentArgument(BSLParser.ExpressionContext expression) {
+    return isNumericExpression(expression) && getEnclosingDateMethodCall(expression).isPresent();
+  }
+
   @Override
   public ParseTree visitNumeric(BSLParser.NumericContext ctx) {
-    String checked = ctx.getText();
+    var checked = ctx.getText();
 
-    if (checked != null && !isExcluded(checked)) {
-      ParserRuleContext expression = ctx.getParent().getParent().getParent();
-      if (expression instanceof BSLParser.ExpressionContext
-        && (!isNumericExpression((BSLParser.ExpressionContext) expression)
-        || mayBeNumberAccess((BSLParser.ExpressionContext) expression))) {
+    if (checked != null && isAllowed(checked)) {
+      var current = ctx.getParent();
+      var isDefaultValue = false;
+      while (current != null) {
+        if (current instanceof BSLParser.DefaultValueContext) {
+          isDefaultValue = true;
+          break;
+        }
+        current = current.getParent();
+      }
+
+      if (!isDefaultValue && isWrongExpression(ctx, ctx.getParent())) {
         diagnosticStorage.addDiagnostic(ctx.stop, info.getMessage(checked));
       }
     }
-
-    return ctx;
+    return defaultResult();
   }
 
-  private boolean isExcluded(String s) {
+  private boolean isAllowed(String s) {
     for (String elem : this.authorizedNumbers) {
       if (s.compareTo(elem) == 0) {
-        return true;
+        return false;
       }
     }
+    return true;
+  }
 
+  private boolean isWrongExpression(BSLParser.NumericContext ctx, ParserRuleContext numericContextParent) {
+    if (mayBeNumberAccess(ctx)) {
+      return true;
+    }
+
+    var expression = getExpression(numericContextParent);
+    if (expression.isEmpty()) {
+      return false;
+    }
+    var context = expression.get();
+    if (isAllowedNumericContext(context)) {
+      return false;
+    }
+    return !isNumericExpression(context) || insideCallParam(context);
+  }
+
+  /**
+   * Контексты, в которых числовой литерал допустим и не считается магическим: внутри
+   * структуры/соответствия, возвращаемое напрямую число ({@code Возврат 55}) и числовая
+   * компонента дата-литерала {@code Дата(...)}.
+   */
+  private boolean isAllowedNumericContext(BSLParser.ExpressionContext context) {
+    return insideStructureOrCorrespondence(context)
+      || (isNumericExpression(context) && insideReturnStatement(context))
+      || isDateComponentArgument(context);
+  }
+
+  private boolean mayBeNumberAccess(BSLParser.NumericContext ctx) {
+    if (allowMagicIndexes) {
+      return false;
+    }
+    ParserRuleContext current = ctx.getParent();
+    while (current != null) {
+      if (current instanceof BSLParser.AccessIndexContext) {
+        return true;
+      }
+      current = current.getParent();
+    }
     return false;
-  }
-
-  private boolean mayBeNumberAccess(BSLParser.ExpressionContext expression) {
-    return !allowMagicIndexes && expression.getParent() instanceof BSLParser.AccessIndexContext;
-  }
-
-  private static boolean isNumericExpression(BSLParser.ExpressionContext expression) {
-    return (expression.getChildCount() <= 1);
   }
 }

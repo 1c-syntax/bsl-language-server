@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.aop.measures;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.parser.SDBLTokenizer;
 import lombok.RequiredArgsConstructor;
@@ -32,7 +31,10 @@ import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 /**
- * Класс отвечает за вызов операций замера производительности для lazy-методов {@link DocumentContext}.
+ * Вычислитель замеров производительности для ленивых данных DocumentContext.
+ * <p>
+ * Автоматически измеряет время вычисления ленивых методов DocumentContext
+ * при изменении содержимого документа для мониторинга производительности.
  */
 @Component
 @ConditionalOnMeasuresEnabled
@@ -62,8 +64,11 @@ public class DocumentContextLazyDataMeasurer {
     measureCollector.measureIt(documentContext.getSymbolTree()::getChildrenFlat, "context: symbolTree - childrenFlat");
     measureCollector.measureIt(documentContext.getSymbolTree()::getMethods, "context: symbolTree - methods");
     measureCollector.measureIt(documentContext.getSymbolTree()::getVariables, "context: symbolTree - variables");
-    measureCollector.measureIt(documentContext.getSymbolTree()::getVariablesByName, "context: symbolTree - variablesByName");
-    measureCollector.measureIt(documentContext.getSymbolTree()::getMethodsByName, "context: symbolTree - methodsByName");
+    // Индексы по имени дерево строит при первом поиске.
+    var symbolTree = documentContext.getSymbolTree();
+    measureCollector.measureIt(() -> symbolTree.getVariablesOfScope(symbolTree.getModule()),
+      "context: symbolTree - variablesByName");
+    measureCollector.measureIt(() -> symbolTree.getMethodSymbol(""), "context: symbolTree - methodsByName");
     measureCollector.measureIt(documentContext::getDiagnosticIgnorance, "context: diagnosticIgnorance");
     measureCollector.measureIt(documentContext::getCognitiveComplexityData, "context: cognitiveComplexity");
     measureCollector.measureIt(documentContext::getCyclomaticComplexityData, "context: cyclomaticComplexity");

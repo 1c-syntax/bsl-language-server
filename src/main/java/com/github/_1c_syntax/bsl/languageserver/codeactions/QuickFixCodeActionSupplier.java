@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -33,6 +33,12 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
+/**
+ * Поставщик code actions для быстрых исправлений диагностик.
+ * <p>
+ * Преобразует диагностики, поддерживающие QuickFixProvider,
+ * в code actions для применения исправлений.
+ */
 @Component
 public class QuickFixCodeActionSupplier extends AbstractQuickFixSupplier {
 

@@ -1,0 +1,208 @@
+/*
+ * This file is a part of BSL Language Server.
+ *
+ * Copyright (c) 2018-2026
+ * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
+ *
+ * SPDX-License-Identifier: LGPL-3.0-or-later
+ *
+ * BSL Language Server is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3.0 of the License, or (at your option) any later version.
+ *
+ * BSL Language Server is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with BSL Language Server.
+ */
+package com.github._1c_syntax.bsl.languageserver.types;
+
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import org.eclipse.lsp4j.Position;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+
+import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
+import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * Inline (висячий) комментарий после присваивания: {@code X = F(); // Тип -}
+ * должен типизировать переменную (сценарий из стандарта 1С:EDT для уточнения
+ * типов локальных переменных).
+ */
+@CleanupContextBeforeClassAndAfterClass
+class InlineTypeCommentInferenceTest extends AbstractServerContextAwareTest {
+
+  @Autowired
+  private TypeService typeService;
+
+  @Test
+  void singleTypeWithTrailingDash() {
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/InlineTypeComment.bsl");
+
+    var types = inferAtMarker(documentContext, "X = Значение", "X = ".length());
+    // Комментарий дополняет расчётные типы, а не заменяет их: заглушка возвращает строку,
+    // поэтому к объявленному Число добавляется Строка из тела функции.
+    assertThat(types.refs())
+      .as("inline `// Число -` дополняет расчётный тип заглушки")
+      .extracting(TypeRef::qualifiedName)
+      .containsExactlyInAnyOrder("Строка", "Число");
+  }
+
+  @Test
+  void singleTypeWithoutDash() {
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/InlineTypeComment.bsl");
+
+    var types = inferAtMarker(documentContext, "Y = Имя", "Y = ".length());
+    assertThat(types.refs())
+      .as("inline `// Строка` (no dash) also produces Строка")
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Строка");
+  }
+
+  @Test
+  void seeRefToLocalConstructor() {
+    // given: «Х = Ф(); // см. НовыйОбъектДанных» — ссылка на функцию того же модуля.
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/InlineTypeComment.bsl");
+
+    // when
+    var types = inferAtMarker(documentContext, "П = ПоЛокальнойСсылке", "П = ".length());
+
+    // then: тип из описания функции приходит вместе с её полями и дополняет расчётный
+    // тип заглушки.
+    assertThat(types.refs())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactlyInAnyOrder("Строка", "Структура");
+    var structureRef = types.refs().stream()
+      .filter(ref -> "Структура".equals(ref.qualifiedName()))
+      .findFirst()
+      .orElseThrow();
+    assertThat(types.getLocalFields(structureRef).keySet())
+      .containsExactlyInAnyOrder("Ссылка", "Количество");
+  }
+
+  @Test
+  void seeRefToAnotherModuleFunction() {
+    // given: «Х = Ф(); // см. ОбщегоНазначения.НовыеСвойстваПодписи».
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/InlineTypeComment.bsl");
+
+    // when
+    var types = inferAtMarker(documentContext, "М = ПоМежмодульнойСсылке", "М = ".length());
+
+    // then: тип по ссылке дополняет расчётный тип заглушки.
+    assertThat(types.refs())
+      .extracting(TypeRef::qualifiedName)
+      .containsExactlyInAnyOrder("Строка", "Структура");
+  }
+
+  @Test
+  void unionOfTypesSeparatedByComma() {
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/InlineTypeComment.bsl");
+
+    var types = inferAtMarker(documentContext, "Z = Перечисление", "Z = ".length());
+    assertThat(types.refs())
+      .as("inline `// Число, Строка -` produces union")
+      .extracting(TypeRef::qualifiedName)
+      .containsExactlyInAnyOrder("Число", "Строка");
+  }
+
+  @Test
+  void collectionElementTypeFromInlineComment() {
+    // given: «СписокСсылок = Новый Массив; // Массив из Структура -» и обход этого массива.
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/InlineTypeComment.bsl");
+
+    // when
+    var types = inferAtMarker(documentContext, "ЭМ = ЭлементМассива", "ЭМ = ".length());
+
+    // then
+    assertThat(types.refs())
+      .as("тип элементов массива из строчного комментария доходит до элемента обхода")
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Структура");
+  }
+
+  @Test
+  void wrapperElementTypeWinsOverInlineComment() {
+    // given: «МоеСоответствие = Новый Соответствие; // Соответствие из Строка -» —
+    // элемент соответствия это КлючИЗначение, а не значение, поэтому строчная запись
+    // тип элемента задать не может.
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/InlineTypeComment.bsl");
+
+    // when
+    var types = inferAtMarker(documentContext, "ЭС = ЭлементСоответствия", "ЭС = ".length());
+
+    // then
+    assertThat(types.refs())
+      .as("элемент соответствия остаётся КлючИЗначение")
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("КлючИЗначение");
+  }
+
+  @Test
+  void valueListTypeFromInlineCommentGoesToItemValue() {
+    // given: «МойСписок = Новый СписокЗначений; // СписокЗначений из Строка -» — запись
+    // называет тип значения элемента, как и в описании метода: элемент остаётся
+    // ЭлементСпискаЗначений, а «Строка» — тип его свойства «Значение».
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/InlineTypeComment.bsl");
+
+    // when
+    var types = inferAtMarker(documentContext, "ЗМС = ЭлементМоегоСписка.Значение",
+      "ЗМС = ЭлементМоегоСписка.".length());
+
+    // then
+    assertThat(types.refs())
+      .as("«Значение» элемента списка, тип которого задан строчным комментарием")
+      .extracting(TypeRef::qualifiedName)
+      .containsExactly("Строка");
+  }
+
+  @Test
+  void arbitraryAmongDeclaredElementTypesIsKept() {
+    // given: «Смешанный = Новый Массив; // Массив из Произвольный, Строка -» —
+    // «Произвольный» здесь написан автором, а не подставлен реестром: он говорит, что
+    // элементы бывают всякие, и в частности строки. Отбрасывать его нельзя — сужение
+    // до «Строка» назовёт единственным тип, о котором автор сказал обратное.
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/InlineTypeComment.bsl");
+
+    // when
+    var types = inferAtMarker(documentContext, "ЭСм = ЭлементСмешанного", "ЭСм = ".length());
+
+    // then
+    assertThat(types.refs())
+      .as("объявленный «Произвольный» доходит до элемента обхода вместе с названным типом")
+      .extracting(TypeRef::qualifiedName)
+      .containsExactlyInAnyOrder(TypeRef.ANY.qualifiedName(), "Строка");
+  }
+
+  private com.github._1c_syntax.bsl.languageserver.types.model.TypeSet inferAtMarker(
+    com.github._1c_syntax.bsl.languageserver.context.DocumentContext documentContext,
+    String marker,
+    int offsetInMarker
+  ) {
+    var content = documentContext.getContent();
+    int markerStart = content.indexOf(marker);
+    int targetOffset = markerStart + offsetInMarker;
+    int lineStart = content.lastIndexOf('\n', targetOffset) + 1;
+    int line = content.substring(0, targetOffset).split("\n").length - 1;
+    int charInLine = targetOffset - lineStart;
+    return typeService.expressionTypesAt(documentContext, new Position(line, charInLine + 1));
+  }
+}

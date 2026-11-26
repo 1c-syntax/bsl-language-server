@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,15 +21,17 @@
  */
 package com.github._1c_syntax.bsl.languageserver.folding;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
-import edu.umd.cs.findbugs.annotations.Nullable;
 import lombok.Getter;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.FoldingRange;
 import org.eclipse.lsp4j.FoldingRangeKind;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -43,7 +45,7 @@ public class CodeBlockFoldingRangeSupplier implements FoldingRangeSupplier {
 
   @Override
   public List<FoldingRange> getFoldingRanges(DocumentContext documentContext) {
-    CodeBlockVisitor codeBlockVisitor = new CodeBlockVisitor();
+    var codeBlockVisitor = new CodeBlockVisitor(documentContext.getScriptVariantLanguage());
     codeBlockVisitor.visitFile(documentContext.getAst());
     return codeBlockVisitor.getRegionRanges();
   }
@@ -53,49 +55,116 @@ public class CodeBlockFoldingRangeSupplier implements FoldingRangeSupplier {
     @Getter
     private final List<FoldingRange> regionRanges = new ArrayList<>();
 
+    private final String procedureKeyword;
+    private final String functionKeyword;
+
+    CodeBlockVisitor(Language scriptVariantLanguage) {
+      procedureKeyword = Resources.getResourceString(
+        scriptVariantLanguage, CodeBlockFoldingRangeSupplier.class, "procedureKeyword");
+      functionKeyword = Resources.getResourceString(
+        scriptVariantLanguage, CodeBlockFoldingRangeSupplier.class, "functionKeyword");
+    }
+
     @Override
     public ParseTree visitProcedure(BSLParser.ProcedureContext ctx) {
-      addRegionRange(ctx.procDeclaration().PROCEDURE_KEYWORD(), ctx.ENDPROCEDURE_KEYWORD());
+      addRegionRange(
+        ctx.procDeclaration().PROCEDURE_KEYWORD(),
+        ctx.ENDPROCEDURE_KEYWORD(),
+        collapsedTextForMethod(procedureKeyword, ctx.procDeclaration().subName())
+      );
       return super.visitProcedure(ctx);
     }
 
     @Override
     public ParseTree visitFunction(BSLParser.FunctionContext ctx) {
-      addRegionRange(ctx.funcDeclaration().FUNCTION_KEYWORD(), ctx.ENDFUNCTION_KEYWORD());
+      addRegionRange(
+        ctx.funcDeclaration().FUNCTION_KEYWORD(),
+        ctx.ENDFUNCTION_KEYWORD(),
+        collapsedTextForMethod(functionKeyword, ctx.funcDeclaration().subName())
+      );
       return super.visitFunction(ctx);
     }
 
     @Override
     public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {
-      addRegionRange(ctx.ifBranch().IF_KEYWORD(), ctx.ENDIF_KEYWORD());
+      addRegionRange(ctx.ifBranch().IF_KEYWORD(), ctx.ENDIF_KEYWORD(), null);
+      addBranchRanges(ctx);
       return super.visitIfStatement(ctx);
     }
 
     @Override
     public ParseTree visitWhileStatement(BSLParser.WhileStatementContext ctx) {
-      addRegionRange(ctx.WHILE_KEYWORD(), ctx.ENDDO_KEYWORD());
+      addRegionRange(ctx.WHILE_KEYWORD(), ctx.ENDDO_KEYWORD(), null);
       return super.visitWhileStatement(ctx);
     }
 
     @Override
     public ParseTree visitForStatement(BSLParser.ForStatementContext ctx) {
-      addRegionRange(ctx.FOR_KEYWORD(), ctx.ENDDO_KEYWORD());
+      addRegionRange(ctx.FOR_KEYWORD(), ctx.ENDDO_KEYWORD(), null);
       return super.visitForStatement(ctx);
     }
 
     @Override
     public ParseTree visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
-      addRegionRange(ctx.FOR_KEYWORD(), ctx.ENDDO_KEYWORD());
+      addRegionRange(ctx.FOR_KEYWORD(), ctx.ENDDO_KEYWORD(), null);
       return super.visitForEachStatement(ctx);
     }
 
     @Override
     public ParseTree visitTryStatement(BSLParser.TryStatementContext ctx) {
-      addRegionRange(ctx.TRY_KEYWORD(), ctx.ENDTRY_KEYWORD());
+      addRegionRange(ctx.TRY_KEYWORD(), ctx.ENDTRY_KEYWORD(), null);
+      addBranchRange(ctx.EXCEPT_KEYWORD(), ctx.ENDTRY_KEYWORD());
       return super.visitTryStatement(ctx);
     }
 
-    private void addRegionRange(@Nullable TerminalNode start, @Nullable TerminalNode stop) {
+    /**
+     * Добавить области сворачивания для каждой ветви ИначеЕсли и Иначе условного оператора.
+     * Граница ветви — от строки её ключевого слова до строки следующей ветви или КонецЕсли минус один.
+     *
+     * @param ctx контекст условного оператора Если...КонецЕсли
+     */
+    private void addBranchRanges(BSLParser.IfStatementContext ctx) {
+      var branchStarts = new ArrayList<TerminalNode>();
+      ctx.elsifBranch().forEach(branch -> branchStarts.add(branch.ELSIF_KEYWORD()));
+      var elseBranch = ctx.elseBranch();
+      if (elseBranch != null) {
+        branchStarts.add(elseBranch.ELSE_KEYWORD());
+      }
+      branchStarts.add(ctx.ENDIF_KEYWORD());
+
+      for (int i = 0; i < branchStarts.size() - 1; i++) {
+        addBranchRange(branchStarts.get(i), branchStarts.get(i + 1));
+      }
+    }
+
+    /**
+     * Добавить область сворачивания ветви — от строки её ключевого слова
+     * до строки замыкающего узла минус один.
+     *
+     * @param start ключевое слово начала ветви
+     * @param nextStart узел, следующий за телом ветви (следующая ветвь или закрывающее ключевое слово)
+     */
+    private void addBranchRange(@Nullable TerminalNode start, @Nullable TerminalNode nextStart) {
+      if (start == null || nextStart == null) {
+        return;
+      }
+
+      int startLine = start.getSymbol().getLine();
+      int stopLine = nextStart.getSymbol().getLine() - 1;
+
+      if (stopLine > startLine) {
+        var foldingRange = new FoldingRange(startLine - 1, stopLine - 1);
+        foldingRange.setKind(FoldingRangeKind.Region);
+
+        regionRanges.add(foldingRange);
+      }
+    }
+
+    private void addRegionRange(
+      @Nullable TerminalNode start,
+      @Nullable TerminalNode stop,
+      @Nullable String collapsedText
+    ) {
       if (start == null || stop == null) {
         return;
       }
@@ -104,11 +173,19 @@ public class CodeBlockFoldingRangeSupplier implements FoldingRangeSupplier {
       int stopLine = stop.getSymbol().getLine();
 
       if (stopLine > startLine) {
-        FoldingRange foldingRange = new FoldingRange(startLine - 1, stopLine - 1);
+        var foldingRange = new FoldingRange(startLine - 1, stopLine - 1);
         foldingRange.setKind(FoldingRangeKind.Region);
+        foldingRange.setCollapsedText(collapsedText);
 
         regionRanges.add(foldingRange);
       }
+    }
+
+    private static @Nullable String collapsedTextForMethod(String keyword, BSLParser.@Nullable SubNameContext subName) {
+      if (subName == null) {
+        return null;
+      }
+      return keyword + " " + subName.getText() + "()";
     }
   }
 

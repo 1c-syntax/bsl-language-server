@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,25 +21,40 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
+import com.github._1c_syntax.bsl.languageserver.commands.ToggleCyclomaticComplexityInlayHintsCommandSupplier;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
 
 /**
- * Сапплаер линз, показывающий когнитивную сложность методов.
+ * Сапплаер линз, показывающий цикломатическую сложность методов.
  */
 @Component
+@Order(5)
 public class CyclomaticComplexityCodeLensSupplier extends AbstractMethodComplexityCodeLensSupplier {
 
-  public CyclomaticComplexityCodeLensSupplier(LanguageServerConfiguration configuration) {
-    super(configuration);
+  /**
+   * Конструктор поставщика линз цикломатической сложности.
+   *
+   * @param configuration  Конфигурация language server.
+   * @param commandSupplier Поставщик команды переключения inlay-хинтов цикломатической сложности.
+   * @param resources      Локализованные ресурсы сервера.
+   */
+  public CyclomaticComplexityCodeLensSupplier(
+    LanguageServerConfiguration configuration,
+    ToggleCyclomaticComplexityInlayHintsCommandSupplier commandSupplier,
+    Resources resources
+  ) {
+    super(configuration, commandSupplier, resources);
   }
 
   @Override
   protected Map<MethodSymbol, Integer> getMethodsComplexity(DocumentContext documentContext) {
-    return documentContext.getCyclomaticComplexityData().getMethodsComplexity();
+    return documentContext.getCyclomaticComplexityData().methodsComplexity();
   }
 }

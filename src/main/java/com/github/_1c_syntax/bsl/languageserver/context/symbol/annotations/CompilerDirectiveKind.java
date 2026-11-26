@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,7 +22,9 @@
 package com.github._1c_syntax.bsl.languageserver.context.symbol.annotations;
 
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import lombok.Getter;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -37,19 +39,25 @@ public enum CompilerDirectiveKind {
   AT_CLIENT(BSLParser.ANNOTATION_ATCLIENT_SYMBOL),
   AT_SERVER(BSLParser.ANNOTATION_ATSERVER_SYMBOL);
 
+  // По одному Optional на директиву: его держит каждый символ метода с директивой, а таких
+  // методов на большой конфигурации сотни тысяч.
+  private static final List<Optional<CompilerDirectiveKind>> PRESENT = Stream.of(values())
+    .map(Optional::of)
+    .toList();
+
+  @Getter
   private final int tokenType;
 
   CompilerDirectiveKind(int tokenType) {
     this.tokenType = tokenType;
   }
 
-  public int getTokenType() {
-    return tokenType;
-  }
-
   public static Optional<CompilerDirectiveKind> of(int tokenType) {
-    return Stream.of(values())
-      .filter(compilerDirective -> compilerDirective.getTokenType() == tokenType)
-      .findAny();
+    for (var present : PRESENT) {
+      if (present.orElseThrow().tokenType == tokenType) {
+        return present;
+      }
+    }
+    return Optional.empty();
   }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -24,20 +24,25 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SelfMemberClassifier;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableDescription;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotations;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
+import com.github._1c_syntax.bsl.parser.description.VariableDescription;
+import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
+import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -48,53 +53,80 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import static java.util.stream.Collectors.toMap;
 
+/**
+ * Вычислитель символов переменных.
+ * <p>
+ * Анализирует AST и создает символы для всех переменных в модуле:
+ * параметров, локальных переменных, переменных уровня модуля.
+ */
 public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> implements Computer<List<VariableSymbol>> {
 
   private final DocumentContext documentContext;
   private final ModuleSymbol module;
   private final Map<Range, SourceDefinedSymbol> methods;
+  private final SelfMemberClassifier selfMemberClassifier;
   private final Set<VariableSymbol> variables = new HashSet<>();
+  private final Set<VariableSymbol> loopVariables = new HashSet<>();
   private final Map<String, String> currentMethodVariables = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
   private final Map<String, String> moduleVariables = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+  private final Map<String, String> declaredModuleVariables = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
 
   private SourceDefinedSymbol currentMethod;
+  private @Nullable Predicate<String> bareSelfProperties;
 
-  public VariableSymbolComputer(DocumentContext documentContext, ModuleSymbol module,  List<MethodSymbol> methods) {
+  public VariableSymbolComputer(DocumentContext documentContext, ModuleSymbol module,
+                                List<? extends MethodSymbol> methods,
+                                SelfMemberClassifier selfMemberClassifier) {
     this.documentContext = documentContext;
     this.module = module;
     this.methods = methods.stream().collect(toMap(MethodSymbol::getSubNameRange, Function.identity()));
+    this.selfMemberClassifier = selfMemberClassifier;
     this.currentMethod = module;
   }
 
   @Override
   public List<VariableSymbol> compute() {
+    bareSelfProperties = null;
     variables.clear();
+    loopVariables.clear();
     moduleVariables.clear();
+    declaredModuleVariables.clear();
     visitFile(documentContext.getAst());
     return new ArrayList<>(variables);
   }
 
+  /**
+   * Символы, первое объявление которых находится в заголовке цикла.
+   *
+   * @return неизменяемый снимок объявлений циклов из последнего вычисления.
+   */
+  public Set<VariableSymbol> getLoopVariables() {
+    return Set.copyOf(loopVariables);
+  }
+
   @Override
   public ParseTree visitModuleVarDeclaration(BSLParser.ModuleVarDeclarationContext ctx) {
-    if (moduleVariables.containsKey(ctx.var_name().getText())) {
+    if (hasMissingName(ctx.var_name()) || moduleVariables.containsKey(ctx.var_name().getText())) {
       return ctx;
     }
 
     var symbol = VariableSymbol.builder()
-      .name(ctx.var_name().getText())
-      .owner(documentContext)
+      .name(ctx.var_name().getText().intern())
       .range(Ranges.create(ctx))
       .variableNameRange(Ranges.create(ctx.var_name()))
       .export(ctx.EXPORT_KEYWORD() != null)
       .kind(VariableKind.MODULE)
       .description(createDescription(ctx))
+      .annotations(moduleVarAnnotations(ctx))
       .scope(module)
       .build();
     variables.add(symbol);
     moduleVariables.put(ctx.var_name().getText(), ctx.var_name().getText());
+    declaredModuleVariables.put(ctx.var_name().getText(), ctx.var_name().getText());
     return ctx;
   }
 
@@ -109,9 +141,12 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
 
   @Override
   public ParseTree visitSubVarDeclaration(BSLParser.SubVarDeclarationContext ctx) {
+    if (hasMissingName(ctx.var_name())) {
+      return ctx;
+    }
+
     var symbol = VariableSymbol.builder()
-      .name(ctx.var_name().getText())
-      .owner(documentContext)
+      .name(ctx.var_name().getText().intern())
       .range(Ranges.create(ctx))
       .variableNameRange(Ranges.create(ctx.var_name()))
       .export(false)
@@ -138,12 +173,12 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
     var variable = VariableSymbol.builder()
       .name(ctx.IDENTIFIER().getText().intern())
       .scope(currentMethod)
-      .owner(documentContext)
       .range(Ranges.create(ctx))
       .variableNameRange(Ranges.create(ctx.IDENTIFIER()))
       .export(false)
       .kind(VariableKind.PARAMETER)
       .description(Optional.empty())
+      .annotations(Annotations.from(ctx.annotation()))
       .build();
     variables.add(variable);
 
@@ -159,8 +194,16 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   public ParseTree visitLValue(BSLParser.LValueContext ctx) {
     if (
       ctx.getChildCount() > 1
+      || ctx.IDENTIFIER() == null
       || currentMethodVariables.containsKey(ctx.getText())
-      || moduleVariables.containsKey(ctx.getText())
+      || isVisibleModuleVariable(ctx.getText())
+      // Голое присваивание одноимённому self-реквизиту (без Перем) — это обращение к
+      // реквизиту объекта/набора записей/менеджера, а не отдельная переменная: символ не
+      // заводим. Имя резолвит self-член machinery (инференсер, PlatformMemberReferenceFinder,
+      // индексация в ReferenceIndexFiller, подсветка SymbolsSemanticTokensSupplier). Проверка
+      // здесь, а не в общем updateVariablesCache: переменные цикла Для/Для Каждого — реальные
+      // объявления и НЕ должны подавляться, даже если их имя совпадает с реквизитом.
+      || isBareSelfProperty(ctx.IDENTIFIER().getText())
     ) {
       return ctx;
     }
@@ -173,26 +216,79 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   public ParseTree visitForStatement(BSLParser.ForStatementContext ctx) {
     if (
       currentMethodVariables.containsKey(ctx.IDENTIFIER().getText())
-      || moduleVariables.containsKey(ctx.IDENTIFIER().getText())
+      || isVisibleModuleVariable(ctx.IDENTIFIER().getText())
     ) {
       return super.visitForStatement(ctx);
     }
 
-    updateVariablesCache(ctx.IDENTIFIER(), createDescription(ctx));
+    loopVariables.add(updateVariablesCache(ctx.IDENTIFIER(), createDescription(ctx)));
     return super.visitForStatement(ctx);
   }
 
   @Override
   public ParseTree visitForEachStatement(BSLParser.ForEachStatementContext ctx) {
+    if (ctx.IDENTIFIER() == null) {
+      return super.visitForEachStatement(ctx);
+    }
+
     if (
       currentMethodVariables.containsKey(ctx.IDENTIFIER().getText())
-      || moduleVariables.containsKey(ctx.IDENTIFIER().getText())
+      || isVisibleModuleVariable(ctx.IDENTIFIER().getText())
     ) {
       return super.visitForEachStatement(ctx);
     }
 
-    updateVariablesCache(ctx.IDENTIFIER(), createDescription(ctx));
+    loopVariables.add(updateVariablesCache(ctx.IDENTIFIER(), createDescription(ctx)));
     return super.visitForEachStatement(ctx);
+  }
+
+  /**
+   * Заведена ли уже переменная модуля с этим именем, видимая в текущей точке. В теле
+   * модуля видна любая; в методе — только объявленная {@code Перем}: переменная, созданная
+   * присваиванием в теле модуля, живёт в нём одном, и одноимённое присваивание в методе
+   * заводит переменную метода.
+   */
+  private boolean isVisibleModuleVariable(String name) {
+    return currentMethod == module
+      ? moduleVariables.containsKey(name)
+      : declaredModuleVariables.containsKey(name);
+  }
+
+  /**
+   * Аннотации объявления переменной модуля. Грамматически они висят на
+   * охватывающем {@code moduleVar} (общем для всех переменных в одном
+   * {@code Перем А, Б;}), поэтому поднимаемся к нему от объявления.
+   */
+  private static List<Annotation> moduleVarAnnotations(BSLParser.ModuleVarDeclarationContext ctx) {
+    var moduleVar = (BSLParser.ModuleVarContext) Trees.getRootParent(ctx, BSLParser.RULE_moduleVar);
+    if (moduleVar == null) {
+      return Collections.emptyList();
+    }
+    return Annotations.from(moduleVar.annotation());
+  }
+
+  /**
+   * Проверяет, что имя переменной отсутствует в исходном коде.
+   * <p>
+   * При незавершённом объявлении (например, {@code Перем} без имени) парсер
+   * выполняет восстановление и подставляет на место идентификатора фиктивный
+   * токен ({@link ErrorNode}). Такой токен получает позицию следующей значимой
+   * лексемы, из-за чего диапазон объявления становится «вывернутым» (начало
+   * после конца), а {@code selectionRange} перестаёт содержаться в {@code range}.
+   * Подобный символ ломает весь ответ на запрос {@code textDocument/documentSymbol},
+   * поэтому его нужно пропустить.
+   * <p>
+   * {@link Trees#nodeContainsErrors} здесь не подходит: он проверяет только
+   * {@link org.antlr.v4.runtime.ParserRuleContext#exception}, но не подставленные
+   * при восстановлении узлы-ошибки (см.
+   * <a href="https://github.com/1c-syntax/bsl-language-server/issues/3968">#3968</a>).
+   *
+   * @param varName Контекст имени переменной
+   * @return {@code true}, если идентификатор имени отсутствует или является узлом-ошибкой
+   */
+  private static boolean hasMissingName(BSLParser.Var_nameContext varName) {
+    var identifier = varName.IDENTIFIER();
+    return identifier == null || identifier instanceof ErrorNode;
   }
 
   private SourceDefinedSymbol getVariableScope(BSLParser.SubVarDeclarationContext ctx) {
@@ -205,7 +301,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   }
 
   private SourceDefinedSymbol getVariableScope(BSLParser.SubContext ctx) {
-      BSLParserRuleContext subNameNode;
+      ParserRuleContext subNameNode;
       if (Trees.nodeContainsErrors(ctx)) {
         return module;
       } else if (ctx.function() != null) {
@@ -225,11 +321,35 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
     }
 
     return Optional.of(
-      new VariableDescription(Collections.emptyList(), trailingComments)
+      VariableDescription.create(Collections.emptyList(), trailingComments)
     );
   }
 
-  private Optional<VariableDescription> createDescription(BSLParserRuleContext ctx) {
+  private Optional<VariableDescription> createDescription(BSLParser.ForEachStatementContext ctx) {
+    var trailingComments = Trees.getTrailingComment(documentContext.getTokens(), ctx.IDENTIFIER().getSymbol());
+
+    if (trailingComments.isEmpty()) {
+      return Optional.empty();
+    }
+
+    return Optional.of(
+      VariableDescription.create(Collections.emptyList(), trailingComments)
+    );
+  }
+
+  private Optional<VariableDescription> createDescription(BSLParser.ForStatementContext ctx) {
+    var trailingComments = Trees.getTrailingComment(documentContext.getTokens(), ctx.IDENTIFIER().getSymbol());
+
+    if (trailingComments.isEmpty()) {
+      return Optional.empty();
+    }
+
+    return Optional.of(
+      VariableDescription.create(Collections.emptyList(), trailingComments)
+    );
+  }
+
+  private Optional<VariableDescription> createDescription(ParserRuleContext ctx) {
     List<Token> tokens = documentContext.getTokens();
     List<Token> comments = new ArrayList<>();
 
@@ -245,14 +365,13 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
       return Optional.empty();
     }
 
-    return Optional.of(new VariableDescription(comments, trailingComments));
+    return Optional.of(VariableDescription.create(comments, trailingComments));
 
   }
 
-  private void updateVariablesCache(TerminalNode node, Optional<VariableDescription> description) {
+  private VariableSymbol updateVariablesCache(TerminalNode node, Optional<VariableDescription> description) {
     var variable = VariableSymbol.builder()
       .name(node.getText().intern())
-      .owner(documentContext)
       .range(Ranges.create(node))
       .variableNameRange(Ranges.create(node))
       .export(false)
@@ -269,6 +388,14 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
     } else {
       currentMethodVariables.put(node.getText(), node.getText());
     }
+    return variable;
   }
 
+  /** Классификатор документа берётся один раз, при первом голом присваивании. */
+  private boolean isBareSelfProperty(String name) {
+    if (bareSelfProperties == null) {
+      bareSelfProperties = selfMemberClassifier.bareSelfPropertiesOf(documentContext);
+    }
+    return bareSelfProperties.test(name);
+  }
 }

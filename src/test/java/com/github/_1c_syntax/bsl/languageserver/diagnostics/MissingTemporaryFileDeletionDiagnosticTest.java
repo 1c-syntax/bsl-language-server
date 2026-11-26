@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -78,7 +78,10 @@ class MissingTemporaryFileDeletionDiagnosticTest extends AbstractDiagnosticTest<
       .hasRange(49, 30, 63)
       .hasRange(64, 30, 58)
       .hasRange(71, 26, 54)
-      .hasSize(5)
+      .hasRange(83, 20, 61)
+      .hasRange(87, 20, 50)
+      .hasRange(91, 26, 59)
+      .hasSize(8)
     ;
   }
 
@@ -106,7 +109,10 @@ class MissingTemporaryFileDeletionDiagnosticTest extends AbstractDiagnosticTest<
       .hasRange(60, 29, 57)
       .hasRange(64, 30, 58)
       .hasRange(71, 26, 54)
-      .hasSize(12)
+      .hasRange(83, 20, 61)
+      .hasRange(87, 20, 50)
+      .hasRange(91, 26, 59)
+      .hasSize(15)
     ;
   }
 }

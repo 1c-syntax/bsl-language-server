@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,10 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticInfo;
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfos;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.info.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
+import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import org.apache.commons.io.FileUtils;
@@ -37,9 +39,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -50,18 +52,29 @@ import java.util.Map;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
-class GenericReporterTest {
+@CleanupContextBeforeClassAndAfterEachTestMethod
+class GenericReporterTest extends AbstractServerContextAwareTest {
+
+  private static final String SOURCE_DIR = ".";
 
   @Autowired
   private GenericIssueReporter reporter;
 
   @Autowired
+  private DiagnosticInfos diagnosticInfosBean;
+
   private Map<String, DiagnosticInfo> diagnosticInfos;
 
   private final File file = new File("./bsl-generic-json.json");
 
   @BeforeEach
   void setUp() {
+    // Workspace нужен только для резолва workspace-scoped бинов: отчёт строится из
+    // AnalysisInfo, а не из содержимого контекста. Пустой каталог вместо корня проекта —
+    // регистрация корня индексировала бы OneScript-библиотеки всего репозитория
+    // (чтение и разбор каждого .os) на каждый тест-метод.
+    initServerContext();
+    diagnosticInfos = diagnosticInfosBean.getByCode();
     FileUtils.deleteQuietly(file);
   }
 
@@ -72,7 +85,7 @@ class GenericReporterTest {
   }
 
   @Test
-  void report() throws IOException {
+  void report() {
 
     // given
     List<Diagnostic> diagnostics = new ArrayList<>();
@@ -105,26 +118,30 @@ class GenericReporterTest {
 
     var documentContext = TestUtils.getDocumentContext("");
     Location location = new Location("file:///fake-uri2.bsl", Ranges.create(0, 2, 2, 3));
-    diagnostics.get(0).setRelatedInformation(Collections.singletonList(new DiagnosticRelatedInformation(location, "message")));
+    diagnostics.getFirst().setRelatedInformation(Collections.singletonList(new DiagnosticRelatedInformation(location, "message")));
 
-    String sourceDir = ".";
-    FileInfo fileInfo = new FileInfo(sourceDir, documentContext, diagnostics);
-    AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), sourceDir);
+    FileInfo fileInfo = new FileInfo(SOURCE_DIR, documentContext, diagnostics);
+    AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), SOURCE_DIR);
 
     // when
-    reporter.report(analysisInfo, Path.of(sourceDir));
+    ReporterTestDriver.report(reporter, analysisInfo, Path.of("."));
 
     // then
-    ObjectMapper mapper = new ObjectMapper();
+    var mapper = new JsonMapper();
     GenericIssueReport report = mapper.readValue(file, GenericIssueReport.class);
     assertThat(report).isNotNull();
     assertThat(report.getIssues()).isNotNull();
-    assertThat(report.getIssues().size()).isEqualTo(3);
-    assertThat(report.getIssues().get(0).getPrimaryLocation()).isNotNull();
+    assertThat(report.getIssues()).hasSize(3);
+    assertThat(report.getIssues().getFirst().getPrimaryLocation()).isNotNull();
     assertThat(report.getIssues().get(0).getSecondaryLocations()).isNotNull();
-    assertThat(report.getIssues().get(0).getSecondaryLocations().size()).isEqualTo(1);
+    assertThat(report.getIssues().get(0).getSecondaryLocations()).hasSize(1);
     assertThat(report.getIssues().get(2).getRuleId()).isEqualTo(secondInfo.getCode().getStringValue());
     assertThat(report.getIssues().get(1).getSeverity()).isEqualTo(firstInfo.getSeverity().name());
+  }
+
+  @Test
+  void doesNotRequireMetricCalculation() {
+    assertThat(reporter.isMetricCalculationRequired()).isFalse();
   }
 
 }

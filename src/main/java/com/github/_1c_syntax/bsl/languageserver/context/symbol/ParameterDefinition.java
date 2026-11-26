@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,14 +21,18 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context.symbol;
 
-import com.github._1c_syntax.bsl.languageserver.context.symbol.description.ParameterDescription;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.parser.description.ParameterDescription;
 import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Value;
+import org.jspecify.annotations.Nullable;
 import org.eclipse.lsp4j.Range;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 /**
@@ -49,14 +53,18 @@ public class ParameterDefinition {
   boolean byValue;
 
   /**
-   * Описание параметра.
+   * Описание параметра; {@code null}, если его нет.
    */
-  Optional<ParameterDescription> description;
+  @Getter(AccessLevel.NONE)
+  @Nullable ParameterDescription description;
 
   /**
    * Значение по умолчанию.
    */
   DefaultValue defaultValue;
+
+  @Builder.Default
+  List<Annotation> annotations = Collections.emptyList();
 
   @Getter(AccessLevel.NONE)
   int startLine;
@@ -66,6 +74,13 @@ public class ParameterDefinition {
   int endLine;
   @Getter(AccessLevel.NONE)
   int endCharacter;
+
+  /**
+   * Описание параметра.
+   */
+  public Optional<ParameterDescription> getDescription() {
+    return Optional.ofNullable(description);
+  }
 
   /**
    * Место объявления параметра.
@@ -92,15 +107,16 @@ public class ParameterDefinition {
     EMPTY
   }
 
-  @Value
-  public static class DefaultValue {
-    public static final DefaultValue EMPTY = new DefaultValue(ParameterType.EMPTY, "");
-
-    ParameterType type;
-    String value;
+  public record DefaultValue(ParameterType type, String value) {
+      public static final DefaultValue EMPTY = new DefaultValue(ParameterType.EMPTY, "");
   }
 
   public static class ParameterDefinitionBuilder {
+
+    public ParameterDefinitionBuilder description(Optional<ParameterDescription> description) {
+      this.description = description.orElse(null);
+      return this;
+    }
 
     public ParameterDefinitionBuilder range(Range range) {
       var start = range.getStart();

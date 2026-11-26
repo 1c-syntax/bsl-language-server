@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -25,15 +25,16 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.bsl.Constructors;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.AssignmentContext;
-import com.github._1c_syntax.bsl.parser.BSLParserRuleContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import edu.umd.cs.findbugs.annotations.Nullable;
+import lombok.Getter;
 import lombok.ToString;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.RuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayDeque;
 import java.util.Collection;
@@ -73,7 +74,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   private static final String GLOBAL_SCOPE = "GLOBAL_SCOPE";
   private static final String MODULE_SCOPE = "MODULE_SCOPE";
 
-  private VariableScope currentScope;
+  private VariableScope currentScope = new VariableScope();
 
   private static String getTypeFromConstValue(BSLParser.ConstValueContext constValue) {
     String result;
@@ -98,19 +99,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
 
   private static String getTypeFromNewExpressionContext(BSLParser.NewExpressionContext newExpression) {
 
-    String typeName = Optional.ofNullable(newExpression.typeName())
-      .map(RuleContext::getText)
-      .or(() -> Optional.ofNullable(newExpression.doCall())
-        .map(BSLParser.DoCallContext::callParamList)
-        .flatMap(callParamListContext -> callParamListContext.callParam().stream().findFirst())
-        .map(BSLParser.CallParamContext::expression)
-        .map(BSLParser.ExpressionContext::member)
-        .flatMap(memberListContext -> memberListContext.stream().findFirst())
-        .map(BSLParser.MemberContext::constValue)
-        .filter(constValue -> getTypeFromConstValue(constValue).equals(STRING_TYPE))
-        .map(RuleContext::getText)
-        .map(constValueText -> constValueText.substring(1, constValueText.length() - 1))
-      )
+    String typeName = Constructors.typeName(newExpression)
       .orElse(UNDEFINED_TYPE);
 
     if (QUERY_BUILDER_PATTERN.matcher(typeName).matches()) {
@@ -128,12 +117,12 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     return callStatement.IDENTIFIER().getText();
   }
 
+  @Nullable
   private static String getVariableNameFromModifierContext(BSLParser.ModifierContext modifier) {
     ParserRuleContext parent = modifier.getParent();
-    if (parent instanceof BSLParser.ComplexIdentifierContext) {
-      return getComplexPathName(((BSLParser.ComplexIdentifierContext) parent), modifier);
-    } else if (parent instanceof BSLParser.CallStatementContext) {
-      BSLParser.CallStatementContext parentCall = (BSLParser.CallStatementContext) parent;
+    if (parent instanceof BSLParser.ComplexIdentifierContext complexIdentifierContext) {
+      return getComplexPathName(complexIdentifierContext, modifier);
+    } else if (parent instanceof BSLParser.CallStatementContext parentCall) {
 
       return parentCall.modifier().stream()
         .takeWhile(e -> !e.equals(modifier))
@@ -145,7 +134,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
 
   private static String getComplexPathName(
     BSLParser.ComplexIdentifierContext ci,
-    @Nullable BSLParser.ModifierContext to
+    BSLParser.@Nullable ModifierContext to
   ) {
 
     return ci.modifier().stream()
@@ -160,7 +149,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     currentScope = new VariableScope();
     currentScope.enterScope(GLOBAL_SCOPE);
     ParseTree result = super.visitFile(ctx);
-    currentScope = null;
+    currentScope.clear();
     return result;
   }
 
@@ -226,9 +215,9 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     }
   }
 
-  private void visitDescendantCodeBlock(@Nullable BSLParser.CodeBlockContext ctx) {
+  private void visitDescendantCodeBlock(BSLParser.@Nullable CodeBlockContext ctx) {
     Optional.ofNullable(ctx)
-      .map(e -> e.children)
+      .map(ParserRuleContext::getChildren)
       .stream()
       .flatMap(Collection::stream)
       .forEach(t -> t.accept(this));
@@ -244,18 +233,17 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     }
 
     String variableName = null;
-    BSLParserRuleContext errorContext = null;
-    BSLParserRuleContext parent = ctx.getParent();
-    if (parent instanceof BSLParser.CallStatementContext) {
+    ParserRuleContext errorContext = null;
+    ParserRuleContext parent = ctx.getParent();
+    if (parent instanceof BSLParser.CallStatementContext callStatementContext) {
       errorContext = parent;
-      variableName = getVariableNameFromCallStatementContext((BSLParser.CallStatementContext) parent);
-    } else if (parent instanceof BSLParser.ModifierContext) {
-      BSLParser.ModifierContext callModifier = (BSLParser.ModifierContext) parent;
+      variableName = getVariableNameFromCallStatementContext(callStatementContext);
+    } else if (parent instanceof BSLParser.ModifierContext callModifier) {
       errorContext = callModifier.getParent();
       variableName = getVariableNameFromModifierContext(callModifier);
     }
     Optional<VariableDefinition> variableDefinition = currentScope.getVariableByName(variableName);
-    BSLParserRuleContext finalErrorContext = errorContext;
+    ParserRuleContext finalErrorContext = errorContext;
     if (finalErrorContext != null) {
       variableDefinition.ifPresent((VariableDefinition definition) -> {
 
@@ -313,6 +301,8 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   public static class VariableDefinition {
     private final String variableName;
     private final Set<String> types = new HashSet<>();
+
+    @Nullable
     private ParseTree firstDeclaration;
 
     VariableDefinition(String variableName) {
@@ -331,6 +321,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private static class Scope {
+    @Getter
     private final String name;
 
     private final HashMap<String, VariableDefinition> variables = new HashMap<>();
@@ -352,10 +343,6 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
           return key;
         });
     }
-
-    public String getName() {
-      return name;
-    }
   }
 
   private static class VariableScope extends ArrayDeque<Scope> {
@@ -370,7 +357,9 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
     }
 
     public Optional<VariableDefinition> getVariableByName(@Nullable String variableName) {
-      return Optional.ofNullable(current().variables.get(variableName));
+      return current()
+        .map(scope -> scope.variables)
+        .map(variable -> variable.get(variableName));
     }
 
     public void addVariable(VariableDefinition variableDefinition) {
@@ -378,7 +367,7 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
       if (flowType == null) {
         return;
       }
-      this.current().addVariable(variableDefinition, flowType == CodeFlowType.CYCLE);
+      this.current().ifPresent(scope -> scope.addVariable(variableDefinition, flowType == CodeFlowType.CYCLE));
     }
 
     public void enterScope(String name) {
@@ -396,8 +385,8 @@ public class CreateQueryInCycleDiagnostic extends AbstractVisitorDiagnostic {
       flowMode.pop();
     }
 
-    public Scope current() {
-      return this.peek();
+    public Optional<Scope> current() {
+      return Optional.ofNullable(this.peek());
     }
 
   }

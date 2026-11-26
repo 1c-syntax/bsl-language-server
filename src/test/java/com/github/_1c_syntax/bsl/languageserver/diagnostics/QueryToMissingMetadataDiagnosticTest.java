@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.utils.Absolute;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -49,13 +50,39 @@ class QueryToMissingMetadataDiagnosticTest extends AbstractDiagnosticTest<QueryT
         4, 18, 55)
       .hasMessageOnRange("Исправьте обращение к несуществующему метаданному \"РегистрСведений.УдалитьИмяРегистра\" в запросе",
         19, 40, 74)
+      .hasMessageOnRange("Исправьте обращение к несуществующему метаданному \"ВнешнийИсточникДанных.ВнешнийИсточникДанных2\" в запросе",
+        50, 18, 62)
+      .hasMessageOnRange("Исправьте обращение к несуществующему метаданному \"ВнешнийИсточникДанных.ВнешнийИсточникДанных2\" в запросе",
+        66, 18, 62)
+      .hasMessageOnRange("Исправьте обращение к несуществующему метаданному \"Куб2\" в запросе",
+        80, 51, 55)
+      .hasMessageOnRange("Исправьте обращение к несуществующему метаданному \"ТаблицаИзмерения1\" в запросе",
+        80, 73, 90)
+      .hasMessageOnRange("Исправьте обращение к несуществующему метаданному \"ТаблицаИзмерения2\" в запросе",
+        94, 73, 90)
 
-      .hasSize(2);
+      .hasSize(7);
 
   }
 
   @Test
+  void indexedLookupAcceptsEnglishTypeNamesAndMixedCaseNames() {
+    initServerContext(Absolute.path(PATH_TO_METADATA));
+    var document = TestUtils.getDocumentContext("""
+      Запрос = Новый Запрос;
+      Запрос.Текст = "SELECT * FROM InformationRegister.рЕГИСТРСВЕДЕНИЙ1";
+      Запрос.Текст = "SELECT * FROM Catalog.сПРАВОЧНИК1";
+      Запрос.Текст = "SELECT * FROM InformationRegister.НетТакогоРегистра";
+      """, context);
+    assertThat(getDiagnostics(document), true).hasSize(1)
+      .hasMessageOnRange("Исправьте обращение к несуществующему метаданному "
+        + "\"InformationRegister.НетТакогоРегистра\" в запросе", 3, 30, 67);
+  }
+
+  @Test
   void testSingleFile() {
+    // Initialize empty context without metadata
+    initServerContext();
 
     List<Diagnostic> diagnostics = getDiagnostics();
 

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,82 +21,52 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references.model;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.utils.GenericInterner;
-import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.Value;
 import org.eclipse.lsp4j.SymbolKind;
+import org.jspecify.annotations.Nullable;
+
+import java.util.Comparator;
+
+import static java.util.Comparator.comparing;
 
 /**
  * Облегченные данные символа для поиска без кросс-ссылок между файлами.
  *
- * @see com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol
+ * @param mdoRef     Ссылка на объект метаданных в формате ВидОбъектаМетаданных.ИмяОбъекта, в котором расположен символ.
+ * @param moduleType Тип модуля объекта метаданных, в котором расположен символ.
+ * @param scopeName  Область видимости символа.
+ * @param symbolKind Тип символа.
+ * @param symbolName Имя символа.
+ * @see SourceDefinedSymbol
  */
-@Value
-@AllArgsConstructor
 @Builder
-public class Symbol implements Comparable<Symbol> {
+public record Symbol(
+  String mdoRef,
+  ModuleType moduleType,
+  String scopeName,
+  SymbolKind symbolKind,
+  String symbolName
+) implements Comparable<Symbol> {
 
-  private static GenericInterner<Symbol> interner = new GenericInterner<>();
-
-  /**
-   * Cсылка на объект метаданных в формате ВидОбъектаМетаданных.ИмяОбъекта, в котором расположен символ.
-   */
-  String mdoRef;
-
-  /**
-   * Тип модуля объекта метаданных, в котором расположен символ.
-   */
-  ModuleType moduleType;
-
-  /**
-   * Область видимости символа.
-   */
-  String scopeName;
-
-  /**
-   * Тип символа.
-   */
-  SymbolKind symbolKind;
-
-  /**
-   * Имя символа.
-   */
-  String symbolName;
-
-  public Symbol intern() {
-    return interner.intern(this);
-  }
+  // Компаратор по всем полям, вынесенный в константу. Иначе цепочка из пяти
+  // comparing/thenComparing пересобиралась на каждый вызов compareTo, а он
+  // вызывается при каждой навигации по сортированным структурам reference-индекса
+  // (на keystroke это десятки тысяч вызовов и мегабайты лишних аллокаций).
+  private static final Comparator<Symbol> COMPARATOR =
+    comparing(Symbol::mdoRef)
+      .thenComparing(Symbol::moduleType)
+      .thenComparing(Symbol::scopeName)
+      .thenComparing(Symbol::symbolKind)
+      .thenComparing(Symbol::symbolName);
 
   @Override
-  public int compareTo(Symbol o) {
-    if (this.equals(o)) {
-      return 0;
+  public int compareTo(@Nullable Symbol other) {
+    if (other == null) {
+      return 1;
     }
 
-    int compareResult = mdoRef.compareTo(o.mdoRef);
-    if (compareResult != 0) {
-      return compareResult;
-    }
-
-    compareResult = moduleType.compareTo(o.moduleType);
-    if (compareResult != 0) {
-      return compareResult;
-    }
-
-    compareResult = scopeName.compareTo(o.scopeName);
-    if (compareResult != 0) {
-      return compareResult;
-    }
-
-    compareResult = symbolKind.compareTo(o.symbolKind);
-    if (compareResult != 0) {
-      return compareResult;
-    }
-
-    compareResult = symbolName.compareTo(o.symbolName);
-    return compareResult;
+    return COMPARATOR.compare(this, other);
   }
-
 }

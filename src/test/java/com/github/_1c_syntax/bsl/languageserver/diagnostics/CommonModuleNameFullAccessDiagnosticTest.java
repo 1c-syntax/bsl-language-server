@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
-import com.github._1c_syntax.mdclasses.mdo.MDCommonModule;
+import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
@@ -33,7 +33,6 @@ import org.junit.jupiter.api.Test;
 
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 
@@ -44,7 +43,7 @@ import static org.mockito.Mockito.when;
 @CleanupContextBeforeClassAndAfterEachTestMethod
 class CommonModuleNameFullAccessDiagnosticTest extends AbstractDiagnosticTest<CommonModuleNameFullAccessDiagnostic> {
   private DocumentContext documentContext;
-  private MDCommonModule module;
+  private CommonModule module;
 
   CommonModuleNameFullAccessDiagnosticTest() {
     super(CommonModuleNameFullAccessDiagnostic.class);
@@ -116,9 +115,8 @@ class CommonModuleNameFullAccessDiagnosticTest extends AbstractDiagnosticTest<Co
 
   @SneakyThrows
   void getDocumentContextFromFile() {
-
     Path path = Absolute.path(PATH_TO_METADATA);
-    Path testFile = Paths.get(PATH_TO_MODULE_FILE).toAbsolutePath();
+    Path testFile = Path.of(PATH_TO_MODULE_FILE).toAbsolutePath();
 
     initServerContext(path);
     var configuration = context.getConfiguration();
@@ -128,8 +126,6 @@ class CommonModuleNameFullAccessDiagnosticTest extends AbstractDiagnosticTest<Co
       context
     ));
 
-
-    module = spy((MDCommonModule) configuration.getModulesByObject().get(documentContext.getUri()));
-
+    module = spy((CommonModule) configuration.findChild(documentContext.getUri()).get());
   }
 }

@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,40 +21,37 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.ReferenceContext;
 import org.eclipse.lsp4j.ReferenceParams;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import javax.annotation.PostConstruct;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterClass
-class ReferencesProviderTest {
+class ReferencesProviderTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private ReferencesProvider referencesProvider;
 
-  @Autowired
-  private ServerContext serverContext;
-
   private static final String PATH_TO_FILE = "./src/test/resources/providers/references.bsl";
 
-  @PostConstruct
+  @BeforeEach
   void prepareServerContext() {
-    serverContext.setConfigurationRoot(Paths.get(PATH_TO_METADATA));
-    serverContext.populateContext();
+    initServerContextOnce(Path.of(PATH_TO_METADATA));
   }
 
   @Test
@@ -84,16 +81,99 @@ class ReferencesProviderTest {
     // then
     assertThat(references).hasSize(1);
 
-    var reference = references.get(0);
+    var reference = references.getFirst();
 
     assertThat(reference.getUri()).isEqualTo(documentContext.getUri().toString());
     assertThat(reference.getRange()).isEqualTo(Ranges.create(4, 0, 10));
   }
 
   @Test
+  void testLocalMethodsWithIncludeDeclaration() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+
+    var params = new ReferenceParams();
+    params.setPosition(new Position(0, 10));
+    params.setContext(new ReferenceContext(true));
+
+    // when
+    var references = referencesProvider.getReferences(documentContext, params);
+
+    // then
+    var declaration = new Location(documentContext.getUri().toString(), Ranges.create(0, 8, 18));
+    var call = new Location(documentContext.getUri().toString(), Ranges.create(4, 0, 10));
+
+    assertThat(references)
+      .hasSize(2)
+      .containsExactlyInAnyOrder(declaration, call);
+  }
+
+  @Test
+  void testLocalMethodsWithoutIncludeDeclaration() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+
+    var params = new ReferenceParams();
+    params.setPosition(new Position(0, 10));
+    params.setContext(new ReferenceContext(false));
+
+    // when
+    var references = referencesProvider.getReferences(documentContext, params);
+
+    // then
+    var call = new Location(documentContext.getUri().toString(), Ranges.create(4, 0, 10));
+
+    assertThat(references)
+      .hasSize(1)
+      .containsExactly(call);
+  }
+
+  @Test
+  void testIncludeDeclarationWhenCursorOnDeclarationDoesNotDuplicate() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+
+    var params = new ReferenceParams();
+    // курсор стоит на самом объявлении функции
+    params.setPosition(new Position(0, 12));
+    params.setContext(new ReferenceContext(true));
+
+    // when
+    var references = referencesProvider.getReferences(documentContext, params);
+
+    // then
+    var declaration = new Location(documentContext.getUri().toString(), Ranges.create(0, 8, 18));
+    var call = new Location(documentContext.getUri().toString(), Ranges.create(4, 0, 10));
+
+    assertThat(references)
+      .hasSize(2)
+      .containsExactlyInAnyOrder(declaration, call);
+  }
+
+  @Test
+  void testNullContextDoesNotFail() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+
+    // context намеренно не задан — по умолчанию null
+    var params = new ReferenceParams();
+    params.setPosition(new Position(0, 10));
+
+    // when
+    var references = referencesProvider.getReferences(documentContext, params);
+
+    // then
+    var call = new Location(documentContext.getUri().toString(), Ranges.create(4, 0, 10));
+
+    assertThat(references)
+      .hasSize(1)
+      .containsExactly(call);
+  }
+
+  @Test
   void testMethodsFromManagerModule() {
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
-    var managerModule = serverContext.getDocument("Catalog.Справочник1", ModuleType.ManagerModule).orElseThrow();
+    var managerModule = context.getDocument("Catalog.Справочник1", ModuleType.ManagerModule).orElseThrow();
 
     var params = new ReferenceParams();
     params.setPosition(new Position(24, 15));

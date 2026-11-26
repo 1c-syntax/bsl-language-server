@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,22 +21,25 @@
  */
 package com.github._1c_syntax.bsl.languageserver.references;
 
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.Position;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.SpyBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
-import javax.annotation.PostConstruct;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.Optional;
 
 import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
@@ -46,29 +49,25 @@ import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterClass
-class ReferenceIndexReferenceFinderTest {
+class ReferenceIndexReferenceFinderTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private ReferenceIndexReferenceFinder referenceFinder;
 
-  @Autowired
-  private ServerContext serverContext;
-
-  @SpyBean
+  @MockitoSpyBean
   private ReferenceIndex referenceIndex;
 
   private static final String PATH_TO_FILE = "./src/test/resources/references/ReferenceIndexReferenceFinder.bsl";
 
-  @PostConstruct
+  @BeforeEach
   void prepareServerContext() {
-    serverContext.setConfigurationRoot(Paths.get(PATH_TO_METADATA));
-    serverContext.populateContext();
+    initServerContextOnce(Path.of(PATH_TO_METADATA));
   }
 
   @Test
   void testLocalMethodCall() {
     // given
-    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE, context);
     var method = documentContext.getSymbolTree().getMethodSymbol("ИмяПроцедуры").orElseThrow();
 
     var uri = documentContext.getUri();
@@ -94,9 +93,9 @@ class ReferenceIndexReferenceFinderTest {
   @Test
   void testCommonModuleMethodCall() {
     // given
-    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE, context);
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("ИмяПроцедуры").orElseThrow();
-    var commonModuleContext = serverContext.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
+    var commonModuleContext = context.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
     var calledMethodSymbol = commonModuleContext.getSymbolTree().getMethodSymbol("УстаревшаяПроцедура").orElseThrow();
 
     var uri = documentContext.getUri();
@@ -106,18 +105,18 @@ class ReferenceIndexReferenceFinderTest {
     var reference = referenceFinder.findReference(uri, position).orElseThrow();
 
     // then
-    assertThat(reference.getUri()).isEqualTo(uri);
-    assertThat(reference.getFrom()).isEqualTo(methodSymbol);
-    assertThat(reference.getSymbol()).isEqualTo(calledMethodSymbol);
-    assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(2, 22, 41));
+    assertThat(reference.uri()).isEqualTo(uri);
+    assertThat(reference.from()).isEqualTo(methodSymbol);
+    assertThat(reference.symbol()).isEqualTo(calledMethodSymbol);
+    assertThat(reference.selectionRange()).isEqualTo(Ranges.create(2, 22, 41));
   }
 
   @Test
   void testManagerModuleMethodCall() {
     // given
-    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE, context);
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("ИмяПроцедуры").orElseThrow();
-    var managerModuleContext = serverContext.getDocument("InformationRegister.РегистрСведений1", ModuleType.ManagerModule).orElseThrow();
+    var managerModuleContext = context.getDocument("InformationRegister.РегистрСведений1", ModuleType.ManagerModule).orElseThrow();
     var calledMethodSymbol = managerModuleContext.getSymbolTree().getMethodSymbol("УстаревшаяПроцедура").orElseThrow();
 
     var uri = documentContext.getUri();
@@ -127,16 +126,16 @@ class ReferenceIndexReferenceFinderTest {
     var reference = referenceFinder.findReference(uri, position).orElseThrow();
 
     // then
-    assertThat(reference.getUri()).isEqualTo(uri);
-    assertThat(reference.getFrom()).isEqualTo(methodSymbol);
-    assertThat(reference.getSymbol()).isEqualTo(calledMethodSymbol);
-    assertThat(reference.getSelectionRange()).isEqualTo(Ranges.create(3, 38, 57));
+    assertThat(reference.uri()).isEqualTo(uri);
+    assertThat(reference.from()).isEqualTo(methodSymbol);
+    assertThat(reference.symbol()).isEqualTo(calledMethodSymbol);
+    assertThat(reference.selectionRange()).isEqualTo(Ranges.create(3, 38, 57));
   }
 
   @Test
   void testCantFindNonExportMethodFromOtherModule() {
     // given
-    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE, context);
 
     var uri = documentContext.getUri();
     var position = new Position(4, 25);
@@ -151,7 +150,7 @@ class ReferenceIndexReferenceFinderTest {
   @Test
   void testUnknownLocationReturnsEmptyReference() {
     // given
-    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE, context);
     var method = mock(MethodSymbol.class);
 
     var uri = documentContext.getUri();
@@ -166,6 +165,126 @@ class ReferenceIndexReferenceFinderTest {
 
     // then
     assertThat(optionalReference).isEmpty();
+  }
+
+  @Test
+  void bareAssignmentToOwnAttributeIsNotResolvedAsDynamicVariable() {
+    // Присваивание без Перем одноимённому реквизиту объекта — это запись в реквизит
+    // (self-член), а не отдельная динамическая переменная. Голый self-член индексируется
+    // (ReferenceIndexFiller) как обращение к PlatformMemberSymbol, поэтому finder резолвит
+    // его напрямую через индекс — единообразно с definition/hover, а не как переменную.
+    var uri = Path.of(
+      "./src/test/resources/metadata/designer/Catalogs/Справочник1/Ext/ObjectModule.bsl").toUri();
+    var content = """
+      Процедура Тест()
+        Реквизит1 = "А";
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(uri, content, context);
+    try {
+      var reference = referenceFinder.findReference(documentContext.getUri(), new Position(1, 3));
+
+      assertThat(reference)
+        .as("голый self-реквизит резолвится в self-член (PlatformMemberSymbol), не в переменную")
+        .isPresent()
+        .hasValueSatisfying(ref -> {
+          assertThat(ref.isSourceDefinedSymbolReference()).isFalse();
+          assertThat(ref.symbol()).isInstanceOf(PlatformMemberSymbol.class);
+        });
+    } finally {
+      // Тест подменяет контент реального модуля из общей фикстуры (нужен
+      // настоящий self-тип) — контекст между тестами класса переиспользуется
+      // (initServerContextOnce), поэтому явно возвращаем документ к состоянию
+      // на диске, иначе следующий тест увидит эту подмену.
+      context.removeDocument(documentContext.getUri());
+    }
+  }
+
+  @Test
+  void explicitlyDeclaredVariableStillShadowsSameNamedAttribute() {
+    // А вот с явным Перем — это уже настоящая локальная переменная модуля,
+    // она перекрывает одноимённый реквизит: finder должен резолвить её как обычно.
+    var uri = Path.of(
+      "./src/test/resources/metadata/designer/Catalogs/Справочник1/Ext/ObjectModule.bsl").toUri();
+    var content = """
+      Перем Реквизит1;
+
+      Процедура Тест()
+        Реквизит1 = "А";
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(uri, content, context);
+    try {
+      var reference = referenceFinder.findReference(documentContext.getUri(), new Position(3, 3));
+
+      assertThat(reference)
+        .as("явно объявленная (Перем) переменная должна резолвиться как обычно, self-свойство её не перекрывает")
+        .isPresent()
+        .hasValueSatisfying(ref -> assertThat(ref.symbol()).isInstanceOfSatisfying(VariableSymbol.class,
+          variable -> assertThat(variable.getKind()).isEqualTo(VariableKind.MODULE)));
+    } finally {
+      context.removeDocument(documentContext.getUri());
+    }
+  }
+
+  @Test
+  void bareAssignmentToNonAttributeNameResolvesAsOrdinaryDynamicVariable() {
+    // DYNAMIC-переменная (без Перем), но её имя не совпадает ни с одним
+    // self-членом — isDynamicVariableShadowedBySelfMember возвращает false,
+    // finder должен вернуть ссылку на саму DYNAMIC-переменную без изменений.
+    // Позиция — на ВТОРОМ (читающем) вхождении: первое (объявляющее)
+    // присваивание в ReferenceIndex не попадает как usage вовсе
+    // (см. ReferenceIndexFiller#notVariableInitialization), поэтому для
+    // непустого результата нужно повторное обращение.
+    var uri = Path.of(
+      "./src/test/resources/metadata/designer/Catalogs/Справочник1/Ext/ObjectModule.bsl").toUri();
+    var content = """
+      Процедура Тест()
+        МояЛокальная = "А";
+        Х = МояЛокальная;
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(uri, content, context);
+    try {
+      var reference = referenceFinder.findReference(documentContext.getUri(), new Position(2, 6));
+
+      assertThat(reference)
+        .as("DYNAMIC-переменная, не перекрытая self-членом, резолвится как обычно")
+        .isPresent()
+        .hasValueSatisfying(ref -> assertThat(ref.symbol()).isInstanceOfSatisfying(VariableSymbol.class,
+          variable -> assertThat(variable.getKind()).isEqualTo(VariableKind.DYNAMIC)));
+    } finally {
+      context.removeDocument(documentContext.getUri());
+    }
+  }
+
+  @Test
+  void forEachLoopVariableMatchingSelfAttributeResolvesAsVariableNotSelfMember() {
+    // Регресс [code-review]: голое присваивание одноимённому реквизиту подавляет
+    // фантомную переменную, но переменная цикла Для Каждого — реальное объявление и
+    // подавляться НЕ должна, даже если её имя совпадает со стандартным реквизитом
+    // объекта (Ссылка). Иначе обращение к ней внутри цикла резолвилось бы в self-член.
+    var uri = Path.of(
+      "./src/test/resources/metadata/designer/Catalogs/Справочник1/Ext/ObjectModule.bsl").toUri();
+    var content = """
+      Процедура Тест()
+        Для Каждого Ссылка Из Новый Массив Цикл
+          Х = Ссылка;
+        КонецЦикла;
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(uri, content, context);
+    try {
+      var reference = referenceFinder.findReference(documentContext.getUri(), new Position(2, 8));
+
+      assertThat(reference)
+        .as("переменная цикла Для Каждого должна резолвиться как переменная, не как self-член")
+        .isPresent()
+        .hasValueSatisfying(ref -> assertThat(ref.symbol()).isInstanceOfSatisfying(VariableSymbol.class,
+          variable -> assertThat(variable.getKind()).isEqualTo(VariableKind.DYNAMIC)));
+    } finally {
+      context.removeDocument(documentContext.getUri());
+    }
   }
 
 }

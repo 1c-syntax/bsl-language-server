@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -22,23 +22,26 @@
 package com.github._1c_syntax.bsl.languageserver.reporters.data;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
-import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
-import lombok.Data;
+import tools.jackson.databind.annotation.JsonDeserialize;
+import tools.jackson.databind.annotation.JsonSerialize;
+import tools.jackson.databind.ext.javatime.deser.LocalDateTimeDeserializer;
+import tools.jackson.databind.ext.javatime.ser.LocalDateTimeSerializer;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Data
-public class AnalysisInfo {
+public record AnalysisInfo(
   @JsonFormat(
-    pattern = "yyyy-MM-dd HH:mm:ss",
+    pattern = AnalysisInfo.DATE_PATTERN,
     shape = JsonFormat.Shape.STRING)
   @JsonDeserialize(using = LocalDateTimeDeserializer.class)
   @JsonSerialize(using = LocalDateTimeSerializer.class)
-  private final LocalDateTime date;
-  private final List<FileInfo> fileinfos;
-  private final String sourceDir;
+  LocalDateTime date,
+  List<FileInfo> fileinfos,
+  String sourceDir) {
+
+  /**
+   * Формат даты анализа в отчёте {@code bsl-json.json}.
+   */
+  public static final String DATE_PATTERN = "yyyy-MM-dd HH:mm:ss";
 }

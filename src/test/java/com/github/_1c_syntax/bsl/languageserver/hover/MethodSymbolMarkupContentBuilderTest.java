@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -21,37 +21,34 @@
  */
 package com.github._1c_syntax.bsl.languageserver.hover;
 
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.types.ModuleType;
+import org.junit.jupiter.api.BeforeEach;
+import org.eclipse.lsp4j.Location;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
 
-import javax.annotation.PostConstruct;
-import java.nio.file.Paths;
+import java.nio.file.Path;
 import java.util.Arrays;
 
-import static com.github._1c_syntax.bsl.languageserver.util.TestUtils.PATH_TO_METADATA;
 import static org.assertj.core.api.Assertions.assertThat;
 
-@SpringBootTest
 @CleanupContextBeforeClassAndAfterClass
-class MethodSymbolMarkupContentBuilderTest {
+class MethodSymbolMarkupContentBuilderTest extends AbstractServerContextAwareTest {
 
   @Autowired
   private MethodSymbolMarkupContentBuilder markupContentBuilder;
 
-  @Autowired
-  private ServerContext serverContext;
-
   private static final String PATH_TO_FILE = "./src/test/resources/hover/methodSymbolMarkupContentBuilder.bsl";
 
-  @PostConstruct
-  void prepareServerContext() {
-    serverContext.setConfigurationRoot(Paths.get(PATH_TO_METADATA));
-    serverContext.populateContext();
+  @BeforeEach
+  void prepareMetadataServerContext() {
+    initServerContextOnce(Path.of(TestUtils.PATH_TO_METADATA));
   }
 
   @Test
@@ -61,92 +58,237 @@ class MethodSymbolMarkupContentBuilderTest {
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("ИмяФункции").orElseThrow();
 
     // when
-    var content = markupContentBuilder.getContent(methodSymbol).getValue();
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, methodSymbol)).getValue();
 
     assertThat(content).isNotEmpty();
 
     var blocks = Arrays.asList(content.split("---\n?"));
 
     assertThat(blocks).hasSize(5);
-    assertThat(blocks.get(0)).isEqualTo("```bsl\n" +
-      "Функция ИмяФункции(Знач П1: Дата | Число, П2: Число = -10, П2_5, Знач П3: Структура = \"\", " +
-      "П4: Массив | СписокЗначений, ПДата: См. ОбщийМодуль.СуперМетод() = '20100101', ПДатаВремя = '20110101121212', " +
-      "П6 = Ложь, П7 = Истина, П8 = Неопределено, П9 = NULL) Экспорт: Строка | Структура\n```\n\n");
+    assertThat(blocks.get(0)).isEqualTo("""
+      ```bsl
+      Функция ИмяФункции(Знач П1: Дата | Число, П2: Число? = -10, П2_5, Знач П3: Структура? = "", П4: Массив | СписокЗначений, ПДата: ОбщийМодуль.СуперМетод? = '20100101', ПДатаВремя? = '20110101121212', П6? = Ложь, П7? = Истина, П8? = Неопределено, П9? = NULL) Экспорт: Строка | Структура
+      ```
+
+      """);
     assertThat(blocks.get(1)).matches("\\[file://.*/src/test/resources/hover/methodSymbolMarkupContentBuilder.bsl]\\(.*src/test/resources/hover/methodSymbolMarkupContentBuilder.bsl#\\d+\\)\n\n");
     assertThat(blocks.get(2)).isEqualTo("Описание функции.\nМногострочное.\n\n");
-    assertThat(blocks.get(3)).isEqualTo("**Параметры:**\n\n" +
-      "* **П1**: `Дата` | `Число` - Описание даты/числа  \n" +
-      "* **П2**: `Число` - Описание числа  \n" +
-      "* **П2_5**:   \n" +
-      "* **П3**: `Структура` - Описание строки<br>&nbsp;&nbsp;продолжается на следующей строкке:  \n" +
-      "  * **Поле1**: `Число` - Описание поле1  \n" +
-      "  * **Поле2**: `Строка` - Описание поле2  \n" +
-      "  * **Поле3**: `Структура` :  \n" +
-      "    * **Поле31**: `строка`  \n" +
-      "    * **Поле32**: `Структура` :  \n" +
-      "      * **Поле321**: `Число` - Описание поля 321  \n" +
-      "    * **Поле33**: `строка`  \n" +
-      "  * **Поле4**: `строка`  \n" +
-      "* **П4**:   \n" +
-      "&nbsp;&nbsp;`Массив` - Описание Массива  \n" +
-      "&nbsp;&nbsp;`СписокЗначений` - Описание списка  \n" +
-      "* **ПДата**: [См. ОбщийМодуль.СуперМетод()](ОбщийМодуль.СуперМетод())  \n" +
-      "* **ПДатаВремя**:   \n" +
-      "* **П6**:   \n" +
-      "* **П7**:   \n" +
-      "* **П8**:   \n" +
-      "* **П9**: \n" +
-      "\n");
-    assertThat(blocks.get(4)).isEqualTo("**Возвращаемое значение:**\n\n" +
-      "&nbsp;&nbsp;`Строка` - вернувшаяся строка  \n" +
-      "&nbsp;&nbsp;`Структура` - Описание строки<br>&nbsp;&nbsp;продолжается на следующей строкке:  \n" +
-      "  * **Поле1**: `Число` - Описание поле1  \n" +
-      "  * **Поле2**: `Строка` - Описание поле2  \n" +
-      "  * **Поле3**: `Структура` :  \n" +
-      "    * **Поле31**: `строка`  \n" +
-      "    * **Поле32**: `Структура`\n\n");
+    assertThat(blocks.get(3)).isEqualTo("""
+      **Параметры:**
+
+      * **П1**:  \s
+      `Число` \s
+      &nbsp;&nbsp;`Дата` - Описание даты/числа \s
+      * **П2**: `Число` - Описание числа \s
+      * **П2_5**:  \s
+      * **П3**: `Структура` - Описание строки: \s
+        * **Поле1**: `Число` - Описание поле1<br>&nbsp;&nbsp;&nbsp;&nbsp;продолжается на следующей строкке \s
+        * **Поле2**: `Строка` - Описание поле2 \s
+        * **Поле3**: `Структура` : \s
+          * **Поле31**: `строка` \s
+          * **Поле32**: `Структура` : \s
+            * **Поле321**: `Число` - Описание поля 321 \s
+          * **Поле33**: `строка` \s
+        * **Поле4**: `строка` \s
+      * **П4**:  \s
+      &nbsp;&nbsp;`Массив` - Описание Массива \s
+      &nbsp;&nbsp;`СписокЗначений` - Описание списка \s
+      * **ПДата**: [ОбщийМодуль.СуперМетод](ОбщийМодуль.СуперМетод) \s
+      * **ПДатаВремя**:  \s
+      * **П6**:  \s
+      * **П7**:  \s
+      * **П8**:  \s
+      * **П9**:\s
+
+      """);
+    assertThat(blocks.get(4)).isEqualTo("""
+      **Возвращаемое значение:**
+
+      &nbsp;&nbsp;`Структура` - Описание строки: \s
+        * **Поле1**: `Число` - Описание поле1<br>&nbsp;&nbsp;&nbsp;&nbsp;продолжается на следующей строкке \s
+        * **Поле2**: `Строка` - Описание поле2 \s
+        * **Поле3**: `Структура` : \s
+          * **Поле31**: `строка` \s
+          * **Поле32**: `Структура` \s
+      &nbsp;&nbsp;`Строка` - вернувшаяся строка
+
+      **Выведено по коду:** Неопределено
+
+      """);
   }
 
   @Test
   void testContentFromManagerModule() {
 
     // given
-    var documentContext = serverContext.getDocument("Catalog.Справочник1", ModuleType.ManagerModule).orElseThrow();
+    var documentContext = context.getDocument("Catalog.Справочник1", ModuleType.ManagerModule).orElseThrow();
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("ТестЭкспортная").orElseThrow();
 
     // when
-    var content = markupContentBuilder.getContent(methodSymbol).getValue();
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, methodSymbol)).getValue();
 
     // then
     assertThat(content).isNotEmpty();
 
     var blocks = Arrays.asList(content.split("---\n?"));
 
+    // В этой фикстуре нет доступности типа менеджера из СП; контексты не предполагаются.
     assertThat(blocks).hasSize(2);
-    assertThat(blocks.get(0)).isEqualTo("```bsl\n" +
-      "Процедура ТестЭкспортная() Экспорт\n```\n\n");
+    assertThat(blocks.get(0)).isEqualTo("""
+      ```bsl
+      Процедура ТестЭкспортная() Экспорт
+      ```
+
+      """);
     assertThat(blocks.get(1)).matches("\\[Catalog.Справочник1]\\(.*Catalogs/.*/Ext/ManagerModule.bsl#\\d+\\)\n\n");
+    assertThat(content).doesNotContain("**Контексты компиляции:**");
   }
 
   @Test
   void testMethodsFromCommonModule() {
     // given
-    var documentContext = serverContext.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
+    var documentContext = context.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
     var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("УстаревшаяПроцедура").orElseThrow();
 
     // when
-    var content = markupContentBuilder.getContent(methodSymbol).getValue();
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, methodSymbol)).getValue();
 
     // then
     assertThat(content).isNotEmpty();
 
     var blocks = Arrays.asList(content.split("---\n?"));
 
-    assertThat(blocks).hasSize(3);
-    assertThat(blocks.get(0)).isEqualTo("```bsl\n" +
-      "Процедура УстаревшаяПроцедура() Экспорт\n```\n\n");
+    assertThat(blocks).hasSize(5);
+    assertThat(blocks.getLast()).contains("**Контексты компиляции:**");
+    assertThat(blocks.get(0)).isEqualTo("""
+      ```bsl
+      Процедура УстаревшаяПроцедура() Экспорт
+      ```
+
+      """);
     assertThat(blocks.get(1)).matches("\\[CommonModule.ПервыйОбщийМодуль]\\(.*CommonModules/.*/Ext/Module.bsl#\\d+\\)\n\n");
-    assertThat(blocks.get(2)).isEqualTo("Процедура - Устаревшая процедура\n\n");
+    assertThat(blocks.get(2)).isEqualTo("**Устарела.** См. НеУстаревшаяПроцедура.\n\n");
+    assertThat(blocks.get(3)).isEqualTo("Процедура - Устаревшая процедура\n\n");
   }
 
+  @Test
+  void testDeprecatedMethodWithoutInfo() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("УстаревшаяБезПояснения").orElseThrow();
+
+    // when
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, methodSymbol)).getValue();
+
+    // then
+    assertThat(content).contains("**Устарела.**");
+    assertThat(content).doesNotContain("**Устарела.** ");
+  }
+
+  @Test
+  void testTypeRefinedByHyperlinkShowsBothParts() {
+    // given: тип параметра уточнён ссылкой — автор написал обе половины записи.
+    var documentContext = TestUtils.getDocumentContext("""
+      // Возвращаемое значение:
+      //  Структура:
+      //   * Ссылка - Строка
+      Функция НовыйОбъектДанных() Экспорт
+      	Возврат Новый Структура;
+      КонецФункции
+
+      // Параметры:
+      //  Данные - Структура: См. НовыйОбъектДанных
+      Процедура СоСсылкойНаМетод(Данные) Экспорт
+      КонецПроцедуры
+      """);
+    var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("СоСсылкойНаМетод").orElseThrow();
+
+    // when
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, methodSymbol)).getValue();
+
+    // then: в подсказке видны и голова описания, и ссылка — как в исходной записи.
+    assertThat(content).contains("`Структура`: [НовыйОбъектДанных](НовыйОбъектДанных)");
+  }
+
+  @Test
+  void testNonDeprecatedMethodHasNoDeprecationBlock() {
+    // given
+    var documentContext = context.getDocument("CommonModule.ПервыйОбщийМодуль", ModuleType.CommonModule).orElseThrow();
+    var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("НеУстаревшаяПроцедура").orElseThrow();
+
+    // when
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, methodSymbol)).getValue();
+
+    // then
+    assertThat(content).doesNotContain("**Устарела.**");
+  }
+
+
+  @Test
+  void testReturnedValueSectionIsInferredWhenNotDescribed() {
+    // given: описания у функции нет, а тело возвращает массив и число.
+    var documentContext = TestUtils.getDocumentContext("""
+      Функция РазныеТипы(Флаг) Экспорт
+      	Если Флаг Тогда
+      		Возврат Новый Массив;
+      	Иначе
+      		Возврат 10;
+      	КонецЕсли;
+      КонецФункции
+      """, context);
+    var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("РазныеТипы").orElseThrow();
+
+    // when
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, methodSymbol)).getValue();
+
+    // then: секция строится по рассчитанным типам.
+    assertThat(content).contains("**Возвращаемое значение:**");
+    assertThat(content).contains("Массив");
+    assertThat(content).contains("Число");
+  }
+
+  @Test
+  void testDescribedReturnedValueIsShownWithDivergence() {
+    // given: автор описал Булево, а тело возвращает массив.
+    var documentContext = TestUtils.getDocumentContext("""
+      // Возвращаемое значение:
+      //  Булево - признак
+      Функция Признак() Экспорт
+      	Возврат Новый Массив;
+      КонецФункции
+      """, context);
+    var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("Признак").orElseThrow();
+
+    // when
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, methodSymbol)).getValue();
+
+    // then: написанное автором остаётся вместе с его текстом, а расхождение видно припиской.
+    assertThat(content).contains("Булево");
+    assertThat(content).contains("признак");
+    assertThat(content).contains("**Выведено по коду:** Массив");
+  }
+
+  @Test
+  void testDescribedReturnedValueWithoutDivergenceHasNoNote() {
+    // given: описание совпадает с тем, что возвращает тело.
+    var documentContext = TestUtils.getDocumentContext("""
+      // Возвращаемое значение:
+      //  Массив - список
+      Функция Список() Экспорт
+      	Возврат Новый Массив;
+      КонецФункции
+      """, context);
+    var methodSymbol = documentContext.getSymbolTree().getMethodSymbol("Список").orElseThrow();
+
+    // when
+    var content = markupContentBuilder.getContent(referenceTo(documentContext, methodSymbol)).getValue();
+
+    // then
+    assertThat(content).doesNotContain("Выведено по коду");
+  }
+
+  private static Reference referenceTo(DocumentContext documentContext, SourceDefinedSymbol symbol) {
+    return Reference.of(documentContext.getSymbolTree().getModule(), symbol,
+      new Location(documentContext.getUri().toString(), symbol.getSelectionRange()));
+  }
 }

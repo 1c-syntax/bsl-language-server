@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -23,28 +23,28 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.mdo.MD;
+import com.github._1c_syntax.bsl.mdo.Module;
+import com.github._1c_syntax.bsl.mdo.ModuleOwner;
+import com.github._1c_syntax.bsl.mdo.ScheduledJob;
 import com.github._1c_syntax.bsl.mdo.support.Handler;
 import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.MdoReference;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectBase;
-import com.github._1c_syntax.mdclasses.mdo.AbstractMDObjectComplex;
-import com.github._1c_syntax.mdclasses.mdo.MDScheduledJob;
-import com.github._1c_syntax.mdclasses.mdo.support.MDOModule;
 import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 import org.junit.jupiter.api.Test;
 
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertThat;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
+import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMessage;
 
 @CleanupContextBeforeClassAndAfterEachTestMethod
 class ScheduledJobHandlerDiagnosticTest extends AbstractDiagnosticTest<ScheduledJobHandlerDiagnostic> {
@@ -66,17 +66,17 @@ class ScheduledJobHandlerDiagnosticTest extends AbstractDiagnosticTest<Scheduled
     assertThat(diagnostics, true)
       .allMatch(
         diagnostic -> diagnostic.getRange().equals(getRange()))
-      .anyMatch(diagnostic -> diagnostic.getMessage()
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage())
         .equals("Укажите существующий обработчик вместо несуществующего \"ПервыйОбщийМодуль.НесуществующийМетод\" у регламентного задания \"РегламентноеЗаданиеНесуществующийМетод\""))
-      .anyMatch(diagnostic -> diagnostic.getMessage()
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage())
         .equals("Добавьте \"Экспорт\" методу \"ПервыйОбщийМодуль.Тест\" или исправьте некорректный обработчик регламентного задания \"РегламентноеЗаданиеПриватныйМетод\""))
-      .anyMatch(diagnostic -> diagnostic.getMessage()
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage())
         .equals("Добавьте код в тело обработчика \"ПервыйОбщийМодуль.НеУстаревшаяПроцедура\" регламентного задания \"РегламентноеЗадание1\""))
-      .anyMatch(diagnostic -> diagnostic.getMessage()
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage())
         .equals("Добавьте код в тело обработчика \"ПервыйОбщийМодуль.НеУстаревшаяПроцедура\" регламентного задания \"РегламентноеЗадание2\""))
-      .anyMatch(diagnostic -> diagnostic.getMessage()
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage())
         .equals("Исправьте дубли использования одного обработчика \"ПервыйОбщийМодуль.НеУстаревшаяПроцедура\" в разных регламентных заданиях. Задания: \"РегламентноеЗадание1, РегламентноеЗадание2\""))
-      .anyMatch(diagnostic -> diagnostic.getMessage()
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage())
         .equals("Исправьте некорректный обработчик \"ПервыйОбщийМодуль.ВерсионированиеПриЗаписи\" предопределенного регламентного задания \"РегламентноеЗаданиеПредопределенноеНесколькоПараметров\" - у метода не должно быть параметров"))
       .hasSize(6)
     ;
@@ -90,7 +90,7 @@ class ScheduledJobHandlerDiagnosticTest extends AbstractDiagnosticTest<Scheduled
     List<Diagnostic> diagnostics = checkMockHandler(methodPath);
 
     assertThat(diagnostics, true)
-      .anyMatch(diagnostic -> diagnostic.getMessage()
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage())
         .equals("Укажите существующий обработчик вместо несуществующего \"\" у регламентного задания \"РегламентноеЗадание1\""))
       .hasSize(1)
     ;
@@ -103,7 +103,7 @@ class ScheduledJobHandlerDiagnosticTest extends AbstractDiagnosticTest<Scheduled
     List<Diagnostic> diagnostics = checkMockHandler(methodPath);
 
     assertThat(diagnostics, true)
-      .anyMatch(diagnostic -> diagnostic.getMessage()
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage())
         .equals("Создайте общий модуль \"НесуществующийМодуль\" или исправьте некорректный обработчик регламентного задания \"РегламентноеЗадание1\""))
       .hasSize(1)
     ;
@@ -116,7 +116,7 @@ class ScheduledJobHandlerDiagnosticTest extends AbstractDiagnosticTest<Scheduled
     List<Diagnostic> diagnostics = checkMockHandler(methodPath);
 
     assertThat(diagnostics, true)
-      .anyMatch(diagnostic -> diagnostic.getMessage()
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage())
         .equals("Установите флаг \"Сервер\" общему модулю \"КлиентскийОбщийМодуль\" или исправьте некорректный обработчик регламентного задания \"РегламентноеЗадание1\""))
       .hasSize(1)
     ;
@@ -137,7 +137,7 @@ class ScheduledJobHandlerDiagnosticTest extends AbstractDiagnosticTest<Scheduled
     List<Diagnostic> diagnostics = checkMockHandler("ОбщийМодуль.ПервыйОбщийМодуль.ОбработчикБезТела");
 
     assertThat(diagnostics, true)
-      .anyMatch(diagnostic -> diagnostic.getMessage()
+      .anyMatch(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage())
         .equals("Добавьте код в тело обработчика \"ПервыйОбщийМодуль.ОбработчикБезТела\" регламентного задания \"РегламентноеЗадание1\""))
       .hasSize(1)
     ;
@@ -168,21 +168,21 @@ class ScheduledJobHandlerDiagnosticTest extends AbstractDiagnosticTest<Scheduled
     var documentContext = spy(getDocumentContext());
     when(documentContext.getModuleType()).thenReturn(ModuleType.SessionModule);
 
-    Set<AbstractMDObjectBase> children = new HashSet<>();
+    List<MD> children = new ArrayList<>();
 
     context.getConfiguration().getChildren().forEach(mdo -> {
       var spyMDO = spy(mdo);
-      if (mdo instanceof MDScheduledJob) {
-        when(((MDScheduledJob) spyMDO).getHandler()).thenReturn(new Handler(methodPath));
+      if (mdo instanceof ScheduledJob) {
+        when(((ScheduledJob) spyMDO).getMethodName()).thenReturn(new Handler(methodPath));
 
         if (mdo.getName().equalsIgnoreCase("РегламентноеЗадание1")) {
           children.add(spyMDO);
         }
-      } else if (mdo instanceof AbstractMDObjectComplex) {
-        List<MDOModule> modules = ((AbstractMDObjectComplex) mdo).getModules().stream()
+      } else if (mdo instanceof ModuleOwner moduleOwner) {
+        List<Module> modules = moduleOwner.getModules().stream()
           .filter(mdoModule -> mdoModule.getModuleType() == ModuleType.ManagerModule)
           .collect(Collectors.toList());
-        when(((AbstractMDObjectComplex) spyMDO).getModules()).thenReturn(modules);
+        when(((ModuleOwner) spyMDO).getModules()).thenReturn(modules);
       }
     });
 

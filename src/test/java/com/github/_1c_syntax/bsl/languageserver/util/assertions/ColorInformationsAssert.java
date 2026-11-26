@@ -1,7 +1,7 @@
 /*
  * This file is a part of BSL Language Server.
  *
- * Copyright (c) 2018-2022
+ * Copyright (c) 2018-2026
  * Alexey Sosnoviy <labotamy@gmail.com>, Nikita Fedkin <nixel2007@gmail.com> and contributors
  *
  * SPDX-License-Identifier: LGPL-3.0-or-later
@@ -40,7 +40,7 @@ public class ColorInformationsAssert extends AbstractListAssert<ColorInformation
   /**
    * Ассерт для проверки совпадения цвета.
    *
-   * @param color Цвет (см. {@link org.eclipse.lsp4j.Color}.
+   * @param color Цвет см. {@link org.eclipse.lsp4j.Color}.
    * @return Ссылка на объект для текучести.
    */
   public ColorInformationsAssert hasColor(Color color) {
@@ -54,7 +54,7 @@ public class ColorInformationsAssert extends AbstractListAssert<ColorInformation
   /**
    * Ассерт для проверки совпадения диапазона.
    *
-   * @param range Диапазон (см. {@link org.eclipse.lsp4j.Range}.
+   * @param range Диапазон см. {@link org.eclipse.lsp4j.Range}.
    * @return Ссылка на объект для текучести.
    */
   public ColorInformationsAssert hasRange(Range range) {
@@ -68,8 +68,8 @@ public class ColorInformationsAssert extends AbstractListAssert<ColorInformation
   /**
    * Ассерт для проверки совпадения цвета и диапазона.
    *
-   * @param color Цвет (см. {@link org.eclipse.lsp4j.Color}.
-   * @param range Диапазон (см. {@link org.eclipse.lsp4j.Range}.
+   * @param color Цвет см. {@link org.eclipse.lsp4j.Color}.
+   * @param range Диапазон см. {@link org.eclipse.lsp4j.Range}.
    * @return Ссылка на объект для текучести.
    */
   public ColorInformationsAssert hasColorAndRange(Color color, Range range) {
