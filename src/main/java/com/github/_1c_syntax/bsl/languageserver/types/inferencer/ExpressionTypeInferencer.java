@@ -1198,17 +1198,18 @@ public class ExpressionTypeInferencer {
     var nested = ctx.nested(method.getOwner(), null);
     var inputs = reusable ? ctx.contextualReturns.approximationInputs(guard) : new Object();
     var approximate = ctx.flowSession.cellsComputing();
-    var computed = methodReturnTypeIndexer.computeIfAbsent(method, () -> returnTypesOfBody(method, nested),
+    var estimate = methodReturnTypeIndexer.computeOrReuse(method, () -> returnTypesOfBody(method, nested),
       approximate, inputs, ctx.contextualReturns.returnGeneration);
-    var types = computed == null ? symbolTypeIndex.getReturnTypes(method)
-      : symbolTypeIndex.getReturnTypes(method, computed.types());
+    var types = estimate == null ? symbolTypeIndex.getReturnTypes(method)
+      : symbolTypeIndex.getReturnTypes(method, estimate.types());
     if (!hasCurrentReturnInputs(ctx)) {
       nested.noteMissingData();
     }
     var result = returnSnapshot(types, nested);
     inheritReturn(result, ctx);
     ctx.failed |= nested.failed;
-    if (computed != null && reusable && canUseContextualReturns(nested)) {
+    if (estimate instanceof MethodReturnTypeIndexer.ComputedReturnTypes
+      && reusable && canUseContextualReturns(nested)) {
       ctx.contextualReturns.remember(guard, result, revision);
     }
     return types;

@@ -609,6 +609,25 @@ class MethodReturnTypeIndexerTest {
   }
 
   @Test
+  void reusedProvisionalTypeBelongsToTheMatchingKeyEvenAfterAnotherPublication() {
+    var firstInputs = new Object();
+    var nextInputs = new Object();
+    var generation = indexer.configurationGeneration();
+    indexer.computeOrReuse(consumerMethod, () -> new ComputedReturnTypes(STRING, Set.of(), false),
+      true, firstInputs, generation);
+    var reused = indexer.computeOrReuse(consumerMethod, () -> {
+      throw new AssertionError("Matching inputs should reuse the provisional type");
+    }, true, firstInputs, generation);
+
+    indexer.computeOrReuse(consumerMethod, () -> new ComputedReturnTypes(NUMBER, Set.of(), false),
+      true, nextInputs, generation);
+
+    assertThat(symbolTypeIndex.getReturnTypes(consumerMethod)).isEqualTo(NUMBER);
+    assertThat(reused).isNotNull().isNotInstanceOf(ComputedReturnTypes.class);
+    assertThat(reused.types()).isEqualTo(STRING);
+  }
+
+  @Test
   void anIncompleteNeutralValueIsRecomputedAndItsCompleteReplacementIsCached() {
     var calls = new AtomicInteger();
     java.util.function.Supplier<ComputedReturnTypes> computation = () -> calls.incrementAndGet() == 1
