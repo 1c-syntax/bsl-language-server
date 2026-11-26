@@ -1306,7 +1306,7 @@ public class ExpressionTypeInferencer {
   private @Nullable ExecutionContext reachableReturnContext(MethodSymbol method, InferenceContext ctx,
                                                             ExecutionContext context) {
     var owner = method.getOwner();
-    var profile = ctx.compilation.methodContext(owner, method.getCompilerDirectiveKind(), compilationContextResolver);
+    var profile = ctx.compilation().methodContext(owner, method.getCompilerDirectiveKind(), compilationContextResolver);
     var target = profile.map(value -> compilationContextResolver.targetContext(
       ctx.documentContext, owner, value, context)).orElse(context);
     var branch = owner.getSymbolTree().getMethodPreprocessorContexts(method);
@@ -1565,8 +1565,9 @@ public class ExpressionTypeInferencer {
 
   private TypeSet returnTypesInContext(MethodSymbol method, InferenceContext ctx, @Nullable ExecutionContext context) {
     try (var scope = MemberLookupSession.openIfAbsent()) {
-      var result = returnTypeFromBodyInference.of(method, expression -> inferInternal(expression, ctx, false, true), context,
-        body -> ctx.compilation.possibleContexts(method.getOwner(), body, compilationContextResolver));
+      var result = returnTypeFromBodyInference.of(method,
+        expression -> inferInternal(expression, ctx, false, true), context,
+        body -> ctx.compilation().possibleContexts(method.getOwner(), body, compilationContextResolver));
       ctx.noteIncompleteCells();
       return result;
     }
@@ -1763,7 +1764,7 @@ public class ExpressionTypeInferencer {
 
   /** Контексты запроса по модулю, методу и ветке; без метаданных остаются известные ограничения препроцессора. */
   private Optional<Set<ExecutionContext>> queryContextsAt(InferenceContext ctx, ParseTree node, Position position) {
-    return ctx.compilation.contextAt(ctx.documentContext, position, compilationContextResolver)
+    return ctx.compilation().contextAt(ctx.documentContext, position, compilationContextResolver)
       .map(CompilationContextResolver.MethodContext::contexts)
       .or(() -> compilationContextResolver.narrowedContextsAt(ctx.documentContext, node, position));
   }
@@ -1923,7 +1924,7 @@ public class ExpressionTypeInferencer {
                                                               DocumentContext document,
                                                               InferenceContext ctx) {
     var context = ctx.executionContext;
-    return ctx.compilation.possibleContexts(document, body, compilationContextResolver)
+    return ctx.compilation().possibleContexts(document, body, compilationContextResolver)
       .map((Set<ExecutionContext> contexts) -> {
         if (context == null) {
           return contexts;
@@ -2366,10 +2367,8 @@ public class ExpressionTypeInferencer {
    */
   private TypeSet typesOfAssignmentComment(DocumentContext owner, BSLParser.AssignmentContext assignment,
                                            InferenceContext ctx) {
-    if (!workspacePopulated) {
-      return commentTypeResolver.ofAssignment(owner, assignment, ctx::noteMissingData);
-    }
-    return commentTypeResolver.ofAssignment(owner, assignment);
+    Runnable onIncomplete = workspacePopulated ? null : ctx::noteMissingData;
+    return commentTypeResolver.ofAssignment(owner, assignment, onIncomplete, ctx.assignmentComments());
   }
 
   /**

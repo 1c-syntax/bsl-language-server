@@ -1,4 +1,4 @@
-# Missing code in Raise block in "Try ... Raise ... EndTry" (MissingCodeTryCatchEx)
+# Missing code in Except block in "Try ... Except ... EndTry" (MissingCodeTryCatchEx)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
 ## Description
@@ -11,7 +11,7 @@ It is unacceptable to catch any exception, without any trace for system administ
 Try
     // code causing exception
     ....
-Raise // catch any exception
+Except // catch any exception
 EndTry;
 
 ```
@@ -24,7 +24,7 @@ As a rule, such a design hides a real problem, which is subsequently impossible 
 Try
     // code causing exception
     ....
-Raise
+Except
     // Explanation why catching all exceptions untraceable for enduser.
     // ....
     // Write to log for system administrator.
