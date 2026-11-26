@@ -137,7 +137,15 @@ final class LostVariableFlow {
       live.addAll(external);
     }
     for (var edge : graph.outgoingEdgesOf(vertex)) {
-      live.addAll(liveIn.getOrDefault(graph.getEdgeTarget(edge), Set.of()));
+      var successor = liveIn.getOrDefault(graph.getEdgeTarget(edge), Set.of());
+      if (vertex instanceof ForeachLoopVertex loop && edge.getType() == CfgEdgeType.TRUE_BRANCH) {
+        // Entering the body assigns the next item. The loop exit preserves the current value.
+        var beforeIteration = new HashSet<>(successor);
+        resolve(loop.getLoopHeader().IDENTIFIER()).ifPresent(beforeIteration::remove);
+        live.addAll(beforeIteration);
+      } else {
+        live.addAll(successor);
+      }
     }
     for (var op : operations.get(vertex).reversed()) {
       if (op.variable != null && op.write != null) {
@@ -194,9 +202,7 @@ final class LostVariableFlow {
     if (symbol.isEmpty()) {
       return;
     }
-    if (collection != null && collection.getStart() == collection.getStop()
-      && collection.getStart().getType() == BSLParser.IDENTIFIER
-      && symbol.equals(resolve(collection.getText())) && hasPriorBinding(symbol.get(), iterator)) {
+    if (symbol.equals(collectionVariable(collection)) && hasPriorBinding(symbol.get(), iterator)) {
       report.accept(iterator, "collectionIterator");
       return;
     }
@@ -214,6 +220,20 @@ final class LostVariableFlow {
     if (symbol.get().getKind() == VariableKind.MODULE) {
       report.accept(iterator, "moduleIterator");
     }
+  }
+
+  private Optional<VariableSymbol> collectionVariable(BSLParser.@Nullable ExpressionContext expression) {
+    while (expression != null && expression.getChildCount() == 1) {
+      if (expression.getStart() == expression.getStop() && expression.getStart().getType() == BSLParser.IDENTIFIER) {
+        return resolve(expression.getText());
+      }
+      var member = expression.member(0);
+      if (member == null || member.LPAREN() == null || member.getChildCount() != 3) {
+        break;
+      }
+      expression = member.expression();
+    }
+    return Optional.empty();
   }
 
   private static boolean hasPriorBinding(VariableSymbol symbol, TerminalNode iterator) {
