@@ -41,7 +41,7 @@ class LostVariableDiagnosticTest extends AbstractDiagnosticTest<LostVariableDiag
 
   @Test
   void originalExamples() {
-    assertThat(getDiagnostics()).extracting(Diagnostic::getRange, Diagnostic::getMessage)
+    assertThat(getDiagnostics()).extracting(Diagnostic::getRange, diagnostic -> diagnostic.getMessage().getLeft())
       .containsExactlyInAnyOrder(
         assignment(3, 4, "Значение"), assignment(4, 4, "Значение"), assignment(5, 4, "МояПеременная"),
         assignment(6, 4, "МояПеременная"), assignment(10, 4, "ТекстЗапроса"), assignment(24, 4, "ТекстЗапроса"),
