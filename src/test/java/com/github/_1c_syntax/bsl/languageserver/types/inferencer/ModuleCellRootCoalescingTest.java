@@ -127,7 +127,7 @@ class ModuleCellRootCoalescingTest extends AbstractServerContextAwareTest {
       body -> Optional.empty(), () -> false, body -> List.of(shared), null, variable -> true,
       variable -> TypeSet.EMPTY, variable -> List.of(new Position(2, 2)), variable -> List.of(),
       assigned, (variable, position, incoming) -> incoming, mock(VariableFlowAnalyzer.GuardNarrowing.class),
-      () -> {}, prepare, isolated);
+      () -> {}, prepare, isolated, variable -> true);
   }
 
   private void runConcurrentRoots(ExecutionContext secondMode, int expectedAssignments,

@@ -80,6 +80,7 @@ import java.util.function.Predicate;
  * @param noteIncompleteCellInput отметить, что результат опирается на неполный вход ячейки.
  * @param prepareCells        самостоятельный расчёт ячеек при первом обращении во вложенном выводе.
  * @param preparingCells     изолированная подготовка, которой нужны проверенные независимые входы.
+ * @param externalDeclaration зависит ли тип объявления от других документов.
  *     <p>
  *     Переменные и места изменений отдаются поставщиками, а не значениями: за ними стоит
  *     обход индекса ссылок и разбор документирующих комментариев. При готовом ответе в
@@ -96,7 +97,8 @@ record FlowInputs(
   Function<VariableSymbol, Collection<Position>> definitionPositions,
   Function<VariableSymbol, Collection<Position>> mutationPositions,
   AssignedTypes assigned, Mutations mutations, GuardNarrowing narrowing, Runnable noteIncompleteCellInput,
-  @Nullable Consumer<List<VariableSymbol>> prepareCells, boolean preparingCells
+  @Nullable Consumer<List<VariableSymbol>> prepareCells, boolean preparingCells,
+  Predicate<VariableSymbol> externalDeclaration
 ) {
   /** Входы без отдельного списка чтений сохраняют консервативный расчёт всех видимых переменных. */
   public FlowInputs(FlowSession session, Consumer<CodeBlockContext> activeBodyRead, boolean cacheable,
@@ -109,7 +111,7 @@ record FlowInputs(
     AssignedTypes assigned, Mutations mutations, GuardNarrowing narrowing) {
     this(session, activeBodyRead, cacheable, executionContext, compilationContexts, sawMissing, variables, null,
       sharedWithOtherBodies, declaredFact, definitionPositions, mutationPositions, assigned, mutations, narrowing,
-      () -> {}, null, false);
+      () -> {}, null, false, variable -> true);
   }
 
   public FlowInputs(FlowSession session, Consumer<CodeBlockContext> activeBodyRead, boolean cacheable,
@@ -123,6 +125,6 @@ record FlowInputs(
     AssignedTypes assigned, Mutations mutations, GuardNarrowing narrowing, Runnable noteIncompleteCellInput) {
     this(session, activeBodyRead, cacheable, executionContext, compilationContexts, sawMissing, variables,
       readModuleVariables, sharedWithOtherBodies, declaredFact, definitionPositions, mutationPositions, assigned,
-      mutations, narrowing, noteIncompleteCellInput, null, false);
+      mutations, narrowing, noteIncompleteCellInput, null, false, variable -> true);
   }
 }

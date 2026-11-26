@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.cfg.CfgVertex;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
@@ -31,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionN
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionTreeBuildingVisitor;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.jspecify.annotations.Nullable;
 
@@ -50,6 +52,8 @@ final class IndependentReturnedStructure {
   private IndependentReturnedStructure() {
   }
 
+  record Reachability(Set<CfgVertex> vertices, Predicate<ParserRuleContext> statements) { }
+
   /**
    * @param variable символ переменной.
    * @return относится ли объявленная или динамическая переменная к телу метода.
@@ -61,6 +65,10 @@ final class IndependentReturnedStructure {
     };
   }
 
+  static boolean localVariable(DocumentContext document, VariableSymbol variable) {
+    return document.getFileType() == FileType.BSL && localVariable(variable);
+  }
+
   /**
    * Проверяет единственное начальное присваивание, независимость изменений и условий,
    * а также отсутствие передачи переменной в аргументах вызовов.
@@ -69,17 +77,17 @@ final class IndependentReturnedStructure {
    * @param body тело метода.
    * @param variable проверяемая локальная переменная.
    * @param variables раскладка переменных и изменений.
-   * @param vertices доступные вершины графа.
    * @param inputs входы текущего режима расчёта.
-   * @param reachable проверка достижимости синтаксического узла.
+   * @param reachable достижимые вершины и проверка достижимости синтаксического узла.
+   * @param returning выполняется ли вывод возвращаемого значения, допускающий локальный вызов.
    * @return можно ли включить переменную в сокращённое окружение.
    */
   static boolean supports(DocumentContext document, BSLParser.CodeBlockContext body, VariableSymbol variable,
-                          FlowVariables variables, Set<CfgVertex> vertices, FlowInputs inputs,
-                          Predicate<ParserRuleContext> reachable) {
+                          FlowVariables variables, FlowInputs inputs, Reachability reachable, boolean returning) {
     return variables.indexes().containsKey(variable)
-      && closedChanges(document, variable, variables, reachable, !inputs.session().cellsComputing())
-      && closedConditions(variable, vertices, inputs) && !escapes(document, body, variable, reachable);
+      && closedChanges(document, variable, variables, reachable.statements(), returning && !inputs.session().cellsComputing())
+      && closedConditions(variable, reachable.vertices(), inputs)
+      && !escapes(document, body, variable, reachable.statements());
   }
 
   /**
@@ -88,21 +96,19 @@ final class IndependentReturnedStructure {
    * @param document документ тела.
    * @param body тело метода.
    * @param variables раскладка переменных и изменений.
-   * @param vertices доступные вершины графа.
    * @param inputs входы текущего режима расчёта.
    * @param required уже проверенный обязательный результат.
-   * @param reachable проверка достижимости синтаксического узла.
+   * @param reachable достижимые вершины и проверка достижимости синтаксического узла.
    * @return обязательная переменная и остальные независимые переменные из операторов возврата.
    */
   static Set<VariableSymbol> returnedLocals(DocumentContext document, BSLParser.CodeBlockContext body,
-      FlowVariables variables, Set<CfgVertex> vertices, FlowInputs inputs, VariableSymbol required,
-      Predicate<ParserRuleContext> reachable) {
+      FlowVariables variables, FlowInputs inputs, VariableSymbol required, Reachability reachable) {
     Set<VariableSymbol> selected = Collections.newSetFromMap(new IdentityHashMap<>(0));
     selected.add(required);
     for (var node : Trees.findAllRuleNodes(body, BSLParser.RULE_returnStatement)) {
-      var candidate = returnedVariable(document, body, (BSLParser.ReturnStatementContext) node, reachable);
+      var candidate = returnedVariable(document, body, (BSLParser.ReturnStatementContext) node, reachable.statements());
       if (candidate != null && !selected.contains(candidate) && localVariable(candidate)
-        && supports(document, body, candidate, variables, vertices, inputs, reachable)) {
+        && supports(document, body, candidate, variables, inputs, reachable, true)) {
         selected.add(candidate);
       }
     }
@@ -186,7 +192,19 @@ final class IndependentReturnedStructure {
         .noneMatch(change -> change.variable() == variable && !change.definition());
   }
 
-  private static boolean emptyStructure(ConstructorCallNode constructor) {
+  static boolean resetsToEmptyStructure(DocumentContext document, BSLParser.AssignmentContext assignment,
+                                                 String variableName) {
+    var left = assignment.lValue();
+    if (left == null || left.acceptor() != null || left.IDENTIFIER() == null
+      || !left.IDENTIFIER().getText().equalsIgnoreCase(variableName)) {
+      return false;
+    }
+    var right = ExpressionTreeBuildingVisitor.buildExpressionTree(assignment.expression());
+    return right instanceof ConstructorCallNode constructor && IndependentReturnedStructure.emptyStructure(constructor)
+      && Trees.getTrailingComment(document.getTokens(), assignment.getStop()).isEmpty();
+  }
+
+  static boolean emptyStructure(ConstructorCallNode constructor) {
     if (!constructor.isStaticallyTyped() || !parameterless(constructor)) {
       return false;
     }
@@ -201,8 +219,7 @@ final class IndependentReturnedStructure {
       && arguments.getFirst().getNodeType() == ExpressionNodeType.SKIPPED_CALL_ARG);
   }
 
-  private static boolean closedConditions(VariableSymbol variable, Set<CfgVertex> vertices,
-                                           FlowInputs inputs) {
+  static boolean closedConditions(VariableSymbol variable, Set<CfgVertex> vertices, FlowInputs inputs) {
     for (var vertex : vertices) {
       var condition = FlowConditionNarrowing.conditionOf(vertex);
       if (condition == null) {
@@ -217,21 +234,34 @@ final class IndependentReturnedStructure {
     return true;
   }
 
-  private static boolean escapes(DocumentContext document, BSLParser.CodeBlockContext body, VariableSymbol variable,
-                                 Predicate<ParserRuleContext> reachable) {
+  static boolean escapes(DocumentContext document, BSLParser.CodeBlockContext body, VariableSymbol variable,
+                         Predicate<ParserRuleContext> reachable) {
+    return escapes(document, body, variable, reachable, false);
+  }
+
+  /** Проверить передачу параметра целиком или любого обращения, начинающегося с него. */
+  static boolean escapes(DocumentContext document, BSLParser.CodeBlockContext body, VariableSymbol variable,
+                         Predicate<ParserRuleContext> reachable, boolean directOnly) {
     for (var node : Trees.<ParserRuleContext>findAllRuleNodes(body, BSLParser.RULE_callParam)) {
       if (!reachable.test(node)) {
         continue;
       }
       for (var identifier : Trees.findAllTokenNodes(node, BSLParser.IDENTIFIER)) {
-        if (identifier.getParent() instanceof BSLParser.ComplexIdentifierContext complex
-          && complex.IDENTIFIER() == identifier && identifier.getText().equalsIgnoreCase(variable.getName())
+        if (isArgumentUse(identifier, variable.getName(), directOnly)
           && document.getSymbolTreeNoLock().getVariableSymbolInScope(body, identifier.getText()).orElse(null) == variable) {
           return true;
         }
       }
     }
     return false;
+  }
+
+  private static boolean isArgumentUse(ParseTree identifier, String name, boolean directOnly) {
+    if (!(identifier.getParent() instanceof BSLParser.ComplexIdentifierContext complex)
+      || complex.IDENTIFIER() != identifier || !identifier.getText().equalsIgnoreCase(name)) {
+      return false;
+    }
+    return !directOnly || complex.modifier().isEmpty();
   }
 
   private static boolean supportedInsert(BSLParser.CallStatementContext call, String variableName) {

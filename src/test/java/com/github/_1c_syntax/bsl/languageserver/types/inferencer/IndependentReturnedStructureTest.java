@@ -79,12 +79,10 @@ class IndependentReturnedStructureTest extends AbstractServerContextAwareTest {
     var layout = analyzer.layoutOf(document, body);
     var variables = analyzer.variablesOf(document, body, layout, inputs);
     var vertices = analyzer.flowGraph(document, body, inputs).graph().vertexSet();
+    var reachable = new IndependentReturnedStructure.Reachability(vertices, node -> true);
 
-    assertThat(IndependentReturnedStructure.supports(document, body, first, variables, vertices, inputs,
-      node -> true)).isTrue();
-    assertThat(IndependentReturnedStructure.supports(document, body, escaping, variables, vertices, inputs,
-      node -> true)).isFalse();
-    assertThat(IndependentReturnedStructure.returnedLocals(document, body, variables, vertices, inputs, first,
-      node -> true)).containsExactlyInAnyOrder(first, second);
+    assertThat(IndependentReturnedStructure.supports(document, body, first, variables, inputs, reachable, true)).isTrue();
+    assertThat(IndependentReturnedStructure.supports(document, body, escaping, variables, inputs, reachable, true)).isFalse();
+    assertThat(IndependentReturnedStructure.returnedLocals(document, body, variables, inputs, first, reachable)).containsExactlyInAnyOrder(first, second);
   }
 }
