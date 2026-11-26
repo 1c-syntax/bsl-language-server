@@ -288,6 +288,38 @@ final class FlowLayout {
   }
 
   /**
+   * @param node узел исходного выражения или оператора.
+   * @return самый внешний блок кода над узлом или {@code null}, если узел вне тела.
+   */
+  static BSLParser.@Nullable CodeBlockContext enclosingBody(ParserRuleContext node) {
+    ParserRuleContext current = node;
+    BSLParser.CodeBlockContext outermost = null;
+    while (current != null) {
+      if (current instanceof BSLParser.CodeBlockContext codeBlock) {
+        outermost = codeBlock;
+      }
+      current = current.getParent();
+    }
+    return outermost;
+  }
+
+  /**
+   * @param node узел исходного выражения или оператора.
+   * @return ближайший оператор из раскладки, содержащий узел, или {@code null}.
+   */
+  @Nullable
+  ParserRuleContext enclosingStatement(ParserRuleContext node) {
+    ParserRuleContext current = node;
+    while (current != null) {
+      if (hasStatement(current)) {
+        return current;
+      }
+      current = current.getParent();
+    }
+    return null;
+  }
+
+  /**
    * Является ли оператор выражением условия ветвления или цикла {@code Пока}.
    * <p>
    * Отличать нужно потому, что внутри условия значим порядок проверок, а внутри обычного

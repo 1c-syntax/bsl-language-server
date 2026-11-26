@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageSer
 import com.github._1c_syntax.bsl.languageserver.cfg.CfgBuildOptions;
 import com.github._1c_syntax.bsl.languageserver.cfg.PreprocessorFlow;
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
+import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraph;
 import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraphIndex;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
@@ -58,6 +59,7 @@ import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -212,6 +214,8 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
 
     private final Runnable cellsChanged;
     private final Runnable cellRead;
+    /** Проекция локального результата живёт только в запросе и не заменяет общие facts тела. */
+    private @Nullable Map<ReturnedLocalFlow.Key, @Nullable Facts> independentReturnFacts;
 
     /** Создать сессию без внешних результатов, зависящих от её приближений. */
     public FlowSession() {
@@ -230,8 +234,13 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     }
 
     FlowSession(Runnable cellsChanged, Runnable cellRead) {
-      this.cellsChanged = cellsChanged;
       this.cellRead = cellRead;
+      this.cellsChanged = () -> {
+        if (independentReturnFacts != null) {
+          independentReturnFacts.clear();
+        }
+        cellsChanged.run();
+      };
     }
 
     /** Вход мог быть прочитан через готовое окружение без вызова cellOf в текущем вычислении. */
@@ -284,6 +293,34 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       return true;
     }
 
+    boolean hasIndependentFacts(ReturnedLocalFlow.Key key) {
+      return independentReturnFacts != null && independentReturnFacts.containsKey(key);
+    }
+
+    @Nullable Facts independentFacts(ReturnedLocalFlow.Key key) {
+      return independentReturnFacts == null ? null : independentReturnFacts.get(key);
+    }
+
+    void rememberIndependentFacts(ReturnedLocalFlow.Key key, @Nullable Facts facts, FlowInputs inputs,
+                                  BooleanSupplier complete) {
+      if (cellsComputing || cellsIncomplete || inputs.sawMissing().getAsBoolean() || !complete.getAsBoolean()) {
+        return;
+      }
+      if (independentReturnFacts == null) {
+        independentReturnFacts = new HashMap<>();
+      }
+      independentReturnFacts.put(key, facts);
+    }
+
+    Facts computeBodyFacts(BSLParser.CodeBlockContext body, VariableFlowPass pass) {
+      active.put(body, pass);
+      try {
+        return pass.computeFacts();
+      } finally {
+        active.remove(body);
+      }
+    }
+
     /**
      * Идут ли прямо сейчас круги по ячейкам переменных модуля.
      * <p>
@@ -331,8 +368,6 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       return Set.copyOf(active.keySet());
     }
   }
-
-
 
   /**
    * Изменение типа одной переменной одним оператором.
@@ -556,6 +591,19 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
   }
 
   /**
+   * @param document документ текущего дерева.
+   * @param use узел использования в операторе возврата.
+   * @param variable символ возвращаемой локальной переменной.
+   * @param inputs входы прохода и сессия вывода типов.
+   * @param complete проверка полноты результата перед сохранением.
+   * @return тип из сокращённого окружения или {@code null}, если нужен полный проход.
+   */
+  @Nullable TypeSet independentReturnTypeAt(DocumentContext document, ParserRuleContext use,
+                                           VariableSymbol variable, FlowInputs inputs, BooleanSupplier complete) {
+    return ReturnedLocalFlow.typeAt(this, document, use, variable, inputs, complete);
+  }
+
+  /**
    * Внешний запрос выражения: независимые запросы могут дождаться опубликованных фактов.
    * Активные тела, круги по ячейкам и незапоминаемые расчёты используют обычный путь.
    *
@@ -573,12 +621,12 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
 
   private @Nullable TypeSet typeAt(DocumentContext documentContext, ParserRuleContext use,
                                    VariableSymbol variable, FlowInputs inputs, @Nullable BooleanSupplier sharedRoot) {
-    var body = enclosingBody(use);
+    var body = FlowLayout.enclosingBody(use);
     if (body == null) {
       return null;
     }
     var layout = layoutOf(documentContext, body);
-    var useStatement = enclosingStatement(use, layout);
+    var useStatement = layout.enclosingStatement(use);
     if (useStatement == null) {
       return null;
     }
@@ -650,7 +698,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     }
     // Тела у объявления нет либо переменная в нём не живёт — так стоит `Перем` уровня
     // модуля. Значение такой переменной оставляют тела, и оно как раз в её ячейке.
-    ensureCellsFor(documentContext, List.of(variable), inputs);
+    ensureCellsFor(documentContext, List.of(variable), inputs, null);
     return cellOf(documentContext, variable, inputs, true);
   }
 
@@ -724,7 +772,7 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
       shared.removeIf(variable -> variable.getKind() == VariableKind.MODULE
         && !inputs.session().cellsDone.contains(variable) && !read.contains(variable));
     }
-    ensureCellsFor(documentContext, shared, inputs);
+    ensureCellsFor(documentContext, shared, inputs, null);
   }
 
   /**
@@ -734,10 +782,6 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
    * @param shared          переменные, видимые другим телам.
    * @param inputs          исходные данные расчёта.
    */
-  private void ensureCellsFor(DocumentContext documentContext, List<VariableSymbol> shared, FlowInputs inputs) {
-    ensureCellsFor(documentContext, shared, inputs, null);
-  }
-
   void ensureCellsFor(DocumentContext documentContext, List<VariableSymbol> shared, FlowInputs inputs,
                               @Nullable BooleanSupplier complete) {
     var session = inputs.session();
@@ -1040,6 +1084,17 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     return computeAndPublish(documentContext, body, layout, inputs, byBody, sharedRoot);
   }
 
+  @Nullable Facts cachedFacts(URI uri, BSLParser.CodeBlockContext body, FlowInputs inputs) {
+    if (!inputs.cacheable()) {
+      return null;
+    }
+    var context = inputs.executionContext();
+    var byBody = context == null
+      ? factsByUri.getOrDefault(uri, Map.of())
+      : contextualFactsByUri.getOrDefault(uri, Map.of()).getOrDefault(context, Map.of());
+    return byBody.get(body);
+  }
+
   /** Разные внешние тела одного модуля ждут общие ячейки до захвата собственного расчёта тела. */
   private void ensureRootCells(DocumentContext documentContext, BSLParser.CodeBlockContext body, FlowInputs inputs,
                                BooleanSupplier complete) {
@@ -1182,17 +1237,24 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
     if (variables.variables().isEmpty()) {
       return new Facts(Map.of(), Map.of(), Map.of(), FlowEnvironment.EMPTY);
     }
-    var graph = controlFlowGraphIndex.graphOf(documentContext, body, CfgBuildOptions.defaults());
+    return computeFacts(documentContext, body, layout, inputs, variables, flowGraph(documentContext, body, inputs));
+  }
+
+  Facts computeFacts(DocumentContext document, CodeBlockContext body, FlowLayout layout,
+                     FlowInputs inputs, FlowVariables variables, FlowGraph flow) {
+    var pass = new VariableFlowPass(this, document, flow.graph(), layout, inputs, flow.compiled(), variables);
+    return inputs.session().computeBodyFacts(body, pass);
+  }
+
+  record FlowGraph(ControlFlowGraph graph, @Nullable PreprocessorFlow compiled) { }
+
+  /** Подготовить один и тот же граф для полного прохода и его проекции. */
+  FlowGraph flowGraph(DocumentContext document, CodeBlockContext body, FlowInputs inputs) {
+    var graph = controlFlowGraphIndex.graphOf(document, body, CfgBuildOptions.defaults());
     var compiled = inputs.compilationContexts().apply(body)
-      .map(contexts -> PreprocessorFlow.of(graph, contexts, documentContext.getFileType())).orElse(null);
-    var pass = new VariableFlowPass(this, documentContext, graph, layout, inputs, compiled, variables);
-    var active = inputs.session().active;
-    active.put(body, pass);
-    try {
-      return pass.computeFacts();
-    } finally {
-      active.remove(body);
-    }
+      .map(contexts -> PreprocessorFlow.of(graph, contexts, document.getFileType())).orElse(null);
+
+    return new FlowGraph(graph, compiled);
   }
 
   /** Структура переменных тела для текущего дерева символов, общая для всех режимов расчёта. */
@@ -1213,36 +1275,6 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
 
 
 
-
-  /**
-   * Тело метода или код модуля, которому принадлежит узел, — единица, по которой строится
-   * граф потока управления. Это самый внешний блок кода над узлом: вложенные блоки
-   * ветвлений и циклов частями графа не являются.
-   */
-  private static BSLParser.@Nullable CodeBlockContext enclosingBody(ParserRuleContext node) {
-    ParserRuleContext current = node;
-    BSLParser.CodeBlockContext outermost = null;
-    while (current != null) {
-      if (current instanceof BSLParser.CodeBlockContext codeBlock) {
-        outermost = codeBlock;
-      }
-      current = current.getParent();
-    }
-    return outermost;
-  }
-
-  /** Ближайший оператор графа, внутри которого находится узел. */
-  @Nullable
-  private static ParserRuleContext enclosingStatement(ParserRuleContext node, FlowLayout layout) {
-    ParserRuleContext current = node;
-    while (current != null) {
-      if (layout.hasStatement(current)) {
-        return current;
-      }
-      current = current.getParent();
-    }
-    return null;
-  }
 
   /**
    * Тело метода или код модуля, накрывающие позицию. Поиск идёт по упорядоченным

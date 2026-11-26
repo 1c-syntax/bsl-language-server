@@ -45,6 +45,20 @@ class OpenDataObjectInferenceTest {
   private static final TypeRef STRING = new TypeRef(TypeKind.PRIMITIVE, "Строка");
 
   @Test
+  void literalKeyIsSharedByInsertAnalysisAndProjectionEligibility() {
+    var ast = new BSLTokenizer("""
+      Result.Insert("  Key  ", 1);
+      Result.Insert(Key, 1);
+      Result.Insert(, 1);
+      """).getAst();
+    Collection<BSLParser.CallStatementContext> calls = Trees.findAllRuleNodes(ast, BSLParser.RULE_callStatement);
+
+    assertThat(calls).extracting(call ->
+      OpenDataObjectInference.literalKeyOf(call.accessCall().methodCall().doCall().callParamList().callParam()))
+      .containsExactly("Key", null, null);
+  }
+
+  @Test
   void structureAndFixedStructureAreStructureLike() {
     // given / when / then
     assertThat(OpenDataObjectInference.isStructureLike("Структура")).isTrue();

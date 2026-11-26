@@ -101,6 +101,11 @@ record FlowVariables(List<VariableSymbol> visibleVariables, List<VariableSymbol>
     return select(selected::contains);
   }
 
+  /** Есть ли среди исходных видимых переменных объявления модуля, включая пропущенные в раскладке. */
+  boolean hasVisibleModuleVariables() {
+    return visibleVariables.stream().anyMatch(variable -> variable.getKind() == VariableKind.MODULE);
+  }
+
   private FlowVariables select(Predicate<VariableSymbol> needed) {
     if (variables.stream().allMatch(needed)) {
       return this;
