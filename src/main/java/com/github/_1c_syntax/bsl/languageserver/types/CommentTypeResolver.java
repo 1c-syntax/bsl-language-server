@@ -38,12 +38,14 @@ import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import com.github._1c_syntax.bsl.parser.description.VariableDescription;
 import com.github._1c_syntax.bsl.parser.description.support.Hyperlink;
 import lombok.RequiredArgsConstructor;
+import org.antlr.v4.runtime.Token;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Тип, объявленный автором в комментарии рядом с кодом — единый для обоих языков
@@ -128,11 +130,7 @@ public class CommentTypeResolver implements VariableTypeSource {
    *     не распознаны.
    */
   public TypeSet ofAssignment(DocumentContext owner, BSLParser.AssignmentContext assignment) {
-    var trailing = trailingOf(owner, assignment);
-    if (trailing == null) {
-      return TypeSet.EMPTY;
-    }
-    return typesOfComment(trailing.getTypes(), trailing.getLinks(), owner, owner.getFileType());
+    return ofAssignment(owner, assignment, null, null);
   }
 
   /**
@@ -146,14 +144,30 @@ public class CommentTypeResolver implements VariableTypeSource {
    */
   public TypeSet ofAssignment(DocumentContext owner, BSLParser.AssignmentContext assignment,
                               Runnable onIncomplete) {
-    var trailing = trailingOf(owner, assignment);
+    return ofAssignment(owner, assignment, onIncomplete, null);
+  }
+
+  /**
+   * Разрешить типы по актуальному комментарию, переиспользуя синтаксис в одном запросе.
+   *
+   * @param owner документ-владелец.
+   * @param assignment оператор, у которого ищется комментарий.
+   * @param onIncomplete уведомление перед выводом типов, если нужно проверять полноту.
+   * @param comments синтаксис положительных находок запроса или отсутствие кеша.
+   * @return объявленные типы либо пустой набор.
+   */
+  public TypeSet ofAssignment(DocumentContext owner, BSLParser.AssignmentContext assignment,
+                              @Nullable Runnable onIncomplete,
+                              @Nullable AssignmentCommentCache comments) {
+    var trailing = trailingOf(owner, assignment, comments);
     if (trailing == null) {
       return TypeSet.EMPTY;
     }
-    if (anyLinkAwaitsUnparsedModule(trailing.getLinks(), owner)) {
+    var links = trailing.getLinks();
+    if (onIncomplete != null && anyLinkAwaitsUnparsedModule(links, owner)) {
       onIncomplete.run();
     }
-    return typesOfComment(trailing.getTypes(), trailing.getLinks(), owner, owner.getFileType());
+    return typesOfComment(trailing.getTypes(), links, owner, owner.getFileType());
   }
 
   /**
@@ -166,7 +180,7 @@ public class CommentTypeResolver implements VariableTypeSource {
    * @return {@code true}, если комментарий ссылается на ещё не разобранный модуль.
    */
   public boolean assignmentAwaitsUnparsedModule(DocumentContext owner, BSLParser.AssignmentContext assignment) {
-    var trailing = trailingOf(owner, assignment);
+    var trailing = trailingOf(owner, assignment, null);
     return trailing != null && anyLinkAwaitsUnparsedModule(trailing.getLinks(), owner);
   }
 
@@ -198,16 +212,28 @@ public class CommentTypeResolver implements VariableTypeSource {
    *
    * @param owner      документ с присваиванием.
    * @param assignment оператор присваивания.
+   * @param comments синтаксис положительных находок запроса или отсутствие кеша.
    * @return висячая часть описания; {@code null}, если комментария нет.
    */
-  private static @Nullable VariableDescription trailingOf(DocumentContext owner, BSLParser.AssignmentContext assignment) {
-    var trailingComment = Trees.getTrailingComment(owner.getTokens(), assignment.getStop());
-    if (trailingComment.isEmpty()) {
+  private static @Nullable VariableDescription trailingOf(DocumentContext owner, BSLParser.AssignmentContext assignment,
+                                                            @Nullable AssignmentCommentCache comments) {
+    var tokens = owner.getTokens();
+    var stop = assignment.getStop();
+    var comment = Trees.getTrailingComment(tokens, stop).orElse(null);
+    if (comment == null) {
       return null;
     }
-    return VariableDescription.create(Collections.emptyList(), trailingComment)
-      .getTrailingDescription()
-      .orElse(null);
+
+    var index = stop.getTokenIndex();
+    if (comments == null || index < 0 || index >= tokens.size() || tokens.get(index) != stop) {
+      return parseAssignmentComment(comment);
+    }
+    return comments.read(tokens, stop, comment);
+  }
+
+  static @Nullable VariableDescription parseAssignmentComment(Token comment) {
+    return VariableDescription.create(Collections.emptyList(), Optional.of(comment))
+      .getTrailingDescription().orElse(null);
   }
 
   /**

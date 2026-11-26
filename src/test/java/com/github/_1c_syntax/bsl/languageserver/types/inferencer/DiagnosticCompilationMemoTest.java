@@ -55,7 +55,8 @@ class DiagnosticCompilationMemoTest {
       var document = mock(DocumentContext.class);
       var first = new InferenceContext(document, ExecutionContext.SERVER, memo(A, 7));
       var second = new InferenceContext(document, ExecutionContext.THIN_CLIENT, memo(A, 7));
-      assertThat(first.compilation).isSameAs(second.compilation);
+      assertThat(first.compilation()).isSameAs(second.compilation());
+      assertThat(first.assignmentComments()).isNotSameAs(second.assignmentComments());
       assertThat(first.contextualReturns).isNotSameAs(second.contextualReturns);
       assertThat(first.flowSession).isNotSameAs(second.flowSession);
       first.noteMissingData();
