@@ -1111,10 +1111,11 @@ public class ExpressionTypeInferencer {
     TypeSet result;
     if (method.getOwner() == ctx.documentContext) {
       result = neutralReturnTypes(method, ctx);
+    } else if (method.isFunction() && !methodReturnTypeIndexer.isIndexed(method)) {
+      var inputs = symbolTypeIndex.returnTypeInputs(method);
+      ctx.noteMissingMethod(inputs);
+      result = inputs.types();
     } else {
-      if (method.isFunction() && !methodReturnTypeIndexer.isIndexed(method)) {
-        ctx.noteMissingMethod(method);
-      }
       result = symbolTypeIndex.getReturnTypes(method);
     }
     // Объявленное значение ссылается на ещё не разобранный модуль. По самому типу

@@ -25,7 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.types.index.MethodReturnTypeInde
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.types.index.SymbolTypeIndex.ReturnTypeInputs;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.jspecify.annotations.Nullable;
 
@@ -137,11 +137,11 @@ final class ContextualReturnCache {
   record Result(TypeSet types, Set<MethodSymbol> consulted, Set<URI> dependencies, Set<MethodSymbol> cutMethods,
                 Set<BSLParser.CodeBlockContext> flowBodiesRead,
                 boolean cycleCut, boolean bodyInFlowCut, boolean depthCut,
-                @Nullable Set<MethodSymbol> missingInputs, boolean incompleteCellInput) {
+                @Nullable List<ReturnTypeInputs> missingInputs, boolean incompleteCellInput) {
     Result(TypeSet types, Set<MethodSymbol> consulted, Set<URI> dependencies, Set<MethodSymbol> cutMethods,
            Set<BSLParser.CodeBlockContext> flowBodiesRead,
            boolean cycleCut, boolean bodyInFlowCut, boolean depthCut) {
-      this(types, consulted, dependencies, cutMethods, flowBodiesRead, cycleCut, bodyInFlowCut, depthCut, Set.of(),
+      this(types, consulted, dependencies, cutMethods, flowBodiesRead, cycleCut, bodyInFlowCut, depthCut, List.of(),
         false);
     }
   }
@@ -186,7 +186,7 @@ final class ContextualReturnCache {
     Set<MethodSymbol> activeMethods = new HashSet<>();
     Set<BSLParser.CodeBlockContext> otherBodies = new HashSet<>();
     for (var body : activeBodies) {
-      var method = bodyMethods.computeIfAbsent(body, ignored -> methodOf(body, context));
+      var method = bodyMethods.computeIfAbsent(body, context::methodOfBody);
       if (method.isPresent()) {
         activeMethods.add(method.orElseThrow());
       } else {
@@ -195,11 +195,6 @@ final class ContextualReturnCache {
     }
     return new Guard(key, Set.copyOf(context.visited), activeBodies, Set.copyOf(activeMethods), Set.copyOf(otherBodies),
       context.depth, context.flowSession.cellsComputing());
-  }
-
-  private static Optional<MethodSymbol> methodOf(BSLParser.CodeBlockContext body, InferenceContext context) {
-    BSLParser.SubContext sub = Trees.getAncestorByRuleIndex(body, BSLParser.RULE_sub);
-    return sub == null ? Optional.empty() : context.documentContext.getSymbolTreeNoLock().getMethodSymbol(sub);
   }
 
   @Nullable Result get(Guard guard) {
