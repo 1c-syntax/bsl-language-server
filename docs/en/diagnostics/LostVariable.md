@@ -7,6 +7,8 @@ A value is lost when no path after the assignment reads it. Typical cases includ
 
 The diagnostic also highlights a loop iterator that reuses a module variable, an enclosing iterator or the variable holding the collection being iterated. The location points to the conflicting loop header.
 
+The default profile enables `LostVariable`. You can disable the diagnostic in your profile settings.
+
 The optional `checkFormShadowing` setting checks method parameters and explicit local `Var` declarations in form modules against properties resolved for the owning form. It is disabled by default.
 
 ## Examples
