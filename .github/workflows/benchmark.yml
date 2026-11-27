@@ -65,11 +65,10 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
-          python-version: "3.12"
+          python-version: "3.14"
 
       - name: Setup Python libs
-        # pybadges imports pkg_resources, which was removed in setuptools 82.
-        run: pip install pytest pytest-benchmark && pip install pybadges 'setuptools<82'
+        run: python -m pip install pytest pytest-benchmark anybadge
 
       - name: Download SSL 3.1
         run: git clone --depth 1 https://github.com/1c-syntax/ssl_3_1.git ssl
