@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.lsp;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.client.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.client.WorkDoneProgressHelper;
@@ -33,8 +34,12 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Phaser;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Перехватчик события заполнения контекста сервера, запускающий анализ всех файлов контекста.
@@ -62,39 +67,87 @@ public class AnalyzeProjectOnStart {
     }
 
     var serverContext = event.getSource();
+    // Анализ — фоновая работа над рабочей областью: её остановка дожидается анализа, даже
+    // если слушатель отработал в своём потоке.
+    serverContext.runBackgroundWork(() -> analyze(serverContext));
+  }
 
+  private void analyze(ServerContext serverContext) {
     var documentContexts = serverContext.getDocuments().values();
     var progress = workDoneProgressHelper.createProgress(documentContexts.size(), getMessage("filesSuffix"));
     progress.beginProgress(getMessage("analyzeProject"));
 
+    var cancelled = new AtomicBoolean();
+    var completed = false;
     try {
-      executor.submit(() ->
-        documentContexts.parallelStream().forEach((DocumentContext documentContext) -> {
-          progress.tick();
+      var analysis = CompletableFuture.runAsync(
+        () -> analyzeDocuments(serverContext, documentContexts, progress, cancelled), executor);
+      awaitAnalysis(analysis, cancelled);
+      completed = !serverContext.isBackgroundWorkStopped();
+    } finally {
+      progress.endProgress(completed ? getMessage("projectAnalyzed") : "");
+    }
+  }
 
-          // Работа с документом — под его верхнеуровневым локом, как в остальных
-          // писателях (didOpen, DocumentChangeExecutor, MCP): перестроение,
-          // синхронная переиндексация ссылок по событию rebuild и очистка не должны
-          // пересекаться с конкурентными читателями/писателями этого документа.
-          var lock = serverContext.getDocumentLock(documentContext.getUri());
-          lock.writeLock().lock();
-          try {
-            serverContext.rebuildDocument(documentContext);
-            diagnosticProvider.computeAndPublishDiagnostics(documentContext);
-
-            serverContext.tryClearDocument(documentContext);
-          } finally {
-            lock.writeLock().unlock();
-          }
-        })
-      ).get();
-
-      progress.endProgress(getMessage("projectAnalyzed"));
+  private static void awaitAnalysis(CompletableFuture<Void> analysis, AtomicBoolean cancelled) {
+    try {
+      analysis.get();
     } catch (ExecutionException e) {
       throw new IllegalStateException("Can't analyze project on start", e);
     } catch (InterruptedException e) {
+      cancelled.set(true);
+      // Отмена Future переводит её в завершённое состояние сразу. Здесь нужно дождаться
+      // физических работников до возврата из runBackgroundWork и очистки контекста.
+      analysis.handle((ignored, failure) -> null).join();
       Thread.currentThread().interrupt();
       throw new IllegalStateException("Interrupted while analyzing project on start", e);
+    }
+  }
+
+  private void analyzeDocuments(
+    ServerContext serverContext, Collection<DocumentContext> documents,
+    WorkDoneProgressHelper.WorkDoneProgressReporter progress, AtomicBoolean cancelled
+  ) {
+    var active = new Phaser(1);
+    try {
+      documents.parallelStream().forEach((DocumentContext document) -> {
+        if (cancelled.get() || serverContext.isBackgroundWorkStopped() || active.register() < 0) {
+          return;
+        }
+        try {
+          analyzeDocument(serverContext, document, progress, cancelled);
+        } finally {
+          active.arriveAndDeregister();
+        }
+      });
+    } finally {
+      // При исключении параллельный проход может выйти раньше соседних обработчиков.
+      // Зарегистрированные дожидаются окончания, остальные не начинают работу.
+      cancelled.set(true);
+      active.awaitAdvance(active.arriveAndDeregister());
+    }
+  }
+
+  private void analyzeDocument(
+    ServerContext serverContext, DocumentContext document,
+    WorkDoneProgressHelper.WorkDoneProgressReporter progress, AtomicBoolean cancelled
+  ) {
+    progress.tick();
+    // Перестроение, переиндексация и очистка идут под блокировкой записи документа.
+    var lock = serverContext.getDocumentLock(document.getUri()).writeLock();
+    lock.lock();
+    try {
+      if (cancelled.get() || serverContext.isBackgroundWorkStopped()) {
+        return;
+      }
+      serverContext.rebuildDocument(document);
+
+      if (!cancelled.get() && !serverContext.isBackgroundWorkStopped()) {
+        diagnosticProvider.computeAndPublishDiagnostics(document);
+      }
+      serverContext.tryClearDocument(document);
+    } finally {
+      lock.unlock();
     }
   }
 

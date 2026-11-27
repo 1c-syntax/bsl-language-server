@@ -32,6 +32,13 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.eclipse.lsp4j.services.LanguageClient;
 import org.eclipse.lsp4j.services.LanguageServer;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+
+import java.time.Duration;
+import java.util.ArrayDeque;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.refEq;
@@ -39,6 +46,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.verifyNoInteractions;
 
 class WorkDoneProgressHelperTest {
 
@@ -54,6 +63,9 @@ class WorkDoneProgressHelperTest {
 
     // when
     var progress = workDoneProgressHelper.createProgress(1, "");
+    var tasks = new ArrayDeque<Runnable>();
+    assertThat(progress.reportActivity(() -> "working", tasks::addLast)).isFalse();
+    assertThat(tasks).isEmpty();
     progress.beginProgress("test");
     progress.tick();
     progress.endProgress("");
@@ -189,6 +201,77 @@ class WorkDoneProgressHelperTest {
           "token"
         )
       );
+  }
+
+  @Test
+  void activityReportsTheCurrentCounterAndStopsAfterCompletion() {
+    var holder = getLanguageClientHolder();
+    var client = holder.getClient().orElseThrow();
+    var helper = new WorkDoneProgressHelper(holder, getClientCapabilitiesHolder(Boolean.TRUE));
+    helper.handleEvent(new ClientInitializedEvent(mock(LanguageServer.class)));
+    var progress = helper.createProgress(2, " files");
+    var tasks = new ArrayDeque<Runnable>();
+    progress.beginProgress("populate");
+    assertThat(progress.reportActivity(() -> "processing Module.bsl", tasks::addLast)).isTrue();
+    assertThat(progress.reportActivity(() -> "duplicate", tasks::addLast)).isFalse();
+    assertThat(tasks).hasSize(1);
+
+    clearInvocations(client);
+    tasks.removeFirst().run();
+    var params = ArgumentCaptor.forClass(ProgressParams.class);
+    verify(client).notifyProgress(params.capture());
+    assertThat(params.getValue().getValue().getLeft()).isInstanceOfSatisfying(WorkDoneProgressReport.class, report -> {
+      assertThat(report.getMessage()).isEqualTo("0/2 files; processing Module.bsl");
+      assertThat(report.getPercentage()).isZero();
+    });
+
+    progress.tick();
+    clearInvocations(client);
+    tasks.removeFirst().run();
+    verify(client).notifyProgress(params.capture());
+    assertThat(params.getValue().getValue().getLeft()).isInstanceOfSatisfying(WorkDoneProgressReport.class, report -> {
+      assertThat(report.getMessage()).isEqualTo("1/2 files; processing Module.bsl");
+      assertThat(report.getPercentage()).isEqualTo(50);
+    });
+
+    progress.endProgress("done");
+    clearInvocations(client);
+    tasks.removeFirst().run();
+    progress.tick();
+    assertThat(tasks).isEmpty();
+    verifyNoInteractions(client);
+  }
+
+  @Test
+  void activityDoesNotSeeATickThatIsStillWaitingForPublication() throws InterruptedException {
+    var holder = getLanguageClientHolder();
+    var client = holder.getClient().orElseThrow();
+    var helper = new WorkDoneProgressHelper(holder, getClientCapabilitiesHolder(Boolean.TRUE));
+    helper.handleEvent(new ClientInitializedEvent(mock(LanguageServer.class)));
+    var progress = helper.createProgress(2, " files");
+    var tasks = new ArrayDeque<Runnable>();
+    progress.beginProgress("populate");
+    assertThat(progress.reportActivity(() -> "working", tasks::addLast)).isTrue();
+    clearInvocations(client);
+
+    var tick = new Thread(progress::tick);
+    try {
+      synchronized (progress) {
+        tick.start();
+        await().atMost(Duration.ofSeconds(5)).until(() -> tick.getState() == Thread.State.BLOCKED);
+        tasks.removeFirst().run();
+      }
+      assertThat(tick.join(Duration.ofSeconds(5))).isTrue();
+
+      var params = ArgumentCaptor.forClass(ProgressParams.class);
+      verify(client, times(2)).notifyProgress(params.capture());
+      assertThat(params.getAllValues())
+        .extracting(value -> ((WorkDoneProgressReport) value.getValue().getLeft()).getPercentage())
+        .containsExactly(0, 50);
+    } finally {
+      tick.join(5000);
+      progress.endProgress("");
+    }
   }
 
   @Test

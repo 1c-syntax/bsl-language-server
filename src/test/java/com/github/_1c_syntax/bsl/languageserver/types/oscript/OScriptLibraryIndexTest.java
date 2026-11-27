@@ -23,6 +23,8 @@ package com.github._1c_syntax.bsl.languageserver.types.oscript;
 
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.EntryKind;
@@ -33,11 +35,19 @@ import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.Absolute;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.AdditionalAnswers.delegatesTo;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
 
 @CleanupContextBeforeClassAndAfterClass
 class OScriptLibraryIndexTest extends AbstractServerContextAwareTest {
@@ -93,6 +103,53 @@ class OScriptLibraryIndexTest extends AbstractServerContextAwareTest {
 
     assertThat(entryNames(index, EntryKind.MODULE)).filteredOn(n -> n.equals("MyModule")).hasSize(1);
     assertThat(entryNames(index, EntryKind.CLASS)).filteredOn(n -> n.equals("MyClass")).hasSize(1);
+  }
+
+  @Test
+  void aStoppedWorkspaceDoesNotReadAChangedLibraryManifest(@TempDir Path root) throws IOException {
+    var script = root.resolve("Library.os");
+    Files.writeString(script, "Процедура Привет() Экспорт\nКонецПроцедуры\n");
+    var config = root.resolve("lib.config");
+    Files.writeString(config, """
+      <package-def><module name="Original" file="Library.os"/></package-def>
+      """);
+    initServerContext(root, false);
+    index.reindex(context);
+    assertThat(index.findByName("Original")).isPresent();
+
+    context.stopBackgroundWork();
+    Files.writeString(config, """
+      <package-def><module name="Changed" file="Library.os"/></package-def>
+      """);
+    assertThat(index.reindex(context)).isEmpty();
+    assertThat(index.findByName("Original")).isPresent();
+    assertThat(index.findByName("Changed")).isEmpty();
+  }
+
+  @Test
+  void libraryReindexStopsBeforeTheNextFile(@TempDir Path root) throws IOException {
+    Files.writeString(root.resolve("First.os"), "Процедура Привет() Экспорт\nКонецПроцедуры\n");
+    Files.writeString(root.resolve("Second.os"), "Процедура Привет() Экспорт\nКонецПроцедуры\n");
+    Files.writeString(root.resolve("lib.config"), """
+      <package-def>
+        <module name="First" file="First.os"/>
+        <module name="Second" file="Second.os"/>
+      </package-def>
+      """);
+    initServerContext(root, false);
+    var stopped = new AtomicBoolean();
+    var stopping = mock(ServerContext.class, delegatesTo(context));
+    doAnswer(invocation -> stopped.get()).when(stopping).isBackgroundWorkStopped();
+    doAnswer(invocation -> {
+      context.rebuildDocument(invocation.getArgument(0, DocumentContext.class));
+      stopped.set(true);
+      return null;
+    }).when(stopping).rebuildDocument(any(DocumentContext.class));
+
+    index.reindex(stopping);
+
+    assertThat(index.findByName("First")).isPresent();
+    assertThat(index.findByName("Second")).isEmpty();
   }
 
   @Test

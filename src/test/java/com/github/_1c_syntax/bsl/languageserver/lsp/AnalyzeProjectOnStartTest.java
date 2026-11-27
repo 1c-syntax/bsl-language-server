@@ -40,8 +40,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.net.URI;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -121,5 +123,25 @@ class AnalyzeProjectOnStartTest {
 
     verify(serverContext, times(1)).getDocuments();
     verify(languageClient, times(1)).publishDiagnostics(any());
+  }
+
+  @Test
+  void skipsDiagnosticsWhenWorkspaceStopsDuringRebuild() {
+    configuration.getDiagnosticsOptions().setAnalyzeOnStart(true);
+    languageClientHolder.connect(languageClient);
+
+    var document = TestUtils.getDocumentContext("A = 0", serverContext);
+    var stopped = new AtomicBoolean();
+    doAnswer(invocation -> stopped.get()).when(serverContext).isBackgroundWorkStopped();
+    doAnswer(invocation -> {
+      invocation.callRealMethod();
+      stopped.set(true);
+      return null;
+    }).when(serverContext).rebuildDocument(document);
+
+    analyzeProjectOnStart.handleEvent(new ServerContextPopulatedEvent(serverContext));
+
+    verify(serverContext).tryClearDocument(document);
+    verify(languageClient, never()).publishDiagnostics(any());
   }
 }

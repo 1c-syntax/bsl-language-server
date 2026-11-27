@@ -60,10 +60,15 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.Phaser;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
@@ -128,7 +133,8 @@ public class ServerContext {
 
   private final Map<DocumentContext, DocumentState> states = new ConcurrentHashMap<>();
   private final Set<DocumentContext> openedDocuments = ConcurrentHashMap.newKeySet();
-  private volatile boolean clearing;
+  /** Остановка фоновой работы и очистка этой рабочей области. */
+  private final WorkspaceBackgroundWork backgroundWork = new WorkspaceBackgroundWork();
 
   /**
    * Подготовка рабочей области, идущая в фоне (см. {@link #beginPreparation()}); завершена,
@@ -230,6 +236,10 @@ public class ServerContext {
   }
 
   public void populateContext() {
+    runBackgroundWork(this::discoverAndPopulateContext);
+  }
+
+  private void discoverAndPopulateContext() {
     if (configurationRoot == null) {
       LOGGER.info("Can't populate server context. Configuration root is not defined.");
       return;
@@ -246,11 +256,40 @@ public class ServerContext {
       files.size(), configurationRoot, millisSince(startedAt));
     populateContext(files);
     // Слушатели события наполнения (дорасчёт типов и прочее) отработали в этом же вызове.
-    LOGGER.info("Workspace {} is ready in {} ms: context populated, post-population work done",
-      configurationRoot, millisSince(startedAt));
+    if (!isBackgroundWorkStopped()) {
+      LOGGER.info("Workspace {} is ready in {} ms: context populated, post-population work done",
+        configurationRoot, millisSince(startedAt));
+    }
   }
 
+  /**
+   * Наполнить контекст документами из перечисленных файлов.
+   * <p>
+   * Наполнение — фоновая работа ({@link #runBackgroundWork(Runnable)}): после остановки
+   * ({@link #stopBackgroundWork()}) оставшиеся файлы не разбираются, а об остановленном
+   * наполнении не сообщается. Обработка окончания наполнения — слушатели
+   * {@code ServerContextPopulatedEvent} — идёт как его часть.
+   *
+   * @param files файлы модулей.
+   */
   public void populateContext(Collection<File> files) {
+    runBackgroundWork(() -> {
+      try {
+        populateDocuments(files);
+      } catch (CancellationException e) {
+        LOGGER.debug("Populating context stopped.", e);
+      }
+    });
+  }
+
+  /**
+   * Завести и разобрать документы перечисленных файлов. По окончании публикуется
+   * {@code ServerContextPopulatedEvent}.
+   *
+   * @param files файлы модулей.
+   * @throws CancellationException если фоновая работа остановлена и наполнение не закончено.
+   */
+  private void populateDocuments(Collection<File> files) {
     // Деревья символов опираются на типы конфигурации и запоминают посчитанное, поэтому
     // документы разбираются только после того, как типы зарегистрированы.
     awaitPreparationShowingProgress();
@@ -264,6 +303,11 @@ public class ServerContext {
     );
     workDoneProgressReporter.beginProgress(getMessage("populatePopulatingContext"));
 
+    var activeFiles = new ConcurrentHashMap<URI, Long>();
+    var activityPattern = getMessage("populateActiveFile");
+    var root = configurationRoot;
+    var showActivity = workDoneProgressReporter.reportActivity(() -> describeActiveFile(activeFiles, root, activityPattern));
+
     LOGGER.debug("Populating context...");
     var startedAt = System.nanoTime();
 
@@ -272,39 +316,126 @@ public class ServerContext {
     // нельзя: чтение идёт в другом ForkJoinPool, и ждущий его воркер пула заполнения
     // подхватывает чужие задачи заполнения. Те встают на блокировках документов, держатели
     // которых ждут эту же конфигурацию, — и ожидание замыкается.
-    getConfiguration();
-
+    var workersCompleted = false;
+    boolean complete;
+    var cancelled = new AtomicBoolean();
+    var workers = new Phaser(1);
     try {
-      populateContextExecutor.submit(() ->
+      getConfiguration();
+      var population = populateContextExecutor.submit(() ->
         files.parallelStream().forEach((File file) -> {
-          workDoneProgressReporter.tick();
-
-          var uri = Absolute.uri(file.toURI());
-          var lock = getDocumentLock(uri);
-          lock.writeLock().lock();
+          if (workers.register() < 0) {
+            return;
+          }
           try {
-            var documentContext = documents.get(uri);
-            if (documentContext == null) {
-              documentContext = createDocumentContext(uri);
-              rebuildDocument(documentContext);
-              documentContext.freezeComputedData();
-              tryClearDocument(documentContext);
+            if (cancelled.get() || backgroundWork.isStopped()) {
+              return;
             }
+            populateFile(file, cancelled, activeFiles, showActivity, workDoneProgressReporter);
           } finally {
-            lock.writeLock().unlock();
+            workers.arriveAndDeregister();
           }
         })
-      ).get();
+      );
+      awaitPopulation(population, cancelled);
+      workersCompleted = true;
     } catch (ExecutionException e) {
       throw new IllegalStateException("Error populating context", e);
-    } catch (InterruptedException e) {
-      Thread.currentThread().interrupt();
-      throw new IllegalStateException("Interrupted while populating context", e);
+    } finally {
+      // Ошибка parallelStream может завершить корневую задачу раньше соседних работников.
+      // После снятия последнего допуска новые работники уже не зарегистрируются.
+      cancelled.set(true);
+      workers.awaitAdvance(workers.arriveAndDeregister());
+      complete = workersCompleted && !backgroundWork.isStopped();
+      workDoneProgressReporter.endProgress(complete ? getMessage("populateContextPopulated") : "");
     }
 
-    workDoneProgressReporter.endProgress(getMessage("populateContextPopulated"));
+    if (!complete) {
+      // Часть файлов пропущена, и обрабатывать окончание наполнения незачем: рабочую
+      // область закрывают.
+      throw new CancellationException("Populating context stopped");
+    }
     LOGGER.info("Context of {} populated with {} files in {} ms",
       configurationRoot, files.size(), millisSince(startedAt));
+  }
+
+  /** Обработать файл и обновить прогресс, удалив активную метку при любом исходе. */
+  private void populateFile(
+    File file,
+    AtomicBoolean cancelled,
+    Map<URI, Long> activeFiles,
+    boolean showActivity,
+    WorkDoneProgressHelper.WorkDoneProgressReporter progress
+  ) {
+    var uri = Absolute.uri(file.toURI());
+    if (showActivity) {
+      activeFiles.put(uri, System.nanoTime());
+    }
+    try {
+      if (populateDocument(uri, cancelled)) {
+        progress.tick();
+      }
+    } finally {
+      if (showActivity) {
+        activeFiles.remove(uri);
+      }
+    }
+  }
+
+  /** Дождаться физического завершения задачи, сохранив прерывание и отменив оставшиеся файлы. */
+  private static void awaitPopulation(Future<?> population, AtomicBoolean cancelled) throws ExecutionException {
+    InterruptedException interruption = null;
+    try {
+      while (true) {
+        try {
+          population.get();
+          break;
+        } catch (InterruptedException e) {
+          interruption = e;
+          cancelled.set(true);
+        }
+      }
+    } finally {
+      if (interruption != null) {
+        Thread.currentThread().interrupt();
+      }
+    }
+    if (interruption != null) {
+      throw new IllegalStateException("Interrupted while populating context", interruption);
+    }
+  }
+
+  /** Обработать документ под блокировкой. Вернуть true, если он обработан или уже загружен. */
+  private boolean populateDocument(URI uri, AtomicBoolean cancelled) {
+    var lock = getDocumentLock(uri);
+    lock.writeLock().lock();
+    try {
+      if (cancelled.get() || backgroundWork.isStopped()) {
+        return false;
+      }
+      var documentContext = documents.get(uri);
+      if (documentContext == null) {
+        documentContext = createDocumentContext(uri);
+        rebuildDocument(documentContext);
+        documentContext.freezeComputedData();
+        tryClearDocument(documentContext);
+      }
+      return true;
+    } finally {
+      lock.writeLock().unlock();
+    }
+  }
+
+  private static String describeActiveFile(Map<URI, Long> activeFiles, @Nullable Path root, String pattern) {
+    var oldest = activeFiles.entrySet().stream().min(Map.Entry.comparingByValue());
+    if (oldest.isEmpty()) {
+      return "";
+    }
+    var active = oldest.orElseThrow();
+    var path = Path.of(active.getKey());
+    var display = root != null && path.startsWith(root) ? root.relativize(path) : path;
+    var seconds = TimeUnit.NANOSECONDS.toSeconds(System.nanoTime() - active.getValue());
+    return pattern.formatted(display, seconds, activeFiles.size());
   }
 
   public Map<URI, DocumentContext> getDocuments() {
@@ -451,8 +582,7 @@ public class ServerContext {
    * На всё время очистки {@link #isClearing()} отвечает {@code true}.
    */
   public void clear() {
-    clearing = true;
-    try {
+    backgroundWork.runCleanup(() -> {
       openedDocuments.clear();
       for (var uri : new ArrayList<>(documents.keySet())) {
         removeDocument(uri);
@@ -467,9 +597,7 @@ public class ServerContext {
       commonModuleNameFilter = CommonModuleNameFilter.ALLOW_ALL;
       commonModuleCache.invalidateAll();
       configurationMetadata.clear();
-    } finally {
-      clearing = false;
-    }
+    });
   }
 
   /**
@@ -482,7 +610,45 @@ public class ServerContext {
    * @return {@code true}, пока идёт {@link #clear()}.
    */
   public boolean isClearing() {
-    return clearing;
+    return backgroundWork.isClearing();
+  }
+
+  /**
+   * Выполнить фоновую работу над рабочей областью, если она ещё не остановлена.
+   * <p>
+   * {@link #stopBackgroundWork()} дожидается конца такой работы, поэтому долгая работа должна
+   * сверяться с {@link #isBackgroundWorkStopped()} и после остановки заканчиваться.
+   *
+   * @param work работа.
+   * @return {@code true}, если работа выполнена; {@code false}, если фоновая работа уже остановлена.
+   */
+  public boolean runBackgroundWork(Runnable work) {
+    return backgroundWork.run(work);
+  }
+
+  /** Запретить новую фоновую работу и сообщить об отмене уже запущенной. */
+  void requestBackgroundWorkStop() {
+    backgroundWork.requestStop();
+  }
+
+  /**
+   * Остановить фоновую работу над рабочей областью и дождаться конца той, что уже идёт. После
+   * этого с документами области никто не работает, и её можно очищать. Новая фоновая работа не
+   * начинается.
+   * <p>
+   * Вызывающий поток не должен держать блокировок, которых может ждать фоновая работа.
+   */
+  public void stopBackgroundWork() {
+    backgroundWork.stop();
+  }
+
+  /**
+   * Остановлена ли фоновая работа над рабочей областью ({@link #stopBackgroundWork()}).
+   *
+   * @return {@code true}, если остановлена: долгой работе пора заканчиваться.
+   */
+  public boolean isBackgroundWorkStopped() {
+    return backgroundWork.isStopped();
   }
 
   /**

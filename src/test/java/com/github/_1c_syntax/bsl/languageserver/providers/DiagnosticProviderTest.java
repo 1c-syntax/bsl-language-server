@@ -46,10 +46,20 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.net.URI;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReadWriteLock;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThatCode;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -259,6 +269,59 @@ class DiagnosticProviderTest {
 
     // then
     verify(languageClient, never()).refreshDiagnostics();
+  }
+
+  @Test
+  void stoppingDuringRefreshSkipsRemainingDocuments() {
+    initializeRefreshSupport(false);
+    languageClientHolder.connect(mock(LanguageClient.class));
+    var serverContext = mock(ServerContext.class);
+    var first = mock(DocumentContext.class);
+    var second = mock(DocumentContext.class);
+    var firstUri = URI.create("untitled:first");
+    when(first.getUri()).thenReturn(firstUri);
+    when(first.getServerContext()).thenReturn(serverContext);
+    when(serverContext.getDocumentLock(firstUri)).thenReturn(new ReentrantReadWriteLock());
+    when(serverContext.getOpenedDocuments()).thenReturn(new LinkedHashSet<>(List.of(first, second)));
+    var stopped = new AtomicBoolean();
+    when(serverContext.isBackgroundWorkStopped()).thenAnswer(invocation -> stopped.get());
+    when(first.getDiagnostics()).thenAnswer(invocation -> {
+      stopped.set(true);
+      return List.of();
+    });
+
+    diagnosticProvider.handleServerContextPopulatedEvent(new ServerContextPopulatedEvent(serverContext));
+
+    verify(first).getDiagnostics();
+    verify(second, never()).getDiagnostics();
+    verify(second, never()).getServerContext();
+  }
+
+  @Test
+  void stoppingWhileRefreshWaitsForDocumentLockSkipsComputation() {
+    initializeRefreshSupport(false);
+    languageClientHolder.connect(mock(LanguageClient.class));
+    var serverContext = mock(ServerContext.class);
+    var document = mock(DocumentContext.class);
+    var uri = URI.create("untitled:locked");
+    when(document.getUri()).thenReturn(uri);
+    when(document.getServerContext()).thenReturn(serverContext);
+    when(serverContext.getOpenedDocuments()).thenReturn(Set.of(document));
+    var lock = mock(ReadWriteLock.class);
+    var readLock = mock(Lock.class);
+    when(serverContext.getDocumentLock(uri)).thenReturn(lock);
+    when(lock.readLock()).thenReturn(readLock);
+    var stopped = new AtomicBoolean();
+    when(serverContext.isBackgroundWorkStopped()).thenAnswer(invocation -> stopped.get());
+    doAnswer(invocation -> {
+      stopped.set(true);
+      return null;
+    }).when(readLock).lock();
+
+    diagnosticProvider.handleServerContextPopulatedEvent(new ServerContextPopulatedEvent(serverContext));
+
+    verify(document, never()).getDiagnostics();
+    verify(readLock).unlock();
   }
 
   @Test

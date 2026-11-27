@@ -31,6 +31,7 @@ import org.junit.jupiter.api.Test;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -41,7 +42,10 @@ import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -52,6 +56,7 @@ class DocumentChangeExecutorTest {
 
   private DocumentContext documentContext;
   private ServerContext serverContext;
+  private WorkspaceBackgroundWork backgroundWork;
   private DocumentChangeExecutor.DocumentChangeListener listener;
   private DocumentChangeExecutor executor;
   private AtomicInteger listenerCalls;
@@ -67,6 +72,9 @@ class DocumentChangeExecutorTest {
     when(documentContext.getUri()).thenReturn(TEST_URI);
     when(documentContext.getServerContext()).thenReturn(serverContext);
     when(serverContext.getWorkspaceUri()).thenReturn(WORKSPACE_URI);
+    backgroundWork = new WorkspaceBackgroundWork();
+    when(serverContext.runBackgroundWork(any())).thenAnswer(invocation -> backgroundWork.run(invocation.getArgument(0)));
+    when(serverContext.isBackgroundWorkStopped()).thenAnswer(invocation -> backgroundWork.isStopped());
 
     // Create a map to store locks per URI, ensuring the same lock is returned for the same URI
     Map<URI, ReadWriteLock> lockMap = new ConcurrentHashMap<>();
@@ -99,6 +107,93 @@ class DocumentChangeExecutorTest {
       result = change.getText();
     }
     return result;
+  }
+
+  @Test
+  void stoppedWorkspaceCancelsWaitersWithoutApplyingChanges() throws Exception {
+    var tryingAdmission = new CompletableFuture<Void>();
+    var reject = new CompletableFuture<Void>();
+    doAnswer(invocation -> {
+      tryingAdmission.complete(null);
+      reject.get(5, TimeUnit.SECONDS);
+      return false;
+    }).when(serverContext).runBackgroundWork(any());
+
+    executor.submit(1, List.of(new TextDocumentContentChangeEvent("first")));
+    CompletableFuture<Void> waiter;
+    try {
+      tryingAdmission.get(5, TimeUnit.SECONDS);
+      waiter = executor.awaitLatest();
+      assertThat(waiter).isNotDone();
+    } finally {
+      reject.complete(null);
+    }
+
+    assertThatThrownBy(() -> waiter.get(5, TimeUnit.SECONDS)).isInstanceOf(CancellationException.class);
+    assertThat(executor.awaitLatest()).isCancelled();
+    assertThat(listenerCalls).hasValue(0);
+  }
+
+  @Test
+  void workspaceStopWhileWaitingForTheDocumentLockSkipsTheChange() {
+    var lock = new ReentrantReadWriteLock();
+    when(serverContext.getDocumentLock(TEST_URI)).thenReturn(lock);
+
+    CompletableFuture<Void> waiter;
+    lock.writeLock().lock();
+    try {
+      executor.submit(1, List.of(new TextDocumentContentChangeEvent("first")));
+      await().atMost(5, TimeUnit.SECONDS).until(lock::hasQueuedThreads);
+      waiter = executor.awaitLatest();
+      assertThat(waiter).isNotDone();
+
+      backgroundWork.requestStop();
+    } finally {
+      lock.writeLock().unlock();
+    }
+
+    assertThatThrownBy(() -> waiter.get(5, TimeUnit.SECONDS)).isInstanceOf(CancellationException.class);
+    assertThat(executor.awaitLatest()).isCancelled();
+    assertThat(listenerCalls).hasValue(0);
+  }
+
+  @Test
+  void shutdownNowCancelsUnappliedWaitersAfterTheAdmittedChangeFinishes() throws Exception {
+    executor.shutdown();
+    assertThat(executor.awaitTermination(5, TimeUnit.SECONDS)).isTrue();
+
+    var applying = new CompletableFuture<Void>();
+    var finishApplying = new CompletableFuture<Void>();
+    listener = (ctx, content, version) -> {
+      listenerCalls.incrementAndGet();
+      applying.complete(null);
+      finishApplying.join();
+    };
+    executor = new DocumentChangeExecutor(documentContext, DocumentChangeExecutorTest::apply, listener, "test");
+
+    CompletableFuture<Void> applied;
+    CompletableFuture<Void> discarded;
+    try {
+      executor.submit(1, List.of(new TextDocumentContentChangeEvent("first")));
+      applying.get(5, TimeUnit.SECONDS);
+      applied = executor.awaitLatest();
+
+      executor.submit(2, List.of(new TextDocumentContentChangeEvent("discarded")));
+      discarded = executor.awaitLatest();
+      backgroundWork.requestStop();
+      executor.shutdownNow();
+
+      assertThat(applied).isNotDone();
+      assertThat(discarded).isNotDone();
+    } finally {
+      finishApplying.complete(null);
+    }
+
+    assertThat(executor.awaitTermination(5, TimeUnit.SECONDS)).isTrue();
+    applied.get(5, TimeUnit.SECONDS);
+    assertThat(discarded).isCancelled();
+    assertThat(executor.awaitLatest()).isCancelled();
+    assertThat(listenerCalls).hasValue(1);
   }
 
   @Test

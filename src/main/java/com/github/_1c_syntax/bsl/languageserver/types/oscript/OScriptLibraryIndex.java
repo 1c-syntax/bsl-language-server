@@ -136,6 +136,9 @@ public class OScriptLibraryIndex {
    *         {@code EventPublisherAspect}).
    */
   public List<Path> reindex(ServerContext serverContext) {
+    if (serverContext.isBackgroundWorkStopped()) {
+      return List.of();
+    }
     oScriptModuleTypeResolver.clear();
     entriesByUri.clear();
     entriesByName.clear();
@@ -147,6 +150,9 @@ public class OScriptLibraryIndex {
     if (!configs.isEmpty()) {
       LOGGER.debug("Indexing {} OneScript library manifest(s)", configs.size());
       for (var libConfigPath : configs) {
+        if (serverContext.isBackgroundWorkStopped()) {
+          return configs;
+        }
         indexLibrary(libConfigPath, serverContext);
       }
     }
@@ -155,6 +161,9 @@ public class OScriptLibraryIndex {
     if (!conventional.isEmpty()) {
       LOGGER.debug("Indexing {} convention-based OneScript librar(y/ies)", conventional.size());
       for (var lib : conventional) {
+        if (serverContext.isBackgroundWorkStopped()) {
+          return configs;
+        }
         indexConventional(lib, serverContext);
       }
     }
@@ -331,7 +340,7 @@ public class OScriptLibraryIndex {
    * workspace'а).
    */
   private void collectImplicitEntries(Path libRoot, @Nullable String libOrigin, ServerContext serverContext) {
-    if (libRoot == null || !Files.isDirectory(libRoot)) {
+    if (serverContext.isBackgroundWorkStopped() || libRoot == null || !Files.isDirectory(libRoot)) {
       return;
     }
     var rootAbs = libRoot.toAbsolutePath().normalize();
@@ -339,6 +348,9 @@ public class OScriptLibraryIndex {
       Files.walkFileTree(rootAbs, Set.of(), IMPLICIT_SCAN_MAX_DEPTH, new SimpleFileVisitor<>() {
         @Override
         public FileVisitResult preVisitDirectory(Path dir, BasicFileAttributes attrs) {
+          if (serverContext.isBackgroundWorkStopped()) {
+            return FileVisitResult.TERMINATE;
+          }
           if (dir.equals(rootAbs)) {
             return FileVisitResult.CONTINUE;
           }
@@ -351,12 +363,12 @@ public class OScriptLibraryIndex {
 
         @Override
         public FileVisitResult visitFile(Path file, BasicFileAttributes attrs) {
-          var fileName = file.getFileName().toString();
-          if (!fileName.toLowerCase(Locale.ROOT).endsWith(DirContents.OS_SUFFIX)) {
-            return FileVisitResult.CONTINUE;
+          if (serverContext.isBackgroundWorkStopped()) {
+            return FileVisitResult.TERMINATE;
           }
+          var fileName = file.getFileName().toString();
           var parent = file.getParent();
-          if (parent == null) {
+          if (parent == null || !fileName.toLowerCase(Locale.ROOT).endsWith(DirContents.OS_SUFFIX)) {
             return FileVisitResult.CONTINUE;
           }
           var parentName = parent.getFileName().toString();
@@ -400,6 +412,9 @@ public class OScriptLibraryIndex {
    */
   void registerEntry(String rawQualifiedName, Path osFile, EntryKind kind, ServerContext serverContext,
                      String libOrigin, boolean implicit) {
+    if (serverContext.isBackgroundWorkStopped()) {
+      return;
+    }
     // NFC-нормализация имени: имя выводится из имени файла, которое на macOS
     // хранится в NFD. Приводим к NFC, чтобы оно совпадало с идентификаторами в
     // исходном коде (см. nameKey). qualifiedName в этом виде попадёт и в
