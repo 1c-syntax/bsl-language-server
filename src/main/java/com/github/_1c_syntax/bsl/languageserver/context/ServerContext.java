@@ -67,6 +67,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReadWriteLock;
 import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.function.Supplier;
 
 /**
  * Контекст сервера - центральное хранилище информации о рабочей области.
@@ -216,15 +217,11 @@ public class ServerContext {
     // подготовки её не знает.
     WorkspaceContextHolder.run(workspaceUri, () -> {
       for (var documentContext : List.copyOf(createdWhilePreparing)) {
-        var lock = getDocumentLock(documentContext.getUri());
-        lock.writeLock().lock();
-        try {
+        runUnderDocumentWriteLock(documentContext.getUri(), () -> {
           if (createdWhilePreparing.remove(documentContext)) {
             rebindDocument(documentContext);
           }
-        } finally {
-          lock.writeLock().unlock();
-        }
+        });
       }
     });
   }
@@ -280,19 +277,14 @@ public class ServerContext {
           workDoneProgressReporter.tick();
 
           var uri = Absolute.uri(file.toURI());
-          var lock = getDocumentLock(uri);
-          lock.writeLock().lock();
-          try {
-            var documentContext = documents.get(uri);
-            if (documentContext == null) {
-              documentContext = createDocumentContext(uri);
+          runUnderDocumentWriteLock(uri, () -> {
+            if (!documents.containsKey(uri)) {
+              var documentContext = createDocumentContext(uri);
               rebuildDocument(documentContext);
               documentContext.freezeComputedData();
               tryClearDocument(documentContext);
             }
-          } finally {
-            lock.writeLock().unlock();
-          }
+          });
         })
       ).get();
     } catch (ExecutionException e) {
@@ -402,36 +394,36 @@ public class ServerContext {
    * @return Контекст документа
    */
   public DocumentContext addDocument(URI uri) {
-    var lock = getDocumentLock(uri);
-    lock.writeLock().lock();
-    try {
+    return underDocumentWriteLock(uri, () -> {
       var documentContext = documents.get(uri);
-      if (documentContext == null) {
-        documentContext = createDocumentContext(uri);
-      }
-      return documentContext;
-    } finally {
-      lock.writeLock().unlock();
-    }
+      return documentContext != null ? documentContext : createDocumentContext(uri);
+    });
   }
 
   /**
    * Удалить документ из контекста.
    * <p>
    * URI должен быть уже нормализован.
+   * <p>
+   * Удаление идёт под блокировкой документа на запись: писатель, который уже работает с
+   * документом под ней, доработает с действующим экземпляром, а не запишет состояние в
+   * экземпляр, заведённый по тому же URI после удаления. Сама блокировка снимается с URI,
+   * пока удаление её держит, поэтому вызывающий поток не должен держать её на чтение.
    *
    * @param uri нормализованный URI документа
    */
   public void removeDocument(URI uri) {
-    var documentContext = documents.get(uri);
-    if (openedDocuments.contains(documentContext)) {
-      throw new IllegalStateException("Document %s is opened".formatted(uri));
-    }
+    runUnderDocumentWriteLock(uri, () -> {
+      var documentContext = documents.get(uri);
+      if (openedDocuments.contains(documentContext)) {
+        throw new IllegalStateException("Document %s is opened".formatted(uri));
+      }
 
-    removeDocumentMdoRefByUri(uri);
-    states.remove(documentContext);
-    documents.remove(uri);
-    documentLocks.remove(uri);
+      removeDocumentMdoRefByUri(uri);
+      states.remove(documentContext);
+      documents.remove(uri);
+      documentLocks.remove(uri);
+    });
   }
 
   /**
@@ -495,6 +487,47 @@ public class ServerContext {
    */
   public ReadWriteLock getDocumentLock(URI uri) {
     return documentLocks.computeIfAbsent(uri, k -> new ReentrantReadWriteLock());
+  }
+
+  /**
+   * Выполнить действие под блокировкой документа на запись — той, что действует для URI.
+   * <p>
+   * Удаление документа снимает его блокировку с URI. Поток, который дождался её уже после
+   * этого, держал бы блокировку, которую остальные писатели не видят: они берут новую, заведённую
+   * для URI заново. Такой поток отпускает снятую блокировку и берёт действующую.
+   *
+   * @param uri    URI документа.
+   * @param action действие.
+   * @param <T>    тип результата действия.
+   * @return результат действия.
+   */
+  private <T> T underDocumentWriteLock(URI uri, Supplier<T> action) {
+    while (true) {
+      var documentLock = getDocumentLock(uri);
+      var writeLock = documentLock.writeLock();
+      writeLock.lock();
+      try {
+        if (documentLocks.get(uri) == documentLock) {
+          return action.get();
+        }
+      } finally {
+        writeLock.unlock();
+      }
+    }
+  }
+
+  /**
+   * Выполнить действие под блокировкой документа на запись — той, что действует для URI
+   * (см. {@link #underDocumentWriteLock(URI, Supplier)}).
+   *
+   * @param uri    URI документа.
+   * @param action действие.
+   */
+  private void runUnderDocumentWriteLock(URI uri, Runnable action) {
+    underDocumentWriteLock(uri, () -> {
+      action.run();
+      return null;
+    });
   }
 
   /**
@@ -573,11 +606,14 @@ public class ServerContext {
 
     if (documentContext.rebuildFromFileSystem()) {
       states.put(documentContext, DocumentState.WITH_CONTENT);
+      rebuildSymbolTreeIfStale(documentContext);
     }
   }
 
   /**
    * Перестроить документ, используя новое содержимое.
+   * <p>
+   * Если текст прежний, а дерево символов устарело, оно строится заново по тому же тексту.
    *
    * @param documentContext документ, который необходимо перестроить.
    * @param content         новое содержимое документа.
@@ -586,6 +622,14 @@ public class ServerContext {
   public void rebuildDocument(DocumentContext documentContext, String content, Integer version) {
     documentContext.rebuild(content, version);
     states.put(documentContext, DocumentState.WITH_CONTENT);
+    rebuildSymbolTreeIfStale(documentContext);
+  }
+
+  private static void rebuildSymbolTreeIfStale(DocumentContext documentContext) {
+    // После правки текста дерево построено разбором заново и устареть не успело.
+    if (!documentContext.isContentChangedOnLastRebuild() && documentContext.isSymbolTreeStale()) {
+      documentContext.rebuildSymbolTree();
+    }
   }
 
   /**
@@ -604,9 +648,7 @@ public class ServerContext {
       return false;
     }
 
-    var lock = getDocumentLock(documentContext.getUri()).writeLock();
-    lock.lock();
-    try {
+    return underDocumentWriteLock(documentContext.getUri(), () -> {
       // Документ могли открыть, пока очистка дожидалась активных читателей.
       if (openedDocuments.contains(documentContext)) {
         return false;
@@ -615,9 +657,7 @@ public class ServerContext {
       states.put(documentContext, DocumentState.WITHOUT_CONTENT);
       documentContext.clearSecondaryData();
       return true;
-    } finally {
-      lock.unlock();
-    }
+    });
   }
 
 
@@ -629,15 +669,11 @@ public class ServerContext {
    * @param documentContext документ, который необходимо закрыть.
    */
   public void closeDocument(DocumentContext documentContext) {
-    var lock = getDocumentLock(documentContext.getUri()).writeLock();
-    lock.lock();
-    try {
+    runUnderDocumentWriteLock(documentContext.getUri(), () -> {
       openedDocuments.remove(documentContext);
       states.put(documentContext, DocumentState.WITHOUT_CONTENT);
       documentContext.clearSecondaryData();
-    } finally {
-      lock.unlock();
-    }
+    });
   }
 
   /**
@@ -768,9 +804,7 @@ public class ServerContext {
    */
   public boolean rebindDocument(DocumentContext documentContext) {
     var uri = documentContext.getUri();
-    var lock = getDocumentLock(uri);
-    lock.writeLock().lock();
-    try {
+    return underDocumentWriteLock(uri, () -> {
       if (documents.get(uri) != documentContext) {
         return false;
       }
@@ -778,9 +812,45 @@ public class ServerContext {
       var rebuilt = documentContext.rebindToConfiguration();
       addMdoRefByUri(uri, documentContext);
       return rebuilt;
-    } finally {
-      lock.writeLock().unlock();
-    }
+    });
+  }
+
+  /**
+   * Построить дерево символов документа заново, если оно устарело без правки его текста:
+   * классификаторы отвечают о методах и голых присваиваниях документа иначе, чем при
+   * построении дерева ({@link DocumentContext#isSymbolTreeStale()}).
+   * <p>
+   * У документа с текстом дерево строится по уже разобранному тексту. Документ, текст
+   * которого освобождён, перечитывается из файла — разбор сам построит устаревшее дерево
+   * заново — и освобождается снова. Дерево, которое ещё не строилось, не трогается.
+   * <p>
+   * Берёт блокировку документа на запись, поэтому вызывающий поток не должен держать
+   * блокировку какого-либо документа. События о перестроенном дереве публикуются, пока она
+   * держится: их слушатели читают дерево разбора, а освободить документ другой писатель
+   * может только под этой же блокировкой.
+   *
+   * @param documentContext документ.
+   * @return {@code true}, если дерево построено заново по уже разобранному тексту;
+   *     {@code false}, если оно годно, документ снят с рабочей области или перечитан из
+   *     файла — о перечитанном оповещает сам разбор.
+   */
+  public boolean refreshSymbolTree(DocumentContext documentContext) {
+    var uri = documentContext.getUri();
+    return underDocumentWriteLock(uri, () -> {
+      if (documents.get(uri) != documentContext) {
+        return false;
+      }
+      if (!documentContext.isSymbolTreeStale()) {
+        return false;
+      }
+      if (states.get(documentContext) == DocumentState.WITH_CONTENT) {
+        documentContext.rebuildSymbolTree();
+        return true;
+      }
+      rebuildDocument(documentContext);
+      tryClearDocument(documentContext);
+      return false;
+    });
   }
 
   private boolean isPreparing() {

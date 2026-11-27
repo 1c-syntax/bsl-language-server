@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<MetaDataObject xmlns="http://v8.1c.ru/8.3/MDClasses" version="2.11">
+  <Configuration uuid="c93fa639-5991-43df-9cda-dc71381fb9eb">
+    <Properties>
+      <Name>Конфигурация</Name>
+      <DefaultRunMode>ManagedApplication</DefaultRunMode>
+      <ScriptVariant>Russian</ScriptVariant>
+      <CompatibilityMode>Version8_3_24</CompatibilityMode>
+    </Properties>
+    <ChildObjects>
+      <Document>Документ1</Document>
+    </ChildObjects>
+  </Configuration>
+</MetaDataObject>

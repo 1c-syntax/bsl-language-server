@@ -75,8 +75,8 @@
 ## События — `events/`
 
 Spring `ApplicationEvent`: `ServerContextDocumentAdded/Removed/Closed/ClearedEvent`,
-`DocumentContextContentChangedEvent`, `DocumentContextConfigurationBindingChangedEvent`,
-`ServerContextPopulatedEvent`, `ConfigurationTypesRegisteredEvent`. Используются downstream-индексами (`references/`, `types/`)
+`DocumentContextContentChangedEvent`, `DocumentContextSymbolTreeRebuiltEvent` (и его подкласс
+`DocumentContextConfigurationBindingChangedEvent`), `ServerContextPopulatedEvent`, `ConfigurationTypesRegisteredEvent`. Используются downstream-индексами (`references/`, `types/`)
 для инвалидации кэшей. События жизненного цикла workspace (`Workspace(Before)Added/RemovedEvent`)
 вынесены в корневой пакет `events` и «похудели» до URI (контекст в payload не носят), чтобы от них
 мог зависеть `configuration`, не образуя цикл `configuration↔context`; подписчики резолвят контекст
@@ -92,13 +92,27 @@ Spring `ApplicationEvent`: `ServerContextDocumentAdded/Removed/Closed/ClearedEve
 поток не находит уже посчитанного (см. ишью 4429). Сбрасываться по перечитыванию обязаны только
 те, чьи ключи — узлы AST: у них ключи после разбора другие.
 
-**Перепривязка — третий вид изменения.** Документ, заведённый до прочтения конфигурации, после
-него перепривязывается (`ServerContext.rebindDocument`): AST тот же, дерево символов построено
-заново, публикуется `DocumentContextConfigurationBindingChangedEvent`. Здесь символы прежним
-**не равны**, если сменился их вид: класс символа входит в `equals`, а обычный метод мог стать
-обработчиком события или конструктором. Поэтому слушатели, чьи записи привязаны к символам или к
-привязке документа, на это событие пересчитывают документ — в том же порядке, что и на правку.
-Индексы на `AbstractDocumentLifecycleClearableIndex` сбрасывают по нему записи документа.
+**Перестройка дерева по прежнему тексту — третий вид изменения.** Текст тот же, а дерево
+символов построено заново, публикуется `DocumentContextSymbolTreeRebuiltEvent`. Здесь символы
+прежним **не равны**, если сменился их вид: класс символа входит в `equals`, а обычный метод мог
+стать обработчиком события или конструктором, голое присваивание — обращением к реквизиту.
+Поэтому слушатели, чьи записи привязаны к символам, на это событие пересчитывают документ — в
+том же порядке, что и на правку; индексы на `AbstractDocumentLifecycleClearableIndex` сбрасывают
+по нему записи документа. Причины перестройки:
+- **дерево устарело** — его вид зависит от ответов классификаторов (`SelfMemberClassifier`,
+  `EventHandlerClassifier`), а те — от членов чужих модулей. Перечитывание того же текста
+  (`ServerContext.rebuildDocument`) такое дерево строит заново (`SymbolTreeComputer.isUpToDate`):
+  `DocumentContextContentChangedEvent` уходит с `isContentChanged() == false`, а следом —
+  событие перестройки. Сам `DocumentContext.rebuild` дерево по прежнему тексту не трогает:
+  устарело ли оно, решает `ServerContext` (`isSymbolTreeStale`) и перестраивает его
+  мутатором `rebuildSymbolTree`, на который и навешено событие. Если перечитывать документ некому, его дерево
+  перепроверяет `ServerContext.refreshSymbolTree` — так `ConfigurationModuleMembersProvider` после
+  изменения членов модуля перепроверяет другие модули того же типа (объект в основной
+  конфигурации и в расширении);
+- **сменилась привязка** — документ, заведённый до прочтения конфигурации, после него
+  перепривязывается (`ServerContext.rebindDocument`), публикуется подкласс
+  `DocumentContextConfigurationBindingChangedEvent`: от привязки зависят и символы, и тип,
+  членами которого становятся методы модуля.
 
 **Эти события публикуются не вручную, а через AOP** — аспект `aop/EventPublisherAspect`
 (AspectJ compile-time weaving) перехватывает вызовы методов-мутаторов `ServerContext`/

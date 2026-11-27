@@ -24,8 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 import com.github._1c_syntax.bsl.context.api.ContextNames;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextConfigurationBindingChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextSymbolTreeRebuiltEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
@@ -41,8 +41,11 @@ import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
+import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -50,6 +53,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
 
@@ -99,8 +103,14 @@ public class ConfigurationModuleMembersProvider {
   private final CommentTypeResolver commentTypeResolver;
   private final DescribedTypeResolver describedTypeResolver;
 
+  @Qualifier("asyncEventListenerExecutor")
+  private final AsyncTaskExecutor coSourceRefreshExecutor;
+
   /** Уже зарегистрированные источники (по URI документа), чтобы избежать дублей. */
   private final Map<URI, TypeRef> registeredByUri = new ConcurrentHashMap<>();
+
+  /** Документы-источники членов по типу: обратный индекс к {@link #registeredByUri}. */
+  private final Map<TypeRef, Set<URI>> sourcesByType = new ConcurrentHashMap<>();
 
   // Раньше ReferenceIndexFiller (@Order 200): register() наполняет moduleTypeRefByUri,
   // от которого зависит self-member проход индексатора. Без явного порядка filler мог
@@ -112,15 +122,16 @@ public class ConfigurationModuleMembersProvider {
     if (!event.isContentChanged() && refreshCommonModule(documentContext)) {
       return;
     }
-    register(documentContext);
+    register(documentContext, event.isContentChanged());
   }
 
-  // Привязка к метаданным определяет, членами какого типа становятся методы модуля, и
-  // порядок тот же, что у правки: индексатор ссылок и индекс типов идут следом.
+  // Дерево символов построено заново по прежнему тексту. Если сменилась привязка к метаданным,
+  // сменился и тип, членами которого становятся методы модуля. Порядок тот же, что у правки:
+  // индексатор ссылок и индекс типов идут следом.
   @Order(100)
   @EventListener
-  public void handleEvent(DocumentContextConfigurationBindingChangedEvent event) {
-    register(event.getSource());
+  public void handleEvent(DocumentContextSymbolTreeRebuiltEvent event) {
+    register(event.getSource(), true);
   }
 
   /**
@@ -212,14 +223,21 @@ public class ConfigurationModuleMembersProvider {
     return Optional.of(groupNameRu + wrapperSuffix + "." + name);
   }
 
-  private void register(DocumentContext documentContext) {
+  /**
+   * Регистрирует документ источником членов его типа.
+   *
+   * @param documentContext документ.
+   * @param membersMayHaveChanged могли ли измениться члены, которые даёт документ: при
+   *                              перечитывании того же текста с прежним деревом они те же.
+   */
+  private void register(DocumentContext documentContext, boolean membersMayHaveChanged) {
     var moduleType = documentContext.getModuleType();
     if (moduleType == ModuleType.CommonModule) {
       registerCommonModule(documentContext);
       return;
     }
     if (moduleType == ModuleType.FormModule) {
-      registerFormModule(documentContext);
+      registerFormModule(documentContext, membersMayHaveChanged);
       return;
     }
     if (!MODULE_TYPE_TO_WRAPPER_RU.containsKey(moduleType)) {
@@ -251,18 +269,20 @@ public class ConfigurationModuleMembersProvider {
       typeRegistry.registerConfigurationTypeAlias(wrapperEn + "." + name, ref);
     }
 
-    var prev = registeredByUri.put(documentContext.getUri(), ref);
+    var prev = rememberSource(documentContext.getUri(), ref);
     globalScopeProvider.indexModuleType(documentContext.getUri(), ref);
     if (prev != null && prev.equals(ref)) {
       // источник уже зарегистрирован, но содержимое изменилось (rebuild) — его member-source
       // лениво читает символьное дерево, поэтому точечно сбрасываем memo членов только этого
       // типа; кэши прочих типов остаются валидными (без сдвига глобальной эпохи).
       typeRegistry.invalidateMembers(ref);
-      return;
+    } else {
+      typeRegistry.registerOwnMemberSource(ref, () -> collectModuleMembers(documentContext), FileType.BSL);
+      LOGGER.debug("Registered module-as-member-source for {} -> {}", documentContext.getUri(), qualifiedRu);
     }
-
-    typeRegistry.registerOwnMemberSource(ref, () -> collectModuleMembers(documentContext), FileType.BSL);
-    LOGGER.debug("Registered module-as-member-source for {} -> {}", documentContext.getUri(), qualifiedRu);
+    if (membersMayHaveChanged) {
+      refreshOtherSources(documentContext, ref);
+    }
   }
 
   /**
@@ -272,26 +292,79 @@ public class ConfigurationModuleMembersProvider {
    * даёт в модуле формы разыменование {@code ЭтотОбъект.} и резолв неквалифицированных
    * имён реквизитов и элементов.
    */
-  private void registerFormModule(DocumentContext documentContext) {
+  private void registerFormModule(DocumentContext documentContext, boolean membersMayHaveChanged) {
     var mdObjectOpt = documentContext.getMdObject();
     if (mdObjectOpt.isEmpty() || !(mdObjectOpt.get() instanceof Form form)) {
       return;
     }
     var ref = typeRegistry.registerConfigurationType(FormTypesProvider.moduleTypeQualifiedName(form));
 
-    var prev = registeredByUri.put(documentContext.getUri(), ref);
+    var prev = rememberSource(documentContext.getUri(), ref);
     globalScopeProvider.indexModuleType(documentContext.getUri(), ref);
     if (prev != null && prev.equals(ref)) {
       // Источник уже зарегистрирован, но содержимое изменилось (rebuild): он лениво
       // читает символьное дерево, и без сброса memo в модуле формы остались бы
       // экспортные методы и переменные предыдущей редакции — как и в общем пути выше.
       typeRegistry.invalidateMembers(ref);
+    } else {
+      typeRegistry.registerOwnMemberSource(ref, () -> collectModuleMembers(documentContext), FileType.BSL);
+      LOGGER.debug("Registered form module as member source for {} -> {}",
+        documentContext.getUri(), ref.qualifiedName());
+    }
+    if (membersMayHaveChanged) {
+      refreshOtherSources(documentContext, ref);
+    }
+  }
+
+  /**
+   * Запоминает документ источником членов типа.
+   *
+   * @return тип, источником которого документ был до этого; {@code null}, если не был.
+   */
+  @Nullable
+  private TypeRef rememberSource(URI uri, TypeRef ref) {
+    var prev = registeredByUri.put(uri, ref);
+    if (prev != null && !prev.equals(ref)) {
+      var previousSources = sourcesByType.get(prev);
+      if (previousSources != null) {
+        previousSources.remove(uri);
+      }
+    }
+    sourcesByType.computeIfAbsent(ref, key -> ConcurrentHashMap.newKeySet()).add(uri);
+    return prev;
+  }
+
+  /**
+   * Перепроверяет деревья символов других документов — источников членов того же типа.
+   * <p>
+   * У типа бывает несколько модулей: модуль заимствованного объекта есть и в основной
+   * конфигурации, и в расширении. Дерево каждого зависит от членов типа, а значит, и от
+   * экспортных переменных другого модуля: голое присваивание такой переменной — обращение к
+   * реквизиту, а не новая переменная. Дерево, построенное раньше, чем другой модуль объявил
+   * переменную, само не исправится: текст документа не менялся, и перечитывать его некому.
+   * <p>
+   * Перепроверка идёт отдельной задачей: ей нужны блокировки чужих документов, а поток события
+   * может держать блокировку своего — ожидание замкнулось бы на встречное. Цепочка
+   * перепроверок конечна: перестроенное дерево даёт те же экспортные члены, и перепроверка
+   * документа, начатая им, ничего не меняет.
+   *
+   * @param documentContext документ, члены которого могли измениться.
+   * @param ref             тип, членами которого они становятся.
+   */
+  private void refreshOtherSources(DocumentContext documentContext, TypeRef ref) {
+    var sources = sourcesByType.get(ref);
+    if (sources == null || sources.size() < 2) {
       return;
     }
-
-    typeRegistry.registerOwnMemberSource(ref, () -> collectModuleMembers(documentContext), FileType.BSL);
-    LOGGER.debug("Registered form module as member source for {} -> {}",
-      documentContext.getUri(), ref.qualifiedName());
+    var uri = documentContext.getUri();
+    var others = sources.stream().filter(source -> !source.equals(uri)).toList();
+    var serverContext = documentContext.getServerContext();
+    coSourceRefreshExecutor.execute(() -> others.forEach((URI other) -> {
+      var otherDocument = serverContext.getDocument(other);
+      if (otherDocument != null) {
+        serverContext.refreshSymbolTree(otherDocument);
+      }
+    }));
   }
 
   private void registerCommonModule(DocumentContext documentContext) {
@@ -306,7 +379,7 @@ public class ConfigurationModuleMembersProvider {
 
     var ref = typeRegistry.registerConfigurationType(name);
 
-    var prev = registeredByUri.put(documentContext.getUri(), ref);
+    var prev = rememberSource(documentContext.getUri(), ref);
     globalScopeProvider.indexModuleType(documentContext.getUri(), ref);
 
     // общий модуль — глобальное свойство (value-type = тип модуля,
@@ -379,12 +452,17 @@ public class ConfigurationModuleMembersProvider {
    * становятся свойствами соответствующего типа ({@code СправочникОбъект.X}),
    * тип свойства выводится из висячего комментария декларации через общий
    * {@link CommentTypeResolver}.
+   * <p>
+   * Дерево модуля читается без ожидания его перестроения ({@link DocumentContext#getSymbolTreeNoLock()}):
+   * у типа бывают модули и основной конфигурации, и расширения, а члены типа спрашивают изнутри
+   * перестроения одного из них — ожидание замкнулось бы на встречное.
    */
   private List<MemberDescriptor> collectModuleMembers(DocumentContext documentContext) {
-    var methodMembers = documentContext.getSymbolTree().getMethods().stream()
+    var symbolTree = documentContext.getSymbolTreeNoLock();
+    var methodMembers = symbolTree.getMethods().stream()
       .filter(MethodSymbol::isExport)
       .map(this::toMethodMember);
-    var variableMembers = documentContext.getSymbolTree().getVariables().stream()
+    var variableMembers = symbolTree.getVariables().stream()
       .filter(VariableSymbol::isExport)
       .map(this::toVariableMember);
     return Stream.concat(methodMembers, variableMembers).toList();

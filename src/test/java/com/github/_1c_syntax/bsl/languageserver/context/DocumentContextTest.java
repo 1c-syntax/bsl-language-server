@@ -25,6 +25,8 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.read.ListAppender;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextSymbolTreeRebuiltEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.EventHandlerClassifier;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.EventMethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
@@ -42,7 +44,11 @@ import org.apache.commons.lang3.reflect.FieldUtils;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.ApplicationEvent;
+import org.springframework.test.context.event.ApplicationEvents;
+import org.springframework.test.context.event.RecordApplicationEvents;
 
 import java.io.File;
 import java.io.IOException;
@@ -59,7 +65,11 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @CleanupContextBeforeClassAndAfterEachTestMethod
+@RecordApplicationEvents
 class DocumentContextTest {
+
+  @Autowired
+  private ApplicationEvents applicationEvents;
 
   @Test
   void testRebuild() throws IOException {
@@ -128,7 +138,7 @@ class DocumentContextTest {
     FieldUtils.writeField(documentContext, "eventHandlerClassifier", everyMethodIsHandler, true);
 
     // when
-    documentContext.rebuild(documentContext.getContent(), documentContext.getVersion() + 1);
+    reread(documentContext);
 
     // then
     assertThat(documentContext.getSymbolTree()).isNotSameAs(symbolTree);
@@ -148,13 +158,114 @@ class DocumentContextTest {
     FieldUtils.writeField(documentContext, "selfMemberClassifier", nameIsSelfProperty, true);
 
     // when
-    documentContext.rebuild(documentContext.getContent(), documentContext.getVersion() + 1);
+    reread(documentContext);
 
     // then: присваивание обращается к реквизиту, переменной нет
     assertThat(documentContext.getSymbolTree()).isNotSameAs(symbolTree);
     assertThat(documentContext.getSymbolTree().getVariables())
       .extracting(VariableSymbol::getName)
       .doesNotContain("А");
+  }
+
+  @Test
+  void refreshedSymbolTreeGetsComplexityOfItsOwnMethods() throws IllegalAccessException {
+    // given: сложность посчитана по дереву, а потом методы модуля стали обработчиками событий
+    var documentContext = getDocumentContext();
+    documentContext.getCognitiveComplexityData();
+    documentContext.getCyclomaticComplexityData();
+    EventHandlerClassifier everyMethodIsHandler = (document, name) -> true;
+    FieldUtils.writeField(documentContext, "eventHandlerClassifier", everyMethodIsHandler, true);
+
+    // when: дерево перепроверено и построено заново по тому же тексту
+    assertThat(documentContext.getServerContext().refreshSymbolTree(documentContext)).isTrue();
+
+    // then: сложность есть у методов нового дерева
+    assertComplexityCoversMethodsOf(documentContext);
+  }
+
+  @Test
+  void frozenDocumentRereadThatRebuildsSymbolTreeGetsComplexityOfItsOwnMethods() throws IllegalAccessException {
+    // given: у замороженного документа посчитана сложность, а потом методы модуля стали
+    // обработчиками событий
+    var documentContext = getDocumentContext();
+    documentContext.getCognitiveComplexityData();
+    documentContext.getCyclomaticComplexityData();
+    documentContext.freezeComputedData();
+    EventHandlerClassifier everyMethodIsHandler = (document, name) -> true;
+    FieldUtils.writeField(documentContext, "eventHandlerClassifier", everyMethodIsHandler, true);
+
+    // when: тот же текст перечитан, и дерево построено заново
+    reread(documentContext);
+
+    // then: сложность есть у методов нового дерева
+    assertComplexityCoversMethodsOf(documentContext);
+  }
+
+  private static void assertComplexityCoversMethodsOf(DocumentContext documentContext) {
+    var methods = documentContext.getSymbolTree().getMethods();
+    assertThat(methods).isNotEmpty().allMatch(EventMethodSymbol.class::isInstance);
+    assertThat(documentContext.getCognitiveComplexityData().methodsComplexity().keySet())
+      .containsAll(methods);
+    assertThat(documentContext.getCyclomaticComplexityData().methodsComplexity().keySet())
+      .containsAll(methods);
+  }
+
+  @Test
+  void rereadingSameContentThatRebuildsSymbolTreeIsTreeRebuildNotContentChange() throws IllegalAccessException {
+    // given: голое присваивание «А = 0» завело переменную, а потом у своего типа модуля
+    // появился реквизит А
+    var documentContext = getDocumentContext();
+    SelfMemberClassifier nameIsSelfProperty = (document, name) -> "А".equals(name);
+    FieldUtils.writeField(documentContext, "selfMemberClassifier", nameIsSelfProperty, true);
+
+    // when: тот же текст перечитан, и дерево построено заново
+    applicationEvents.clear();
+    reread(documentContext);
+
+    // then: текст прежний, а дерево построено заново — символы уже не те, что были
+    assertThat(documentEvents(documentContext))
+      .hasSize(2)
+      .satisfiesExactly(
+        event -> assertThat(event)
+          .isInstanceOfSatisfying(DocumentContextContentChangedEvent.class,
+            changed -> assertThat(changed.isContentChanged()).isFalse()),
+        event -> assertThat(event).isExactlyInstanceOf(DocumentContextSymbolTreeRebuiltEvent.class)
+      );
+  }
+
+  @Test
+  void rereadingSameContentWithUpToDateSymbolTreeIsNotTreeRebuild() {
+    // given
+    var documentContext = getDocumentContext();
+
+    // when: тот же текст перечитан, дерево годно
+    applicationEvents.clear();
+    reread(documentContext);
+
+    // then
+    assertThat(documentEvents(documentContext))
+      .noneMatch(DocumentContextSymbolTreeRebuiltEvent.class::isInstance);
+  }
+
+  @Test
+  void contentChangeIsNotReportedAsTreeRebuild() throws IllegalAccessException {
+    // given: дерево построено при других ответах классификатора
+    var documentContext = getDocumentContext();
+    SelfMemberClassifier nameIsSelfProperty = (document, name) -> "А".equals(name);
+    FieldUtils.writeField(documentContext, "selfMemberClassifier", nameIsSelfProperty, true);
+
+    // when: текст изменился
+    applicationEvents.clear();
+    documentContext.getServerContext().rebuildDocument(
+      documentContext, documentContext.getContent() + "\n", documentContext.getVersion() + 1);
+
+    // then: о новом дереве говорит изменение содержимого, перестройкой по тому же тексту это
+    // не считается
+    assertThat(documentEvents(documentContext))
+      .hasSize(1)
+      .first()
+      .isInstanceOfSatisfying(DocumentContextContentChangedEvent.class,
+        changed -> assertThat(changed.isContentChanged()).isTrue());
   }
 
   @Test
@@ -172,7 +283,7 @@ class DocumentContextTest {
     FieldUtils.writeField(documentContext, "selfMemberClassifier", selfMemberClassifier, true);
 
     // when: реквизита больше нет
-    documentContext.rebuild(content, documentContext.getVersion() + 1);
+    reread(documentContext);
 
     // then
     assertThat(documentContext.getSymbolTree()).isNotSameAs(symbolTree);
@@ -192,7 +303,7 @@ class DocumentContextTest {
       new SymbolTree.Basis(basis.moduleType(), "Другой.Объект", basis.bareSelfProperties()), true);
 
     // when
-    documentContext.rebuild(documentContext.getContent(), documentContext.getVersion() + 1);
+    reread(documentContext);
 
     // then
     assertThat(documentContext.getSymbolTree()).isNotSameAs(symbolTree);
@@ -270,6 +381,24 @@ class DocumentContextTest {
     // then: посчитанное по прежнему тексту сброшено. Заморозка — политика хранения, а
     // изменение содержимого — факт, и факт сильнее: иначе диагностики остались бы от
     // текста, которого больше нет.
+    var diagnostics = FieldUtils.readField(documentContext, "diagnostics", true);
+    assertThat(FieldUtils.readField(diagnostics, "value", true)).isNull();
+  }
+
+  @Test
+  void frozenDocumentDropsDiagnosticsWhenRereadRebuildsSymbolTree() throws IllegalAccessException {
+    // given: у замороженного документа посчитаны диагностики, а потом методы модуля стали
+    // обработчиками событий
+    var documentContext = getDocumentContext();
+    documentContext.getDiagnostics();
+    documentContext.freezeComputedData();
+    EventHandlerClassifier everyMethodIsHandler = (document, name) -> true;
+    FieldUtils.writeField(documentContext, "eventHandlerClassifier", everyMethodIsHandler, true);
+
+    // when: тот же текст перечитан, и дерево построено заново
+    reread(documentContext);
+
+    // then: диагностики, посчитанные по прежним символам, сброшены
     var diagnostics = FieldUtils.readField(documentContext, "diagnostics", true);
     assertThat(FieldUtils.readField(diagnostics, "value", true)).isNull();
   }
@@ -516,6 +645,25 @@ class DocumentContextTest {
     } finally {
       logger.detachAppender(appender);
     }
+  }
+
+  /**
+   * Перечитать тот же текст документа так, как это делает рабочая область.
+   */
+  private static void reread(DocumentContext documentContext) {
+    documentContext.getServerContext().rebuildDocument(
+      documentContext, documentContext.getContent(), documentContext.getVersion() + 1);
+  }
+
+  /**
+   * События об изменении документа, опубликованные с начала теста или последней очистки.
+   */
+  private List<ApplicationEvent> documentEvents(DocumentContext documentContext) {
+    return applicationEvents.stream()
+      .filter(event -> event instanceof DocumentContextContentChangedEvent
+        || event instanceof DocumentContextSymbolTreeRebuiltEvent)
+      .filter(event -> event.getSource() == documentContext)
+      .toList();
   }
 
   @SneakyThrows

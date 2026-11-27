@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextConfigurationBindingChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextSymbolTreeRebuiltEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentAddedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClearedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
@@ -155,6 +156,11 @@ public class EventPublisherAspect {
     if (symbolTreeRebuilt) {
       publishEvent(new DocumentContextConfigurationBindingChangedEvent(documentContext));
     }
+  }
+
+  @AfterReturning("Pointcuts.isDocumentContext() && Pointcuts.isRebuildSymbolTreeCall()")
+  public void documentContextSymbolTreeRebuilt(JoinPoint joinPoint) {
+    publishEvent(new DocumentContextSymbolTreeRebuiltEvent((DocumentContext) joinPoint.getThis()));
   }
 
   @AfterReturning("Pointcuts.isServerContext() && Pointcuts.isPopulateContextCall() && args(files)")

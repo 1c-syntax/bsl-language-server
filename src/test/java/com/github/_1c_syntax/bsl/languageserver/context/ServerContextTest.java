@@ -43,6 +43,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentMatchers;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 
 import java.io.File;
@@ -55,6 +56,10 @@ import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
@@ -74,7 +79,66 @@ class ServerContextTest extends AbstractServerContextAwareTest {
   private ExecutorService computeConfigurationExecutor;
 
   @Autowired
+  @Qualifier("diagnosticComputerExecutor")
+  private ExecutorService workspaceExecutor;
+
+  @Autowired
   private GlobalScopeProvider globalScopeProvider;
+
+  @Test
+  void removalThatWaitedForRemovedLockLeavesReplacementWhileItsLockIsHeld() throws Exception {
+    // given: документ зарегистрирован, его блокировку держит тестовый поток, а удаление того же
+    // URI на другом потоке встало её ждать.
+    initServerContext(PATH_TO_METADATA);
+    var uri = Absolute.uri(new File(PATH_TO_METADATA, PATH_TO_MODULE_FILE));
+    var removedLock = (ReentrantReadWriteLock) context.getDocumentLock(uri);
+    var replacementHeld = new CountDownLatch(1);
+    var releaseReplacement = new CountDownLatch(1);
+    Future<?> waitingRemoval;
+    DocumentContext replacement;
+    removedLock.writeLock().lock();
+    try {
+      waitingRemoval = workspaceExecutor.submit(() -> context.removeDocument(uri));
+      await().atMost(Duration.ofSeconds(30)).until(removedLock::hasQueuedThreads);
+
+      // when: документ удалён — его блокировка снята с URI — и заведён заново под новой
+      // блокировкой, которую держит другой писатель.
+      context.removeDocument(uri);
+      replacement = context.addDocument(uri);
+      var replacementLock = context.getDocumentLock(uri);
+      assertThat(replacementLock).isNotSameAs(removedLock);
+      new Thread(() -> {
+        replacementLock.writeLock().lock();
+        try {
+          replacementHeld.countDown();
+          releaseReplacement.await();
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+        } finally {
+          replacementLock.writeLock().unlock();
+        }
+      }).start();
+      assertThat(replacementHeld.await(30, TimeUnit.SECONDS)).isTrue();
+    } finally {
+      removedLock.writeLock().unlock();
+    }
+
+    try {
+      // then: ждавшее удаление не трогает новый документ, пока его блокировку держат.
+      try {
+        waitingRemoval.get(2, TimeUnit.SECONDS);
+      } catch (TimeoutException e) {
+        // удаление ждёт действующую блокировку
+      }
+      assertThat(context.getDocumentNoLock(uri)).isSameAs(replacement);
+    } finally {
+      releaseReplacement.countDown();
+    }
+
+    // then: дождавшись её, удаление снимает документ.
+    waitingRemoval.get(30, TimeUnit.SECONDS);
+    assertThat(context.getDocumentNoLock(uri)).isNull();
+  }
 
   @Autowired
   private TypeService typeService;

@@ -142,6 +142,14 @@ public class Pointcuts {
   }
 
   /**
+   * Это вызов метода rebuildSymbolTree.
+   */
+  @Pointcut("isBSLLanguageServerScope() && execution(* rebuildSymbolTree(..))")
+  public void isRebuildSymbolTreeCall() {
+    // no-op
+  }
+
+  /**
    * Это вызов метода tryClearDocument.
    */
   @Pointcut("isBSLLanguageServerScope() && execution(* tryClearDocument(..))")

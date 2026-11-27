@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.context.events;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import org.springframework.context.ApplicationEvent;
 
 import java.io.Serial;
 
@@ -31,21 +30,16 @@ import java.io.Serial;
  * метаданных и ссылки на него.
  * <p>
  * Текст документа при этом не меняется, но от привязки зависит дерево символов (имя модуля,
- * вид методов), поэтому к моменту публикации оно уже построено заново по прежнему тексту.
- * Всё, что посчитано по документу с опорой на его привязку или дерево символов, надо
- * пересчитать.
+ * вид методов), поэтому к моменту публикации оно уже построено заново по прежнему тексту —
+ * это частный случай {@link DocumentContextSymbolTreeRebuiltEvent}. Всё, что посчитано по
+ * документу с опорой на его привязку или дерево символов, надо пересчитать.
  */
-public class DocumentContextConfigurationBindingChangedEvent extends ApplicationEvent {
+public class DocumentContextConfigurationBindingChangedEvent extends DocumentContextSymbolTreeRebuiltEvent {
 
   @Serial
   private static final long serialVersionUID = 6620913145782270453L;
 
   public DocumentContextConfigurationBindingChangedEvent(DocumentContext source) {
     super(source);
-  }
-
-  @Override
-  public DocumentContext getSource() {
-    return (DocumentContext) super.getSource();
   }
 }
