@@ -48,6 +48,7 @@ import java.util.Set;
     ModuleType.CommonModule,
     ModuleType.FormModule,
     ModuleType.ManagerModule,
+    ModuleType.ObjectModule,
     ModuleType.ValueManagerModule,
     ModuleType.SessionModule,
     ModuleType.UNKNOWN

@@ -11,3 +11,5 @@ In form modules, the diagnostic respects scope. Form attributes and properties a
 by name in a method with form context are excluded. An explicit local declaration can
 shadow a form attribute. In a method without form context, assignment to an unqualified
 name can declare a local variable with the same name as a form attribute.
+
+In object modules, the diagnostic uses name resolution. Object attributes, including standard attributes and tabular sections, are excluded. An explicitly declared local variable with the same name is still checked.
