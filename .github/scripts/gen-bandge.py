@@ -1,13 +1,11 @@
 import json
-from pybadges import badge
 
-value = '0'
-with open("output.json", "r") as file:
-  data = json.load(file)
-  total = data.get('benchmarks')[0].get('stats').get('mean')
-  value = '{:.2f}'.format(total)
+from anybadge import Badge
 
-svg = badge(left_text='Benchmark (SSL 1.0)', right_text=value)
-f = open('benchmark.svg', 'w')
-f.write(svg)
-f.close()
+
+with open("output.json", encoding="utf-8") as report:
+    mean = json.load(report)["benchmarks"][0]["stats"]["mean"]
+
+Badge("Benchmark (SSL 1.0)", mean, default_color="#007ec6", value_format="%.2f").write_badge(
+    "benchmark.svg", overwrite=True
+)
