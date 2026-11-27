@@ -116,7 +116,7 @@ public class MemberAccessUnavailableDiagnostic extends AbstractVisitorDiagnostic
   private String checkMobileApplicationServer = "auto";
 
   /**
-   * Проверка мобильного автономного сервера; в режиме {@code auto} пока отключена.
+   * Проверка мобильного автономного сервера. Режим {@code auto} учитывает автономный состав.
    */
   @DiagnosticParameter(type = String.class, defaultValue = "auto")
   private String checkMobileStandaloneServer = "auto";

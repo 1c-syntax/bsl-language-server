@@ -33,9 +33,11 @@ import com.github._1c_syntax.bsl.languageserver.types.registry.ModulePlatformTyp
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.bsl.mdo.Form;
+import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.mdo.support.FormType;
 import com.github._1c_syntax.bsl.mdo.support.ApplicationRunMode;
 import com.github._1c_syntax.bsl.mdo.support.UsePurposes;
+import com.github._1c_syntax.bsl.types.MdoReference;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github.benmanes.caffeine.cache.LoadingCache;
@@ -141,20 +143,19 @@ class ModuleCompilationContexts {
    * <p>
    * Назначение использования ограничивает мобильные и платформенные режимы, а основной режим
    * запуска — обычный или управляемые клиенты. Без этих метаданных соответствующее ограничение
-   * не применяется. Мобильный автономный сервер исключён до поддержки его состава в MDClasses.
+   * не применяется. Для мобильного автономного сервера объект модуля должен входить
+   * в автономный состав.
    * <p>
-   * Результат задаёт выбор проверок проекта, а не контексты компиляции отдельного модуля.
+   * Результат задаёт выбор проверок для документа.
    *
    * @param document документ, через который доступны метаданные корня проекта.
    * @return неизменяемое множество автоматически выбранных режимов.
    */
   public static Set<ExecutionContext> automaticContexts(DocumentContext document) {
     var contexts = ExecutionContext.copyOf(supportedContexts(document));
-    // До чтения автономного состава в MDClasses и его учёта здесь этот контекст доступен только через on.
-    // https://github.com/1c-syntax/mdclasses/issues/728
-    contexts.remove(ExecutionContext.MOBILE_STANDALONE_SERVER);
     var solution = document.getServerContext().getConfiguration();
     if (solution.isEmpty()) {
+      contexts.remove(ExecutionContext.MOBILE_STANDALONE_SERVER);
       return Set.copyOf(contexts);
     }
     var configuration = solution.getMergedConfiguration();
@@ -165,6 +166,16 @@ class ModuleCompilationContexts {
       }
       if (!configuration.getUsePurposes().contains(UsePurposes.PLATFORM_APPLICATION)) {
         contexts.retainAll(mobile);
+      }
+    }
+    if (contexts.contains(ExecutionContext.MOBILE_STANDALONE_SERVER)) {
+      var standalone = configuration.getStandaloneContent();
+      if (standalone.isEmpty() || document.getMdObject()
+        .map(MD::getMdoReference)
+        .filter(ref -> !MdoReference.EMPTY.equals(ref))
+        .filter(standalone::isIncluded)
+        .isEmpty()) {
+        contexts.remove(ExecutionContext.MOBILE_STANDALONE_SERVER);
       }
     }
     if (configuration.getDefaultRunMode() == ApplicationRunMode.MANAGED_APPLICATION) {

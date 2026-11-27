@@ -36,6 +36,8 @@ import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.bsl.mdclasses.Configuration;
 import com.github._1c_syntax.bsl.mdclasses.Solution;
+import com.github._1c_syntax.bsl.mdclasses.StandaloneConfigurationContent;
+import com.github._1c_syntax.bsl.mdclasses.StandaloneServerPriority;
 import com.github._1c_syntax.bsl.mdo.Form;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.mdo.support.FormType;
@@ -43,6 +45,8 @@ import com.github._1c_syntax.bsl.mdo.support.ApplicationRunMode;
 import com.github._1c_syntax.bsl.mdo.support.UsePurposes;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.bsl.types.MDOType;
+import com.github._1c_syntax.bsl.types.MdoReference;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
@@ -309,6 +313,33 @@ class CompilationContextResolverTest {
       .doesNotContain(ExecutionContext.MOBILE_STANDALONE_SERVER);
   }
 
+  @ParameterizedTest
+  @CsvSource({
+    "Document.Order, true",
+    "Document.Order.Form.Editor, true",
+    "Document.Order.Form.List, false",
+    "Document.Other, false",
+    ", false"
+  })
+  void automaticStandaloneServerRequiresIncludedMetadata(@Nullable String objectName, boolean included) {
+    var document = document(ModuleType.FormModule);
+    var configuration = configuration(document);
+    var standalone = StandaloneConfigurationContent.builder()
+      .addUsedItem(MdoReference.create("Document.Order"))
+      .addUnusedItem(MdoReference.create("Document.Order.Form.List"))
+      .addPriorityItem(MdoReference.create("Document.Other"), StandaloneServerPriority.LOCAL_SERVER)
+      .build();
+    when(configuration.getStandaloneContent()).thenReturn(standalone);
+    if (objectName != null) {
+      var object = mock(MD.class);
+      when(object.getMdoReference()).thenReturn(MdoReference.create(objectName));
+      when(document.getMdObject()).thenReturn(Optional.of(object));
+    }
+
+    assertThat(resolver.automaticContexts(document).contains(ExecutionContext.MOBILE_STANDALONE_SERVER))
+      .isEqualTo(included);
+  }
+
   @Test
   void autoContextsFollowConfigurationPurpose() {
     var document = document(ModuleType.CommonModule);
@@ -358,6 +389,7 @@ class CompilationContextResolverTest {
   private static Configuration configuration(DocumentContext document) {
     var solution = mock(Solution.class);
     var configuration = mock(Configuration.class);
+    when(configuration.getStandaloneContent()).thenReturn(StandaloneConfigurationContent.EMPTY);
     when(solution.getMergedConfiguration()).thenReturn(configuration);
     when(document.getServerContext().getConfiguration()).thenReturn(solution);
     return configuration;

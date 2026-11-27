@@ -151,9 +151,10 @@ class MemberAccessUnavailableContextOptionsTest extends AbstractDiagnosticTest<M
     var server = mock(ServerContext.class);
     when(server.getLanguageServerConfiguration()).thenReturn(this.configuration);
     var solution = mock(Solution.class);
-    var configuration = mock(Configuration.class);
-    when(configuration.getDefaultRunMode()).thenReturn(ApplicationRunMode.MANAGED_APPLICATION);
-    when(configuration.isUseManagedFormInOrdinaryApplication()).thenReturn(true);
+    var configuration = Configuration.builder()
+      .defaultRunMode(ApplicationRunMode.MANAGED_APPLICATION)
+      .useManagedFormInOrdinaryApplication(true)
+      .build();
     when(solution.getMergedConfiguration()).thenReturn(configuration);
     when(server.getConfiguration()).thenReturn(solution);
     doReturn(server).when(document).getServerContext();

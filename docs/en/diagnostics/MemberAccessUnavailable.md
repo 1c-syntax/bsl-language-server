@@ -65,10 +65,10 @@ In `auto`, managed applications exclude the thick ordinary client. Ordinary appl
 the thick ordinary client among platform client modes. Mobile platform use enables mobile application
 client/server; platform application use enables the other modes. Both purposes enable both groups.
 Mobile client and mobile standalone server belong to platform applications.
-As a temporary exception, `checkMobileStandaloneServer = auto` disables mobile standalone server
-checks regardless of metadata. Automatic selection requires reading standalone configuration content
-in [MDClasses](https://github.com/1c-syntax/mdclasses/issues/728) and using it in BSLLS.
-Until that support is integrated, enable this context explicitly with `on` if needed.
+`checkMobileStandaloneServer = auto` checks a module in the mobile standalone server context
+when its metadata object is included in the standalone configuration. Inclusion of a parent
+also covers its children unless they are explicitly excluded. If the content or the module's
+metadata object is unknown, use `on` to enable the check explicitly.
 An unknown module kind is skipped even when context parameters are `on`.
 
 For example, a project without COM access can use:
