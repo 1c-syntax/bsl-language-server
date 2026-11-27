@@ -102,7 +102,7 @@ dependencies {
     api("io.github.1c-syntax:utils:0.10.1")
     api("io.github.1c-syntax:mdclasses:0.21.0")
     api("io.github.1c-syntax:bsl-common-library:0.12.5")
-    api("io.github.1c-syntax:supportconf:0.17.1")
+    api("io.github.1c-syntax:supportconf:0.17.2")
     api("io.github.1c-syntax:bsl-context:0.10.2")
 
     // nullability annotations
