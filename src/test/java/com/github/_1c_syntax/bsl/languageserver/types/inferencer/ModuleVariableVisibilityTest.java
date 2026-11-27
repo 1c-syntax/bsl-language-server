@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
+import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraphIndex;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
@@ -37,6 +38,7 @@ import com.github._1c_syntax.bsl.languageserver.types.registry.ConfigurationType
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -60,8 +62,11 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.verify;
 
 @CleanupContextBeforeClassAndAfterClass
 @TestPropertySource(properties = "app.platform-context.enabled=false")
@@ -474,6 +479,202 @@ class ModuleVariableVisibilityTest extends AbstractServerContextAwareTest {
 
     assertThat(inferencer.computeReturnTypes(document.getSymbolTree().getMethodSymbol("Read").orElseThrow())
       .types().refs()).extracting(TypeRef::qualifiedName).contains("Строка").doesNotContain("Число");
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void independentReceiverDoesNotAnalyzeUnrelatedModuleWrites(boolean parameter) {
+    var document = document(parameter ? """
+      Var Shared;
+      // Параметры:
+      //  Result - Массив
+      Procedure Use(Result)
+        Text = Result.Количество();
+        Other = Result.Количество();
+        Shared = Slow();
+      EndProcedure
+      Function Slow()
+        Return "another value";
+      EndFunction
+      """ : """
+      Var Shared;
+      Procedure Use()
+        Result = New Structure;
+        Result.Insert("Name", "ready");
+        Text = Result.Name;
+        Other = Result.Name;
+        Shared = Slow();
+      EndProcedure
+      Function Slow()
+        Return "another value";
+      EndFunction
+      """);
+    publisher.publishEvent(new ServerContextPopulatedEvent(context));
+
+    var target = AopTestUtils.<ExpressionTypeInferencer>getUltimateTargetObject(inferencer);
+    var original = (ReturnTypeFromBodyInference) ReflectionTestUtils.getField(target, "returnTypeFromBodyInference");
+    var counted = spy(original);
+    var flow = AopTestUtils.<VariableFlowAnalyzer>getUltimateTargetObject(analyzer);
+    var originalGraphs = (ControlFlowGraphIndex) ReflectionTestUtils.getField(flow, "controlFlowGraphIndex");
+    var graphs = spy(originalGraphs);
+    var unrelatedCalls = new AtomicInteger();
+    doAnswer(invocation -> {
+      var called = (MethodSymbol) invocation.getArgument(0);
+      if (called.getName().equals("Slow")) {
+        unrelatedCalls.incrementAndGet();
+      }
+      return invocation.callRealMethod();
+    }).when(counted).of(any(), any(), any(), any());
+    ReflectionTestUtils.setField(target, "returnTypeFromBodyInference", counted);
+    ReflectionTestUtils.setField(flow, "controlFlowGraphIndex", graphs);
+    try {
+      var member = typeService.memberAt(document, new Position(4, "  Text = Result.".length())).orElseThrow();
+
+      assertThat(member.descriptor().returnTypes().refs()).extracting(TypeRef::qualifiedName)
+        .containsExactly(parameter ? "Число" : "Строка");
+      clearInvocations(graphs);
+
+      var repeated = typeService.memberAt(document, new Position(5, "  Other = Result.".length())).orElseThrow();
+
+      assertThat(repeated.descriptor().returnTypes()).isEqualTo(member.descriptor().returnTypes());
+      verify(graphs, never()).graphOf(eq(document), any(BSLParser.CodeBlockContext.class), any());
+      assertThat(unrelatedCalls).hasValue(0);
+    } finally {
+      ReflectionTestUtils.setField(flow, "controlFlowGraphIndex", originalGraphs);
+      ReflectionTestUtils.setField(target, "returnTypeFromBodyInference", original);
+    }
+  }
+
+  @Test
+  void moduleReceiverImmediatelyAfterResetDoesNotAnalyzeOtherWriters() {
+    var document = document("""
+      Var Shared;
+      Procedure Use()
+        Shared = New Structure;
+        Shared.Insert("Name", "ready");
+        Shared.Insert("Size", 1);
+      EndProcedure
+      Procedure OtherWriter()
+        Shared = Slow();
+      EndProcedure
+      Function Slow()
+        Return "another value";
+      EndFunction
+      """);
+    publisher.publishEvent(new ServerContextPopulatedEvent(context));
+
+    var target = AopTestUtils.<ExpressionTypeInferencer>getUltimateTargetObject(inferencer);
+    var original = (ReturnTypeFromBodyInference) ReflectionTestUtils.getField(target, "returnTypeFromBodyInference");
+    var counted = spy(original);
+    var unrelatedCalls = new AtomicInteger();
+    doAnswer(invocation -> {
+      var called = (MethodSymbol) invocation.getArgument(0);
+      if (called.getName().equals("Slow")) {
+        unrelatedCalls.incrementAndGet();
+      }
+      return invocation.callRealMethod();
+    }).when(counted).of(any(), any(), any(), any());
+    ReflectionTestUtils.setField(target, "returnTypeFromBodyInference", counted);
+    try {
+      var afterReset = typeService.receiverTypesAt(document, new Position(3, "  Shared.".length()));
+      assertThat(afterReset.refs()).extracting(TypeRef::qualifiedName).containsExactly("Структура");
+      assertThat(unrelatedCalls).hasValue(0);
+
+      var afterCall = typeService.receiverTypesAt(document, new Position(4, "  Shared.".length()));
+      assertThat(afterCall.refs()).extracting(TypeRef::qualifiedName).contains("Строка", "Структура");
+      assertThat(unrelatedCalls.get()).isPositive();
+    } finally {
+      ReflectionTestUtils.setField(target, "returnTypeFromBodyInference", original);
+    }
+  }
+
+  @Test
+  void loopHeadersReuseParameterProjectionWithoutModuleVariables() {
+    var document = document("""
+      // Параметры:
+      //  Data - Структура:
+      //   * Items - Массив
+      Procedure Use(Data)
+        For Each First In Data.Items Do
+        EndDo;
+        For Each Second In Data.Items Do
+        EndDo;
+      EndProcedure
+      """);
+    publisher.publishEvent(new ServerContextPopulatedEvent(context));
+
+    var flow = AopTestUtils.<VariableFlowAnalyzer>getUltimateTargetObject(analyzer);
+    var reads = (ReceiverReadFlow) ReflectionTestUtils.getField(flow, "receiverReads");
+    var original = (ReturnedLocalFlow) ReflectionTestUtils.getField(reads, "projections");
+    var projections = spy(original);
+    ReflectionTestUtils.setField(reads, "projections", projections);
+    try {
+      var first = typeService.receiverTypesAt(document, new Position(4, "  For Each First In Data.".length()));
+      var second = typeService.receiverTypesAt(document, new Position(6, "  For Each Second In Data.".length()));
+
+      assertThat(first.refs()).extracting(TypeRef::qualifiedName).containsExactly("Структура");
+      assertThat(second).isEqualTo(first);
+      verify(projections).readFacts(eq(document), any(), any(), any());
+      verify(projections, never()).readParameterBeforeLoop(eq(document), any(), any(), any(), any(), any(), any());
+    } finally {
+      ReflectionTestUtils.setField(reads, "projections", original);
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void parameterReceiverInLoopUsesItsPredecessorFlow(boolean backEdgeWrite) {
+    var document = document("""
+      Var Shared;
+      // Параметры:
+      //  Data - Структура:
+      //   * Items - Массив
+      //   * Auxiliary - Число
+      Procedure Use(Data)
+        Temporary = Slow();
+        Touch(Data.Auxiliary);
+        For Each Item In Data.Items Do
+          %s
+        EndDo;
+        Data = New Array;
+        Shared = Data.Количество();
+      EndProcedure
+      Procedure Touch(Value)
+        Value = 1;
+      EndProcedure
+      Function Slow()
+        Return "another value";
+      EndFunction
+      """.formatted(backEdgeWrite ? "Data = New Array;" : "Temporary = Item;"));
+    publisher.publishEvent(new ServerContextPopulatedEvent(context));
+
+    var target = AopTestUtils.<ExpressionTypeInferencer>getUltimateTargetObject(inferencer);
+    var original = (ReturnTypeFromBodyInference) ReflectionTestUtils.getField(target, "returnTypeFromBodyInference");
+    var counted = spy(original);
+    var unrelatedCalls = new AtomicInteger();
+    doAnswer(invocation -> {
+      var method = (MethodSymbol) invocation.getArgument(0);
+      if (method.getName().equals("Slow")) {
+        unrelatedCalls.incrementAndGet();
+      }
+      return invocation.callRealMethod();
+    }).when(counted).of(any(), any(), any(), any());
+    ReflectionTestUtils.setField(target, "returnTypeFromBodyInference", counted);
+    try {
+      var receiver = typeService.receiverTypesAt(document, new Position(8, "  For Each Item In Data.".length()));
+      if (backEdgeWrite) {
+        assertThat(receiver.refs()).extracting(TypeRef::qualifiedName).containsExactlyInAnyOrder("Структура", "Массив");
+        assertThat(unrelatedCalls.get()).isPositive();
+      } else {
+        assertThat(receiver.refs()).extracting(TypeRef::qualifiedName).containsExactly("Структура");
+        assertThat(unrelatedCalls).hasValue(0);
+      }
+
+      var afterLoop = typeService.receiverTypesAt(document, new Position(12, "  Shared = Data.".length()));
+      assertThat(afterLoop.refs()).extracting(TypeRef::qualifiedName).containsExactly("Массив");
+    } finally {
+      ReflectionTestUtils.setField(target, "returnTypeFromBodyInference", original);
+    }
   }
 
   @Test

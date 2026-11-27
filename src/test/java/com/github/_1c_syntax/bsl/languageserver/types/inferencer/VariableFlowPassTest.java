@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraph;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.VariableFlowAnalyzer.FlowSession;
 import com.github._1c_syntax.bsl.languageserver.types.model.LazyTypeSet;
@@ -36,6 +37,7 @@ import org.junit.jupiter.api.Test;
 
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -59,6 +61,15 @@ class VariableFlowPassTest {
   private final DocumentContext document = mock(DocumentContext.class);
   private final ControlFlowGraph graph = emptyGraph();
   private final FlowLayout layout = emptyLayout(graph);
+
+  @Test
+  void compiledReachabilityIsReusedForTheSameContexts() {
+    var server = layout.bslReachableVertices(Set.of(ExecutionContext.SERVER));
+
+    assertThat(server).contains(graph.getEntryPoint());
+    assertThat(layout.bslReachableVertices(EnumSet.of(ExecutionContext.SERVER))).isSameAs(server);
+    assertThat(layout.bslReachableVertices(Set.of())).isEmpty();
+  }
 
   @Test
   void preservesDeclaredAndSharedFactsIncludingLazyAndEmptyDecorations() {

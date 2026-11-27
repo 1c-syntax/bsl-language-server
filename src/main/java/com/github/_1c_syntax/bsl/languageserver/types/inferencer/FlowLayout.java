@@ -28,10 +28,13 @@ import com.github._1c_syntax.bsl.languageserver.cfg.ConditionalVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraph;
 import com.github._1c_syntax.bsl.languageserver.cfg.ForLoopVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.ForeachLoopVertex;
+import com.github._1c_syntax.bsl.languageserver.cfg.PreprocessorFlow;
 import com.github._1c_syntax.bsl.languageserver.cfg.WhileLoopVertex;
+import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.Lazy;
+import com.google.common.base.Equivalence;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Position;
@@ -49,6 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Разложенное по позициям тело метода: операторы графа с их границами и вершинами,
@@ -94,6 +98,10 @@ final class FlowLayout {
     }
   }
 
+  private static final Comparator<Slot> STATEMENT_ORDER =
+    Comparator.comparingInt(Slot::startLine).thenComparingInt(Slot::startChar);
+
+  private final ControlFlowGraph graph;
   private final List<Slot> slots;
   private final Map<ParserRuleContext, Slot> byStatement;
   private final List<CfgVertex> orderedVertices;
@@ -103,13 +111,18 @@ final class FlowLayout {
   /** Операторы с вызовами: считаются по первому требованию, см. {@link #hasCall}. */
   private final Lazy<Set<ParserRuleContext>> callStatements = new Lazy<>(this::findCallStatements);
 
+  /** Достижимость для быстрых чтений BSL в пределах версии графа. */
+  private final Lazy<Map<Set<ExecutionContext>, Set<CfgVertex>>> bslReachability = new Lazy<>(ConcurrentHashMap::new);
+
   private FlowLayout(
+    ControlFlowGraph graph,
     List<Slot> slots,
     Map<ParserRuleContext, Slot> byStatement,
     List<CfgVertex> orderedVertices,
     int bodyStartLine,
     int bodyEndLine
   ) {
+    this.graph = graph;
     this.slots = slots;
     this.byStatement = byStatement;
     this.orderedVertices = orderedVertices;
@@ -164,17 +177,25 @@ final class FlowLayout {
     // Операторы графа занимают непересекающиеся участки текста (составные операторы в
     // вершины не кладутся — только листовые), поэтому отсортированный список даёт
     // двоичный поиск по позиции вместо перебора всего тела.
-    slots.sort(Comparator.comparingInt(Slot::startLine).thenComparingInt(Slot::startChar));
+    slots.sort(STATEMENT_ORDER);
     var bodyStart = body.getStart();
     // Последнего токена может не быть у недоразобранного блока — тогда границей служит первый.
     var bodyStop = Objects.requireNonNullElse(body.getStop(), bodyStart);
     return new FlowLayout(
+      graph,
       List.copyOf(slots),
       byStatement,
       orderVertices(graph),
       bodyStart.getLine() - 1,
       bodyStop.getLine() - 1
     );
+  }
+
+  Set<CfgVertex> bslReachableVertices(Set<ExecutionContext> contexts) {
+    var byContexts = bslReachability.getOrCompute();
+    var cached = byContexts.get(contexts);
+    return cached != null ? cached : byContexts.computeIfAbsent(Set.copyOf(contexts),
+      active -> PreprocessorFlow.of(graph, active).vertices());
   }
 
   /**
@@ -280,6 +301,21 @@ final class FlowLayout {
   CfgVertex vertexOf(ParserRuleContext statement) {
     var slot = byStatement.get(statement);
     return slot == null ? null : slot.vertex();
+  }
+
+  /** Предыдущий последовательный оператор той же базовой вершины. */
+  @Nullable
+  ParserRuleContext previousInBasicBlock(ParserRuleContext statement) {
+    var current = byStatement.get(statement);
+    if (current == null || !(current.vertex() instanceof BasicBlockVertex)) {
+      return null;
+    }
+    var index = Collections.binarySearch(slots, current, STATEMENT_ORDER);
+    if (index <= 0 || !Equivalence.identity().equivalent(slots.get(index), current)) {
+      return null;
+    }
+    var previous = slots.get(index - 1);
+    return previous.vertex() == current.vertex() ? previous.statement() : null;
   }
 
   /** Есть ли оператор в графе. */

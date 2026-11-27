@@ -1887,8 +1887,7 @@ public class ExpressionTypeInferencer {
   private TypeSet declaredFact(VariableSymbol target, InferenceContext ctx,
                                Map<VariableSymbol, TypeSet> declaredByVariable,
                                @Nullable DiagnosticDeclarationSession sharedDeclarations) {
-    if (ctx.contextualReturns.preparingCells
-      && variableTypeSources.stream().anyMatch(source -> source.hasExternalTypeLinks(target))) {
+    if (ctx.contextualReturns.preparingCells && declarationMayReadAnotherDocument(target)) {
       ctx.noteMissingData();
     }
     var revision = sharedDeclarations == null ? 0 : inferredExpressionTypeIndex.inputRevision();
@@ -1964,8 +1963,13 @@ public class ExpressionTypeInferencer {
       narrowingCallback(owner),
       ctx::noteIncompleteCellInput,
       cellPreparationFor(ctx),
-      ctx.contextualReturns.preparingCells
+      ctx.contextualReturns.preparingCells,
+      this::declarationMayReadAnotherDocument
     );
+  }
+
+  private boolean declarationMayReadAnotherDocument(VariableSymbol variable) {
+    return variableTypeSources.stream().anyMatch(source -> source.hasExternalTypeLinks(variable));
   }
 
   private @Nullable Consumer<List<VariableSymbol>> cellPreparationFor(InferenceContext ctx) {
