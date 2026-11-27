@@ -28,26 +28,18 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseListener;
 import com.github._1c_syntax.utils.StringInterner;
-import jakarta.annotation.PostConstruct;
-import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import lombok.Setter;
 import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
 import org.antlr.v4.runtime.tree.Tree;
 import org.eclipse.lsp4j.Range;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-
-import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROTOTYPE;
 
 // idea from https://pdepend.org/documentation/software-metrics/cyclomatic-complexity.html
 
@@ -57,37 +49,24 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
  * Вычисляет метрику цикломатической сложности (Cyclomatic Complexity)
  * для файла и каждого метода с указанием вторичных локаций.
  */
-@Component
-@Scope(SCOPE_PROTOTYPE)
 @RequiredArgsConstructor
 public class CyclomaticComplexityComputer
   extends BSLParserBaseListener
   implements Computer<ComplexityData> {
 
   private final DocumentContext documentContext;
-
-  @Setter(onMethod_ ={@Autowired}, value = AccessLevel.PACKAGE)
-  private StringInterner stringInterner;
+  private final StringInterner stringInterner;
 
   private int fileComplexity;
   private int fileCodeBlockComplexity;
-  private List<ComplexitySecondaryLocation> fileBlockComplexitySecondaryLocations;
+  private final List<ComplexitySecondaryLocation> fileBlockComplexitySecondaryLocations = new ArrayList<>();
 
-  private Map<MethodSymbol, Integer> methodsComplexity;
-  private Map<MethodSymbol, List<ComplexitySecondaryLocation>> methodsComplexitySecondaryLocations;
+  private final Map<MethodSymbol, Integer> methodsComplexity = new HashMap<>();
+  private final Map<MethodSymbol, List<ComplexitySecondaryLocation>> methodsComplexitySecondaryLocations
+    = new HashMap<>();
 
   private MethodSymbol currentMethod;
   private int complexity;
-
-  @PostConstruct
-  public void init() {
-    fileComplexity = 0;
-    fileCodeBlockComplexity = 0;
-    fileBlockComplexitySecondaryLocations = new ArrayList<>();
-    resetMethodComplexityCounters();
-    methodsComplexity = new HashMap<>();
-    methodsComplexitySecondaryLocations = new HashMap<>();
-  }
 
   @Override
   public ComplexityData compute() {

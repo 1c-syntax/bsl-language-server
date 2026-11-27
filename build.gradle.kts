@@ -9,6 +9,9 @@ plugins {
     `java-library`
     `maven-publish`
     jacoco
+    // Подключается только с -Pnative (см. ниже): иначе Spring Boot добавляет AOT-обработку
+    // (processAot/processTestAot) в обычные build и test.
+    id("org.graalvm.buildtools.native") version "1.1.19" apply false
     id("com.diffplug.spotless") version "7.0.4"
     // git-versioning 7 подтягивает JGit 7 без GpgObjectSigner и ломает JReleaser 1.26.0.
     // Остаёмся на 6.4.4 до поддержки JGit 7 в JReleaser 2.x.
@@ -80,6 +83,8 @@ dependencies {
     api("io.micrometer:context-propagation")
 
     api("info.picocli:picocli-spring-boot-starter:4.7.7")
+    // генерирует конфигурацию native-image (рефлексия, ресурсы) для @Command-классов
+    annotationProcessor("info.picocli:picocli-codegen:4.7.7")
 
     // кэширование
     api("com.github.ben-manes.caffeine:caffeine:3.3.1")
@@ -127,6 +132,12 @@ dependencies {
 
     // AOP
     implementation("org.aspectj:aspectjrt:1.9.27")
+    // Spring AOT разбирает pointcut-выражения @Aspect-бинов через PointcutParser из weaver'а,
+    // а AOT-сгенерированные advisor'ы (кэш, Sentry) требуют AspectJExpressionPointcut в рантайме.
+    // Classpath AOT-обработки и рантайма должны совпадать, поэтому weaver — в implementation.
+    // Наши аспекты вплетаются CTW (io.freefair.aspectj.post-compile-weaving); Spring AOP
+    // пропускает классы, скомпилированные ajc, и повторно их не проксирует.
+    implementation("org.aspectj:aspectjweaver:1.9.27")
 
     // commons utils
     implementation("commons-io:commons-io:2.22.0")
@@ -176,6 +187,8 @@ dependencies {
     // test utils
     testImplementation("com.github.hazendaz.jmockit:jmockit:2.3.0")
     testImplementation("org.awaitility:awaitility:4.3.0")
+    // TestCompiler/TestGenerationContext для проверки AOT-обработки контекста
+    testImplementation("org.springframework:spring-core-test")
 
     // архитектурные тесты (проверка конвенций именования/аннотаций/зависимостей)
     testImplementation("com.tngtech.archunit:archunit-junit6:1.5.1")
@@ -196,6 +209,11 @@ tasks.withType<JavaCompile> {
     options.compilerArgs.add("-Xlint:deprecation")
 }
 
+tasks.compileJava {
+    // каталог конфигурации native-image, которую генерирует picocli-codegen
+    options.compilerArgs.add("-Aproject=${project.group}/${project.name}")
+}
+
 tasks.jar {
     manifest {
         attributes["Main-Class"] = "com.github._1c_syntax.bsl.languageserver.MainApplication"
@@ -214,6 +232,53 @@ tasks.bootJar {
 
 tasks.named<org.springframework.boot.gradle.tasks.bundling.BootBuildImage>("bootBuildImage") {
     imageName.set("docker.io/1csyntax/bsl-language-server:${project.version}")
+}
+
+// Сборка native-image: ./gradlew nativeCompile -Pnative (нужен GraalVM, GRAALVM_HOME).
+if (providers.gradleProperty("native").isPresent) {
+    apply(plugin = "org.graalvm.buildtools.native")
+
+    // Код, нужный только сборщику native-image (Feature, подмены @TargetClass): в обычный jar не попадает.
+    val graalvm by sourceSets.creating {
+        // runtimeClasspath: подменяемые библиотеки (ClassGraph) приходят к нам только транзитивно в рантайме
+        compileClasspath += sourceSets.main.get().output + sourceSets.main.get().runtimeClasspath
+    }
+    dependencies {
+        "graalvmCompileOnly"("org.graalvm.nativeimage:svm:25.0.4")
+    }
+    // Аспектов в этом коде нет, а ajc для этого source set не настроен.
+    tasks.named<JavaCompile>("compileGraalvmJava") {
+        extensions.configure<io.freefair.gradle.plugins.aspectj.AjcAction> {
+            enabled.set(false)
+        }
+    }
+
+    configure<org.graalvm.buildtools.gradle.dsl.GraalVMExtension> {
+        binaries {
+            named("main") {
+                imageName.set("bsl-language-server")
+                // При подключённом java-library плагин по умолчанию собирает разделяемую библиотеку.
+                sharedLibrary.set(false)
+                mainClass.set("com.github._1c_syntax.bsl.languageserver.MainApplication")
+                classpath(graalvm.output)
+                buildArgs.addAll(
+                    "--no-fallback",
+                    "-H:+ReportExceptionStackTraces",
+                    // Анализ многопоточный и активно аллоцирует: однопоточный Serial GC (по умолчанию)
+                    // заметно медленнее. G1 есть в Oracle GraalVM; для GraalVM CE: -PnativeGc=serial.
+                    "--gc=${providers.gradleProperty("nativeGc").getOrElse("G1")}",
+                    "--features=com.github._1c_syntax.bsl.languageserver.nativeimage.ClassGraphScansFeature," +
+                        "com.github._1c_syntax.bsl.languageserver.nativeimage.SpringCglibClassesFeature," +
+                        "com.github._1c_syntax.bsl.languageserver.nativeimage.MdclassesReflectionFeature"
+                )
+                // Дополнительные аргументы native-image для экспериментов: -PnativeExtraArgs="--a --b"
+                providers.gradleProperty("nativeExtraArgs").orNull
+                    ?.split(" ")
+                    ?.filter { it.isNotBlank() }
+                    ?.let { buildArgs.addAll(it) }
+            }
+        }
+    }
 }
 
 afterEvaluate {

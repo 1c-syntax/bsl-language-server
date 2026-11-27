@@ -44,10 +44,10 @@ import com.github._1c_syntax.bsl.parser.SDBLTokenizer;
 import com.github._1c_syntax.bsl.support.SupportVariant;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.Lazy;
+import com.github._1c_syntax.utils.StringInterner;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Locked;
-import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.antlr.v4.runtime.Token;
 import org.apache.commons.io.FilenameUtils;
@@ -55,10 +55,6 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.jspecify.annotations.Nullable;
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Scope;
-import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.net.URI;
@@ -86,9 +82,9 @@ import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
  * Управляет синтаксическим деревом, токенизацией, символьной таблицей,
  * метриками сложности, диагностиками и другими аспектами анализа кода BSL.
  * Является центральным объектом для работы с отдельным файлом модуля.
+ * <p>
+ * Создаётся {@link DocumentContextFactory}.
  */
-@Component
-@Scope("prototype")
 @Slf4j
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 //@NullUnmarked
@@ -123,28 +119,11 @@ public class DocumentContext implements Comparable<DocumentContext> {
   private int version;
 
   private final ServerContext context;
-  @SuppressWarnings("NullAway.Init")
-  @Setter(onMethod_ = {@Autowired})
-  private DiagnosticComputer diagnosticComputer;
-
-  @SuppressWarnings("NullAway.Init")
-  @Setter(onMethod_ = {@Autowired})
-  private ObjectProvider<CognitiveComplexityComputer> cognitiveComplexityComputerProvider;
-  @SuppressWarnings("NullAway.Init")
-  @Setter(onMethod_ = {@Autowired})
-  private ObjectProvider<CyclomaticComplexityComputer> cyclomaticComplexityComputerProvider;
-
-  @SuppressWarnings("NullAway.Init")
-  @Setter(onMethod_ = {@Autowired})
-  private OScriptModuleTypeResolver oScriptModuleTypeResolver;
-
-  @SuppressWarnings("NullAway.Init")
-  @Setter(onMethod_ = {@Autowired})
-  private SelfMemberClassifier selfMemberClassifier;
-
-  @SuppressWarnings("NullAway.Init")
-  @Setter(onMethod_ = {@Autowired})
-  private EventHandlerClassifier eventHandlerClassifier;
+  private final DiagnosticComputer diagnosticComputer;
+  private final OScriptModuleTypeResolver oScriptModuleTypeResolver;
+  private final SelfMemberClassifier selfMemberClassifier;
+  private final EventHandlerClassifier eventHandlerClassifier;
+  private final StringInterner stringInterner;
 
   @Nullable
   private BSLTokenizer tokenizer;
@@ -180,10 +159,33 @@ public class DocumentContext implements Comparable<DocumentContext> {
 
   private final Lazy<List<SDBLTokenizer>> queries = new Lazy<>(this::computeQueries, computeLock);
 
-  public DocumentContext(URI uri, ServerContext context) {
+  DocumentContext(URI uri, ServerContext context, Dependencies dependencies) {
     this.uri = uri;
     this.context = context;
+    this.diagnosticComputer = dependencies.diagnosticComputer();
+    this.oScriptModuleTypeResolver = dependencies.oScriptModuleTypeResolver();
+    this.selfMemberClassifier = dependencies.selfMemberClassifier();
+    this.eventHandlerClassifier = dependencies.eventHandlerClassifier();
+    this.stringInterner = dependencies.stringInterner();
     this.fileType = computeFileType(uri);
+  }
+
+  /**
+   * Общие для всех документов сервисы, которые нужны контексту документа для вычислений.
+   *
+   * @param diagnosticComputer        вычислитель диагностик
+   * @param oScriptModuleTypeResolver определитель типа модуля OneScript-файлов
+   * @param selfMemberClassifier      классификатор обращений к собственным членам модуля
+   * @param eventHandlerClassifier    классификатор обработчиков событий
+   * @param stringInterner            интернер строк для вторичных локаций метрик сложности
+   */
+  record Dependencies(
+    DiagnosticComputer diagnosticComputer,
+    OScriptModuleTypeResolver oScriptModuleTypeResolver,
+    SelfMemberClassifier selfMemberClassifier,
+    EventHandlerClassifier eventHandlerClassifier,
+    StringInterner stringInterner
+  ) {
   }
 
   public ServerContext getServerContext() {
@@ -634,12 +636,12 @@ public class DocumentContext implements Comparable<DocumentContext> {
   }
 
   private ComplexityData computeCognitiveComplexity() {
-    Computer<ComplexityData> cognitiveComplexityComputer = cognitiveComplexityComputerProvider.getObject(this);
+    Computer<ComplexityData> cognitiveComplexityComputer = new CognitiveComplexityComputer(this, stringInterner);
     return cognitiveComplexityComputer.compute();
   }
 
   private ComplexityData computeCyclomaticComplexity() {
-    Computer<ComplexityData> cyclomaticComplexityComputer = cyclomaticComplexityComputerProvider.getObject(this);
+    Computer<ComplexityData> cyclomaticComplexityComputer = new CyclomaticComplexityComputer(this, stringInterner);
     return cyclomaticComplexityComputer.compute();
   }
 

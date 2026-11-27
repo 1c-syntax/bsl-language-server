@@ -24,8 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.utils.StringInterner;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -37,7 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class CognitiveComplexityComputerTest {
 
   @Autowired
-  private ObjectProvider<CognitiveComplexityComputer> computerObjectProvider;
+  private StringInterner stringInterner;
 
   @Test
   void compute() {
@@ -46,7 +46,7 @@ class CognitiveComplexityComputerTest {
       = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/CognitiveComplexityComputerTest.bsl");
 
     // when
-    Computer<ComplexityData> cognitiveComplexityComputer = computerObjectProvider.getObject(documentContext);
+    Computer<ComplexityData> cognitiveComplexityComputer = new CognitiveComplexityComputer(documentContext, stringInterner);
     ComplexityData data = cognitiveComplexityComputer.compute();
     final Map<MethodSymbol, Integer> methodsComplexity = data.methodsComplexity();
 

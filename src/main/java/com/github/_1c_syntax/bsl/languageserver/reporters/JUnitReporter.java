@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.reporters;
 
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.SerializationFeature;
 import tools.jackson.dataformat.xml.XmlMapper;
@@ -33,6 +34,7 @@ import java.nio.file.Path;
 
 @Slf4j
 @Component
+@RegisterReflectionForBinding(JUnitTestSuites.class)
 public class JUnitReporter implements DiagnosticReporter {
 
   private static final String SUITE_ELEMENT = "testsuite";

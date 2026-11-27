@@ -24,8 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import com.github._1c_syntax.utils.StringInterner;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -37,7 +37,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 class CyclomaticComplexityComputerTest {
 
   @Autowired
-  private ObjectProvider<CyclomaticComplexityComputer> computerObjectProvider;
+  private StringInterner stringInterner;
 
   @Test
   void compute() {
@@ -47,7 +47,7 @@ class CyclomaticComplexityComputerTest {
       = TestUtils.getDocumentContextFromFile("./src/test/resources/context/computer/CyclomaticComplexityComputerTest.bsl");
 
     // when
-    Computer<ComplexityData> cyclomaticComplexityComputer = computerObjectProvider.getObject(documentContext);
+    Computer<ComplexityData> cyclomaticComplexityComputer = new CyclomaticComplexityComputer(documentContext, stringInterner);
     ComplexityData data = cyclomaticComplexityComputer.compute();
     final Map<MethodSymbol, Integer> methodsComplexity = data.methodsComplexity();
 

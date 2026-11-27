@@ -32,6 +32,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.jspecify.annotations.Nullable;
+import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
@@ -60,6 +61,7 @@ import static tools.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS
 @Slf4j
 @NoArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
+@RegisterReflectionForBinding(GlobalLanguageServerConfiguration.class)
 public class GlobalLanguageServerConfiguration {
 
   /**

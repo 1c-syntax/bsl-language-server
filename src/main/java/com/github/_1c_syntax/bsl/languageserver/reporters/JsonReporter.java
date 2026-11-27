@@ -24,17 +24,45 @@ package com.github._1c_syntax.bsl.languageserver.reporters;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.databind.AnalysisInfoJsonMapper;
+import com.github._1c_syntax.bsl.languageserver.reporters.databind.DiagnosticCodeSerializer;
+import com.github._1c_syntax.bsl.languageserver.reporters.databind.DiagnosticMessageSerializer;
+import com.github._1c_syntax.bsl.languageserver.reporters.databind.DiagnosticMixIn;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
+import org.springframework.aot.hint.MemberCategory;
+import org.springframework.aot.hint.RuntimeHints;
+import org.springframework.aot.hint.RuntimeHintsRegistrar;
+import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
+import org.springframework.context.annotation.ImportRuntimeHints;
 import org.springframework.stereotype.Component;
 import tools.jackson.core.JsonGenerator;
 import tools.jackson.databind.SequenceWriter;
 
 import java.nio.file.Path;
 import java.time.format.DateTimeFormatter;
+import java.util.stream.Stream;
 
 @Slf4j
 @Component
+@RegisterReflectionForBinding(FileInfo.class)
+@ImportRuntimeHints(JsonReporter.MixInSerializersRuntimeHints.class)
 public class JsonReporter implements DiagnosticReporter {
+
+  /**
+   * Подсказки для native-image: {@link DiagnosticMixIn}, о котором биндинг-подсказки не знают,
+   * и подключаемые им сериализаторы. Аннотации mixin'а Jackson читает с его полей и методов.
+   */
+  static class MixInSerializersRuntimeHints implements RuntimeHintsRegistrar {
+
+    @Override
+    public void registerHints(RuntimeHints hints, @Nullable ClassLoader classLoader) {
+      hints.reflection().registerType(DiagnosticMixIn.class,
+        MemberCategory.ACCESS_DECLARED_FIELDS, MemberCategory.INVOKE_DECLARED_METHODS);
+      Stream.of(DiagnosticCodeSerializer.class, DiagnosticMessageSerializer.class)
+        .forEach(serializer -> hints.reflection().registerType(serializer, MemberCategory.INVOKE_DECLARED_CONSTRUCTORS));
+    }
+  }
+
 
   private ReportFile reportFile;
   private JsonGenerator generator;

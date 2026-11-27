@@ -24,11 +24,16 @@ package com.github._1c_syntax.bsl.languageserver.codelenses.infrastructure;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensData;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensSupplier;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.databind.ImplementationsBindingHints;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import org.jspecify.annotations.Nullable;
+import org.springframework.aot.hint.RuntimeHints;
+import org.springframework.aot.hint.RuntimeHintsRegistrar;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.jackson.autoconfigure.JsonMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.ImportRuntimeHints;
 import org.springframework.context.annotation.Scope;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.OrderUtils;
@@ -49,7 +54,19 @@ import static org.springframework.beans.factory.config.BeanDefinition.SCOPE_PROT
  * пакета {@link com.github._1c_syntax.bsl.languageserver.codelenses}.
  */
 @Configuration
+@ImportRuntimeHints(CodeLensesConfiguration.CodeLensDataRuntimeHints.class)
 public class CodeLensesConfiguration {
+
+  /**
+   * Подсказки для native-image: данные линз, которые Jackson читает из {@code data} линзы.
+   */
+  static class CodeLensDataRuntimeHints implements RuntimeHintsRegistrar {
+
+    @Override
+    public void registerHints(RuntimeHints hints, @Nullable ClassLoader classLoader) {
+      ImplementationsBindingHints.register(hints, classLoader, CodeLensData.class);
+    }
+  }
 
   /**
    * Получить список сапплаеров линз в разрезе их идентификаторов.

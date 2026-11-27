@@ -78,6 +78,7 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.SymbolKind;
 import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.jspecify.annotations.Nullable;
+import org.springframework.aot.hint.annotation.RegisterReflectionForBinding;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.json.JsonMapper;
@@ -112,6 +113,7 @@ import java.util.stream.Collectors;
  */
 @Component
 @RequiredArgsConstructor
+@RegisterReflectionForBinding(CompletionData.class)
 public final class CompletionProvider {
 
   private static final String TRIGGER_PARAMETER_HINTS_COMMAND = "editor.action.triggerParameterHints";
