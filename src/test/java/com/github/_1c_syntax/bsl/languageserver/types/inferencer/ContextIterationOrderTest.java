@@ -29,7 +29,6 @@ import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationCon
 import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver.MethodContext;
 import com.github._1c_syntax.bsl.languageserver.types.index.InferredExpressionTypeIndex;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.VariableFlowAnalyzer.FlowInputs;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.antlr.v4.runtime.ParserRuleContext;
