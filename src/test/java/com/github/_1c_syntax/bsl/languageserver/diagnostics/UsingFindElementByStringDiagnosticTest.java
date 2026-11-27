@@ -22,6 +22,16 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.eclipse.lsp4j.Diagnostic;
+import org.springframework.beans.factory.annotation.Autowired;
+import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
+import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
+import java.nio.file.Path;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -33,6 +43,92 @@ class UsingFindElementByStringDiagnosticTest extends AbstractDiagnosticTest<Usin
 
   UsingFindElementByStringDiagnosticTest() {
     super(UsingFindElementByStringDiagnostic.class);
+  }
+
+  @Autowired
+  private TypeRegistry registry;
+
+  @Test
+  void resolvedUserMethodDoesNotImpersonateManager() {
+    initServerContext();
+    var owner = registry.registerConfigurationType("ПользовательскийТип");
+    var method = new MemberDescriptor(new BilingualString("НайтиПоНаименованию", "FindByDescription"),
+      MemberKind.METHOD, BilingualString.EMPTY, TypeSet.EMPTY, List.of(), null, false,
+      PlatformMetadata.EMPTY, false, false);
+    registry.registerMemberOverride(owner, () -> List.of(method), FileType.BSL);
+    var document = TestUtils.getDocumentContext("""
+      // Параметры:
+      //  Объект - ПользовательскийТип - пользовательский объект.
+      Процедура Проверка(Объект)
+        Объект.НайтиПоНаименованию("Литерал");
+        Объект.FindByDescription("Literal");
+      КонецПроцедуры
+      """, context);
+    assertThat(getDiagnostics(document)).isEmpty();
+  }
+
+  @Test
+  void resolvedManagersRequireExplicitSearchOptions() {
+    initServerContext(Path.of("src/test/resources/metadata/designer"));
+    var document = TestUtils.getDocumentContext("""
+      Процедура Проверка(Имя, Номер, Дата)
+        Справочники.Справочник1.НайтиПоНаименованию(Имя);
+        Справочники.Справочник1.НайтиПоНаименованию("Текст");
+        Справочники.Справочник1.НайтиПоНаименованию(Имя, , , );
+        Справочники.Справочник1.НайтиПоНаименованию(Имя, Истина);
+        Справочники.Справочник1.НайтиПоНаименованию(Имя, Ложь);
+        Документы.Документ1.НайтиПоНомеру(Номер);
+        Документы.Документ1.НайтиПоНомеру(Номер, );
+        Документы.Документ1.НайтиПоНомеру(Номер, Дата);
+        Неизвестный.НайтиПоНаименованию(Имя);
+        Справочники.Справочник1.НайтиПоНаименованию("Текст", Истина);
+      КонецПроцедуры
+      """, context);
+    var diagnostics = getDiagnostics(document);
+    assertThat(diagnostics).hasSize(6);
+    var info = diagnosticInstance.getInfo();
+    var exactMatch = info.getResourceString("missingExactMatch", "НайтиПоНаименованию");
+    var intervalDate = info.getResourceString("missingPeriod", "НайтиПоНомеру");
+    assertThat(diagnostics, true)
+      .hasMessageOnRange(exactMatch, 1, 26, 50)
+      .hasMessageOnRange(exactMatch, 2, 26, 54)
+      .hasMessageOnRange(exactMatch, 3, 26, 56)
+      .hasMessageOnRange(intervalDate, 6, 22, 42)
+      .hasMessageOnRange(intervalDate, 7, 22, 44)
+      .hasMessageOnRange(info.getMessage("НайтиПоНаименованию"), 10, 26, 62);
+  }
+
+  @Test
+  void englishCallsAndExplicitOptions() {
+    initServerContext(Path.of("src/test/resources/metadata/designer"));
+    // The minimal built-in context used by tests omits English method aliases.
+    // Keep the real configuration owners and platform signatures.
+    registerEnglishAlias("СправочникМенеджер.Справочник1", "НайтиПоНаименованию", "FindByDescription");
+    registerEnglishAlias("ДокументМенеджер.Документ1", "НайтиПоНомеру", "FindByNumber");
+    var document = TestUtils.getDocumentContext("""
+      Procedure Check(Name, Number, Date)
+        Catalogs.Справочник1.FindByDescription(Name);
+        Documents.Документ1.FindByNumber(Number);
+        Catalogs.Справочник1.FindByDescription(Name, False);
+        Documents.Документ1.FindByNumber(Number, Date);
+        Unknown.FindByDescription(Name);
+        Unknown.FindByNumber(Number);
+      EndProcedure
+      """, context);
+    var diagnostics = getDiagnostics(document);
+    assertThat(diagnostics).hasSize(2);
+    var info = diagnosticInstance.getInfo();
+    assertThat(diagnostics, true)
+      .hasMessageOnRange(info.getResourceString("missingExactMatch", "FindByDescription"), 1, 23, 46)
+      .hasMessageOnRange(info.getResourceString("missingPeriod", "FindByNumber"), 2, 22, 42);
+  }
+
+  private void registerEnglishAlias(String ownerName, String nameRu, String nameEn) {
+    var owner = registry.resolve(ownerName).orElseThrow();
+    var method = registry.getMembers(owner, FileType.BSL).stream()
+      .filter(member -> member.matches(nameRu)).findFirst().orElseThrow()
+      .withBilingualName(new BilingualString(nameRu, nameEn));
+    registry.registerMemberOverride(owner, () -> List.of(method), FileType.BSL);
   }
 
   @Test

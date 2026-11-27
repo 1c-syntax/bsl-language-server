@@ -35,5 +35,15 @@ Catalogs.BankClassifier.FindByCode(BankDetails.BIK);
 ```
 
 ```bsl
-Documents.Invoice.FindByNumber(Number);
+Documents.Invoice.FindByNumber(Number, CurrentDate());
 ```
+
+Resolved platform manager calls have separate messages for omitted search options:
+
+* `CatalogManager.FindByDescription`: explicitly pass the second argument, `ExactMatch`. The default prefix search can
+  return a different item when there is no exact match. Pass `True` for an exact search or `False` for a prefix search.
+* `DocumentManager.FindByNumber`: pass the second argument, `IntervalDate`, for periodic numbering. This date selects the number search interval. The diagnostic also warns when the date is omitted for nonperiodic numbering because it cannot determine the numbering mode.
+
+An empty argument slot is also an omission. Each call produces at most one message, either for the omitted option or the existing literal search warning. The new checks require a resolved manager type and signature; unknown and user methods do not receive the new messages.
+
+These methods can return deletion marked items and do not report duplicate matches. Use a query with explicit filtering and check the result count when deletion marks or uniqueness matter. Exact matching and an interval date do not provide these guarantees.

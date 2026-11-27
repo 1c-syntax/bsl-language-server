@@ -26,11 +26,15 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.types.TypeService;
+import com.github._1c_syntax.bsl.languageserver.types.TypeService.TypedMember;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.jspecify.annotations.Nullable;
 
+import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -47,22 +51,64 @@ import java.util.regex.Pattern;
 
 public class UsingFindElementByStringDiagnostic extends AbstractVisitorDiagnostic {
 
-  private final Pattern pattern = CaseInsensitivePattern.compile(
-    "(НайтиПоНаименованию|FindByDescription|НайтиПоКоду|FindByCode|НайтиПоНомеру|FindByNumber)"
+  private static final Pattern SEARCH_METHOD = CaseInsensitivePattern.compile(
+    "(?<byDescription>НайтиПоНаименованию|FindByDescription)|НайтиПоКоду|FindByCode|"
+      + "(?<byNumber>НайтиПоНомеру|FindByNumber)"
   );
+
+  private final TypeService typeService;
+
+  public UsingFindElementByStringDiagnostic(TypeService typeService) {
+    this.typeService = typeService;
+  }
 
   @Override
   public @Nullable ParseTree visitMethodCall(BSLParser.MethodCallContext ctx) {
-    var matcher = pattern.matcher(ctx.methodName().getText());
+    var matcher = SEARCH_METHOD.matcher(ctx.methodName().getText());
     if (matcher.matches()) {
-      BSLParser.CallParamContext param = ctx.doCall().callParamList().callParam().getFirst();
-      if (param.getChildren().isEmpty() ||
-        param.getStart().getType() == BSLParser.STRING ||
-        param.getStart().getType() == BSLParser.DECIMAL) {
-        diagnosticStorage.addDiagnostic(ctx, info.getMessage(matcher.group(0)));
-      }
+      checkSearchCall(ctx, matcher);
     }
     return super.visitMethodCall(ctx);
+  }
+
+  private void checkSearchCall(BSLParser.MethodCallContext ctx, Matcher matcher) {
+    var arguments = ctx.doCall().callParamList().callParam();
+    var firstArgument = arguments.getFirst();
+    var literalSearch = firstArgument.getChildren().isEmpty()
+      || firstArgument.getStart().getType() == BSLParser.STRING
+      || firstArgument.getStart().getType() == BSLParser.DECIMAL;
+    var missingSecondArgument = arguments.size() < 2 || arguments.get(1).expression() == null;
+    var checkExactMatch = missingSecondArgument && matcher.group("byDescription") != null;
+    var checkIntervalDate = missingSecondArgument && matcher.group("byNumber") != null;
+    if (!literalSearch && !checkExactMatch && !checkIntervalDate) {
+      return;
+    }
+
+    var members = typeService.accessTargetsAt(documentContext, ctx.methodName().IDENTIFIER(), null);
+    if (members.stream().anyMatch(member -> !member.descriptor().standardLibrary())) {
+      return;
+    }
+
+    var methodName = matcher.group();
+    if (checkExactMatch && allFromManager(members, "СправочникМенеджер.", "CatalogManager.")) {
+      diagnosticStorage.addDiagnostic(ctx, info.getResourceString("missingExactMatch", methodName));
+    } else if (checkIntervalDate && allFromManager(members, "ДокументМенеджер.", "DocumentManager.")) {
+      diagnosticStorage.addDiagnostic(ctx, info.getResourceString("missingPeriod", methodName));
+    } else if (literalSearch) {
+      diagnosticStorage.addDiagnostic(ctx, info.getMessage(methodName));
+    }
+  }
+
+  private static boolean allFromManager(List<TypedMember> members, String ownerPrefixRu, String ownerPrefixEn) {
+    return !members.isEmpty() && members.stream().allMatch(member -> {
+      var owner = member.owner();
+      if (owner == null || member.descriptor().signatures().isEmpty()) {
+        return false;
+      }
+      var name = owner.qualifiedName();
+      return name.regionMatches(true, 0, ownerPrefixRu, 0, ownerPrefixRu.length())
+        || name.regionMatches(true, 0, ownerPrefixEn, 0, ownerPrefixEn.length());
+    });
   }
 
 }
