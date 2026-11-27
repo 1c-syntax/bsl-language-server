@@ -22,7 +22,16 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import org.eclipse.lsp4j.Diagnostic;
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
+import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
+import com.github._1c_syntax.bsl.languageserver.types.model.PlatformMetadata;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 
 import java.util.List;
 
@@ -32,6 +41,89 @@ import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertTha
 class UsingObjectNotAvailableUnixDiagnosticTest extends AbstractDiagnosticTest<UsingObjectNotAvailableUnixDiagnostic> {
   UsingObjectNotAvailableUnixDiagnosticTest() {
     super(UsingObjectNotAvailableUnixDiagnostic.class);
+  }
+
+  @Autowired
+  private TypeRegistry registry;
+
+  @Test
+  void htmlShellReceiverMustBeResolved() {
+    initServerContext();
+    // The minimal test platform package does not include HTMLDocumentShell.
+    var shell = registry.registerConfigurationType("ОболочкаHTMLДокумента");
+    var method = new MemberDescriptor(new BilingualString("ПолучитьCOMОбъект", "GetCOMObject"),
+      MemberKind.METHOD, BilingualString.EMPTY, TypeSet.EMPTY, List.of(), null, false,
+      PlatformMetadata.EMPTY, false, true);
+    registry.registerMemberOverride(shell, () -> List.of(method), FileType.BSL);
+    var document = TestUtils.getDocumentContext("""
+      // Параметры:
+      //  Оболочка - ОболочкаHTMLДокумента - оболочка документа.
+      Процедура Проверка(Оболочка, Неизвестный)
+        COM = Оболочка.ПолучитьCOMОбъект();
+        COM = Оболочка.GetCOMObject();
+        COM = Неизвестный.GetCOMObject();
+        Пользовательский = Новый Структура("GetCOMObject", 1);
+        COM = Пользовательский.GetCOMObject();
+        Если ЭтоWindowsКлиент() Тогда
+          COM = Оболочка.GetCOMObject();
+        КонецЕсли;
+      КонецПроцедуры
+      """, context);
+    var diagnostics = getDiagnostics(document);
+    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics, true)
+      .hasRange(3, 17, 36)
+      .hasRange(4, 17, 31);
+  }
+
+  @Test
+  void globalCOMCallsAndPlatformGuards() {
+    initServerContext();
+    var document = TestUtils.getDocumentContext("""
+      Процедура Проверка()
+        COM = ПолучитьCOMОбъект("", "Excel.Application");
+        COM = getcomobject("", "Excel.Application");
+        Если ЭтоWindowsКлиент() Тогда
+          COM = ПолучитьCOMОбъект("", "Excel.Application");
+        КонецЕсли;
+        Если НужноОткрыть Тогда
+          COM = ПолучитьCOMОбъект("", "WindowsInstaller.Installer");
+        ИначеЕсли ЭтоWindowsКлиент() Тогда
+          COM = GetCOMObject("", "Excel.Application");
+        КонецЕсли;
+        Если ПолучитьCOMОбъект("", "WindowsInstaller.Installer") = Неопределено Тогда
+          Возврат;
+        ИначеЕсли ПолучитьCOMОбъект("", "WindowsInstaller.Installer") = Неопределено Тогда
+          Возврат;
+        КонецЕсли;
+        Если ЭтоWindowsКлиент() Тогда
+          Если GetCOMObject("", "Excel.Application") = Неопределено Тогда
+            Возврат;
+          КонецЕсли;
+        КонецЕсли;
+        Неизвестный.ПолучитьCOMОбъект();
+      КонецПроцедуры
+      """, context);
+    var diagnostics = getDiagnostics(document);
+    assertThat(diagnostics).hasSize(5);
+    assertThat(diagnostics, true)
+      .hasRange(1, 8, 50)
+      .hasRange(2, 8, 45)
+      .hasRange(7, 10, 61)
+      .hasRange(11, 7, 58)
+      .hasRange(13, 12, 63);
+  }
+
+  @Test
+  void localMethodShadowsGlobalCOMFunction() {
+    initServerContext();
+    var document = TestUtils.getDocumentContext("""
+      Функция ПолучитьCOMОбъект()
+        Возврат Неопределено;
+      КонецФункции
+      Результат = ПолучитьCOMОбъект();
+      """, context);
+    assertThat(getDiagnostics(document)).isEmpty();
   }
 
   @Test
