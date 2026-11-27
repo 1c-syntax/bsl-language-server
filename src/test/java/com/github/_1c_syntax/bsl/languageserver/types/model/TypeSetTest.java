@@ -101,6 +101,15 @@ class TypeSetTest {
   }
 
   @Test
+  void unionReusesLeftWithExistingRefsAndNoNewDecorations() {
+    var left = TypeSet.of(ARRAY, STRING).withElement(ARRAY, TypeSet.of(NUMBER));
+    var sameRefs = TypeSet.of(STRING, ARRAY);
+
+    assertThat(left.union(sameRefs)).isSameAs(left);
+    assertThat(left.union(TypeSet.of(ARRAY))).isSameAs(left);
+  }
+
+  @Test
   void withElementAttachesElementTypes() {
     // given / when
     var array = TypeSet.of(ARRAY).withElement(ARRAY, TypeSet.of(NUMBER));

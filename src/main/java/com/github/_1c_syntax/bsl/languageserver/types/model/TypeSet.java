@@ -139,8 +139,18 @@ public record TypeSet(
     if (this.isEmpty() && !this.hasDecorations()) {
       return other;
     }
-    var merged = new LinkedHashSet<>(this.refs);
-    merged.addAll(other.refs);
+
+    var containsOtherRefs = containsRefsOf(other);
+    if (containsOtherRefs && !other.hasDecorations()) {
+      return this;
+    }
+
+    var merged = refs;
+    if (!containsOtherRefs) {
+      var combined = new LinkedHashSet<>(refs);
+      combined.addAll(other.refs);
+      merged = combined;
+    }
 
     return new TypeSet(
       merged,
@@ -150,6 +160,18 @@ public record TypeSet(
       TypeDecorations.mergedNested(this.lazyFields, other.lazyFields, LazyField::merge),
       TypeDecorations.mergedFlat(this.describedTypes, other.describedTypes, TypeSet::union)
     );
+  }
+
+  private boolean containsRefsOf(TypeSet other) {
+    if (other.size() > size()) {
+      return false;
+    }
+    for (var ref : other.refs) {
+      if (ref == null || !refs.contains(ref)) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /**
