@@ -5,6 +5,8 @@
 
 The diagnostic highlights the name of a variable with no known reads. Passing the variable to a call, returning it, indexing it or accessing a member through it counts as a read. Another assignment alone does not use the previous value. Once a variable has been read, this rule does not check its final assignment or the order of initialization.
 
+The rule skips a variable assigned directly from the global function `Eval` (`Вычислить`). Evaluating the expression can raise an exception even when the result is not needed. This function cannot be called as a standalone statement.
+
 In form, object and record set modules, the rule checks variables local to procedures and functions. Module variables may have external readers, including form bindings. [UnusedParameters](UnusedParameters.md) checks method parameters.
 
 * A method with form context can access form attributes and properties by name. In a method marked `&AtServerNoContext` or `&AtClientAtServerNoContext`, assignment to the same name can introduce a local variable.
@@ -26,6 +28,10 @@ EndProcedure
 Procedure UseValue()
     Value = 1;
     Message(value);
+EndProcedure
+
+Procedure CheckExpression(Expression)
+    Result = Eval(Expression); // No diagnostic.
 EndProcedure
 ```
 

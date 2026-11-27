@@ -33,6 +33,7 @@ import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.types.registry.BslContextHolder;
+import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.mdo.Form;
 import com.github._1c_syntax.bsl.mdo.support.FormType;
@@ -40,6 +41,7 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
+import org.jspecify.annotations.Nullable;
 
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -90,9 +92,12 @@ public class UnusedLocalVariableDiagnostic extends AbstractDiagnostic {
   @Override
   public void check() {
     var inScope = checkedScope();
-    documentContext.getSymbolTree().getVariables().stream()
+    var tree = documentContext.getSymbolTree();
+    var evalResults = evalResultVariables(tree);
+    tree.getVariables().stream()
       .filter(variable -> CHECKING_VARIABLE_KINDS.contains(variable.getKind()))
       .filter(variable -> !variable.isExport())
+      .filter(variable -> !evalResults.contains(variable))
       .filter(variable -> referenceIndex.getReferencesTo(variable).stream()
         .noneMatch(ref -> ref.occurrenceType() == OccurrenceType.REFERENCE)
       )
@@ -100,6 +105,47 @@ public class UnusedLocalVariableDiagnostic extends AbstractDiagnostic {
       .forEach(variable -> diagnosticStorage.addDiagnostic(
         variable.getSelectionRange(), info.getMessage(variable.getName()))
       );
+  }
+
+  private Set<VariableSymbol> evalResultVariables(SymbolTree tree) {
+    // Вычислить требуется вызвать в выражении, даже если его результат не читают.
+    var results = new HashSet<VariableSymbol>();
+    for (var assignment : Trees.<BSLParser.AssignmentContext>findAllRuleNodes(
+      documentContext.getAst(), BSLParser.RULE_assignment)) {
+      var target = assignment.lValue();
+      if (target == null || target.IDENTIFIER() == null || target.acceptor() != null) {
+        continue;
+      }
+      var call = directCall(assignment.expression());
+      if (call == null || call.methodName() == null) {
+        continue;
+      }
+      var name = call.methodName().getText();
+      if ((Keywords.EVAL.getRu().equalsIgnoreCase(name) || Keywords.EVAL.getEn().equalsIgnoreCase(name))
+        && tree.getMethodSymbol(name).isEmpty()) {
+        tree.getVariableSymbolInScope(assignment, target.IDENTIFIER().getText()).ifPresent(results::add);
+      }
+    }
+    return results;
+  }
+
+  private static BSLParser.@Nullable GlobalMethodCallContext directCall(
+    BSLParser.@Nullable ExpressionContext expression) {
+    while (expression != null && expression.member().size() == 1) {
+      var member = expression.member(0);
+      if (member.unaryModifier() != null || !member.modifier().isEmpty()) {
+        return null;
+      }
+      var identifier = member.complexIdentifier();
+      if (identifier != null) {
+        return identifier.modifier().isEmpty() ? identifier.globalMethodCall() : null;
+      }
+      if (member.globalMethodCall() != null) {
+        return member.globalMethodCall();
+      }
+      expression = member.expression();
+    }
+    return null;
   }
 
   private Predicate<VariableSymbol> checkedScope() {

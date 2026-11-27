@@ -133,6 +133,24 @@ class UnusedLocalVariableFormDiagnosticTest extends AbstractServerContextAwareTe
   }
 
   @Test
+  void ignoresEvalResultAssignedToLocalWithFormAttributeName() {
+    var document = formDocument("""
+      &НаСервереБезКонтекста
+      Процедура Проверить(Выражение)
+        ДругойОбъект = Вычислить(Выражение);
+        Локальная = 1;
+      КонецПроцедуры
+      """);
+
+    assertThat(document.getDiagnostics()).hasSize(1);
+    assertThat(document.getDiagnostics(), true).hasRange(3, 2, 11);
+    assertThat(document.getSymbolTree().getVariables())
+      .filteredOn(variable -> variable.getName().equals("ДругойОбъект"))
+      .extracting(VariableSymbol::getKind)
+      .containsExactly(VariableKind.DYNAMIC);
+  }
+
+  @Test
   void keepsSymbolTreeWithNoContextLocalMatchingFormAttribute() {
     var document = formDocument("""
       &НаКлиенте
