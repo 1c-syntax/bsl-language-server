@@ -1226,6 +1226,24 @@
             "title": "Using a logical \"OR\" in the \"WHERE\" section of a query",
             "$id": "#/definitions/LogicalOrInTheWhereSectionOfQuery"
         },
+        "LostVariable": {
+            "description": "Lost variable value",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Lost variable value",
+            "properties": {
+                "checkFormShadowing": {
+                    "description": "Check method parameters and explicitly declared local variables that hide form properties",
+                    "default": false,
+                    "type": "boolean",
+                    "title": "Check method parameters and explicitly declared local variables that hide form properties"
+                }
+            },
+            "$id": "#/definitions/LostVariable"
+        },
         "MagicDate": {
             "description": "Magic dates",
             "default": true,

@@ -72,19 +72,20 @@ class DisableDiagnosticTriggeringSupplierTest {
 
     List<CodeAction> codeActions = codeActionSupplier.getCodeActions(params, documentContext);
 
-    assertThat(codeActions)
-      .hasSize(11)
-      .anyMatch(codeAction -> codeAction.getTitle().equals("Disable all diagnostic in file"))
-      .anyMatch(codeAction -> codeAction.getTitle().equals("Disable NumberOfValuesInStructureConstructor in file"))
-      .anyMatch(codeAction -> codeAction.getTitle().equals("Disable ExportVariables in file"))
-      .anyMatch(codeAction -> codeAction.getTitle().equals("Disable IfElseDuplicatedCondition in file"))
-      .anyMatch(codeAction -> codeAction.getTitle().equals("Disable CanonicalSpellingKeywords in file"))
-      .anyMatch(codeAction -> codeAction.getTitle().equals("Disable FunctionShouldHaveReturn in file"))
-      .anyMatch(codeAction -> codeAction.getTitle().equals("Disable IfElseIfEndsWithElse in file"))
-      .anyMatch(codeAction -> codeAction.getTitle().equals("Disable MagicNumber in file"))
-      .anyMatch(codeAction -> codeAction.getTitle().equals("Disable MissingSpace in file"))
-      .anyMatch(codeAction -> codeAction.getTitle().equals("Disable MissingVariablesDescription in file"))
-      .anyMatch(codeAction -> codeAction.getTitle().equals("Disable all diagnostic in file"));
+    assertThat(codeActions).extracting(CodeAction::getTitle)
+      .containsExactlyInAnyOrder(
+        "Disable CanonicalSpellingKeywords in file",
+        "Disable ExportVariables in file",
+        "Disable FunctionShouldHaveReturn in file",
+        "Disable IfElseDuplicatedCondition in file",
+        "Disable IfElseIfEndsWithElse in file",
+        "Disable LostVariable in file",
+        "Disable MagicNumber in file",
+        "Disable MissingSpace in file",
+        "Disable MissingVariablesDescription in file",
+        "Disable NumberOfValuesInStructureConstructor in file",
+        "Disable UnusedLocalVariable in file",
+        "Disable all diagnostic in file");
   }
 
   @Test
@@ -117,14 +118,18 @@ class DisableDiagnosticTriggeringSupplierTest {
 
     List<CodeAction> codeActions = codeActionSupplier.getCodeActions(params, documentContext);
 
-    assertThat(codeActions)
-      .hasSize(8)
-      .anyMatch(codeAction -> codeAction.getTitle().equals("Disable MagicNumber in line"))
-      .anyMatch(codeAction -> codeAction.getTitle().equals("Disable MissingSpace in line"))
-      .anyMatch(codeAction -> codeAction.getTitle().equals("Disable MagicNumber in file"))
-      .anyMatch(codeAction -> codeAction.getTitle().equals("Disable MissingSpace in file"))
-      .anyMatch(codeAction -> codeAction.getTitle().equals("Disable all diagnostic in line"))
-      .anyMatch(codeAction -> codeAction.getTitle().equals("Disable all diagnostic in file"));
+    assertThat(codeActions).extracting(CodeAction::getTitle)
+      .containsExactlyInAnyOrder(
+        "Disable LostVariable in line",
+        "Disable MagicNumber in line",
+        "Disable MissingSpace in line",
+        "Disable UnusedLocalVariable in line",
+        "Disable all diagnostic in line",
+        "Disable LostVariable in file",
+        "Disable MagicNumber in file",
+        "Disable MissingSpace in file",
+        "Disable UnusedLocalVariable in file",
+        "Disable all diagnostic in file");
   }
 
   @Test
@@ -155,16 +160,20 @@ class DisableDiagnosticTriggeringSupplierTest {
 
     List<CodeAction> codeActions = codeActionSupplier.getCodeActions(params, documentContext);
 
-    assertThat(codeActions)
-      .hasSize(10)
-      .anyMatch(codeAction -> codeAction.getTitle().equals("Disable MagicNumber in range"))
-      .anyMatch(codeAction -> codeAction.getTitle().equals("Disable MissingSpace in range"))
-      .anyMatch(codeAction -> codeAction.getTitle().equals("Disable MagicNumber in file"))
-      .anyMatch(codeAction -> codeAction.getTitle().equals("Disable MissingSpace in file"))
-      .anyMatch(codeAction -> codeAction.getTitle().equals("Disable all diagnostic in range"))
-      .anyMatch(codeAction -> codeAction.getTitle().equals("Disable all diagnostic in file"))
-      .anyMatch(codeAction -> codeAction.getTitle().equals("Disable CanonicalSpellingKeywords in range"))
-      .anyMatch(codeAction -> codeAction.getTitle().equals("Disable CanonicalSpellingKeywords in file"));
+    assertThat(codeActions).extracting(CodeAction::getTitle)
+      .containsExactlyInAnyOrder(
+        "Disable CanonicalSpellingKeywords in range",
+        "Disable LostVariable in range",
+        "Disable MagicNumber in range",
+        "Disable MissingSpace in range",
+        "Disable UnusedLocalVariable in range",
+        "Disable all diagnostic in range",
+        "Disable CanonicalSpellingKeywords in file",
+        "Disable LostVariable in file",
+        "Disable MagicNumber in file",
+        "Disable MissingSpace in file",
+        "Disable UnusedLocalVariable in file",
+        "Disable all diagnostic in file");
   }
 
   @Test

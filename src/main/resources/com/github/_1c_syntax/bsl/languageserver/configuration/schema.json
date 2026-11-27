@@ -290,6 +290,9 @@
                 "LogicalOrInTheWhereSectionOfQuery": {
                     "$ref": "parameters-schema.json#/definitions/LogicalOrInTheWhereSectionOfQuery"
                 },
+                "LostVariable": {
+                    "$ref": "parameters-schema.json#/definitions/LostVariable"
+                },
                 "MagicDate": {
                     "$ref": "parameters-schema.json#/definitions/MagicDate"
                 },
