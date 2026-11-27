@@ -29,12 +29,14 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymb
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotations;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
 import com.github._1c_syntax.bsl.parser.description.VariableDescription;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ErrorNode;
@@ -66,6 +68,7 @@ import static java.util.stream.Collectors.toMap;
 public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> implements Computer<List<VariableSymbol>> {
 
   private final DocumentContext documentContext;
+  private final ModuleType moduleType;
   private final ModuleSymbol module;
   private final Map<Range, SourceDefinedSymbol> methods;
   private final SelfMemberClassifier selfMemberClassifier;
@@ -82,6 +85,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
                                 List<? extends MethodSymbol> methods,
                                 SelfMemberClassifier selfMemberClassifier) {
     this.documentContext = documentContext;
+    this.moduleType = documentContext.getModuleType();
     this.module = module;
     this.methods = methods.stream().collect(toMap(MethodSymbol::getSubNameRange, Function.identity()));
     this.selfMemberClassifier = selfMemberClassifier;
@@ -203,7 +207,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
       // индексация в ReferenceIndexFiller, подсветка SymbolsSemanticTokensSupplier). Проверка
       // здесь, а не в общем updateVariablesCache: переменные цикла Для/Для Каждого — реальные
       // объявления и НЕ должны подавляться, даже если их имя совпадает с реквизитом.
-      || isBareSelfProperty(ctx.IDENTIFIER().getText())
+      || (hasBareSelfProperties(moduleType, currentMethod) && isBareSelfProperty(ctx.IDENTIFIER().getText()))
     ) {
       return ctx;
     }
@@ -252,6 +256,16 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
     return currentMethod == module
       ? moduleVariables.containsKey(name)
       : declaredModuleVariables.containsKey(name);
+  }
+
+  /** Методы формы без контекста не видят её реквизиты и свойства по простому имени. */
+  static boolean hasBareSelfProperties(ModuleType moduleType, SourceDefinedSymbol scope) {
+    if (moduleType == ModuleType.FormModule && scope instanceof MethodSymbol method) {
+      var directive = method.getCompilerDirectiveKind().orElse(null);
+      return directive != CompilerDirectiveKind.AT_SERVER_NO_CONTEXT
+        && directive != CompilerDirectiveKind.AT_CLIENT_AT_SERVER_NO_CONTEXT;
+    }
+    return true;
   }
 
   /**
