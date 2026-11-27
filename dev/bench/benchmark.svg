@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="185" height="20" role="img" aria-label="Benchmark (SSL 1.0): 112.57">
-    <title>Benchmark (SSL 1.0): 112.57</title>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="178" height="20" role="img" aria-label="Benchmark (SSL 1.0): 90.57">
+    <title>Benchmark (SSL 1.0): 90.57</title>
     <linearGradient id="b" x2="0" y2="100%">
         <stop offset="0" stop-color="#bbb" stop-opacity=".1"/>
         <stop offset="1" stop-opacity=".1"/>
     </linearGradient>
     <mask id="anybadge_1">
-        <rect width="185" height="20" rx="3" fill="#fff"/>
+        <rect width="178" height="20" rx="3" fill="#fff"/>
     </mask>
     <g mask="url(#anybadge_1)">
         <path fill="#555" d="M0 0h135v20H0z"/>
-        <path fill="#007ec6" d="M135 0h50v20H135z"/>
-        <path fill="url(#b)" d="M0 0h185v20H0z"/>
+        <path fill="#007ec6" d="M135 0h43v20H135z"/>
+        <path fill="url(#b)" d="M0 0h178v20H0z"/>
     </g>
 
     <g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11">
@@ -19,7 +19,7 @@
         <text x="67.5" y="14">Benchmark (SSL 1.0)</text>
     </g>
     <g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="11">
-        <text x="161.0" y="15" fill="#010101" fill-opacity=".3">112.57</text>
-        <text x="160.0" y="14">112.57</text>
+        <text x="157.5" y="15" fill="#010101" fill-opacity=".3">90.57</text>
+        <text x="156.5" y="14">90.57</text>
     </g>
 </svg>

@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795782862894,
+  "lastUpdate": 1795798598537,
   "repoUrl": "https://github.com/1c-syntax/bsl-language-server",
   "entries": {
     "BSL LS perfomance measurement (SSL 3.1)": [
@@ -48050,6 +48050,37 @@ window.BENCHMARK_DATA = {
             "unit": "sec",
             "range": "stddev: 3.623097980214022",
             "extra": "mean: 112.57091959317525 sec\nrounds: 3"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "nixel2007@gmail.com",
+            "name": "Nikita Fedkin",
+            "username": "nixel2007"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "705cebcd0dc70035fd98b7cdd2cd54214bccc837",
+          "message": "Merge pull request #5024 from 1c-syntax/perf/shared-compiled-flow-20261127\n\nperf(types): переиспользовать проекции CFG по режимам",
+          "timestamp": "2026-11-27T17:31:53+01:00",
+          "tree_id": "7286aef7768fbf2888502af968f338c74abd8522",
+          "url": "https://github.com/1c-syntax/bsl-language-server/commit/705cebcd0dc70035fd98b7cdd2cd54214bccc837"
+        },
+        "date": 1795798596840,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": ".github/scripts/benchmark.py::test_analyze_ssl31",
+            "value": 90.56587799390157,
+            "unit": "sec",
+            "range": "stddev: 3.6567960104471164",
+            "extra": "mean: 90.56587799390157 sec\nrounds: 3"
           }
         ]
       }
