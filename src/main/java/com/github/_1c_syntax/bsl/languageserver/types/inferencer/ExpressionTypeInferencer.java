@@ -2438,7 +2438,8 @@ public class ExpressionTypeInferencer {
     InferenceContext ctx
   ) {
     if (statement instanceof BSLParser.AssignmentContext assignment) {
-      var expression = DiagnosticDeclarationSession.expressionTree(assignment.expression());
+      var source = assignment.expression();
+      var expression = source == null ? null : ctx.contextualReturns.assignmentExpressions().get(source);
       var types = expression == null ? TypeSet.EMPTY : inferInternal(expression, ctx);
       return types.union(typesOfAssignmentComment(owner, assignment, ctx));
     }

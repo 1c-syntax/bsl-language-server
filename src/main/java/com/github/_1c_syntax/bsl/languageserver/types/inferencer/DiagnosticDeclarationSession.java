@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.ExpressionT
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.jspecify.annotations.Nullable;
 
+import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Objects;
@@ -54,6 +55,15 @@ public final class DiagnosticDeclarationSession {
     }
     return session.expressions.computeIfAbsent(expression,
       key -> Optional.ofNullable(ExpressionTreeBuildingVisitor.buildExpressionTree(key))).orElse(null);
+  }
+
+  /** Синтаксис присваиваний одного запроса вывода, включая уточнения и вложенные расчёты. */
+  static final class AssignmentExpressions {
+    private final Map<BSLParser.ExpressionContext, Optional<BslExpression>> expressions = new IdentityHashMap<>(0);
+
+    @Nullable BslExpression get(BSLParser.ExpressionContext expression) {
+      return expressions.computeIfAbsent(expression, key -> Optional.ofNullable(expressionTree(key))).orElse(null);
+    }
   }
 
   private record Key(VariableSymbol variable, long revision) {

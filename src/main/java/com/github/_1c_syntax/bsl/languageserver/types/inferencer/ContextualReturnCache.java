@@ -24,15 +24,14 @@ package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 import com.github._1c_syntax.bsl.languageserver.types.index.MethodReturnTypeIndexer.ConfigurationGeneration;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
+import com.github._1c_syntax.bsl.languageserver.types.inferencer.DiagnosticDeclarationSession.AssignmentExpressions;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.jspecify.annotations.Nullable;
 
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -64,7 +63,9 @@ final class ContextualReturnCache {
   private long revision;
   private long cellReads;
   private @Nullable CellPreparationAttempts preparations;
-  private @Nullable ContextualReturnCache preparationOwner;
+  /** Синтаксис правых частей одинаков для всех приближений и режимов текущего запроса. */
+  private @Nullable AssignmentExpressions assignmentExpressions;
+  private @Nullable ContextualReturnCache requestOwner;
   /** Самостоятельный расчёт ячеек. Его промежуточные результаты остаются внутри запроса. */
   boolean preparingCells;
   /** Стартовое доразрешение может подготовить ячейки после первого наполнения области. */
@@ -81,18 +82,26 @@ final class ContextualReturnCache {
 
   ContextualReturnCache forRefinement() {
     var result = new ContextualReturnCache(returnGeneration);
-    result.preparationOwner = preparationOwner == null ? this : preparationOwner;
+    result.requestOwner = requestOwner == null ? this : requestOwner;
     result.preparingCells = preparingCells;
     result.resolvingDeferredReturns = resolvingDeferredReturns;
     return result;
   }
 
   CellPreparationAttempts cellPreparations() {
-    var owner = preparationOwner == null ? this : preparationOwner;
+    var owner = requestOwner == null ? this : requestOwner;
     if (owner.preparations == null) {
       owner.preparations = new CellPreparationAttempts();
     }
     return owner.preparations;
+  }
+
+  AssignmentExpressions assignmentExpressions() {
+    var owner = requestOwner == null ? this : requestOwner;
+    if (owner.assignmentExpressions == null) {
+      owner.assignmentExpressions = new AssignmentExpressions();
+    }
+    return owner.assignmentExpressions;
   }
 
   @Nullable TypeSet get(ContextualReturnKey key) {
@@ -205,10 +214,10 @@ final class ContextualReturnCache {
 
   Guard guard(ContextualReturnKey key, InferenceContext context) {
     var activeBodies = context.flowSession.activeBodies();
-    Set<MethodSymbol> activeMethods = new HashSet<>();
-    Set<BSLParser.CodeBlockContext> otherBodies = new HashSet<>();
+    var activeMethods = new ArrayList<MethodSymbol>();
+    var otherBodies = new ArrayList<BSLParser.CodeBlockContext>();
     for (var body : activeBodies) {
-      var method = bodyMethods.computeIfAbsent(body, ignored -> methodOf(body, context));
+      var method = bodyMethods.computeIfAbsent(body, context::methodOfBody);
       if (method.isPresent()) {
         activeMethods.add(method.orElseThrow());
       } else {
@@ -217,11 +226,6 @@ final class ContextualReturnCache {
     }
     return new Guard(key, Set.copyOf(context.visited), activeBodies, Set.copyOf(activeMethods), Set.copyOf(otherBodies),
       context.depth, context.flowSession.cellsComputing());
-  }
-
-  private static Optional<MethodSymbol> methodOf(BSLParser.CodeBlockContext body, InferenceContext context) {
-    BSLParser.SubContext sub = Trees.getAncestorByRuleIndex(body, BSLParser.RULE_sub);
-    return sub == null ? Optional.empty() : context.documentContext.getSymbolTreeNoLock().getMethodSymbol(sub);
   }
 
   @Nullable Result get(Guard guard) {

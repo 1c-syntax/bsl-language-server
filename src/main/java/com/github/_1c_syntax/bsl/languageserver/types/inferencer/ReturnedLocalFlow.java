@@ -30,7 +30,6 @@ import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionCon
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.VariableFlowAnalyzer.Facts;
-import com.github._1c_syntax.bsl.languageserver.types.inferencer.VariableFlowAnalyzer.FlowGraph;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -105,14 +104,12 @@ final class ReturnedLocalFlow {
       session.noteCellInput();
       return cached == null ? session.independentFacts(key) : cached;
     }
-    var graph = analyzer.flowGraph(document, key.body(), inputs);
-    var projection = plan(document, layout, key, inputs, graph, true);
+    var projection = plan(document, layout, key, inputs, true);
     return project(projection, key, inputs, complete);
   }
 
   @Nullable Facts readFacts(DocumentContext document, FlowLayout layout, Key key, FlowInputs inputs) {
-    var graph = analyzer.flowGraph(document, key.body(), inputs);
-    var projection = plan(document, layout, key, inputs, graph, false);
+    var projection = plan(document, layout, key, inputs, false);
     return projection == null ? null : inputs.session().computeBodyFacts(key.body(), projection.pass());
   }
 
@@ -120,12 +117,12 @@ final class ReturnedLocalFlow {
   @Nullable Facts readParameterBeforeLoop(DocumentContext document, FlowLayout layout,
     Key key, CfgVertex loop, FlowInputs inputs, Optional<Set<ExecutionContext>> contexts, TypeSet declared) {
     var body = key.body();
-    var graph = analyzer.graphOf(document, body);
+    var graph = layout.graph();
     var compiled = contexts.map(active -> PreprocessorFlow.of(graph, active, document.getFileType())).orElse(null);
     if (compiled != null && !compiled.vertices().contains(loop)) {
       return null;
     }
-    var beforeLoop = predecessorsOf(graph, loop, compiled);
+    var beforeLoop = predecessorsOf(layout, loop, compiled);
     var variables = analyzer.variablesOf(document, body, layout, inputs);
     if (!beforeLoop.vertices().contains(graph.getEntryPoint())
       || !supportsParameter(document, key, inputs, variables, beforeLoop.vertices(),
@@ -133,13 +130,13 @@ final class ReturnedLocalFlow {
       return null;
     }
     var selectedInputs = inputs.withDeclaredType(key.variable(), declared);
-    var pass = new VariableFlowPass(analyzer, document, graph, layout, selectedInputs, beforeLoop,
+    var pass = new VariableFlowPass(analyzer, document, layout, selectedInputs, beforeLoop,
       variables.forVariables(Set.of(key.variable())));
     return inputs.session().computeBodyFacts(body, pass);
   }
 
   /** Все входящие переходы, по которым значение может попасть в выбранную вершину. */
-  private static PreprocessorFlow predecessorsOf(ControlFlowGraph graph, CfgVertex vertex,
+  private static PreprocessorFlow predecessorsOf(FlowLayout layout, CfgVertex vertex,
                                                  @Nullable PreprocessorFlow compiled) {
     Set<CfgVertex> vertices = Collections.newSetFromMap(new IdentityHashMap<>());
     Set<CfgEdge> edges = Collections.newSetFromMap(new IdentityHashMap<>());
@@ -147,12 +144,12 @@ final class ReturnedLocalFlow {
     vertices.add(vertex);
     pending.add(vertex);
     while (!pending.isEmpty()) {
-      for (var edge : graph.incomingEdgesOf(pending.removeFirst())) {
+      for (var edge : layout.incomingOf(pending.removeFirst())) {
         if (compiled != null && !compiled.edges().contains(edge)) {
           continue;
         }
         edges.add(edge);
-        var source = graph.getEdgeSource(edge);
+        var source = layout.graph().getEdgeSource(edge);
         if (vertices.add(source)) {
           pending.addLast(source);
         }
@@ -163,12 +160,12 @@ final class ReturnedLocalFlow {
 
   private @Nullable Projection plan(
     DocumentContext document, FlowLayout layout,
-    Key key, FlowInputs inputs, FlowGraph flow, boolean returning
+    Key key, FlowInputs inputs, boolean returning
   ) {
     var body = key.body();
+    var graph = layout.graph();
     var variables = analyzer.variablesOf(document, body, layout, inputs);
-    var graph = flow.graph();
-    var compiled = flow.compiled();
+    var compiled = analyzer.compiledFlow(document, body, layout, inputs);
     var vertices = compiled == null ? graph.vertexSet() : compiled.vertices();
     var reachable = new IndependentReturnedStructure.Reachability(vertices,
       node -> compiled == null || possiblyReachable(node, layout, vertices));
@@ -179,7 +176,7 @@ final class ReturnedLocalFlow {
     var locals = returning
       ? IndependentReturnedStructure.returnedLocals(document, body, variables, inputs, variable, reachable)
       : Set.of(variable);
-    var pass = new VariableFlowPass(analyzer, document, graph, layout, inputs, compiled, variables.forVariables(locals));
+    var pass = new VariableFlowPass(analyzer, document, layout, inputs, compiled, variables.forVariables(locals));
     return new Projection(pass, locals);
   }
 

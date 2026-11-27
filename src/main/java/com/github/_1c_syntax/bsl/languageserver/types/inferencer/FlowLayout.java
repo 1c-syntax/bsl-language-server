@@ -66,6 +66,7 @@ import java.util.concurrent.ConcurrentHashMap;
 final class FlowLayout {
 
   private static final int MIN_BRANCH_EDGES = 2;
+  private static final CfgEdge[] NO_PREDECESSORS = new CfgEdge[0];
 
   /**
    * Оператор с границами и вершиной, которой он принадлежит.
@@ -110,6 +111,7 @@ final class FlowLayout {
 
   /** Операторы с вызовами: считаются по первому требованию, см. {@link #hasCall}. */
   private final Lazy<Set<ParserRuleContext>> callStatements = new Lazy<>(this::findCallStatements);
+  private final Lazy<Map<CfgVertex, CfgEdge[]>> incoming = new Lazy<>(this::snapshotIncoming);
 
   /** Достижимость для быстрых чтений BSL в пределах версии графа. */
   private final Lazy<Map<Set<ExecutionContext>, Set<CfgVertex>>> bslReachability = new Lazy<>(ConcurrentHashMap::new);
@@ -196,6 +198,26 @@ final class FlowLayout {
     var cached = byContexts.get(contexts);
     return cached != null ? cached : byContexts.computeIfAbsent(Set.copyOf(contexts),
       active -> PreprocessorFlow.of(graph, active).vertices());
+  }
+
+  ControlFlowGraph graph() {
+    return graph;
+  }
+
+  /** Переходы в порядке исходного графа. Массив принадлежит раскладке. */
+  CfgEdge[] incomingOf(CfgVertex vertex) {
+    return incoming.getOrCompute().getOrDefault(vertex, NO_PREDECESSORS);
+  }
+
+  private Map<CfgVertex, CfgEdge[]> snapshotIncoming() {
+    Map<CfgVertex, CfgEdge[]> result = new IdentityHashMap<>(graph.vertexSet().size());
+    for (var vertex : graph.vertexSet()) {
+      var edges = graph.incomingEdgesOf(vertex);
+      if (!edges.isEmpty()) {
+        result.put(vertex, edges.toArray(CfgEdge[]::new));
+      }
+    }
+    return result;
   }
 
   /**

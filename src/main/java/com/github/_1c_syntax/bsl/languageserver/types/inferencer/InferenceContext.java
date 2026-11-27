@@ -28,11 +28,13 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymb
 import com.github._1c_syntax.bsl.languageserver.types.AssignmentCommentCache;
 import com.github._1c_syntax.bsl.languageserver.types.index.MethodReturnTypeIndexer.ConfigurationGeneration;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.jspecify.annotations.Nullable;
 
 import java.net.URI;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -146,6 +148,11 @@ final class InferenceContext {
 
   private static VariableFlowAnalyzer.FlowSession flowSessionFor(ContextualReturnCache cache) {
     return new VariableFlowAnalyzer.FlowSession(cache::invalidate, cache::noteCellRead);
+  }
+
+  Optional<MethodSymbol> methodOfBody(BSLParser.CodeBlockContext body) {
+    BSLParser.SubContext sub = Trees.getAncestorByRuleIndex(body, BSLParser.RULE_sub);
+    return sub == null ? Optional.empty() : documentContext.getSymbolTreeNoLock().getMethodSymbol(sub);
   }
 
   /** Защита от повторного входа или лимит глубины не дали завершить вывод. */
