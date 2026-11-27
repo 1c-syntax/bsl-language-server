@@ -35,6 +35,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
+import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.mdclasses.CF;
 import com.github._1c_syntax.bsl.mdo.Attribute;
@@ -44,6 +45,7 @@ import com.github._1c_syntax.bsl.mdo.Catalog;
 import com.github._1c_syntax.bsl.mdo.ChartOfAccounts;
 import com.github._1c_syntax.bsl.mdo.ChartOfCalculationTypes;
 import com.github._1c_syntax.bsl.mdo.CommonAttribute;
+import com.github._1c_syntax.bsl.mdo.Constant;
 import com.github._1c_syntax.bsl.mdo.DefinedType;
 import com.github._1c_syntax.bsl.mdo.DocumentJournal;
 import com.github._1c_syntax.bsl.mdo.Enum;
@@ -379,12 +381,27 @@ public class ConfigurationTypesProvider {
 
     registerObjectAndRefTypes(md, mdoType, name, fullName, commonAttributes);
     registerSpecializationsAndExpansions(md, ref, name, fullName);
+    if (md instanceof Constant constant) {
+      registerConstantGetter(ref, constant);
+    }
     registerCollectionAliases(ref, managerNames, groupRu, groupEn, name);
 
     collectionMembersByType
       .computeIfAbsent(mdoType, k -> new ArrayList<>())
       .add(MemberDescriptor.property(name, ref).withBilingualName(BilingualString.of(name, name)));
     return true;
+  }
+
+  private void registerConstantGetter(TypeRef manager, Constant constant) {
+    // Источник добавляется после специализаций: описание платформы имеет приоритет.
+    typeRegistry.registerMemberSource(manager, () -> {
+      var value = ValueTypes.resolve(typeRegistry, constant.getValueType());
+      var signature = new SignatureDescriptor(List.of(), value, BilingualString.EMPTY);
+      return List.of(MemberDescriptor.method("Получить", List.of(signature))
+        .withReturnTypes(value)
+        .withBilingualName(BilingualString.of("Получить", "Get"))
+        .withStandardLibrary(true));
+    }, FileType.BSL);
   }
 
   private record ManagerNames(String ru, @Nullable String en) {

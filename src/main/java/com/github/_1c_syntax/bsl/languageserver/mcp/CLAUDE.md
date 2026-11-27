@@ -15,9 +15,10 @@
 1. **Отдельная подкоманда `mcp`** (`McpCommand`) — транспорт по `--protocol`:
    - `stdio` (по умолчанию) — профили `mcp,mcp-stdio`; `McpStdioConfiguration` (общий `JsonMapper`,
      `EofSignalingInputStream`, `ConcurrentSendTransportProvider`); процесс блокируется до EOF stdin через
-     `McpShutdownSignal`. Транспорт SDK не переносит одновременную отправку: одна из двух получает
-     отказ, и сессия умирает — поэтому транспорт сессии обёрнут в `McpEnqueueRetryingTransport`,
-     повторяющий отказанную отправку, как исправление в самом SDK.
+     `McpShutdownSignal`. Транспорт SDK ждёт занятый приёмник не дольше 100 мс (с 2.1.0), и под
+     нагрузкой одновременная отправка всё равно получает отказ, а сессия умирает — поэтому транспорт
+     сессии обёрнут в `McpEnqueueRetryingTransport`, повторяющий отказанную отправку. Закрытый
+     java-sdk#686 — не повод его удалять; условие и способ проверки — в TODO у `McpEnqueueRetryingTransport`.
    - `sse` — `mcp,mcp-sse` (Server-Sent Events по HTTP); `streamable` — `mcp,mcp-streamable`
      (Streamable HTTP). HTTP-транспорты требуют servlet-контейнера, процесс жив за счёт веб-сервера.
 2. **Флаг `--mcp` к `lsp` (по умолчанию) или `websocket`** — поднимает MCP по **Streamable HTTP**
@@ -62,7 +63,9 @@ Roots объявлены deprecated в спеке MCP 2026-07-28 (`roots/list_ch
 
 **Ошибки — часть API для агента.** Сообщение о незарегистрированной рабочей папке обязано перечислять
 доступные корни и называть инструмент регистрации: агент исправляется сам, без человека. Единый
-текст — `McpWorkspaceFolders.registrationHint`, не пиши свой.
+текст — `McpWorkspaceFolders.registrationHint`, не пиши свой. Заранее, в ответе на `initialize`, агент
+получает инструкции сервера — `spring.ai.mcp.server.instructions` в `application-mcp.properties`;
+переименовал инструмент или поменял порядок работы — поправь и их.
 
 ## Инструменты (`@McpTool`)
 

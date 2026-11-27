@@ -109,6 +109,27 @@ class McpStreamableServerTest {
 
   @Test
   void streamableHttpEndpointHandlesInitialize() throws Exception {
+    var response = initialize();
+
+    assertThat(response.statusCode()).isEqualTo(200);
+    assertThat(response.headers().firstValue("Mcp-Session-Id")).isPresent();
+    assertThat(response.body()).contains("\"serverInfo\"").contains("BSL Language Server");
+  }
+
+  @Test
+  void initializeResultTellsAgentToRegisterWorkspaceFolder() throws Exception {
+    // Без зарегистрированной рабочей папки инструменты анализа не работают. Инструкции сервера
+    // агент получает до первого вызова инструмента — и узнаёт о регистрации заранее, а не из ошибки.
+    var response = initialize();
+
+    assertThat(response.statusCode()).isEqualTo(200);
+    assertThat(response.body())
+      .contains("\"instructions\"")
+      .contains("register_workspace_folder")
+      .contains("list_workspace_folders");
+  }
+
+  private HttpResponse<String> initialize() throws Exception {
     var requestBody = """
       {"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2025-03-26",\
       "capabilities":{},"clientInfo":{"name":"test","version":"1"}}}""";
@@ -120,10 +141,6 @@ class McpStreamableServerTest {
       .POST(HttpRequest.BodyPublishers.ofString(requestBody))
       .build();
 
-    var response = HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
-
-    assertThat(response.statusCode()).isEqualTo(200);
-    assertThat(response.headers().firstValue("Mcp-Session-Id")).isPresent();
-    assertThat(response.body()).contains("\"serverInfo\"").contains("BSL Language Server");
+    return HttpClient.newHttpClient().send(request, HttpResponse.BodyHandlers.ofString());
   }
 }

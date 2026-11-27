@@ -35,6 +35,27 @@ import java.util.Set;
 
 class ContextualReturnCacheTest {
   @Test
+  void approximationInputsDoNotCrossQueryRevisionOrRecursionGuards() {
+    var cache = new ContextualReturnCache();
+    var method = mock(MethodSymbol.class);
+    var caller = mock(MethodSymbol.class);
+    var key = new ContextualReturnKey(method, null);
+    var guard = new ContextualReturnCache.Guard(key, Set.of(method), Set.of(), 4);
+    var otherStack = new ContextualReturnCache.Guard(key, Set.of(method, caller), Set.of(), 4);
+    var otherDepth = new ContextualReturnCache.Guard(key, Set.of(method), Set.of(), 5);
+    var otherBody = new ContextualReturnCache.Guard(key, Set.of(method), Set.of(mock(BSLParser.CodeBlockContext.class)), 4);
+    var inputs = cache.approximationInputs(guard);
+
+    assertThat(cache.approximationInputs(guard)).isSameAs(inputs);
+    assertThat(cache.approximationInputs(otherStack)).isNotSameAs(inputs);
+    assertThat(cache.approximationInputs(otherDepth)).isNotSameAs(inputs);
+    assertThat(cache.approximationInputs(otherBody)).isNotSameAs(inputs);
+    assertThat(new ContextualReturnCache().approximationInputs(guard)).isNotSameAs(inputs);
+    cache.invalidate();
+    assertThat(cache.approximationInputs(guard)).isNotSameAs(inputs);
+  }
+
+  @Test
   void depthCutResultsDoNotCrossGuardOrDepthBoundaries() {
     var cache = new ContextualReturnCache();
     var method = mock(MethodSymbol.class);
@@ -54,6 +75,33 @@ class ContextualReturnCacheTest {
     assertThat(cache.get(key)).isNull();
     cache.invalidate();
     assertThat(cache.get(first)).isNull();
+  }
+
+  @Test
+  void anIndependentResultSurvivesACellRevisionButKeepsItsGuards() {
+    var cache = new ContextualReturnCache();
+    var method = mock(MethodSymbol.class);
+    var dependency = mock(MethodSymbol.class);
+    var caller = mock(MethodSymbol.class);
+    var server = new ContextualReturnKey(method, ExecutionContext.SERVER);
+    var client = new ContextualReturnKey(method, ExecutionContext.THIN_CLIENT);
+    var original = new ContextualReturnCache.Guard(server, Set.of(method, caller), Set.of(), Set.of(), Set.of(), 4, true);
+    var newCycle = new ContextualReturnCache.Guard(server, Set.of(method, dependency),
+      Set.of(), Set.of(), Set.of(), 4, true);
+    var outsideCells = new ContextualReturnCache.Guard(server, Set.of(method, caller), Set.of(), 4);
+    var anotherMode = new ContextualReturnCache.Guard(client, Set.of(method, caller),
+      Set.of(), Set.of(), Set.of(), 4, true);
+    var result = new ContextualReturnCache.Result(TypeSet.of(TypeRef.UNDEFINED), Set.of(dependency), Set.of(),
+      Set.of(), Set.of(), false, false, false);
+
+    cache.rememberWithoutCellInputs(original, result);
+    cache.invalidate();
+
+    assertThat(cache.get(original, true)).isSameAs(result);
+    assertThat(cache.get(original, false)).isNull();
+    assertThat(cache.get(newCycle, true)).isNull();
+    assertThat(cache.get(outsideCells, true)).isNull();
+    assertThat(cache.get(anotherMode, true)).isNull();
   }
 
   @Test

@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
@@ -62,6 +63,7 @@ public class PlatformMemberReferenceFinder implements ReferenceFinder {
   public Optional<Reference> findReference(URI uri, Position position) {
     // Горячий путь inferencer/hover — без захвата per-document RWLock.
     return serverContextProvider.getDocumentNoLock(uri)
+      .filter(document -> document.getServerContext().getDocumentState(document) == DocumentState.WITH_CONTENT)
       .flatMap(document -> typeService.memberAt(document, position)
         .map(member -> toReference(document, uri, member)));
   }

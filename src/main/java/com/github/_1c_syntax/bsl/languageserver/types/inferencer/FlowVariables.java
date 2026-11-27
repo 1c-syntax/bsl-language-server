@@ -22,11 +22,13 @@
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.VariableFlowAnalyzer.Change;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.VariableFlowAnalyzer.Changes;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.VariableFlowAnalyzer.FlowInputs;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.Position;
 
 import java.util.ArrayList;
@@ -35,15 +37,25 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
-/** Переменные тела и их изменения; коллекции создаются здесь и наружу отдаются только для чтения. */
-record FlowVariables(List<VariableSymbol> variables, Map<VariableSymbol, Integer> indexes,
-                     Map<ParserRuleContext, List<Change>> changesByStatement) {
+/**
+ * Переменные тела и их изменения; коллекции наружу отдаются только для чтения.
+ * Исходный набор видимых переменных сохраняется и для тех, чьи изменения не легли в граф:
+ * они по-прежнему могут требовать расчёта общих ячеек.
+ */
+record FlowVariables(List<VariableSymbol> visibleVariables, List<VariableSymbol> variables,
+                     Map<VariableSymbol, Integer> indexes,
+                     Map<ParserRuleContext, List<Change>> changesByStatement,
+                     Set<VariableSymbol> readModuleVariables) {
   FlowVariables {
+    visibleVariables = List.copyOf(visibleVariables);
     variables = Collections.unmodifiableList(variables);
     indexes = Collections.unmodifiableMap(indexes);
     changesByStatement = Collections.unmodifiableMap(changesByStatement);
+    readModuleVariables = Set.copyOf(readModuleVariables);
   }
 
   static FlowVariables collect(BSLParser.CodeBlockContext body, FlowLayout layout, FlowInputs inputs,
@@ -55,7 +67,8 @@ record FlowVariables(List<VariableSymbol> variables, Map<VariableSymbol, Integer
     Map<VariableSymbol, Integer> indexes = new IdentityHashMap<>();
     var variables = new ArrayList<VariableSymbol>();
     Map<ParserRuleContext, List<Change>> changesByStatement = new IdentityHashMap<>();
-    for (var variable : inputs.variables().apply(body)) {
+    var visibleVariables = List.copyOf(inputs.variables().apply(body));
+    for (var variable : visibleVariables) {
       var changes = changesOf.apply(variable);
       var definitions = changes.definitions();
       var mutations = changes.mutations();
@@ -74,7 +87,62 @@ record FlowVariables(List<VariableSymbol> variables, Map<VariableSymbol, Integer
     }
 
     changesByStatement.replaceAll((statement, changes) -> List.copyOf(changes));
-    return new FlowVariables(variables, indexes, changesByStatement);
+    var reads = inputs.readModuleVariables();
+    return new FlowVariables(visibleVariables, variables, indexes, changesByStatement,
+      reads == null ? Set.copyOf(visibleVariables) : reads.apply(body));
+  }
+
+  /** Оставить все локальные значения, входы и запрошенные выходы расчёта общих ячеек. */
+  FlowVariables forCells(Set<VariableSymbol> requested) {
+    return select(variable -> neededForCells(variable, requested));
+  }
+
+  FlowVariables forVariables(Set<VariableSymbol> selected) {
+    return select(selected::contains);
+  }
+
+  /** Есть ли среди исходных видимых переменных объявления модуля, включая пропущенные в раскладке. */
+  boolean hasVisibleModuleVariables() {
+    return visibleVariables.stream().anyMatch(variable -> variable.getKind() == VariableKind.MODULE);
+  }
+
+  private FlowVariables select(Predicate<VariableSymbol> needed) {
+    if (variables.stream().allMatch(needed)) {
+      return this;
+    }
+    var selected = variables.stream().filter(needed).toList();
+    Map<VariableSymbol, Integer> selectedIndexes = new IdentityHashMap<>();
+    for (var i = 0; i < selected.size(); i++) {
+      selectedIndexes.put(selected.get(i), i);
+    }
+    IdentityHashMap<ParserRuleContext, List<Change>> selectedChanges = new IdentityHashMap<>();
+    changesByStatement.forEach((ParserRuleContext statement, List<Change> changes) -> {
+      var kept = new ArrayList<Change>();
+      for (var change : changes) {
+        var index = selectedIndexes.get(change.variable());
+        if (index != null) {
+          kept.add(new Change(change.variable(), index, change.position(), change.definition()));
+        }
+      }
+      if (!kept.isEmpty()) {
+        selectedChanges.put(statement, List.copyOf(kept));
+      }
+    });
+    return new FlowVariables(visibleVariables, selected, selectedIndexes, selectedChanges, readModuleVariables);
+  }
+
+  private boolean neededForCells(VariableSymbol variable, Set<VariableSymbol> requested) {
+    return variable.getKind() != VariableKind.MODULE || requested.contains(variable)
+      || readModuleVariables.contains(variable);
+  }
+
+  /** Идентификатор переменной, включая получателя цепочки и переменную внутри индекса. */
+  static boolean isVariableIdentifier(ParseTree identifier) {
+    return identifier.getParent() instanceof ParserRuleContext parent && switch (parent.getRuleIndex()) {
+      case BSLParser.RULE_complexIdentifier, BSLParser.RULE_lValue, BSLParser.RULE_callStatement,
+           BSLParser.RULE_forStatement, BSLParser.RULE_forEachStatement -> true;
+      default -> false;
+    };
   }
 
   /** Разложить позиции изменений по операторам, в которых они стоят. */

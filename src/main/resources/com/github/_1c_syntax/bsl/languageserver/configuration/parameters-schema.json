@@ -1315,19 +1315,19 @@
             "$id": "#/definitions/MissedRequiredParameter"
         },
         "MissingCodeTryCatchEx": {
-            "description": "Missing code in Raise block in \"Try ... Raise ... EndTry\"",
+            "description": "Missing code in Except block in \"Try ... Except ... EndTry\"",
             "default": true,
             "type": [
                 "boolean",
                 "object"
             ],
-            "title": "Missing code in Raise block in \"Try ... Raise ... EndTry\"",
+            "title": "Missing code in Except block in \"Try ... Except ... EndTry\"",
             "properties": {
                 "commentAsCode": {
-                    "description": "Treat comment in Raise section as code",
+                    "description": "Treat comment in Except section as code",
                     "default": false,
                     "type": "boolean",
-                    "title": "Treat comment in Raise section as code"
+                    "title": "Treat comment in Except section as code"
                 }
             },
             "$id": "#/definitions/MissingCodeTryCatchEx"
