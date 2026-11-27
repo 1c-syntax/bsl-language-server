@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cfg;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.index.AbstractDocumentLifecycleClearableIndex;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
@@ -55,7 +57,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @WorkspaceScope
 public class ControlFlowGraphIndex extends AbstractDocumentLifecycleClearableIndex {
 
-  private final Map<URI, Map<GraphKey, ControlFlowGraph>> graphsByUri = new ConcurrentHashMap<>();
+  private final Map<URI, Cache<GraphKey, IndexedControlFlowGraph>> graphsByUri = new ConcurrentHashMap<>();
 
   /**
    * Граф потока управления блока кода — из кэша либо построенный на месте.
@@ -70,18 +72,31 @@ public class ControlFlowGraphIndex extends AbstractDocumentLifecycleClearableInd
     BSLParser.CodeBlockContext codeBlock,
     CfgBuildOptions options
   ) {
-    var byKey = graphsByUri.computeIfAbsent(documentContext.getUri(), uri -> new ConcurrentHashMap<>());
+    return indexedGraphOf(documentContext, codeBlock, options).graph();
+  }
+
+  /**
+   * @param documentContext владелец графа.
+   * @param codeBlock блок кода, принадлежащий актуальному дереву.
+   * @param options настройки построения.
+   * @return общий граф и проекции для тех же узлов и рёбер.
+   */
+  public IndexedControlFlowGraph indexedGraphOf(
+    DocumentContext documentContext,
+    BSLParser.CodeBlockContext codeBlock,
+    CfgBuildOptions options
+  ) {
+    var byKey = graphsByUri.computeIfAbsent(documentContext.getUri(), uri -> Caffeine.newBuilder().build());
     var key = new GraphKey(codeBlock, options);
-    var cached = byKey.get(key);
+    var cached = byKey.getIfPresent(key);
     if (cached != null) {
       return cached;
     }
     // Построение идёт ВНЕ computeIfAbsent: обход поддерева операторов не мгновенный, а под
     // замком корзины на нём выстраивались бы все потоки пакетного анализа. Двойная работа
     // при гонке безвредна — граф зависит только от блока кода и настроек.
-    var graph = options.buildGraph(codeBlock);
-    var previous = byKey.putIfAbsent(key, graph);
-    return previous == null ? graph : previous;
+    var graph = new IndexedControlFlowGraph(options.buildGraph(codeBlock), documentContext.getFileType());
+    return byKey.get(key, ignored -> graph);
   }
 
   /**

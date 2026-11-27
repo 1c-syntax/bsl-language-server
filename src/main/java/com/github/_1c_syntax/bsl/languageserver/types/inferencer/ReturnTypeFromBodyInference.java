@@ -121,7 +121,7 @@ public class ReturnTypeFromBodyInference {
     if (body == null) {
       return TypeSet.EMPTY;
     }
-    var graph = controlFlowGraphIndex.graphOf(owner, body, CfgBuildOptions.defaults());
+    var indexedGraph = controlFlowGraphIndex.indexedGraphOf(owner, body, CfgBuildOptions.defaults());
     var compiled = compilationContexts.apply(body)
       .map((Set<ExecutionContext> contexts) -> {
         if (context == null) {
@@ -129,7 +129,8 @@ public class ReturnTypeFromBodyInference {
         }
         return contexts.contains(context) ? Set.of(context) : Set.<ExecutionContext>of();
       })
-      .map(contexts -> PreprocessorFlow.of(graph, contexts, owner.getFileType())).orElse(null);
+      .map(indexedGraph::compiledFlow).orElse(null);
+    var graph = indexedGraph.graph();
     var exitPoint = graph.getExitPoint();
     var result = TypeSet.EMPTY;
     for (var edge : graph.incomingEdgesOf(exitPoint)) {

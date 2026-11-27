@@ -22,6 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.cfg;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLTokenizer;
@@ -30,6 +32,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import java.net.URI;
+import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
@@ -65,6 +68,40 @@ class ControlFlowGraphIndexTest {
 
     // then
     assertThat(second).isSameAs(first);
+  }
+
+  @Test
+  void reusesReachabilityAcrossNonemptyContextsWithoutPreprocessor() {
+    var document = documentContext("fake-uri.bsl");
+    var graph = index.indexedGraphOf(document, codeBlockOf(document), CfgBuildOptions.defaults());
+
+    var server = graph.compiledFlow(Set.of(ExecutionContext.SERVER));
+
+    assertThat(graph.compiledFlow(Set.of(ExecutionContext.THIN_CLIENT))).isSameAs(server);
+    assertThat(graph.compiledFlow(Set.of()).vertices()).isEmpty();
+    assertThat(graph.compiledFlow(Set.of()).edges()).isEmpty();
+  }
+
+  @Test
+  void keepsPreprocessorContextsSeparateAndClearsTheirProjectionsWithTheGraph() {
+    var document = documentContext("conditional.bsl", """
+      #Если Сервер Тогда
+        А = 1;
+      #Иначе
+        А = 2;
+      #КонецЕсли
+      """);
+    var body = codeBlockOf(document);
+    var graph = index.indexedGraphOf(document, body, CfgBuildOptions.defaults());
+    var serverContext = Set.of(ExecutionContext.SERVER);
+    var server = graph.compiledFlow(serverContext);
+
+    assertThat(graph.compiledFlow(Set.of(ExecutionContext.THIN_CLIENT)).vertices()).isNotEqualTo(server.vertices());
+    assertThat(graph.compiledFlow(serverContext)).isSameAs(server);
+
+    index.clear(document.getUri());
+    var rebuilt = index.indexedGraphOf(document, body, CfgBuildOptions.defaults());
+    assertThat(rebuilt.compiledFlow(serverContext)).isNotSameAs(server);
   }
 
   @Test
@@ -118,9 +155,14 @@ class ControlFlowGraphIndexTest {
   }
 
   private static DocumentContext documentContext(String fileName) {
+    return documentContext(fileName, CODE);
+  }
+
+  private static DocumentContext documentContext(String fileName, String source) {
     var documentContext = mock(DocumentContext.class);
     when(documentContext.getUri()).thenReturn(uriOf(fileName));
-    when(documentContext.getAst()).thenReturn(new BSLTokenizer(CODE).getAst());
+    when(documentContext.getFileType()).thenReturn(FileType.BSL);
+    when(documentContext.getAst()).thenReturn(new BSLTokenizer(source).getAst());
     return documentContext;
   }
 
