@@ -10,7 +10,7 @@ In form, object and record set modules, the rule checks variables local to proce
 * A method with form context can access form attributes and properties by name. In a method marked `&AtServerNoContext` or `&AtClientAtServerNoContext`, assignment to the same name can introduce a local variable.
 * Object modules can access object attributes, standard properties and tabular sections. Record set modules can access properties of the set itself. Dimensions, resources and row attributes belong to individual records.
 * An explicit local declaration (`Var`) can shadow an attribute. Reading `Form.Name` or `Row.Name` does not read a separate local variable named `Name`.
-* A numeric loop uses its implicit counter. The rule checks whether a `For Each` item is read within the method.
+* A numeric loop reads its counter, including a variable declared or assigned before the loop. The rule checks whether a `For Each` item is read within the method.
 
 Resolving an unqualified assignment in a method with context requires the owner's metadata from a Designer export or EDT project and the selected platform's syntax helper. Forms also require their content definition. With incomplete inputs, the rule checks cases with definite local scope, such as explicit declarations and assignments in form methods without context. The type of the assigned value can be unknown.
 

@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
@@ -42,6 +43,7 @@ import lombok.RequiredArgsConstructor;
 
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -111,20 +113,25 @@ public class UnusedLocalVariableDiagnostic extends AbstractDiagnostic {
       && (type != ModuleType.FormModule || owner.get() instanceof Form form
         && form.getFormType() != FormType.UNKNOWN && !form.getData().isEmpty())
       && platform.get().isPresent() && typeService.selfTypeRef(documentContext).isPresent();
-    var loops = documentContext.getSymbolTree().getBasis().loopVariables();
-    return variable -> {
-      if (!(variable.getScope() instanceof MethodSymbol method)) {
-        return false;
+    var tree = documentContext.getSymbolTree();
+    var counters = numericLoopCounters(tree);
+    var loops = tree.getBasis().loopVariables();
+    return variable -> variable.getScope() instanceof MethodSymbol method && !counters.contains(variable)
+      && (variable.getKind() == VariableKind.LOCAL || knownContext || loops.contains(variable)
+        || type == ModuleType.FormModule && method.isWithoutFormContext());
+  }
+
+  private Set<VariableSymbol> numericLoopCounters(SymbolTree tree) {
+    var counters = new HashSet<VariableSymbol>();
+    // Цикл читает счётчик, даже если его объявили до заголовка Для.
+    for (var loop : Trees.<BSLParser.ForStatementContext>findAllRuleNodes(
+      documentContext.getAst(), BSLParser.RULE_forStatement)) {
+      var identifier = loop.IDENTIFIER();
+      if (identifier != null) {
+        tree.getVariableSymbolInScope(loop, identifier.getText()).ifPresent(counters::add);
       }
-      if (loops.contains(variable)) {
-        // Числовой цикл сам читает и увеличивает свой счётчик.
-        return Trees.findTerminalNodeContainsPosition(documentContext.getAst(), variable.getSelectionRange().getStart())
-          .map(node -> node.getParent() instanceof BSLParser.ForEachStatementContext)
-          .orElse(false);
-      }
-      return variable.getKind() == VariableKind.LOCAL || knownContext
-        || type == ModuleType.FormModule && method.isWithoutFormContext();
-    };
+    }
+    return counters;
   }
 
   private ModuleType moduleType() {

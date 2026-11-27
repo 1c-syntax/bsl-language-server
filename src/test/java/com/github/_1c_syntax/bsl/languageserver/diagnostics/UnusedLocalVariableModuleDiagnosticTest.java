@@ -92,6 +92,40 @@ class UnusedLocalVariableModuleDiagnosticTest extends AbstractServerContextAware
     assertThat(document.getDiagnostics(), true).hasRange(2, 2, 13);
   }
 
+  @ParameterizedTest
+  @ValueSource(strings = {"CommonForms/F/Module.bsl", "Catalogs/C/Ext/ObjectModule.bsl",
+    "InformationRegisters/R/Ext/RecordSetModule.bsl"})
+  void numericLoopReadsItsCounterInTheEnclosingMethod(String path) {
+    initServerContext();
+    configure(true);
+    var directive = path.startsWith("CommonForms/") ? "&AtServerNoContext" : "";
+    var document = TestUtils.getDocumentContext(Path.of(path).toUri(), """
+      %s
+      Procedure Check(Items)
+        Var Counter, Item;
+        Assigned = 0;
+        For counter = 1 To 2 Do
+        EndDo;
+        For Assigned = 1 To 2 Do
+        EndDo;
+        For Each Mixed In Items Do
+        EndDo;
+        For Mixed = 1 To 2 Do
+        EndDo;
+        For Each Item In Items Do
+        EndDo;
+      EndProcedure
+
+      Procedure Other()
+        Var Counter;
+      EndProcedure
+      """.formatted(directive), context);
+    var diagnostics = document.getDiagnostics();
+    assertThat(diagnostics).hasSize(2);
+    assertThat(diagnostics, true).hasRange(2, 15, 19);
+    assertThat(diagnostics, true).hasRange(17, 6, 13);
+  }
+
   @Test
   void disabledRuleDoesNotReportProvenLocal() {
     initServerContext();
