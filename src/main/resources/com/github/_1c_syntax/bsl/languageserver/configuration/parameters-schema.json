@@ -2569,6 +2569,16 @@
             ],
             "title": "Using Russian character \"yo\" (\"\u0451\") in code",
             "$id": "#/definitions/YoLetterUsage"
+        },
+        "YodaConditions": {
+            "description": "Yoda conditions",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Yoda conditions",
+            "$id": "#/definitions/YodaConditions"
         }
     }
 }
