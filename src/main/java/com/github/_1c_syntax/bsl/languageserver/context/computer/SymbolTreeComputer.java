@@ -113,15 +113,19 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
    */
   public boolean isUpToDate(SymbolTree symbolTree) {
     var basis = symbolTree.getBasis();
+    var moduleType = documentContext.getModuleType();
     if (basis == SymbolTree.Basis.NONE
-      || basis.moduleType() != documentContext.getModuleType()
+      || basis.moduleType() != moduleType
       || !basis.mdoRef().equals(documentContext.getMdoRef())) {
       return false;
     }
     var eventHandlers = eventHandlerClassifier.eventHandlersOf(documentContext);
     var bareSelfProperty = selfMemberClassifier.bareSelfPropertiesOf(documentContext);
     return basis.bareSelfProperties().stream().allMatch(bareSelfProperty)
-      && classifiedAsBefore(symbolTree.getModule(), eventHandlers, bareSelfProperty, basis.loopVariables());
+      && classifiedAsBefore(symbolTree.getModule(), eventHandlers,
+        variable -> VariableSymbolComputer.hasModuleContext(moduleType, variable.getScope())
+          && bareSelfProperty.test(variable.getName()),
+        basis.loopVariables());
   }
 
   /**
@@ -130,7 +134,8 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
    * достраивать у документов, которые после неё сразу отпустят.
    */
   private static boolean classifiedAsBefore(SourceDefinedSymbol symbol, Predicate<String> eventHandlers,
-                                            Predicate<String> bareSelfProperty, Set<VariableSymbol> loopVariables) {
+                                            Predicate<VariableSymbol> bareSelfProperty,
+                                            Set<VariableSymbol> loopVariables) {
     for (var child : symbol.getChildren()) {
       if (child instanceof MethodSymbol method
         && !(method instanceof ConstructorSymbol)
@@ -140,7 +145,7 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
       if (child instanceof VariableSymbol variable
         && variable.getKind() == VariableKind.DYNAMIC
         && !loopVariables.contains(variable)
-        && bareSelfProperty.test(variable.getName())) {
+        && bareSelfProperty.test(variable)) {
         return false;
       }
       if (!classifiedAsBefore(child, eventHandlers, bareSelfProperty, loopVariables)) {
