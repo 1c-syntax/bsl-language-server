@@ -14,6 +14,8 @@ In form, object and record set modules, the rule checks variables local to proce
 
 Resolving an unqualified assignment in a method with context requires the owner's metadata from a Designer export or EDT project and the selected platform's syntax helper. Forms also require their content definition. With incomplete inputs, the rule checks cases with definite local scope, such as explicit declarations and assignments in form methods without context. The type of the assigned value can be unknown.
 
+In a partial export, the rule checks the metadata collection directory and the module's location. Standalone BSL files outside an export use the existing checks for unknown module types.
+
 ## Example
 
 ```bsl

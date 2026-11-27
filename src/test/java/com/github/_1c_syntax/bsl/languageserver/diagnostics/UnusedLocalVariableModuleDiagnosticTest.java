@@ -49,7 +49,9 @@ class UnusedLocalVariableModuleDiagnosticTest extends AbstractServerContextAware
     """;
 
   @ParameterizedTest
-  @ValueSource(strings = {"Catalogs/Test/Ext/ObjectModule.bsl", "InformationRegisters/R/RecordSetModule.bsl",
+  @ValueSource(strings = {"Catalogs/Test/Ext/ObjectModule.bsl", "Documents/D/ObjectModule.bsl",
+    "Catalogs/Ext/ObjectModule.bsl", "InformationRegisters/R/RecordSetModule.bsl",
+    "AccumulationRegisters/R/Ext/RecordSetModule.bsl",
     "Forms/F/Ext/Form/Module.bsl", "Catalogs/Test/Forms/F/Module.bsl", "CommonForms/F/Module.bsl"})
   void incompleteExportOnlyProvesExplicitLocals(String path) {
     initServerContext();
@@ -58,6 +60,22 @@ class UnusedLocalVariableModuleDiagnosticTest extends AbstractServerContextAware
     assertThat(document.getModuleType()).isEqualTo(ModuleType.UNKNOWN);
     assertThat(document.getDiagnostics()).hasSize(1);
     assertThat(document.getDiagnostics(), true).hasRange(3, 6, 19);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"ObjectModule.bsl", "RecordSetModule.bsl", "work/Ext/Form/Module.bsl",
+    "Catalogs/Test/RecordSetModule.bsl", "InformationRegisters/R/Ext/ObjectModule.bsl"})
+  void standaloneFilesKeepUnknownModuleChecks(String path) {
+    initServerContext();
+    configure(true);
+    var document = TestUtils.getDocumentContext(Path.of(path).toUri(), """
+      Procedure Check()
+        Unread = 1;
+      EndProcedure
+      """, context);
+    assertThat(document.getModuleType()).isEqualTo(ModuleType.UNKNOWN);
+    assertThat(document.getDiagnostics()).hasSize(1);
+    assertThat(document.getDiagnostics(), true).hasRange(1, 2, 8);
   }
 
   @Test

@@ -36,13 +36,19 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.mdo.Form;
 import com.github._1c_syntax.bsl.mdo.support.FormType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -67,8 +73,9 @@ import java.util.regex.Pattern;
 )
 @RequiredArgsConstructor
 public class UnusedLocalVariableDiagnostic extends AbstractDiagnostic {
-  private static final Pattern FORM_MODULE_PATH = Pattern.compile(
-    "/(?:Ext/Form|(?:CommonForms|Forms)/[^/]+)/Module\\.bsl$", Pattern.CASE_INSENSITIVE);
+  private static final Map<ModuleType, Pattern> EXPORT_PATHS = Stream.of(
+      ModuleType.FormModule, ModuleType.ObjectModule, ModuleType.RecordSetModule)
+    .collect(Collectors.toUnmodifiableMap(Function.identity(), UnusedLocalVariableDiagnostic::exportPath));
   private final ReferenceIndex referenceIndex;
   private final TypeService typeService;
   private final BslContextHolder platform;
@@ -95,7 +102,7 @@ public class UnusedLocalVariableDiagnostic extends AbstractDiagnostic {
 
   private Predicate<VariableSymbol> checkedScope() {
     var type = moduleType();
-    if (type != ModuleType.FormModule && type != ModuleType.ObjectModule && type != ModuleType.RecordSetModule) {
+    if (!EXPORT_PATHS.containsKey(type)) {
       return variable -> true;
     }
     // Для простого имени контекстный метод требует и реквизитов владельца, и свойств платформы.
@@ -128,13 +135,19 @@ public class UnusedLocalVariableDiagnostic extends AbstractDiagnostic {
     }
     // Без выгрузки mdclasses возвращает UNKNOWN. Ограничиваем проверку в известных
     // путях Designer/EDT, сохраняя прежнюю область для самостоятельных модулей.
-    var fileName = path.substring(path.lastIndexOf('/') + 1);
-    if (fileName.equalsIgnoreCase(ModuleType.ObjectModule.getFileName())) {
-      return ModuleType.ObjectModule;
-    }
-    if (fileName.equalsIgnoreCase(ModuleType.RecordSetModule.getFileName())) {
-      return ModuleType.RecordSetModule;
-    }
-    return FORM_MODULE_PATH.matcher(path).find() ? ModuleType.FormModule : type;
+    return EXPORT_PATHS.entrySet().stream()
+      .filter(entry -> entry.getValue().matcher(path).find())
+      .map(Map.Entry::getKey)
+      .findFirst().orElse(type);
+  }
+
+  private static Pattern exportPath(ModuleType module) {
+    var groups = Arrays.stream(MDOType.values())
+      .filter(owner -> ModuleType.byMDOType(owner).contains(module))
+      .map(owner -> Pattern.quote(owner.groupName()))
+      .collect(Collectors.joining("|"));
+    var ext = module == ModuleType.FormModule ? "(?:Ext/Form/)?" : "(?:Ext/)?";
+    return Pattern.compile("/(?:" + groups + ")/[^/]+/" + ext + Pattern.quote(module.getFileName()) + "$",
+      Pattern.CASE_INSENSITIVE);
   }
 }
