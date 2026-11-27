@@ -201,7 +201,7 @@ public class TypeService implements SelfMemberClassifier {
    * них фантомную DYNAMIC-переменную, затеняющую реквизит до первой правки файла.
    * Тот же приём, что у {@code EventHandlerResolver.resolveOwnerType}.
    */
-  private Optional<TypeRef> selfTypeRef(DocumentContext documentContext) {
+  public Optional<TypeRef> selfTypeRef(DocumentContext documentContext) {
     var cached = globalScopeProvider.moduleTypeRefByUri(documentContext.getUri());
     if (cached.isPresent()) {
       return cached;

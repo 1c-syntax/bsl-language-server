@@ -91,10 +91,8 @@ class UnusedLocalVariableFormDiagnosticTest extends AbstractServerContextAwareTe
       """);
 
     assertThat(document.getDiagnostics(), true)
-      .hasRange(1, 6, 26)
-      .hasRange(6, 2, 11)
       .hasRange(11, 8, 20);
-    assertThat(document.getDiagnostics()).hasSize(3);
+    assertThat(document.getDiagnostics()).hasSize(1);
     assertThat(document.getSymbolTree().getVariables())
       .filteredOn(variable -> variable.getName().equalsIgnoreCase("ДругойОбъект"))
       .extracting(VariableSymbol::getKind)

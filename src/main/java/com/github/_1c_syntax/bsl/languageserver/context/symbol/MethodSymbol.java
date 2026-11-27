@@ -57,6 +57,13 @@ public interface MethodSymbol extends SourceDefinedSymbol, Exportable, Describab
 
   Optional<CompilerDirectiveKind> getCompilerDirectiveKind();
 
+  /** Директива метода исключает доступ к контексту формы по простому имени. */
+  default boolean isWithoutFormContext() {
+    var directive = getCompilerDirectiveKind().orElse(null);
+    return directive == CompilerDirectiveKind.AT_SERVER_NO_CONTEXT
+      || directive == CompilerDirectiveKind.AT_CLIENT_AT_SERVER_NO_CONTEXT;
+  }
+
   List<Annotation> getAnnotations();
 
   /**

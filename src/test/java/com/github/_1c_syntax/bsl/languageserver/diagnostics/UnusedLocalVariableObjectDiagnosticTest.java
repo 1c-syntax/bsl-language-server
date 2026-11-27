@@ -59,9 +59,10 @@ class UnusedLocalVariableObjectDiagnosticTest extends AbstractServerContextAware
   }
 
   @Test
-  void detectsUnusedLocalsAlongsideObjectMembers() {
+  void excludesObjectMembersAndAmbiguousWritesWithoutPlatform() {
     var document = objectDocument("""
       Процедура ИзменитьОбъект()
+        Перем Явная;
         реквизит1 = "новое";
         Наименование = "объект";
         ТабличнаяЧасть1.Очистить();
@@ -73,10 +74,10 @@ class UnusedLocalVariableObjectDiagnosticTest extends AbstractServerContextAware
     assertThat(typeService.isBareSelfProperty(document, "Наименование")).isTrue();
     assertThat(typeService.isBareSelfProperty(document, "ТабличнаяЧасть1")).isTrue();
     assertThat(document.getSymbolTree().getVariables()).extracting(VariableSymbol::getName)
-      .containsExactly("Локальная");
+      .containsExactly("Явная", "Локальная");
     var diagnostics = document.getDiagnostics();
     assertThat(diagnostics).hasSize(1);
-    assertThat(diagnostics, true).hasRange(4, 2, 11);
+    assertThat(diagnostics, true).hasRange(1, 8, 13);
   }
 
   @Test

@@ -29,7 +29,6 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymb
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotations;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
@@ -260,12 +259,8 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
 
   /** Методы формы без контекста не видят её реквизиты и свойства по простому имени. */
   static boolean hasBareSelfProperties(ModuleType moduleType, SourceDefinedSymbol scope) {
-    if (moduleType == ModuleType.FormModule && scope instanceof MethodSymbol method) {
-      var directive = method.getCompilerDirectiveKind().orElse(null);
-      return directive != CompilerDirectiveKind.AT_SERVER_NO_CONTEXT
-        && directive != CompilerDirectiveKind.AT_CLIENT_AT_SERVER_NO_CONTEXT;
-    }
-    return true;
+    return moduleType != ModuleType.FormModule || !(scope instanceof MethodSymbol method)
+      || !method.isWithoutFormContext();
   }
 
   /**

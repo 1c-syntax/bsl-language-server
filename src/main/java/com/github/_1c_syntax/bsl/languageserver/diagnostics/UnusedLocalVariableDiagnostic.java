@@ -21,6 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
@@ -28,11 +30,19 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
+import com.github._1c_syntax.bsl.languageserver.types.TypeService;
+import com.github._1c_syntax.bsl.languageserver.types.registry.BslContextHolder;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.mdo.Form;
+import com.github._1c_syntax.bsl.mdo.support.FormType;
+import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
 
 import java.util.EnumSet;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -49,6 +59,7 @@ import java.util.Set;
     ModuleType.FormModule,
     ModuleType.ManagerModule,
     ModuleType.ObjectModule,
+    ModuleType.RecordSetModule,
     ModuleType.ValueManagerModule,
     ModuleType.SessionModule,
     ModuleType.UNKNOWN
@@ -56,7 +67,11 @@ import java.util.Set;
 )
 @RequiredArgsConstructor
 public class UnusedLocalVariableDiagnostic extends AbstractDiagnostic {
+  private static final Pattern FORM_MODULE_PATH = Pattern.compile(
+    "/(?:Ext/Form|(?:CommonForms|Forms)/[^/]+)/Module\\.bsl$", Pattern.CASE_INSENSITIVE);
   private final ReferenceIndex referenceIndex;
+  private final TypeService typeService;
+  private final BslContextHolder platform;
   private static final Set<VariableKind> CHECKING_VARIABLE_KINDS = EnumSet.of(
     VariableKind.MODULE,
     VariableKind.LOCAL,
@@ -65,14 +80,61 @@ public class UnusedLocalVariableDiagnostic extends AbstractDiagnostic {
 
   @Override
   public void check() {
+    var inScope = checkedScope();
     documentContext.getSymbolTree().getVariables().stream()
       .filter(variable -> CHECKING_VARIABLE_KINDS.contains(variable.getKind()))
       .filter(variable -> !variable.isExport())
       .filter(variable -> referenceIndex.getReferencesTo(variable).stream()
-        .filter(ref -> ref.occurrenceType() == OccurrenceType.REFERENCE).findFirst().isEmpty()
+        .noneMatch(ref -> ref.occurrenceType() == OccurrenceType.REFERENCE)
       )
+      .filter(inScope)
       .forEach(variable -> diagnosticStorage.addDiagnostic(
         variable.getSelectionRange(), info.getMessage(variable.getName()))
       );
+  }
+
+  private Predicate<VariableSymbol> checkedScope() {
+    var type = moduleType();
+    if (type != ModuleType.FormModule && type != ModuleType.ObjectModule && type != ModuleType.RecordSetModule) {
+      return variable -> true;
+    }
+    // Для простого имени контекстный метод требует и реквизитов владельца, и свойств платформы.
+    var owner = documentContext.getMdObject();
+    boolean knownContext = owner.isPresent()
+      && (type != ModuleType.FormModule || owner.get() instanceof Form form
+        && form.getFormType() != FormType.UNKNOWN && !form.getData().isEmpty())
+      && platform.get().isPresent() && typeService.selfTypeRef(documentContext).isPresent();
+    var loops = documentContext.getSymbolTree().getBasis().loopVariables();
+    return variable -> {
+      if (!(variable.getScope() instanceof MethodSymbol method)) {
+        return false;
+      }
+      if (loops.contains(variable)) {
+        // Числовой цикл сам читает и увеличивает свой счётчик.
+        return Trees.findTerminalNodeContainsPosition(documentContext.getAst(), variable.getSelectionRange().getStart())
+          .map(node -> node.getParent() instanceof BSLParser.ForEachStatementContext)
+          .orElse(false);
+      }
+      return variable.getKind() == VariableKind.LOCAL || knownContext
+        || type == ModuleType.FormModule && method.isWithoutFormContext();
+    };
+  }
+
+  private ModuleType moduleType() {
+    var type = documentContext.getModuleType();
+    var path = documentContext.getUri().getPath();
+    if (type != ModuleType.UNKNOWN || path == null) {
+      return type;
+    }
+    // Без выгрузки mdclasses возвращает UNKNOWN. Ограничиваем проверку в известных
+    // путях Designer/EDT, сохраняя прежнюю область для самостоятельных модулей.
+    var fileName = path.substring(path.lastIndexOf('/') + 1);
+    if (fileName.equalsIgnoreCase(ModuleType.ObjectModule.getFileName())) {
+      return ModuleType.ObjectModule;
+    }
+    if (fileName.equalsIgnoreCase(ModuleType.RecordSetModule.getFileName())) {
+      return ModuleType.RecordSetModule;
+    }
+    return FORM_MODULE_PATH.matcher(path).find() ? ModuleType.FormModule : type;
   }
 }
