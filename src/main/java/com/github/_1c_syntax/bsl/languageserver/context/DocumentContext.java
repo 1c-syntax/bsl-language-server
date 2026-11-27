@@ -76,6 +76,7 @@ import java.util.Locale;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 import static org.antlr.v4.runtime.Token.DEFAULT_CHANNEL;
@@ -207,6 +208,23 @@ public class DocumentContext implements Comparable<DocumentContext> {
    */
   public SymbolTree getSymbolTreeNoLock() {
     return symbolTree.get();
+  }
+
+  /**
+   * Прочитать сохранённое дерево и метаданные документа без ожидания перестроения.
+   *
+   * @param read чтение дерева и метаданных этого документа без доступа к тексту и другим документам.
+   * @return результат чтения либо {@code null}, если данные не подтверждены или документ занят.
+   */
+  public <T> @Nullable T tryReadRetainedSymbols(Function<SymbolTree, @Nullable T> read) {
+    if (!computeLock.tryLock()) {
+      return null;
+    }
+    try {
+      return read.apply(symbolTree.get());
+    } finally {
+      computeLock.unlock();
+    }
   }
 
   /**

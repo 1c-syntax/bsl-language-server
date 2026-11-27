@@ -69,8 +69,13 @@ class ForeignContextDocumentLifetimeTest extends AbstractServerContextAwareTest 
   private static final Path METADATA = Path.of("src/test/resources/metadata/commonModuleCalls");
   private static final String CALLER = """
     Процедура Вызов()
-      Результат = КлиентСерверныйМодуль.Проверка();
+      Результат = %s.Проверка();
     КонецПроцедуры
+    """;
+  private static final String NUMBER_CALLEE = """
+    Функция Проверка() Экспорт
+      Возврат 1;
+    КонецФункции
     """;
   private static final String CONTEXTUAL_CALLEE = """
     Функция Проверка() Экспорт
@@ -186,6 +191,96 @@ class ForeignContextDocumentLifetimeTest extends AbstractServerContextAwareTest 
   }
 
   @Test
+  void unloadedCalleeDoesNotResurrectExcludedDeclaration() throws Exception {
+    var documents = documents("""
+      #Если Сервер Тогда
+      Функция Проверка() Экспорт
+        Возврат 1;
+      КонецФункции
+      #КонецЕсли
+      """);
+
+    assertThat(indexedTypes(documents.callee())).containsExactly("Число");
+    assertThat(typesAtCall(documents.caller(), ExecutionContext.THIN_CLIENT)).isEmpty();
+
+    assertCleared(documents.callee());
+    variableFlowAnalyzer.clear(documents.caller().getUri());
+    expressionTypeIndex.clear(documents.caller().getUri());
+
+    assertThat(typesAtCall(documents.caller(), ExecutionContext.THIN_CLIENT))
+      .as("the explicitly excluded foreign declaration after releasing its AST").isEmpty();
+    assertThat(context.getDocumentState(documents.callee())).isEqualTo(DocumentState.WITHOUT_CONTENT);
+  }
+
+  @ParameterizedTest
+  @EnumSource(value = ExecutionContext.class, names = {"EXTERNAL_CONNECTION", "THICK_CLIENT_MANAGED"})
+  void unloadedCalleeKeepsModuleProfileExclusions(ExecutionContext mode) throws Exception {
+    context.getLanguageServerConfiguration().setSupportThickClientFileMode(true);
+    var module = mode == ExecutionContext.EXTERNAL_CONNECTION ? "КлиентСерверныйМодуль" : "СерверныйМодуль";
+    var documents = documents(NUMBER_CALLEE, module, "ОбщегоНазначения");
+    assertThat(indexedTypes(documents.callee())).containsExactly("Число");
+    assertThat(typesAtCall(documents.caller(), mode)).isEmpty();
+    assertThat(typesAtCall(documents.caller(), ExecutionContext.THICK_CLIENT_MANAGED_FILE)).containsExactly("Число");
+
+    assertCleared(documents.callee());
+    variableFlowAnalyzer.clear(documents.caller().getUri());
+    expressionTypeIndex.clear(documents.caller().getUri());
+
+    assertThat(typesAtCall(documents.caller(), mode)).isEmpty();
+    assertThat(typesAtCall(documents.caller(), ExecutionContext.SERVER)).containsExactly("Число");
+    assertThat(typesAtCall(documents.caller(), ExecutionContext.THICK_CLIENT_MANAGED_FILE)).containsExactly("Число");
+    assertThat(context.getDocumentState(documents.callee())).isEqualTo(DocumentState.WITHOUT_CONTENT);
+  }
+
+  @Test
+  void unloadedCalleeKeepsPermittedServerTransition() throws Exception {
+    var documents = documents("""
+      #Если Сервер Тогда
+      Функция Проверка() Экспорт
+        Возврат 1;
+      КонецФункции
+      #КонецЕсли
+      """, "СерверныйМодульВызовСервера", "ОбщегоНазначения");
+    assertThat(typesAtCall(documents.caller(), ExecutionContext.THIN_CLIENT)).containsExactly("Число");
+
+    assertCleared(documents.callee());
+    variableFlowAnalyzer.clear(documents.caller().getUri());
+    expressionTypeIndex.clear(documents.caller().getUri());
+
+    assertThat(typesAtCall(documents.caller(), ExecutionContext.THIN_CLIENT)).containsExactly("Число");
+    assertThat(context.getDocumentState(documents.callee())).isEqualTo(DocumentState.WITHOUT_CONTENT);
+  }
+
+  @Test
+  void busyUnloadedCalleeDoesNotCacheAnUnverifiedApproximation() throws Exception {
+    var documents = documents(NUMBER_CALLEE, "СерверныйМодуль", "ОбщегоНазначения");
+    assertCleared(documents.callee());
+    var target = AopTestUtils.getUltimateTargetObject(inferencer);
+    var previousPopulation = ReflectionTestUtils.getField(target, "workspacePopulated");
+    ReflectionTestUtils.setField(target, "workspacePopulated", true);
+    try {
+      var lock = context.getDocumentLock(documents.callee().getUri()).writeLock();
+      var uri = context.getWorkspaceUri();
+
+      try (var reader = Executors.newSingleThreadExecutor()) {
+        lock.lock();
+        try {
+          var result = reader.submit(() -> WorkspaceContextHolder.call(uri,
+            () -> typesAtCall(documents.caller(), ExecutionContext.EXTERNAL_CONNECTION)));
+          assertThat(result.get(5, SECONDS)).containsExactly("Число");
+        } finally {
+          lock.unlock();
+        }
+      }
+
+      assertThat(typesAtCall(documents.caller(), ExecutionContext.EXTERNAL_CONNECTION)).isEmpty();
+      assertThat(context.getDocumentState(documents.callee())).isEqualTo(DocumentState.WITHOUT_CONTENT);
+    } finally {
+      ReflectionTestUtils.setField(target, "workspacePopulated", previousPopulation);
+    }
+  }
+
+  @Test
   void sameDocumentCallsStillNarrowByCompilationContext() {
     var documents = documents(CONTEXTUAL_CALLEE + """
       Процедура Вызов()
@@ -199,10 +294,14 @@ class ForeignContextDocumentLifetimeTest extends AbstractServerContextAwareTest 
   }
 
   private Documents documents(String calleeSource) {
+    return documents(calleeSource, "КлиентСерверныйМодуль", "КлиентскийМодуль");
+  }
+
+  private Documents documents(String calleeSource, String calleeModule, String callerModule) {
     var callee = TestUtils.getDocumentContext(
-      workspace.resolve("CommonModules/КлиентСерверныйМодуль/Ext/Module.bsl").toUri(), calleeSource, context);
+      workspace.resolve("CommonModules/" + calleeModule + "/Ext/Module.bsl").toUri(), calleeSource, context);
     var caller = TestUtils.getDocumentContext(
-      workspace.resolve("CommonModules/КлиентскийМодуль/Ext/Module.bsl").toUri(), CALLER, context);
+      workspace.resolve("CommonModules/" + callerModule + "/Ext/Module.bsl").toUri(), CALLER.formatted(calleeModule), context);
     var method = callee.getSymbolTree().getMethodSymbol("Проверка").orElseThrow();
     typeService.inferReturnTypes(method);
 
