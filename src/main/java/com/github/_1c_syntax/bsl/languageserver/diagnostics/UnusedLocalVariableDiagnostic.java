@@ -47,6 +47,7 @@ import java.util.Set;
     ModuleType.CommandModule,
     ModuleType.CommonModule,
     ModuleType.ManagerModule,
+    ModuleType.ObjectModule,
     ModuleType.ValueManagerModule,
     ModuleType.SessionModule,
     ModuleType.UNKNOWN
