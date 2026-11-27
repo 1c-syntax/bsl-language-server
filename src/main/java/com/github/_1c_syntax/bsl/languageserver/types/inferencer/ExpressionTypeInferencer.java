@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraphIndex;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContentUnavailableException;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentState;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
@@ -217,8 +218,8 @@ public class ExpressionTypeInferencer {
    * Полные корневые результаты после наполнения рабочей области сохраняются отдельно по режимам.
    * Они не записываются в общий индекс возвращаемых типов; окружения потока также разделены по режимам.
    * <p>
-   * Если AST вызываемой функции уже выгружен, используется известный индексу результат
-   * без ограничения контекста. Запрос не загружает её исходник заново ради уточнения.
+   * Для выгруженной функции учитываются ограничения, известные по сохранённым объявлениям.
+   * Если недоступность не подтверждена, используется общий тип из индекса без загрузки AST.
    *
    * @param expression выражение из текущего AST документа.
    * @param documentContext документ, которому принадлежит выражение.
@@ -972,14 +973,13 @@ public class ExpressionTypeInferencer {
     // ОбщийМодуль.Метод()) берём полный тип возврата из индекса символов —
     // с localFields структуры/ТЗ, объявленными в JsDoc. MemberDescriptor
     // несёт лишь головной ref, поэтому без этого поля структуры терялись.
-    if (expectedKind == MemberKind.METHOD) {
-      var symbolReturn = member.getSourceSymbol()
-        .filter(MethodSymbol.class::isInstance)
-        .map(MethodSymbol.class::cast)
-        .map(sourceMethod -> methodReturnType(sourceMethod, ctx))
-        .filter(returned -> !returned.isEmpty());
-      if (symbolReturn.isPresent()) {
-        return symbolReturn.get();
+    if (expectedKind == MemberKind.METHOD && member.getSourceSymbol().orElse(null) instanceof MethodSymbol method) {
+      var returned = methodReturnTypeUnlessExcluded(method, ctx);
+      if (returned == null) {
+        return TypeSet.EMPTY;
+      }
+      if (!returned.isEmpty()) {
+        return returned;
       }
     }
     // Возможные типы члена (union); UNKNOWN-ref'ы отбрасываем.
@@ -1142,6 +1142,12 @@ public class ExpressionTypeInferencer {
    * тип нельзя подменять self-свойством того же имени.
    */
   private TypeSet methodReturnType(MethodSymbol method, InferenceContext ctx) {
+    var returned = methodReturnTypeUnlessExcluded(method, ctx);
+    return returned == null ? TypeSet.EMPTY : returned;
+  }
+
+  /** @return выведенный тип или {@code null}, если метод недоступен в этом режиме. */
+  private @Nullable TypeSet methodReturnTypeUnlessExcluded(MethodSymbol method, InferenceContext ctx) {
     var owner = method.getOwner();
     var contextual = ctx.executionContext != null && (owner == ctx.documentContext
       || owner.getServerContext().getDocumentState(owner) == DocumentState.WITH_CONTENT);
@@ -1159,7 +1165,6 @@ public class ExpressionTypeInferencer {
       ctx.bodyInFlowCut = true;
       return TypeSet.EMPTY;
     }
-    // Чужой выгруженный модуль отвечает из общего индекса, одинаково во всех режимах.
     if (ctx.flowSession.contextTracking && !ctx.flowSession.contextSensitive
         && contextual && !hasModeIndependentModuleReturn(method, ctx)) {
       markContextSensitive(ctx);
@@ -1180,6 +1185,12 @@ public class ExpressionTypeInferencer {
           return symbolTypeIndex.getReturnTypes(method);
         }
       }
+      var mode = ctx.executionContext;
+      if (mode != null && owner.getFileType() == FileType.BSL && unloadedTargetIsExcluded(method, ctx, mode)) {
+        ctx.contextualReturns.noteCellRead();
+        return null;
+      }
+
       // Заранее посчитаны только экспортные функции. Неэкспортную, вызванную из её же
       // документа, считаем на месте — дерево разбора здесь доступно. Документы сравниваются
       // по ссылке: на URI в рабочей области приходится ровно один DocumentContext, а
@@ -1313,9 +1324,9 @@ public class ExpressionTypeInferencer {
    * @param method вызываемый метод.
    * @param ctx состояние текущего запроса вывода.
    * @param context режим в точке вызова.
-   * @return контекстные типы либо собранные типы занятого или уже выгруженного документа.
+   * @return контекстные или собранные типы, либо {@code null} при подтверждённом запрете.
    */
-  private TypeSet contextualReturnTypes(MethodSymbol method, InferenceContext ctx, ExecutionContext context) {
+  private @Nullable TypeSet contextualReturnTypes(MethodSymbol method, InferenceContext ctx, ExecutionContext context) {
     var owner = method.getOwner();
     if (owner == ctx.documentContext) {
       return inferContextualReturnTypes(method, ctx, context);
@@ -1330,12 +1341,71 @@ public class ExpressionTypeInferencer {
     }
     try {
       if (serverContext.getDocumentState(owner) != DocumentState.WITH_CONTENT) {
-        return symbolTypeIndex.getReturnTypes(method);
+        return retainedTargetIsExcluded(method, ctx, context) ? null : symbolTypeIndex.getReturnTypes(method);
       }
       return inferContextualReturnTypes(method, ctx, context);
     } finally {
       lock.unlock();
     }
+  }
+
+  private boolean unloadedTargetIsExcluded(MethodSymbol method, InferenceContext ctx, ExecutionContext context) {
+    var owner = method.getOwner();
+    var serverContext = owner.getServerContext();
+    var lock = serverContext.getDocumentLock(owner.getUri()).readLock();
+    if (!lock.tryLock()) {
+      ctx.noteMissingData();
+      markContextSensitive(ctx);
+      return false;
+    }
+    try {
+      if (serverContext.getDocumentState(owner) == DocumentState.WITH_CONTENT) {
+        ctx.noteMissingData();
+        markContextSensitive(ctx);
+        return false;
+      }
+      return retainedTargetIsExcluded(method, ctx, context);
+    } finally {
+      lock.unlock();
+    }
+  }
+
+  private boolean retainedTargetIsExcluded(MethodSymbol method, InferenceContext ctx, ExecutionContext context) {
+    var owner = method.getOwner();
+    if (owner.getFileType() != FileType.BSL) {
+      return false;
+    }
+    var excluded = owner.<Boolean>tryReadRetainedSymbols(tree -> {
+      if (owner.getServerContext().getDocumentNoLock(owner.getUri()) != owner
+        || method.getRootParent(ModuleSymbol.class).orElse(null) != tree.getModule()) {
+        return null;
+      }
+
+      var profile = ctx.compilation().methodContext(owner, method.getCompilerDirectiveKind(), compilationContextResolver);
+      if (profile.isEmpty()) {
+        markContextSensitive(ctx);
+        return false;
+      }
+      var target = returnTarget(owner, ctx, context, profile);
+      var branch = tree.getMethodPreprocessorContexts(method);
+      var excludedInMode = !includesReturnTarget(target, profile, branch);
+
+      // Даже разрешённое обращение зависит от режима, если другой режим может исключить объявление.
+      if (ctx.flowSession.contextTracking && !ctx.flowSession.contextSensitive) {
+        var modes = compilationContextResolver.supportedContexts(ctx.documentContext);
+        if (excludedInMode || !profile.orElseThrow().contexts().containsAll(modes)
+          || (branch != null && !branch.containsAll(modes))) {
+          markContextSensitive(ctx);
+        }
+      }
+      return excludedInMode;
+    });
+    if (excluded == null) {
+      ctx.noteMissingData();
+      markContextSensitive(ctx);
+      return false;
+    }
+    return excluded;
   }
 
   /**
@@ -1350,20 +1420,28 @@ public class ExpressionTypeInferencer {
                                                             ExecutionContext context) {
     var owner = method.getOwner();
     var profile = ctx.compilation().methodContext(owner, method.getCompilerDirectiveKind(), compilationContextResolver);
-    var target = profile.map(value -> compilationContextResolver.targetContext(
-      ctx.documentContext, owner, value, context)).orElse(context);
+    var target = returnTarget(owner, ctx, context, profile);
     var branch = owner.getSymbolTree().getMethodPreprocessorContexts(method);
-    if ((profile.isPresent() && !profile.get().contexts().contains(target))
-        || (branch != null && !branch.contains(target))) {
-      return null;
-    }
-    return target;
+    return includesReturnTarget(target, profile, branch) ? target : null;
+  }
+
+  private ExecutionContext returnTarget(DocumentContext owner, InferenceContext ctx, ExecutionContext context,
+                                        Optional<CompilationContextResolver.MethodContext> profile) {
+    return profile.map(value -> compilationContextResolver.targetContext(
+      ctx.documentContext, owner, value, context)).orElse(context);
+  }
+
+  private static boolean includesReturnTarget(ExecutionContext target,
+                                              Optional<CompilationContextResolver.MethodContext> profile,
+                                              @Nullable Set<ExecutionContext> branch) {
+    return (profile.isEmpty() || profile.orElseThrow().contexts().contains(target))
+      && (branch == null || branch.contains(target));
   }
 
   /**
    * Вывести возвращаемый тип по доступному телу функции в контексте назначения вызова.
    * <p>
-   * Известное отсутствие объявления в целевом режиме даёт пустой тип. Иначе результат тела
+   * Известное отсутствие объявления в целевом режиме даёт {@code null}. Иначе результат тела
    * соединяется с документирующим комментарием по правилам {@link SymbolTypeIndex}.
    * Мемоизация действует только внутри текущего запроса: ключ включает метод и целевой режим.
    * Отсечение рекурсии и недостающие данные запрещают запоминать результат. При уточнении
@@ -1372,12 +1450,12 @@ public class ExpressionTypeInferencer {
    * @param method вызываемый метод с доступным AST.
    * @param ctx состояние текущего запроса вывода.
    * @param context режим в точке вызова до перехода в целевой метод.
-   * @return тип с учётом достижимых возвратов и документирующего комментария.
+   * @return тип с учётом достижимых возвратов и документации либо {@code null} при подтверждённом запрете.
    */
-  private TypeSet inferContextualReturnTypes(MethodSymbol method, InferenceContext ctx, ExecutionContext context) {
+  private @Nullable TypeSet inferContextualReturnTypes(MethodSymbol method, InferenceContext ctx, ExecutionContext context) {
     var target = reachableReturnContext(method, ctx, context);
     if (target == null) {
-      return TypeSet.EMPTY;
+      return null;
     }
     var key = new ContextualReturnKey(method, target);
     var sameFlow = method.getOwner() == ctx.documentContext && target == ctx.executionContext;
