@@ -2381,10 +2381,10 @@ Ordinary forms are checked in managed mode only when Use ordinary forms in manag
 the thick ordinary client among platform client modes. Mobile platform use enables mobile application
 client/server; platform application use enables the other modes. Both purposes enable both groups.
 Mobile client and mobile standalone server belong to platform applications.
-As a temporary exception, <code>checkMobileStandaloneServer = auto</code> disables mobile standalone server
-checks regardless of metadata. Automatic selection requires reading standalone configuration content
-in <a href="https://github.com/1c-syntax/mdclasses/issues/728">MDClasses</a> and using it in BSLLS.
-Until that support is integrated, enable this context explicitly with <code>on</code> if needed.
+<code>checkMobileStandaloneServer = auto</code> checks a module in the mobile standalone server context
+when its metadata object is included in the standalone configuration. Inclusion of a parent
+also covers its children unless they are explicitly excluded. If the content or the module's
+metadata object is unknown, use <code>on</code> to enable the check explicitly.
 An unknown module kind is skipped even when context parameters are <code>on</code>.</p>
 <p>For example, a project without COM access can use:</p>
 <div class="highlight"><pre><span></span><code><span class="p">{</span>
