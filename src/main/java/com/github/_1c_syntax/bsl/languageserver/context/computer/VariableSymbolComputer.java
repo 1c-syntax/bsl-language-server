@@ -206,7 +206,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
       // индексация в ReferenceIndexFiller, подсветка SymbolsSemanticTokensSupplier). Проверка
       // здесь, а не в общем updateVariablesCache: переменные цикла Для/Для Каждого — реальные
       // объявления и НЕ должны подавляться, даже если их имя совпадает с реквизитом.
-      || (hasBareSelfProperties(moduleType, currentMethod) && isBareSelfProperty(ctx.IDENTIFIER().getText()))
+      || (hasModuleContext(moduleType, currentMethod) && isBareSelfProperty(ctx.IDENTIFIER().getText()))
     ) {
       return ctx;
     }
@@ -247,18 +247,17 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
 
   /**
    * Заведена ли уже переменная модуля с этим именем, видимая в текущей точке. В теле
-   * модуля видна любая; в методе — только объявленная {@code Перем}: переменная, созданная
-   * присваиванием в теле модуля, живёт в нём одном, и одноимённое присваивание в методе
-   * заводит переменную метода.
+   * модуля видна любая; в методе с контекстом видны только объявленные {@code Перем}.
+   * Переменные модуля формы скрыты в её бесконтекстных методах.
    */
   private boolean isVisibleModuleVariable(String name) {
     return currentMethod == module
       ? moduleVariables.containsKey(name)
-      : declaredModuleVariables.containsKey(name);
+      : hasModuleContext(moduleType, currentMethod) && declaredModuleVariables.containsKey(name);
   }
 
-  /** Методы формы без контекста не видят её реквизиты и свойства по простому имени. */
-  static boolean hasBareSelfProperties(ModuleType moduleType, SourceDefinedSymbol scope) {
+  /** Методы формы без контекста не видят переменные модуля и реквизиты формы. */
+  static boolean hasModuleContext(ModuleType moduleType, SourceDefinedSymbol scope) {
     return moduleType != ModuleType.FormModule || !(scope instanceof MethodSymbol method)
       || !method.isWithoutFormContext();
   }

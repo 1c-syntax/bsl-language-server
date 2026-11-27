@@ -150,6 +150,49 @@ class UnusedLocalVariableFormDiagnosticTest extends AbstractServerContextAwareTe
       .containsExactly(VariableKind.DYNAMIC);
   }
 
+  @ParameterizedTest
+  @ValueSource(strings = {"НаСервереБезКонтекста", "AtClientAtServerNoContext"})
+  void treatsNamesOfFormModuleVariablesAsLocalInNoContextMethods(String directive) {
+    var document = formDocument("""
+      &НаСервере
+      Перем Кэш, ЭлементКэша, СчётчикКэша;
+
+      &НаСервере
+      Процедура ВКонтексте(Коллекция)
+        Кэш = 1;
+        Для Каждого ЭлементКэша Из Коллекция Цикл
+        КонецЦикла;
+        Для СчётчикКэша = 1 По 2 Цикл
+        КонецЦикла;
+      КонецПроцедуры
+
+      &%1$s
+      Процедура БезКонтекста(Коллекция)
+        кэш = 2;
+        Для Каждого ЭлементКэша Из Коллекция Цикл
+        КонецЦикла;
+        Для СчётчикКэша = 1 По 2 Цикл
+        КонецЦикла;
+      КонецПроцедуры
+
+      &%1$s
+      Функция ПрочитатьКэш()
+        Кэш = 3;
+        Возврат кэш;
+      КонецФункции
+      """.formatted(directive));
+
+    assertThat(document.getDiagnostics()).hasSize(2);
+    assertThat(document.getDiagnostics(), true).hasRange(14, 2, 5).hasRange(15, 14, 25);
+    var tree = document.getSymbolTree();
+    var withContext = tree.getMethodSymbol("ВКонтексте").orElseThrow();
+    var noContext = tree.getMethodSymbol("БезКонтекста").orElseThrow();
+    assertThat(tree.getVariablesOfScope(withContext)).extracting(VariableSymbol::getKind)
+      .containsExactly(VariableKind.PARAMETER);
+    assertThat(tree.getVariablesOfScope(noContext)).filteredOn(variable -> variable.getKind() == VariableKind.DYNAMIC)
+      .extracting(VariableSymbol::getName).containsExactlyInAnyOrder("кэш", "ЭлементКэша", "СчётчикКэша");
+  }
+
   @Test
   void keepsSymbolTreeWithNoContextLocalMatchingFormAttribute() {
     var document = formDocument("""

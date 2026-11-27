@@ -123,7 +123,7 @@ public class SymbolTreeComputer implements Computer<SymbolTree> {
     var bareSelfProperty = selfMemberClassifier.bareSelfPropertiesOf(documentContext);
     return basis.bareSelfProperties().stream().allMatch(bareSelfProperty)
       && classifiedAsBefore(symbolTree.getModule(), eventHandlers,
-        variable -> VariableSymbolComputer.hasBareSelfProperties(moduleType, variable.getScope())
+        variable -> VariableSymbolComputer.hasModuleContext(moduleType, variable.getScope())
           && bareSelfProperty.test(variable.getName()),
         basis.loopVariables());
   }

@@ -9,7 +9,7 @@ The rule skips a variable assigned directly from the global function `Eval` (`В
 
 In form, object and record set modules, the rule checks variables local to procedures and functions. Module variables may have external readers, including form bindings. [UnusedParameters](UnusedParameters.md) checks method parameters.
 
-* A method with form context can access form attributes and properties by name. In a method marked `&AtServerNoContext` or `&AtClientAtServerNoContext`, assignment to the same name can introduce a local variable.
+* A method with form context can access form attributes and properties by name. In a method marked `&AtServerNoContext` or `&AtClientAtServerNoContext`, assignment can introduce a local variable with the same name as a form attribute, property or module variable.
 * Object modules can access object attributes, standard properties and tabular sections. Record set modules can access properties of the set itself. Dimensions, resources and row attributes belong to individual records.
 * An explicit local declaration (`Var`) can shadow an attribute. Reading `Form.Name` or `Row.Name` does not read a separate local variable named `Name`.
 * A numeric loop reads its counter, including a variable declared or assigned before the loop. The rule checks whether a `For Each` item is read within the method.
