@@ -179,6 +179,16 @@ class ArchitectureTest {
     .should().resideInAPackage("..events..")
     .because("класс с суффиксом Event должен лежать в пакете events");
 
+  // --- Конфигурация -------------------------------------------------------------------------------
+
+  @ArchTest
+  static final ArchRule configuration_files_are_parsed_only_by_configuration_files = noClasses()
+    .that().resideInAPackage(ROOT_PACKAGE + ".configuration")
+    .and().doNotHaveFullyQualifiedName(ROOT_PACKAGE + ".configuration.ConfigurationFiles")
+    .should().dependOnClassesThat().resideInAPackage("tools.jackson.databind..")
+    .because("поиск и чтение файла конфигурации (порядок кандидатов, настройки маппера, политика "
+      + "ошибок разбора) сосредоточены в ConfigurationFiles");
+
   // --- Логирование --------------------------------------------------------------------------------
 
   @ArchTest

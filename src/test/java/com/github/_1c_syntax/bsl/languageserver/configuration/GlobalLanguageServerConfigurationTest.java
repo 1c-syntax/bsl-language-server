@@ -205,6 +205,45 @@ class GlobalLanguageServerConfigurationTest {
     assertThat(configuration.getWorkspaceSymbol().isSyncFuzzySearch()).isFalse();
   }
 
+  @Test
+  void onApplicationReady_cwdConfigMalformed_keepsDefaults() throws Exception {
+    // given
+    var cwdConfig = tempDir.resolve("cwd-config.json");
+    Files.writeString(cwdConfig, "{\"language\": ");
+
+    var configuration = createConfiguration(
+      cwdConfig.toString(),
+      tempDir.resolve("non-existent-global.json").toString()
+    );
+
+    // when
+    configuration.onApplicationReady();
+
+    // then
+    assertThat(configuration.getLanguage()).isEqualTo(Language.RU);
+  }
+
+  @Test
+  void update_mistypedValue_keepsCurrentSettings() throws Exception {
+    // given
+    var validConfig = tempDir.resolve("valid-config.json");
+    Files.writeString(validConfig, "{\"language\": \"en\"}");
+    var mistypedConfig = tempDir.resolve("mistyped-config.json");
+    Files.writeString(mistypedConfig, "{\"language\": \"klingon\"}");
+
+    var configuration = createConfiguration(
+      validConfig.toString(),
+      tempDir.resolve("non-existent-global.json").toString()
+    );
+    configuration.onApplicationReady();
+
+    // when
+    configuration.update(mistypedConfig.toFile());
+
+    // then
+    assertThat(configuration.getLanguage()).isEqualTo(Language.EN);
+  }
+
   private static GlobalLanguageServerConfiguration createConfiguration(
     String configurationFilePath,
     String globalConfigPath

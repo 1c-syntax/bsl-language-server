@@ -26,7 +26,6 @@ import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
-import java.io.File;
 import java.nio.file.Path;
 
 /**
@@ -65,27 +64,9 @@ public class LanguageServerConfigurationFactory {
     // Spring создаёт prototype bean — AOP аспекты работают
     var config = configurationProvider.getObject();
 
-    // 1. Если задан полный путь к конфигурации (не просто имя файла)
-    var configFile = new File(defaultConfigFileName);
-    if (configFile.exists()) {
-      config.update(configFile);
-      return config;
-    }
-
-    // 2. Попробовать загрузить из workspace
-    var workspaceConfig = workspaceRoot.resolve(defaultConfigFileName).toFile();
-    if (workspaceConfig.exists()) {
-      config.update(workspaceConfig);
-      return config;
-    }
-
-    // 3. Fallback на глобальную конфигурацию
-    var globalConfig = new File(globalConfigPath);
-    if (globalConfig.exists()) {
-      config.update(globalConfig);
-    }
-
-    // 4. Иначе — дефолтные значения (уже в config)
+    // Без найденного файла остаются дефолтные значения (уже в config)
+    ConfigurationFiles.locate(defaultConfigFileName, workspaceRoot, globalConfigPath)
+      .ifPresent(config::update);
     return config;
   }
 }

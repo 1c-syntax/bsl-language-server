@@ -1,0 +1,92 @@
+# Пул задач упорядочивания архитектуры
+
+Найденная архитектурная энтропия, ещё не устранённая. Пункт удаляется отсюда, когда закрыт
+(запись о закрытии — в [progress.md](progress.md)). Статус: **проверено** — подтверждено чтением
+кода; **гипотеза** — найдено сканированием, перед работой перепроверить.
+
+## Ожидают подтверждения (продуктовое решение или ломающее изменение)
+
+- **CLI: устаревший ключ `--srcDir` у `format`** (`cli/FormatCommand.java`, `TODO delete old key`).
+  Удаление ломает скрипты пользователей. У `analyze` основным ключом остаётся `--srcDir`, так что
+  «старый» он только для `format` — нужно решить, какой ключ каноничен для обеих команд.
+- **Отчёт JSON: поле `covlocData`** (`context/MetricStorage.java`, `@Deprecated`). Входит в формат
+  отчёта, который читают внешние инструменты; удаление — изменение контракта.
+- **Цикл `references` ↔ `types`** (известный долг из `ArchitectureTest`). Разрыв требует переноса
+  резолва конструкторов/членов платформы между подсистемами — существенное изменение архитектуры.
+- **Значение `-c` различается между подкомандами**: `analyze` применяет файл к глобальной и
+  workspace-конфигурации, `lsp`/`websocket`/`mcp` — только к глобальной, у `format` ключа нет
+  (гипотеза). Унификация меняет поведение CLI.
+- **Правки `CLAUDE.md`** по итогам раундов — по правилам репозитория только с согласия мейнтейнера.
+
+## Высокий приоритет (дефекты или вероятные дефекты)
+
+- **Кэши `testIds`/`testSources` без ограничений** (гипотеза): `@Primary CacheManager` в
+  `infrastructure/CacheConfiguration.java` строит Caffeine без spec, из-за чего
+  `spring.cache.caffeine.spec` в `application.properties` (и копия в `BSLLSBinding`) не действует.
+  `TestRunnerAdapter.getTestIds` кэшируется по `DocumentContext` (равенство по URI) и не
+  сбрасывается при изменении документа — test id устаревают после правки.
+- **NPE при resolve code lens с неизвестным id** (гипотеза): `CodeLensProvider.resolveCodeLens`
+  не проверяет отсутствие supplier'а; inlay hint возвращает подсказку как есть, команда бросает
+  `MethodNotFound` — три политики одного механизма.
+- **Гонка в `AbstractComplexityInlayHintSupplier.enabledMethods`** (гипотеза): `HashMap` пишется
+  из исполнителя workspace-сервиса и читается из исполнителя text document; не чистится на
+  удаление документа.
+- **SARIF: URI файлов от рабочего каталога процесса** (гипотеза): `SarifReporter` строит URI из
+  относительного пути через `Path.toUri()`, а не от `-w`. Прочие репортёры пишут разделители ОС,
+  `CodeQualityReporter` — `/`.
+- **`UnreachableCodeDiagnostic`: позиция с 1-based строкой** сравнивается с 0-based диапазонами
+  (гипотеза, `diagnostics/UnreachableCodeDiagnostic.java` ~:191).
+- **`MainApplication` разбирает аргументы вручную параллельно picocli** (гипотеза): `--websocket`
+  не распознаётся как websocket-режим, токен `mcp` в любом месте включает MCP-профили; поля
+  `serverPort`/`endpointPath`/`--mcp-path` у команд не читаются.
+- **`EventPublisherAspect` глотает исключения слушателей** с `WARN e.toString()` без стека
+  (гипотеза).
+
+## Дублирование реализаций (канонизация)
+
+- **Метод, содержащий позицию** — 5 копий (`ExpressionTypeInferencer`, `CompletionProvider`,
+  `CompilationContextMemo`, `CompilationContextResolver`, `InsertionWithoutChangeAndValidateDiagnostic`);
+  естественный дом — `SymbolTree`.
+- **Сравнение токена/позиции с `Position`** — 5 копий; `RewriteMethodParameterDiagnostic.compare`
+  — дословная копия `Ranges.compare`.
+- **Ручное построение `Position` из токена** вместо `Positions.create` — 6 мест, 2 обёртки.
+- **«Самый вложенный узел типа T, содержащий позицию»** и `encloses` — копии в
+  `NewExpressionReferenceFinder` и `SignatureHelpProvider`.
+- **`Trees.getRootParent(ctx, int)` ≡ `Trees.getAncestorByRuleIndex(ctx, int)`** (оба —
+  ближайший предок; javadoc `getRootParent` неверен) + ручные циклы поиска предка в
+  `MagicNumberDiagnostic`/`MagicDateDiagnostic`; две копии «ancestor-or-self».
+- **Терминал, заканчивающийся на курсоре** — `LinkedEditingRangeProvider`/`SelectionRangeProvider`.
+- **`safeGetAst`** — 4 приватные копии и 3 inline (две политики перехвата).
+- **Таблицы «тип токена → `Keywords.MultiName`»** — 3 копии (completion, formatter, diagnostic).
+- **Сплющивание выражений в `Cognitive/CyclomaticComplexityComputer`** — ~45 строк копии.
+- **Мелкие пары копий**: `readFlag` (inlay hint flags), `findMethodAt` (две диагностики
+  EventHandler*), `getVariableName`, `record ProfileKey`, `isIdentChar`, `stringField`, `key`.
+- **Реестры supplier'ов code lens / inlay hint / command** — конфигурации, `getId()` по суффиксу,
+  `extractData`, разбор data в resolve написаны трижды-четырежды.
+- **Фильтрация включённых supplier'ов и параметры `Either<Boolean, Map>`** — разные механизмы
+  у code lens и inlay hint; у code lens сортировка по `@Order`, у inlay hint — нет.
+- **Чтение возможностей клиента** — четыре способа (кэш в holder'е, чтение на каждый вызов,
+  из `InitializeParams` события, напрямую); дубли `isVsCodeLikeClient`, понижения
+  `LocationLink → Location`.
+- **`BSLTextDocumentService`**: 40 копий «найти документ → дефолт → `withFreshDocumentContext`»,
+  непоследовательные пустые ответы (`null` vs `emptyList()`), порядок аргументов провайдеров.
+- **Code actions**: фильтр `only` в трёх местах с тремя смыслами (провайдер — точное совпадение
+  вместо иерархического префикса по LSP), копия построения fix-all параметров, двухшаговый API
+  `QuickFixSupplier`.
+- **Нормализация URI в MCP** — несколько способов; имя workspace выводится в двух местах.
+- **Источник `language`** — глобальная и workspace-настройка с тремя правилами разрешения;
+  `GlobalLanguageServerConfiguration.reset()` дублирует дефолты вручную.
+- **Константы**: расширения `bsl`/`os` и glob'ы — `BSLFiles` и дважды в `BSLLanguageServer`;
+  footer'ы CLI с разными годами; дефолты `server.port`/`/lsp` в полях websocket-команды.
+- **Дефолты опций** — в полях `*Options`, в `schema.json` и в двух локалях документации, без
+  автоматической сверки (кандидат на контрактный тест).
+
+## Мёртвый код (гипотезы, перепроверить вызывающих)
+
+- `WorkspaceBeanScope.getAllInstances`, `ServerContextProvider.getDocumentUnsafeNoLock`.
+- `SemanticTokensHelper.addTokenRange` (обе перегрузки).
+- `FormatProvider.handleEvent(LanguageServerConfigurationChangedEvent)` — пустой слушатель.
+- `CommandSupplier.needRefreshCodeLensesAfterExecuteCommand` — нигде не переопределён.
+- `DiagnosticHelper.isCorrespondenceType`.
+- `AbstractDiagnosticReporter.serverContextProvider` — не используется наследниками.
+- Устаревшее имя `McpServerInfoCustomizer` в `application-mcp.properties`.

@@ -36,13 +36,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
-import tools.jackson.databind.json.JsonMapper;
 
 import java.io.File;
-import java.io.IOException;
-import java.nio.file.Files;
-
-import static tools.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS;
 
 /**
  * Глобальная конфигурация BSL Language Server.
@@ -121,12 +116,8 @@ public class GlobalLanguageServerConfiguration {
    */
   @EventListener(ContextRefreshedEvent.class)
   void onApplicationReady() {
-    var configFile = new File(configurationFilePath);
-    if (configFile.exists()) {
-      update(configFile);
-      return;
-    }
-    update(new File(globalConfigPath));
+    // update вызывается и без найденного файла: событие об изменении конфигурации публикуется всегда.
+    update(ConfigurationFiles.locate(configurationFilePath, null, globalConfigPath).orElse(null));
   }
 
   /**
@@ -160,19 +151,12 @@ public class GlobalLanguageServerConfiguration {
   }
 
   private void loadFromFile(File file) {
-    var mapper = JsonMapper.builder()
-      .enable(ACCEPT_CASE_INSENSITIVE_ENUMS)
-      .build();
-
-    try (var inputStream = Files.newInputStream(file.toPath())) {
-      var loaded = mapper.readValue(inputStream, GlobalLanguageServerConfiguration.class);
+    ConfigurationFiles.read(file, GlobalLanguageServerConfiguration.class).ifPresent(loaded -> {
       this.language = loaded.language;
       this.sendErrors = loaded.sendErrors;
       this.traceLog = loaded.traceLog;
       this.capabilities.getTextDocumentSync().setChange(loaded.capabilities.getTextDocumentSync().getChange());
       this.workspaceSymbol.setSyncFuzzySearch(loaded.workspaceSymbol.isSyncFuzzySearch());
-    } catch (IOException e) {
-      LOGGER.error("Can't deserialize global configuration file", e);
-    }
+    });
   }
 }
