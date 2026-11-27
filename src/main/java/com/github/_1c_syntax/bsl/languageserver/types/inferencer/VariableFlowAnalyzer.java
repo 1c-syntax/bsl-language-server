@@ -1250,11 +1250,10 @@ public class VariableFlowAnalyzer extends AbstractDocumentLifecycleClearableInde
 
   /** Подготовить один и тот же граф для полного прохода и его проекции. */
   FlowGraph flowGraph(DocumentContext document, CodeBlockContext body, FlowInputs inputs) {
-    var graph = controlFlowGraphIndex.graphOf(document, body, CfgBuildOptions.defaults());
-    var compiled = inputs.compilationContexts().apply(body)
-      .map(contexts -> PreprocessorFlow.of(graph, contexts, document.getFileType())).orElse(null);
+    var indexedGraph = controlFlowGraphIndex.indexedGraphOf(document, body, CfgBuildOptions.defaults());
+    var compiled = inputs.compilationContexts().apply(body).map(indexedGraph::compiledFlow).orElse(null);
 
-    return new FlowGraph(graph, compiled);
+    return new FlowGraph(indexedGraph.graph(), compiled);
   }
 
   /** Структура переменных тела для текущего дерева символов, общая для всех режимов расчёта. */

@@ -63,7 +63,7 @@ class InferenceFailureTest extends AbstractServerContextAwareTest {
   @Test
   void failedComputationOfMethodValueYieldsEmptyInsteadOfPropagating() {
     // given: расчёт значения метода срывается.
-    when(controlFlowGraphIndex.graphOf(any(), any(), any())).thenThrow(new IllegalStateException("сбой"));
+    when(controlFlowGraphIndex.indexedGraphOf(any(), any(), any())).thenThrow(new IllegalStateException("сбой"));
     var documentContext = TestUtils.getDocumentContext("""
       Функция Ф() Экспорт
         Возврат Новый Массив;
@@ -78,7 +78,7 @@ class InferenceFailureTest extends AbstractServerContextAwareTest {
       var computed = inferencer.computeReturnTypes(method.get());
       assertThat(computed.types().isEmpty()).isTrue();
     }).doesNotThrowAnyException();
-    verify(controlFlowGraphIndex).graphOf(any(), any(), any());
+    verify(controlFlowGraphIndex).indexedGraphOf(any(), any(), any());
   }
 
   @Test

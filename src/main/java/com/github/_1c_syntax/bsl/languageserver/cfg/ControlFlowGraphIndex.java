@@ -22,13 +22,17 @@
 package com.github._1c_syntax.bsl.languageserver.cfg;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.index.AbstractDocumentLifecycleClearableIndex;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.parser.BSLParser;
+import com.github._1c_syntax.utils.Lazy;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -55,7 +59,50 @@ import java.util.concurrent.ConcurrentHashMap;
 @WorkspaceScope
 public class ControlFlowGraphIndex extends AbstractDocumentLifecycleClearableIndex {
 
-  private final Map<URI, Map<GraphKey, ControlFlowGraph>> graphsByUri = new ConcurrentHashMap<>();
+  private final Map<URI, Map<GraphKey, IndexedGraph>> graphsByUri = new ConcurrentHashMap<>();
+
+  /** Общий граф и его неизменяемые проекции препроцессора на время жизни дерева разбора. */
+  public static final class IndexedGraph {
+    private static final Set<ExecutionContext> WITHOUT_CONDITIONS = Set.of(ExecutionContext.SERVER);
+    private static final PreprocessorFlow EMPTY_FLOW = new PreprocessorFlow(Set.of(), Set.of());
+
+    private final ControlFlowGraph graph;
+    private final FileType fileType;
+    private final Lazy<Boolean> hasPreprocessorConditions;
+    private final Lazy<Map<Set<ExecutionContext>, PreprocessorFlow>> compiled = new Lazy<>(ConcurrentHashMap::new);
+
+    /**
+     * @param graph построенный граф, который больше не изменяется.
+     * @param fileType диалект для проверки условий препроцессора.
+     */
+    private IndexedGraph(ControlFlowGraph graph, FileType fileType) {
+      this.graph = graph;
+      this.fileType = fileType;
+      hasPreprocessorConditions = new Lazy<>(() -> graph.vertexSet().stream()
+        .anyMatch(PreprocessorConditionVertex.class::isInstance));
+    }
+
+    /** @return исходный граф, общий для потребителей и проекций. */
+    public ControlFlowGraph graph() {
+      return graph;
+    }
+
+    /**
+     * @param contexts возможные режимы тела. Пустой набор исключает всё тело.
+     * @return доступные вершины и рёбра исходного графа.
+     */
+    public PreprocessorFlow compiledFlow(Set<ExecutionContext> contexts) {
+      if (contexts.isEmpty()) {
+        return EMPTY_FLOW;
+      }
+      // Без условий препроцессора выбор непустого набора режимов не меняет достижимость.
+      var key = hasPreprocessorConditions.getOrCompute() ? contexts : WITHOUT_CONDITIONS;
+      var byContexts = compiled.getOrCompute();
+      var existing = byContexts.get(key);
+      return existing != null ? existing
+        : byContexts.computeIfAbsent(Set.copyOf(key), active -> PreprocessorFlow.of(graph, active, fileType));
+    }
+  }
 
   /**
    * Граф потока управления блока кода — из кэша либо построенный на месте.
@@ -70,6 +117,20 @@ public class ControlFlowGraphIndex extends AbstractDocumentLifecycleClearableInd
     BSLParser.CodeBlockContext codeBlock,
     CfgBuildOptions options
   ) {
+    return indexedGraphOf(documentContext, codeBlock, options).graph();
+  }
+
+  /**
+   * @param documentContext владелец графа.
+   * @param codeBlock блок кода, принадлежащий актуальному дереву.
+   * @param options настройки построения.
+   * @return общий граф и проекции для тех же узлов и рёбер.
+   */
+  public IndexedGraph indexedGraphOf(
+    DocumentContext documentContext,
+    BSLParser.CodeBlockContext codeBlock,
+    CfgBuildOptions options
+  ) {
     var byKey = graphsByUri.computeIfAbsent(documentContext.getUri(), uri -> new ConcurrentHashMap<>());
     var key = new GraphKey(codeBlock, options);
     var cached = byKey.get(key);
@@ -79,7 +140,7 @@ public class ControlFlowGraphIndex extends AbstractDocumentLifecycleClearableInd
     // Построение идёт ВНЕ computeIfAbsent: обход поддерева операторов не мгновенный, а под
     // замком корзины на нём выстраивались бы все потоки пакетного анализа. Двойная работа
     // при гонке безвредна — граф зависит только от блока кода и настроек.
-    var graph = options.buildGraph(codeBlock);
+    var graph = new IndexedGraph(options.buildGraph(codeBlock), documentContext.getFileType());
     var previous = byKey.putIfAbsent(key, graph);
     return previous == null ? graph : previous;
   }
