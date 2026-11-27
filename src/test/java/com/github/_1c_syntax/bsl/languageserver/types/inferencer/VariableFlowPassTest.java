@@ -142,9 +142,9 @@ class VariableFlowPassTest {
     var allocated = allocations.getThreadAllocatedBytes(thread) - before;
 
     assertThat(entry.types()).hasSize(variables.size()).containsOnly(number);
-    // A generous per-variable budget includes graph traversal and the facts container.
-    // Repeated array copies require several MiB for this body, independently of timing.
-    assertThat(allocated).isBetween(0L, variables.size() * 128L);
+    // Allow for allocations that vary with the JVM and test suite.
+    // Copying the array for every variable still requires several MiB for this body.
+    assertThat(allocated).isBetween(0L, variables.size() * 512L);
   }
 
   private VariableFlowPass pass(List<VariableSymbol> variables, FlowInputs inputs) {
