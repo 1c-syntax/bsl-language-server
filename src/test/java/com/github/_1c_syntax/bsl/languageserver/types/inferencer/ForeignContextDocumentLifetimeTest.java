@@ -46,6 +46,7 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.jspecify.annotations.Nullable;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -230,6 +231,26 @@ class ForeignContextDocumentLifetimeTest extends AbstractServerContextAwareTest 
     assertThat(typesAtCall(documents.caller(), ExecutionContext.SERVER)).containsExactly("Число");
     assertThat(typesAtCall(documents.caller(), ExecutionContext.THICK_CLIENT_MANAGED_FILE)).containsExactly("Число");
     assertThat(context.getDocumentState(documents.callee())).isEqualTo(DocumentState.WITHOUT_CONTENT);
+  }
+
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void documentedTypeDoesNotOverrideConfirmedExclusion(boolean unloaded) throws Exception {
+    var documents = documents("""
+      // Возвращаемое значение:
+      // Число - результат.
+      Функция Проверка() Экспорт
+        Возврат 1;
+      КонецФункции
+      """, "СерверныйМодуль", "ОбщегоНазначения");
+    assertThat(indexedTypes(documents.callee())).containsExactly("Число");
+    if (unloaded) {
+      assertCleared(documents.callee());
+    }
+
+    assertThat(typesAtCall(documents.caller(), ExecutionContext.EXTERNAL_CONNECTION)).isEmpty();
+    assertThat(typesAtCall(documents.caller(), ExecutionContext.SERVER)).containsExactly("Число");
   }
 
   @Test

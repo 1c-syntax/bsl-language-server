@@ -131,7 +131,34 @@ class ModuleCallInvarianceTest extends AbstractServerContextAwareTest {
 
   @Test
   void aReleasedModuleUsesItsNeutralIndexWithoutReloadingItsBody() {
-    var callee = common("""
+    var callee = releasedGetter("ОбщегоНазначения");
+    var source = "&НаКлиентеНаСервереБезКонтекста\n" + builder("ОбщегоНазначения.Фабрика()");
+    var document = TestUtils.getDocumentContext(ROOT.resolve("CommonForms/Тест/Ext/Form/Module.bsl").toUri(), source, context);
+    try (var scope = new DiagnosticDeclarationSession().open()) {
+      var server = query(document, ExecutionContext.SERVER);
+      assertThat(fieldTypes(server)).containsExactlyInAnyOrder("Число", "Строка");
+      var first = constructors();
+      assertThat(query(document, ExecutionContext.THIN_CLIENT)).isEqualTo(server);
+      assertThat(constructors()).as("an available foreign return is mode-independent").isEqualTo(first);
+      assertThat(context.getDocumentState(callee)).isEqualTo(DocumentState.WITHOUT_CONTENT);
+    }
+  }
+
+  @Test
+  void aReleasedModuleDoesNotShareFactsWithAnExcludedMode() {
+    var callee = releasedGetter("КлиентСерверныйМодуль");
+    var document = common("ОбщегоНазначения", builder("КлиентСерверныйМодуль.Фабрика()"));
+    try (var scope = new DiagnosticDeclarationSession().open()) {
+      assertThat(fieldTypes(query(document, ExecutionContext.SERVER))).containsExactlyInAnyOrder("Число", "Строка");
+      var first = constructors();
+      assertThat(fieldTypes(query(document, ExecutionContext.EXTERNAL_CONNECTION))).isEmpty();
+      assertThat(constructors()).as("the excluded mode needs separate facts").isGreaterThan(first);
+      assertThat(context.getDocumentState(callee)).isEqualTo(DocumentState.WITHOUT_CONTENT);
+    }
+  }
+
+  private DocumentContext releasedGetter(String module) {
+    var callee = common(module, """
       Функция Фабрика() Экспорт
         #Если Сервер Тогда
           Возврат 1;
@@ -144,21 +171,17 @@ class ModuleCallInvarianceTest extends AbstractServerContextAwareTest {
     returns.computeIfAbsent(method, () -> inferencer.computeReturnTypes(method));
     context.closeDocument(callee);
     assertThat(context.getDocumentState(callee)).isEqualTo(DocumentState.WITHOUT_CONTENT);
-    var source = "&НаКлиентеНаСервереБезКонтекста\n" + builder("КлиентСерверныйМодуль.Фабрика()");
-    var document = TestUtils.getDocumentContext(ROOT.resolve("CommonForms/Тест/Ext/Form/Module.bsl").toUri(), source, context);
-    try (var scope = new DiagnosticDeclarationSession().open()) {
-      var server = query(document, ExecutionContext.SERVER);
-      assertThat(fieldTypes(server)).containsExactlyInAnyOrder("Число", "Строка");
-      var first = constructors();
-      assertThat(query(document, ExecutionContext.THIN_CLIENT)).isEqualTo(server);
-      assertThat(constructors()).as("an indexed foreign return is independent of the requested mode").isEqualTo(first);
-      assertThat(context.getDocumentState(callee)).isEqualTo(DocumentState.WITHOUT_CONTENT);
-    }
+    return callee;
   }
 
   private DocumentContext common(String source) {
-    return TestUtils.getDocumentContext(ROOT.resolve("CommonModules/КлиентСерверныйМодуль/Ext/Module.bsl").toUri(), source, context);
+    return common("КлиентСерверныйМодуль", source);
   }
+
+  private DocumentContext common(String module, String source) {
+    return TestUtils.getDocumentContext(ROOT.resolve("CommonModules/" + module + "/Ext/Module.bsl").toUri(), source, context);
+  }
+
 
   private static String builder(String value) {
     return "Функция Построить(Вход)\nДанныеПостроителя = Новый Структура;\n"

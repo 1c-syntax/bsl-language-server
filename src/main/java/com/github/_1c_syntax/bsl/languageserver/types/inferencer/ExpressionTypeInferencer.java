@@ -957,14 +957,13 @@ public class ExpressionTypeInferencer {
     // ОбщийМодуль.Метод()) берём полный тип возврата из индекса символов —
     // с localFields структуры/ТЗ, объявленными в JsDoc. MemberDescriptor
     // несёт лишь головной ref, поэтому без этого поля структуры терялись.
-    if (expectedKind == MemberKind.METHOD) {
-      var symbolReturn = member.getSourceSymbol()
-        .filter(MethodSymbol.class::isInstance)
-        .map(MethodSymbol.class::cast)
-        .map(sourceMethod -> methodReturnType(sourceMethod, ctx))
-        .filter(returned -> !returned.isEmpty());
-      if (symbolReturn.isPresent()) {
-        return symbolReturn.get();
+    if (expectedKind == MemberKind.METHOD && member.getSourceSymbol().orElse(null) instanceof MethodSymbol method) {
+      var returned = methodReturnTypeUnlessExcluded(method, ctx);
+      if (returned == null) {
+        return TypeSet.EMPTY;
+      }
+      if (!returned.isEmpty()) {
+        return returned;
       }
     }
     // Возможные типы члена (union); UNKNOWN-ref'ы отбрасываем.
@@ -1117,6 +1116,12 @@ public class ExpressionTypeInferencer {
    * тип нельзя подменять self-свойством того же имени.
    */
   private TypeSet methodReturnType(MethodSymbol method, InferenceContext ctx) {
+    var returned = methodReturnTypeUnlessExcluded(method, ctx);
+    return returned == null ? TypeSet.EMPTY : returned;
+  }
+
+  /** @return выведенный тип или {@code null}, если метод недоступен в этом режиме. */
+  private @Nullable TypeSet methodReturnTypeUnlessExcluded(MethodSymbol method, InferenceContext ctx) {
     var owner = method.getOwner();
     var contextual = ctx.executionContext != null && (owner == ctx.documentContext
       || owner.getServerContext().getDocumentState(owner) == DocumentState.WITH_CONTENT);
@@ -1159,7 +1164,7 @@ public class ExpressionTypeInferencer {
       var mode = ctx.executionContext;
       if (mode != null && owner.getFileType() == FileType.BSL && unloadedTargetIsExcluded(method, ctx, mode)) {
         ctx.contextualReturns.noteCellRead();
-        return TypeSet.EMPTY;
+        return null;
       }
 
       // Заранее посчитаны только экспортные функции. Неэкспортную, вызванную из её же
@@ -1277,9 +1282,9 @@ public class ExpressionTypeInferencer {
    * @param method вызываемый метод.
    * @param ctx состояние текущего запроса вывода.
    * @param context режим в точке вызова.
-   * @return контекстные типы либо собранные типы занятого или уже выгруженного документа.
+   * @return контекстные или собранные типы, либо {@code null} при подтверждённом запрете.
    */
-  private TypeSet contextualReturnTypes(MethodSymbol method, InferenceContext ctx, ExecutionContext context) {
+  private @Nullable TypeSet contextualReturnTypes(MethodSymbol method, InferenceContext ctx, ExecutionContext context) {
     var owner = method.getOwner();
     if (owner == ctx.documentContext) {
       return inferContextualReturnTypes(method, ctx, context);
@@ -1294,7 +1299,7 @@ public class ExpressionTypeInferencer {
     }
     try {
       if (serverContext.getDocumentState(owner) != DocumentState.WITH_CONTENT) {
-        return retainedTargetIsExcluded(method, ctx, context) ? TypeSet.EMPTY : symbolTypeIndex.getReturnTypes(method);
+        return retainedTargetIsExcluded(method, ctx, context) ? null : symbolTypeIndex.getReturnTypes(method);
       }
       return inferContextualReturnTypes(method, ctx, context);
     } finally {
@@ -1345,7 +1350,7 @@ public class ExpressionTypeInferencer {
 
       // Даже разрешённое обращение зависит от режима, если другой режим может исключить объявление.
       if (ctx.flowSession.contextTracking && !ctx.flowSession.contextSensitive) {
-        var modes = ExecutionContext.forFileType(ctx.documentContext.getFileType());
+        var modes = compilationContextResolver.supportedContexts(ctx.documentContext);
         if (excludedInMode || !profile.orElseThrow().contexts().containsAll(modes)
           || (branch != null && !branch.containsAll(modes))) {
           markContextSensitive(ctx);
@@ -1394,7 +1399,7 @@ public class ExpressionTypeInferencer {
   /**
    * Вывести возвращаемый тип по доступному телу функции в контексте назначения вызова.
    * <p>
-   * Известное отсутствие объявления в целевом режиме даёт пустой тип. Иначе результат тела
+   * Известное отсутствие объявления в целевом режиме даёт {@code null}. Иначе результат тела
    * соединяется с документирующим комментарием по правилам {@link SymbolTypeIndex}.
    * Мемоизация действует только внутри текущего запроса: ключ включает метод и целевой режим.
    * Отсечение рекурсии и недостающие данные запрещают запоминать результат. При уточнении
@@ -1403,12 +1408,12 @@ public class ExpressionTypeInferencer {
    * @param method вызываемый метод с доступным AST.
    * @param ctx состояние текущего запроса вывода.
    * @param context режим в точке вызова до перехода в целевой метод.
-   * @return тип с учётом достижимых возвратов и документирующего комментария.
+   * @return тип с учётом достижимых возвратов и документации либо {@code null} при подтверждённом запрете.
    */
-  private TypeSet inferContextualReturnTypes(MethodSymbol method, InferenceContext ctx, ExecutionContext context) {
+  private @Nullable TypeSet inferContextualReturnTypes(MethodSymbol method, InferenceContext ctx, ExecutionContext context) {
     var target = reachableReturnContext(method, ctx, context);
     if (target == null) {
-      return TypeSet.EMPTY;
+      return null;
     }
     var key = new ContextualReturnKey(method, target);
     var sameFlow = method.getOwner() == ctx.documentContext && target == ctx.executionContext;
