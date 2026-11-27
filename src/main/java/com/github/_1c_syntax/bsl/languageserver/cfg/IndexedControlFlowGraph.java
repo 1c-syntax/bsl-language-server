@@ -61,11 +61,11 @@ public final class IndexedControlFlowGraph {
   private Function<Set<ExecutionContext>, PreprocessorFlow> createProjection() {
     if (graph.vertexSet().stream().noneMatch(PreprocessorConditionVertex.class::isInstance)) {
       var common = PreprocessorFlow.of(graph, EnumSet.of(ExecutionContext.SERVER), fileType);
-      return contexts -> common;
+      return (Set<ExecutionContext> contexts) -> common;
     }
 
     Cache<Set<ExecutionContext>, PreprocessorFlow> byContexts = Caffeine.newBuilder().build();
-    return contexts -> {
+    return (Set<ExecutionContext> contexts) -> {
       var existing = byContexts.getIfPresent(contexts);
       return existing != null ? existing
         : byContexts.get(Set.copyOf(contexts), active -> PreprocessorFlow.of(graph, active, fileType));

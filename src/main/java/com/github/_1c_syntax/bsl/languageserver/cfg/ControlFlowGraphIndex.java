@@ -96,8 +96,7 @@ public class ControlFlowGraphIndex extends AbstractDocumentLifecycleClearableInd
     // замком корзины на нём выстраивались бы все потоки пакетного анализа. Двойная работа
     // при гонке безвредна — граф зависит только от блока кода и настроек.
     var graph = new IndexedControlFlowGraph(options.buildGraph(codeBlock), documentContext.getFileType());
-    var previous = byKey.asMap().putIfAbsent(key, graph);
-    return previous == null ? graph : previous;
+    return byKey.get(key, ignored -> graph);
   }
 
   /**
