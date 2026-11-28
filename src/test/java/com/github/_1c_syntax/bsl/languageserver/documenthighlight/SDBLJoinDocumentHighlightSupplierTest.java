@@ -126,6 +126,40 @@ class SDBLJoinDocumentHighlightSupplierTest {
     assertThat(highlights).isEmpty();
   }
 
+  @Test
+  void joinInsideSubqueryHighlightsItselfNotTheEnclosingJoin() {
+    // given — соединение внутри вложенного запроса, который сам стоит в левом соединении
+    var text = """
+      Процедура Тест()
+        Текст = "ВЫБРАТЬ
+        |  Т.Ссылка
+        |ИЗ
+        |  Справочник.Товары КАК Т
+        |    ЛЕВОЕ СОЕДИНЕНИЕ (ВЫБРАТЬ
+        |      В.Ссылка КАК Ссылка
+        |    ИЗ
+        |      Справочник.Товары КАК В
+        |        ВНУТРЕННЕЕ СОЕДИНЕНИЕ Справочник.Товары КАК Г
+        |        ПО В.Ссылка = Г.Ссылка) КАК П
+        |    ПО Т.Ссылка = П.Ссылка";
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(text);
+    var innerJoinLine = 9;
+    var innerJoinChar = text.lines().toList().get(innerJoinLine).indexOf("ВНУТРЕННЕЕ") + 1;
+    var params = new DocumentHighlightParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(innerJoinLine, innerJoinChar));
+
+    // when
+    var highlights = supplier.getDocumentHighlight(params, documentContext, Optional.empty());
+
+    // then — подсвечено внутреннее соединение и его «ПО», а не внешнее
+    assertThat(highlights)
+      .extracting(highlight -> highlight.getRange().getStart().getLine())
+      .containsExactlyInAnyOrder(innerJoinLine, innerJoinLine + 1);
+  }
+
   private void assertHighlightRange(List<DocumentHighlight> highlights,
                                      int startLine, int startChar,
                                      int endLine, int endChar) {

@@ -151,6 +151,32 @@
 
 ## Дублирование реализаций (канонизация)
 
+- **Углублённое сканирование `types/` и мелких пакетов (после раунда 76).** Закрыто: повторная
+  специализация семейства (77), английский вид в `См.` (78); «вложенная подсветка SDBL» проверена —
+  дефекта нет (79). Не проверено построчно, к разбору (по убыванию ценности):
+  1. Рецепт «типизированной коллекции» (`registerDefaultElementTypes` → `inheritCollectionTraits`
+     → `CollectionReturnsSpecializer.register`, порядок обязателен) — около шести мест
+     (`RegisterTypesRegistrar`, `ConfigurationTypesProvider`, `FormDataTypesRegistrar` ×4).
+  2. «Для каждого дженерика семейства → `findSpecialization` → override/подавление» — четыре места.
+  3. Регистрация конфигурационного типа с английским алиасом — семь мест с разной политикой
+     отображаемого имени (`XdtoTypesProvider` — без проверки пустого/совпадающего имени).
+  4. Схема имён конфигурационных типов (`<Вид>Объект.`, `…ТабличнаяЧасть[Строка].`, `…Ссылка.`)
+     собирается вручную в десятке мест; `CatalogOwnerTypesRegistrar.refTypeName` — копия
+     `FormPlatformTypes.typeNameWithSuffix`.
+  5. Свойства из детей формы по имени в нижнем регистре — три построителя членов и три карты.
+  6. Пересборка сигнатур и параметров с новыми типами — нет `SignatureDescriptor.withReturnTypes`/
+     `ParameterDescriptor.withTypes`; обход `MdoMemberFactory.property` девятиаргументным
+     конструктором.
+  7. Мелкие обходы канонического: `TableCollectionInference.resolveMember` ≈ `TypeRegistry.findMember`,
+     `SymbolTypeIndex.findLocalFunction` ≈ `getMethodSymbol(name).filter(isFunction)`,
+     `ConfigurationModuleMembersProvider.register` строит self-тип мимо `selfTypeQualifiedName`.
+  8. `completion/`: свёртка `CompletionPriority` четырьмя копиями при неиспользуемом
+     `combine(int[])`; `diagnostics/infrastructure`: рецепт сборки `DiagnosticInfo` четырежды, два
+     метода фабрики без вызовов (у `DiagnosticInfos.init` общий список экземпляров — намеренно).
+  **Ожидает решения:** `OpenDataObjectInference.applyTypeDescriptionTypes` резолвит имена из
+  строки `ОписаниеТипов("…")` через `resolve`, а не `resolveSet` — `ОпределяемыйТип.X` в такой
+  строке выпадает. Нужен ответ, принимает ли платформа имя определяемого типа в этом конструкторе.
+
 - **Сканирование `codeactions/`, `inlayhints/`, `rename/`, `reporters/`, `aop/`, `websocket/`,
   `types/oscript/`, `utils/` (после раунда 69).** В `inlayhints/`, `rename/`, `aop/`, `websocket/`
   существенного не найдено. Найдено (порядок — по ценности):

@@ -179,6 +179,36 @@ class SDBLCaseDocumentHighlightSupplierTest {
       .extracting(DocumentHighlight::getRange)
       .doesNotContain(new Range(new Position(6, 8), new Position(6, 13)));
   }
+  @Test
+  void caseNestedInOperandHighlightsItselfNotTheEnclosingCase() {
+    // given — вложенный ВЫБОР стоит операндом внешнего: «ВЫБОР <выражение> КОГДА …»
+    var text = """
+      Процедура Тест()
+        Текст = "ВЫБРАТЬ
+        |  ВЫБОР ВЫБОР КОГДА Т.Код = 1 ТОГДА 1 ИНАЧЕ 2 КОНЕЦ
+        |    КОГДА 1 ТОГДА ""а""
+        |  КОНЕЦ КАК Поле
+        |ИЗ
+        |  Справочник.Товары КАК Т";
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(text);
+    var innerCaseLine = 2;
+    var line = text.lines().toList().get(innerCaseLine);
+    var innerCaseChar = line.indexOf("ВЫБОР", line.indexOf("ВЫБОР") + 1) + 1;
+    var params = new DocumentHighlightParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(innerCaseLine, innerCaseChar));
+
+    // when
+    var highlights = supplier.getDocumentHighlight(params, documentContext, Optional.empty());
+
+    // then — все ключевые слова внутреннего ВЫБОР на одной строке, внешнего — нет
+    assertThat(highlights)
+      .isNotEmpty()
+      .allSatisfy(highlight -> assertThat(highlight.getRange().getStart().getLine()).isEqualTo(innerCaseLine));
+  }
+
   private void assertHighlightRange(List<DocumentHighlight> highlights,
                                      int startLine, int startChar,
                                      int endLine, int endChar) {
