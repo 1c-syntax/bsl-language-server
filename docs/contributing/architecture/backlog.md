@@ -31,17 +31,16 @@
 - **Разделители путей в отчётах**: `GenericIssueReporter`, `TSLintReporter`, `JUnitTestSuites`
   пишут разделители ОС, `CodeQualityReporter` — `/`. Смена — изменение формата вывода на Windows,
   требует решения.
-- **`UnreachableCodeDiagnostic`: позиция с 1-based строкой** сравнивается с 0-based диапазонами
-  (гипотеза, `diagnostics/UnreachableCodeDiagnostic.java` ~:191).
 - **Поля `serverPort`/`endpointPath`/`--mcp-path` у команд не читаются** (гипотеза): значения
   берёт Spring из сырых аргументов, поля нужны picocli для справки и приёма опций. Дефолты
   `8025`/`/lsp` в описаниях опций дублируют `application.properties`.
 
 ## Дублирование реализаций (канонизация)
 
-- **Сравнение токена/позиции с `Position`** — 5 копий; `RewriteMethodParameterDiagnostic.compare`
-  — дословная копия `Ranges.compare`.
-- **Ручное построение `Position` из токена** вместо `Positions.create` — 6 мест, 2 обёртки.
+- **Сравнение начала токена с `Position`** без выделения объекта — `KeywordCompletion.startsBefore`,
+  `SignatureHelpProvider.tokenBefore`, `CodeBlockLookup.startsAfter`,
+  `EventHandlerInvalidSignatureDiagnostic.isAfterPosition`, `SymbolTree.before`. Часть стоит на
+  горячих путях двоичного поиска; кандидат — открыть `Ranges.isBefore(int, int, int, int)`.
 - **«Самый вложенный узел типа T, содержащий позицию»** и `encloses` — копии в
   `NewExpressionReferenceFinder` и `SignatureHelpProvider`.
 - **Терминал, заканчивающийся на курсоре** — `LinkedEditingRangeProvider`/`SelectionRangeProvider`.
@@ -55,7 +54,8 @@
   покрыт тестами, выигрыш ~25 строк.
 - **`format` без найденных файлов** завершается с кодом 1 без сообщения.
 - **Таблицы «тип токена → `Keywords.MultiName`»** — 3 копии (completion, formatter, diagnostic).
-- **Мелкие пары копий**: `getVariableName`, `record ProfileKey`, `isIdentChar`, `stringField`, `key`.
+- **Мелкие пары копий**: `record ProfileKey` (`MemberMethodProfiles`, `CompletionMethodTargets`),
+  `stringField` (два загрузчика JSON в `types/registry`), `key` (нижний регистр с `Locale.ROOT`).
 - **Реестры supplier'ов code lens / inlay hint / command** — конфигурации, `getId()` по суффиксу,
   `extractData`, разбор data в resolve написаны трижды-четырежды.
 - **Отбор включённых supplier'ов** — у code lens prototype-бин с сортировкой по `@Order`, у
@@ -74,8 +74,6 @@
 - **Нормализация URI в MCP** — несколько способов; имя workspace выводится в двух местах.
 - **Источник `language`** — глобальная и workspace-настройка с тремя правилами разрешения;
   `GlobalLanguageServerConfiguration.reset()` дублирует дефолты вручную.
-- **Дефолты `server.port`/`/lsp`** в описаниях опций websocket-команды дублируют
-  `application.properties`.
 - **Дефолты опций в документации** (`ConfigurationFile.md`, обе локали) не сверяются
   автоматически; код ↔ схема сверяет `ConfigurationSchemaDefaultsTest` (раунд 17).
 
