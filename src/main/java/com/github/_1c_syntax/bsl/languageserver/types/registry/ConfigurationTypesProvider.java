@@ -729,10 +729,7 @@ public class ConfigurationTypesProvider {
     typeRegistry.registerDefaultElementTypes(collRef, List.of(rowRef));
     typeRegistry.inheritCollectionTraits(collRef, genericColl, FileType.BSL);
 
-    var valueTableRow = typeRegistry.resolve(CollectionReturnsSpecializer.VALUE_TABLE_ROW).orElse(null);
-    typeRegistry.registerMemberOverride(collRef, () -> CollectionReturnsSpecializer.specialize(
-      typeRegistry.getMembers(genericColl, FileType.BSL), genericRow, rowRef,
-      CollectionReturnsSpecializer.unloadedRow(valueTableRow, columns)), FileType.BSL);
+    CollectionReturnsSpecializer.register(typeRegistry, collRef, genericColl, genericRow, rowRef, columns);
   }
 
   /**

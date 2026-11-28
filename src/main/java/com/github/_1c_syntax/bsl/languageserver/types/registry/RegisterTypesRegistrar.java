@@ -185,13 +185,10 @@ public class RegisterTypesRegistrar {
     typeRegistry.registerDefaultElementTypes(setRef, List.of(recordRef));
     typeRegistry.inheritCollectionTraits(setRef, genericSet, FileType.BSL);
 
-    var valueTableRow = typeRegistry.resolve(CollectionReturnsSpecializer.VALUE_TABLE_ROW).orElse(null);
     MemberSource columns = () -> typeRegistry.getMembers(recordRef, FileType.BSL).stream()
       .filter(member -> member.kind() == MemberKind.PROPERTY && !member.generic())
       .toList();
-    typeRegistry.registerMemberOverride(setRef, () -> CollectionReturnsSpecializer.specialize(
-      typeRegistry.getMembers(genericSet, FileType.BSL), genericRecord, recordRef,
-      CollectionReturnsSpecializer.unloadedRow(valueTableRow, columns)), FileType.BSL);
+    CollectionReturnsSpecializer.register(typeRegistry, setRef, genericSet, genericRecord, recordRef, columns);
   }
 
   /**

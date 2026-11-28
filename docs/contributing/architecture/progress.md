@@ -1047,3 +1047,23 @@
   вернула сам дженерик).
 - **Проверка.** `types.registry`, `types.inferencer`, `*Completion*`, `*Hover*`,
   `ArchitectureTest` (160 классов, 1492 теста) зелёные; `javadoc`, `spotlessCheck` зелёные.
+
+## Раунд 69. Уточнение коллекции под её строку — `CollectionReturnsSpecializer.register`
+
+Источник — пункт 4 остаточного сканирования (раунд 64), последний из найденных.
+
+- **Проблема.** Регистрация уточнённых членов коллекции («найти строку таблицы значений →
+  override коллекции поверх членов обобщённой с подменой строки и выгрузкой») — три копии:
+  `FormDataTypesRegistrar.specializeCollectionReturns` (данные формы), `RegisterTypesRegistrar`
+  (набор записей), `ConfigurationTypesProvider.registerTabularSectionPlatformMembers`
+  (табличная часть). Наружу из `CollectionReturnsSpecializer` торчали две детали —
+  `specialize` и `unloadedRow`, — которые каждый собирал сам.
+- **Сделано.** `CollectionReturnsSpecializer.register(...)`; `specialize` и `unloadedRow` стали
+  приватными — модуль углубился: снаружи одна операция вместо трёх шагов. Приватный
+  `specializeCollectionReturns` в `FormDataTypesRegistrar` оставлен однострочным: у него четыре
+  вызова и javadoc о том, зачем уточнение нужно любой коллекции данных формы.
+- **Тесты.** Новый `CollectionReturnsSpecializerTest.registeredCollectionReturnsItsOwnRow`
+  красный на заглушке → зелёный.
+- **Проверка.** `types.registry`, `types.inferencer`, `*Completion*`, `*Hover*`,
+  `ArchitectureTest` (161 класс, 1493 теста) зелёные; `javadoc`, `spotlessCheck` зелёные.
+- **Итог остаточного сканирования раунда 64:** все восемь пунктов закрыты (65–69).

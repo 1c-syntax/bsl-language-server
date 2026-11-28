@@ -611,11 +611,7 @@ class FormDataTypesRegistrar {
    */
   private void specializeCollectionReturns(TypeRef collectionRef, TypeRef collectionBase,
                                            TypeRef itemBase, TypeRef itemRef, MemberSource columns) {
-    var valueTableRow = typeRegistry.resolve(CollectionReturnsSpecializer.VALUE_TABLE_ROW).orElse(null);
-    typeRegistry.registerMemberOverride(collectionRef,
-      () -> CollectionReturnsSpecializer.specialize(
-        typeRegistry.getMembers(collectionBase, FileType.BSL), itemBase, itemRef,
-        CollectionReturnsSpecializer.unloadedRow(valueTableRow, columns)), FileType.BSL);
+    CollectionReturnsSpecializer.register(typeRegistry, collectionRef, collectionBase, itemBase, itemRef, columns);
   }
 
   /**
