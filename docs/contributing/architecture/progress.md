@@ -891,3 +891,11 @@
 - **Ограничение.** `ArchitectureTest.no_classes_should_use_jackson_2` — запрет зависимостей от
   `com.fasterxml.jackson.databind..`/`core..` (аннотации `com.fasterxml.jackson.annotation` у
   Jackson 3 свои и разрешены); на прежнем коде красный ровно по этому загрузчику.
+
+## Раунд 61. Встроенные ресурсы `types/registry` — через `BuiltinResources`
+
+- **Сделано.** `BuiltinQueryTables` открывал свой ресурс в обход `BuiltinResources.open`
+  (`getResourceAsStream` + собственная проверка на `null`) — теперь так же, как остальные
+  загрузчики пакета; отсутствие ресурса по-прежнему даёт пустой список и WARN (в сообщение
+  добавлен путь ресурса).
+- **Проверка.** Тесты `BuiltinQueryTables*`, `QueryTable*`, `Sdbl*` зелёные.
