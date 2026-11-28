@@ -471,6 +471,32 @@ class ReferenceIndexFillerTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void callOnCommonModuleVariableNestedInCallStatementArgumentIsIndexed() throws IOException {
+    // given — вызов через переменную-модуль стоит в аргументе вызова через ту же переменную
+    initServerContext(PATH_TO_METADATA);
+    var file = new File(PATH_TO_METADATA, "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
+    var commonModuleContext = TestUtils.getDocumentContext(
+      Absolute.uri(file), FileUtils.readFileToString(file, StandardCharsets.UTF_8), context);
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Тест()
+          Модуль = ОбщегоНазначения.ОбщийМодуль("ПервыйОбщийМодуль");
+          Модуль.НеУстаревшаяПроцедура(Модуль.НеУстаревшаяФункция());
+      КонецПроцедуры
+      """, context);
+
+    // when
+    referenceIndexFiller.fill(documentContext);
+
+    // then — индексированы оба вызова: и голова оператора, и вложенный в аргумент
+    var procMethod = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяПроцедура").orElseThrow();
+    var funcMethod = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяФункция").orElseThrow();
+    assertThat(referenceIndex.getReferencesTo(procMethod))
+      .filteredOn(ref -> ref.uri().equals(documentContext.getUri())).hasSize(1);
+    assertThat(referenceIndex.getReferencesTo(funcMethod))
+      .filteredOn(ref -> ref.uri().equals(documentContext.getUri())).hasSize(1);
+  }
+
+  @Test
   void testCommonModuleVariableReassignment() throws IOException {
     initServerContext(PATH_TO_METADATA);
 

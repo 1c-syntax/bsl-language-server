@@ -811,23 +811,15 @@ public class ReferenceIndexFiller {
       var variableName = ctx.IDENTIFIER().getText();
       var variableKey = variableName.toLowerCase(Locale.ENGLISH);
 
-      // Check if we are inside a callStatement - if so, skip processing here to avoid duplication
-      var parentCallStatement = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_callStatement);
-      var isInsideCallStatement = false;
-      if (parentCallStatement instanceof BSLParser.CallStatementContext callStmt) {
-        isInsideCallStatement = callStmt.IDENTIFIER() != null
-          && callStmt.IDENTIFIER().getText().equalsIgnoreCase(variableName);
-      }
-
-      // Check if variable references a common module
+      // Голова оператора вызова — терминал callStatement, а не complexIdentifier (её обрабатывает
+      // visitCallStatement); здесь — выражения, в том числе аргументы такого оператора
       var commonModuleMdoRef = variableToCommonModuleMap.get(variableKey);
-      if (commonModuleMdoRef != null && !ctx.modifier().isEmpty() && !isInsideCallStatement) {
-        // Process method calls on the common module variable
+      if (commonModuleMdoRef != null && !ctx.modifier().isEmpty()) {
         processCommonModuleMethodCalls(ctx.modifier(), commonModuleMdoRef);
       }
 
       var libClassUri = variableToLibraryClassUriMap.get(variableKey);
-      if (libClassUri != null && !ctx.modifier().isEmpty() && !isInsideCallStatement) {
+      if (libClassUri != null && !ctx.modifier().isEmpty()) {
         processLibraryClassMethodCalls(ctx.modifier(), libClassUri);
       }
 
