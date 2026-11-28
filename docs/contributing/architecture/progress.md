@@ -173,3 +173,15 @@
 - **Ограничение.** `ArchitectureTest.code_action_kind_filter_is_read_only_by_canonical_predicate`:
   `CodeActionContext.getOnly()` вызывает только `CodeActionSupplier` (на промежуточном варианте,
   где провайдер читал `only` сам, правило падало).
+
+## Раунд 13. Глубокий `QuickFixSupplier`
+
+- **Проблема.** `QuickFixSupplier` отдавал двухшаговый API (`getQuickFixClass` →
+  `getQuickFixInstance`), и каждый из трёх вызывающих повторял цепочку «найти класс → проверить
+  → получить экземпляр → вызвать»; построение параметров fix-all (контекст с диагностиками и
+  видом `quickfix`) было скопировано в `FixAllCodeActionSupplier` и `SourceFixAllCodeActionSupplier`.
+- **Сделано.** Две операции, скрывающие поиск провайдера и параметры fix-all:
+  `getQuickFixes(diagnostic, …)` и `getFixAllQuickFixes(code, diagnostics, …)`; старый API удалён,
+  поставщики сократились до одного вызова.
+- **Проверка.** `QuickFixSupplierTest` переписан под новый контракт (красный на заглушках →
+  зелёный); тесты code actions и quick fix'ов.

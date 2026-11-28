@@ -28,9 +28,6 @@ import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
@@ -53,30 +50,6 @@ public class QuickFixCodeActionSupplier extends AbstractQuickFixSupplier {
     DocumentContext documentContext
   ) {
     return diagnosticStream
-      .flatMap(diagnostic -> getCodeActionsByDiagnostic(diagnostic, params, documentContext).stream());
-  }
-
-  private List<CodeAction> getCodeActionsByDiagnostic(
-    Diagnostic diagnostic,
-    CodeActionParams params,
-    DocumentContext documentContext
-  ) {
-
-    Optional<Class<? extends QuickFixProvider>> quickFixClass =
-      quickFixSupplier.getQuickFixClass(diagnostic.getCode());
-
-    if (quickFixClass.isEmpty()) {
-      return Collections.emptyList();
-    }
-
-    Class<? extends QuickFixProvider> quickFixProviderClass = quickFixClass.get();
-
-    QuickFixProvider quickFixInstance = quickFixSupplier.getQuickFixInstance(quickFixProviderClass);
-    return quickFixInstance.getQuickFixes(
-      Collections.singletonList(diagnostic),
-      params,
-      documentContext
-    );
-
+      .flatMap(diagnostic -> quickFixSupplier.getQuickFixes(diagnostic, params, documentContext).stream());
   }
 }
