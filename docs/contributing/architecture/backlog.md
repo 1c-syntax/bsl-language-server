@@ -100,8 +100,10 @@
 - **`BslContextHolder` не перечитывает синтакс-помощник при смене `v8platform.binPath`** (нужен
   перезапуск); построенные на нём кеши (`FormParametersResolver`, `EventHandlerResolver`) тоже не
   сбрасываются. Нужно решить, поддерживать ли смену пути на лету.
-- **`TestSourcesProvider` — `@Cacheable` по `configurationRoot`, значение зависит от
-  per-workspace конфигурации**; у OneScript-областей корень `null` — одна запись на все.
+- **`TestSourcesProvider`** — проверено (раунд 64), дефекта нет: менеджер кешей
+  workspace-scoped (`CacheConfiguration`), так что ключи разных областей не пересекаются; корень
+  `null` бывает только при `configurationRoot`, заданном вне рабочей области (ошибка настройки), —
+  у OneScript-области корень равен её каталогу.
 - **Три механизма сброса per-URI данных** (`AbstractDocumentLifecycleClearableIndex`,
   `AbstractOScriptLazyIndex`, ручные карты) — **рассмотрено (раунд 58), слияние отклонено**:
   смысл разный — немедленный сброс по любому событию жизни документа; ленивая сборка с
@@ -132,8 +134,10 @@
   `getResourceAsStream` в обход `BuiltinResources.open()`).
 - **Уровни журнала сбоя вывода типа** разные в одном классе (`ExpressionTypeInferencer`: ERROR со
   стеком на горячем пути в пяти местах, DEBUG — в шестом и в соседних компонентах).
-- **Замеры времени мимо `MeasuresAspect`** — `ServerContext.millisSince`,
-  `ConfigurationTypesProvider`, `MethodReturnTypeIndexer`; два разных часа для одной операции.
+- **Замеры времени мимо `MeasuresAspect`** (`ServerContext.millisSince`,
+  `ConfigurationTypesProvider`, `MethodReturnTypeIndexer`) — **рассмотрено и отклонено (раунд 64)**:
+  назначение разное — `MeasuresAspect` профилирует по включению профиля `measures`, а эти места
+  всегда пишут длительность этапа в журнал для пользователя.
 - **Конфигурация:** имя файла сведено к `ConfigurationFiles.DEFAULT_FILE_NAME` (раунд 58);
   наблюдатель за файлами при незаданном файле узнаёт новый файл по имени по умолчанию, а не по
   `app.configuration.path` (переопределённый путь, файл создан после старта — не подхватится);
