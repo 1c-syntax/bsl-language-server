@@ -22,10 +22,10 @@
 package com.github._1c_syntax.bsl.languageserver.codelenses;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.databind.SupplierIds;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.Command;
 
-import java.beans.Introspector;
 import java.util.List;
 
 /**
@@ -55,13 +55,7 @@ public interface CodeLensSupplier<T extends CodeLensData> {
    * @return Идентификатор сапплаера.
    */
   default String getId() {
-    String simpleName = getClass().getSimpleName();
-    if (simpleName.endsWith(CODE_LENS_SUPPLIER_SUFFIX)) {
-      simpleName = simpleName.substring(0, simpleName.length() - CODE_LENS_SUPPLIER_SUFFIX.length());
-      simpleName = Introspector.decapitalize(simpleName);
-    }
-
-    return simpleName;
+    return SupplierIds.of(getClass(), CODE_LENS_SUPPLIER_SUFFIX);
   }
 
   /**

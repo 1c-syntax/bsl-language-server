@@ -22,10 +22,10 @@
 package com.github._1c_syntax.bsl.languageserver.inlayhints;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.databind.SupplierIds;
 import org.eclipse.lsp4j.InlayHint;
 import org.eclipse.lsp4j.InlayHintParams;
 
-import java.beans.Introspector;
 import java.util.List;
 
 /**
@@ -52,13 +52,7 @@ public interface InlayHintSupplier<T extends InlayHintData> {
    * @return Идентификатор сапплаера.
    */
   default String getId() {
-    String simpleName = getClass().getSimpleName();
-    if (simpleName.endsWith(INLAY_HINT_SUPPLIER)) {
-      simpleName = simpleName.substring(0, simpleName.length() - INLAY_HINT_SUPPLIER.length());
-      simpleName = Introspector.decapitalize(simpleName);
-    }
-
-    return simpleName;
+    return SupplierIds.of(getClass(), INLAY_HINT_SUPPLIER);
   }
 
   /**
