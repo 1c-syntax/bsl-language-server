@@ -32,6 +32,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
+import org.eclipse.lsp4j.util.Positions;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -501,8 +502,7 @@ public class SymbolTree {
   }
 
   private static boolean before(Position left, Position right) {
-    return left.getLine() < right.getLine()
-      || (left.getLine() == right.getLine() && left.getCharacter() < right.getCharacter());
+    return Positions.isBefore(left, right);
   }
 
   private List<SourceDefinedSymbol> createChildrenFlat() {

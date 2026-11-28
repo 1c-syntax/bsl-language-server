@@ -39,7 +39,6 @@ import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
-import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 
@@ -218,16 +217,8 @@ public class EventHandlerInvalidSignatureDiagnostic extends AbstractDiagnostic i
     var subNameEnd = method.getSubNameRange().getEnd();
     var methodEnd = method.getRange().getEnd();
     return all.stream()
-      .filter(t -> isAfterPosition(t, subNameEnd) && t.getLine() - 1 <= methodEnd.getLine())
+      .filter(t -> Positions.compareStart(t, subNameEnd) >= 0 && t.getLine() - 1 <= methodEnd.getLine())
       .toList();
-  }
-
-  private static boolean isAfterPosition(Token token, Position position) {
-    var line = token.getLine() - 1;
-    if (line > position.getLine()) {
-      return true;
-    }
-    return line == position.getLine() && token.getCharPositionInLine() >= position.getCharacter();
   }
 
   private static int indexOf(List<Token> tokens, int tokenType) {

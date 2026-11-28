@@ -50,10 +50,6 @@
 
 ## Дублирование реализаций (канонизация)
 
-- **Сравнение начала токена с `Position`** без выделения объекта — `KeywordCompletion.startsBefore`,
-  `SignatureHelpProvider.tokenBefore`, `CodeBlockLookup.startsAfter`,
-  `EventHandlerInvalidSignatureDiagnostic.isAfterPosition`, `SymbolTree.before`. Часть стоит на
-  горячих путях двоичного поиска; кандидат — открыть `Ranges.isBefore(int, int, int, int)`.
 - **`safeGetAst` с перехватом любого `RuntimeException`** (`FormExpressionInference`,
   `PropertyMethodInference`) — после раунда 25 остались две копии второй политики; сузить до
   `findAst()` можно только решением владельцев `types/` (сейчас скрываются и настоящие ошибки).

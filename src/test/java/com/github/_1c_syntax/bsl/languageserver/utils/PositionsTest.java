@@ -33,6 +33,17 @@ import static org.assertj.core.api.Assertions.assertThat;
 class PositionsTest {
 
   @Test
+  void compareStartOrdersTokenStartAgainstPosition() {
+    var token = token(); // начало — (4, 6)
+
+    assertThat(Positions.compareStart(token, new Position(4, 6))).isZero();
+    assertThat(Positions.compareStart(token, new Position(4, 7))).isNegative();
+    assertThat(Positions.compareStart(token, new Position(5, 0))).isNegative();
+    assertThat(Positions.compareStart(token, new Position(4, 5))).isPositive();
+    assertThat(Positions.compareStart(token, new Position(3, 99))).isPositive();
+  }
+
+  @Test
   void createFromCoordinates() {
     assertThat(Positions.create(3, 7)).isEqualTo(new Position(3, 7));
   }

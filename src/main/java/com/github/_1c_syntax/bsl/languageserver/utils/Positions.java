@@ -96,6 +96,18 @@ public final class Positions {
    * @param terminalNode терминальный узел; {@code null} трактуется как пустая позиция (0,0)
    * @return позиция конца узла
    */
+  /**
+   * Сравнить начало токена с позицией, не создавая объектов, — для горячих путей.
+   *
+   * @param token    токен
+   * @param position позиция
+   * @return отрицательное число, если токен начинается раньше позиции; ноль — в ней; положительное — позже
+   */
+  public int compareStart(Token token, Position position) {
+    var byLine = Integer.compare(token.getLine() - 1, position.getLine());
+    return byLine != 0 ? byLine : Integer.compare(token.getCharPositionInLine(), position.getCharacter());
+  }
+
   public Position createEnd(@Nullable TerminalNode terminalNode) {
     return terminalNode == null ? create(0, 0) : createEnd(terminalNode.getSymbol());
   }

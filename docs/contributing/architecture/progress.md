@@ -664,3 +664,15 @@
 - **Проверка.** Красный `TreesTest.innermostEnclosingNode*` (на заглушке) → зелёный; тесты
   signature help, `NewExpression*`, `PlatformConstructor*`, `ReferenceResolver*`,
   `ArchitectureTest` (138) зелёные; `javadoc`, `spotlessCheck` зелёные.
+
+## Раунд 47. Сравнение начала токена с позицией
+
+- **Сделано.** `Positions.compareStart(token, position)` — знак сравнения начала токена с позицией
+  без создания объектов (горячие пути). Четыре копии с разными знаками сравнения —
+  `KeywordCompletion.startsBefore` (`<`), `SignatureHelpProvider.tokenBefore` (`<`),
+  `CodeBlockLookup.startsAfter` (`>`), `EventHandlerInvalidSignatureDiagnostic.isAfterPosition`
+  (`>=`) — удалены. `SymbolTree.before` (позиция против позиции) теперь делегирует в
+  `org.eclipse.lsp4j.util.Positions.isBefore` — та же логика.
+- **Проверка.** Красный `PositionsTest.compareStart*` (на заглушке) → зелёный; тесты completion,
+  signature help, `types.inferencer`, `SymbolTree*`, `EventHandlerInvalidSignature` (549) зелёные;
+  `javadoc`, `spotlessCheck` зелёные.

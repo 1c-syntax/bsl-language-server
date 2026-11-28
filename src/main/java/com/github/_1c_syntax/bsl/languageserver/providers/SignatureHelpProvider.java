@@ -39,7 +39,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.Positions;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
-import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.ClientCapabilities;
@@ -301,24 +300,12 @@ public final class SignatureHelpProvider {
       var child = paramList.getChild(i);
       if (child instanceof TerminalNode tn) {
         var token = tn.getSymbol();
-        if (token.getType() == BSLParser.COMMA && tokenBefore(token, position)) {
+        if (token.getType() == BSLParser.COMMA && Positions.compareStart(token, position) < 0) {
           commas++;
         }
       }
     }
     return commas;
-  }
-
-  private static boolean tokenBefore(Token token, Position position) {
-    int tokLine = token.getLine() - 1;
-    int tokCol = token.getCharPositionInLine();
-    if (tokLine < position.getLine()) {
-      return true;
-    }
-    if (tokLine > position.getLine()) {
-      return false;
-    }
-    return tokCol < position.getCharacter();
   }
 
   /**
