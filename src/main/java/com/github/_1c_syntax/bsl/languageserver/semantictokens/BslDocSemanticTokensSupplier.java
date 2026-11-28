@@ -31,12 +31,8 @@ import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import com.github._1c_syntax.bsl.parser.description.support.SimpleRange;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.eclipse.lsp4j.ClientCapabilities;
-import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.SemanticTokenTypes;
-import org.eclipse.lsp4j.SemanticTokensCapabilities;
-import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
@@ -45,7 +41,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
@@ -65,13 +60,7 @@ public class BslDocSemanticTokensSupplier implements SemanticTokensSupplier {
 
   @EventListener
   public void onClientCapabilitiesChanged(LanguageServerInitializedEvent event) {
-    multilineTokenSupport = Optional.of(event)
-      .map(LanguageServerInitializedEvent::getParams)
-      .map(InitializeParams::getCapabilities)
-      .map(ClientCapabilities::getTextDocument)
-      .map(TextDocumentClientCapabilities::getSemanticTokens)
-      .map(SemanticTokensCapabilities::getMultilineTokenSupport)
-      .orElse(false);
+    multilineTokenSupport = SemanticTokensHelper.supportsMultilineTokens(event.getParams());
   }
 
   @Override

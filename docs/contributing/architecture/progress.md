@@ -646,3 +646,11 @@
   аргументы.
 - **Проверка.** Красные `HoverParametersTest` (на заглушках) → зелёные; тесты hover (170) зелёные;
   `javadoc`, `spotlessCheck` зелёные.
+
+## Раунд 45. Поддержка многострочных семантических токенов — одно чтение
+
+- **Сделано.** `SemanticTokensHelper.supportsMultilineTokens(InitializeParams)` — чтение
+  `textDocument.semanticTokens.multilineTokenSupport`. Восьмистрочные цепочки-копии в
+  `CommentSemanticTokensSupplier` и `BslDocSemanticTokensSupplier` удалены.
+- **Проверка.** Красный `SemanticTokensHelperCapabilitiesTest` (на заглушке) → зелёный; тесты
+  семантических токенов (267), `javadoc`, `spotlessCheck` зелёные.

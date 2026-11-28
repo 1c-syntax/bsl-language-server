@@ -24,13 +24,18 @@ package com.github._1c_syntax.bsl.languageserver.semantictokens;
 import com.github._1c_syntax.bsl.parser.description.support.DescriptionElement;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.eclipse.lsp4j.ClientCapabilities;
+import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SemanticTokensCapabilities;
 import org.eclipse.lsp4j.SemanticTokensLegend;
+import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Вспомогательные методы для создания семантических токенов.
@@ -45,6 +50,22 @@ public class SemanticTokensHelper {
   private static final String[] NO_MODIFIERS = new String[0];
 
   private final SemanticTokensLegend legend;
+
+  /**
+   * Заявил ли клиент поддержку многострочных токенов
+   * ({@code textDocument.semanticTokens.multilineTokenSupport}).
+   *
+   * @param params параметры {@code initialize}
+   * @return {@code true}, только если клиент явно заявил поддержку
+   */
+  public static boolean supportsMultilineTokens(@Nullable InitializeParams params) {
+    return Optional.ofNullable(params)
+      .map(InitializeParams::getCapabilities)
+      .map(ClientCapabilities::getTextDocument)
+      .map(TextDocumentClientCapabilities::getSemanticTokens)
+      .map(SemanticTokensCapabilities::getMultilineTokenSupport)
+      .orElse(false);
+  }
 
   /**
    * Добавить токен с заданным типом без модификаторов.
