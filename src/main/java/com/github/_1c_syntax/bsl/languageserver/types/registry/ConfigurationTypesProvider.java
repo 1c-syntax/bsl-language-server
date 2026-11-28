@@ -247,7 +247,7 @@ public class ConfigurationTypesProvider {
     // WorkspaceAddedEvent, событие публикуется под workspace-контекстом, а исполнитель
     // асинхронных обработчиков переносит его в свой поток.
     var workspaceUri = WorkspaceContextHolder.get();
-    var serverContext = serverContextProvider.getAllContexts().get(workspaceUri);
+    var serverContext = serverContextProvider.getCurrentServerContext().orElse(null);
     if (serverContext == null) {
       return null;
     }

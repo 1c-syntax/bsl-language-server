@@ -26,7 +26,6 @@ import com.github._1c_syntax.bsl.context.api.Context;
 import com.github._1c_syntax.bsl.context.api.ContextProperty;
 import com.github._1c_syntax.bsl.context.api.ContextType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
-import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
@@ -371,15 +370,11 @@ public class MetadataCollectionSpecializer {
     if (providerOpt.isEmpty()) {
       return;
     }
-    var workspaceUri = WorkspaceContextHolder.get();
-    if (workspaceUri == null) {
+    var serverContext = serverContextProvider.getCurrentServerContext();
+    if (serverContext.isEmpty()) {
       return;
     }
-    var serverContext = serverContextProvider.getAllContexts().get(workspaceUri);
-    if (serverContext == null) {
-      return;
-    }
-    var configuration = serverContext.getConfiguration();
+    var configuration = serverContext.get().getConfiguration();
     if (configuration.isEmpty()) {
       return;
     }

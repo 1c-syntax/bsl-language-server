@@ -399,6 +399,16 @@ public class ServerContextProvider {
   }
 
   /**
+   * Контекст рабочей области, выбранной в текущем потоке ({@link WorkspaceContextHolder}).
+   *
+   * @return контекст; пусто, если рабочая область в потоке не выбрана или уже удалена
+   */
+  public Optional<ServerContext> getCurrentServerContext() {
+    var workspaceUri = WorkspaceContextHolder.get();
+    return workspaceUri == null ? Optional.empty() : Optional.ofNullable(contexts.get(workspaceUri));
+  }
+
+  /**
    * Очистить все workspaces.
    */
   public synchronized void clear() {

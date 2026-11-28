@@ -21,8 +21,8 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
-import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.mdclasses.CF;
@@ -161,15 +161,9 @@ public class QueryTableResolver {
    *   ещё не прочитана.
    */
   private @Nullable CF currentConfiguration() {
-    var workspaceUri = WorkspaceContextHolder.get();
-    if (workspaceUri == null) {
-      return null;
-    }
-    var serverContext = serverContextProvider.getAllContexts().get(workspaceUri);
-    if (serverContext == null) {
-      return null;
-    }
-    var configuration = serverContext.getConfiguration();
-    return configuration.isEmpty() ? null : configuration;
+    return serverContextProvider.getCurrentServerContext()
+      .map(ServerContext::getConfiguration)
+      .filter(configuration -> !configuration.isEmpty())
+      .orElse(null);
   }
 }

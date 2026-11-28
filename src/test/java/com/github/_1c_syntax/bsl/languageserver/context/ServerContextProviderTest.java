@@ -52,6 +52,25 @@ class ServerContextProviderTest {
   }
 
   @Test
+  void currentServerContextIsTheWorkspaceSelectedInThread(@TempDir Path workspaceDir) {
+    // given
+    var workspaceUri = Absolute.path(workspaceDir).toUri();
+    var serverContext = serverContextProvider.addWorkspace(workspaceUri);
+
+    // when / then — в потоке выбрана рабочая область: её контекст
+    try (var ctx = com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder.forUri(workspaceUri)) {
+      assertThat(serverContextProvider.getCurrentServerContext()).containsSame(serverContext);
+    }
+
+    // рабочая область удалена — контекста больше нет, даже если поток её помнит
+    serverContextProvider.removeWorkspace(new WorkspaceFolder(workspaceUri.toString(), "temp"));
+    try (var ctx = com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder
+      .forUri(workspaceUri, "temp")) {
+      assertThat(serverContextProvider.getCurrentServerContext()).isEmpty();
+    }
+  }
+
+  @Test
   void testAddWorkspace() {
     // given
     var workspaceUri = Absolute.path(PATH_TO_METADATA).toUri().toString();

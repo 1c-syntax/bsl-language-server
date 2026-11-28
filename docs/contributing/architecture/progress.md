@@ -961,3 +961,23 @@
 - **Остаток** — решения мейнтейнера (сетевая открытость, форматы отчётов, контракты MCP и CLI,
   Sentry, перезагрузка синтакс-помощника, правки `CLAUDE.md`) и рассмотренные и отклонённые с
   обоснованием варианты.
+
+## Раунд 65. Контекст текущей рабочей области — `ServerContextProvider.getCurrentServerContext`
+
+Источник — остаточное сканирование `types/`, `references/`, `context/`, `cfg/`, `formatting/`,
+`folding/`, `color/`, `mcp/`, `cli/`, `lsp/` и доступа к данным (раунд 64): вне `types/` и одной
+мелочи в `mcp/` существенных дублей не найдено; доступ к метаданным и файлам централизован
+(`DocumentContext.getMdObject`, `ServerContext.findCommonModule`/`getDocument`, чтение файла — одно
+место).
+
+- **Проблема.** Единственный параллельный путь к данным: «контекст рабочей области текущего
+  потока» — `WorkspaceContextHolder.get()` → проверка на `null` → `getAllContexts().get(uri)` →
+  проверка на `null` — шестью копиями (`ConfigurationGenericExpander`, `QueryTableResolver`,
+  `MetadataCollectionSpecializer`, `ConfigurationTypesProvider`, `MethodReturnTypeIndexer`,
+  `DiagnosticProvider`); у `ConfigurationTypesProvider` — без проверки URI (на `null` бросил бы NPE).
+- **Сделано.** `ServerContextProvider.getCurrentServerContext()` (`Optional`); копии удалены.
+  Модульные тесты четырёх классов заглушали внутренний путь (`getAllContexts`) — переведены на
+  новый метод; выбор рабочей области по потоку проверяет `ServerContextProviderTest`.
+- **Проверка.** Красный `ServerContextProviderTest.currentServerContextIsTheWorkspaceSelectedInThread`
+  (на заглушке) → зелёный; тесты `types.registry`, `MethodReturnType*`, `DiagnosticProvider*`,
+  `QueryTable*`, `ArchitectureTest` (84 класса) зелёные; `javadoc`, `spotlessCheck` зелёные.

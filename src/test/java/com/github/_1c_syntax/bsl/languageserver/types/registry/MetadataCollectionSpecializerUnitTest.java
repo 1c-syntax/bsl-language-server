@@ -120,7 +120,7 @@ class MetadataCollectionSpecializerUnitTest {
 
     var workspaceUri = TEST_WORKSPACE;
     var serverProvider = Mockito.mock(ServerContextProvider.class);
-    when(serverProvider.getAllContexts()).thenReturn(Map.of(workspaceUri, serverContext));
+    when(serverProvider.getCurrentServerContext()).thenReturn(Optional.of(serverContext));
 
     WorkspaceContextHolder.set(workspaceUri);
     var specializer = new MetadataCollectionSpecializer(registry, holder, serverProvider);
@@ -230,7 +230,7 @@ class MetadataCollectionSpecializerUnitTest {
 
     WorkspaceContextHolder.set(TEST_WORKSPACE);
     new MetadataCollectionSpecializer(registry, holder, serverProvider).specialize();
-    Mockito.verify(serverProvider, Mockito.never()).getAllContexts();
+    Mockito.verify(serverProvider, Mockito.never()).getCurrentServerContext();
   }
 
   @Test
@@ -244,7 +244,9 @@ class MetadataCollectionSpecializerUnitTest {
     var serverProvider = Mockito.mock(ServerContextProvider.class);
     WorkspaceContextHolder.clear();
     new MetadataCollectionSpecializer(registry, holder, serverProvider).specialize();
-    Mockito.verify(serverProvider, Mockito.never()).getAllContexts();
+    // рабочей области в потоке нет — провайдер отвечает «контекста нет», дальше ничего не идёт
+    Mockito.verify(serverProvider).getCurrentServerContext();
+    Mockito.verifyNoMoreInteractions(serverProvider);
   }
 
   @Test
@@ -310,7 +312,7 @@ class MetadataCollectionSpecializerUnitTest {
       .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
 
     var serverProvider = Mockito.mock(ServerContextProvider.class);
-    when(serverProvider.getAllContexts()).thenReturn(Map.of(TEST_WORKSPACE, serverContext));
+    when(serverProvider.getCurrentServerContext()).thenReturn(Optional.of(serverContext));
 
     WorkspaceContextHolder.set(TEST_WORKSPACE);
     new MetadataCollectionSpecializer(registry, holder, serverProvider).specialize();
@@ -433,7 +435,7 @@ class MetadataCollectionSpecializerUnitTest {
       .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
 
     var serverProvider = Mockito.mock(ServerContextProvider.class);
-    when(serverProvider.getAllContexts()).thenReturn(Map.of(TEST_WORKSPACE, serverContext));
+    when(serverProvider.getCurrentServerContext()).thenReturn(Optional.of(serverContext));
 
     WorkspaceContextHolder.set(TEST_WORKSPACE);
     new MetadataCollectionSpecializer(registry, holder, serverProvider).specialize();
@@ -473,7 +475,7 @@ class MetadataCollectionSpecializerUnitTest {
       .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
 
     var serverProvider = Mockito.mock(ServerContextProvider.class);
-    when(serverProvider.getAllContexts()).thenReturn(Map.of(TEST_WORKSPACE, serverContext));
+    when(serverProvider.getCurrentServerContext()).thenReturn(Optional.of(serverContext));
 
     WorkspaceContextHolder.set(TEST_WORKSPACE);
     new MetadataCollectionSpecializer(registry, holder, serverProvider).specialize();
@@ -508,7 +510,7 @@ class MetadataCollectionSpecializerUnitTest {
       .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
 
     var serverProvider = Mockito.mock(ServerContextProvider.class);
-    when(serverProvider.getAllContexts()).thenReturn(Map.of(TEST_WORKSPACE, serverContext));
+    when(serverProvider.getCurrentServerContext()).thenReturn(Optional.of(serverContext));
 
     var unknownRef = registry.registerConfigurationType("ОбъектМетаданныхНезнакомый");
     WorkspaceContextHolder.set(TEST_WORKSPACE);
@@ -539,7 +541,7 @@ class MetadataCollectionSpecializerUnitTest {
       .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
 
     var serverProvider = Mockito.mock(ServerContextProvider.class);
-    when(serverProvider.getAllContexts()).thenReturn(Map.of(TEST_WORKSPACE, serverContext));
+    when(serverProvider.getCurrentServerContext()).thenReturn(Optional.of(serverContext));
 
     WorkspaceContextHolder.set(TEST_WORKSPACE);
     new MetadataCollectionSpecializer(registry, holder, serverProvider).specialize();
@@ -564,7 +566,7 @@ class MetadataCollectionSpecializerUnitTest {
 
     var workspaceUri = TEST_WORKSPACE;
     var serverProvider = Mockito.mock(ServerContextProvider.class);
-    when(serverProvider.getAllContexts()).thenReturn(Map.of(workspaceUri, serverContext));
+    when(serverProvider.getCurrentServerContext()).thenReturn(Optional.of(serverContext));
 
     WorkspaceContextHolder.registerWorkspace(workspaceUri, "test");
     WorkspaceContextHolder.set(workspaceUri);
@@ -579,11 +581,11 @@ class MetadataCollectionSpecializerUnitTest {
     var holder = Mockito.mock(BslContextHolder.class);
     when(holder.get()).thenReturn(Optional.of(Mockito.mock(ContextProvider.class)));
     var serverProvider = Mockito.mock(ServerContextProvider.class);
-    when(serverProvider.getAllContexts()).thenReturn(Map.of());
+    when(serverProvider.getCurrentServerContext()).thenReturn(Optional.empty());
     WorkspaceContextHolder.registerWorkspace(TEST_WORKSPACE, "test");
     WorkspaceContextHolder.set(TEST_WORKSPACE);
     new MetadataCollectionSpecializer(registry, holder, serverProvider).specialize();
-    Mockito.verify(serverProvider).getAllContexts();
+    Mockito.verify(serverProvider).getCurrentServerContext();
   }
 
   private static ContextProperty tabularSectionsProperty() {
@@ -643,7 +645,7 @@ class MetadataCollectionSpecializerUnitTest {
     when(serverContext.getConfiguration())
       .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
     var serverProvider = mock(ServerContextProvider.class);
-    when(serverProvider.getAllContexts()).thenReturn(Map.of(TEST_WORKSPACE, serverContext));
+    when(serverProvider.getCurrentServerContext()).thenReturn(Optional.of(serverContext));
     return serverProvider;
   }
 
