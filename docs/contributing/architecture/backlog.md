@@ -151,6 +151,28 @@
 
 ## Дублирование реализаций (канонизация)
 
+- **Сканирование `codeactions/`, `inlayhints/`, `rename/`, `reporters/`, `aop/`, `websocket/`,
+  `types/oscript/`, `utils/` (после раунда 69).** В `inlayhints/`, `rename/`, `aop/`, `websocket/`
+  существенного не найдено. Найдено (порядок — по ценности):
+  1. Типы из описания метода `.os` собираются вручную (`OScriptModuleMembersProvider.toMemberDescriptor`/
+     `resolveTypes`, `AutumnCollectionIndex.getterReturnType`) мимо `DescribedTypeResolver`, и уже
+     **расходятся**: сопоставление параметров по номеру, а не по `ParameterDefinition.getDescription()`;
+     «Массив из Строка» без типа элемента; без `DescriptionTypes.resolveName`. Переход меняет
+     выведенные типы `.os` — только с тестами на каждое расхождение.
+  2. Мультикарта «имя → множество» с обратным индексом по URI — три копии
+     (`AutumnBeanIndex`, `AutumnInjectionPointIndex`, `TypeRelationIndex`).
+  3. Жизненный цикл файла отчёта — шесть одинаковых `abortReport` и окончаний `endReport`
+     (`commit` + «report saved to»). Общий базовый класс не годится: часть репортёров наследует
+     `AbstractDiagnosticReporter`; место — `ReportFile`.
+  4. Перечень точек внедрения «ОСени» (параметры конструктора + поля модуля без дублей-параметров)
+     — две копии (`AutumnInjectionPointIndex.indexClass`, `AutumnNavigationCodeActionSupplier`).
+  5. Аннотации конструктора `.os`-класса — три способа (`OScriptIterable`, `OScriptExtends`,
+     `OScriptMetaAnnotationResolver`); ручные копии `OScriptMetaAnnotationResolver.find`.
+  6. Сборка refactor-`CodeAction` — три копии с мелкими отличиями (`isPreferred`, `diagnostics`).
+  Мелочь: `Trees.encloses` и `Ranges.containsPosition(ParserRuleContext, …)` — один промежуток с
+  разной обработкой EOF и `null`-стопа (javadoc `encloses` говорит «границы включены» — конец
+  не включён); в `ModuleReference` дважды null-безопасная копия `Methods.getMethodName`.
+
 - **`safeGetAst` с перехватом любого `RuntimeException`** (`FormExpressionInference`,
   `PropertyMethodInference`) — после раунда 25 остались две копии второй политики; сузить до
   `findAst()` можно только решением владельцев `types/` (сейчас скрываются и настоящие ошибки).
