@@ -1638,3 +1638,17 @@
 - **Сделано.** Имя типа — `Constructors.typeName`.
 - **Тесты.** `UsingObjectNotAvailableUnixDiagnosticTest.constructorWithTypeNameAsArgumentIsChecked`
   красный → зелёный; прежние три срабатывания сохранились.
+
+## Раунд 104. Hover конструктора класса OneScript — ключевое слово на языке интерфейса
+
+Источник — углублённое сканирование `hover/`.
+
+- **Дефект.** `OScriptClassConstructorRenderer` писал заголовок `Новый Класс(…)` всегда по-русски,
+  тогда как hover конструкторов платформенных типов (`ConstructorHoverBuilder`) берёт ключевое
+  слово на языке интерфейса.
+- **Сделано.** Ключевое слово — `Keywords.NEW` по языку конфигурации (канонический двуязычный
+  словарь ключевых слов, им же пользуются форматтер и автодополнение).
+- **Тесты.** `HoverProviderOScriptLibraryTest.constructorHoverOfOScriptClassUsesTheKeywordOfTheInterfaceLanguage`
+  красный → зелёный.
+- **Проверка.** `hover`, `*Hover*`, `ArchitectureTest` (25 классов, 194 теста) зелёные; `javadoc`,
+  `spotlessCheck` зелёные.
