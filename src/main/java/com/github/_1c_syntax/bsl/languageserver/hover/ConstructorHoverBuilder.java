@@ -96,15 +96,7 @@ public class ConstructorHoverBuilder {
     if (chosen != null && !chosen.parameters().isEmpty()) {
       sb.append("\n\n**").append(tr("parameters")).append("**\n");
       for (var p : chosen.parameters()) {
-        HoverParameters.appendNameAndType(sb, parameterName(p, lang), renderTypeSet(p.types(), lang), p.optional());
-        if (!p.defaultValue().isBlank()) {
-          sb.append(" _= ").append(p.defaultValue()).append('_');
-        }
-        var pDesc = p.displayDescription(lang);
-        if (pDesc != null && !pDesc.isBlank()) {
-          sb.append(" — ").append(pDesc);
-        }
-        sb.append('\n');
+        HoverParameters.appendParameter(sb, parameterName(p, lang), renderTypeSet(p.types(), lang), p, lang);
       }
     }
     // Метаданные конструктора (его собственная страница СП: версии, примеры,
@@ -143,12 +135,9 @@ public class ConstructorHoverBuilder {
    * пустая строка.
    */
   private String renderTypeSet(TypeSet types, Language lang) {
-    if (types == null || types.isEmpty()) {
+    if (types == null) {
       return "";
     }
-    return types.refs().stream()
-      .map(r -> typeService.displayName(r, lang))
-      .filter(name -> name != null && !name.isEmpty())
-      .collect(Collectors.joining(" | "));
+    return HoverParameters.typesLabel(types, ref -> typeService.displayName(ref, lang));
   }
 }

@@ -636,3 +636,13 @@
   внесённую раундом 29: перенесённый в `types.references` `KeywordReferenceFinder` ссылался в
   javadoc на `AnnotationReferenceFinder` без пакета — исправлено полным именем. С этого раунда
   javadoc проверяется явно.
+
+## Раунд 44. Строка параметра и метка типов в hover
+
+- **Сделано.** `HoverParameters.appendParameter` (имя и тип, значение по умолчанию, описание) и
+  `HoverParameters.typesLabel(types, displayName)` (имена типов через `" | "` без пустых).
+  `PlatformMemberHoverBuilder` и `ConstructorHoverBuilder` держали копии обоих фрагментов;
+  различаются они только тем, как берут имя параметра и отображаемое имя типа, — это теперь
+  аргументы.
+- **Проверка.** Красные `HoverParametersTest` (на заглушках) → зелёные; тесты hover (170) зелёные;
+  `javadoc`, `spotlessCheck` зелёные.
