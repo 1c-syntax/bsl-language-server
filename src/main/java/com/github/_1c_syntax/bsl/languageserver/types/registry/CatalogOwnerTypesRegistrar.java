@@ -78,7 +78,7 @@ class CatalogOwnerTypesRegistrar {
       return;
     }
     var ownerNames = catalog.getOwners().stream()
-      .map(owner -> refTypeName(owner.getMdoRefRu()))
+      .map(owner -> FormPlatformTypes.typeNameWithSuffix(owner.getMdoRefRu(), "Ссылка"))
       .toList();
     if (ownerNames.isEmpty()) {
       return;
@@ -114,12 +114,6 @@ class CatalogOwnerTypesRegistrar {
       }
     }
     return List.of();
-  }
-
-  /** {@code Справочник.Владелец1} → {@code СправочникСсылка.Владелец1}. */
-  private static String refTypeName(String mdoRef) {
-    var dot = mdoRef.indexOf('.');
-    return dot < 0 ? mdoRef : (mdoRef.substring(0, dot) + "Ссылка" + mdoRef.substring(dot));
   }
 
 }
