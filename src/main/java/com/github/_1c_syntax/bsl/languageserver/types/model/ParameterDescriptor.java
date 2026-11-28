@@ -49,6 +49,7 @@ public record ParameterDescriptor(
 
   public ParameterDescriptor {
     bilingualName = Objects.requireNonNullElse(bilingualName, BilingualString.EMPTY);
+    types = Objects.requireNonNullElse(types, TypeSet.EMPTY);
     bilingualDescription = Objects.requireNonNullElse(bilingualDescription, BilingualString.EMPTY);
     defaultValue = Objects.requireNonNullElse(defaultValue, "");
   }

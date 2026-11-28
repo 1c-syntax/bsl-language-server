@@ -58,6 +58,15 @@ class ParameterDescriptorTest {
   }
 
   @Test
+  void canonicalConstructorNormalizesMissingTypesToEmptySet() {
+    // given / when — как и тип возврата у SignatureDescriptor
+    var p = new ParameterDescriptor(BilingualString.of("Имя"), null, false, BilingualString.EMPTY, "");
+
+    // then
+    assertThat(p.types()).isSameAs(TypeSet.EMPTY);
+  }
+
+  @Test
   void compatConstructorWithBilingualName() {
     // given
     var bilingual = BilingualString.of("Имя", "Name");

@@ -92,7 +92,8 @@ class CanonicalImplementationsTest {
         Pattern.compile("new ParameterDescriptor\\(\\w+\\.bilingualName\\(\\),"),
         Set.of()),
       new Case("SignatureDescriptor.withReturnTypes",
-        Pattern.compile("new SignatureDescriptor\\(\\w+\\.parameters\\(\\),[^;]*\\w+\\.bilingualDescription\\(\\), \\w+\\.metadata\\(\\)\\)"),
+        // Без смежных квантификаторов ([^;]* и \w+ перед точкой): иначе откат сверхлинеен
+        Pattern.compile("new SignatureDescriptor\\(\\w+\\.parameters\\(\\),[^;]*\\.bilingualDescription\\(\\), \\w+\\.metadata\\(\\)\\)"),
         Set.of()),
       new Case("FormPlatformTypes.namedProperties",
         Pattern.compile("withBilingualName\\(FormPlatformTypes\\.neutral\\([^)]*\\)\\)\\s*"

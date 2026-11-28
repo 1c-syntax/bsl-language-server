@@ -32,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -59,7 +60,7 @@ public class ConstructorHoverBuilder {
   public MarkupContent build(
     String typeName,
     TypeRef ref,
-    SignatureDescriptor chosen,
+    @Nullable SignatureDescriptor chosen,
     List<SignatureDescriptor> ctors,
     boolean disclaim,
     String classDescription,
@@ -82,7 +83,7 @@ public class ConstructorHoverBuilder {
     // (BSL/OS). {@code classDescription} от caller'а используется только если
     // registry не знает описание (legacy/source-defined символы).
     var bilingual = typeService.getDescription(ref, lang, fileType);
-    var classDesc = !bilingual.isBlank() ? bilingual : (classDescription != null ? classDescription : "");
+    var classDesc = bilingual.isBlank() ? classDescription : bilingual;
     if (!classDesc.isBlank()) {
       sb.append("\n\n").append(classDesc);
     }
@@ -130,9 +131,6 @@ public class ConstructorHoverBuilder {
    * пустая строка.
    */
   private String renderTypeSet(TypeSet types, Language lang) {
-    if (types == null) {
-      return "";
-    }
     return HoverParameters.typesLabel(types, ref -> typeService.displayName(ref, lang));
   }
 }

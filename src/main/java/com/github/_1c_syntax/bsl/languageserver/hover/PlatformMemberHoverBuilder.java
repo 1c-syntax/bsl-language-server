@@ -305,9 +305,6 @@ public class PlatformMemberHoverBuilder {
    * union-свойств в одиночном блоке кода hover'а.
    */
   private String renderTypeSet(TypeSet types, Language lang) {
-    if (types == null) {
-      return "";
-    }
     return HoverParameters.typesLabel(types, ref -> typeRegistry.displayName(ref, lang));
   }
 

@@ -1756,3 +1756,30 @@
   `SignatureSelection` (типы, затем число аргументов); различие в отступном (hover берёт первую
   с оговоркой «вариант не определён», inlay — первую молча, signature help — по активному
   параметру) — это смысл фичи, а общая обёртка свелась бы к трём строкам.
+
+## Контрольная точка после раунда 109
+
+Полный `./gradlew check` (test + jacoco + spotless + javadoc) — зелёный: 867 тестовых классов,
+6048 тестов.
+
+## Раунд 110. Замечания надёжности SonarCloud на новом коде PR
+
+Источник — Quality Gate SonarCloud PR (рейтинг надёжности C при требуемом A, пять замечаний).
+
+- **Мёртвые проверки на `null` (S2583, три).** Пакеты под `@NullMarked`: `classDescription` у
+  `ConstructorHoverBuilder.build` и набор типов в `renderTypeSet` обоих построителей hover не бывают
+  `null` по контракту. Для набора типов контракт держался не везде: конструктор
+  `ParameterDescriptor` нормализовал имя, описание и умолчание, но не `types`, — теперь
+  нормализует и его (`TypeSet.EMPTY`, как `SignatureDescriptor` для типа возврата), и проверки в
+  отрисовке удалены без риска. Попутно `chosen` у `ConstructorHoverBuilder.build` помечен
+  `@Nullable` — туда действительно передают `null` (конструкторов нет).
+- **`volatile` у ссылки на изменяемый объект (S3077).** `ConfigurationModuleMembersProvider`:
+  документ регистрации модуля — `AtomicReference`. Заодно закрыта гонка «проверили — записали» в
+  `refreshCommonModule`: удаление документа между проверкой и записью возвращало его к жизни,
+  теперь замена атомарна (`compareAndSet`).
+- **Регулярка со сверхлинейным откатом (S8786)** в образце `CanonicalImplementationsTest`
+  (`SignatureDescriptor.withReturnTypes`): убраны смежные квантификаторы.
+- **Тесты.** `ParameterDescriptorTest.canonicalConstructorNormalizesMissingTypesToEmptySet`
+  красный → зелёный.
+- **Проверка.** `types.model`, `types.registry`, `hover`, `*Hover*`, `CanonicalImplementationsTest`,
+  `ArchitectureTest` (121 класс, 1116 тестов), `javadoc`, `spotlessCheck` зелёные.

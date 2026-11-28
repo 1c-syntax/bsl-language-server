@@ -55,6 +55,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 /**
@@ -113,15 +114,16 @@ public class ConfigurationModuleMembersProvider {
 
   private final class ModuleRegistration {
     private final TypeRef ref;
-    private volatile @Nullable DocumentContext document;
+    // Пусто — документ удалён: регистрация ждёт файла, созданного заново по тому же пути
+    private final AtomicReference<@Nullable DocumentContext> document;
 
     private ModuleRegistration(TypeRef ref, DocumentContext document) {
       this.ref = ref;
-      this.document = document;
+      this.document = new AtomicReference<>(document);
     }
 
     private Collection<MemberDescriptor> members() {
-      var current = document;
+      var current = document.get();
       return current == null ? List.of() : collectModuleMembers(current);
     }
   }
@@ -139,7 +141,7 @@ public class ConfigurationModuleMembersProvider {
     if (registration == null) {
       return;
     }
-    registration.document = null;
+    registration.document.set(null);
     globalScopeProvider.removeModuleType(event.getUri());
     typeRegistry.invalidateMembers(registration.ref);
   }
@@ -154,7 +156,7 @@ public class ConfigurationModuleMembersProvider {
     globalScopeProvider.indexModuleType(documentContext.getUri(), ref);
     var registration = registeredByUri.get(documentContext.getUri());
     if (registration != null && registration.ref.equals(ref)) {
-      registration.document = documentContext;
+      registration.document.set(documentContext);
       return true;
     }
     return false;
@@ -201,10 +203,14 @@ public class ConfigurationModuleMembersProvider {
       return false;
     }
     var registration = registeredByUri.get(documentContext.getUri());
-    if (registration == null || registration.document == null) {
+    if (registration == null) {
       return false;
     }
-    registration.document = documentContext;
+    // Атомарно: удаление документа между проверкой и записью не должно вернуть его к жизни
+    var previous = registration.document.get();
+    if (previous == null || !registration.document.compareAndSet(previous, documentContext)) {
+      return false;
+    }
     var ref = registration.ref;
     typeRegistry.refreshGlobalPropertyDeclaration(ref, documentContext.getSymbolTree().getModule());
     typeRegistry.invalidateMembers(ref);
