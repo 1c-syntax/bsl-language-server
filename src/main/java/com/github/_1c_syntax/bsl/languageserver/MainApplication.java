@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.cli.AnalyzeCommand;
+import com.github._1c_syntax.bsl.languageserver.cli.CommandHelp;
 import com.github._1c_syntax.bsl.languageserver.cli.FormatCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.LanguageServerStartCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.McpCommand;
@@ -74,7 +75,7 @@ import static picocli.CommandLine.Command;
   },
   usageHelpAutoWidth = true,
   synopsisSubcommandLabel = "[COMMAND [ARGS]]",
-  footer = "@|green Copyright(c) 2018-2025|@",
+  footer = CommandHelp.FOOTER,
   header = "@|green BSL language server|@")
 @SpringBootApplication(scanBasePackageClasses = MainApplication.class)
 @Component

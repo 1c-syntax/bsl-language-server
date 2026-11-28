@@ -61,7 +61,7 @@ import static picocli.CommandLine.Option;
   name = "mcp",
   description = "MCP (Model Context Protocol) server mode (stdio, sse or streamable)",
   usageHelpAutoWidth = true,
-  footer = "@|green Copyright(c) 2018-2026|@")
+  footer = CommandHelp.FOOTER)
 @Component
 @RequiredArgsConstructor
 public class McpCommand implements Callable<Integer> {
