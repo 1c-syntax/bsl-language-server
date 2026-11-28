@@ -523,3 +523,15 @@
   зелёные; тесты пяти диагностик зелёные.
 - **Ограничение.** `DiagnosticTestLayoutTest`: у каждой диагностики есть `XxxDiagnosticTest` —
   наследник `AbstractDiagnosticTest` (без нового теста правило красное: `ThisObjectAssign`).
+
+## Раунд 37. Константа-аргумент и комментарий в диапазоне
+
+- **Сделано.**
+  - `AbstractFindMethodDiagnostic.isCalledWithSingleConstant(ctx, tokenType)` — «вызов ровно с
+    одним аргументом, начинающимся с константы `Истина`/`Ложь`». Цепочки-копии в
+    `SetPrivilegedMode` (`FALSE()`) и `DisableSafeMode` (`getToken(tokenType, 0)`) удалены.
+  - `Ranges.containsAnyToken(range, tokens)` — «хотя бы один токен целиком в диапазоне»;
+    `EmptyCodeBlock` и `MissingCodeTryCatchEx` проверяют через него комментарии в блоке.
+- **Проверка.** Красные `AbstractFindMethodDiagnosticTest` и `RangesTest.containsAnyToken*`
+  (на заглушках) → зелёные; тесты четырёх диагностик зелёные (18 тестов вместе с контрактом
+  `DiagnosticTestLayoutTest`).

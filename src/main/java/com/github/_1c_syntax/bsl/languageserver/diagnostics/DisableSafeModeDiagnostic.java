@@ -29,8 +29,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
-import java.util.List;
-import java.util.Optional;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -64,21 +62,6 @@ public class DisableSafeModeDiagnostic extends AbstractFindMethodDiagnostic {
     } else {
       enabledValue = BSLParser.FALSE;
     }
-    return !enabledCall(ctx, enabledValue);
-  }
-
-  private static boolean enabledCall(BSLParser.GlobalMethodCallContext ctx, int enabledValue) {
-    return Optional.of(ctx)
-      .map(BSLParser.GlobalMethodCallContext::doCall)
-      .map(BSLParser.DoCallContext::callParamList)
-      .map(BSLParser.CallParamListContext::callParam)
-      .filter(callParamContexts -> callParamContexts.size() == 1)
-      .map(List::getFirst)
-      .map(BSLParser.CallParamContext::expression)
-      .map(BSLParser.ExpressionContext::member)
-      .map(List::getFirst)
-      .map(BSLParser.MemberContext::constValue)
-      .filter(constValueContext -> constValueContext.getToken(enabledValue, 0) != null)
-      .isPresent();
+    return !isCalledWithSingleConstant(ctx, enabledValue);
   }
 }

@@ -29,8 +29,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
-import java.util.List;
-import java.util.Optional;
 import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
@@ -54,24 +52,9 @@ public class SetPrivilegedModeDiagnostic extends AbstractFindMethodDiagnostic {
   @Override
   protected boolean checkGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
     final var result = super.checkGlobalMethodCall(ctx);
-    if (result && (isSetPrivilegedModeWithFalse(ctx))) {
+    if (result && isCalledWithSingleConstant(ctx, BSLParser.FALSE)) {
       return false;
     }
     return result;
-  }
-
-  private static boolean isSetPrivilegedModeWithFalse(BSLParser.GlobalMethodCallContext ctx) {
-    return Optional.of(ctx)
-      .map(BSLParser.GlobalMethodCallContext::doCall)
-      .map(BSLParser.DoCallContext::callParamList)
-      .map(BSLParser.CallParamListContext::callParam)
-      .filter(callParamContexts -> callParamContexts.size() == 1)
-      .map(List::getFirst)
-      .map(BSLParser.CallParamContext::expression)
-      .map(BSLParser.ExpressionContext::member)
-      .map(List::getFirst)
-      .map(BSLParser.MemberContext::constValue)
-      .filter(constValueContext -> constValueContext.FALSE() != null)
-      .isPresent();
   }
 }

@@ -27,6 +27,8 @@ import lombok.Setter;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 
+import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
@@ -127,5 +129,28 @@ public abstract class AbstractFindMethodDiagnostic extends AbstractVisitorDiagno
     }
 
     return super.visitMethodCall(ctx);
+  }
+
+  /**
+   * Вызван ли глобальный метод ровно с одним аргументом, первый член выражения которого —
+   * константа с указанным токеном (например, {@code УстановитьПривилегированныйРежим(Ложь)}).
+   *
+   * @param ctx               контекст вызова глобального метода
+   * @param constantTokenType тип токена константы ({@link BSLParser#TRUE}, {@link BSLParser#FALSE}, …)
+   * @return {@code true}, если единственный аргумент начинается с такой константы
+   */
+  protected static boolean isCalledWithSingleConstant(BSLParser.GlobalMethodCallContext ctx, int constantTokenType) {
+    return Optional.of(ctx)
+      .map(BSLParser.GlobalMethodCallContext::doCall)
+      .map(BSLParser.DoCallContext::callParamList)
+      .map(BSLParser.CallParamListContext::callParam)
+      .filter(callParamContexts -> callParamContexts.size() == 1)
+      .map(List::getFirst)
+      .map(BSLParser.CallParamContext::expression)
+      .map(BSLParser.ExpressionContext::member)
+      .map(List::getFirst)
+      .map(BSLParser.MemberContext::constValue)
+      .filter(constValueContext -> constValueContext.getToken(constantTokenType, 0) != null)
+      .isPresent();
   }
 }

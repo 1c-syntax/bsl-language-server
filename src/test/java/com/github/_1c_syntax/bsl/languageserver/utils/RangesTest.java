@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
+import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.parser.BSLTokenizer;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.Position;
@@ -46,6 +47,25 @@ class RangesTest {
     assertThat(ranges).containsExactly(separate, nested, adjacent, outer, overlapping);
     assertThat(outer).isEqualTo(Ranges.create(0, 0, 2, 0));
     assertThat(overlapping).isEqualTo(Ranges.create(1, 1, 3, 0));
+  }
+
+  @Test
+  void containsAnyTokenFindsTokenFullyInsideRange() {
+    var comments = new BSLTokenizer("""
+      А = 1; // первый
+      Б = 2;
+      // второй
+      """).getTokens().stream()
+      .filter(token -> token.getType() == BSLLexer.LINE_COMMENT)
+      .toList();
+    assertThat(comments).hasSize(2);
+
+    assertThat(Ranges.containsAnyToken(Ranges.create(0, 0, 0, 20), comments)).isTrue();
+    assertThat(Ranges.containsAnyToken(Ranges.create(2, 0, 2, 9), comments)).isTrue();
+    // диапазон задевает комментарий, но не содержит его целиком
+    assertThat(Ranges.containsAnyToken(Ranges.create(0, 0, 0, 10), comments)).isFalse();
+    assertThat(Ranges.containsAnyToken(Ranges.create(1, 0, 1, 6), comments)).isFalse();
+    assertThat(Ranges.containsAnyToken(Ranges.create(0, 0, 2, 9), List.of())).isFalse();
   }
 
   @Test

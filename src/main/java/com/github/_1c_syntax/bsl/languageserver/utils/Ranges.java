@@ -206,6 +206,17 @@ public final class Ranges {
   }
 
   /**
+   * Лежит ли хотя бы один из токенов целиком внутри диапазона.
+   *
+   * @param range  диапазон
+   * @param tokens токены (например, комментарии документа)
+   * @return {@code true}, если диапазон целиком содержит хотя бы один токен
+   */
+  public boolean containsAnyToken(Range range, List<Token> tokens) {
+    return tokens.stream().anyMatch(token -> containsRange(range, create(token)));
+  }
+
+  /**
    * Объединить пересекающиеся и соприкасающиеся диапазоны, включая вложенные.
    * Исходный список и его диапазоны не изменяются.
    *
