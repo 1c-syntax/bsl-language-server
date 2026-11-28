@@ -53,3 +53,17 @@
   все id зарегистрированы как подтипы Jackson, неизвестный id падает при разборе данных.
 - **Проверка.** Компиляция; тесты `semantictokens`, `WorkspaceBeanScopeTest`,
   `ServerContextProvider*`, `ArchitectureTest`.
+
+## Раунд 4. Состояние подсказок сложности
+
+- **Проблема.** `AbstractComplexityInlayHintSupplier.enabledMethods` — `HashMap` с вложенными
+  `HashSet`: пишется командой переключения (исполнитель workspace-сервиса), читается при
+  построении подсказок (исполнитель text document) — гонка. Состояние не освобождалось при
+  удалении документа и «переезжало» на документ, заведённый заново по тому же URI.
+- **Сделано.** Конкурентные коллекции, атомарное переключение через `compute`, сброс по
+  `ServerContextDocumentRemovedEvent`. Канонический `AbstractDocumentLifecycleClearableIndex`
+  здесь не подходит намеренно: включённые методы обязаны переживать правку документа.
+- **Проверка.** Красный тест `CognitiveComplexityInlayHintSupplierTest.testCleanupOnDocumentRemoved`
+  (утечка состояния роняла и соседний тест) → зелёный; тесты `inlayhints`, `commands`.
+- **Ограничение.** Машинной проверки нет: поле объявлено как `Map`, тип реализации ArchUnit не
+  видит. Кандидат — статический анализ (Error Prone/SpotBugs), см. backlog.

@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.inlayhints;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.computer.ComplexitySecondaryLocation;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import org.eclipse.lsp4j.InlayHint;
 import org.eclipse.lsp4j.InlayHintKind;
@@ -33,21 +34,22 @@ import org.springframework.context.event.EventListener;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 
 /**
  * Абстрактный поставщик подсказок о сложности методов.
  * <p>
  * По умолчанию подсказки отключены. Для включения нужно вызвать метод {@link #toggleHints(URI, String)}.
+ * Включённые методы переживают правку документа и сбрасываются при его закрытии или удалении.
+ * Переключение и чтение безопасны при вызове из разных потоков.
  */
 public abstract class AbstractComplexityInlayHintSupplier implements InlayHintSupplier<DefaultInlayHintData> {
 
-  private final Map<URI, Set<String>> enabledMethods = new HashMap<>();
+  private final Map<URI, Set<String>> enabledMethods = new ConcurrentHashMap<>();
 
   /**
    * {@inheritDoc}
@@ -90,12 +92,13 @@ public abstract class AbstractComplexityInlayHintSupplier implements InlayHintSu
    * @param methodName Имя метода.
    */
   public void toggleHints(URI uri, String methodName) {
-    var methodsInFile = enabledMethods.computeIfAbsent(uri, uri1 -> new HashSet<>());
-    if (methodsInFile.contains(methodName)) {
-      methodsInFile.remove(methodName);
-    } else {
-      methodsInFile.add(methodName);
-    }
+    enabledMethods.compute(uri, (key, methodsInFile) -> {
+      var methods = methodsInFile == null ? ConcurrentHashMap.<String>newKeySet() : methodsInFile;
+      if (!methods.remove(methodName)) {
+        methods.add(methodName);
+      }
+      return methods;
+    });
   }
 
   /**
@@ -106,6 +109,16 @@ public abstract class AbstractComplexityInlayHintSupplier implements InlayHintSu
   @EventListener
   public void handleDocumentClosed(ServerContextDocumentClosedEvent event) {
     enabledMethods.remove(event.getDocumentContext().getUri());
+  }
+
+  /**
+   * Очищает состояние подсказок при удалении документа из рабочей области.
+   *
+   * @param event событие удаления документа
+   */
+  @EventListener
+  public void handleDocumentRemoved(ServerContextDocumentRemovedEvent event) {
+    enabledMethods.remove(event.getUri());
   }
 
   /**
