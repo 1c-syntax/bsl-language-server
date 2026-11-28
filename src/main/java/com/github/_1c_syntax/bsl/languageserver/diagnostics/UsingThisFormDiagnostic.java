@@ -41,7 +41,6 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.regex.Pattern;
@@ -135,18 +134,8 @@ public class UsingThisFormDiagnostic extends AbstractVisitorDiagnostic implement
     DocumentContext documentContext
   ) {
 
-    List<TextEdit> newTextEdits = new ArrayList<>();
-
-    for (Diagnostic diagnostic : diagnostics) {
-      newTextEdits.add(getQuickFixText(diagnostic, documentContext));
-    }
-
-    return QuickFixProvider.createCodeActions(
-      newTextEdits,
-      info.getResourceString("quickFixMessage"),
-      documentContext.getUri(),
-      diagnostics
-    );
+    return QuickFixProvider.fixEach(diagnostics, info.getResourceString("quickFixMessage"), documentContext.getUri(),
+      diagnostic -> List.of(getQuickFixText(diagnostic, documentContext)));
   }
 
   @Override

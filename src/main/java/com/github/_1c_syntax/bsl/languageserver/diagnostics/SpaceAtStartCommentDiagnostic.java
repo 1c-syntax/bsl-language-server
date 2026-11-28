@@ -36,7 +36,6 @@ import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.TextEdit;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -110,25 +109,15 @@ public class SpaceAtStartCommentDiagnostic extends AbstractDiagnostic implements
     DocumentContext documentContext
   ) {
 
-    List<TextEdit> textEdits = new ArrayList<>();
-
-    diagnostics.forEach((Diagnostic diagnostic) -> {
-      var range = diagnostic.getRange();
-      var currentText = documentContext.getText(range);
-
-      var textEdit = new TextEdit(
-        range,
-        currentText.substring(0, COMMENT_LENGTH) + " " + currentText.substring(COMMENT_LENGTH)
-      );
-      textEdits.add(textEdit);
-    });
-
-    return QuickFixProvider.createCodeActions(
-      textEdits,
-      info.getResourceString("quickFixMessage"),
-      documentContext.getUri(),
-      diagnostics
-    );
+    return QuickFixProvider.fixEach(diagnostics, info.getResourceString("quickFixMessage"), documentContext.getUri(),
+      (Diagnostic diagnostic) -> {
+        var range = diagnostic.getRange();
+        var currentText = documentContext.getText(range);
+        return List.of(new TextEdit(
+          range,
+          currentText.substring(0, COMMENT_LENGTH) + " " + currentText.substring(COMMENT_LENGTH)
+        ));
+      });
   }
 
   private Pattern goodPattern() {

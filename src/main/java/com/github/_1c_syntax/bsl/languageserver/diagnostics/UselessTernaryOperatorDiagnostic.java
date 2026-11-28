@@ -36,7 +36,6 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.TextEdit;
 import tools.jackson.databind.json.JsonMapper;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -121,24 +120,12 @@ public class UselessTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic 
     DocumentContext documentContext
   ) {
 
-    List<TextEdit> textEdits = new ArrayList<>();
-
-    diagnostics.forEach((Diagnostic diagnostic) -> {
-      var range = diagnostic.getRange();
-      // от клиента data приходит JSON-деревом, внутри сервера — объектом
-      var data = LspPayloads.read(DATA_MAPPER, diagnostic.getData(), DiagnosticStorage.DiagnosticAdditionalData.class);
-      if (data != null) {
-        textEdits.add(new TextEdit(range, data.string()));
-      }
-    });
-
-    return QuickFixProvider.createCodeActions(
-      textEdits,
-      info.getResourceString("quickFixMessage"),
-      documentContext.getUri(),
-      diagnostics
-    );
-
+    return QuickFixProvider.fixEach(diagnostics, info.getResourceString("quickFixMessage"), documentContext.getUri(),
+      (Diagnostic diagnostic) -> {
+        // от клиента data приходит JSON-деревом, внутри сервера — объектом
+        var data = LspPayloads.read(DATA_MAPPER, diagnostic.getData(), DiagnosticStorage.DiagnosticAdditionalData.class);
+        return data == null ? List.of() : List.of(new TextEdit(diagnostic.getRange(), data.string()));
+      });
   }
 
   /**

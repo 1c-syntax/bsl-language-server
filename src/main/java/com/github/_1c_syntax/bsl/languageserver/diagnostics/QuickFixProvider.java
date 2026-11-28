@@ -30,10 +30,12 @@ import org.eclipse.lsp4j.TextEdit;
 import org.eclipse.lsp4j.WorkspaceEdit;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * Интерфейс для диагностик, предоставляющих быстрые исправления.
@@ -58,13 +60,42 @@ public interface QuickFixProvider {
   );
 
   /**
+   * Собрать Code Actions, исправляя каждое замечание по отдельности. Действие заявляет только те
+   * замечания, для которых правка построена: замечание от клиента может прийти без данных для
+   * исправления или с устаревшим диапазоном, и тогда исправлять его нечем.
+   *
+   * @param diagnostics Замечания, которые просят исправить
+   * @param title Название действия
+   * @param uri URI документа
+   * @param fix Правки для одного замечания; пустой список — исправить нечем
+   * @return Список Code Actions; пустой, если не исправлено ни одно замечание
+   */
+  static List<CodeAction> fixEach(
+    List<Diagnostic> diagnostics,
+    String title,
+    URI uri,
+    Function<Diagnostic, List<TextEdit>> fix
+  ) {
+    var textEdits = new ArrayList<TextEdit>();
+    var fixed = new ArrayList<Diagnostic>();
+    for (var diagnostic : diagnostics) {
+      var edits = fix.apply(diagnostic);
+      if (!edits.isEmpty()) {
+        textEdits.addAll(edits);
+        fixed.add(diagnostic);
+      }
+    }
+    return createCodeActions(textEdits, title, uri, fixed);
+  }
+
+  /**
    * Собрать Code Actions (быстрые исправления) для списка текстовых изменений.
    *
    * @param textEdits Список текстовых изменений
    * @param title Название действия
    * @param uri URI документа
    * @param diagnostics Список диагностик, которые исправляет это действие
-   * @return Список Code Actions
+   * @return Список Code Actions; пустой, если нет ни замечаний, ни правок
    */
   static List<CodeAction> createCodeActions(
     List<TextEdit> textEdits,
@@ -73,7 +104,7 @@ public interface QuickFixProvider {
     List<Diagnostic> diagnostics
   ) {
 
-    if (diagnostics.isEmpty()) {
+    if (diagnostics.isEmpty() || textEdits.isEmpty()) {
       return Collections.emptyList();
     }
 

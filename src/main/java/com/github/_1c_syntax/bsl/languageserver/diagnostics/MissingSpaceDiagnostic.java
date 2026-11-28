@@ -188,33 +188,24 @@ public class MissingSpaceDiagnostic extends AbstractDiagnostic implements QuickF
     DocumentContext documentContext
   ) {
 
-    List<TextEdit> textEdits = new ArrayList<>();
+    return QuickFixProvider.fixEach(diagnostics, info.getResourceString("quickFixMessage"), documentContext.getUri(),
+      (Diagnostic diagnostic) -> {
+        String diagnosticMessage = DiagnosticMessage.getStringValue(diagnostic.getMessage()).toLowerCase(Locale.ENGLISH);
 
-    diagnostics.forEach((Diagnostic diagnostic) -> {
-      String diagnosticMessage = DiagnosticMessage.getStringValue(diagnostic.getMessage()).toLowerCase(Locale.ENGLISH);
+        // TODO @YanSergey. Переделать после выполнения issue #371 'Доработки ядра. Хранение информации для квикфиксов'
+        var missedLeft = diagnosticMessage.contains("слева") || diagnosticMessage.contains("left");
+        var missedRight = diagnosticMessage.contains("справа") || diagnosticMessage.contains("right");
 
-      // TODO @YanSergey. Переделать после выполнения issue #371 'Доработки ядра. Хранение информации для квикфиксов'
-      var missedLeft = diagnosticMessage.contains("слева") || diagnosticMessage.contains("left");
-      var missedRight = diagnosticMessage.contains("справа") || diagnosticMessage.contains("right");
-
-      var range = diagnostic.getRange();
-
-      if (missedLeft) {
-        var textEdit = new TextEdit(new Range(range.getStart(), range.getStart()), " ");
-        textEdits.add(textEdit);
-      }
-      if (missedRight) {
-        var textEdit = new TextEdit(new Range(range.getEnd(), range.getEnd()), " ");
-        textEdits.add(textEdit);
-      }
-    });
-
-    return QuickFixProvider.createCodeActions(
-      textEdits,
-      info.getResourceString("quickFixMessage"),
-      documentContext.getUri(),
-      diagnostics
-    );
+        var range = diagnostic.getRange();
+        var textEdits = new ArrayList<TextEdit>(2);
+        if (missedLeft) {
+          textEdits.add(new TextEdit(new Range(range.getStart(), range.getStart()), " "));
+        }
+        if (missedRight) {
+          textEdits.add(new TextEdit(new Range(range.getEnd(), range.getEnd()), " "));
+        }
+        return textEdits;
+      });
   }
 
   private void addDiagnostic(Token t, String mainMessage, String errorMessage) {

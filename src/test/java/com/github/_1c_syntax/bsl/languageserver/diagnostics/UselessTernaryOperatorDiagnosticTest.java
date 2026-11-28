@@ -121,6 +121,38 @@ class UselessTernaryOperatorDiagnosticTest extends AbstractDiagnosticTest<Useles
   }
 
   /**
+   * Замечание, для которого правку построить нечем (клиент прислал его без {@code data}), не
+   * должно давать действия: пустое действие, заявляющее замечание исправленным, — обман.
+   */
+  @Test
+  void diagnosticWithoutFixDataGetsNoQuickFix() {
+    var diagnostic = getDiagnostics().getFirst();
+    diagnostic.setData(null);
+
+    var quickFixes = getQuickFixes(diagnostic);
+
+    assertThat(quickFixes).isEmpty();
+  }
+
+  /**
+   * В исправлении всех замечаний разом заявлены только те, для которых правка построена.
+   */
+  @Test
+  void fixAllClaimsOnlyDiagnosticsItFixes() {
+    var documentContext = getDocumentContext();
+    var diagnostics = getDiagnostics();
+    var fixable = diagnostics.get(0);
+    var unfixable = diagnostics.get(1);
+    unfixable.setData(null);
+
+    var quickFixes = ((QuickFixProvider) diagnosticInstance).getQuickFixes(
+      List.of(fixable, unfixable), new org.eclipse.lsp4j.CodeActionParams(), documentContext);
+
+    assertThat(quickFixes).singleElement()
+      .satisfies(action -> assertThat(action.getDiagnostics()).containsExactly(fixable));
+  }
+
+  /**
    * Проверяет, что на некорректном синтаксисе тернарного оператора
    * (пример: {@code Return ?(table.Count() = 1, undefined, );}) диагностика
    * не падает с {@link NullPointerException}.

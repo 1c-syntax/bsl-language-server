@@ -226,16 +226,7 @@ public class CommentedCodeDiagnostic extends AbstractDiagnostic implements Quick
     List<Diagnostic> diagnostics, CodeActionParams params, DocumentContext documentContext
   ) {
 
-    var textEdits = diagnostics.stream()
-      .map(Diagnostic::getRange)
-      .map(range -> new TextEdit(range, ""))
-      .toList();
-
-    return QuickFixProvider.createCodeActions(
-      textEdits,
-      info.getResourceString("quickFixMessage"),
-      documentContext.getUri(),
-      diagnostics
-    );
+    return QuickFixProvider.fixEach(diagnostics, info.getResourceString("quickFixMessage"), documentContext.getUri(),
+      diagnostic -> List.of(new TextEdit(diagnostic.getRange(), "")));
   }
 }

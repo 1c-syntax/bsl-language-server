@@ -110,6 +110,10 @@ class CanonicalImplementationsTest {
       new Case("TypeRegistry.findMember(type, kind, name, fileType)",
         Pattern.compile("\\.kind\\(\\) == \\w+ && \\w+\\.matches\\("),
         Set.of("types/registry/MemberLookupSession.java")),
+      new Case("QuickFixProvider.fixEach",
+        Pattern.compile("QuickFixProvider\\.createCodeActions\\("),
+        // Правки, общие для нескольких замечаний: слияние диапазонов, перенос методов в область
+        Set.of("diagnostics/EmptyRegionDiagnostic.java", "diagnostics/EventHandlerOutsideEventRegionDiagnostic.java")),
       new Case("SynchronousMethod",
         Pattern.compile("(?iu)НачатьПомещениеФайла"),
         Set.of("diagnostics/SynchronousMethod.java"))

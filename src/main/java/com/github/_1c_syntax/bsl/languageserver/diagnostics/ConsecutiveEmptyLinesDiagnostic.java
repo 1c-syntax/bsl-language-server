@@ -37,7 +37,6 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -100,16 +99,8 @@ public class ConsecutiveEmptyLinesDiagnostic extends AbstractDiagnostic implemen
 
     var eofTokenLine = getEofTokenLine(documentContext.getTokens());
 
-    var textEdits = diagnostics.stream()
-      .map(diagnostic -> getQuickFixText(diagnostic, eofTokenLine))
-      .collect(Collectors.toList());
-
-    return QuickFixProvider.createCodeActions(
-      textEdits,
-      info.getResourceString("quickFixMessage"),
-      documentContext.getUri(),
-      diagnostics
-    );
+    return QuickFixProvider.fixEach(diagnostics, info.getResourceString("quickFixMessage"), documentContext.getUri(),
+      diagnostic -> List.of(getQuickFixText(diagnostic, eofTokenLine)));
   }
 
   private static TextEdit getQuickFixText(Diagnostic diagnostic, int eofTokenLine) {

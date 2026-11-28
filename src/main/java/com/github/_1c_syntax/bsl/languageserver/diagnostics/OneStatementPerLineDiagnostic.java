@@ -118,33 +118,22 @@ public class OneStatementPerLineDiagnostic extends AbstractVisitorDiagnostic imp
     CodeActionParams params,
     DocumentContext documentContext
   ) {
-    List<TextEdit> textEdits = new ArrayList<>();
+    return QuickFixProvider.fixEach(diagnostics, info.getResourceString("quickFixMessage"), documentContext.getUri(),
+      (Diagnostic diagnostic) -> {
+        Range range = diagnostic.getRange();
+        Range startLineRange = Ranges.create(
+          range.getStart().getLine(),
+          0,
+          range.getStart().getLine(),
+          range.getStart().getCharacter());
 
-    diagnostics.forEach((Diagnostic diagnostic) -> {
-      Range range = diagnostic.getRange();
-      Range startLineRange = Ranges.create(
-        range.getStart().getLine(),
-        0,
-        range.getStart().getLine(),
-        range.getStart().getCharacter());
+        Matcher matcher = NEW_LINE_PATTERN.matcher(documentContext.getText(startLineRange));
+        String indent = "";
+        if (matcher.find()) {
+          indent = matcher.group(1);
+        }
 
-      Matcher matcher = NEW_LINE_PATTERN.matcher(documentContext.getText(startLineRange));
-      String indent = "";
-      if (matcher.find()) {
-        indent = matcher.group(1);
-      }
-
-      TextEdit textEdit = new TextEdit(
-        range, "\n" + indent + documentContext.getText(range)
-      );
-      textEdits.add(textEdit);
-    });
-
-    return QuickFixProvider.createCodeActions(
-      textEdits,
-      info.getResourceString("quickFixMessage"),
-      documentContext.getUri(),
-      diagnostics
-    );
+        return List.of(new TextEdit(range, "\n" + indent + documentContext.getText(range)));
+      });
   }
 }

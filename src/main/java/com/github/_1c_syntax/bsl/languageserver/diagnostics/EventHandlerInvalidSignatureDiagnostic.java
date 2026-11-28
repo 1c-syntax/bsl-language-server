@@ -130,24 +130,13 @@ public class EventHandlerInvalidSignatureDiagnostic extends AbstractDiagnostic i
   public List<CodeAction> getQuickFixes(List<Diagnostic> diagnostics,
                                         CodeActionParams params,
                                         DocumentContext documentContext) {
-    var textEdits = new ArrayList<TextEdit>();
-    var fixedDiagnostics = new ArrayList<Diagnostic>();
-    diagnostics.forEach(diagnostic ->
-      documentContext.getSymbolTree().getMethodSymbolAtPosition(diagnostic.getRange().getStart())
+    return QuickFixProvider.fixEach(diagnostics, info.getResourceString("quickFixMessage"), documentContext.getUri(),
+      diagnostic -> documentContext.getSymbolTree().getMethodSymbolAtPosition(diagnostic.getRange().getStart())
         .flatMap(method -> eventContractsIndex.getContract(documentContext, method.getName())
           .filter(contract -> !contract.signatures().isEmpty())
           .flatMap(contract -> buildSignatureFix(documentContext, method, contract)))
-        .ifPresent((TextEdit edit) -> {
-          textEdits.add(edit);
-          fixedDiagnostics.add(diagnostic);
-        })
-    );
-    if (textEdits.isEmpty()) {
-      return List.of();
-    }
-    return QuickFixProvider.createCodeActions(
-      textEdits, info.getResourceString("quickFixMessage"),
-      documentContext.getUri(), fixedDiagnostics);
+        .map(List::of)
+        .orElse(List.of()));
   }
 
   /**

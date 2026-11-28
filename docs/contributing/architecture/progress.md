@@ -1783,3 +1783,26 @@
   красный → зелёный.
 - **Проверка.** `types.model`, `types.registry`, `hover`, `*Hover*`, `CanonicalImplementationsTest`,
   `ArchitectureTest` (121 класс, 1116 тестов), `javadoc`, `spotlessCheck` зелёные.
+
+## Раунд 111. Quick fix заявляет только исправленные замечания
+
+Источник — сканирование `diagnostics/` после раунда 97 (пункт 2).
+
+- **Дефект.** Тринадцать провайдеров быстрых исправлений собирали правки в цикле по замечаниям и
+  отдавали в `QuickFixProvider.createCodeActions` весь присланный список. Где правка строится не
+  всегда (`UselessTernaryOperator` — замечание пришло без `data`, `CanonicalSpellingKeywords` —
+  текст под устаревшим диапазоном уже не ключевое слово, `InvalidCharacterInFile` — сообщение на
+  другом языке, `EventHandlerInvalidSignature` — нет контракта), действие заявляло исправленными
+  и неисправленные замечания, а при отсутствии правок вовсе — предлагалось пустым.
+- **Сделано.** `QuickFixProvider.fixEach(замечания, заголовок, uri, замечание → правки)` —
+  канонический путь для исправлений по одному замечанию: заявляются только замечания с правками,
+  без правок действия нет. `createCodeActions` больше не создаёт действие без правок. Тринадцать
+  провайдеров переведены на `fixEach`, их каркас (списки, циклы, ручной учёт исправленных у
+  `EventHandlerInvalidSignature`) удалён. Через `createCodeActions` остались только исправления,
+  где правки общие для нескольких замечаний: слияние диапазонов (`EmptyRegion`) и перенос методов
+  в область (`EventHandlerOutsideEventRegion`).
+- **Тесты.** `UselessTernaryOperatorDiagnosticTest.diagnosticWithoutFixDataGetsNoQuickFix` и
+  `fixAllClaimsOnlyDiagnosticsItFixes` красные → зелёные; `CanonicalImplementationsTest`
+  (случай `QuickFixProvider.fixEach`) держит новые копии каркаса.
+- **Проверка.** `diagnostics`, `*CodeAction*`, `CanonicalImplementationsTest`, `ArchitectureTest`
+  (232 класса, 1016 тестов), `javadoc`, `spotlessCheck` зелёные.
