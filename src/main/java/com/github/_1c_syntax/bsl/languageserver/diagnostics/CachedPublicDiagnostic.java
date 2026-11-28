@@ -27,13 +27,10 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
+import com.github._1c_syntax.bsl.languageserver.utils.Regions;
 import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.bsl.mdo.support.ReturnValueReuse;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.utils.CaseInsensitivePattern;
-
-import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -51,9 +48,6 @@ import java.util.regex.Pattern;
 )
 public class CachedPublicDiagnostic extends AbstractDiagnostic {
 
-  private static final Pattern PUBLIC = CaseInsensitivePattern.compile(
-    "^(%s|%s)$".formatted(Keywords.PUBLIC_REGION.getRu(), Keywords.PUBLIC_REGION.getEn()));
-
   @Override
   protected void check() {
 
@@ -64,7 +58,7 @@ public class CachedPublicDiagnostic extends AbstractDiagnostic {
     documentContext.getSymbolTree().getModuleLevelRegions()
       .stream()
       .filter(regionSymbol -> !regionSymbol.getMethods().isEmpty())
-      .filter(regionSymbol -> PUBLIC.matcher(regionSymbol.getName()).find())
+      .filter(regionSymbol -> Regions.isPublicRegionName(regionSymbol.getName()))
       .forEach(regionSymbol -> diagnosticStorage.addDiagnostic(regionSymbol.getRegionNameRange()));
   }
 

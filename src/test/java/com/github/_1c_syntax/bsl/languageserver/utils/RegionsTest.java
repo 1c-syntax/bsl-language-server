@@ -33,6 +33,30 @@ import static org.assertj.core.api.Assertions.assertThat;
 class RegionsTest {
 
   @Test
+  void publicRegionNameMatchesBothLanguagesIgnoringCase() {
+    assertThat(Regions.isPublicRegionName("ПрограммныйИнтерфейс")).isTrue();
+    assertThat(Regions.isPublicRegionName("программныйинтерфейс")).isTrue();
+    assertThat(Regions.isPublicRegionName("PUBLIC")).isTrue();
+
+    assertThat(Regions.isPublicRegionName("СлужебныйПрограммныйИнтерфейс")).isFalse();
+    assertThat(Regions.isPublicRegionName("Internal")).isFalse();
+    assertThat(Regions.isPublicRegionName("ПрограммныйИнтерфейсДоп")).isFalse();
+    assertThat(Regions.isPublicRegionName("")).isFalse();
+  }
+
+  @Test
+  void apiRegionNameMatchesPublicAndInternalIgnoringCase() {
+    assertThat(Regions.isApiRegionName("ПрограммныйИнтерфейс")).isTrue();
+    assertThat(Regions.isApiRegionName("public")).isTrue();
+    assertThat(Regions.isApiRegionName("служебныйпрограммныйинтерфейс")).isTrue();
+    assertThat(Regions.isApiRegionName("Internal")).isTrue();
+
+    assertThat(Regions.isApiRegionName("СлужебныеПроцедурыИФункции")).isFalse();
+    assertThat(Regions.isApiRegionName("Private")).isFalse();
+    assertThat(Regions.isApiRegionName("InternalX")).isFalse();
+  }
+
+  @Test
   void testGetStandardRegionsPatternsByModuleTypeUnknown() {
     // Given
     ModuleType unknownType = ModuleType.UNKNOWN;

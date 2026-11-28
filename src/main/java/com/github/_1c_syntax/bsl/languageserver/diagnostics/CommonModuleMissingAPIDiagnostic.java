@@ -28,12 +28,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.Regions;
 import com.github._1c_syntax.bsl.types.ModuleType;
-
-import java.util.Set;
-import java.util.TreeSet;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -49,18 +46,6 @@ import java.util.TreeSet;
   }
 )
 public class CommonModuleMissingAPIDiagnostic extends AbstractDiagnostic {
-
-  private static final Set<String> REGION_NAME = makeRegionsAPI();
-
-  private static Set<String> makeRegionsAPI() {
-    Set<String> result = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-    result.add(Keywords.PUBLIC_REGION.getRu());
-    result.add(Keywords.PUBLIC_REGION.getEn());
-    result.add(Keywords.INTERNAL_REGION.getRu());
-    result.add(Keywords.INTERNAL_REGION.getEn());
-
-    return result;
-  }
 
   @Override
   protected void check() {
@@ -84,7 +69,7 @@ public class CommonModuleMissingAPIDiagnostic extends AbstractDiagnostic {
     var isModuleWithoutRegionAPI = symbolTree.getModuleLevelRegions()
       .stream()
       .map(RegionSymbol::getName)
-      .noneMatch(REGION_NAME::contains);
+      .noneMatch(Regions::isApiRegionName);
 
     if (isModuleWithoutExportSub || isModuleWithoutRegionAPI) {
       diagnosticStorage.addDiagnostic(range);

@@ -494,3 +494,15 @@
     `equalsIgnoreCase` — теперь `SymbolTree.getMethodSymbol(String)` (тот же результат: без учёта
     регистра, первый объявленный).
 - **Проверка.** Поведение не меняется; тесты шести диагностик (13) зелёные.
+
+## Раунд 35. Имя области программного интерфейса — `Regions`
+
+- **Проблема.** «Это область `ПрограммныйИнтерфейс`/`Public` (и `СлужебныйПрограммныйИнтерфейс`/
+  `Internal`)?» решалось четырьмя копиями: регулярками в `PublicMethodsDescription`,
+  `NonExportMethodsInApiRegion`, `CachedPublic` (своя сборка из `Keywords`) и `TreeSet` без учёта
+  регистра в `CommonModuleMissingAPI`, тогда как канонические шаблоны уже лежали закрытыми в
+  `Regions`.
+- **Сделано.** `Regions.isPublicRegionName` и `Regions.isApiRegionName` поверх существующих
+  `PUBLIC_REGION_NAME`/`INTERNAL_REGION_NAME`; все четыре диагностики переведены, копии удалены.
+- **Проверка.** Красные `RegionsTest.publicRegionName*`/`apiRegionName*` (на заглушках) → зелёные;
+  тесты четырёх диагностик зелёные (49 тестов).
