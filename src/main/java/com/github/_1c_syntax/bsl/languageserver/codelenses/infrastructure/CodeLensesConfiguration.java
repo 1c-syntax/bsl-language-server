@@ -24,7 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.codelenses.infrastructure;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensData;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensSupplier;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import org.eclipse.lsp4j.jsonrpc.messages.Either;
+import com.github._1c_syntax.bsl.languageserver.configuration.SupplierParameters;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.jackson.autoconfigure.JsonMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -82,7 +82,7 @@ public class CodeLensesConfiguration {
   ) {
     var parameters = configuration.getCodeLensOptions().getParameters();
     return codeLensSuppliersById.values().stream()
-      .filter(supplier -> supplierIsEnabled(supplier.getId(), parameters))
+      .filter(supplier -> SupplierParameters.isEnabled(parameters, supplier.getId()))
       .sorted(Comparator.comparing(o ->
         Objects.requireNonNullElse(OrderUtils.getOrder(o.getClass()), Ordered.LOWEST_PRECEDENCE)))
       .collect(Collectors.toList());
@@ -102,13 +102,5 @@ public class CodeLensesConfiguration {
       .map(supplier -> new NamedType(supplier.getCodeLensDataClass(), supplier.getId()))
       .toList();
     return builder -> namedTypes.forEach(builder::registerSubtypes);
-  }
-
-  private static boolean supplierIsEnabled(
-    String supplierId,
-    Map<String, Either<Boolean, Map<String, Object>>> parameters
-  ) {
-    var supplierConfig = parameters.getOrDefault(supplierId, Either.forLeft(true));
-    return supplierConfig.isRight() || supplierConfig.getLeft();
   }
 }

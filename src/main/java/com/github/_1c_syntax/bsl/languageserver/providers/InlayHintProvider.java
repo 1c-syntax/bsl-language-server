@@ -24,11 +24,11 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.client.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.SupplierParameters;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.inlayhints.InlayHintData;
 import com.github._1c_syntax.bsl.languageserver.inlayhints.InlayHintSupplier;
-import com.github._1c_syntax.bsl.languageserver.inlayhints.infrastructure.InlayHintsConfiguration;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import org.eclipse.lsp4j.ClientCapabilities;
@@ -74,7 +74,7 @@ public class InlayHintProvider {
     var parameters = configuration.getInlayHintOptions().getParameters();
 
     return inlayHintSuppliersById.values().stream()
-      .filter(supplier -> InlayHintsConfiguration.supplierIsEnabled(supplier.getId(), parameters))
+      .filter(supplier -> SupplierParameters.isEnabled(parameters, supplier.getId()))
       .map(supplier -> supplier.getInlayHints(documentContext, params))
       .flatMap(Collection::stream)
       .collect(Collectors.toList());

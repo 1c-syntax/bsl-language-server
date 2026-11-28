@@ -19,7 +19,8 @@
 - **Правки `CLAUDE.md`** по итогам раундов — по правилам репозитория только с согласия мейнтейнера:
   - `reporters/CLAUDE.md`: у `ReportContext` появилось поле `workspaceDir` (раунд 7);
   - `configuration/CLAUDE.md`: порядок поиска файла конфигурации теперь живёт в
-    `ConfigurationFiles` (раунд 1) — стоит сослаться на него.
+    `ConfigurationFiles` (раунд 1) — стоит сослаться на него; включение supplier'а проверяет не
+    `XxxConfiguration.supplierIsEnabled(...)`, а `SupplierParameters.isEnabled` (раунд 15).
 
 ## Высокий приоритет (дефекты или вероятные дефекты)
 
@@ -44,7 +45,7 @@
 - **Терминал, заканчивающийся на курсоре** — `LinkedEditingRangeProvider`/`SelectionRangeProvider`.
 - **`safeGetAst`** — 4 приватные копии и 3 inline (две политики перехвата).
 - **Таблицы «тип токена → `Keywords.MultiName`»** — 3 копии (completion, formatter, diagnostic).
-- **Мелкие пары копий**: `readFlag` (inlay hint flags), `findMethodAt` (две диагностики
+- **Мелкие пары копий**: `findMethodAt` (две диагностики
   EventHandler*), `getVariableName`, `record ProfileKey`, `isIdentChar`, `stringField`, `key`.
 - **Реестры supplier'ов code lens / inlay hint / command** — конфигурации, `getId()` по суффиксу,
   `extractData`, разбор data в resolve написаны трижды-четырежды.

@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.inlayhints.infrastructure;
 
 import com.github._1c_syntax.bsl.languageserver.inlayhints.InlayHintData;
 import com.github._1c_syntax.bsl.languageserver.inlayhints.InlayHintSupplier;
-import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.boot.jackson.autoconfigure.JsonMapperBuilderCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -73,20 +72,5 @@ public class InlayHintsConfiguration {
       .map(supplier -> new NamedType(supplier.getInlayHintDataClass(), supplier.getId()))
       .toList();
     return builder -> namedTypes.forEach(builder::registerSubtypes);
-  }
-
-  /**
-   * Проверить, включён ли сапплаер по его id.
-   *
-   * @param supplierId id сапплаера
-   * @param parameters параметры из конфигурации
-   * @return true если сапплаер включён
-   */
-  public static boolean supplierIsEnabled(
-    String supplierId,
-    Map<String, Either<Boolean, Map<String, Object>>> parameters
-  ) {
-    var supplierConfig = parameters.getOrDefault(supplierId, Either.forLeft(true));
-    return supplierConfig.isRight() || supplierConfig.getLeft();
   }
 }

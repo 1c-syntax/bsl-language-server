@@ -27,12 +27,12 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
+import com.github._1c_syntax.bsl.languageserver.configuration.SupplierParameters;
 import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
 import lombok.ToString;
 import lombok.Value;
 import org.eclipse.lsp4j.CodeLens;
-import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 import java.beans.ConstructorProperties;
 import java.net.URI;
@@ -126,12 +126,10 @@ public abstract class AbstractMethodComplexityCodeLensSupplier
    * @return Порог сложности; {@code -1} (показывать всегда), если не задан.
    */
   private int getComplexityThreshold() {
-    var parameters = configuration.getCodeLensOptions().getParameters().getOrDefault(getId(), Either.forLeft(true));
-    if (parameters.isLeft()) {
-      return DEFAULT_COMPLEXITY_THRESHOLD;
-    } else {
-      return (int) parameters.getRight().getOrDefault("complexityThreshold", DEFAULT_COMPLEXITY_THRESHOLD);
-    }
+    return SupplierParameters.setting(configuration.getCodeLensOptions().getParameters(), getId(), "complexityThreshold")
+      .filter(Number.class::isInstance)
+      .map(threshold -> ((Number) threshold).intValue())
+      .orElse(DEFAULT_COMPLEXITY_THRESHOLD);
   }
 
   /**
