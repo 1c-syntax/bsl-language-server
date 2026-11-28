@@ -1715,3 +1715,24 @@
 - **Проверка.** `context.symbol`, четыре диагностики, `types.inferencer`, `references`,
   `CanonicalImplementationsTest`, `ArchitectureTest` (86 классов, 572 теста), `javadoc`,
   `spotlessCheck` зелёные.
+
+## Раунд 108. Раскраска глобальной цепочки — член по имени через `TypeRegistry.findMember`
+
+Источник — сканирование после раунда 97 (пункт 5).
+
+- **Дублирование.** `GlobalScopeSemanticTokensSupplier.findMember` перебирал `getMembers` руками
+  («вид совпал и `matches(имя)`») — копия канонического `TypeRegistry.findMember`
+  (`MemberLookupSession.first`), только без индексного пути для больших типов.
+- **Сделано.** Поиск — `typeRegistry.findMember(…)`; цикл удалён.
+- **Тесты.** `CanonicalImplementationsTest` (случай `TypeRegistry.findMember`) красный → зелёный;
+  тесты семантических токенов — без изменений, зелёные.
+- **Проверка.** `semantictokens`, `*SemanticTokens*`, `CanonicalImplementationsTest`,
+  `ArchitectureTest` (28 классов, 306 тестов), `javadoc`, `spotlessCheck` зелёные.
+- **Рассмотрено и отклонено (остальное в пункте 5).** Классификация «перечисление / модуль /
+  прочее» у четырёх потребителей — общее ядро уже каноническое (`TypeRegistry.isEnumType` и
+  `GlobalScopeProvider.uriByModuleTypeRef`), различается представление: completion отдаёт иконку
+  `Module` только в `.os`, токены — `Namespace` везде, MCP — две категории. «Первый конкретный тип»
+  у токенов vs `returnType()` у прочих — тоже представление: токен с неизвестным типом не красится,
+  а элемент completion и карточка MCP показываются как обычное свойство. Ручной обход цепочки
+  у токенов — осознанно дешёвый статический проход по первым типам (горячий путь), полный вывод
+  типов на каждое звено был бы дороже.

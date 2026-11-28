@@ -174,9 +174,9 @@
      которые не исправляет.
   3. ~~Таблица синхронных и асинхронных методов~~ — закрыто, раунд 106 (`SynchronousMethod`).
   4. ~~«Объемлющий метод»~~ — закрыто, раунд 107 (`SymbolTree.getEnclosingMethodSymbol`).
-  5. Классификация глобального значения «перечисление или свойство» — четыре копии с двумя
-     правилами (`CompletionProvider`, `GlobalScopeSemanticTokensSupplier`, `GlobalMemberSearchTool`,
-     `GlobalMemberInfoTool`); там же ручной обход цепочки в `GlobalScopeSemanticTokensSupplier`.
+  5. ~~Классификация глобального значения и обход цепочки у токенов~~ — раунд 108: копия поиска
+     члена сведена к `TypeRegistry.findMember`; остальное рассмотрено и отклонено (ядро уже
+     каноническое, различается представление).
   6. Выбор сигнатуры — `PlatformMemberHoverBuilder` и `PlatformMethodCallInlayHintCollector`;
      обозначение вариативных параметров (`...`) в hover — непоследовательно.
   7. **Рассмотрено и отклонено (раунд 106):** `Timeouts`, `HardcodeSecret` берут имя типа мимо

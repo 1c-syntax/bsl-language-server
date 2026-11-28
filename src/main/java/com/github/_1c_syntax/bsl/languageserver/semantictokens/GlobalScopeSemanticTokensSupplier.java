@@ -236,12 +236,7 @@ public class GlobalScopeSemanticTokensSupplier implements SemanticTokensSupplier
     if (ownerType == null || memberName == null || memberName.isBlank()) {
       return null;
     }
-    for (var m : typeRegistry.getMembers(ownerType, fileType)) {
-      if (m.kind() == expectedKind && m.matches(memberName)) {
-        return m;
-      }
-    }
-    return null;
+    return typeRegistry.findMember(ownerType, expectedKind, memberName, fileType).orElse(null);
   }
 
   private static boolean isLocalName(SymbolTree symbolTree, String name) {

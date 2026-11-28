@@ -106,6 +106,9 @@ class CanonicalImplementationsTest {
         Pattern.compile("getAncestor(OrSelf)?ByRuleIndex\\([^;]*RULE_sub\\)"),
         // Сама реализация; вычислитель переменных строит дерево и спросить его ещё не может
         Set.of("context/symbol/SymbolDeclarationRanges.java", "context/computer/VariableSymbolComputer.java")),
+      new Case("TypeRegistry.findMember(type, kind, name, fileType)",
+        Pattern.compile("\\.kind\\(\\) == \\w+ && \\w+\\.matches\\("),
+        Set.of("types/registry/MemberLookupSession.java")),
       new Case("SynchronousMethod",
         Pattern.compile("(?iu)НачатьПомещениеФайла"),
         Set.of("diagnostics/SynchronousMethod.java"))
