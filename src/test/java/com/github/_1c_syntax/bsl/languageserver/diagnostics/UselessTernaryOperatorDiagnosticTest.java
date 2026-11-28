@@ -100,6 +100,27 @@ class UselessTernaryOperatorDiagnosticTest extends AbstractDiagnosticTest<Useles
   }
 
   /**
+   * Диагностику клиент присылает обратно в запросе code action, и её {@code data} приходит уже не
+   * объектом сервера, а JSON-деревом — исправление должно строиться и из него.
+   */
+  @Test
+  void quickFixIsBuiltFromDiagnosticDataSentBackByClient() {
+    var documentContext = getDocumentContext();
+    var diagnostic = getDiagnostics().getFirst();
+    diagnostic.setData(new com.google.gson.Gson().toJsonTree(diagnostic.getData()));
+
+    var quickFixes = getQuickFixes(diagnostic);
+
+    assertThat(quickFixes).hasSize(1);
+    assertThat(quickFixes.getFirst())
+      .of(diagnosticInstance)
+      .in(documentContext)
+      .fixes(diagnostic)
+      .hasChanges(1)
+      .hasNewText("Б=1");
+  }
+
+  /**
    * Проверяет, что на некорректном синтаксисе тернарного оператора
    * (пример: {@code Return ?(table.Count() = 1, undefined, );}) диагностика
    * не падает с {@link NullPointerException}.

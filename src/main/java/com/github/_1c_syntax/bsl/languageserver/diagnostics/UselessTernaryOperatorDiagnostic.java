@@ -27,12 +27,14 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.LspPayloads;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.TextEdit;
+import tools.jackson.databind.json.JsonMapper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,6 +51,9 @@ import java.util.Optional;
   }
 )
 public class UselessTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic implements QuickFixProvider {
+
+  /** Нагрузка — запись из одной строки, подтипов нет: регистрация в общем маппере не нужна. */
+  private static final JsonMapper DATA_MAPPER = JsonMapper.builder().build();
 
   private static final int SKIPPED_RULE_INDEX = 0;
   private static final int COUNT_EXPRESSIONS = 3;
@@ -120,10 +125,10 @@ public class UselessTernaryOperatorDiagnostic extends AbstractVisitorDiagnostic 
 
     diagnostics.forEach((Diagnostic diagnostic) -> {
       var range = diagnostic.getRange();
-      var data = diagnostic.getData();
-      if (data instanceof DiagnosticStorage.DiagnosticAdditionalData(String string)) {
-        var textEdit = new TextEdit(range, string);
-        textEdits.add(textEdit);
+      // от клиента data приходит JSON-деревом, внутри сервера — объектом
+      var data = LspPayloads.read(DATA_MAPPER, diagnostic.getData(), DiagnosticStorage.DiagnosticAdditionalData.class);
+      if (data != null) {
+        textEdits.add(new TextEdit(range, data.string()));
       }
     });
 
