@@ -1233,3 +1233,18 @@
 - **Тесты оставлены как сторожа**: `SDBLJoinDocumentHighlightSupplierTest.joinInsideSubqueryHighlightsItselfNotTheEnclosingJoin`,
   `SDBLCaseDocumentHighlightSupplierTest.caseNestedInOperandHighlightsItselfNotTheEnclosingCase` —
   поведение на вложенности до сих пор не было закреплено ничем.
+
+## Раунд 80. Свёртка рангов автодополнения — `CompletionPriority.Fold`
+
+Источник — бэклог, пункт 8 углублённого сканирования.
+
+- **Проблема.** Свёртка «есть доступная альтернатива / есть недоступная → ранг» была записана
+  четырежды (`CompletionContextEvaluation` ×3, `CompletionMethodEvaluation`), а готовый для неё
+  `CompletionPriority.combine(int[])` не вызывался нигде: массив не подходит циклам с досрочным
+  выходом (`rankSharedReceiverUnion` возвращает `null` посреди обхода).
+- **Сделано.** Накопитель `CompletionPriority.Fold` (`add`/`result`); четыре копии сведены к нему,
+  мёртвый `combine(int[])` удалён, `combine(boolean, boolean)` стал приватным.
+- **Тесты.** Новый `CompletionPriorityTest` — шесть из девяти случаев красные на заглушке
+  (три «всё доступно» совпадают с ответом заглушки) → зелёные.
+- **Проверка.** `completion`, `*Completion*` (32 класса, 372 теста) зелёные; `javadoc`,
+  `spotlessCheck` зелёные.

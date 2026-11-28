@@ -34,19 +34,36 @@ final class CompletionPriority {
   }
 
   /**
-   * Пустой набор означает отсутствие сведений; смешанная доступность — отдельную промежуточную группу.
+   * Свёртка рангов альтернатив по одному: доступна ли хотя бы одна и недоступна ли хотя бы одна.
+   * Без рангов результат — {@link #AVAILABLE}: отсутствие сведений не скрывает вариант.
    */
-  static int combine(int[] ranks) {
-    var available = false;
-    var unavailable = false;
-    for (var rank : ranks) {
+  static final class Fold {
+
+    private boolean available;
+    private boolean unavailable;
+
+    /**
+     * Учесть ранг очередной альтернативы.
+     *
+     * @param rank {@link #AVAILABLE}, {@link #PARTIAL} или {@link #UNAVAILABLE}.
+     */
+    void add(int rank) {
       available |= rank != UNAVAILABLE;
       unavailable |= rank != AVAILABLE;
     }
-    return combine(available, unavailable);
+
+    /**
+     * Итоговый ранг.
+     *
+     * @return {@link #AVAILABLE}, если все доступны; {@link #UNAVAILABLE}, если все недоступны;
+     *     иначе {@link #PARTIAL}.
+     */
+    int result() {
+      return combine(available, unavailable);
+    }
   }
 
-  static int combine(boolean available, boolean unavailable) {
+  private static int combine(boolean available, boolean unavailable) {
     if (!unavailable) {
       return AVAILABLE;
     }

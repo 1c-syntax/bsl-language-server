@@ -170,8 +170,7 @@
   7. Мелкие обходы канонического: `TableCollectionInference.resolveMember` ≈ `TypeRegistry.findMember`,
      `SymbolTypeIndex.findLocalFunction` ≈ `getMethodSymbol(name).filter(isFunction)`,
      `ConfigurationModuleMembersProvider.register` строит self-тип мимо `selfTypeQualifiedName`.
-  8. `completion/`: свёртка `CompletionPriority` четырьмя копиями при неиспользуемом
-     `combine(int[])`; `diagnostics/infrastructure`: рецепт сборки `DiagnosticInfo` четырежды, два
+  8. ~~`completion/`: свёртка `CompletionPriority`~~ — закрыто, раунд 80; `diagnostics/infrastructure`: рецепт сборки `DiagnosticInfo` четырежды, два
      метода фабрики без вызовов (у `DiagnosticInfos.init` общий список экземпляров — намеренно).
   **Ожидает решения:** `OpenDataObjectInference.applyTypeDescriptionTypes` резолвит имена из
   строки `ОписаниеТипов("…")` через `resolve`, а не `resolveSet` — `ОпределяемыйТип.X` в такой

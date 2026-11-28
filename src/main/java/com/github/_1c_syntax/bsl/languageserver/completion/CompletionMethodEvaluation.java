@@ -108,16 +108,12 @@ final class CompletionMethodEvaluation {
     var ready = byTarget.get(target);
     if (ready == null) {
       var contribution = new CompletionMethodHint();
-      var available = false;
-      var unavailable = false;
+      var fold = new CompletionPriority.Fold();
       for (var context : scope.contexts()) {
         var methodRank = methodRank(targets, context, contribution);
-        var rank = Math.max(typeContext.typeRank(owner, context), methodRank);
-        available |= rank != UNAVAILABLE;
-        unavailable |= rank != AVAILABLE;
+        fold.add(Math.max(typeContext.typeRank(owner, context), methodRank));
       }
-      var rank = combine(available, unavailable);
-      ready = new SharedRank(rank, contribution);
+      ready = new SharedRank(fold.result(), contribution);
       byTarget.put(target, ready);
     }
     hint.merge(ready.hint());
