@@ -87,13 +87,11 @@
   на методах LSP-сервисов, а они возвращают `CompletableFuture`; исключение провайдера
   возникает внутри future и совету не видно; логback-аппендера Sentry нет. Кандидат — хук
   `whenComplete` в `onDocument`.
-- **`CompletionProvider`**: три копии сканирования строки (`dotCompletionInfo`, `currentLineInfo`,
-  `isDotCompletion`) с `catch (Exception) { return null/false; }` — глушат и
-  `DocumentContentUnavailableException`, которую канонический путь превращает в `ContentModified`.
-- **Ожидание `Future` с оборачиванием в `IllegalStateException`** — 5 копий
+- **Ожидание `Future` с оборачиванием в `IllegalStateException`** — 5 мест
   (`FormatCommand`, `AnalyzeCommand`, `AnalyzeProjectOnStart`, `ServerContext`,
-  `DefaultDiagnosticComputer`); оборачивается сам `ExecutionException`, настоящая причина —
-  на два уровня глубже (`MethodReturnTypeIndexer` разворачивает).
+  `DefaultDiagnosticComputer`) — **рассмотрено и отклонено (раунд 57)**: политика у всех одна
+  (флаг прерывания восстанавливается, сообщение — своё для операции), цепочка причин в стеке
+  сохраняется; общий помощник дал бы лишь формальное единообразие.
 - **Преобразование URI → `Path` без единой политики** — пять охраняемых мест с разными наборами
   исключений и четыре неохраняемых `Path.of(uri)`; канонический `Absolute.path` уже есть.
 - **Загрузчики встроенных ресурсов** (`types/registry`) по-разному реагируют на одну ошибку

@@ -421,6 +421,30 @@ class BSLTextDocumentServiceTest {
         assertThat(e.getResponseError().getCode()).isEqualTo(ResponseErrorCode.ContentModified.getValue()));
   }
 
+  /**
+   * Автодополнение на документе без текста отвечает так же, как прочие запросы, — «содержимое
+   * изменилось», а не пустым списком: пустой список клиент принял бы за «предложить нечего» и не
+   * переспросил бы.
+   */
+  @Test
+  void completionAfterCloseFailsAsContentModified() throws Exception {
+    // given
+    textDocumentService.didOpen(new DidOpenTextDocumentParams(getTextDocumentItem()));
+    textDocumentService.didClose(new DidCloseTextDocumentParams(getTextDocumentIdentifier()));
+
+    // when
+    var result = textDocumentService.completion(
+      new org.eclipse.lsp4j.CompletionParams(getTextDocumentIdentifier(), new Position(0, 0)));
+
+    // then
+    assertThat(result)
+      .failsWithin(Duration.ofSeconds(10))
+      .withThrowableOfType(ExecutionException.class)
+      .havingCause()
+      .isInstanceOfSatisfying(ResponseErrorException.class, e ->
+        assertThat(e.getResponseError().getCode()).isEqualTo(ResponseErrorCode.ContentModified.getValue()));
+  }
+
   /** Ошибка провайдера, не связанная с текстом, и на закрытом документе доходит до клиента как есть. */
   @Test
   void providerFailureOnClosedDocumentIsNotReportedAsContentModified() throws Exception {

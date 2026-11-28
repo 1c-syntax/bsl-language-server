@@ -633,24 +633,8 @@ public final class CompletionProvider {
 
   @Nullable
   private static DotCompletionInfo dotCompletionInfo(DocumentContext documentContext, Position position) {
-    try {
-      var lines = documentContext.getContentList();
-      if (position.getLine() >= lines.length) {
-        return null;
-      }
-      var line = lines[position.getLine()];
-      var col = Math.min(position.getCharacter(), line.length());
-      var i = col;
-      while (i > 0 && isIdentChar(line.charAt(i - 1))) {
-        i--;
-      }
-      if (i == 0 || line.charAt(i - 1) != '.') {
-        return null;
-      }
-      return new DotCompletionInfo(line.substring(i, col));
-    } catch (Exception e) {
-      return null;
-    }
+    var lineInfo = currentLineInfo(documentContext, position);
+    return lineInfo != null && lineInfo.afterDot() ? new DotCompletionInfo(lineInfo.prefix()) : null;
   }
 
   private record DotCompletionInfo(String prefix) {
@@ -1089,24 +1073,25 @@ public final class CompletionProvider {
     return head.endsWith("новый") || head.endsWith("new");
   }
 
+  /**
+   * Строка под курсором и набираемый идентификатор перед ним. Текста у документа может не быть
+   * (документ закрыт и освобождён) — тогда исключение уходит выше и запрос отвечает «содержимое
+   * изменилось», как и прочие.
+   */
   @Nullable
   private static LineInfo currentLineInfo(DocumentContext documentContext, Position position) {
-    try {
-      var lines = documentContext.getContentList();
-      if (position.getLine() >= lines.length) {
-        return null;
-      }
-      var line = lines[position.getLine()];
-      var col = Math.min(position.getCharacter(), line.length());
-      var start = col;
-      while (start > 0 && isIdentChar(line.charAt(start - 1))) {
-        start--;
-      }
-      var prefix = line.substring(start, col);
-      return new LineInfo(line, col, prefix);
-    } catch (Exception e) {
+    var lines = documentContext.getContentList();
+    if (position.getLine() >= lines.length) {
       return null;
     }
+    var line = lines[position.getLine()];
+    var col = Math.min(position.getCharacter(), line.length());
+    var start = col;
+    while (start > 0 && isIdentChar(line.charAt(start - 1))) {
+      start--;
+    }
+    var prefix = line.substring(start, col);
+    return new LineInfo(line, col, prefix);
   }
 
   private static boolean isIdentChar(char c) {
@@ -1114,25 +1099,15 @@ public final class CompletionProvider {
   }
 
   private record LineInfo(String line, int cursor, String prefix) {
+    /** Перед набираемым идентификатором — точка: «x.|» и «x.Доб|». */
+    boolean afterDot() {
+      var start = cursor - prefix.length();
+      return start > 0 && line.charAt(start - 1) == '.';
+    }
   }
 
   private static boolean isDotCompletion(DocumentContext documentContext, Position position) {
-    try {
-      var lines = documentContext.getContentList();
-      if (position.getLine() >= lines.length) {
-        return false;
-      }
-      var line = lines[position.getLine()];
-      var col = Math.min(position.getCharacter(), line.length());
-      // dot-completion also when typing prefix after dot: e.g. "x.Доб|" → walk back through ident
-      var i = col;
-      while (i > 0 && isIdentChar(line.charAt(i - 1))) {
-        i--;
-      }
-      return i > 0 && line.charAt(i - 1) == '.';
-    } catch (Exception e) {
-      return false;
-    }
+    return dotCompletionInfo(documentContext, position) != null;
   }
 
   /**

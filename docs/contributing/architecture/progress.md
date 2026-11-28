@@ -827,3 +827,18 @@
   прежнем коде дельта от вытесненного результата считалась) → зелёный; тесты семантических
   токенов (259), `javadoc`, `spotlessCheck` зелёные. Первая версия (один результат на документ)
   уронила три теста дельты — по ним и выбран размер истории.
+
+## Раунд 57. Автодополнение на документе без текста отвечало пустым списком (дефект)
+
+- **Проблема.** В `CompletionProvider` три копии сканирования строки под курсором
+  (`dotCompletionInfo`, `currentLineInfo`, `isDotCompletion`) были обёрнуты в
+  `catch (Exception) { return null/false; }`. Тела бросать могли лишь одно —
+  `DocumentContentUnavailableException` (текста нет: документ закрыт и освобождён), — и его
+  глушили: клиент получал пустой список («предложить нечего») вместо «содержимое изменилось»,
+  которым отвечают остальные запросы (канонический путь `onDocument`, раунд 16) и после которого
+  клиент переспрашивает.
+- **Сделано.** Одно сканирование `currentLineInfo` без перехвата; признак «после точки» —
+  `LineInfo.afterDot()`; `dotCompletionInfo` и `isDotCompletion` выводятся из него.
+- **Проверка.** Красный `BSLTextDocumentServiceTest.completionAfterCloseFailsAsContentModified`
+  (пустой список) → зелёный; тесты completion и `BSLTextDocumentServiceTest` (419) зелёные;
+  `javadoc`, `spotlessCheck` зелёные.
