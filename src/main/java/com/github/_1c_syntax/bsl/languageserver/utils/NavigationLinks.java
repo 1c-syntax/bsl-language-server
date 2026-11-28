@@ -21,13 +21,17 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
+import org.eclipse.lsp4j.Location;
+import org.eclipse.lsp4j.LocationLink;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.jsonrpc.messages.Either;
 
 import java.net.URI;
+import java.util.List;
 
 /**
- * Построение навигационных таргетов для кликабельных ссылок (document links,
- * гиперссылки в hover): {@code uri#L<line>,<col>}.
+ * Построение навигационных ссылок: таргетов для кликабельных ссылок (document links,
+ * гиперссылки в hover) вида {@code uri#L<line>,<col>} и ответов навигации LSP.
  */
 public final class NavigationLinks {
 
@@ -50,5 +54,30 @@ public final class NavigationLinks {
   public static String toTarget(URI uri, Range range) {
     var start = range.getStart();
     return "%s#L%d,%d".formatted(uri, start.getLine() + 1, start.getCharacter() + 1);
+  }
+
+  /**
+   * Ответ навигации ({@code definition}, {@code implementation} и т.п.) в форме, которую принимает
+   * клиент.
+   * <p>
+   * По LSP 3.14+ {@link LocationLink} допустим, только если клиент заявил {@code linkSupport}
+   * для запроса; иначе каждая связь понижается до {@link Location} с {@code targetUri} и
+   * {@code targetSelectionRange}.
+   *
+   * @param links       связи навигации
+   * @param linkSupport заявил ли клиент {@code linkSupport} для этого запроса
+   * @return связи как есть либо их понижение до местоположений
+   */
+  public static Either<List<? extends Location>, List<? extends LocationLink>> forClient(
+    List<LocationLink> links,
+    boolean linkSupport
+  ) {
+    if (linkSupport) {
+      return Either.forRight(links);
+    }
+    List<Location> locations = links.stream()
+      .map(link -> new Location(link.getTargetUri(), link.getTargetSelectionRange()))
+      .toList();
+    return Either.forLeft(locations);
   }
 }
