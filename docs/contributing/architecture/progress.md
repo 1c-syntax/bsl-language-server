@@ -506,3 +506,20 @@
   `PUBLIC_REGION_NAME`/`INTERNAL_REGION_NAME`; все четыре диагностики переведены, копии удалены.
 - **Проверка.** Красные `RegionsTest.publicRegionName*`/`apiRegionName*` (на заглушках) → зелёные;
   тесты четырёх диагностик зелёные (49 тестов).
+
+## Раунд 36. «ЭтотОбъект» и переменная параметра — по одному месту в `context`
+
+- **Сделано.**
+  - `Modules.isThisObject(TerminalNode)` (принимает `null`); прежняя перегрузка для
+    `ComplexIdentifierContext` делегирует в неё. `RedundantAccessToObject` (два места) и
+    `ThisObjectAssign` больше не держат своих шаблонов `ЭтотОбъект|ThisObject`.
+  - `MethodSymbol.getParameterVariable(ParameterDefinition)` — переменная параметра среди дочерних
+    символов метода (по началу имени). Побайтные копии `getVariableByParameter` в
+    `TransferringParametersBetweenClientAndServer` и `RewriteMethodParameter` удалены.
+- **Найдено попутно.** У `ThisObjectAssignDiagnostic` не было тестового класса (единственная
+  диагностика без него, хотя фикстура лежала). Добавлен характеризующий тест — зелёный и на
+  прежней реализации.
+- **Проверка.** Красные `ModulesTest` и `SymbolTreeTest.parameterVariable*` (на заглушках) →
+  зелёные; тесты пяти диагностик зелёные.
+- **Ограничение.** `DiagnosticTestLayoutTest`: у каждой диагностики есть `XxxDiagnosticTest` —
+  наследник `AbstractDiagnosticTest` (без нового теста правило красное: `ThisObjectAssign`).

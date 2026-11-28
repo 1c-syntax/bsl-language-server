@@ -25,6 +25,8 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import lombok.experimental.UtilityClass;
+import org.antlr.v4.runtime.tree.TerminalNode;
+import org.jspecify.annotations.Nullable;
 
 import java.util.EnumSet;
 import java.util.Set;
@@ -55,11 +57,17 @@ public class Modules {
    * @return true, если идентификатор представляет ЭтотОбъект/ThisObject
    */
   public static boolean isThisObject(BSLParser.ComplexIdentifierContext complexIdentifier) {
-    final var identifier = complexIdentifier.IDENTIFIER();
-    if (identifier == null){
-      return false;
-    }
-    return THIS_OBJECT_PATTERN.matcher(identifier.getText()).matches();
+    return isThisObject(complexIdentifier.IDENTIFIER());
+  }
+
+  /**
+   * Проверить, является ли идентификатор именем "ЭтотОбъект" (ThisObject) — без учёта регистра.
+   *
+   * @param identifier Терминал идентификатора; {@code null} — идентификатора нет
+   * @return true, если идентификатор есть и это ЭтотОбъект/ThisObject
+   */
+  public static boolean isThisObject(@Nullable TerminalNode identifier) {
+    return identifier != null && THIS_OBJECT_PATTERN.matcher(identifier.getText()).matches();
   }
 
   /**

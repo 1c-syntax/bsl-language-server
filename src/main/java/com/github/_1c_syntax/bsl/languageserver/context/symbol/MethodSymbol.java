@@ -70,4 +70,20 @@ public interface MethodSymbol extends SourceDefinedSymbol, Exportable, Describab
    * непосредственно внутри {@link RegionSymbol}.
    */
   Optional<RegionSymbol> getRegion();
+
+  /**
+   * Символ переменной, которым параметр метода представлен среди его дочерних символов, —
+   * переменная, чьё имя объявлено в начале диапазона параметра.
+   *
+   * @param parameter параметр этого метода
+   * @return переменная параметра; пусто, если такой среди дочерних символов нет
+   */
+  default Optional<VariableSymbol> getParameterVariable(ParameterDefinition parameter) {
+    var parameterStart = parameter.getRange().getStart();
+    return getChildren().stream()
+      .filter(VariableSymbol.class::isInstance)
+      .map(VariableSymbol.class::cast)
+      .filter(variable -> parameterStart.equals(variable.getSelectionRange().getStart()))
+      .findFirst();
+  }
 }

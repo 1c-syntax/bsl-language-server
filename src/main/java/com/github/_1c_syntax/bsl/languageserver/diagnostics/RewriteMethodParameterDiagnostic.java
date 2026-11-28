@@ -42,7 +42,6 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
-import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -69,7 +68,7 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
   public void check() {
     documentContext.getSymbolTree().getMethods().stream()
       .flatMap(RewriteMethodParameterDiagnostic::getParametersByValue)
-      .flatMap(pair -> getVariableByParameter(pair.getLeft(), pair.getRight()))
+      .flatMap(pair -> pair.getLeft().getParameterVariable(pair.getRight()).stream())
       .map(this::isOverwrited)
       .flatMap(Optional::stream)
       .forEach(variableSymbolReferenceListTriple -> fireIssue(variableSymbolReferenceListTriple.getLeft(),
@@ -81,17 +80,6 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
     return methodSymbol.getParameters().stream()
       .filter(ParameterDefinition::isByValue)
       .map(parameterDefinition -> Pair.of(methodSymbol, parameterDefinition));
-  }
-
-  private static Stream<VariableSymbol> getVariableByParameter(MethodSymbol method,
-                                                               ParameterDefinition parameterDefinition) {
-    return method.getChildren().stream()
-      // в будущем могут появиться и другие символы, подчиненные методам
-      .filter(sourceDefinedSymbol -> sourceDefinedSymbol.getSymbolKind() == SymbolKind.Variable)
-      .filter(variable -> parameterDefinition.getRange().getStart().equals(variable.getSelectionRange().getStart()))
-      .filter(VariableSymbol.class::isInstance)
-      .map(VariableSymbol.class::cast)
-      .findFirst().stream();
   }
 
   private Optional<Triple<VariableSymbol, Reference, List<Reference>>> isOverwrited(VariableSymbol variable) {

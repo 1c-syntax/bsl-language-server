@@ -60,6 +60,31 @@ class SymbolTreeTest {
   }
 
   @Test
+  void parameterVariableIsTheChildDeclaredAtParameterStart() {
+    // given — у метода два параметра и локальная переменная с тем же именем, что у параметра
+    // другого метода.
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Первый(Знач А, Б)
+        В = 1;
+      КонецПроцедуры
+      Процедура Второй(В)
+      КонецПроцедуры
+      """);
+    var symbolTree = documentContext.getSymbolTree();
+    var first = symbolTree.getMethodSymbol("Первый").orElseThrow();
+    var second = symbolTree.getMethodSymbol("Второй").orElseThrow();
+
+    // then — переменная параметра — та, чьё имя стоит в начале параметра.
+    for (var parameter : first.getParameters()) {
+      var variable = first.getParameterVariable(parameter).orElseThrow();
+      assertThat(variable.getName()).isEqualTo(parameter.getName());
+      assertThat(variable.getSelectionRange().getStart()).isEqualTo(parameter.getRange().getStart());
+    }
+    // параметр другого метода среди детей этого не находится
+    assertThat(first.getParameterVariable(second.getParameters().getFirst())).isEmpty();
+  }
+
+  @Test
   void getMethodSymbolAtPositionFindsMethodThroughNestedSymbols() {
     // given — переменная модуля, метод с областью и локальной переменной внутри.
     var documentContext = TestUtils.getDocumentContext("""

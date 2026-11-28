@@ -67,7 +67,11 @@ class DiagnosticDocsLayoutTest {
     assertThat(deviations).isEmpty();
   }
 
-  private static Set<String> diagnosticCodes() throws IOException {
+  /**
+   * Коды всех диагностик пакета — имена классов с {@link DiagnosticMetadata} без суффикса
+   * {@code Diagnostic}.
+   */
+  static Set<String> diagnosticCodes() throws IOException {
     try (Stream<Path> files = Files.list(DIAGNOSTICS_SOURCES)) {
       return files
         .map(file -> file.getFileName().toString())

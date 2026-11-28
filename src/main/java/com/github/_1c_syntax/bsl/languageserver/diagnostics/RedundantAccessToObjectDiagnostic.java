@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.Modules;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -61,7 +62,6 @@ import java.util.regex.Pattern;
 )
 public class RedundantAccessToObjectDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final Pattern PATTERN = CaseInsensitivePattern.compile("^ЭтотОбъект|ThisObject");
   private static final Pattern PATTERN_WITH_DOT = CaseInsensitivePattern.compile("^(ЭтотОбъект|ThisObject)\\..*");
 
   private static final boolean CHECK_OBJECT_MODULE = true;
@@ -138,7 +138,7 @@ public class RedundantAccessToObjectDiagnostic extends AbstractVisitorDiagnostic
     }
 
     if (
-      PATTERN.matcher(identifier.getText()).matches()
+      Modules.isThisObject(identifier)
         && modifiers.getFirst() != null
         && modifiers.getFirst().accessIndex() == null
     ) {
@@ -162,7 +162,7 @@ public class RedundantAccessToObjectDiagnostic extends AbstractVisitorDiagnostic
     }
 
     if (
-      PATTERN.matcher(identifier.getText()).matches()
+      Modules.isThisObject(identifier)
         && notHasAccessIndex(acceptor)
         && hasAccessProperty(acceptor)
     ) {
