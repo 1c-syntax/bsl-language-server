@@ -603,3 +603,16 @@
 - **Проверка.** Красные `TreesTest.terminalNodeEndingAtPosition*`, `ReferenceTest.definitionOf*`,
   `TypeServiceTest.argumentTypes*` (на заглушках) → зелёные; тесты rename, references, signature
   help, inlay hints, selection range, linked editing и `ArchitectureTest` — 243 теста зелёные.
+
+## Раунд 42. Парная скобка и наборы модификаторов семантических токенов
+
+- **Сделано.**
+  - `documenthighlight/MatchingBrackets.find` (пакетный — нужен только подсветке) — парная скобка
+    с учётом вложенности в обе стороны. `BracketDocumentHighlightSupplier` (круглые и квадратные
+    скобки BSL) и `SDBLBracketDocumentHighlightSupplier` (круглые скобки запроса) держали по своей
+    копии сканирования; различие в ответе сохранено — BSL подсвечивает скобку и без пары, SDBL нет.
+  - `semantictokens/SemanticTokenModifierSets.of(defaultLibrary, static, async)` — общие наборы
+    модификаторов. Таблицы констант (до восьми на класс) и выбор по флагам в шести supplier'ах
+    удалены.
+- **Проверка.** Красные `MatchingBracketsTest` и `SemanticTokenModifierSetsTest` (на заглушках) →
+  зелёные; тесты `documenthighlight` (70) и семантических токенов (266) зелёные.

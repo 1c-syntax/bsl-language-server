@@ -103,7 +103,7 @@ public class PlatformMemberPropertyAccessSemanticTokensSupplier
     // получают лишь члены стандартной библиотеки или платформы. У собственных и
     // общих реквизитов конфигурации его быть не должно — остаётся обычный Property.
     if (member.get().descriptor().standardLibrary()) {
-      helper.addRange(entries, range, SemanticTokenTypes.Property, DEFAULT_LIBRARY_MODIFIERS);
+      helper.addRange(entries, range, SemanticTokenTypes.Property, SemanticTokenModifierSets.of(true, false, false));
     } else {
       helper.addRange(entries, range, SemanticTokenTypes.Property);
     }

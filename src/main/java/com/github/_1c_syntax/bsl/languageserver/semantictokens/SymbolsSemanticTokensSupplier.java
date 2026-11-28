@@ -50,28 +50,6 @@ import java.util.List;
 @RequiredArgsConstructor
 public class SymbolsSemanticTokensSupplier implements SemanticTokensSupplier {
 
-  private static final String[] NO_MODIFIERS = new String[0];
-  private static final String[] ASYNC_MODIFIERS = {SemanticTokenModifiers.Async};
-  private static final String[] STATIC_MODIFIERS = {SemanticTokenModifiers.Static};
-  private static final String[] STATIC_ASYNC_MODIFIERS = {
-    SemanticTokenModifiers.Static,
-    SemanticTokenModifiers.Async
-  };
-  private static final String[] DEFAULT_LIBRARY_MODIFIERS = {SemanticTokenModifiers.DefaultLibrary};
-  private static final String[] DEFAULT_LIBRARY_ASYNC_MODIFIERS = {
-    SemanticTokenModifiers.DefaultLibrary,
-    SemanticTokenModifiers.Async
-  };
-  private static final String[] DEFAULT_LIBRARY_STATIC_MODIFIERS = {
-    SemanticTokenModifiers.DefaultLibrary,
-    SemanticTokenModifiers.Static
-  };
-  private static final String[] DEFAULT_LIBRARY_STATIC_ASYNC_MODIFIERS = {
-    SemanticTokenModifiers.DefaultLibrary,
-    SemanticTokenModifiers.Static,
-    SemanticTokenModifiers.Async
-  };
-
   private final ReferenceIndex referenceIndex;
   private final SemanticTokensHelper helper;
 
@@ -159,23 +137,11 @@ public class SymbolsSemanticTokensSupplier implements SemanticTokensSupplier {
   }
 
   private static String[] methodModifiers(boolean isStatic, boolean isAsync) {
-    if (isStatic) {
-      return isAsync ? STATIC_ASYNC_MODIFIERS : STATIC_MODIFIERS;
-    }
-    return isAsync ? ASYNC_MODIFIERS : NO_MODIFIERS;
+    return SemanticTokenModifierSets.of(false, isStatic, isAsync);
   }
 
   private static String[] selfMemberModifiers(MemberDescriptor descriptor, boolean isStatic) {
-    if (descriptor.standardLibrary()) {
-      if (isStatic) {
-        return descriptor.async() ? DEFAULT_LIBRARY_STATIC_ASYNC_MODIFIERS : DEFAULT_LIBRARY_STATIC_MODIFIERS;
-      }
-      return descriptor.async() ? DEFAULT_LIBRARY_ASYNC_MODIFIERS : DEFAULT_LIBRARY_MODIFIERS;
-    }
-    if (isStatic) {
-      return descriptor.async() ? STATIC_ASYNC_MODIFIERS : STATIC_MODIFIERS;
-    }
-    return descriptor.async() ? ASYNC_MODIFIERS : NO_MODIFIERS;
+    return SemanticTokenModifierSets.of(descriptor.standardLibrary(), isStatic, descriptor.async());
   }
 }
 

@@ -83,55 +83,8 @@ public class SDBLBracketDocumentHighlightSupplier extends AbstractSDBLDocumentHi
   }
 
   @Nullable
-  private Token findMatchingBracket(List<? extends Token> tokens, Token bracket) {
-    var tokenType = bracket.getType();
-    var tokenIndex = bracket.getTokenIndex();
-
-    if (tokenType == SDBLLexer.LPAREN) {
-      return findClosingBracket(tokens, tokenIndex);
-    } else if (tokenType == SDBLLexer.RPAREN) {
-      return findOpeningBracket(tokens, tokenIndex);
-    }
-
-    return null;
-  }
-
-  @Nullable
-  private Token findClosingBracket(List<? extends Token> tokens, int startIndex) {
-    int depth = 0;
-    for (int i = startIndex; i < tokens.size(); i++) {
-      var token = tokens.get(i);
-      var type = token.getType();
-
-      if (type == SDBLLexer.LPAREN) {
-        depth++;
-      } else if (type == SDBLLexer.RPAREN) {
-        depth--;
-        if (depth == 0) {
-          return token;
-        }
-      }
-    }
-    return null;
-  }
-
-  @Nullable
-  private Token findOpeningBracket(List<? extends Token> tokens, int startIndex) {
-    int depth = 0;
-    for (int i = startIndex; i >= 0; i--) {
-      var token = tokens.get(i);
-      var type = token.getType();
-
-      if (type == SDBLLexer.RPAREN) {
-        depth++;
-      } else if (type == SDBLLexer.LPAREN) {
-        depth--;
-        if (depth == 0) {
-          return token;
-        }
-      }
-    }
-    return null;
+  private static Token findMatchingBracket(List<? extends Token> tokens, Token bracket) {
+    return MatchingBrackets.find(tokens, bracket.getTokenIndex(), SDBLLexer.LPAREN, SDBLLexer.RPAREN);
   }
 }
 

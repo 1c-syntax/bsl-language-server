@@ -65,14 +65,6 @@ import java.util.function.BiPredicate;
 public class PlatformMemberMethodCallSemanticTokensSupplier
   extends AbstractPlatformMemberSemanticTokensSupplier<BSLParser.AccessCallContext> {
 
-  private static final String[] DEFAULT_LIBRARY_ASYNC_MODIFIERS = {
-    SemanticTokenModifiers.DefaultLibrary,
-    SemanticTokenModifiers.Async
-  };
-
-  private static final String[] ASYNC_MODIFIERS = {SemanticTokenModifiers.Async};
-  private static final String[] NO_MODIFIERS = new String[0];
-
   private final ReferenceIndex referenceIndex;
 
   public PlatformMemberMethodCallSemanticTokensSupplier(TypeService typeService,
@@ -120,10 +112,7 @@ public class PlatformMemberMethodCallSemanticTokensSupplier
     // DefaultLibrary — только для методов стандартной библиотеки или платформы.
     // Экспортные методы модулей конфигурации (общих/менеджеров/объектов), которые
     // резолвятся по типу и не попали в ReferenceIndex, его получать не должны.
-    if (descriptor.standardLibrary()) {
-      return descriptor.async() ? DEFAULT_LIBRARY_ASYNC_MODIFIERS : DEFAULT_LIBRARY_MODIFIERS;
-    }
-    return descriptor.async() ? ASYNC_MODIFIERS : NO_MODIFIERS;
+    return SemanticTokenModifierSets.of(descriptor.standardLibrary(), false, descriptor.async());
   }
 
   private Set<Position> collectSourceDefinedCallSites(DocumentContext documentContext) {
