@@ -235,3 +235,6 @@
   `didChange`/`didClose` со своей блокировкой оставлены как были. Ответы по умолчанию сохранены
   без изменений (в т.ч. непоследовательные `null`/пустой список — см. backlog).
 - **Проверка.** Тесты `lsp`, `websocket`, `ArchitectureTest` (188 тестов); javadoc, spotless.
+- **Ограничение.** `ArchitectureTest.text_document_requests_go_through_on_document`: в
+  `BSLTextDocumentService` документ через `getDocumentUnsafe` ищут только `onDocument`,
+  `didChange`, `didClose` (на прежней реализации правило нарушено 38 раз).

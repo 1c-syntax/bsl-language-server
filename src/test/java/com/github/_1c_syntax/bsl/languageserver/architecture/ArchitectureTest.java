@@ -22,11 +22,14 @@
 package com.github._1c_syntax.bsl.languageserver.architecture;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.lsp.BSLTextDocumentService;
 import com.github._1c_syntax.bsl.languageserver.reporters.DiagnosticReporter;
 import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.JavaClass;
+import com.tngtech.archunit.core.domain.JavaCodeUnit;
 import com.tngtech.archunit.core.domain.JavaMethod;
 import com.tngtech.archunit.core.domain.JavaModifier;
 import com.tngtech.archunit.core.importer.ImportOption;
@@ -51,6 +54,7 @@ import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAPac
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideOutsideOfPackage;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noCodeUnits;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMembers;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMethods;
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
@@ -196,6 +200,28 @@ class ArchitectureTest {
     .should().dependOnClassesThat().resideInAPackage("tools.jackson.databind..")
     .because("поиск и чтение файла конфигурации (порядок кандидатов, настройки маппера, политика "
       + "ошибок разбора) сосредоточены в ConfigurationFiles");
+
+  // --- Обработка запросов LSP ---------------------------------------------------------------------
+  // Обработчик запроса к документу — одно выражение через onDocument: поиск документа, ответ по
+  // умолчанию и выполнение над его актуальным состоянием собраны там. Уведомления didChange/didClose
+  // со своей блокировкой ищут документ сами.
+
+  @ArchTest
+  static final ArchRule text_document_requests_go_through_on_document = noCodeUnits()
+    .that().areDeclaredIn(BSLTextDocumentService.class)
+    .and().doNotHaveName("onDocument")
+    .and().doNotHaveName("didChange")
+    .and().doNotHaveName("didClose")
+    .should(new ArchCondition<JavaCodeUnit>("искать документ через ServerContextProvider.getDocumentUnsafe") {
+      @Override
+      public void check(JavaCodeUnit codeUnit, ConditionEvents events) {
+        codeUnit.getMethodCallsFromSelf().stream()
+          .filter(call -> call.getTargetOwner().isEquivalentTo(ServerContextProvider.class))
+          .filter(call -> call.getName().equals("getDocumentUnsafe"))
+          .forEach(call -> events.add(SimpleConditionEvent.satisfied(codeUnit, call.getDescription())));
+      }
+    })
+    .because("обработчик запроса к документу строится на BSLTextDocumentService.onDocument");
 
   // --- Code actions -------------------------------------------------------------------------------
 

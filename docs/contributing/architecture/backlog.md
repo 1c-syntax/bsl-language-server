@@ -56,8 +56,11 @@
 - **Чтение возможностей клиента** — четыре способа (кэш в holder'е, чтение на каждый вызов,
   из `InitializeParams` события, напрямую); дубли `isVsCodeLikeClient`, понижения
   `LocationLink → Location`.
-- **`BSLTextDocumentService`**: 40 копий «найти документ → дефолт → `withFreshDocumentContext`»,
-  непоследовательные пустые ответы (`null` vs `emptyList()`), порядок аргументов провайдеров.
+- **Пустые ответы LSP-обработчиков непоследовательны**: при неизвестном документе часть
+  списковых запросов отвечает `null` (`codeAction`, `documentSymbol`, `foldingRange`,
+  `documentLink`, `formatting`…), часть — пустым списком; `definition` — `Either.forRight`,
+  `implementation` — `Either.forLeft`. Унификация меняет видимое клиенту поведение — решение
+  мейнтейнера. Порядок аргументов провайдеров `(params, doc)` vs `(doc, params)` различается.
 - **Нормализация URI в MCP** — несколько способов; имя workspace выводится в двух местах.
 - **Источник `language`** — глобальная и workspace-настройка с тремя правилами разрешения;
   `GlobalLanguageServerConfiguration.reset()` дублирует дефолты вручную.
