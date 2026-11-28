@@ -27,6 +27,8 @@
     (раунд 29, ADR-0003).
   - `diagnostics/CLAUDE.md`: в таблицу базовых классов — `AbstractComplexityDiagnostic`
     (раунд 39).
+  - корневой `CLAUDE.md`: `ReferenceIndex` перечислен среди `@WorkspaceScope`-бинов, а это
+    синглтон; per-workspace — его репозитории (найдено в раунде 49).
   - корневой `CLAUDE.md`: «`./gradlew check` — test + jacoco + spotless + javadoc» неверно —
     `check` задачу `javadoc` не запускает (её гоняет отдельный workflow `javadoc.yml`); проверять
     javadoc нужно явно (`./gradlew javadoc`). Найдено в раунде 43.
@@ -57,6 +59,62 @@
   `DiagnosticParameterInfo` собирает параметры и у предка. Живого дефекта нет (единственный такой
   предок, `AbstractMultilingualStringDiagnostic`, переопределяет `configure`); исправление —
   поиск поля по иерархии классов, когда появится второй случай.
+
+## Кеширование и владение состоянием (обзор раунда 49)
+
+Проверено чтением кода; исправленное — в progress.md (раунды 51–54).
+
+- **`ReferenceIndexFiller.filled` — один набор на все рабочие области** (класс — синглтон, а
+  данные индекса — per-workspace репозитории). Удаление рабочей области A стирает отметки B;
+  если регистрация типов B закончится позже, документы B не получат повторной индексации
+  self-членов до правки. Узкая гонка multi-root. Исправление — набор на `ServerContext`
+  (тест на две рабочие области).
+- **`BslContextHolder` не перечитывает синтакс-помощник при смене `v8platform.binPath`** (нужен
+  перезапуск); построенные на нём кеши (`FormParametersResolver`, `EventHandlerResolver`) тоже не
+  сбрасываются. Нужно решить, поддерживать ли смену пути на лету.
+- **`TestSourcesProvider` — `@Cacheable` по `configurationRoot`, значение зависит от
+  per-workspace конфигурации**; у OneScript-областей корень `null` — одна запись на все.
+- **`SemanticTokensProvider.tokenCache` растёт, пока документ открыт**: на каждый полный запрос —
+  новый `resultId`, старый снимается только при успешной дельте; клиент, не пользующийся дельтой,
+  копит по массиву токенов на запрос до закрытия документа.
+- **Три механизма сброса per-URI данных**: `AbstractDocumentLifecycleClearableIndex` (9
+  наследников), `AbstractOScriptLazyIndex` (правка и удаление) и ручные карты с разными наборами
+  событий. Дефекты раундов 51–53 — прямое следствие; общий кандидат — дать базе выбор событий
+  (документ «закрыт/освобождён» нужен не всем) вместо ручных копий.
+- **Мелкое:** `TypeRef.PLACEHOLDER_CACHE` — статическая неограниченная карта по любому имени
+  типа; `MethodReturnTypeIndexer.dependentsByUri` оставляет пустые наборы удалённых URI.
+
+## Обработка ошибок, журнал, конфигурация (обзор раунда 49)
+
+- **Sentry не видит большинства сбоев** (решение мейнтейнера): `SentryAspect` — `@AfterThrowing`
+  на методах LSP-сервисов, а они возвращают `CompletableFuture`; исключение провайдера
+  возникает внутри future и совету не видно; логback-аппендера Sentry нет. Кандидат — хук
+  `whenComplete` в `onDocument`.
+- **`CompletionProvider`**: три копии сканирования строки (`dotCompletionInfo`, `currentLineInfo`,
+  `isDotCompletion`) с `catch (Exception) { return null/false; }` — глушат и
+  `DocumentContentUnavailableException`, которую канонический путь превращает в `ContentModified`.
+- **Ожидание `Future` с оборачиванием в `IllegalStateException`** — 5 копий
+  (`FormatCommand`, `AnalyzeCommand`, `AnalyzeProjectOnStart`, `ServerContext`,
+  `DefaultDiagnosticComputer`); оборачивается сам `ExecutionException`, настоящая причина —
+  на два уровня глубже (`MethodReturnTypeIndexer` разворачивает).
+- **Преобразование URI → `Path` без единой политики** — пять охраняемых мест с разными наборами
+  исключений и четыре неохраняемых `Path.of(uri)`; канонический `Absolute.path` уже есть.
+- **Загрузчики встроенных ресурсов** (`types/registry`) по-разному реагируют на одну ошибку
+  (WARN/ERROR, перехват `RuntimeException` только в `BuiltinQueryTables`, свой
+  `getResourceAsStream` в обход `BuiltinResources.open()`).
+- **Уровни журнала сбоя вывода типа** разные в одном классе (`ExpressionTypeInferencer`: ERROR со
+  стеком на горячем пути в пяти местах, DEBUG — в шестом и в соседних компонентах).
+- **Замеры времени мимо `MeasuresAspect`** — `ServerContext.millisSince`,
+  `ConfigurationTypesProvider`, `MethodReturnTypeIndexer`; два разных часа для одной операции.
+- **Конфигурация:** пути файла конфигурации (`.bsl-language-server.json`,
+  `${user.home}/…`) повторены 7+ раз (`application.properties`, inline-дефолты `@Value` в трёх
+  классах, инициализаторы полей); два выключателя одной возможности
+  (`app.platform-context.enabled` и `v8platform.enabled`); `--mcp-path` у двух команд читается
+  только для журнала, действует значение из сырых аргументов; `TestRunnerAdapter` повторяет
+  `TestRunnerAdapterOptions.getExecutableForCurrentOS()`, тайм-аут 10 с и кодировка `cp866`
+  зашиты.
+- **Мёртвые настройки журнала** в `application.properties` (hibernate, hikari, JPA, Spring Data —
+  таких зависимостей нет).
 
 ## Дублирование реализаций (канонизация)
 
