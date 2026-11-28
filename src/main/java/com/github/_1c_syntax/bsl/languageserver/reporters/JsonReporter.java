@@ -40,6 +40,7 @@ public class JsonReporter implements DiagnosticReporter {
   private JsonGenerator generator;
   private SequenceWriter writer;
   private String sourceDir;
+  private Path workspaceDir;
 
   @Override
   public String key() {
@@ -54,6 +55,7 @@ public class JsonReporter implements DiagnosticReporter {
   @Override
   public void beginReport(ReportContext context, Path outputDir) {
     sourceDir = context.sourceDir();
+    workspaceDir = context.workspaceDir();
 
     var mapper = new AnalysisInfoJsonMapper();
 
@@ -70,7 +72,14 @@ public class JsonReporter implements DiagnosticReporter {
 
   @Override
   public void accept(FileInfo fileInfo) {
-    writer.write(fileInfo);
+    // Путь файла относителен каталогу проекта; в отчёт он пишется URI, и разрешать его надо от
+    // этого каталога, а не от рабочего каталога процесса.
+    writer.write(new FileInfo(
+      workspaceDir.resolve(fileInfo.getPath()),
+      fileInfo.getMdoRef(),
+      fileInfo.getDiagnostics(),
+      fileInfo.getMetrics()
+    ));
   }
 
   @Override

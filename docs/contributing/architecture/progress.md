@@ -913,3 +913,17 @@
 - **Проверка.** Красный `UselessTernaryOperatorDiagnosticTest.quickFixIsBuiltFromDiagnosticDataSentBackByClient`
   (`data` — Gson-дерево, как от клиента: исправлений 0) → зелёный; `ArchitectureTest`,
   тесты code action зелёные.
+
+## Раунд 63. Путь файла в JSON-отчёте — от каталога проекта (дефект)
+
+- **Проблема.** `FileInfo.path` относителен каталогу проекта (`-w`), а `JsonReporter` писал его
+  как есть: Jackson сериализует `Path` через `toUri()`, то есть разрешает относительный путь от
+  рабочего каталога процесса. При `-w`, отличном от него, «полный путь к файлу» (так в
+  `docs/reporters/json.md`) указывал не туда — та же ошибка, что раунд 7 исправил у SARIF.
+- **Сделано.** `JsonReporter` берёт `workspaceDir` из `ReportContext` и пишет путь, разрешённый от
+  него. При умолчании (`-w .`) вывод прежний — побайтовый `ReporterOutputFormatTest` зелёный.
+- **Проверка.** Красный `JsonReporterTest.filePathIsResolvedAgainstWorkspaceDir` (путь вёл в
+  рабочий каталог процесса) → зелёный; тесты `reporters` и `AnalyzeCommand*` (16 классов)
+  зелёные.
+- **Остальные находки обзора контрактов** меняют видимый вывод (TSLint, SARIF/Generic, важность,
+  JUnit, CodeQuality, схема `codeLens`, MCP, CLI) — в backlog как решения мейнтейнера.

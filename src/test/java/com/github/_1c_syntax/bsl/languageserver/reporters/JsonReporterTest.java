@@ -56,6 +56,33 @@ class JsonReporterTest {
     FileUtils.deleteQuietly(file);
   }
 
+  /**
+   * Путь файла в отчёте — полный, от каталога проекта ({@code -w}), а не от рабочего каталога
+   * процесса: при {@code -w}, отличном от него, прежде указывал не туда (как у SARIF до раунда 7).
+   */
+  @Test
+  void filePathIsResolvedAgainstWorkspaceDir(
+    @org.junit.jupiter.api.io.TempDir Path workspaceDir,
+    @org.junit.jupiter.api.io.TempDir Path outputDir
+  ) throws Exception {
+    // given
+    var relativePath = Path.of("src", "Модуль.bsl");
+    var fileInfo = new FileInfo(relativePath, "", Collections.emptyList(), null);
+    var context = new ReportContext(LocalDateTime.now(), workspaceDir.toString(), workspaceDir);
+    var reporter = new JsonReporter();
+
+    // when
+    reporter.beginReport(context, outputDir);
+    reporter.accept(fileInfo);
+    reporter.endReport();
+
+    // then
+    var report = new tools.jackson.databind.ObjectMapper()
+      .readTree(outputDir.resolve("bsl-json.json").toFile());
+    Assertions.assertThat(report.get("fileinfos").get(0).get("path").asString())
+      .isEqualTo(workspaceDir.resolve(relativePath).toUri().toString());
+  }
+
   @Test
   void report() {
 
