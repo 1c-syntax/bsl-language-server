@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticP
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -95,15 +96,7 @@ public class MagicNumberDiagnostic extends AbstractMagicValueDiagnostic {
     var checked = ctx.getText();
 
     if (checked != null && isAllowed(checked)) {
-      var current = ctx.getParent();
-      var isDefaultValue = false;
-      while (current != null) {
-        if (current instanceof BSLParser.DefaultValueContext) {
-          isDefaultValue = true;
-          break;
-        }
-        current = current.getParent();
-      }
+      var isDefaultValue = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_defaultValue) != null;
 
       if (!isDefaultValue && isWrongExpression(ctx, ctx.getParent())) {
         diagnosticStorage.addDiagnostic(ctx.stop, info.getMessage(checked));
@@ -152,13 +145,6 @@ public class MagicNumberDiagnostic extends AbstractMagicValueDiagnostic {
     if (allowMagicIndexes) {
       return false;
     }
-    ParserRuleContext current = ctx.getParent();
-    while (current != null) {
-      if (current instanceof BSLParser.AccessIndexContext) {
-        return true;
-      }
-      current = current.getParent();
-    }
-    return false;
+    return Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_accessIndex) != null;
   }
 }

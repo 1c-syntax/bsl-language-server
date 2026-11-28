@@ -148,3 +148,13 @@
   `getRootParent(ctx)` действительно возвращает корень — оставлен, javadoc уточнён.
 - **Проверка.** Компиляция; тесты `utils`, `context`, `references`, `semantictokens` и всех
   затронутых диагностик (103 тестовых класса).
+
+## Раунд 11. Поиск предка: ручные циклы и «ancestor-or-self»
+
+- **Сделано.** Три ручных цикла подъёма по родителям (`MagicNumberDiagnostic` ×2,
+  `MagicDateDiagnostic`) заменены на `Trees.getAncestorByRuleIndex(…) != null`. Две копии
+  «сам узел или ближайший предок» (`ExpressionAtPosition`, `NewExpressionReferenceFinder`)
+  заменены новым `Trees.getAncestorOrSelfByRuleIndex`; пояснение, зачем родитель терминала
+  считается кандидатом, перенесено к единственному месту, где оно нужно.
+- **Проверка.** Красный `TreesTest.ancestorOrSelfConsidersNodeItselfThenAncestors` (на
+  заглушке) → зелёный; тесты `references`, `types.inferencer`, `MagicNumber`/`MagicDate`.

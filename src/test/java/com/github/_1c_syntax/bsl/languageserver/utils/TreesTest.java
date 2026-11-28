@@ -101,4 +101,27 @@ class TreesTest {
     assertThat(tokens.get(1).getType()).isEqualTo(BSLLexer.TRUE);
     assertThat(tokens.get(2).getType()).isEqualTo(BSLLexer.THEN_KEYWORD);
   }
+
+  @Test
+  void ancestorOrSelfConsidersNodeItselfThenAncestors() {
+    // given
+    var lexer = new BSLLexer(CharStreams.fromString("""
+      Процедура Тест()
+        А = 1;
+      КонецПроцедуры"""));
+    var parser = new BSLParser(new IncrementalTokenStream(lexer));
+    var file = parser.file();
+    var statement = Trees.<BSLParser.StatementContext>findAllRuleNodes(file, BSLParser.RULE_statement)
+      .stream().findFirst().orElseThrow();
+    var sub = Trees.<BSLParser.SubContext>getAncestorByRuleIndex(statement, BSLParser.RULE_sub);
+
+    // then
+    assertThat(Trees.<BSLParser.StatementContext>getAncestorOrSelfByRuleIndex(statement, BSLParser.RULE_statement))
+      .isSameAs(statement);
+    assertThat(Trees.<BSLParser.SubContext>getAncestorOrSelfByRuleIndex(statement, BSLParser.RULE_sub))
+      .isSameAs(sub)
+      .isNotNull();
+    assertThat(Trees.<BSLParser.ModuleVarContext>getAncestorOrSelfByRuleIndex(statement, BSLParser.RULE_moduleVar))
+      .isNull();
+  }
 }

@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticP
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
@@ -105,14 +106,7 @@ public class MagicDateDiagnostic extends AbstractMagicValueDiagnostic {
   }
 
   private static boolean isInsideDefaultValue(BSLParser.ConstValueContext ctx) {
-    var current = ctx.getParent();
-    while (current != null) {
-      if (current instanceof BSLParser.DefaultValueContext) {
-        return true;
-      }
-      current = current.getParent();
-    }
-    return false;
+    return Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_defaultValue) != null;
   }
 
   private static boolean shouldAddDiagnostic(BSLParser.@Nullable ExpressionContext expressionContext) {

@@ -139,18 +139,11 @@ public class NewExpressionReferenceFinder implements ReferenceFinder {
     if (!(terminal.getParent() instanceof ParserRuleContext prc)) {
       return null;
     }
-    var typeName = ancestorOrSelfByRule(prc, BSLParser.RULE_typeName);
+    ParserRuleContext typeName = Trees.getAncestorOrSelfByRuleIndex(prc, BSLParser.RULE_typeName);
     if (typeName == null) {
       return null;
     }
     return Trees.getAncestorByRuleIndex(typeName, BSLParser.RULE_newExpression);
-  }
-
-  private static @Nullable ParserRuleContext ancestorOrSelfByRule(ParserRuleContext node, int ruleIndex) {
-    if (node.getRuleIndex() == ruleIndex) {
-      return node;
-    }
-    return Trees.getAncestorByRuleIndex(node, ruleIndex);
   }
 
   private static int countNewExpressionArgs(BSLParser.NewExpressionContext nex) {

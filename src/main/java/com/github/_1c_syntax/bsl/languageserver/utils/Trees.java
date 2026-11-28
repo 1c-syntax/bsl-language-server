@@ -137,6 +137,24 @@ public final class Trees {
   }
 
   /**
+   * Сам узел, если у него указанное правило, иначе — ближайший предок с этим правилом.
+   *
+   * @param element узел, с которого начинается поиск
+   * @param type    индекс правила ({@code BSLParser.RULE_*} или {@code SDBLParser.RULE_*})
+   * @param <T>     тип контекста искомого правила
+   * @return узел или ближайший предок с правилом {@code type}; {@code null}, если такого нет
+   */
+  @Nullable
+  public static <T extends ParserRuleContext> T getAncestorOrSelfByRuleIndex(ParserRuleContext element, int type) {
+    if (element.getRuleIndex() == type) {
+      @SuppressWarnings("unchecked")
+      var self = (T) element;
+      return self;
+    }
+    return getAncestorByRuleIndex(element, type);
+  }
+
+  /**
    * Ближайший предок узла с одним из указанных правил; сам узел не рассматривается.
    *
    * @param element узел, от которого идёт подъём по родителям
