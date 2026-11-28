@@ -50,14 +50,9 @@ public class DocumentHighlightTestUtils {
   ) {
     var ast = documentContext.getAst();
 
-    // Сначала пробуем найти токен на текущей позиции
-    var maybeTerminalNode = Trees.findTerminalNodeContainsPosition(ast, position);
-
-    // Если не нашли и курсор не в начале строки, пробуем позицию слева (курсор справа от токена)
-    if (maybeTerminalNode.isEmpty() && position.getCharacter() > 0) {
-      var leftPosition = new Position(position.getLine(), position.getCharacter() - 1);
-      maybeTerminalNode = Trees.findTerminalNodeContainsPosition(ast, leftPosition);
-    }
+    // Как в DocumentHighlightProvider: токен на позиции либо кончающийся у курсора
+    var maybeTerminalNode = Trees.findTerminalNodeContainsPosition(ast, position)
+      .or(() -> Trees.findTerminalNodeEndingAtPosition(ast, position));
 
     if (maybeTerminalNode.isEmpty()) {
       return Optional.empty();

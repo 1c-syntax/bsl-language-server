@@ -174,11 +174,8 @@
      `DiagnosticInfosFactory.createDiagnosticInfosByCode`/`ByClass` в коде не вызываются, но
      фабрика публична и отдаётся наружу через `BSLLSBinding.getDiagnosticInfosFactory()` —
      удаление ломает внешних потребителей (интеграции), если они есть.
-  9. `documenthighlight/`: курсор сразу за закрывающим словом — закрыто, раунды 87–88. Остаток
-     (мелко): `DocumentHighlightProvider` повторяет поиск «токен у курсора или левее» вместо
-     `Trees.findTerminalNodeEndingAtPosition` как запасного; `LoopStatementDocumentHighlightSupplier` —
-     ручной «сам или ближайший предок с правилом из набора» (у `Trees.getAncestorByRuleIndex` с набором
-     нет варианта «включая сам узел»); `addTokenHighlight` в двух базовых классах.
+  9. ~~`documenthighlight/`~~ — закрыто, раунды 87–88 и 90; `addTokenHighlight` в двух базовых
+     классах — рассмотрено и отклонено (четыре строки, разные иерархии).
   **Ожидает решения:** `OpenDataObjectInference.applyTypeDescriptionTypes` резолвит имена из
   строки `ОписаниеТипов("…")` через `resolve`, а не `resolveSet` — `ОпределяемыйТип.X` в такой
   строке выпадает. Нужен ответ, принимает ли платформа имя определяемого типа в этом конструкторе.

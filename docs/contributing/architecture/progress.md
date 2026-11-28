@@ -1388,3 +1388,23 @@
 - **Ацикличность и границы** (критерии приёмки) уже машинно проверяются: `ArchitectureTest.layer_dependencies_are_respected`
   (карта слоёв с белыми списками, без обратных рёбер) и `acyclic_domains_stay_free_of_cycles`;
   полный `check` после раунда 88 их прогнал.
+
+## Раунд 90. Подсветка: поиск токена и ближайшего цикла — через `Trees`
+
+Источник — бэклог, пункт 9 (остаток по `documenthighlight/`).
+
+- `DocumentHighlightProvider` (и его копия в тестовом `DocumentHighlightTestUtils`) вручную
+  повторял «токен у курсора, иначе — на символ левее»; второй шаг — это ровно
+  `Trees.findTerminalNodeEndingAtPosition` (токен, не содержащий курсор, но содержащий символ
+  левее, кончается у курсора). Оба сведены к `findTerminalNodeContainsPosition(…).or(…EndingAt…)`.
+- `LoopStatementDocumentHighlightSupplier.findNearestLoopStatement` — ручной подъём «сам узел или
+  ближайший предок с правилом из набора»; у `Trees` был такой вариант для одного правила и подъём
+  по набору без самого узла. Добавлен `Trees.getAncestorOrSelfByRuleIndex(узел, набор)` —
+  парный к одиночному; ручной обход удалён. Прочие ручные подъёмы (`AbstractMagicValueDiagnostic`,
+  `FlowLayout`) — с ограничением глубины или другим условием, не копии.
+- **Отклонено:** `addTokenHighlight` в двух базовых классах (BSL и запросы) — четырёхстрочные,
+  разные иерархии; общий помощник — формальное единообразие.
+- **Тесты.** `TreesTest.ancestorOrSelfByAnyRuleStartsFromTheNodeItself` красный на заглушке →
+  зелёный; поведение провайдера закрыто тестами «курсор сразу за токеном» (раунды 87–88).
+- **Проверка.** `TreesTest`, `documenthighlight`, `ArchitectureTest`, `CanonicalImplementationsTest`
+  (16 классов, 120 тестов) зелёные; `javadoc`, `spotlessCheck` зелёные.

@@ -169,6 +169,18 @@ public final class Trees {
   }
 
   /**
+   * Сам узел, если его правило из набора, иначе — ближайший предок с одним из правил набора.
+   *
+   * @param element узел, с которого начинается поиск
+   * @param types   индексы правил ({@code BSLParser.RULE_*} или {@code SDBLParser.RULE_*})
+   * @return узел или ближайший предок с одним из правил {@code types}; {@code null}, если такого нет
+   */
+  @Nullable
+  public static ParserRuleContext getAncestorOrSelfByRuleIndex(ParserRuleContext element, Collection<Integer> types) {
+    return types.contains(element.getRuleIndex()) ? element : getAncestorByRuleIndex(element, types);
+  }
+
+  /**
    * Проверяет среди всех дочерних элементов (рекурсивно) наличие узла с ошибкой
    *
    * @return true - если есть узел с ошибкой

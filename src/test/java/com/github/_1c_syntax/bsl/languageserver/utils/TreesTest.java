@@ -138,6 +138,29 @@ class TreesTest {
   }
 
   @Test
+  void ancestorOrSelfByAnyRuleStartsFromTheNodeItself() {
+    // given — вызов внутри цикла внутри цикла
+    var tree = parse("""
+      Пока Истина Цикл
+        Для Каждого Э Из М Цикл
+          Ф();
+        КонецЦикла;
+      КонецЦикла;
+      """);
+    var call = Trees.findInnermostEnclosing(tree, new Position(2, 5), BSLParser.DoCallContext.class).orElseThrow();
+    var loops = java.util.List.of(BSLParser.RULE_whileStatement, BSLParser.RULE_forEachStatement);
+
+    // when
+    var nearestLoop = Trees.getAncestorOrSelfByRuleIndex(call, loops);
+    var fromLoopItself = Trees.getAncestorOrSelfByRuleIndex(nearestLoop, loops);
+
+    // then — ближайший цикл, и сам узел, если его правило из набора
+    assertThat(nearestLoop).isInstanceOf(BSLParser.ForEachStatementContext.class);
+    assertThat(fromLoopItself).isSameAs(nearestLoop);
+    assertThat(Trees.getAncestorOrSelfByRuleIndex(call, java.util.List.of(BSLParser.RULE_ifStatement))).isNull();
+  }
+
+  @Test
   void enclosesIncludesStartAndExcludesEnd() {
     // given — внутренний вызов «(2)» в «Ф(1, Г(2));» занимает символы 6–8, конец — позиция 9
     var tree = parse("Ф(1, Г(2));");
