@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.LibraryEntry;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.UriScopedNameIndex;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import org.springframework.stereotype.Component;
 
@@ -38,10 +39,8 @@ import java.net.URI;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Индекс желудей фреймворка «ОСень»: отображение «имя/прозвище желудя → тип».
@@ -58,7 +57,7 @@ import java.util.concurrent.ConcurrentHashMap;
  * конструктором, поэтому он берётся из дерева символов напрямую; методы
  * сканируются на {@code &Завязь} лишь когда класс — дуб.
  * <p>
- * Хранилище — {@link ConcurrentHashMap} (как {@code AnnotationRepository}):
+ * Хранилище — {@link UriScopedNameIndex} на конкурентных картах (как {@code AnnotationRepository}):
  * {@link #resolve} читает без блокировок и параллельно (важно — вывод типов
  * зовётся из диагностик в parallel-стримах). Правка обычного .os-класса
  * обновляется точечно (удаление вклада URI + переиндексация только его), без
@@ -78,10 +77,8 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
 
   private final TypeRegistry typeRegistry;
 
-  /** Имя/прозвище желудя (lowercase) → кандидаты. Значения — конкурентные множества (как в Repository). */
-  private final Map<String, Set<BeanDefinition>> beansByName = new ConcurrentHashMap<>();
-  /** URI .os-файла → имена, под которыми он зарегистрировал кандидатов (для точечного удаления). */
-  private final Map<URI, Set<String>> namesByUri = new ConcurrentHashMap<>();
+  /** Имя/прозвище желудя → кандидаты, с точечным удалением вклада .os-файла. */
+  private final UriScopedNameIndex<BeanDefinition> beansByName = new UriScopedNameIndex<>(BeanDefinition::sourceUri);
 
   public AutumnBeanIndex(OScriptLibraryIndex libraryIndex,
                          ServerContextProvider serverContextProvider,
@@ -180,13 +177,9 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
    */
   public List<FactoryMethodBean> factoryMethodBeansForUri(URI uri) {
     ensureBuilt();
-    var names = namesByUri.get(uri);
-    if (names == null) {
-      return List.of();
-    }
     Map<String, Set<String>> namesByMethod = new LinkedHashMap<>();
-    for (var name : names) {
-      for (var candidate : beansByName.getOrDefault(name, Set.of())) {
+    for (var name : beansByName.namesOf(uri)) {
+      for (var candidate : beansByName.get(name)) {
         if (uri.equals(candidate.sourceUri()) && !candidate.isConstructor()) {
           namesByMethod.computeIfAbsent(candidate.producerMethodName(), key -> new LinkedHashSet<>()).add(name);
         }
@@ -218,13 +211,9 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
    */
   public Set<String> componentBeanNamesForUri(URI uri) {
     ensureBuilt();
-    var names = namesByUri.get(uri);
-    if (names == null) {
-      return Set.of();
-    }
     var result = new LinkedHashSet<String>();
-    for (var name : names) {
-      for (var candidate : beansByName.getOrDefault(name, Set.of())) {
+    for (var name : beansByName.namesOf(uri)) {
+      for (var candidate : beansByName.get(name)) {
         if (uri.equals(candidate.sourceUri()) && candidate.isConstructor()) {
           result.add(name);
         }
@@ -235,8 +224,7 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
 
   /** Все объявления, зарегистрированные под именем/прозвищем (lowercase), либо пустой список. */
   private List<BeanDefinition> candidatesFor(String name) {
-    var candidates = beansByName.get(name.toLowerCase(Locale.ROOT));
-    return candidates == null || candidates.isEmpty() ? List.of() : List.copyOf(candidates);
+    return List.copyOf(beansByName.get(name));
   }
 
   /**
@@ -254,22 +242,12 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
   @Override
   protected void clearIndex() {
     beansByName.clear();
-    namesByUri.clear();
   }
 
   /** Удалить из индекса все кандидаты, зарегистрированные из указанного .os-файла. */
   @Override
   protected void removeByUri(URI uri) {
-    var names = namesByUri.remove(uri);
-    if (names == null) {
-      return;
-    }
-    for (var name : names) {
-      beansByName.computeIfPresent(name, (key, candidates) -> {
-        candidates.removeIf(candidate -> uri.equals(candidate.sourceUri()));
-        return candidates.isEmpty() ? null : candidates; // null => удалить ключ
-      });
-    }
+    beansByName.removeByUri(uri);
   }
 
   @Override
@@ -334,15 +312,9 @@ public class AutumnBeanIndex extends AbstractAutumnLibraryIndex {
     var primary = metaAnnotationResolver.hasRole(annotations, AutumnAnnotations.PRIMARY);
     var candidate = new BeanDefinition(type, primary, uri, producerMethodName, isConstructor);
 
-    addCandidate(uri, primaryName, candidate);
+    beansByName.add(primaryName, candidate);
     for (var alias : metaAnnotationResolver.valuesByRole(annotations, AutumnAnnotations.QUALIFIER)) {
-      addCandidate(uri, alias, candidate);
+      beansByName.add(alias, candidate);
     }
-  }
-
-  private void addCandidate(URI uri, String name, BeanDefinition candidate) {
-    var key = name.toLowerCase(Locale.ROOT);
-    beansByName.computeIfAbsent(key, k -> ConcurrentHashMap.newKeySet()).add(candidate);
-    namesByUri.computeIfAbsent(uri, u -> ConcurrentHashMap.newKeySet()).add(key);
   }
 }
