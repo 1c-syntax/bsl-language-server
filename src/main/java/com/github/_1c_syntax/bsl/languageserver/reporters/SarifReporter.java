@@ -95,6 +95,7 @@ public class SarifReporter extends AbstractDiagnosticReporter {
   private final LanguageServerConfiguration configuration;
 
   private ReportFile reportFile;
+  private Path workspaceDir;
   private JsonGenerator generator;
   private SequenceWriter writer;
 
@@ -125,6 +126,7 @@ public class SarifReporter extends AbstractDiagnosticReporter {
       .enable(SerializationFeature.INDENT_OUTPUT)
       .build();
 
+    workspaceDir = context.workspaceDir();
     reportFile = ReportFile.create(outputDir, "bsl-ls.sarif");
     generator = mapper.createGenerator(reportFile.stream());
 
@@ -154,7 +156,7 @@ public class SarifReporter extends AbstractDiagnosticReporter {
   @Override
   public void accept(FileInfo fileInfo) {
     // uri вычисляется один раз на файл, а не на каждую диагностику
-    var uri = Absolute.uri(fileInfo.getPath().toUri()).toString();
+    var uri = Absolute.uri(workspaceDir.resolve(fileInfo.getPath()).toUri()).toString();
 
     var results = fileInfo.getDiagnostics().stream()
       .map(diagnostic -> createResult(uri, diagnostic))
