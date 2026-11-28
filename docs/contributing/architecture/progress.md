@@ -109,3 +109,16 @@
   `EventPublisherAspectListenerFailureTest` (закоммичены отдельно до исправления) → зелёные;
   тесты `reporters`, `aop`, `AnalyzeCommand*`, `ArchitectureTest`. Перед раундом прогнаны
   `types`, `diagnostics`, `cfg` — 519 тестовых классов, все зелёные.
+
+## Раунд 8. Выбор режима запуска по подкоманде
+
+- **Проблема.** `MainApplication` до старта Spring выбирал тип веб-приложения и профили по
+  вхождению токена в любое место аргументов: `analyze -w <каталог>` (документированная опция
+  рабочей области) считался websocket-режимом и поднимал servlet-контейнер на порту 8025;
+  алиас `--websocket` не распознавался; токен `mcp` в значении любой опции включал MCP-профили.
+- **Сделано.** `MainApplication.subcommandName` — единственное правило «какую подкоманду выберет
+  picocli» (первый аргумент, совпавший с именем или алиасом подкоманды; значение `-c`
+  пропускается). Имена и алиасы читаются из аннотаций `@Command` подкоманд — второй копии списка
+  нет.
+- **Проверка.** Красные `MainApplicationModeTest.modeIsTakenFromSubcommandNotFromAnyArgument` и
+  `websocketAliasesSelectServletMode` → зелёные; `MainApplicationTest`, `ArchitectureTest`.
