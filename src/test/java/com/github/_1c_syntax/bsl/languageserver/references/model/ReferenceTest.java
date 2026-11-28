@@ -58,6 +58,25 @@ class ReferenceTest {
   }
 
   @Test
+  void definitionOfPointsSymbolAtItsOwnName() {
+    // given
+    var methodSymbol = mock(MethodSymbol.class);
+    var owner = mock(com.github._1c_syntax.bsl.languageserver.context.DocumentContext.class);
+    var selectionRange = new Range(new org.eclipse.lsp4j.Position(1, 10), new org.eclipse.lsp4j.Position(1, 14));
+    when(owner.getUri()).thenReturn(FAKE_DOCUMENT_URI);
+    when(methodSymbol.getOwner()).thenReturn(owner);
+    when(methodSymbol.getSelectionRange()).thenReturn(selectionRange);
+
+    // when
+    var reference = Reference.definitionOf(methodSymbol);
+
+    // then
+    assertThat(reference).isEqualTo(new Reference(
+      methodSymbol, methodSymbol, FAKE_DOCUMENT_URI, selectionRange, OccurrenceType.DEFINITION));
+    assertThat(reference.toLocation()).isEqualTo(new Location(FAKE_DOCUMENT_URI.toString(), selectionRange));
+  }
+
+  @Test
   void toLocation() {
     // given
     var methodSymbol = mock(MethodSymbol.class);

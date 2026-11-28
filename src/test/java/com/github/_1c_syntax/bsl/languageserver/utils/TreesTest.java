@@ -27,6 +27,7 @@ import org.antlr.v4.runtime.CharStreams;
 import org.antlr.v4.runtime.IncrementalTokenStream;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
+import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
 
 import java.util.List;
@@ -103,6 +104,21 @@ class TreesTest {
       List.of(conditions.get(0), conditions.get(2)),
       List.of(conditions.get(1), conditions.get(2))
     ));
+  }
+
+  @Test
+  void terminalNodeEndingAtPositionIsTheTokenRightBeforeCaret() {
+    // given — «Перем Имя;»: Имя занимает символы 6..9
+    var tree = (BSLParser.FileContext) parse("Перем Имя;");
+
+    // then — каретка сразу за Имя даёт Имя, а не следующий токен «;»
+    assertThat(Trees.findTerminalNodeEndingAtPosition(tree, new Position(0, 9)))
+      .map(ParseTree::getText)
+      .contains("Имя");
+    // внутри токена — конец не совпадает
+    assertThat(Trees.findTerminalNodeEndingAtPosition(tree, new Position(0, 8))).isEmpty();
+    // начало строки
+    assertThat(Trees.findTerminalNodeEndingAtPosition(tree, new Position(0, 0))).isEmpty();
   }
 
   private static ParseTree parse(String input) {

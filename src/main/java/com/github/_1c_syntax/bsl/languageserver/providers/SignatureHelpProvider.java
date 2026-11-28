@@ -270,22 +270,7 @@ public final class SignatureHelpProvider {
     if (paramList == null) {
       return List.of();
     }
-    var args = paramList.callParam();
-    if (args.isEmpty()) {
-      return List.of();
-    }
-    var result = new ArrayList<TypeSet>(args.size());
-    for (var arg : args) {
-      var text = arg.getText();
-      if (text == null || text.isBlank()) {
-        result.add(TypeSet.EMPTY);
-        continue;
-      }
-      var start = arg.getStart();
-      var position = Positions.create(start);
-      result.add(typeService.expressionTypesAt(documentContext, position));
-    }
-    return result;
+    return typeService.argumentTypes(documentContext, paramList.callParam());
   }
 
   private static SignatureHelp emptyHelp() {

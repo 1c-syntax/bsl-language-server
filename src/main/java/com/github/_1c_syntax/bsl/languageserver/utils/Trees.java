@@ -342,6 +342,30 @@ public final class Trees {
   }
 
   /**
+   * Терминальный узел, заканчивающийся ровно в позиции, — для каретки сразу за токеном.
+   * <p>
+   * {@link #findTerminalNodeContainsPosition} включает начало токена и исключает конец, поэтому
+   * для каретки на границе ищется токен на один символ левее и проверяется, что он
+   * заканчивается в исходной позиции.
+   *
+   * @param tree     дерево, в котором ищем
+   * @param position позиция сразу за искомым токеном
+   * @return терминальный узел, заканчивающийся в позиции; пусто в начале строки или если такого нет
+   */
+  public static Optional<TerminalNode> findTerminalNodeEndingAtPosition(ParserRuleContext tree, Position position) {
+    if (position.getCharacter() == 0) {
+      return Optional.empty();
+    }
+    var positionInsideToken = new Position(position.getLine(), position.getCharacter() - 1);
+    return findTerminalNodeContainsPosition(tree, positionInsideToken)
+      .filter(terminalNode -> endOf(terminalNode).equals(position));
+  }
+
+  private static Position endOf(TerminalNode terminalNode) {
+    return com.github._1c_syntax.bsl.languageserver.utils.Positions.createEnd(terminalNode);
+  }
+
+  /**
    * @param tokens - список токенов из DocumentContext
    * @param token  - токен, на строке которого требуется найти висячий комментарий
    * @return - токен с комментарием, если он найден

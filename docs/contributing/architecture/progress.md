@@ -581,3 +581,25 @@
   состояния, по группе на замечание.
 - **Проверка.** Красные `TreesTest.groupsOfEqualNodes*` (на заглушке) → зелёные; тесты обеих
   диагностик (с проверкой связанной информации) зелёные.
+
+## Контрольная точка: полный `check` после раунда 40
+
+848 тестовых классов, 5946 тестов — без падений; spotless и javadoc зелёные.
+
+## Раунд 41. Терминал у курсора, ссылка-определение, типы аргументов
+
+- **Сделано.**
+  - `Trees.findTerminalNodeEndingAtPosition` — терминал, заканчивающийся у каретки (поиск на символ
+    левее с проверкой конца). Копии в `SelectionRangeProvider` и `LinkedEditingRangeProvider`
+    удалены. `DocumentHighlightProvider` ищет иначе (позиция слева как запасной вариант, без
+    проверки конца) — оставлен.
+  - `Reference.definitionOf(symbol)` — ссылка-определение символа на себя. Бин
+    `rename/SymbolDefinitionReferenceFactory` (класс ради одной фабрики) удалён; `ReferencesProvider`
+    строит местоположение объявления через него же.
+  - `TypeService.argumentTypes(doc, args)` — типы фактических аргументов (пропущенный → `EMPTY`).
+    Копии в `SignatureHelpProvider` и `PlatformMethodCallInlayHintCollector` удалены.
+    `DereferenceMemberMatcher` работает по дереву выражений и отрезает хвостовые пропуски —
+    другой контракт, оставлен.
+- **Проверка.** Красные `TreesTest.terminalNodeEndingAtPosition*`, `ReferenceTest.definitionOf*`,
+  `TypeServiceTest.argumentTypes*` (на заглушках) → зелёные; тесты rename, references, signature
+  help, inlay hints, selection range, linked editing и `ArchitectureTest` — 243 теста зелёные.

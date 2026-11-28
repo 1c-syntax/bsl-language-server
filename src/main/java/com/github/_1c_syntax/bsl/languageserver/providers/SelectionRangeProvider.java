@@ -102,17 +102,7 @@ public class SelectionRangeProvider {
     // Каретка не внутри токена, а на границе (самый частый случай — сразу после идентификатора).
     // Поиск по позиции содержит начало токена и исключает конец, поэтому отдельно ищем токен,
     // заканчивающийся ровно в этой позиции, и предпочитаем его.
-    return findTerminalNodeEndingAtPosition(ast, position).orElse(node);
-  }
-
-  private static Optional<TerminalNode> findTerminalNodeEndingAtPosition(ParserRuleContext ast, Position position) {
-    if (position.getCharacter() == 0) {
-      return Optional.empty();
-    }
-
-    var positionInsideToken = new Position(position.getLine(), position.getCharacter() - 1);
-    return Trees.findTerminalNodeContainsPosition(ast, positionInsideToken)
-      .filter(terminalNode -> Positions.createEnd(terminalNode).equals(position));
+    return Trees.findTerminalNodeEndingAtPosition(ast, position).orElse(node);
   }
 
   @Nullable

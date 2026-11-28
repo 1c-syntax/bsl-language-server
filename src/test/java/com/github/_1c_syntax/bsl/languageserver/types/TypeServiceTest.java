@@ -63,6 +63,26 @@ class TypeServiceTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void argumentTypesGivesOneTypeSetPerArgumentWithEmptyForSkipped() {
+    // given: вызов с числом, пропущенным аргументом и строкой
+    var documentContext = TestUtils.getDocumentContext("Метод(1, , \"с\");", context);
+    var call = (com.github._1c_syntax.bsl.parser.BSLParser.GlobalMethodCallContext)
+      com.github._1c_syntax.bsl.languageserver.utils.Trees.findAllRuleNodes(
+        documentContext.getAst(), com.github._1c_syntax.bsl.parser.BSLParser.RULE_globalMethodCall
+      ).iterator().next();
+    var args = call.doCall().callParamList().callParam();
+
+    // when
+    var types = typeService.argumentTypes(documentContext, args);
+
+    // then
+    assertThat(types).hasSize(3);
+    assertThat(types.get(0).refs()).extracting(TypeRef::qualifiedName).containsExactly("Число");
+    assertThat(types.get(1)).isEqualTo(com.github._1c_syntax.bsl.languageserver.types.model.TypeSet.EMPTY);
+    assertThat(types.get(2).refs()).extracting(TypeRef::qualifiedName).containsExactly("Строка");
+  }
+
+  @Test
   void reassignmentGivesTypeAssignedThere() {
     // given: переменной сначала присвоена строка, затем число.
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
