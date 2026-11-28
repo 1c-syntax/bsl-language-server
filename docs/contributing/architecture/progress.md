@@ -212,3 +212,13 @@
   `activatedByDefault` и режим `mode`) — их не объединял.
 - **Проверка.** Красный `SupplierParametersTest` (на заглушках) → зелёный; тесты
   `configuration`, `codelenses`, `inlayhints`, провайдеров.
+
+## Сверка: полный `check`
+
+- Полный прогон после раундов 1–15: 5903 теста, упал один —
+  `CompletionContextFilteringTest.changingJsonConfigurationAppliesToTheNextRequestWithoutReparsing`
+  ожидал `MismatchedInputException` от `update` с отвергнутым файлом. Это прямое следствие
+  раунда 1: исключение заменено логом с сохранением прежних настроек. Суть теста (`null` для
+  примитивной настройки не применяется, значение сохраняется) не изменилась; ожидание
+  исключения заменено на «не бросает». Изменение контракта отражено в ADR-0002 и вынесено на
+  подтверждение. `check -x test` (spotless, javadoc, jacoco) — зелёный.

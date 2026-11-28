@@ -44,7 +44,6 @@ import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import tools.jackson.databind.exc.MismatchedInputException;
 
 import java.io.IOException;
 import java.net.URI;
@@ -54,7 +53,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.assertThatCode;
 
 class CompletionContextFilteringTest extends AbstractServerContextAwareTest {
   private static final Path ROOT = Path.of("src/test/resources/metadata/commonModuleCalls");
@@ -287,7 +286,8 @@ class CompletionContextFilteringTest extends AbstractServerContextAwareTest {
       .singleElement().satisfies(item -> assertThat(item.getSortText()).startsWith("2_"));
     Files.writeString(file, "{\"completion\":{\"hideUnavailableByContext\":null}}");
     var invalidConfiguration = file.toFile();
-    assertThatThrownBy(() -> configuration.update(invalidConfiguration)).isInstanceOf(MismatchedInputException.class);
+    // null для примитивной настройки отвергается: файл не применяется, прежние настройки сохраняются.
+    assertThatCode(() -> configuration.update(invalidConfiguration)).doesNotThrowAnyException();
     assertThat(configuration.getCompletionOptions().isHideUnavailableByContext()).isFalse();
     assertThat(complete(document, position)).extracting(CompletionItem::getLabel).contains("ClientMethod");
 
