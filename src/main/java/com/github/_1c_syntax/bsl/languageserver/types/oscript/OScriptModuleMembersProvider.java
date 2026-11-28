@@ -36,9 +36,9 @@ import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.CommentTypeResolver;
+import com.github._1c_syntax.bsl.languageserver.types.registry.DescribedTypeResolver;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
-import com.github._1c_syntax.bsl.languageserver.utils.DescriptionTypes;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -97,6 +97,7 @@ public class OScriptModuleMembersProvider {
   private final TypeRelations typeRelations;
   private final OScriptIterable oScriptIterable;
   private final CommentTypeResolver commentTypeResolver;
+  private final DescribedTypeResolver describedTypeResolver;
 
   /** URI документа → множество qualifiedNames зарегистрированных типов
    *  (один .os может одновременно быть и модулем, и классом). */
@@ -384,28 +385,20 @@ public class OScriptModuleMembersProvider {
   }
 
   private MemberDescriptor toMemberDescriptor(MethodSymbol method) {
-    var paramDescs = method.getDescription()
-      .map(com.github._1c_syntax.bsl.parser.description.MethodDescription::getParameters)
-      .orElse(List.of());
-    var paramDefs = method.getParameters();
-    var params = new ArrayList<ParameterDescriptor>(paramDefs.size());
-    for (int i = 0; i < paramDefs.size(); i++) {
-      var def = paramDefs.get(i);
-      TypeSet types = TypeSet.EMPTY;
-      String description = "";
-      if (i < paramDescs.size()) {
-        var pd = paramDescs.get(i);
-        types = resolveTypes(pd.types());
-        description = buildParameterDescription(pd);
-      }
-      params.add(new ParameterDescriptor(def.getName(), types, def.isOptional(), description));
-    }
+    var params = method.getParameters().stream()
+      .map(def -> new ParameterDescriptor(
+        def.getName(),
+        describedTypeResolver.parameterTypes(def),
+        def.isOptional(),
+        def.getDescription().map(OScriptModuleMembersProvider::buildParameterDescription).orElse("")))
+      .toList();
     TypeRef returnType = TypeRef.UNKNOWN;
     if (method.isFunction()) {
       var returnTypes = method.getDescription()
         .map(com.github._1c_syntax.bsl.parser.description.MethodDescription::getReturnedValue)
         .orElse(List.of());
-      var resolved = resolveTypes(returnTypes);
+      // первая резолвящаяся запись, а не первая по счёту — в отличие от модулей BSL
+      var resolved = describedTypeResolver.types(returnTypes);
       if (!resolved.refs().isEmpty()) {
         returnType = resolved.refs().iterator().next();
       }
@@ -416,20 +409,6 @@ public class OScriptModuleMembersProvider {
     var signature = new SignatureDescriptor(params, returnType, purpose);
     return MemberDescriptor.method(method.getName(), purpose, List.of(signature))
       .withSourceSymbol(method);
-  }
-
-  private TypeSet resolveTypes(List<com.github._1c_syntax.bsl.parser.description.TypeDescription> types) {
-    if (types == null || types.isEmpty()) {
-      return TypeSet.EMPTY;
-    }
-    var refs = new ArrayList<TypeRef>(types.size());
-    for (var td : types) {
-      var name = DescriptionTypes.resolveName(td);
-      if (!name.isBlank()) {
-        typeRegistry.resolve(name).ifPresent(refs::add);
-      }
-    }
-    return refs.isEmpty() ? TypeSet.EMPTY : TypeSet.of(refs);
   }
 
   private static String buildParameterDescription(com.github._1c_syntax.bsl.parser.description.ParameterDescription pd) {

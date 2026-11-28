@@ -154,11 +154,12 @@
 - **Сканирование `codeactions/`, `inlayhints/`, `rename/`, `reporters/`, `aop/`, `websocket/`,
   `types/oscript/`, `utils/` (после раунда 69).** В `inlayhints/`, `rename/`, `aop/`, `websocket/`
   существенного не найдено. Найдено (порядок — по ценности):
-  1. Типы из описания метода `.os` собираются вручную (`OScriptModuleMembersProvider.toMemberDescriptor`/
-     `resolveTypes`, `AutumnCollectionIndex.getterReturnType`) мимо `DescribedTypeResolver`, и уже
-     **расходятся**: сопоставление параметров по номеру, а не по `ParameterDefinition.getDescription()`;
-     «Массив из Строка» без типа элемента; без `DescriptionTypes.resolveName`. Переход меняет
-     выведенные типы `.os` — только с тестами на каждое расхождение.
+  1. Типы из описания метода мимо `DescribedTypeResolver`: `OScriptModuleMembersProvider` —
+     закрыто, раунд 73; осталась `AutumnCollectionIndex.getterReturnType` (сырое `td.name()`,
+     без отсечения пояснения и типов элементов).
+     **Ожидает решения:** тип возврата метода из описания у BSL-модуля — по первой записи
+     (`DescribedTypeResolver.returnType`, нерезолвящаяся первая даёт «неизвестно»), у `.os` — по
+     первой резолвящейся. Сведение к одному правилу меняет выведенные типы одного из языков.
   2. Мультикарта «имя → множество» с обратным индексом по URI — три копии
      (`AutumnBeanIndex`, `AutumnInjectionPointIndex`, `TypeRelationIndex`).
   3. ~~Жизненный цикл файла отчёта~~ — закрыто, раунд 72.
