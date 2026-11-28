@@ -49,8 +49,8 @@
   EventHandler*), `getVariableName`, `record ProfileKey`, `isIdentChar`, `stringField`, `key`.
 - **Реестры supplier'ов code lens / inlay hint / command** — конфигурации, `getId()` по суффиксу,
   `extractData`, разбор data в resolve написаны трижды-четырежды.
-- **Фильтрация включённых supplier'ов и параметры `Either<Boolean, Map>`** — разные механизмы
-  у code lens и inlay hint; у code lens сортировка по `@Order`, у inlay hint — нет.
+- **Отбор включённых supplier'ов** — у code lens prototype-бин с сортировкой по `@Order`, у
+  inlay hint — фильтр в провайдере без сортировки (толкование параметров уже общее, раунд 15).
 - **Чтение возможностей клиента** — четыре способа (кэш в holder'е, чтение на каждый вызов,
   из `InitializeParams` события, напрямую); дубли `isVsCodeLikeClient`, понижения
   `LocationLink → Location`.
