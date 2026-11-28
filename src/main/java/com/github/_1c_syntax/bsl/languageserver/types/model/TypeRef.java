@@ -70,8 +70,8 @@ public record TypeRef(TypeKind kind, String qualifiedName) implements Comparable
    * угловых скобок выполняется один раз на каждое уникальное имя, дальше
    * {@link #specialize(TypeRef, Map)} работает со структурным представлением.
    * <p>
-   * Размер кэша ограничен числом уникальных qualifiedName в системе
-   * (для платформы 1С — сотни). Не освобождается — пожизненно на JVM.
+   * В кэш попадают только имена с плейсхолдерами (дженерики платформы — сотни), поэтому
+   * размер ограничен и не зависит от конфигураций. Не освобождается — пожизненно на JVM.
    */
   private static final Map<String, List<Placeholder>> PLACEHOLDER_CACHE = new ConcurrentHashMap<>();
 
@@ -106,6 +106,11 @@ public record TypeRef(TypeKind kind, String qualifiedName) implements Comparable
    * @return неизменяемый список placeholder'ов; пустой, если их нет
    */
   public List<Placeholder> placeholders() {
+    // Без «<» плейсхолдеров нет; такие имена (типы конфигурации — тысячи) в кеш не попадают,
+    // и он ограничен дженериками платформы.
+    if (qualifiedName.indexOf('<') < 0) {
+      return List.of();
+    }
     return PLACEHOLDER_CACHE.computeIfAbsent(qualifiedName, ContextNames::placeholders);
   }
 

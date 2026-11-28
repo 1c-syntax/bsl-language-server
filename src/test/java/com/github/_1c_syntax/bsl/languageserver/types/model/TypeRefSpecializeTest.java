@@ -50,6 +50,23 @@ class TypeRefSpecializeTest {
   }
 
   @Test
+  void namesWithoutPlaceholdersDoNotGrowTheCache() throws Exception {
+    // given — кеш живёт всю жизнь JVM, а имён без плейсхолдеров (типы конфигурации) — тысячи
+    var field = TypeRef.class.getDeclaredField("PLACEHOLDER_CACHE");
+    field.setAccessible(true);
+    var cache = (Map<?, ?>) field.get(null);
+    var sizeBefore = cache.size();
+
+    // when
+    for (var i = 0; i < 100; i++) {
+      assertThat(new TypeRef(TypeKind.CONFIGURATION, "СправочникОбъект.Справочник" + i).placeholders()).isEmpty();
+    }
+
+    // then
+    assertThat(cache.size()).isEqualTo(sizeBefore);
+  }
+
+  @Test
   void placeholdersCachedAcrossCalls() {
     // Один и тот же TypeRef отдаёт тот же list при повторном вызове (через
     // PLACEHOLDER_CACHE по qualifiedName).
