@@ -36,10 +36,9 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.util.SignatureSelection;
 import com.github._1c_syntax.bsl.languageserver.utils.Positions;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -285,37 +284,8 @@ public final class SignatureHelpProvider {
     DocumentContext documentContext, Position position
   ) {
     // Идём по дереву: ищем самый глубокий doCall, у которого LPAREN < pos <= RPAREN.
-    return documentContext.findAst().flatMap(ast -> findInnermostDoCallEnclosing(ast, position));
-  }
-
-  private static Optional<BSLParser.DoCallContext> findInnermostDoCallEnclosing(
-    ParseTree node, Position position
-  ) {
-    BSLParser.DoCallContext best = null;
-    if (node instanceof BSLParser.DoCallContext doCall && encloses(doCall, position)) {
-      best = doCall;
-    }
-    for (int i = 0; i < node.getChildCount(); i++) {
-      var child = node.getChild(i);
-      if (child instanceof ParserRuleContext prc && !encloses(prc, position)) {
-        continue;
-      }
-      var inner = findInnermostDoCallEnclosing(child, position);
-      if (inner.isPresent()) {
-        best = inner.get();
-      }
-    }
-    return Optional.ofNullable(best);
-  }
-
-  private static boolean encloses(ParserRuleContext ctx, Position position) {
-    var start = ctx.getStart();
-    var stop = ctx.getStop();
-    if (start == null || stop == null) {
-      return false;
-    }
-    return Ranges.containsPosition(start.getLine() - 1, start.getCharPositionInLine(),
-      stop.getLine() - 1, stop.getCharPositionInLine() + stop.getText().length(), position);
+    return documentContext.findAst()
+      .flatMap(ast -> Trees.findInnermostEnclosing(ast, position, BSLParser.DoCallContext.class));
   }
 
   /**

@@ -366,6 +366,55 @@ public final class Trees {
   }
 
   /**
+   * Самый глубокий узел указанного типа, чей текст (от начала первого до конца последнего токена)
+   * содержит позицию. Спуск идёт только в поддеревья, содержащие позицию.
+   *
+   * @param tree     дерево, в котором ищем
+   * @param position позиция
+   * @param type     тип искомого узла
+   * @param <T>      тип искомого узла
+   * @return самый вложенный такой узел; пусто, если позицию не содержит ни один
+   */
+  public static <T extends ParserRuleContext> Optional<T> findInnermostEnclosing(
+    ParseTree tree,
+    Position position,
+    Class<T> type
+  ) {
+    T best = null;
+    if (type.isInstance(tree) && encloses((ParserRuleContext) tree, position)) {
+      best = type.cast(tree);
+    }
+    for (var i = 0; i < tree.getChildCount(); i++) {
+      var child = tree.getChild(i);
+      if (child instanceof ParserRuleContext childContext && !encloses(childContext, position)) {
+        continue;
+      }
+      var inner = findInnermostEnclosing(child, position, type);
+      if (inner.isPresent()) {
+        best = inner.get();
+      }
+    }
+    return Optional.ofNullable(best);
+  }
+
+  /**
+   * Содержит ли текст узла (от начала первого до конца последнего токена) позицию.
+   *
+   * @param ctx      узел
+   * @param position позиция
+   * @return {@code true}, если позиция внутри узла или на его границах; {@code false} для узла без токенов
+   */
+  public static boolean encloses(ParserRuleContext ctx, Position position) {
+    var start = ctx.getStart();
+    var stop = ctx.getStop();
+    if (start == null || stop == null) {
+      return false;
+    }
+    return Ranges.containsPosition(start.getLine() - 1, start.getCharPositionInLine(),
+      stop.getLine() - 1, stop.getCharPositionInLine() + stop.getText().length(), position);
+  }
+
+  /**
    * @param tokens - список токенов из DocumentContext
    * @param token  - токен, на строке которого требуется найти висячий комментарий
    * @return - токен с комментарием, если он найден

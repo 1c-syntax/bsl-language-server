@@ -54,9 +54,6 @@
   `SignatureHelpProvider.tokenBefore`, `CodeBlockLookup.startsAfter`,
   `EventHandlerInvalidSignatureDiagnostic.isAfterPosition`, `SymbolTree.before`. Часть стоит на
   горячих путях двоичного поиска; кандидат — открыть `Ranges.isBefore(int, int, int, int)`.
-- **«Самый вложенный узел типа T, содержащий позицию»** и `encloses` — копии в
-  `NewExpressionReferenceFinder` и `SignatureHelpProvider`.
-- **Терминал, заканчивающийся на курсоре** — `LinkedEditingRangeProvider`/`SelectionRangeProvider`.
 - **`safeGetAst` с перехватом любого `RuntimeException`** (`FormExpressionInference`,
   `PropertyMethodInference`) — после раунда 25 остались две копии второй политики; сузить до
   `findAst()` можно только решением владельцев `types/` (сейчас скрываются и настоящие ошибки).
@@ -65,6 +62,15 @@
   фрагменты с разными результатами, общий хелпер дал бы лишь формальное единообразие; снятие
   кэширования `isVsCodeLikeClient` в двух code lens-классах — снимок на `initialize` осознанный и
   покрыт тестами, выигрыш ~25 строк.
+- **Рассмотрено и отклонено (сканирование `diagnostics/`, раунды 34–40)**: пары двух-трёхстрочных
+  предикатов — «общий модуль с повторным использованием» (`CachedPublic`,
+  `CommonModuleNameCached`; `RedundantAccessToObject` проверяет ещё и `DONT_USE` — другой смысл),
+  «последний оператор модуля» (`BeginTransactionBeforeTryCatch`, `CommitTransactionOutsideTryCatch`),
+  «присваивание переменной» (`AbstractMagicValue`, `IncorrectUseOfStrTemplate`), «`+1` для
+  остальных узлов» (`OneStatementPerLine`, `FieldsFromJoinsWithoutIsNull`), шаблоны имён
+  `Вставить`/`Добавить`/`НачатьТранзакцию` (часть с `find()`, часть с `matches()` — разный смысл);
+  перегрузка `RelatedInformation.create` по узлу дерева (16 мест разной формы). Общий помощник
+  дал бы лишь формальное единообразие.
 - **`format` без найденных файлов** завершается с кодом 1 без сообщения.
 - **Таблицы «тип токена → `Keywords.MultiName`»** — 3 копии (completion, formatter, diagnostic).
 - **Мелкие пары копий**: `record ProfileKey` (`MemberMethodProfiles`, `CompletionMethodTargets`),

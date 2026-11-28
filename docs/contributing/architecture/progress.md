@@ -654,3 +654,13 @@
   `CommentSemanticTokensSupplier` и `BslDocSemanticTokensSupplier` удалены.
 - **Проверка.** Красный `SemanticTokensHelperCapabilitiesTest` (на заглушке) → зелёный; тесты
   семантических токенов (267), `javadoc`, `spotlessCheck` зелёные.
+
+## Раунд 46. Самый вложенный узел, содержащий позицию
+
+- **Сделано.** `Trees.findInnermostEnclosing(tree, position, type)` и `Trees.encloses(ctx, position)`.
+  `NewExpressionReferenceFinder` (самое вложенное `Новый …`) и `SignatureHelpProvider` (самый
+  вложенный `doCall`) держали одинаковые рекурсивный поиск и проверку `encloses`, отличаясь только
+  типом узла.
+- **Проверка.** Красный `TreesTest.innermostEnclosingNode*` (на заглушке) → зелёный; тесты
+  signature help, `NewExpression*`, `PlatformConstructor*`, `ReferenceResolver*`,
+  `ArchitectureTest` (138) зелёные; `javadoc`, `spotlessCheck` зелёные.

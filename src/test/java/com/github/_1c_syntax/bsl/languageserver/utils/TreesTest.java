@@ -121,6 +121,22 @@ class TreesTest {
     assertThat(Trees.findTerminalNodeEndingAtPosition(tree, new Position(0, 0))).isEmpty();
   }
 
+  @Test
+  void innermostEnclosingNodeOfTypeIsTheDeepestContainingPosition() {
+    // given — Ф(1, Г(2)); внешний doCall — «(1, Г(2))», внутренний — «(2)»
+    var tree = parse("Ф(1, Г(2));");
+
+    // then — внутри внутреннего вызова находится он, между аргументами внешнего — внешний
+    assertThat(Trees.findInnermostEnclosing(tree, new Position(0, 7), BSLParser.DoCallContext.class))
+      .map(ParseTree::getText)
+      .contains("(2)");
+    assertThat(Trees.findInnermostEnclosing(tree, new Position(0, 3), BSLParser.DoCallContext.class))
+      .map(ParseTree::getText)
+      .contains("(1,Г(2))");
+    // позиция вне всех вызовов
+    assertThat(Trees.findInnermostEnclosing(tree, new Position(0, 0), BSLParser.DoCallContext.class)).isEmpty();
+  }
+
   private static ParseTree parse(String input) {
     var lexer = new BSLLexer(CharStreams.fromString(input));
     var parser = new BSLParser(new IncrementalTokenStream(lexer));

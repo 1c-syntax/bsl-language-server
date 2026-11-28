@@ -33,7 +33,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -91,12 +90,12 @@ public class NewExpressionReferenceFinder implements ReferenceFinder {
     if (ast.isEmpty()) {
       return Optional.empty();
     }
-    var nex = findInnermostNewExpression(ast.get(), position);
+    var nex = Trees.findInnermostEnclosing(ast.get(), position, BSLParser.NewExpressionContext.class);
     if (nex.isEmpty()) {
       return Optional.empty();
     }
     var typeNameCtx = nex.get().typeName();
-    if (typeNameCtx == null || !encloses(typeNameCtx, position)) {
+    if (typeNameCtx == null || !Trees.encloses(typeNameCtx, position)) {
       return Optional.empty();
     }
     return buildReference(document, uri, nex.get());
@@ -163,36 +162,6 @@ public class NewExpressionReferenceFinder implements ReferenceFinder {
       n--;
     }
     return n;
-  }
-
-  private static Optional<BSLParser.NewExpressionContext> findInnermostNewExpression(
-    ParseTree node, Position position
-  ) {
-    BSLParser.NewExpressionContext best = null;
-    if (node instanceof BSLParser.NewExpressionContext nex && encloses(nex, position)) {
-      best = nex;
-    }
-    for (int i = 0; i < node.getChildCount(); i++) {
-      var child = node.getChild(i);
-      if (child instanceof ParserRuleContext prc && !encloses(prc, position)) {
-        continue;
-      }
-      var inner = findInnermostNewExpression(child, position);
-      if (inner.isPresent()) {
-        best = inner.get();
-      }
-    }
-    return Optional.ofNullable(best);
-  }
-
-  private static boolean encloses(ParserRuleContext ctx, Position position) {
-    var start = ctx.getStart();
-    var stop = ctx.getStop();
-    if (start == null || stop == null) {
-      return false;
-    }
-    return Ranges.containsPosition(start.getLine() - 1, start.getCharPositionInLine(),
-      stop.getLine() - 1, stop.getCharPositionInLine() + stop.getText().length(), position);
   }
 
   private static Range tokenRange(ParserRuleContext ctx) {
