@@ -49,6 +49,7 @@ class DiagnosticParametersSchemaTest {
 
   private static final String RESOURCES = "/com/github/_1c_syntax/bsl/languageserver/configuration/";
   private static final JsonMapper MAPPER = JsonMapper.builder().build();
+  private static final String REGENERATE_HINT = "схемы расходятся с кодом — выполните ./gradlew updateJsonSchema";
 
   @Autowired
   private DiagnosticInfos diagnosticInfos;
@@ -90,7 +91,7 @@ class DiagnosticParametersSchemaTest {
       });
     });
 
-    assertThat(mismatches).isEmpty();
+    assertThat(mismatches).as(REGENERATE_HINT).isEmpty();
   }
 
   @Test
@@ -101,7 +102,7 @@ class DiagnosticParametersSchemaTest {
     references.propertyNames().forEach(stale::add);
     stale.removeAll(codes);
 
-    assertThat(stale).isEmpty();
+    assertThat(stale).as(REGENERATE_HINT).isEmpty();
   }
 
   private static boolean sameValue(JsonNode schemaDefault, Object codeDefault) {
