@@ -114,6 +114,9 @@ class CanonicalImplementationsTest {
         Pattern.compile("QuickFixProvider\\.createCodeActions\\("),
         // Правки, общие для нескольких замечаний: слияние диапазонов, перенос методов в область
         Set.of("diagnostics/EmptyRegionDiagnostic.java", "diagnostics/EventHandlerOutsideEventRegionDiagnostic.java")),
+      new Case("WorkspaceFolderDto.listOf(snapshot)",
+        Pattern.compile("fromSnapshot\\(\\w+\\)\\.stream\\(\\)"),
+        Set.of("mcp/dto/WorkspaceFolderDto.java")),
       new Case("SynchronousMethod",
         Pattern.compile("(?iu)НачатьПомещениеФайла"),
         Set.of("diagnostics/SynchronousMethod.java"))
