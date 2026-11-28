@@ -94,4 +94,9 @@ infrastructure -> client
   JSON-схема), `DiagnosticDocsLayoutTest` и `DiagnosticResourcesParityTest` (документация и
   ресурсы диагностик в обеих локалях), `DiagnosticTestLayoutTest` (у каждой диагностики свой тест),
   `DiagnosticConfigurationContractTest` (настройка без параметров не ломает диагностику).
+- `CanonicalImplementationsTest`: сведённые к каноническому помощнику рецепты не появляются вне
+  владельца (`TypeRef.UNDEFINED`, `MemberDescriptor.returnType()`,
+  `MethodSymbol.getParameterDefinition`, `TypeRegistry.findSpecialization`,
+  `registerConfigurationType(ru, en)`, `DiagnosticInfosFactory`, `ReportFile.commit(name)`,
+  `CompletionPriority.Fold`, `CollectionReturnsSpecializer.registerCollection`).
 - Отдельный workflow CI `javadoc.yml` (`./gradlew javadoc`): `check` javadoc не запускает.
