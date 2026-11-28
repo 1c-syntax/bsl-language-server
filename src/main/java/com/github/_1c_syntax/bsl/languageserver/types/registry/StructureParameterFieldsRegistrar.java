@@ -149,9 +149,7 @@ class StructureParameterFieldsRegistrar {
       var signatureChanged = false;
       for (var parameter : signature.parameters()) {
         if (parameter.matches(parameterName)) {
-          parameters.add(new ParameterDescriptor(parameter.bilingualName(),
-            parameter.types().withFields(structureRef, fields), parameter.optional(),
-            parameter.bilingualDescription(), parameter.defaultValue(), parameter.variadic()));
+          parameters.add(parameter.withTypes(parameter.types().withFields(structureRef, fields)));
           signatureChanged = true;
         } else {
           parameters.add(parameter);

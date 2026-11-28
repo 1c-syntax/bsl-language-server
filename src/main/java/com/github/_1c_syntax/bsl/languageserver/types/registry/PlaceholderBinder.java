@@ -152,9 +152,7 @@ final class PlaceholderBinder {
     for (var index = 0; index < first.parameters().size(); index++) {
       var parameter = first.parameters().get(index);
       var other = second.parameters().get(index);
-      parameters.add(new ParameterDescriptor(parameter.bilingualName(),
-        parameter.types().union(other.types()), parameter.optional(),
-        parameter.bilingualDescription(), parameter.defaultValue(), parameter.variadic()));
+      parameters.add(parameter.withTypes(parameter.types().union(other.types())));
     }
     return new SignatureDescriptor(parameters, first.returnTypes().union(second.returnTypes()),
       first.bilingualDescription(), first.metadata());

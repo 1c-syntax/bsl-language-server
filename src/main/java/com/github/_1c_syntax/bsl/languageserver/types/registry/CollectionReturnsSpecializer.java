@@ -194,9 +194,7 @@ final class CollectionReturnsSpecializer {
     for (var parameter : signature.parameters()) {
       var replaced = replaceRow(parameter.types(), genericRow, row);
       parametersChanged |= replaced != null;
-      parameters.add(replaced == null ? parameter : new ParameterDescriptor(parameter.bilingualName(),
-        replaced, parameter.optional(), parameter.bilingualDescription(), parameter.defaultValue(),
-        parameter.variadic()));
+      parameters.add(replaced == null ? parameter : parameter.withTypes(replaced));
     }
     if (returnTypes == null && !parametersChanged) {
       return null;

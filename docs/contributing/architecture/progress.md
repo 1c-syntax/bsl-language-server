@@ -1322,3 +1322,19 @@
   красный на заглушке → зелёный.
 - **Проверка.** Все `types`, `*Hover*`, `*Completion*`, `*EventHandler*` (347 классов, 2955 тестов)
   зелёные; `javadoc`, `spotlessCheck` зелёные.
+
+## Раунд 86. Параметр с другими типами — `ParameterDescriptor.withTypes`
+
+Источник — пункт 6 углублённого сканирования `types/`.
+
+- **Проблема.** Четыре места (`MemberDescriptor.specialize`, `PlaceholderBinder`,
+  `CollectionReturnsSpecializer`, `StructureParameterFieldsRegistrar`) пересобирали параметр
+  шестиаргументным конструктором, переписывая все поля ради одного — типов; пропуск любого поля
+  (например, `variadic`) терял бы его молча.
+- **Сделано.** `withTypes` рядом с уже существовавшим `withVariadic`; четыре места сведены к нему.
+  Аналог для сигнатур (`withReturnTypes`) и обход `MdoMemberFactory.property` — оставлены в
+  бэклоге: места различаются (часть сбрасывает `generic`, часть меняет и параметры).
+- **Тесты.** `ParameterDescriptorTest.withTypesKeepsEverythingButTypes` красный на заглушке →
+  зелёный.
+- **Проверка.** Все `types`, `*Hover*`, `*Completion*`, `*SignatureHelp*` (343 класса, 2972 теста)
+  зелёные; `javadoc`, `spotlessCheck` зелёные.

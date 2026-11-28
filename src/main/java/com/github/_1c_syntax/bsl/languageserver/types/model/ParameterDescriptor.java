@@ -98,6 +98,16 @@ public record ParameterDescriptor(
       defaultValue, isVariadic);
   }
 
+  /**
+   * Копия дескриптора с другими типами.
+   *
+   * @param newTypes типы параметра.
+   * @return дескриптор, в котором остальное — как у исходного.
+   */
+  public ParameterDescriptor withTypes(TypeSet newTypes) {
+    return new ParameterDescriptor(bilingualName, newTypes, optional, bilingualDescription, defaultValue, variadic);
+  }
+
   /** Compat-аксессор: primary написание имени. */
   public String name() {
     return bilingualName.primary();

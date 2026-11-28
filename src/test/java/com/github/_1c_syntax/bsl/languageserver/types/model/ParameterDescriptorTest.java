@@ -31,6 +31,21 @@ class ParameterDescriptorTest {
   private static final TypeRef NUMBER = new TypeRef(TypeKind.PRIMITIVE, "Число");
 
   @Test
+  void withTypesKeepsEverythingButTypes() {
+    // given
+    var string = new TypeRef(TypeKind.PRIMITIVE, "Строка");
+    var p = new ParameterDescriptor(BilingualString.of("Имя", "Name"), TypeSet.of(NUMBER), true,
+      BilingualString.of("оп", "desc"), "0", true);
+
+    // when
+    var retyped = p.withTypes(TypeSet.of(string));
+
+    // then
+    assertThat(retyped).isEqualTo(new ParameterDescriptor(BilingualString.of("Имя", "Name"), TypeSet.of(string),
+      true, BilingualString.of("оп", "desc"), "0", true));
+  }
+
+  @Test
   void canonicalConstructorNormalizesNulls() {
     // given / when
     var p = new ParameterDescriptor(
