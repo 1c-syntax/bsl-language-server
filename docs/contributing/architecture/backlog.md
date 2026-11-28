@@ -154,9 +154,7 @@
 - **Сканирование `codeactions/`, `inlayhints/`, `rename/`, `reporters/`, `aop/`, `websocket/`,
   `types/oscript/`, `utils/` (после раунда 69).** В `inlayhints/`, `rename/`, `aop/`, `websocket/`
   существенного не найдено. Найдено (порядок — по ценности):
-  1. Типы из описания метода мимо `DescribedTypeResolver`: `OScriptModuleMembersProvider` —
-     закрыто, раунд 73; осталась `AutumnCollectionIndex.getterReturnType` (сырое `td.name()`,
-     без отсечения пояснения и типов элементов).
+  1. ~~Типы из описания метода мимо `DescribedTypeResolver`~~ — закрыто, раунды 73–74.
      **Ожидает решения:** тип возврата метода из описания у BSL-модуля — по первой записи
      (`DescribedTypeResolver.returnType`, нерезолвящаяся первая даёт «неизвестно»), у `.os` — по
      первой резолвящейся. Сведение к одному правилу меняет выведенные типы одного из языков.
