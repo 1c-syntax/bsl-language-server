@@ -21,6 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.infrastructure;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import org.ehcache.Cache;
 import org.ehcache.CacheManager;
 import org.ehcache.Status;
@@ -30,6 +34,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.CleanupMode;
 import org.junit.jupiter.api.io.TempDir;
+import org.slf4j.LoggerFactory;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.io.IOException;
@@ -199,19 +204,34 @@ class CacheConfigurationTest {
       additionalManagers.add(lockedManager);
     }
 
+    var configurationLog = (Logger) LoggerFactory.getLogger(CacheConfiguration.class);
+    var logged = new ListAppender<ILoggingEvent>();
+    logged.start();
+    configurationLog.addAppender(logged);
+
     // when - all directories are locked, should fall back to in-memory
-    ehcacheManager = (CacheManager) ReflectionTestUtils.invokeMethod(
-      cacheConfiguration,
-      "createEhcacheManagerWithRetry",
-      cachePathProvider,
-      basePath,
-      fullPath,
-      REGISTRARS
-    );
+    try {
+      ehcacheManager = (CacheManager) ReflectionTestUtils.invokeMethod(
+        cacheConfiguration,
+        "createEhcacheManagerWithRetry",
+        cachePathProvider,
+        basePath,
+        fullPath,
+        REGISTRARS
+      );
+    } finally {
+      configurationLog.detachAppender(logged);
+    }
 
     // then
     assertThat(ehcacheManager).isNotNull();
     assertThat(ehcacheManager.getStatus()).isEqualTo(Status.AVAILABLE);
+    // переход на кеш в памяти — потеря персистентности, о нём сообщается
+    assertThat(logged.list)
+      .anySatisfy(event -> {
+        assertThat(event.getLevel()).isEqualTo(Level.WARN);
+        assertThat(event.getFormattedMessage()).contains(basePath);
+      });
 
     // Verify cache is created and works
     Cache<String, String> cache = ehcacheManager.getCache(CACHE_NAME, String.class, String.class);

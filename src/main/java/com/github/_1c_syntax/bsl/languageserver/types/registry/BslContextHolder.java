@@ -85,7 +85,7 @@ public class BslContextHolder {
     try {
       return factory.create();
     } catch (Exception e) {
-      LOGGER.warn("Failed to load platform contexts from 1C syntax helper: {}", e.getMessage());
+      LOGGER.warn("Failed to load platform contexts from 1C syntax helper", e);
       return Optional.empty();
     }
   }

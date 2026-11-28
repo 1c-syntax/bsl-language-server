@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.infrastructure;
 import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import lombok.extern.slf4j.Slf4j;
 import org.ehcache.config.builders.CacheManagerBuilder;
 import org.ehcache.config.builders.ResourcePoolsBuilder;
 import org.ehcache.config.units.EntryUnit;
@@ -52,6 +53,7 @@ import java.util.Optional;
  */
 @Configuration
 @EnableCaching
+@Slf4j
 public class CacheConfiguration {
   private static final int MAX_CACHE_INSTANCES = 10;
   /**
@@ -165,15 +167,19 @@ public class CacheConfiguration {
     String fullPath,
     List<EhcacheRegistrar> registrars
   ) {
+    org.ehcache.StateTransitionException lastFailure = null;
     for (var instanceNumber = 0; instanceNumber < MAX_CACHE_INSTANCES; instanceNumber++) {
       try {
         var cacheDir = cachePathProvider.getCachePath(basePath, fullPath, instanceNumber);
         return createPersistentEhcacheManager(cacheDir, registrars);
       } catch (org.ehcache.StateTransitionException e) {
         // The directory is locked by another process, try the next instance number.
+        lastFailure = e;
       }
     }
 
+    LOGGER.warn("Persistent cache is unavailable in {} ({} attempts), falling back to in-memory cache",
+      basePath, MAX_CACHE_INSTANCES, lastFailure);
     return createInMemoryEhcacheManager(registrars);
   }
 

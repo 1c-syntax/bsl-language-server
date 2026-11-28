@@ -64,6 +64,30 @@ class BslContextHolderTest {
   }
 
   @Test
+  void loadFailureIsLoggedWithItsCause() throws IOException {
+    // given
+    var failure = new IOException("broken help");
+    when(factory.create()).thenThrow(failure);
+    var holder = new BslContextHolder(factory);
+    var holderLog = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(BslContextHolder.class);
+    var logged = new ch.qos.logback.core.read.ListAppender<ch.qos.logback.classic.spi.ILoggingEvent>();
+    logged.start();
+    holderLog.addAppender(logged);
+
+    // when
+    try {
+      assertThat(holder.get()).isEmpty();
+    } finally {
+      holderLog.detachAppender(logged);
+    }
+
+    // then — причина не теряется: в журнал уходит исключение со стеком, а не только сообщение
+    assertThat(logged.list)
+      .anySatisfy(event -> assertThat(event.getThrowableProxy()).isNotNull()
+        .extracting(proxy -> proxy.getMessage()).isEqualTo("broken help"));
+  }
+
+  @Test
   void queryProviderComesFromTheSameRead() throws IOException {
     // given
     when(factory.create()).thenReturn(Optional.of(contexts(provider, queryProvider)));
