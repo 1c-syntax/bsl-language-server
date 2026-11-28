@@ -24,12 +24,11 @@ package com.github._1c_syntax.bsl.languageserver.completion;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
 import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver;
 import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver.Declaration;
 import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver.MethodContext;
+import com.github._1c_syntax.bsl.languageserver.types.compilation.MemberMethodProfiles;
 
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -42,24 +41,9 @@ import java.util.Set;
 final class CompletionMethodTargets {
   private final CompilationContextResolver resolver;
   private final Map<MethodSymbol, List<MethodTarget>> methodTargets = new IdentityHashMap<>();
-  private final Map<ProfileKey, Optional<MethodContext>> profiles = new HashMap<>();
+  private final MemberMethodProfiles profiles;
   private final Map<DocumentContext, Map<String, List<Declaration>>> declarationsByOwner = new IdentityHashMap<>();
   private final Map<DocumentContext, Map<Declaration, MethodTarget>> targetsByOwner = new IdentityHashMap<>();
-
-  /**
-   * Порядок ключа согласован с URI и необязательной директивой.
-   */
-  private record ProfileKey(URI uri, Optional<CompilerDirectiveKind> directive) implements Comparable<ProfileKey> {
-    @Override
-    public int compareTo(ProfileKey other) {
-      var byUri = uri.compareTo(other.uri);
-      return byUri == 0 ? Integer.compare(directiveOrdinal(), other.directiveOrdinal()) : byUri;
-    }
-
-    private int directiveOrdinal() {
-      return directive.isPresent() ? directive.orElseThrow().ordinal() : -1;
-    }
-  }
 
   /**
    * Объявление и вычисленные один раз профиль и контексты его компиляции.
@@ -70,6 +54,7 @@ final class CompletionMethodTargets {
 
   CompletionMethodTargets(CompilationContextResolver resolver) {
     this.resolver = resolver;
+    this.profiles = new MemberMethodProfiles(resolver);
   }
 
   List<MethodTarget> localMethod(MethodSymbol method) {
@@ -111,8 +96,7 @@ final class CompletionMethodTargets {
   }
 
   private MethodTarget createTarget(DocumentContext owner, Declaration declaration) {
-    var profile = profiles.computeIfAbsent(new ProfileKey(owner.getUri(), declaration.directive()),
-      ignored -> resolver.methodContext(owner, declaration.directive()));
+    var profile = profiles.methodContext(owner, declaration.directive());
     var contexts = declaration.branch() == null ? Optional.<Set<ExecutionContext>>empty() : profile.map((MethodContext value) -> {
       var declared = ExecutionContext.copyOf(value.contexts());
       declared.retainAll(declaration.branch());

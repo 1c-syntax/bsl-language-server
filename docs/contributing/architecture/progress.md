@@ -676,3 +676,14 @@
 - **Проверка.** Красный `PositionsTest.compareStart*` (на заглушке) → зелёный; тесты completion,
   signature help, `types.inferencer`, `SymbolTree*`, `EventHandlerInvalidSignature` (549) зелёные;
   `javadoc`, `spotlessCheck` зелёные.
+
+## Раунд 48. Кеш профилей компиляции методов — один
+
+- **Проблема.** `CompletionMethodTargets` держал свою копию `MemberMethodProfiles` из `types`:
+  тот же ключ `ProfileKey(uri, directive)` с тем же порядком и тот же
+  `computeIfAbsent(… resolver.methodContext(…))`.
+- **Сделано.** `MemberMethodProfiles` перенесён в `types.compilation` (рядом с
+  `CompilationContextResolver`, чей результат он запоминает) и открыт; completion и
+  `MemberAccessContexts` используют его.
+- **Проверка.** Поведение не меняется; тесты completion, `MemberAccess*`, `types.compilation`,
+  `UnavailableMemberCall` и `ArchitectureTest` (687) зелёные; `javadoc`, `spotlessCheck` зелёные.
