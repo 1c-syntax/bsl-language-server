@@ -149,7 +149,7 @@ public class BuiltinTypesJsonLoader {
           forEachDescription, indexAccessDescription, typeParameters, isEnum));
       }
       return result;
-    } catch (IOException e) {
+    } catch (IOException | RuntimeException e) {
       LOGGER.error("Failed to load builtin platform types resource: {}", resourcePath, e);
       return Collections.emptyList();
     }

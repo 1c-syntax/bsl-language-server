@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import lombok.extern.slf4j.Slf4j;
-import tools.jackson.core.JacksonException;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -72,8 +71,8 @@ final class KeywordMetadataLoader {
         builder.add(entry);
       }
       return builder.build();
-    } catch (IOException | JacksonException e) {
-      LOGGER.warn("Builtin keywords resource not found or unreadable: {}", resourcePath, e);
+    } catch (IOException | RuntimeException e) {
+      LOGGER.error("Builtin keywords resource not found or unreadable: {}", resourcePath, e);
       return KeywordMetadata.EMPTY;
     }
   }
