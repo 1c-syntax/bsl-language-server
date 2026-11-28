@@ -28,7 +28,6 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentHighlightParams;
 import java.util.Optional;
-import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -59,27 +58,13 @@ public class IfStatementDocumentHighlightSupplier extends AbstractASTDocumentHig
     }
 
     var parent = (ParserRuleContext) terminalNodeInfo.get().terminalNode().getParent();
-    var ifStatement = findIfStatementContext(parent);
+    ParserRuleContext ifStatement = Trees.getAncestorOrSelfByRuleIndex(parent, BSLParser.RULE_ifStatement);
 
     if (ifStatement == null) {
       return Collections.emptyList();
     }
 
     return highlightIfStatement(ifStatement);
-  }
-
-  /**
-   * Находит IfStatementContext.
-   * Сначала проверяет сам parent, затем ищет среди его предков.
-   */
-  @Nullable
-  private ParserRuleContext findIfStatementContext(ParserRuleContext parent) {
-    // Проверяем, является ли сам parent нужным типом
-    if (parent.getRuleIndex() == BSLParser.RULE_ifStatement) {
-      return parent;
-    }
-    // Если нет, ищем среди предков
-    return Trees.getAncestorByRuleIndex(parent, BSLParser.RULE_ifStatement);
   }
 
   private boolean isIfStatementKeyword(int tokenType) {

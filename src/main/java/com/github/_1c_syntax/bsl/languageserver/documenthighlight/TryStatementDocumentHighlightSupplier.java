@@ -28,7 +28,6 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentHighlightParams;
 import java.util.Optional;
-import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -61,27 +60,13 @@ public class TryStatementDocumentHighlightSupplier extends AbstractASTDocumentHi
     // Токены try-конструкции находятся напрямую в TryStatementContext,
     // поэтому parent уже может быть нужным типом
     var parent = (ParserRuleContext) terminalNodeInfo.get().terminalNode().getParent();
-    var tryStatement = findTryStatementContext(parent);
+    ParserRuleContext tryStatement = Trees.getAncestorOrSelfByRuleIndex(parent, BSLParser.RULE_tryStatement);
 
     if (tryStatement == null) {
       return Collections.emptyList();
     }
 
     return highlightTryStatement(tryStatement);
-  }
-
-  /**
-   * Находит TryStatementContext.
-   * Сначала проверяет сам parent, затем ищет среди его предков.
-   */
-  @Nullable
-  private ParserRuleContext findTryStatementContext(ParserRuleContext parent) {
-    // Проверяем, является ли сам parent нужным типом
-    if (parent.getRuleIndex() == BSLParser.RULE_tryStatement) {
-      return parent;
-    }
-    // Если нет, ищем среди предков
-    return Trees.getAncestorByRuleIndex(parent, BSLParser.RULE_tryStatement);
   }
 
   private boolean isTryStatementKeyword(int tokenType) {

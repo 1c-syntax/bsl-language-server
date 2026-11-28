@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.Describable;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
 import com.github._1c_syntax.bsl.languageserver.utils.DescriptionTypes;
+import com.github._1c_syntax.bsl.languageserver.utils.NavigationLinks;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.description.SourceDefinedSymbolDescription;
 import com.github._1c_syntax.bsl.parser.description.TypeDescription;
@@ -115,7 +116,6 @@ public class TypeDefinitionDocumentLinkSupplier implements DocumentLinkSupplier 
   }
 
   private static String symbolTarget(SourceDefinedSymbol symbol) {
-    var start = symbol.getSelectionRange().getStart();
-    return "%s#L%d,%d".formatted(symbol.getOwner().getUri(), start.getLine() + 1, start.getCharacter() + 1);
+    return NavigationLinks.toTarget(symbol.getOwner().getUri(), symbol.getSelectionRange());
   }
 }

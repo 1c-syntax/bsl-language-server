@@ -457,3 +457,12 @@
   `NavigationLinks.forClient(links, linkSupport)` рядом с прочими навигационными ссылками.
 - **Проверка.** Красный `NavigationLinksTest` (на заглушке) → зелёный; тесты `Definition*`,
   `Implementation*`, `ArchitectureTest`.
+
+## Раунд 32. Готовые канонические помощники в document link и document highlight
+
+- **Сделано.** `TypeDefinitionDocumentLinkSupplier` собирал цель ссылки `uri#Lстрока,колонка`
+  вручную — теперь `NavigationLinks.toTarget`. `If`/`TryStatementDocumentHighlightSupplier`
+  держали приватные копии «сам узел или предок с правилом» — заменены на
+  `Trees.getAncestorOrSelfByRuleIndex`.
+- **Проверка.** Поведение не меняется (переход на уже покрытые тестами функции); тесты
+  `documentlink`, `documenthighlight`, `ArchitectureTest` — 109 тестов зелёные.
