@@ -326,6 +326,9 @@ class ArchitectureTest {
   @ArchTest
   static final ArchRule layer_dependencies_are_respected = layeredArchitecture()
     .consideringOnlyDependenciesInAnyPackage(ROOT_PACKAGE + "..")
+    // Полнота карты — не соглашение, а проверка: класс вне всех слоёв (новый top-level пакет, не
+    // внесённый в карту) валит правило. Исключение — aop (см. ниже).
+    .ensureAllClassesAreContainedInArchitectureIgnoring(ROOT_PACKAGE + ".aop..")
     // Рёбра в пакет aop — артефакт AspectJ compile-time weaving (вплетённые вызовы аспектов в
     // байткоде, исходных import'ов нет), а не проектные зависимости. Исключаем их, оставляя aop
     // единственным неназначенным пакетом.

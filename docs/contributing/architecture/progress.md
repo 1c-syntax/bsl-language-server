@@ -1501,3 +1501,14 @@
   | Тесты, сборка, инструменты | 38, 60, 64, 89, 94; javadoc вне `check` — отдельный workflow |
 - **Проверка.** `ArchitectureTest` (23 правила), `CanonicalImplementationsTest` (12),
   `PackageDocumentationTest` зелёные; `javadoc`, `spotlessCheck` зелёные.
+
+## Раунд 95. Полнота карты слоёв — проверка, а не соглашение
+
+- **Проверено.** Карта слоёв `layer_dependencies_are_respected` объявляет слоем каждый top-level
+  пакет, кроме `aop` (рёбра AspectJ-weaving), — сверено со списком каталогов. Карта — белый
+  список без обратных рёбер, поэтому направление зависимостей и ацикличность закреплены для всего
+  проекта, а не только для пакетов правила `acyclic_domains_stay_free_of_cycles`.
+- **Дыра.** Полнота держалась на соглашении: новый top-level пакет вне карты под правило не
+  попадал. Добавлено `ensureAllClassesAreContainedInArchitectureIgnoring(aop)`.
+- **Проверка сторожа мутацией.** Временный класс в новом пакете `zzprobe` валит
+  `layer_dependencies_are_respected` с указанием `zzprobe.Probe`; класс удалён, правило зелёное.
