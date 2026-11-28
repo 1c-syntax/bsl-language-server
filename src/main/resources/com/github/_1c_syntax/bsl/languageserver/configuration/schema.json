@@ -661,6 +661,33 @@
                     ],
                     "title": "Show injection points count and navigation above Autumn bean producers (OneScript).",
                     "$id": "#/definitions/codeLensParameters/beanUsages"
+                },
+                "runTest": {
+                    "default": true,
+                    "type": [
+                        "boolean",
+                        "object"
+                    ],
+                    "title": "Show \"Run test\" lens above test methods (OneScript, requires codeLens.testRunner).",
+                    "$id": "#/definitions/codeLensParameters/runTest"
+                },
+                "runAllTests": {
+                    "default": true,
+                    "type": [
+                        "boolean",
+                        "object"
+                    ],
+                    "title": "Show \"Run all tests\" lens above the first method of a test file (OneScript, requires codeLens.testRunner).",
+                    "$id": "#/definitions/codeLensParameters/runAllTests"
+                },
+                "debugTest": {
+                    "default": true,
+                    "type": [
+                        "boolean",
+                        "object"
+                    ],
+                    "title": "Show \"Debug test\" lens above test methods (OneScript, shown only when codeLens.testRunner.debugTestArguments is set).",
+                    "$id": "#/definitions/codeLensParameters/debugTest"
                 }
             }
         },

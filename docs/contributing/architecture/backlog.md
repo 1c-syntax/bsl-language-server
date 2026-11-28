@@ -86,9 +86,6 @@
 - **Нагрузки LSP**: `CompletionData` без `@JsonIgnoreProperties(ignoreUnknown)` и без адаптера URI
   (Gson шлёт percent-encoded); у нагрузок нет версии; `id` — производное от имени класса
   (`SupplierIds.of`), переименование класса молча меняет контракт.
-- **Схема настроек**: `codeLens.parameters` принимает `runTest`, `runAllTests`, `debugTest`, но в
-  `schema.json` и `ConfigurationFile.md` (обе локали) их нет; `ConfigurationSchemaDefaultsTest`
-  проверяет только направление «схема → код».
 - **MCP-инструменты**: разнобой имён параметров (`typeName`/`name`, `path`/`workspaceFolder`),
   счётчиков, формы ответа «не найдено» (исключение / `null` / пустой список); входные схемы не
   тестируются.
