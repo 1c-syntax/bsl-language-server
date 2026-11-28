@@ -124,6 +124,7 @@ public class FormatCommand implements Callable<Integer> {
     try (var ctx = WorkspaceContextHolder.forUri(srcDir.toUri())) {
       List<File> files = findFilesForFormatting(filePaths);
       if (files.isEmpty()) {
+        LOGGER.error("No BSL/OS files to format in `{}`", srcDirOption);
         return 1;
       }
 
