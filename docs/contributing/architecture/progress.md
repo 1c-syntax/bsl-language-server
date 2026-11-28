@@ -1547,3 +1547,7 @@
   ишью #5028 и #5029.
 - **Проверка.** `BuiltinResourceLoadersTest`, `types.registry`, `*KeywordMetadata*`,
   `*GlobalScope*` (82 класса, 755 тестов) зелёные; `javadoc`, `spotlessCheck` зелёные.
+
+## Контрольная точка: `./gradlew check javadoc` после раунда 97
+
+`BUILD SUCCESSFUL in 13m 43s`: 863 тестовых класса, 6030 тестов, падений нет.
