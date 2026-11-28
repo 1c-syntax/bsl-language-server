@@ -1157,6 +1157,28 @@ class SemanticTokensProviderTest {
   }
 
   @Test
+  void onlyRecentResultsOfDocumentAreKept() {
+    // given — по документу три полных запроса подряд (клиент без дельт)
+    DocumentContext documentContext = TestUtils.getDocumentContext("Перем А;\n");
+    referenceIndexFiller.fill(documentContext);
+    TextDocumentIdentifier textDocumentIdentifier = TestUtils.getTextDocumentIdentifier(documentContext.getUri());
+    var first = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
+    var second = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
+    var third = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
+
+    // when / then — хранятся два последних результата документа, а не по одному на запрос:
+    // от предпоследнего дельта ещё считается (клиент мог не получить отменённый ответ),
+    // от более старого — уже нет
+    assertThat(provider.getSemanticTokensFullDelta(documentContext,
+      new SemanticTokensDeltaParams(textDocumentIdentifier, first.getResultId())).isLeft()).isTrue();
+    var latest = provider.getSemanticTokensFull(documentContext, new SemanticTokensParams(textDocumentIdentifier));
+    assertThat(provider.getSemanticTokensFullDelta(documentContext,
+      new SemanticTokensDeltaParams(textDocumentIdentifier, latest.getResultId())).isRight()).isTrue();
+    assertThat(List.of(first.getResultId(), second.getResultId(), third.getResultId()))
+      .doesNotContain(latest.getResultId());
+  }
+
+  @Test
   void deltaWithUnknownPreviousResultId_returnsFullTokens() {
     // given
     String bsl = """
