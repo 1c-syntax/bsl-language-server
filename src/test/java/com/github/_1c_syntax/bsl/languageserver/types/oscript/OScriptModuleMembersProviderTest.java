@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.types.oscript;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ModuleSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
@@ -149,6 +150,30 @@ class OScriptModuleMembersProviderTest {
 
     // then — тип помечен обходимой коллекцией.
     verify(typeRegistry).setUserTypeIterable(ref, true, FileType.OS);
+  }
+
+  @Test
+  void removedPlainOsDocumentUnregistersItsType() {
+    // given — небиблиотечный .os зарегистрирован как тип по имени файла.
+    var uri = URI.create("file:///Удаляемый.os");
+    when(oScriptLibraryIndex.findEntriesByUri(uri)).thenReturn(List.of());
+    var documentContext = mock(DocumentContext.class);
+    when(documentContext.getFileType()).thenReturn(FileType.OS);
+    when(documentContext.getUri()).thenReturn(uri);
+    var symbolTree = mock(SymbolTree.class);
+    when(documentContext.getSymbolTree()).thenReturn(symbolTree);
+    when(documentContext.getSymbolTreeNoLock()).thenReturn(symbolTree);
+    when(symbolTree.getModule()).thenReturn(mock(ModuleSymbol.class));
+    when(typeRegistry.registerUserType(eq("Удаляемый"), any(), eq(FileType.OS)))
+      .thenReturn(new TypeRef(TypeKind.USER, "Удаляемый"));
+    provider.register(documentContext);
+
+    // when — документ удалён из рабочей области.
+    provider.handleDocumentRemoved(new ServerContextDocumentRemovedEvent(
+      mock(com.github._1c_syntax.bsl.languageserver.context.ServerContext.class), uri));
+
+    // then — тип снят с реестра.
+    verify(typeRegistry).unregisterUserType("Удаляемый");
   }
 
   @Test

@@ -753,3 +753,19 @@
   `AbstractDocumentLifecycleClearableIndex`, которая чистит и по ним).
 - **Проверка.** Красный `SymbolTypeIndexDeclaredTypesTest.removedDocumentLeavesNoRecords` (на
   заглушке обработчика) → зелёный; тесты `types.index` и `MethodReturnType*` зелёные.
+
+## Раунд 52. Типы удалённых `.os`-файлов оставались в реестре (дефект, утечка)
+
+- **Проблема.** `OScriptModuleMembersProvider` регистрирует каждый `.os`-документ типом и
+  держит источник членов — замыкание над `DocumentContext`. Снятие (`unregister`) вызывалось
+  только из `OScriptLibraryIndex.handleDocumentRemoved`, который для небиблиотечного файла
+  выходит сразу. Поэтому тип обычного удалённого `.os` оставался в реестре вместе с документом;
+  javadoc утверждал обратное. Хуже всего — `LambdaStringTokenizer`: на каждый запрос
+  семантических токенов он заводит временный документ `virtual-lambda-<UUID>.os`, и каждый
+  такой документ оставлял в реестре тип, а регистрация источника сбрасывала memo членов всех
+  типов.
+- **Сделано.** `OScriptModuleMembersProvider` сам слушает `ServerContextDocumentRemovedEvent` и
+  снимает свои регистрации — у них один владелец; явный вызов из `OScriptLibraryIndex` удалён,
+  javadoc `unregister` исправлен.
+- **Проверка.** Красный `OScriptModuleMembersProviderTest.removedPlainOsDocumentUnregistersItsType`
+  (на заглушке) → зелёный; тесты `types.oscript`, семантических токенов и `OScript*` (570) зелёные.

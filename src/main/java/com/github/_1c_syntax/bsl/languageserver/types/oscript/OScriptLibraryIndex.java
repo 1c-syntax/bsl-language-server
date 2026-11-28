@@ -177,7 +177,6 @@ public class OScriptLibraryIndex {
     for (var entry : entries) {
       entriesByName.remove(nameKey(entry.qualifiedName()));
     }
-    oScriptModuleMembersProvider.unregister(uri);
   }
 
   /** @return первая запись о .os-файле, если он зарегистрирован как библиотечный.

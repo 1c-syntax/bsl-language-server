@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.types.oscript;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
@@ -112,6 +113,18 @@ public class OScriptModuleMembersProvider {
     }
     register(documentContext);
     invalidateMembersOfDocumentAndSubtypes(documentContext);
+  }
+
+  /**
+   * Документ удалён из рабочей области — снять зарегистрированные по нему типы. Иначе тип
+   * удалённого {@code .os}-файла оставался бы в реестре вместе с источником членов, держащим
+   * сам документ.
+   *
+   * @param event событие удаления документа
+   */
+  @EventListener
+  public void handleDocumentRemoved(ServerContextDocumentRemovedEvent event) {
+    unregister(event.getUri());
   }
 
   /**
@@ -221,9 +234,10 @@ public class OScriptModuleMembersProvider {
   }
 
   /**
-   * Удалить ранее зарегистрированные типы/namespace по URI документа.
-   * Вызывается из {@link OScriptLibraryIndex#handleDocumentRemoved} и при
-   * удалении любого {@code .os}-документа из {@code ServerContext}.
+   * Удалить ранее зарегистрированные типы/namespace по URI документа. Повторный вызов по тому
+   * же URI ничего не делает.
+   *
+   * @param uri URI документа
    */
   public void unregister(URI uri) {
     globalScopeProvider.removeModuleType(uri);
