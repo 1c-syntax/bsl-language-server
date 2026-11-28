@@ -687,3 +687,21 @@
   `MemberAccessContexts` используют его.
 - **Проверка.** Поведение не меняется; тесты completion, `MemberAccess*`, `types.compilation`,
   `UnavailableMemberCall` и `ArchitectureTest` (687) зелёные; `javadoc`, `spotlessCheck` зелёные.
+
+## Итог третьего захода (раунды 32–48)
+
+- **Финальная сверка.** `./gradlew check javadoc` после раунда 48: 852 тестовых класса, 5959 тестов,
+  ни одного падения; javadoc и spotless зелёные (javadoc запущен явно — `check` его не включает).
+- **Исправленные дефекты** (с красным тестом до исправления): падение многоязычных диагностик на
+  настройке без `declaredLanguages` (раунд 38); битая ссылка javadoc после раунда 29 (раунд 43).
+- **Новые ограничения:** `DiagnosticTestLayoutTest` (у каждой диагностики свой тест),
+  `DiagnosticConfigurationContractTest` (каждая диагностика принимает настройку без параметров).
+- **Канонизация:** 20+ копий сведены к функциям `Trees`, `Ranges`, `Positions`, `Regions`,
+  `Modules`, `MethodSymbol`, `Reference`, `TypeService`, `HoverParameters`,
+  `SemanticTokensHelper`, `MemberMethodProfiles`, к базовым классам `AbstractComplexityDiagnostic`
+  и `AbstractTestMethodCodeLensSupplier`; удалены бин `SymbolDefinitionReferenceFactory` и
+  недостижимая ветка signature help.
+- **Остаток backlog** — решения мейнтейнера (контракты CLI и отчётов, ответ на запрос к
+  неизвестному документу, язык сообщений, политика ошибок `update`, статический анализ,
+  `Асинх`/`Ждать` в `CanonicalSpellingKeywords`, правки `CLAUDE.md`) и рассмотренные и
+  отклонённые с обоснованием варианты.
