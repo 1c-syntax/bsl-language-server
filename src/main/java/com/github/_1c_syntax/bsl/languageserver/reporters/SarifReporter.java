@@ -40,7 +40,6 @@ import com.contrastsecurity.sarif.ToolComponent;
 import tools.jackson.core.JsonGenerator;
 import tools.jackson.databind.SerializationFeature;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfos;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.info.DiagnosticInfo;
@@ -100,12 +99,11 @@ public class SarifReporter extends AbstractDiagnosticReporter {
   private SequenceWriter writer;
 
   public SarifReporter(
-    ServerContextProvider serverContextProvider,
     DiagnosticInfos diagnosticInfos,
     ServerInfo serverInfo,
     LanguageServerConfiguration configuration
   ) {
-    super(serverContextProvider, diagnosticInfos);
+    super(diagnosticInfos);
     this.serverInfo = serverInfo;
     this.configuration = configuration;
   }

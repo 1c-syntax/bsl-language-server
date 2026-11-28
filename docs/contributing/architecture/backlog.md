@@ -20,6 +20,7 @@
   вернуть исключение для явного `update`, оставив терпимость только загрузке при старте.
 - **Правки `CLAUDE.md`** по итогам раундов — по правилам репозитория только с согласия мейнтейнера:
   - `reporters/CLAUDE.md`: у `ReportContext` появилось поле `workspaceDir` (раунд 7);
+    `AbstractDiagnosticReporter` больше не даёт доступа к `ServerContextProvider` (раунд 26);
   - `configuration/CLAUDE.md`: порядок поиска файла конфигурации теперь живёт в
     `ConfigurationFiles` (раунд 1) — стоит сослаться на него; включение supplier'а проверяет не
     `XxxConfiguration.supplierIsEnabled(...)`, а `SupplierParameters.isEnabled` (раунд 15).
@@ -76,8 +77,3 @@
   `GlobalLanguageServerConfiguration.reset()` дублирует дефолты вручную.
 - **Дефолты опций в документации** (`ConfigurationFile.md`, обе локали) не сверяются
   автоматически; код ↔ схема сверяет `ConfigurationSchemaDefaultsTest` (раунд 17).
-
-## Мёртвый код (гипотезы, перепроверить вызывающих)
-
-- `FormatProvider.handleEvent(LanguageServerConfigurationChangedEvent)` — пустой слушатель.
-- `AbstractDiagnosticReporter.serverContextProvider` — не используется наследниками.

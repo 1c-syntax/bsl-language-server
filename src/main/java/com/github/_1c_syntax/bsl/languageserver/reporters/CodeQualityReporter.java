@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfos;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
@@ -42,8 +41,8 @@ public class CodeQualityReporter extends AbstractDiagnosticReporter {
   private ReportFile reportFile;
   private SequenceWriter writer;
 
-  public CodeQualityReporter(ServerContextProvider serverContextProvider, DiagnosticInfos diagnosticInfos) {
-    super(serverContextProvider, diagnosticInfos);
+  public CodeQualityReporter(DiagnosticInfos diagnosticInfos) {
+    super(diagnosticInfos);
   }
 
   @Override

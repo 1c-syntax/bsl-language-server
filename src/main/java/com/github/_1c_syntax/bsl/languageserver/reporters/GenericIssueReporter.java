@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfos;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
@@ -42,8 +41,8 @@ public class GenericIssueReporter extends AbstractDiagnosticReporter {
   private JsonGenerator generator;
   private SequenceWriter writer;
 
-  public GenericIssueReporter(ServerContextProvider serverContextProvider, DiagnosticInfos diagnosticInfos) {
-    super(serverContextProvider, diagnosticInfos);
+  public GenericIssueReporter(DiagnosticInfos diagnosticInfos) {
+    super(diagnosticInfos);
   }
 
   @Override

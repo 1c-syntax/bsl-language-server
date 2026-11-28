@@ -349,3 +349,16 @@
   политика, сужение её меняет поведение.
 - **Проверка.** Красный `DocumentContextTest.findAstIsPresentOnlyWhileDocumentHasContent` (на
   заглушке) → зелёный; тесты `references`, `types.inferencer`, `SignatureHelp*`.
+
+## Сверка: полный `check` после раундов 16–25
+
+- 840 тестовых классов, 5922 теста, ни одного падения; spotless, javadoc, jacoco — зелёные.
+
+## Раунд 26. Оставшийся мёртвый код
+
+- **Сделано.** Удалён пустой слушатель `FormatProvider.handleEvent(LanguageServerConfigurationChangedEvent)`
+  и поле `AbstractDiagnosticReporter.serverContextProvider`, которым не пользовался ни один
+  наследник (из конструкторов `CodeQuality`/`GenericIssue`/`Sarif`-репортёров убран лишний
+  параметр).
+- **Проверка.** Тесты `reporters`, `formatting`, `FormatProvider*`, `AnalyzeCommand*`,
+  `ArchitectureTest`.

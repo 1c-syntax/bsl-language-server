@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.formatting.BslFormatter;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -40,7 +39,6 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 import org.jspecify.annotations.Nullable;
-import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -349,11 +347,6 @@ public final class FormatProvider {
 
     return getTextEdits(
       tokens, documentContext.getScriptVariantLocale(), range, startCharacter, options);
-  }
-
-  @EventListener
-  public void handleEvent(LanguageServerConfigurationChangedEvent event) {
-    // No-op: per-workspace архитектура — конфигурация получается при каждом вызове
   }
 
   private static boolean betweenStartAndStopCharacters(int startCharacter, int endCharacter, int tokenCharacter) {
