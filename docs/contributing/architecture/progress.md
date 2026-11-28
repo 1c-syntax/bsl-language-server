@@ -1512,3 +1512,9 @@
   попадал. Добавлено `ensureAllClassesAreContainedInArchitectureIgnoring(aop)`.
 - **Проверка сторожа мутацией.** Временный класс в новом пакете `zzprobe` валит
   `layer_dependencies_are_respected` с указанием `zzprobe.Probe`; класс удалён, правило зелёное.
+
+## Контрольная точка: `./gradlew check javadoc` после раунда 95
+
+`BUILD SUCCESSFUL in 11m 23s`: 862 тестовых класса, 6023 теста, падений нет — включая новые
+правила `analysis_core_is_transport_agnostic`, полноту карты слоёв и `PackageDocumentationTest`.
+В бэклог внесено решение о сужении публичного интерфейса пакетов (внешний контракт библиотеки).
