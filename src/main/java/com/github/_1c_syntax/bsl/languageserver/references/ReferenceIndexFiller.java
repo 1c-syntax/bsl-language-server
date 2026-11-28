@@ -44,7 +44,6 @@ import com.github._1c_syntax.bsl.languageserver.context.Modules;
 import com.github._1c_syntax.bsl.languageserver.utils.NotifyDescription;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Strings;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseVisitor;
@@ -623,8 +622,6 @@ public class ReferenceIndexFiller {
 
     private final DocumentContext documentContext;
     private final BatchingSink sink;
-    @SuppressWarnings("NullAway.Init")
-    private @Nullable SourceDefinedSymbol currentScope;
     private final Map<String, String> variableToCommonModuleMap = new HashMap<>();
     /** variable name (lowercase) → URI .os-файла library-класса, на экземпляр которого переменная инициализирована. */
     private final Map<String, String> variableToLibraryClassUriMap = new HashMap<>();
@@ -637,7 +634,7 @@ public class ReferenceIndexFiller {
 
     @Override
     public ParserRuleContext visitModuleVarDeclaration(BSLParser.ModuleVarDeclarationContext ctx) {
-      findVariableSymbol(ctx.var_name().getText()).ifPresent(s -> {
+      findVariableSymbol(ctx, ctx.var_name().getText()).ifPresent(s -> {
         if (notVariableInitialization(ctx, s)) {
 
           addVariableUsage(
@@ -654,22 +651,10 @@ public class ReferenceIndexFiller {
 
     @Override
     public ParserRuleContext visitSub(BSLParser.SubContext ctx) {
-      currentScope = documentContext.getSymbolTree().getModule();
-
       // При входе в новый метод очищаем mappings только для локальных переменных.
       // Модульные переменные должны сохраняться между методами.
       clearLocalVariableMappings();
-
-      if (!Trees.nodeContainsErrors(ctx)) {
-        documentContext
-          .getSymbolTree()
-          .getMethodSymbol(ctx)
-          .ifPresent(scope -> currentScope = scope);
-      }
-
-      var result = super.visitSub(ctx);
-      currentScope = documentContext.getSymbolTree().getModule();
-      return result;
+      return super.visitSub(ctx);
     }
 
     /**
@@ -761,7 +746,7 @@ public class ReferenceIndexFiller {
         return super.visitLValue(ctx);
       }
 
-      findVariableSymbol(ctx.IDENTIFIER().getText()).ifPresent((VariableSymbol s) -> {
+      findVariableSymbol(ctx, ctx.IDENTIFIER().getText()).ifPresent((VariableSymbol s) -> {
         if (notVariableInitialization(ctx, s)) {
           addVariableUsage(
             s.getRootParent(MethodSymbol.class),
@@ -798,7 +783,7 @@ public class ReferenceIndexFiller {
         }
       }
 
-      findVariableSymbol(variableName)
+      findVariableSymbol(ctx, variableName)
         .ifPresent(s -> addVariableUsage(
             s.getRootParent(MethodSymbol.class), variableName, Ranges.create(ctx.IDENTIFIER()), true
           )
@@ -827,7 +812,7 @@ public class ReferenceIndexFiller {
         processLibraryClassMethodCalls(ctx.modifier(), libClassUri);
       }
 
-      findVariableSymbol(variableName)
+      findVariableSymbol(ctx, variableName)
         .ifPresent(s -> addVariableUsage(
             s.getRootParent(MethodSymbol.class), variableName, Ranges.create(ctx.IDENTIFIER()), true
           )
@@ -841,7 +826,7 @@ public class ReferenceIndexFiller {
         return super.visitForStatement(ctx);
       }
 
-      findVariableSymbol(ctx.IDENTIFIER().getText()).ifPresent((VariableSymbol s) -> {
+      findVariableSymbol(ctx, ctx.IDENTIFIER().getText()).ifPresent((VariableSymbol s) -> {
         if (notVariableInitialization(ctx, s)) {
           addVariableUsage(
             s.getRootParent(MethodSymbol.class),
@@ -861,7 +846,7 @@ public class ReferenceIndexFiller {
         return super.visitForEachStatement(ctx);
       }
 
-      findVariableSymbol(ctx.IDENTIFIER().getText()).ifPresent((VariableSymbol s) -> {
+      findVariableSymbol(ctx, ctx.IDENTIFIER().getText()).ifPresent((VariableSymbol s) -> {
         if (notVariableInitialization(ctx, s)) {
           addVariableUsage(
             s.getRootParent(MethodSymbol.class),
@@ -875,15 +860,10 @@ public class ReferenceIndexFiller {
       return super.visitForEachStatement(ctx);
     }
 
-    private Optional<VariableSymbol> findVariableSymbol(String variableName) {
-      var symbolTree = documentContext.getSymbolTree();
-      if (currentScope instanceof MethodSymbol method) {
-        var inMethod = symbolTree.getVariableSymbol(variableName, method);
-        // Из метода видны не все переменные модуля: созданная присваиванием в теле модуля
-        // живёт в нём одном.
-        return inMethod.isPresent() ? inMethod : symbolTree.getModuleVariableVisibleFromMethods(variableName);
-      }
-      return symbolTree.getVariableSymbol(variableName, symbolTree.getModule());
+    private Optional<VariableSymbol> findVariableSymbol(ParserRuleContext node, String variableName) {
+      // Правило видимости — то же, что у self-member поиска и остального кода: из метода видны
+      // его переменные и объявленные Перем переменные модуля
+      return documentContext.getSymbolTree().getVariableSymbolInScope(node, variableName);
     }
 
     private boolean notVariableInitialization(BSLParser.LValueContext ctx, VariableSymbol variableSymbol) {

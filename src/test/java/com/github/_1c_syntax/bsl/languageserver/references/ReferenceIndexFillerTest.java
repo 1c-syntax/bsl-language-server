@@ -300,6 +300,28 @@ class ReferenceIndexFillerTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void moduleBodyVariableIsNotReferencedFromMethodWithParseErrors() {
+    // given — переменная создана присваиванием в теле модуля; метод с ошибкой разбора
+    // обращается к одноимённому имени, которое из метода этой переменной не видно
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Тест()
+          Сообщить(Х);
+          А = ;
+      КонецПроцедуры
+      Х = 1;
+      """, context);
+    referenceIndexFiller.fill(documentContext);
+    var bodyVariable = documentContext.getSymbolTree()
+      .getVariableSymbol("Х", documentContext.getSymbolTree().getModule()).orElseThrow();
+
+    // when
+    var references = referenceIndex.getReferencesTo(bodyVariable);
+
+    // then — обращение из метода к переменной тела модуля не относится (как у getVariableSymbolInScope)
+    assertThat(references).noneMatch(ref -> ref.selectionRange().getStart().getLine() == 1);
+  }
+
+  @Test
   void testFindVariables() {
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/references/ReferenceIndexFillerVariableTest.bsl"
