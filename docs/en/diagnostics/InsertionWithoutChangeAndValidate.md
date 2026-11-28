@@ -1,7 +1,7 @@
 # Using #Insert without &ChangeAndValidate (InsertionWithoutChangeAndValidate)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Diagnostic description
+## Description
 
 The `#Insert` / `#EndInsert` directive is used inside a method (procedure or function) that is not annotated with `&ChangeAndValidate`. This causes a module compilation error.
 
