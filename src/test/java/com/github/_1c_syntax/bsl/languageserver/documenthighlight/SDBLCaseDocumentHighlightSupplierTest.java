@@ -83,6 +83,23 @@ class SDBLCaseDocumentHighlightSupplierTest {
     assertHighlightRange(highlights, 7, 8, 7, 13);    // ВЫБОР
   }
   @Test
+  void endKeywordWithCursorRightAfterItHighlightsTheCase() {
+    // given — курсор сразу за «КОНЕЦ» (строка 11, позиция 13), за концом выражения ВЫБОР
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var params = new DocumentHighlightParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(11, 13));
+
+    // when
+    var highlights = supplier.getDocumentHighlight(params, documentContext, Optional.empty());
+
+    // then
+    assertThat(highlights).hasSize(7);
+    assertHighlightRange(highlights, 7, 8, 7, 13);    // ВЫБОР
+    assertHighlightRange(highlights, 11, 8, 11, 13);  // КОНЕЦ
+  }
+
+  @Test
   void testWhenKeyword() {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
