@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
+import com.github._1c_syntax.bsl.languageserver.utils.bsl.Constructors;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -62,16 +63,12 @@ public class UsingObjectNotAvailableUnixDiagnostic extends AbstractVisitorDiagno
    */
   @Override
   public ParseTree visitNewExpression(BSLParser.NewExpressionContext ctx) {
-    var typeNameContext = ctx.typeName();
-    if (typeNameContext == null) {
-      return super.visitNewExpression(ctx);
-    }
-    var matcherTypeName = patternNewExpression.matcher(typeNameContext.getText());
-    // ищем условие выше, пока не дойдем до null
-
-    if (matcherTypeName.find() && !isFindIfBranchWithLinuxCondition(ctx)) {
-      diagnosticStorage.addDiagnostic(ctx, info.getMessage(typeNameContext.getText()));
-    }
+    // Имя типа — и у «Новый COMОбъект(…)», и у «Новый("COMОбъект", …)»
+    Constructors.typeName(ctx)
+      .filter(typeName -> patternNewExpression.matcher(typeName).find())
+      // ищем условие выше, пока не дойдем до null
+      .filter(typeName -> !isFindIfBranchWithLinuxCondition(ctx))
+      .ifPresent(typeName -> diagnosticStorage.addDiagnostic(ctx, info.getMessage(typeName)));
     return super.visitNewExpression(ctx);
   }
 

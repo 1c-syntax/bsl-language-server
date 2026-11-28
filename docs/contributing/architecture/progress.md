@@ -1626,3 +1626,15 @@
   шаблон статически неизвестен, проверки нет. Присваивания другим переменным по-прежнему пропускаются.
 - **Тесты.** `IncorrectUseOfStrTemplateDiagnosticTest.overwrittenConstantTemplateIsNotChecked`
   красный → зелёный; прежние срабатывания основной фикстуры сохранились.
+
+## Раунд 103. `UsingObjectNotAvailableUnix` — и конструктор с именем типа в аргументе
+
+Источник — углублённое сканирование `diagnostics/`.
+
+- **Дефект (пропуск).** Диагностика брала имя типа только из `Новый COMОбъект(…)` и пропускала
+  форму `Новый("COMОбъект", …)`: при пустом `typeName()` выходила сразу. Каноническое
+  `Constructors.typeName` разбирает обе формы, им пользуются `FileSystemAccess`, `InternetAccess`
+  и др.
+- **Сделано.** Имя типа — `Constructors.typeName`.
+- **Тесты.** `UsingObjectNotAvailableUnixDiagnosticTest.constructorWithTypeNameAsArgumentIsChecked`
+  красный → зелёный; прежние три срабатывания сохранились.
