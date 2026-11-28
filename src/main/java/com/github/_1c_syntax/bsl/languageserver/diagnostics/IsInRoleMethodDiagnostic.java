@@ -104,7 +104,7 @@ public class IsInRoleMethodDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private void handleIsInRoleGlobalMethod(BSLParser.GlobalMethodCallContext ctx) {
-    var rootParent = Trees.getRootParent(ctx, ROOT_PARENTS_FOR_GLOBAL_METHODS);
+    var rootParent = Trees.getAncestorByRuleIndex(ctx, ROOT_PARENTS_FOR_GLOBAL_METHODS);
     if (rootParent == null) {
       return;
     }
@@ -118,7 +118,7 @@ public class IsInRoleMethodDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private void handlePrivilegedModeGlobalMethod(BSLParser.GlobalMethodCallContext ctx) {
-    var assignmentNode = Trees.getRootParent(ctx, BSLParser.RULE_assignment);
+    var assignmentNode = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_assignment);
     if (assignmentNode != null) {
       addAssignedNameVar(assignmentNode, privilegedModeNameVars);
     }
@@ -141,7 +141,7 @@ public class IsInRoleMethodDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private boolean checkStatement(ParserRuleContext ctx) {
-    var parentExpression = Trees.getRootParent(ctx, BSLParser.RULE_expression);
+    var parentExpression = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_expression);
     return checkStatement(ctx, parentExpression);
   }
 

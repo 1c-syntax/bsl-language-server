@@ -122,7 +122,7 @@ public class ExpressionAtPosition {
     }
     return Trees.findTerminalNodeContainsPosition(ast, position)
       .map(terminal -> terminal.getParent() instanceof ParserRuleContext prc ? prc : null)
-      .map(rule -> Trees.getRootParent(rule, BSLParser.RULE_assignment))
+      .map(rule -> Trees.getAncestorByRuleIndex(rule, BSLParser.RULE_assignment))
       .filter(BSLParser.AssignmentContext.class::isInstance)
       .map(BSLParser.AssignmentContext.class::cast);
   }

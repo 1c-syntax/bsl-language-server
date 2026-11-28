@@ -135,3 +135,16 @@
 - **Проверка.** Красный `SymbolTreeTest.getMethodSymbolAtPositionFindsMethodThroughNestedSymbols`
   (на заглушке) → зелёный; тесты `context.symbol`, `types.compilation`, `CompletionProvider*`,
   `InsertionWithoutChangeAndValidateDiagnosticTest`.
+
+## Раунд 10. Одно имя для «ближайшего предка по правилу» в `Trees`
+
+- **Проблема.** `Trees.getRootParent(ctx, int)` и `Trees.getAncestorByRuleIndex(ctx, int)`
+  делегировали в один и тот же `org.antlr.v4.runtime.tree.Trees.getAncestor(ctx, int)` — по
+  байткоду форка ANTLR это **ближайший** строгий предок. Javadoc и имя `getRootParent` обещали
+  «самого верхнего»: два имени одной семантики, одно из них вводит в заблуждение (вызовов
+  23 и 34 соответственно). Перегрузка с `Collection<Integer>` вела себя так же.
+- **Сделано.** Каноническое имя — `getAncestorByRuleIndex` (для одного правила и для набора);
+  обе двухаргументные перегрузки `getRootParent` удалены, 22 вызова переведены. Однаргументный
+  `getRootParent(ctx)` действительно возвращает корень — оставлен, javadoc уточнён.
+- **Проверка.** Компиляция; тесты `utils`, `context`, `references`, `semantictokens` и всех
+  затронутых диагностик (103 тестовых класса).

@@ -105,7 +105,7 @@ public class CodeAfterAsyncCallDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private static boolean checkParentBlock(BSLParser.CodeBlockContext codeBlock) {
-    final var rootStatement = Trees.getRootParent(codeBlock, ROOT_INDEXES);
+    final var rootStatement = Trees.getAncestorByRuleIndex(codeBlock, ROOT_INDEXES);
     if (rootStatement != null && rootStatement.getRuleIndex() == RULE_statement) {
       return checkNextBlocks((BSLParser.StatementContext) rootStatement);
     }

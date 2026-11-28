@@ -170,7 +170,7 @@ public class IncorrectUseOfStrTemplateDiagnostic extends AbstractFindMethodDiagn
     }
     final var varName = identifier.getText();
 
-    var prevStatement = (BSLParser.StatementContext) Objects.requireNonNull(Trees.getRootParent(complexIdentifier,
+    var prevStatement = (BSLParser.StatementContext) Objects.requireNonNull(Trees.getAncestorByRuleIndex(complexIdentifier,
       BSLParser.RULE_statement));
     while (true) {
       prevStatement = (BSLParser.StatementContext) getPreviousNode(Objects.requireNonNull(prevStatement), 

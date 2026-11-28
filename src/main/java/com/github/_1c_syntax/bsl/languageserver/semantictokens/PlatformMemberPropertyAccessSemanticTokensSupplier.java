@@ -126,7 +126,7 @@ public class PlatformMemberPropertyAccessSemanticTokensSupplier
    * Пусто, если цепочка начинается не с идентификатора (конструктор {@code Новый ...} и т.п.).
    */
   private static Optional<String> chainBaseName(BSLParser.AccessPropertyContext accessProperty) {
-    var root = Trees.getRootParent(accessProperty, CHAIN_ROOTS);
+    var root = Trees.getAncestorByRuleIndex(accessProperty, CHAIN_ROOTS);
     TerminalNode base = null;
     if (root instanceof BSLParser.ComplexIdentifierContext complexId) {
       base = complexId.IDENTIFIER();

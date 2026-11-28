@@ -123,13 +123,29 @@ public final class Trees {
   }
 
   /**
-   * Ищем предка элемента по указанному типу BSLParser
-   * Пример:
-   * ParserRuleContext parent = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_statement);
+   * Ближайший предок узла с указанным правилом; сам узел не рассматривается.
+   * Пример: {@code Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_statement)}.
+   *
+   * @param element узел, от которого идёт подъём по родителям
+   * @param type    индекс правила ({@code BSLParser.RULE_*} или {@code SDBLParser.RULE_*})
+   * @param <T>     тип контекста искомого правила
+   * @return ближайший предок с правилом {@code type}; {@code null}, если такого нет
    */
   @Nullable
   public static <T extends ParserRuleContext> T getAncestorByRuleIndex(ParserRuleContext element, int type) {
     return org.antlr.v4.runtime.tree.Trees.getAncestor(element, type);
+  }
+
+  /**
+   * Ближайший предок узла с одним из указанных правил; сам узел не рассматривается.
+   *
+   * @param element узел, от которого идёт подъём по родителям
+   * @param types   индексы правил ({@code BSLParser.RULE_*} или {@code SDBLParser.RULE_*})
+   * @return ближайший предок с одним из правил {@code types}; {@code null}, если такого нет
+   */
+  @Nullable
+  public static ParserRuleContext getAncestorByRuleIndex(ParserRuleContext element, Collection<Integer> types) {
+    return org.antlr.v4.runtime.tree.Trees.getAncestor(element, types);
   }
 
   /**
@@ -194,35 +210,15 @@ public final class Trees {
   }
 
   /**
-   * Рекурсивно находит самого верхнего родителя текущей ноды
+   * Корень дерева разбора, которому принадлежит узел.
+   *
+   * @param tnc узел дерева разбора
+   * @return самый верхний предок; сам узел, если родителя у него нет
    */
   public static ParserRuleContext getRootParent(ParserRuleContext tnc) {
     return org.antlr.v4.runtime.tree.Trees.getAncestor(tnc);
   }
 
-  /**
-   * Рекурсивно находит самого верхнего родителя текущей ноды нужного типа
-   *
-   * @param tnc       - нода, для которой ищем родителя
-   * @param ruleindex - BSLParser.RULE_*
-   * @return tnc - если родитель не найден, вернет null
-   */
-  @Nullable
-  public static ParserRuleContext getRootParent(ParserRuleContext tnc, int ruleindex) {
-    return org.antlr.v4.runtime.tree.Trees.getAncestor(tnc, ruleindex);
-  }
-
-  /**
-   * Рекурсивно находит самого верхнего родителя текущей ноды одного из нужных типов
-   *
-   * @param tnc     - нода, для которой ищем родителя
-   * @param indexes - Collection of BSLParser.RULE_*
-   * @return tnc - если родитель не найден, вернет null
-   */
-  @Nullable
-  public static ParserRuleContext getRootParent(ParserRuleContext tnc, Collection<Integer> indexes) {
-    return org.antlr.v4.runtime.tree.Trees.getAncestor(tnc, indexes);
-  }
 
   /**
    * Получает детей с нужными типами

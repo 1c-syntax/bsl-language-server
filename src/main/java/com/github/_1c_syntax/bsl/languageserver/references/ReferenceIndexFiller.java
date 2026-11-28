@@ -814,7 +814,7 @@ public class ReferenceIndexFiller {
       var variableKey = variableName.toLowerCase(Locale.ENGLISH);
 
       // Check if we are inside a callStatement - if so, skip processing here to avoid duplication
-      var parentCallStatement = Trees.getRootParent(ctx, BSLParser.RULE_callStatement);
+      var parentCallStatement = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_callStatement);
       var isInsideCallStatement = false;
       if (parentCallStatement instanceof BSLParser.CallStatementContext callStmt) {
         isInsideCallStatement = callStmt.IDENTIFIER() != null

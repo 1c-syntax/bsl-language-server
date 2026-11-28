@@ -36,9 +36,6 @@
 
 ## Дублирование реализаций (канонизация)
 
-- **Метод, содержащий позицию** — 5 копий (`ExpressionTypeInferencer`, `CompletionProvider`,
-  `CompilationContextMemo`, `CompilationContextResolver`, `InsertionWithoutChangeAndValidateDiagnostic`);
-  естественный дом — `SymbolTree`.
 - **Сравнение токена/позиции с `Position`** — 5 копий; `RewriteMethodParameterDiagnostic.compare`
   — дословная копия `Ranges.compare`.
 - **Ручное построение `Position` из токена** вместо `Positions.create` — 6 мест, 2 обёртки.
