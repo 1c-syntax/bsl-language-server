@@ -56,6 +56,62 @@ class TreesTest {
   }
 
   @Test
+  void groupsOfEqualNodesCollectsFirstOccurrenceWithLaterDuplicates() {
+    // given — условия веток: А, Б, а (равно А без учёта регистра), В, Б
+    var tree = parse("""
+      Если А Тогда
+      ИначеЕсли Б Тогда
+      ИначеЕсли а Тогда
+      ИначеЕсли В Тогда
+      ИначеЕсли Б Тогда
+      КонецЕсли;""");
+    var ifStatement = (BSLParser.IfStatementContext) Trees.findAllRuleNodes(tree, BSLParser.RULE_ifStatement)
+      .iterator().next();
+    var conditions = new java.util.ArrayList<BSLParser.ExpressionContext>();
+    conditions.add(ifStatement.ifBranch().expression());
+    ifStatement.elsifBranch().forEach(branch -> conditions.add(branch.expression()));
+
+    // when
+    var groups = Trees.groupsOfEqualNodes(conditions, (first, candidate) -> true);
+
+    // then
+    assertThat(groups).isEqualTo(List.of(
+      List.of(conditions.get(0), conditions.get(2)),
+      List.of(conditions.get(1), conditions.get(4))
+    ));
+  }
+
+  @Test
+  void groupsOfEqualNodesSkipsPairsRejectedByFilter() {
+    var tree = parse("""
+      Если А Тогда
+      ИначеЕсли А Тогда
+      ИначеЕсли А Тогда
+      КонецЕсли;""");
+    var ifStatement = (BSLParser.IfStatementContext) Trees.findAllRuleNodes(tree, BSLParser.RULE_ifStatement)
+      .iterator().next();
+    var conditions = new java.util.ArrayList<BSLParser.ExpressionContext>();
+    conditions.add(ifStatement.ifBranch().expression());
+    ifStatement.elsifBranch().forEach(branch -> conditions.add(branch.expression()));
+    var second = conditions.get(1);
+
+    // фильтр не пускает второе условие кандидатом: в группу первого оно не входит и потому
+    // начинает свою — с третьим, хоть тот уже повтор первого
+    var groups = Trees.groupsOfEqualNodes(conditions, (first, candidate) -> candidate != second);
+
+    assertThat(groups).isEqualTo(List.of(
+      List.of(conditions.get(0), conditions.get(2)),
+      List.of(conditions.get(1), conditions.get(2))
+    ));
+  }
+
+  private static ParseTree parse(String input) {
+    var lexer = new BSLLexer(CharStreams.fromString(input));
+    var parser = new BSLParser(new IncrementalTokenStream(lexer));
+    return parser.file();
+  }
+
+  @Test
   void testGetTokensWithNullTree() {
     // when
     var tokens = Trees.getTokens(null);

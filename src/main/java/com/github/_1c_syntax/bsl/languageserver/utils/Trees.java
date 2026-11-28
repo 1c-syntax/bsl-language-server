@@ -35,9 +35,11 @@ import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiPredicate;
 
 /**
  * Утилитный класс для работы с синтаксическими деревьями ANTLR.
@@ -449,6 +451,45 @@ public final class Trees {
     var tokenRange = Ranges.create(token);
     var start = tokenRange.getStart();
     return Positions.isBefore(start, position) || start.equals(position);
+  }
+
+  /**
+   * Группы равных по {@link #equalNodes} узлов списка.
+   * <p>
+   * Группа — первое вхождение узла и все равные ему узлы после него, в порядке списка; узел,
+   * уже попавший в группу повтором, новой группы не начинает. Узлы без повторов в результат
+   * не попадают.
+   *
+   * @param nodes      узлы в порядке следования
+   * @param comparable какие пары (первое вхождение, кандидат) вообще сравнивать
+   * @param <T>        тип узла
+   * @return группы из двух и более узлов, первым — первое вхождение
+   */
+  public static <T extends Tree> List<List<T>> groupsOfEqualNodes(
+    List<T> nodes,
+    BiPredicate<? super T, ? super T> comparable
+  ) {
+    var groups = new ArrayList<List<T>>();
+    Set<T> duplicates = Collections.newSetFromMap(new IdentityHashMap<>());
+    for (var i = 0; i < nodes.size() - 1; i++) {
+      var first = nodes.get(i);
+      if (duplicates.contains(first)) {
+        continue;
+      }
+      var group = new ArrayList<T>();
+      group.add(first);
+      for (var j = i + 1; j < nodes.size(); j++) {
+        var candidate = nodes.get(j);
+        if (candidate != first && comparable.test(first, candidate) && equalNodes(first, candidate)) {
+          group.add(candidate);
+          duplicates.add(candidate);
+        }
+      }
+      if (group.size() > 1) {
+        groups.add(group);
+      }
+    }
+    return groups;
   }
 
   /**

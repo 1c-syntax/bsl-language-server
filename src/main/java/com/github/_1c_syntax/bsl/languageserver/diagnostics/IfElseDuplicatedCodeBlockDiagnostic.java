@@ -31,12 +31,9 @@ import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import jakarta.annotation.PostConstruct;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.eclipse.lsp4j.DiagnosticRelatedInformation;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -55,7 +52,6 @@ import java.util.stream.Collectors;
 public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
 
   private String relatedMessage;
-  private final Set<BSLParser.CodeBlockContext> checkedBlocks = new HashSet<>();
 
   @PostConstruct
   public void init() {
@@ -64,7 +60,6 @@ public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnost
 
   @Override
   public ParseTree visitIfStatement(BSLParser.IfStatementContext ctx) {
-    checkedBlocks.clear();
     List<BSLParser.CodeBlockContext> codeBlocks = new ArrayList<>();
 
     codeBlocks.add(ctx.ifBranch().codeBlock());
@@ -79,53 +74,23 @@ public class IfElseDuplicatedCodeBlockDiagnostic extends AbstractVisitorDiagnost
       codeBlocks.add(elseBranch.codeBlock());
     }
 
-    findDuplicatedCodeBlock(codeBlocks);
+    // два пустых блока одинаковы, но повтором кода не считаются
+    Trees.groupsOfEqualNodes(codeBlocks, (first, candidate) ->
+        !(first.getChildren().isEmpty() && candidate.getChildren().isEmpty()))
+      .forEach(this::addDiagnostic);
     return super.visitIfStatement(ctx);
   }
 
-  private void findDuplicatedCodeBlock(List<BSLParser.CodeBlockContext> codeBlockContexts) {
-    for (int i = 0; i < codeBlockContexts.size() - 1; i++) {
-      if (!checkedBlocks.contains(codeBlockContexts.get(i))) {
-        checkCodeBlock(codeBlockContexts, i);
-      }
-    }
-  }
-
-  private void checkCodeBlock(List<BSLParser.CodeBlockContext> codeBlockContexts, int i) {
-    var currentCodeBlock = codeBlockContexts.get(i);
-
-    var identicalCodeBlocks = codeBlockContexts.stream()
-      .skip(i)
-      .filter(codeBlockContext ->
-        !codeBlockContext.equals(currentCodeBlock)
-          && !(currentCodeBlock.getChildren().isEmpty() && codeBlockContext.getChildren().isEmpty())
-          && Trees.equalNodes(currentCodeBlock, codeBlockContext))
+  private void addDiagnostic(List<BSLParser.CodeBlockContext> identicalCodeBlocks) {
+    var relatedInformation = identicalCodeBlocks.stream()
+      .map(codeBlockContext -> RelatedInformation.create(
+        documentContext.getUri(),
+        Ranges.create(codeBlockContext),
+        relatedMessage
+      ))
       .toList();
 
-    if (identicalCodeBlocks.isEmpty()) {
-      return;
-    }
-
-    identicalCodeBlocks.stream().collect(Collectors.toCollection(() -> checkedBlocks));
-    List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
-
-    relatedInformation.add(RelatedInformation.create(
-      documentContext.getUri(),
-      Ranges.create(currentCodeBlock),
-      relatedMessage
-    ));
-
-    identicalCodeBlocks.stream()
-      .map(codeBlockContext ->
-        RelatedInformation.create(
-          documentContext.getUri(),
-          Ranges.create(codeBlockContext),
-          relatedMessage
-        )
-      )
-      .collect(Collectors.toCollection(() -> relatedInformation));
-
-    diagnosticStorage.addDiagnostic(currentCodeBlock, relatedInformation);
+    diagnosticStorage.addDiagnostic(identicalCodeBlocks.getFirst(), relatedInformation);
   }
 
 }
