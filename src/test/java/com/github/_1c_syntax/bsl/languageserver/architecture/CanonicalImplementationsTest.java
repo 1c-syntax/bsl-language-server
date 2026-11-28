@@ -101,7 +101,10 @@ class CanonicalImplementationsTest {
       new Case("CollectionReturnsSpecializer.registerCollection",
         Pattern.compile(
           "registerDefaultElementTypes\\([^;]*;\\s*\\w+\\.inheritCollectionTraits\\([^;]*;[^}]*CollectionReturnsSpecializer\\.register\\("),
-        Set.of("types/registry/CollectionReturnsSpecializer.java"))
+        Set.of("types/registry/CollectionReturnsSpecializer.java")),
+      new Case("SynchronousMethod",
+        Pattern.compile("(?iu)НачатьПомещениеФайла"),
+        Set.of("diagnostics/SynchronousMethod.java"))
     );
   }
 

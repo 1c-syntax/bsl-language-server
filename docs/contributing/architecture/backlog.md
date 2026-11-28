@@ -6,6 +6,14 @@
 
 ## Ожидают подтверждения (продуктовое решение или ломающее изменение)
 
+- **Модуль формы без метаданных — решение мейнтейнера** (проверено, раунд 106).
+  `CompilationDirectiveLost`/`CompilationDirectiveNotAllowed` и `ModuleCompilationContexts.usesFormDirectives`
+  считают такой модуль управляемой формой и проверяют, `ServerSideExportFormMethod` и
+  `UnusedLocalMethod` — пропускают. Оба поведения закреплены тестами
+  (`CompilationDirectiveLostDiagnosticTest.test`, `ServerSideExportFormMethodDiagnosticTest.testWithoutMock`).
+  У `UnusedLocalMethod` пропуск обоснован (без формы не известны обработчики); для
+  `ServerSideExportFormMethod` выравнивание дало бы новые срабатывания. `FormType.UNKNOWN`
+  практически недостижим (mdclasses по умолчанию ставит `MANAGED`).
 - **CLI: устаревший ключ `--srcDir` у `format`** (`cli/FormatCommand.java`, `TODO delete old key`).
   Удаление ломает скрипты пользователей. У `analyze` основным ключом остаётся `--srcDir`, так что
   «старый» он только для `format` — нужно решить, какой ключ каноничен для обеих команд.
@@ -156,6 +164,28 @@
   и кодировка `cp866` зашиты (выбор исполняемого файла сведён к опциям — раунд 55).
 
 ## Дублирование реализаций (канонизация)
+
+- **Углублённое сканирование `diagnostics/`, `hover/`, `mcp/`, `providers/`, `configuration/`
+  (после раунда 97).** Закрыто: раунды 98–105. Не проверено построчно, к разбору (по убыванию
+  ценности):
+  1. ~~Проверка «модуль управляемой формы»~~ — проверено, раунд 106: расхождение «нет метаданных»
+     закреплено тестами, вынесено в «Ожидают подтверждения»; `UNKNOWN` практически недостижим.
+  2. Каркас quick fix — около 15 копий; часть заявляет в `CodeAction.diagnostics` замечания,
+     которые не исправляет.
+  3. ~~Таблица синхронных и асинхронных методов~~ — закрыто, раунд 106 (`SynchronousMethod`).
+  4. «Объемлющий метод» — четыре копии (`DataExchangeLoading`, `FormDataToValue`,
+     `FunctionReturnsSamePrimitive`, `WrongUseFunctionProceedWithCall`).
+  5. Классификация глобального значения «перечисление или свойство» — четыре копии с двумя
+     правилами (`CompletionProvider`, `GlobalScopeSemanticTokensSupplier`, `GlobalMemberSearchTool`,
+     `GlobalMemberInfoTool`); там же ручной обход цепочки в `GlobalScopeSemanticTokensSupplier`.
+  6. Выбор сигнатуры — `PlatformMemberHoverBuilder` и `PlatformMethodCallInlayHintCollector`;
+     обозначение вариативных параметров (`...`) в hover — непоследовательно.
+  7. **Рассмотрено и отклонено (раунд 106):** `Timeouts`, `HardcodeSecret` берут имя типа мимо
+     `Constructors.typeName` — у `Новый("Тип", Параметры)` аргументы лежат массивом, позиционная
+     проверка к ним неприменима, пропуск формы верен.
+  8. Проверка обработчиков подписок на события и регламентных заданий — дублируется.
+  9. Мелочь: охрана `update(File)` конфигурации, регистрация наблюдателей файлов, список DTO папок
+     в инструментах `list_`/`unregister_workspace_folder`.
 
 - **Углублённое сканирование `types/` и мелких пакетов (после раунда 76).** Закрыто: повторная
   специализация семейства (77), английский вид в `См.` (78); «вложенная подсветка SDBL» проверена —

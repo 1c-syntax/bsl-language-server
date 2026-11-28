@@ -29,13 +29,11 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 import static com.github._1c_syntax.bsl.parser.BSLParser.RULE_codeBlock;
 import static com.github._1c_syntax.bsl.parser.BSLParser.RULE_statement;
@@ -57,25 +55,6 @@ import static com.github._1c_syntax.bsl.parser.BSLParser.RULE_subCodeBlock;
   }
 )
 public class CodeAfterAsyncCallDiagnostic extends AbstractVisitorDiagnostic {
-  private static final Pattern ASYNC_METHODS = CaseInsensitivePattern.compile(
-    "ПОКАЗАТЬВОПРОС|SHOWQUERYBOX|ПОКАЗАТЬЗНАЧЕНИЕ|SHOWVALUE" +
-      "|ПОКАЗАТЬПРЕДУПРЕЖДЕНИЕ|SHOWMESSAGEBOX|ПОКАЗАТЬВВОДДАТЫ|SHOWINPUTDATE|ПОКАЗАТЬВВОДЗНАЧЕНИЯ|SHOWINPUTVALUE" +
-      "|ПОКАЗАТЬВВОДСТРОКИ|SHOWINPUTSTRING|ПОКАЗАТЬВВОДЧИСЛА|SHOWINPUTNUMBER" +
-      "|НАЧАТЬУСТАНОВКУВНЕШНЕЙКОМПОНЕНТЫ|BEGININSTALLADDIN" +
-      "|НАЧАТЬУСТАНОВКУРАСШИРЕНИЯРАБОТЫСФАЙЛАМИ|BEGININSTALLFILESYSTEMEXTENSION" +
-      "|НАЧАТЬУСТАНОВКУРАСШИРЕНИЯРАБОТЫСКРИПТОГРАФИЕЙ|BEGININSTALLCRYPTOEXTENSION" +
-      "|НАЧАТЬПОДКЛЮЧЕНИЕРАСШИРЕНИЯРАБОТЫСКРИПТОГРАФИЕЙ|BEGINATTACHINGCRYPTOEXTENSION" +
-      "|НАЧАТЬПОДКЛЮЧЕНИЕРАСШИРЕНИЯРАБОТЫСФАЙЛАМИ|BEGINATTACHINGFILESYSTEMEXTENSION" +
-      "|НАЧАТЬПОМЕЩЕНИЕФАЙЛА|BEGINPUTFILE|НАЧАТЬКОПИРОВАНИЕФАЙЛА|BEGINCOPYINGFILE" +
-      "|НАЧАТЬПЕРЕМЕЩЕНИЕФАЙЛА|BEGINMOVINGFILE|НАЧАТЬПОИСКФАЙЛОВ|BEGINFINDINGFILES" +
-      "|НАЧАТЬУДАЛЕНИЕФАЙЛОВ|BEGINDELETINGFILES" +
-      "|НАЧАТЬСОЗДАНИЕКАТАЛОГА|BEGINCREATINGDIRECTORY|НАЧАТЬПОЛУЧЕНИЕКАТАЛОГАВРЕМЕННЫХФАЙЛОВ|BEGINGETTINGTEMPFILESDIR" +
-      "|НАЧАТЬПОЛУЧЕНИЕКАТАЛОГАДОКУМЕНТОВ|BEGINGETTINGDOCUMENTSDIR" +
-      "|НАЧАТЬПОЛУЧЕНИЕРАБОЧЕГОКАТАЛОГАДАННЫХПОЛЬЗОВАТЕЛЯ|BEGINGETTINGUSERDATAWORKDIR" +
-      "|НАЧАТЬПОЛУЧЕНИЕФАЙЛОВ|BEGINGETTINGFILES|НАЧАТЬПОМЕЩЕНИЕФАЙЛОВ|BEGINPUTTINGFILES" +
-      "|НАЧАТЬЗАПРОСРАЗРЕШЕНИЯПОЛЬЗОВАТЕЛЯ|BEGINREQUESTINGUSERPERMISSION" +
-      "|НАЧАТЬЗАПУСКПРИЛОЖЕНИЯ|BEGINRUNNINGAPPLICATION");
-
   private static final List<Integer> ROOT_INDEXES = Arrays.asList(RULE_statement, RULE_subCodeBlock);
   private Optional<BSLParser.CodeBlockContext> subCodeBlockContext = Optional.empty();
 
@@ -129,7 +108,7 @@ public class CodeAfterAsyncCallDiagnostic extends AbstractVisitorDiagnostic {
     var nonFileCodeBlock = subCodeBlockContext.isPresent();
     if (nonFileCodeBlock) {
       var methodName = ctx.methodName().getText();
-      if (ASYNC_METHODS.matcher(methodName).matches()) {
+      if (SynchronousMethod.isCallbackAnalog(methodName)) {
 
         final var statement = (BSLParser.StatementContext) Trees.getAncestorByRuleIndex(ctx, RULE_statement);
         if (statement != null && checkNextBlocks(statement)) {

@@ -33,14 +33,10 @@ import com.github._1c_syntax.bsl.mdclasses.Configuration;
 import com.github._1c_syntax.bsl.mdo.CommonModule;
 import com.github._1c_syntax.bsl.mdo.support.UseMode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 
 import java.util.EnumSet;
-import java.util.HashMap;
-import java.util.Locale;
 import java.util.Set;
-import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -53,79 +49,8 @@ import java.util.regex.Pattern;
   compatibilityMode = DiagnosticCompatibilityMode.COMPATIBILITY_MODE_8_3_3
 )
 public class UsingSynchronousCallsDiagnostic extends AbstractVisitorDiagnostic {
-  private static final Pattern MODALITY_METHODS = CaseInsensitivePattern.compile(
-    "(ВОПРОС|DOQUERYBOX|ОТКРЫТЬФОРМУМОДАЛЬНО|OPENFORMMODAL|ОТКРЫТЬЗНАЧЕНИЕ|OPENVALUE|" +
-      "ПРЕДУПРЕЖДЕНИЕ|DOMESSAGEBOX|ВВЕСТИДАТУ|INPUTDATE|ВВЕСТИЗНАЧЕНИЕ|INPUTVALUE|" +
-      "ВВЕСТИСТРОКУ|INPUTSTRING|ВВЕСТИЧИСЛО|INPUTNUMBER|УСТАНОВИТЬВНЕШНЮЮКОМПОНЕНТУ|INSTALLADDIN|" +
-      "УСТАНОВИТЬРАСШИРЕНИЕРАБОТЫСФАЙЛАМИ|INSTALLFILESYSTEMEXTENSION|" +
-      "УСТАНОВИТЬРАСШИРЕНИЕРАБОТЫСКРИПТОГРАФИЕЙ|INSTALLCRYPTOEXTENSION|" +
-      "ПОДКЛЮЧИТЬРАСШИРЕНИЕРАБОТЫСКРИПТОГРАФИЕЙ|ATTACHCRYPTOEXTENSION|" +
-      "ПОДКЛЮЧИТЬРАСШИРЕНИЕРАБОТЫСФАЙЛАМИ|ATTACHFILESYSTEMEXTENSION|ПОМЕСТИТЬФАЙЛ|PUTFILE|" +
-      "КОПИРОВАТЬФАЙЛ|FILECOPY|ПЕРЕМЕСТИТЬФАЙЛ|MOVEFILE|НАЙТИФАЙЛЫ|FINDFILES|УДАЛИТЬФАЙЛЫ|DELETEFILES|" +
-      "СОЗДАТЬКАТАЛОГ|CREATEDIRECTORY|КАТАЛОГВРЕМЕННЫХФАЙЛОВ|TEMPFILESDIR|КАТАЛОГДОКУМЕНТОВ|DOCUMENTSDIR|" +
-      "РАБОЧИЙКАТАЛОГДАННЫХПОЛЬЗОВАТЕЛЯ|USERDATAWORKDIR|ПОЛУЧИТЬФАЙЛЫ|GETFILES|ПОМЕСТИТЬФАЙЛЫ|PUTFILES|" +
-      "ЗАПРОСИТЬРАЗРЕШЕНИЕПОЛЬЗОВАТЕЛЯ|REQUESTUSERPERMISSION|ЗАПУСТИТЬПРИЛОЖЕНИЕ|RUNAPP)"
-  );
-
   private static final Set<CompilerDirectiveKind> serverCompilerDirectives =
     EnumSet.of(CompilerDirectiveKind.AT_SERVER, CompilerDirectiveKind.AT_SERVER_NO_CONTEXT);
-
-  private final HashMap<String, String> pairMethods = new HashMap<>();
-
-  public UsingSynchronousCallsDiagnostic() {
-    pairMethods.put("ВОПРОС", "ПоказатьВопрос");
-    pairMethods.put("DOQUERYBOX", "ShowQueryBox");
-    pairMethods.put("ОТКРЫТЬФОРМУМОДАЛЬНО", "ОткрытьФорму");
-    pairMethods.put("OPENFORMMODAL", "OpenForm");
-    pairMethods.put("ОТКРЫТЬЗНАЧЕНИЕ", "ПоказатьЗначение");
-    pairMethods.put("OPENVALUE", "ShowValue");
-    pairMethods.put("ПРЕДУПРЕЖДЕНИЕ", "ПоказатьПредупреждение");
-    pairMethods.put("DOMESSAGEBOX", "ShowMessageBox");
-    pairMethods.put("ВВЕСТИДАТУ", "ПоказатьВводДаты");
-    pairMethods.put("INPUTDATE", "ShowInputDate");
-    pairMethods.put("ВВЕСТИЗНАЧЕНИЕ", "ПоказатьВводЗначения");
-    pairMethods.put("INPUTVALUE", "ShowInputValue");
-    pairMethods.put("ВВЕСТИСТРОКУ", "ПоказатьВводСтроки");
-    pairMethods.put("INPUTSTRING", "ShowInputString");
-    pairMethods.put("ВВЕСТИЧИСЛО", "ПоказатьВводЧисла");
-    pairMethods.put("INPUTNUMBER", "ShowInputNumber");
-    pairMethods.put("УСТАНОВИТЬВНЕШНЮЮКОМПОНЕНТУ", "НачатьУстановкуВнешнейКомпоненты");
-    pairMethods.put("INSTALLADDIN", "BeginInstallAddIn");
-    pairMethods.put("УСТАНОВИТЬРАСШИРЕНИЕРАБОТЫСФАЙЛАМИ", "НачатьУстановкуРасширенияРаботыСФайлами");
-    pairMethods.put("INSTALLFILESYSTEMEXTENSION", "BeginInstallFileSystemExtension");
-    pairMethods.put("УСТАНОВИТЬРАСШИРЕНИЕРАБОТЫСКРИПТОГРАФИЕЙ", "НачатьУстановкуРасширенияРаботыСКриптографией");
-    pairMethods.put("INSTALLCRYPTOEXTENSION", "BeginInstallCryptoExtension");
-    pairMethods.put("ПОДКЛЮЧИТЬРАСШИРЕНИЕРАБОТЫСКРИПТОГРАФИЕЙ", "НачатьПодключениеРасширенияРаботыСКриптографией");
-    pairMethods.put("ATTACHCRYPTOEXTENSION", "BeginAttachingCryptoExtension");
-    pairMethods.put("ПОДКЛЮЧИТЬРАСШИРЕНИЕРАБОТЫСФАЙЛАМИ", "НачатьПодключениеРасширенияРаботыСФайлами");
-    pairMethods.put("ATTACHFILESYSTEMEXTENSION", "BeginAttachingFileSystemExtension");
-    pairMethods.put("ПОМЕСТИТЬФАЙЛ", "НачатьПомещениеФайла");
-    pairMethods.put("PUTFILE", "BeginPutFile");
-    pairMethods.put("КОПИРОВАТЬФАЙЛ", "НачатьКопированиеФайла");
-    pairMethods.put("FILECOPY", "BeginCopyingFile");
-    pairMethods.put("ПЕРЕМЕСТИТЬФАЙЛ", "НачатьПеремещениеФайла");
-    pairMethods.put("MOVEFILE", "BeginMovingFile");
-    pairMethods.put("НАЙТИФАЙЛЫ", "НачатьПоискФайлов");
-    pairMethods.put("FINDFILES", "BeginFindingFiles");
-    pairMethods.put("УДАЛИТЬФАЙЛЫ", "НачатьУдалениеФайлов");
-    pairMethods.put("DELETEFILES", "BeginDeletingFiles");
-    pairMethods.put("СОЗДАТЬКАТАЛОГ", "НачатьСозданиеКаталога");
-    pairMethods.put("CREATEDIRECTORY", "BeginCreatingDirectory");
-    pairMethods.put("КАТАЛОГВРЕМЕННЫХФАЙЛОВ", "НачатьПолучениеКаталогаВременныхФайлов");
-    pairMethods.put("TEMPFILESDIR", "BeginGettingTempFilesDir");
-    pairMethods.put("КАТАЛОГДОКУМЕНТОВ", "НачатьПолучениеКаталогаДокументов");
-    pairMethods.put("DOCUMENTSDIR", "BeginGettingDocumentsDir");
-    pairMethods.put("РАБОЧИЙКАТАЛОГДАННЫХПОЛЬЗОВАТЕЛЯ", "НачатьПолучениеРабочегоКаталогаДанныхПользователя");
-    pairMethods.put("USERDATAWORKDIR", "BeginGettingUserDataWorkDir");
-    pairMethods.put("ПОЛУЧИТЬФАЙЛЫ", "НачатьПолучениеФайлов");
-    pairMethods.put("GETFILES", "BeginGettingFiles");
-    pairMethods.put("ПОМЕСТИТЬФАЙЛЫ", "НачатьПомещениеФайлов");
-    pairMethods.put("PUTFILES", "BeginPuttingFiles");
-    pairMethods.put("ЗАПРОСИТЬРАЗРЕШЕНИЕПОЛЬЗОВАТЕЛЯ", "НачатьЗапросРазрешенияПользователя");
-    pairMethods.put("REQUESTUSERPERMISSION", "BeginRequestingUserPermission");
-    pairMethods.put("ЗАПУСТИТЬПРИЛОЖЕНИЕ", "НачатьЗапускПриложения");
-    pairMethods.put("RUNAPP", "BeginRunningApplication");
-  }
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
@@ -176,10 +101,9 @@ public class UsingSynchronousCallsDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
     String methodName = ctx.methodName().getText();
-    if (MODALITY_METHODS.matcher(methodName).matches()) {
-      diagnosticStorage.addDiagnostic(ctx,
-        info.getMessage(methodName, pairMethods.get(methodName.toUpperCase(Locale.ENGLISH))));
-    }
+    SynchronousMethod.byName(methodName)
+      .ifPresent(method -> diagnosticStorage.addDiagnostic(ctx,
+        info.getMessage(methodName, SynchronousMethod.analogOf(methodName))));
     return super.visitGlobalMethodCall(ctx);
   }
 }
