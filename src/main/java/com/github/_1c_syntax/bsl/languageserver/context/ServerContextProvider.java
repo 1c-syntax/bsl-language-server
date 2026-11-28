@@ -390,16 +390,6 @@ public class ServerContextProvider {
   }
 
   /**
-   * То же, что {@link #getDocumentNoLock(URI)}, но с нормализацией.
-   * Аналог {@link #getDocumentUnsafe(URI)} для контекстов, где нельзя
-   * брать per-document RWLock (см. документацию к {@link #getDocumentNoLock(URI)}).
-   */
-  public Optional<DocumentContext> getDocumentUnsafeNoLock(URI uri) {
-    var normalizedUri = Absolute.uri(uri);
-    return getDocumentNoLock(normalizedUri);
-  }
-
-  /**
    * Получить все контексты серверов с их URI.
    *
    * @return неизменяемая карта URI → контекст сервера

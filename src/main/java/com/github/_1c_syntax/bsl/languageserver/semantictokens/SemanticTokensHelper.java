@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.semantictokens;
 import com.github._1c_syntax.bsl.parser.description.support.DescriptionElement;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SemanticTokensLegend;
@@ -117,43 +116,6 @@ public class SemanticTokensHelper {
     }
     var modifierMask = computeModifierMask(modifiers);
     entries.add(new SemanticTokenEntry(line, start, length, typeIdx, modifierMask));
-  }
-
-  /**
-   * Добавить токен из ANTLR токена с явно указанным типом.
-   *
-   * @param entries Список токенов для наполнения
-   * @param token   ANTLR токен
-   * @param type    Тип семантического токена (из SemanticTokenTypes)
-   */
-  public void addTokenRange(List<SemanticTokenEntry> entries, Token token, String type) {
-    addTokenRange(entries, token, type, NO_MODIFIERS);
-  }
-
-  /**
-   * Добавить токен из ANTLR токена с явно указанным типом и модификаторами.
-   *
-   * @param entries   Список токенов для наполнения
-   * @param token     ANTLR токен
-   * @param type      Тип семантического токена (из SemanticTokenTypes)
-   * @param modifiers Модификаторы токена (из SemanticTokenModifiers)
-   */
-  public void addTokenRange(List<SemanticTokenEntry> entries, @Nullable Token token, String type, String... modifiers) {
-    if (token == null) {
-      return;
-    }
-
-    // ANTLR uses 1-indexed line numbers, convert to 0-indexed for LSP Range
-    int zeroIndexedLine = token.getLine() - 1;
-    int start = token.getCharPositionInLine();
-    int length = (int) token.getText().codePoints().count();
-
-    var range = new Range(
-      new Position(zeroIndexedLine, start),
-      new Position(zeroIndexedLine, start + length)
-    );
-
-    addRange(entries, range, type, modifiers);
   }
 
   /**

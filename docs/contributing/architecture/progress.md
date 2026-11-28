@@ -40,3 +40,16 @@
   → зелёный; тесты `codelenses`, `BSLLSBindingTest`, `CacheConfigurationTest`, `ArchitectureTest`.
 - **Ограничение.** `ArchitectureTest.cacheable_methods_should_not_be_keyed_by_document_context`
   (проверено: на прежней реализации правило падает). В whitelist `CodeLenses` добавлен `Index`.
+
+## Раунд 3. Мёртвый код
+
+- **Сделано.** Удалены методы без единого вызова в `src/main` и `src/test`:
+  `WorkspaceBeanScope.getAllInstances`, `ServerContextProvider.getDocumentUnsafeNoLock`, обе
+  перегрузки `SemanticTokensHelper.addTokenRange`, `DiagnosticHelper.isCorrespondenceType`.
+  Исправлено устаревшее имя `McpServerInfoCustomizer` → `McpServerInfoConfigurer` в комментариях.
+- **Оставлено осознанно.** `CommandSupplier.needRefreshCodeLensesAfterExecuteCommand` — точка
+  расширения plugin-интерфейса, симметричная обновлению inlay hints; не мёртвый код, а пока
+  неиспользованная возможность. NPE при resolve code lens с неизвестным id не воспроизводим:
+  все id зарегистрированы как подтипы Jackson, неизвестный id падает при разборе данных.
+- **Проверка.** Компиляция; тесты `semantictokens`, `WorkspaceBeanScopeTest`,
+  `ServerContextProvider*`, `ArchitectureTest`.

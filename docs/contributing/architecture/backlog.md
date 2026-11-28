@@ -20,9 +20,6 @@
 
 ## Высокий приоритет (дефекты или вероятные дефекты)
 
-- **NPE при resolve code lens с неизвестным id** (гипотеза): `CodeLensProvider.resolveCodeLens`
-  не проверяет отсутствие supplier'а; inlay hint возвращает подсказку как есть, команда бросает
-  `MethodNotFound` — три политики одного механизма.
 - **Гонка в `AbstractComplexityInlayHintSupplier.enabledMethods`** (гипотеза): `HashMap` пишется
   из исполнителя workspace-сервиса и читается из исполнителя text document; не чистится на
   удаление документа.
@@ -78,10 +75,5 @@
 
 ## Мёртвый код (гипотезы, перепроверить вызывающих)
 
-- `WorkspaceBeanScope.getAllInstances`, `ServerContextProvider.getDocumentUnsafeNoLock`.
-- `SemanticTokensHelper.addTokenRange` (обе перегрузки).
 - `FormatProvider.handleEvent(LanguageServerConfigurationChangedEvent)` — пустой слушатель.
-- `CommandSupplier.needRefreshCodeLensesAfterExecuteCommand` — нигде не переопределён.
-- `DiagnosticHelper.isCorrespondenceType`.
 - `AbstractDiagnosticReporter.serverContextProvider` — не используется наследниками.
-- Устаревшее имя `McpServerInfoCustomizer` в `application-mcp.properties`.
