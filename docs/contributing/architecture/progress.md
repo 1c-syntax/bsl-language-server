@@ -1365,3 +1365,7 @@
 и курсор за ключевым словом соединения из него не выходит — красного теста для него нет.
 `SDBLCaseDocumentHighlightSupplierTest.endKeywordWithCursorRightAfterItHighlightsTheCase` красный
 (пусто) → зелёный; тесты подсветки (13 классов) зелёные.
+
+## Контрольная точка: `./gradlew check javadoc` после раунда 88
+
+`BUILD SUCCESSFUL in 11m`: 859 тестовых классов, 6006 тестов, падений нет.
