@@ -1167,3 +1167,19 @@
   зелёные (`clear` на заглушке проходит вырожденно и сторожит реализацию).
 - **Проверка.** `types.oscript`, `*Autumn*`, `codeactions`, `codelenses`, `*Implementation*`,
   `ArchitectureTest` (56 классов, 364 теста) зелёные; `javadoc`, `spotlessCheck` зелёные.
+
+## Раунд 76. Остаток сканирования: javadoc `Trees.encloses`, копия в `ModuleReference`, отказы
+
+- **`Trees.encloses`** — javadoc обещал «позиция на границах узла», а конец не включается (как у
+  `Ranges.containsPosition(Range, …)`). Поведение верное и нужное `findInnermostEnclosing`;
+  исправлено описание, а поведение закреплено характеризующим тестом
+  `TreesTest.enclosesIncludesStartAndExcludesEnd` (прямых тестов у метода не было).
+- **`ModuleReference.extractMethodNameFromModifier`** повторял цепочку `accessCallMethodName` того
+  же класса — теперь вызывает её. Прочие null-безопасные цепочки «вызов → имя метода» в
+  провайдерах заканчиваются разным (текст, токен, диапазон) — трёхстрочные, оставлены.
+- **Отклонены с обоснованием** (бэклог): аннотации конструктора `.os` тремя способами (разные
+  блокировки и круг файлов — намеренно), сборка refactor-`CodeAction` (отличия видимы клиенту).
+- **Итог сканирования после раунда 69:** четыре существенных находки закрыты (71–75), две
+  отклонены, мелочь закрыта; в `inlayhints/`, `rename/`, `aop/`, `websocket/` дублей не найдено.
+- **Проверка.** `TreesTest`, `*ModuleReference*`, `*CommonModule*`, `references` (81 класс,
+  341 тест) зелёные; `javadoc`, `spotlessCheck` зелёные.

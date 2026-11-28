@@ -402,7 +402,8 @@ public final class Trees {
    *
    * @param ctx      узел
    * @param position позиция
-   * @return {@code true}, если позиция внутри узла или на его границах; {@code false} для узла без токенов
+   * @return {@code true}, если позиция внутри узла или в его начале (конец не включается, как у
+   *     {@link Ranges#containsPosition(org.eclipse.lsp4j.Range, Position)}); {@code false} для узла без токенов
    */
   public static boolean encloses(ParserRuleContext ctx, Position position) {
     var start = ctx.getStart();

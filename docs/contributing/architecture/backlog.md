@@ -161,12 +161,17 @@
   2. ~~Мультикарта «имя → множество» с обратным индексом по URI~~ — закрыто, раунд 75.
   3. ~~Жизненный цикл файла отчёта~~ — закрыто, раунд 72.
   4. ~~Перечень точек внедрения «ОСени»~~ — закрыто, раунд 71.
-  5. Аннотации конструктора `.os`-класса — три способа (`OScriptIterable`, `OScriptExtends`,
-     `OScriptMetaAnnotationResolver`); ручные копии `OScriptMetaAnnotationResolver.find`.
-  6. Сборка refactor-`CodeAction` — три копии с мелкими отличиями (`isPreferred`, `diagnostics`).
-  Мелочь: `Trees.encloses` и `Ranges.containsPosition(ParserRuleContext, …)` — один промежуток с
-  разной обработкой EOF и `null`-стопа (javadoc `encloses` говорит «границы включены» — конец
-  не включён); в `ModuleReference` дважды null-безопасная копия `Methods.getMethodName`.
+  5. **Рассмотрено и отклонено (раунд 76)**: аннотации конструктора `.os`-класса тремя способами
+     (`OScriptIterable`, `OScriptExtends`, `OScriptMetaAnnotationResolver`) — различие намеренное:
+     `OScriptExtends` и мета-резолвер читают дерево без ожидания перестроения (иначе встречное
+     ожидание при построении чужого дерева), `OScriptIterable` ждёт; мета-резолвер берёт
+     `ConstructorSymbol` (только у классифицированных классов), остальные — поиск по имени (и у
+     обычных `.os`). Сведение меняет либо блокировки, либо круг файлов; ручные циклы — трёхстрочные
+     копии `find`.
+  6. **Рассмотрено и отклонено (раунд 76)**: сборка refactor-`CodeAction` в трёх поставщиках —
+     по шесть строк, отличаются видимыми клиенту полями (`isPreferred`, `diagnostics` пустой список
+     или нет); у quick fix канонический конструктор уже есть (`QuickFixProvider.createCodeActions`).
+  Мелочь — закрыто, раунд 76.
 
 - **`safeGetAst` с перехватом любого `RuntimeException`** (`FormExpressionInference`,
   `PropertyMethodInference`) — после раунда 25 остались две копии второй политики; сузить до

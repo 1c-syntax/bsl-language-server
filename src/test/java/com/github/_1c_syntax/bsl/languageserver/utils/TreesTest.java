@@ -137,6 +137,20 @@ class TreesTest {
     assertThat(Trees.findInnermostEnclosing(tree, new Position(0, 0), BSLParser.DoCallContext.class)).isEmpty();
   }
 
+  @Test
+  void enclosesIncludesStartAndExcludesEnd() {
+    // given — внутренний вызов «(2)» в «Ф(1, Г(2));» занимает символы 6–8, конец — позиция 9
+    var tree = parse("Ф(1, Г(2));");
+    var innerCall = Trees.findInnermostEnclosing(tree, new Position(0, 7), BSLParser.DoCallContext.class)
+      .orElseThrow();
+
+    // then
+    assertThat(Trees.encloses(innerCall, new Position(0, 6))).isTrue();
+    assertThat(Trees.encloses(innerCall, new Position(0, 8))).isTrue();
+    assertThat(Trees.encloses(innerCall, new Position(0, 9))).isFalse();
+    assertThat(Trees.encloses(innerCall, new Position(0, 5))).isFalse();
+  }
+
   private static ParseTree parse(String input) {
     var lexer = new BSLLexer(CharStreams.fromString(input));
     var parser = new BSLParser(new IncrementalTokenStream(lexer));
