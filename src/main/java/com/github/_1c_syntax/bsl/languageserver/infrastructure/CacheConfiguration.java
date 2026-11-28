@@ -46,8 +46,9 @@ import java.util.Optional;
  * <p>
  * EhCache-менеджер ({@code ehcacheManager}) — общий и cache-agnostic: каждый модуль регистрирует
  * свой персистентный кэш через {@link EhcacheRegistrar}, а {@code ehcacheCacheManager} оборачивает
- * их в Spring-{@link CacheManager}. Для остальных кэшей (например, code lens) используется Caffeine
- * с хранением в памяти.
+ * их в Spring-{@link CacheManager}. Для остальных {@code @Cacheable}-кэшей используется Caffeine
+ * с хранением в памяти; его настройки задаются здесь, свойства {@code spring.cache.*} на него не
+ * влияют.
  */
 @Configuration
 @EnableCaching

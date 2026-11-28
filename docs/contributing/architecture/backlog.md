@@ -20,11 +20,6 @@
 
 ## Высокий приоритет (дефекты или вероятные дефекты)
 
-- **Кэши `testIds`/`testSources` без ограничений** (гипотеза): `@Primary CacheManager` в
-  `infrastructure/CacheConfiguration.java` строит Caffeine без spec, из-за чего
-  `spring.cache.caffeine.spec` в `application.properties` (и копия в `BSLLSBinding`) не действует.
-  `TestRunnerAdapter.getTestIds` кэшируется по `DocumentContext` (равенство по URI) и не
-  сбрасывается при изменении документа — test id устаревают после правки.
 - **NPE при resolve code lens с неизвестным id** (гипотеза): `CodeLensProvider.resolveCodeLens`
   не проверяет отсутствие supplier'а; inlay hint возвращает подсказку как есть, команда бросает
   `MethodNotFound` — три политики одного механизма.

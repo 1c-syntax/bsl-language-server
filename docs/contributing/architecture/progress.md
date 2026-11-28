@@ -25,3 +25,18 @@
   контрактный `ConfigurationFilesTest`; тесты пакета `configuration`, `BSLLSBindingTest`,
   `ArchitectureTest` — зелёные.
 - **Ограничение.** `ArchitectureTest.configuration_files_are_parsed_only_by_configuration_files`.
+
+## Раунд 2. Кэш идентификаторов тестов и мёртвые `spring.cache.*`
+
+- **Проблема.** `TestRunnerAdapter.getTestIds` кэшировался через `@Cacheable("testIds")` по
+  `DocumentContext`, который равен другому по одному URI: после правки документа code lens'ы
+  показывали прежний список тестов, записи удалённых документов не освобождались. Свойства
+  `spring.cache.cache-names`/`spring.cache.caffeine.spec` (в `application.properties` и копией в
+  `BSLLSBinding`) не действовали: собственный `@Primary CacheManager` отключает автоконфигурацию.
+- **Сделано.** `TestRunnerAdapter` переведён на канонический механизм кэшей по документу —
+  `AbstractDocumentLifecycleClearableIndex` (сброс на правку, перепривязку, закрытие, удаление,
+  очистку) плюс сброс на смену конфигурации. Мёртвые свойства удалены.
+- **Проверка.** Красный тест `TestRunnerAdapterTest.whenDocumentContentChanged_thenTestIdsAreRecomputed`
+  → зелёный; тесты `codelenses`, `BSLLSBindingTest`, `CacheConfigurationTest`, `ArchitectureTest`.
+- **Ограничение.** `ArchitectureTest.cacheable_methods_should_not_be_keyed_by_document_context`
+  (проверено: на прежней реализации правило падает). В whitelist `CodeLenses` добавлен `Index`.

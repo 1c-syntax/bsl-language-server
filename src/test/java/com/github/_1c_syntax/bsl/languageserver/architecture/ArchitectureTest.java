@@ -21,20 +21,26 @@
  */
 package com.github._1c_syntax.bsl.languageserver.architecture;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.reporters.DiagnosticReporter;
 import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.JavaClass;
+import com.tngtech.archunit.core.domain.JavaMethod;
 import com.tngtech.archunit.core.domain.JavaModifier;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.core.importer.Location;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
+import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ArchRule;
+import com.tngtech.archunit.lang.ConditionEvents;
+import com.tngtech.archunit.lang.SimpleConditionEvent;
 import com.tngtech.archunit.library.dependencies.SliceAssignment;
 import com.tngtech.archunit.library.dependencies.SliceIdentifier;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEvent;
 
 import java.util.Set;
@@ -45,6 +51,7 @@ import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideOutsid
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMembers;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMethods;
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 import static com.tngtech.archunit.library.GeneralCodingRules.ACCESS_STANDARD_STREAMS;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
@@ -189,6 +196,22 @@ class ArchitectureTest {
     .because("поиск и чтение файла конфигурации (порядок кандидатов, настройки маппера, политика "
       + "ошибок разбора) сосредоточены в ConfigurationFiles");
 
+  // --- Кэши ---------------------------------------------------------------------------------------
+
+  @ArchTest
+  static final ArchRule cacheable_methods_should_not_be_keyed_by_document_context = noMethods()
+    .that().areAnnotatedWith(Cacheable.class)
+    .should(new ArchCondition<JavaMethod>("принимать DocumentContext") {
+      @Override
+      public void check(JavaMethod method, ConditionEvents events) {
+        if (method.getRawParameterTypes().stream().anyMatch(type -> type.isEquivalentTo(DocumentContext.class))) {
+          events.add(SimpleConditionEvent.satisfied(method, method.getFullName() + " принимает DocumentContext"));
+        }
+      }
+    })
+    .because("DocumentContext равен другому по одному URI, поэтому @Cacheable-кэш по нему переживает "
+      + "правку документа; кэш по документу строится на AbstractDocumentLifecycleClearableIndex");
+
   // --- Логирование --------------------------------------------------------------------------------
 
   @ArchTest
@@ -308,8 +331,9 @@ class ArchitectureTest {
     // Поставщики отдельных фич
     .whereLayer("CodeActions").mayOnlyAccessLayers(
       "CodeLenses", "Configuration", "Context", "Diagnostics", "DiagnosticsMetadata", "Types", "Utils")
+    // Index — кэш идентификаторов тестов по документу сбрасывается по его жизненному циклу.
     .whereLayer("CodeLenses").mayOnlyAccessLayers(
-      "Client", "Commands", "Configuration", "Context", "Databind", "Events", "Types")
+      "Client", "Commands", "Configuration", "Context", "Databind", "Events", "Index", "Types")
     .whereLayer("Commands").mayOnlyAccessLayers("Databind", "InlayHints")
     // Utils содержит общий канонический словарь ключевых слов.
     .whereLayer("Completion").mayOnlyAccessLayers("Configuration", "Context", "Types", "Utils")

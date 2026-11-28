@@ -51,4 +51,30 @@ class TestRunnerAdapterTest {
     assertThat(testIds).hasSize(1);
     assertThat(testIds.getFirst()).isEqualTo("Тест1");
   }
+
+  @Test
+  void whenDocumentContentChanged_thenTestIdsAreRecomputed() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile("src/test/resources/codelenses/testrunner/TestRunnerAdapter.os");
+    configuration.getCodeLensOptions().getTestRunnerAdapterOptions().setGetTestsByTestRunner(false);
+    assertThat(testRunnerAdapter.getTestIds(documentContext)).containsExactly("Тест1");
+
+    // when
+    documentContext.getServerContext().rebuildDocument(
+      documentContext,
+      """
+        &Тест
+        Процедура Тест1() Экспорт
+        КонецПроцедуры
+
+        &Тест
+        Процедура Тест2() Экспорт
+        КонецПроцедуры
+        """,
+      2
+    );
+
+    // then
+    assertThat(testRunnerAdapter.getTestIds(documentContext)).containsExactly("Тест1", "Тест2");
+  }
 }
