@@ -302,3 +302,14 @@
   `BSLFiles` (пакет `utils` не может зависеть от `context`) оставлен со своим списком, совпадение
   закреплено тестом `BSLFilesTest.listBslFilesFindsExactlyFileTypeExtensions`.
 - **Проверка.** Тесты `lsp`, `BSLFilesTest`, `DocumentContextTest`.
+
+## Раунд 22. Обновление подсветки при смене конфигурации
+
+- **Проблема.** Code lens, inlay hints и диагностики по `LanguageServerConfigurationChangedEvent`
+  просят клиента обновиться, семантические токены — нет, хотя подсветка строк-шаблонов зависит
+  от `semanticTokens.strTemplateMethods`: после правки настройки подсветка оставалась прежней до
+  правки файла.
+- **Сделано.** `SemanticTokensProvider.handleConfigurationChanged` → `workspace/semanticTokens/refresh`
+  (при поддержке клиентом).
+- **Проверка.** Красный `SemanticTokensRefreshTest.semanticTokensRefreshOnLanguageServerConfigurationChange`
+  → зелёный; тесты `semantictokens`, `ArchitectureTest`.

@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.client.LanguageClientHolder;
+import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
@@ -309,6 +310,20 @@ public class SemanticTokensProvider {
    */
   @EventListener
   public void handleConfigurationTypesRegistered(ConfigurationTypesRegisteredEvent event) {
+    refreshSemanticTokens();
+  }
+
+  /**
+   * Обрабатывает событие изменения конфигурации.
+   * <p>
+   * Подсветка зависит от настроек (например, {@code semanticTokens.strTemplateMethods} —
+   * какие методы раскрашивают строку-шаблон), поэтому после их изменения клиенту
+   * отправляется запрос {@code workspace/semanticTokens/refresh}.
+   *
+   * @param event событие изменения конфигурации
+   */
+  @EventListener
+  public void handleConfigurationChanged(LanguageServerConfigurationChangedEvent event) {
     refreshSemanticTokens();
   }
 

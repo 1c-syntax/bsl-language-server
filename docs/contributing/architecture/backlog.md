@@ -64,9 +64,8 @@
 - **Нормализация URI в MCP** — несколько способов; имя workspace выводится в двух местах.
 - **Источник `language`** — глобальная и workspace-настройка с тремя правилами разрешения;
   `GlobalLanguageServerConfiguration.reset()` дублирует дефолты вручную.
-- **Константы**: расширения `bsl`/`os` — в `BSLFiles` (utils, не может зависеть от
-  `context.FileType`) и glob'ы дважды в `BSLLanguageServer`; дефолты `server.port`/`/lsp` в
-  описаниях опций websocket-команды.
+- **Дефолты `server.port`/`/lsp`** в описаниях опций websocket-команды дублируют
+  `application.properties`.
 - **Дефолты опций в документации** (`ConfigurationFile.md`, обе локали) не сверяются
   автоматически; код ↔ схема сверяет `ConfigurationSchemaDefaultsTest` (раунд 17).
 
