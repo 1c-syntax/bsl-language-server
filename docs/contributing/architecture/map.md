@@ -98,5 +98,7 @@ infrastructure -> client
   владельца (`TypeRef.UNDEFINED`, `MemberDescriptor.returnType()`,
   `MethodSymbol.getParameterDefinition`, `TypeRegistry.findSpecialization`,
   `registerConfigurationType(ru, en)`, `DiagnosticInfosFactory`, `ReportFile.commit(name)`,
-  `CompletionPriority.Fold`, `CollectionReturnsSpecializer.registerCollection`).
+  `CompletionPriority.Fold`, `CollectionReturnsSpecializer.registerCollection`,
+  `ParameterDescriptor.withTypes`, `SignatureDescriptor.withReturnTypes`,
+  `FormPlatformTypes.namedProperties`).
 - Отдельный workflow CI `javadoc.yml` (`./gradlew javadoc`): `check` javadoc не запускает.

@@ -88,6 +88,12 @@ class CanonicalImplementationsTest {
       new Case("CompletionPriority.Fold",
         Pattern.compile("available \\|= \\w+ != UNAVAILABLE"),
         Set.of("completion/CompletionPriority.java")),
+      new Case("ParameterDescriptor.withTypes",
+        Pattern.compile("new ParameterDescriptor\\(\\w+\\.bilingualName\\(\\),"),
+        Set.of()),
+      new Case("SignatureDescriptor.withReturnTypes",
+        Pattern.compile("new SignatureDescriptor\\(\\w+\\.parameters\\(\\),[^;]*\\w+\\.bilingualDescription\\(\\), \\w+\\.metadata\\(\\)\\)"),
+        Set.of()),
       new Case("FormPlatformTypes.namedProperties",
         Pattern.compile("withBilingualName\\(FormPlatformTypes\\.neutral\\([^)]*\\)\\)\\s*"
           + "\\.withBilingualDescription\\(FormPlatformTypes\\.bilingual\\("),
