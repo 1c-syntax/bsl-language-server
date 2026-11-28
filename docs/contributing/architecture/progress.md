@@ -981,3 +981,25 @@
 - **Проверка.** Красный `ServerContextProviderTest.currentServerContextIsTheWorkspaceSelectedInThread`
   (на заглушке) → зелёный; тесты `types.registry`, `MethodReturnType*`, `DiagnosticProvider*`,
   `QueryTable*`, `ArchitectureTest` (84 класса) зелёные; `javadoc`, `spotlessCheck` зелёные.
+
+## Раунд 66. Канонические помощники вместо копий в `types/` и `mcp/`
+
+Источник — пункты 2, 6, 7, 8 остаточного сканирования (раунд 64). Новых помощников нет: везде
+уже был канонический, копии появились до него или мимо него.
+
+- **Self-тип модуля в `EventHandlerResolver`.** Своя карта «вид модуля → русское имя обёртки»
+  и `mdoSpecificQualifiedName` повторяли `ConfigurationModuleMembersProvider.selfTypeQualifiedName`
+  — того, кто этот тип регистрирует; разойтись они могли молча (обработчик не нашёл бы событие).
+  Резолвер берёт имя у провайдера; семейства (`ModulePlatformTypeNames.familyName`) и особый
+  случай общего модуля остались как были.
+- **`Неопределено`.** Пять приватных копий `new TypeRef(PRIMITIVE, "Неопределено")`
+  (`ReturnTypeFromBodyInference`, `OpenDataObjectInference`, `ExpressionTypeInferencer`,
+  `GuardConditionNarrowing`, `FormParametersRegistrar`) ссылаются на `TypeRef.UNDEFINED`.
+- **Поиск метода по имени** в `DeclaredParameterTypeResolver.localMethod` — линейный проход
+  `getMethods()` вместо `SymbolTree.getMethodSymbol` (тот же поиск без учёта регистра, по
+  упорядоченному массиву). Модульный тест заглушал `getMethods()` — переведён на канонический метод.
+- **Первый возвращаемый тип члена** — три копии тела `MemberDescriptor.returnType()`
+  (`CompletionProvider`, `GlobalMemberSearchTool`, `GlobalMemberInfoTool`) заменены вызовом.
+- **Проверка.** Поведение не меняется, новых тестов нет; `types.inferencer`, `types.registry`,
+  `*Completion*`, `mcp`, `*EventHandler*`, `ArchitectureTest` (1630 тестов) и `*Hover*`
+  зелёные; `javadoc`, `spotlessCheck` зелёные.

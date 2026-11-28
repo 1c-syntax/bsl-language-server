@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.EventHandlerClassifier;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
-import com.github._1c_syntax.bsl.mdo.MD;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
@@ -72,18 +71,6 @@ import java.util.stream.Collectors;
 @WorkspaceScope
 @Slf4j
 public class EventHandlerResolver implements EventHandlerClassifier {
-
-  /**
-   * Модули, чей owner-тип — специализация по имени MDO:
-   * {@code <MdoFullName.ru><Суффикс>.<Имя>}. Например,
-   * {@code ДокументОбъект.Покупатели}, {@code РегистрСведенийНаборЗаписей.Курсы}.
-   */
-  private static final Map<ModuleType, String> MODULE_TYPE_TO_WRAPPER_RU = Map.of(
-    ModuleType.ManagerModule, "Менеджер",
-    ModuleType.ObjectModule, "Объект",
-    ModuleType.RecordSetModule, "НаборЗаписей",
-    ModuleType.ValueManagerModule, "МенеджерЗначения"
-  );
 
   /**
    * Глобальные модули прикладного решения. Их события — события объекта
@@ -357,11 +344,6 @@ public class EventHandlerResolver implements EventHandlerClassifier {
    * сервисов одноимённые операции сплошь и рядом принимают разные параметры.
    */
   private Optional<TypeRef> resolveOwnerType(DocumentContext documentContext, ModuleType moduleType) {
-    if (moduleType == ModuleType.FormModule) {
-      return documentContext.getMdObject()
-        .flatMap(md -> ConfigurationModuleMembersProvider.selfTypeQualifiedName(moduleType, md))
-        .flatMap(typeRegistry::resolve);
-    }
     var family = ModulePlatformTypeNames.familyName(moduleType);
     if (family != null) {
       return documentContext.getMdObject()
@@ -369,22 +351,13 @@ public class EventHandlerResolver implements EventHandlerClassifier {
         .flatMap(typeRegistry::resolve)
         .or(() -> typeRegistry.resolve(family));
     }
-    var wrapperRu = MODULE_TYPE_TO_WRAPPER_RU.get(moduleType);
-    if (wrapperRu == null) {
+    if (moduleType == ModuleType.CommonModule) {
+      // self-тип общего модуля — сам модуль, а не тип с событиями платформы
       return Optional.empty();
     }
+    // форма и модули объектов: тот же self-тип, что регистрирует провайдер членов модуля
     return documentContext.getMdObject()
-      .flatMap(md -> mdoSpecificQualifiedName(md, wrapperRu))
+      .flatMap(md -> ConfigurationModuleMembersProvider.selfTypeQualifiedName(moduleType, md))
       .flatMap(typeRegistry::resolve);
-  }
-
-  /** Сборка {@code <FullName.ru><Суффикс>.<Имя>} для MDO; пусто, если части не заполнены. */
-  private static Optional<String> mdoSpecificQualifiedName(MD mdObject, String wrapperRu) {
-    var fullName = mdObject.getMdoType().fullName().getRu();
-    var name = mdObject.getName();
-    if (fullName.isBlank() || name.isBlank()) {
-      return Optional.empty();
-    }
-    return Optional.of(fullName + wrapperRu + "." + name);
   }
 }

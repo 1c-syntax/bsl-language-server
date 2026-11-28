@@ -201,7 +201,7 @@ class DeclaredParameterTypeResolverTest {
     when(otherParameter.getName()).thenReturn("Данные");
     when(prototype.getParameters()).thenReturn(List.of(otherParameter));
     when(documentContext.getSymbolTree()).thenReturn(tree);
-    when(tree.getMethods()).thenReturn(List.of(prototype));
+    when(tree.getMethodSymbol("Прототип")).thenReturn(Optional.of(prototype));
     when(symbolTypeIndex.parameterMayReadAnotherDocument(otherParameter, documentContext))
       .thenReturn(targetTypeIsExternal);
 

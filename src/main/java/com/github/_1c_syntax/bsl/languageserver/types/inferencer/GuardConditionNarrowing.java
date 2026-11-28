@@ -31,7 +31,6 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymb
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.types.index.ReceiverSitesIndex;
-import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
@@ -99,7 +98,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class GuardConditionNarrowing extends AbstractDocumentLifecycleClearableIndex {
 
-  private static final TypeRef UNDEFINED = new TypeRef(TypeKind.PRIMITIVE, "Неопределено");
+  private static final TypeRef UNDEFINED = TypeRef.UNDEFINED;
 
   private static final String TYPE_OF_RU = "ТИПЗНЧ";
   private static final String TYPE_OF_EN = "TYPEOF";

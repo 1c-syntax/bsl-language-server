@@ -29,7 +29,6 @@ import com.github._1c_syntax.bsl.languageserver.cfg.PreprocessorFlow;
 import com.github._1c_syntax.bsl.languageserver.context.compilation.ExecutionContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver;
-import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
@@ -57,7 +56,7 @@ import java.util.function.Function;
 @RequiredArgsConstructor
 public class ReturnTypeFromBodyInference {
 
-  private static final TypeRef UNDEFINED = new TypeRef(TypeKind.PRIMITIVE, "Неопределено");
+  private static final TypeRef UNDEFINED = TypeRef.UNDEFINED;
 
   private final ControlFlowGraphIndex controlFlowGraphIndex;
   private final CompilationContextResolver compilationContextResolver;

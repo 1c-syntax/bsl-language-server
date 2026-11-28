@@ -142,7 +142,7 @@ public class ExpressionTypeInferencer {
   private static final TypeRef STRING = new TypeRef(TypeKind.PRIMITIVE, "Строка");
   private static final TypeRef BOOLEAN = new TypeRef(TypeKind.PRIMITIVE, "Булево");
   private static final TypeRef DATE = new TypeRef(TypeKind.PRIMITIVE, "Дата");
-  private static final TypeRef UNDEFINED = new TypeRef(TypeKind.PRIMITIVE, "Неопределено");
+  private static final TypeRef UNDEFINED = TypeRef.UNDEFINED;
   private static final TypeRef NULL = new TypeRef(TypeKind.PRIMITIVE, "Null");
 
   private final TypeRegistry typeRegistry;

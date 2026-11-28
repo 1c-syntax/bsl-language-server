@@ -1041,7 +1041,7 @@ public final class CompletionProvider {
    * свойство, коллекция, общий модуль) → {@code Variable}.
    */
   private CompletionItemKind completionKindForGlobalProperty(MemberDescriptor member, FileType fileType) {
-    var valueType = member.returnTypes().refs().stream().findFirst().orElse(TypeRef.UNKNOWN);
+    var valueType = member.returnType();
     if (typeService.isEnumType(valueType, fileType)) {
       return CompletionItemKind.Enum;
     }

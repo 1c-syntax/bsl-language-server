@@ -323,9 +323,6 @@ public class DeclaredParameterTypeResolver implements VariableTypeSource {
     if (methodName == null || methodName.contains(".")) {
       return null;
     }
-    return documentContext.getSymbolTree().getMethods().stream()
-      .filter(method -> method.getName().equalsIgnoreCase(methodName))
-      .findFirst()
-      .orElse(null);
+    return documentContext.getSymbolTree().getMethodSymbol(methodName).orElse(null);
   }
 }

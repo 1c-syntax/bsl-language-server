@@ -25,7 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.index.ReceiverSitesIndex;
 import com.github._1c_syntax.bsl.languageserver.types.model.LocalField;
-import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
@@ -79,7 +78,7 @@ public class OpenDataObjectInference {
   private static final String ADJUST_VALUE_EN = "AdjustValue";
 
   /** Тип ключа без значения: {@code Новый Структура("Ключ")} и {@code Вставить("Ключ")}. */
-  private static final TypeSet UNDEFINED = TypeSet.of(new TypeRef(TypeKind.PRIMITIVE, "Неопределено"));
+  private static final TypeSet UNDEFINED = TypeSet.of(TypeRef.UNDEFINED);
 
   private final TypeRegistry typeRegistry;
   private final ReceiverSitesIndex receiverSitesIndex;

@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
-import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.mdo.Catalog;
@@ -73,7 +72,7 @@ class FormParametersRegistrar {
   private static final String REF_SUFFIX = "Ссылка";
 
   /** Тип параметра, передавать в который нечего. */
-  private static final TypeSet UNDEFINED = TypeSet.of(new TypeRef(TypeKind.PRIMITIVE, "Неопределено"));
+  private static final TypeSet UNDEFINED = TypeSet.of(TypeRef.UNDEFINED);
 
   /** Параметр формы записи регистра сведений: ключ записи, открытой на изменение. */
   private static final String SOURCE_RECORD_KEY = "ИсходныйКлючЗаписи";

@@ -110,7 +110,7 @@ public class GlobalMemberInfoTool {
         if (resolved.kind() == MemberKind.METHOD) {
           return functionResult(resolved, effectiveLanguage);
         }
-        var valueType = resolved.returnTypes().refs().stream().findFirst().orElse(TypeRef.UNKNOWN);
+        var valueType = resolved.returnType();
         var kind = typeRegistry.isEnumType(valueType, fileType) ? "ENUM" : "PROPERTY";
         return globalValueResult(resolved, valueType, kind, effectiveLanguage);
       }
