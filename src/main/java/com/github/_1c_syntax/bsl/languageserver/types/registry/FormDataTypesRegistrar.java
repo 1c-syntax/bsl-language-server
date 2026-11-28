@@ -133,23 +133,8 @@ class FormDataTypesRegistrar {
    */
   List<MemberDescriptor> buildAttributeMembers(List<FormAttribute> attributes,
                                                        Map<String, TypeSet> attributeTypes) {
-    if (attributes.isEmpty()) {
-      return List.of();
-    }
-    var byName = LinkedHashMap.<String, MemberDescriptor>newLinkedHashMap(attributes.size());
-    for (var attribute : attributes) {
-      var name = attribute.getName();
-      if (name.isBlank()) {
-        continue;
-      }
-      var key = name.toLowerCase(Locale.ROOT);
-      var types = attributeTypes.getOrDefault(key, TypeSet.EMPTY);
-      var descriptor = MemberDescriptor.property(name, types, "")
-        .withBilingualName(FormPlatformTypes.neutral(name))
-        .withBilingualDescription(FormPlatformTypes.bilingual(attribute.getTitle()));
-      byName.putIfAbsent(key, descriptor);
-    }
-    return List.copyOf(byName.values());
+    return FormPlatformTypes.namedProperties(attributes, FormAttribute::getName, FormAttribute::getTitle,
+      attribute -> attributeTypes.getOrDefault(attribute.getName().toLowerCase(Locale.ROOT), TypeSet.EMPTY));
   }
 
   /**

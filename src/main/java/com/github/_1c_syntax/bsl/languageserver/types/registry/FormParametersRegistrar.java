@@ -313,18 +313,8 @@ class FormParametersRegistrar {
   private static List<MemberDescriptor> buildCommandMembers(List<FormCommand> commands,
                                                             @Nullable TypeRef commandRef) {
     var types = commandRef == null ? TypeSet.EMPTY : TypeSet.of(commandRef);
-    var byName = LinkedHashMap.<String, MemberDescriptor>newLinkedHashMap(commands.size());
-    for (var command : commands) {
-      var name = command.getName();
-      if (name.isBlank()) {
-        continue;
-      }
-      byName.putIfAbsent(name.toLowerCase(Locale.ROOT),
-        MemberDescriptor.property(name, types, "")
-          .withBilingualName(FormPlatformTypes.neutral(name))
-          .withBilingualDescription(FormPlatformTypes.bilingual(command.getTitle())));
-    }
-    return List.copyOf(byName.values());
+    return FormPlatformTypes.namedProperties(commands, FormCommand::getName, FormCommand::getTitle,
+      command -> types);
   }
 
   /**

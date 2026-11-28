@@ -429,19 +429,8 @@ class FormItemTypesRegistrar {
       return List.of();
     }
     var attributeTypes = attributeTypesByName(attributes);
-    var byName = LinkedHashMap.<String, MemberDescriptor>newLinkedHashMap(items.size());
-    for (var item : items) {
-      var name = item.getName();
-      if (name.isBlank()) {
-        continue;
-      }
-      var types = itemTypes(item, attributeTypes, formKind, tableTypes);
-      var descriptor = MemberDescriptor.property(name, types, "")
-        .withBilingualName(FormPlatformTypes.neutral(name))
-        .withBilingualDescription(FormPlatformTypes.bilingual(item.getTitle()));
-      byName.putIfAbsent(name.toLowerCase(Locale.ROOT), descriptor);
-    }
-    return List.copyOf(byName.values());
+    return FormPlatformTypes.namedProperties(items, FormElement::getName, FormElement::getTitle,
+      item -> itemTypes(item, attributeTypes, formKind, tableTypes));
   }
 
   /**
