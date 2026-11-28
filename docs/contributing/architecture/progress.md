@@ -1083,3 +1083,20 @@
 - **Тесты.** `FormatCommandTest.callReturnsOneWhenNoFilesFound` дополнен проверкой записи в
   журнале — красный до исправления, зелёный после.
 - **Проверка.** `FormatCommandTest` (8 тестов), `spotlessCheck` зелёные.
+
+## Раунд 71. Точки внедрения «ОСени» — `AutumnComponentInferencer.injectionCandidates`
+
+Источник — сканирование `codeactions/`, `types/oscript/` и др. после раунда 69 (бэклог, пункт 4).
+
+- **Проблема.** «Какие объявления класса могут быть точками внедрения» — параметры конструктора
+  и поля модуля, без повторов параметров среди переменных дерева (`VariableKind.PARAMETER`) —
+  было записано дважды: индексом точек внедрения (обратная навигация «кто внедряет желудь») и
+  code action перехода к производителю. Новый вид точки, добавленный в одном месте, потерялся бы
+  в другом — переходы в обе стороны разошлись бы.
+- **Сделано.** Статический `injectionCandidates(SymbolTree)` и запись `InjectionCandidate`
+  рядом с `InjectedBean`; внедряется ли желудь, по-прежнему решает `injectedBean`. Статический
+  — чтобы модульные тесты индекса, мокающие инференсер, видели настоящий перечень.
+- **Тесты.** `AutumnComponentInferencerTest.injectionCandidatesAreConstructorParametersAndModuleFieldsOnce`
+  красный на заглушке → зелёный.
+- **Проверка.** `types.oscript`, `*Autumn*`, `codeactions` (35 классов, 270 тестов) зелёные;
+  `javadoc`, `spotlessCheck` зелёные.

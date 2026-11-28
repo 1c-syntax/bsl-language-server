@@ -164,8 +164,7 @@
   3. Жизненный цикл файла отчёта — шесть одинаковых `abortReport` и окончаний `endReport`
      (`commit` + «report saved to»). Общий базовый класс не годится: часть репортёров наследует
      `AbstractDiagnosticReporter`; место — `ReportFile`.
-  4. Перечень точек внедрения «ОСени» (параметры конструктора + поля модуля без дублей-параметров)
-     — две копии (`AutumnInjectionPointIndex.indexClass`, `AutumnNavigationCodeActionSupplier`).
+  4. ~~Перечень точек внедрения «ОСени»~~ — закрыто, раунд 71.
   5. Аннотации конструктора `.os`-класса — три способа (`OScriptIterable`, `OScriptExtends`,
      `OScriptMetaAnnotationResolver`); ручные копии `OScriptMetaAnnotationResolver.find`.
   6. Сборка refactor-`CodeAction` — три копии с мелкими отличиями (`isPreferred`, `diagnostics`).

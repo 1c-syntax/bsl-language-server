@@ -22,15 +22,22 @@
 package com.github._1c_syntax.bsl.languageserver.types.oscript.autumn;
 
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationParameterDefinition;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.references.model.AnnotationRepository;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.annotations.OScriptMetaAnnotationResolver;
+import org.eclipse.lsp4j.Position;
+import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -44,6 +51,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -72,6 +80,45 @@ class AutumnComponentInferencerTest {
     // Дефолт: коллекция не известна индексу — возвращается пустой TypeSet, а не
     // null. Конкретные тесты переопределяют ответ при необходимости.
     lenient().when(collectionIndex.resolve(anyString())).thenReturn(TypeSet.EMPTY);
+  }
+
+  @Test
+  void injectionCandidatesAreConstructorParametersAndModuleFieldsOnce() {
+    // given — у класса параметр конструктора (он же повторно — переменная-параметр), поле
+    // модуля и локальная переменная.
+    var annotations = List.of(plasticine(positional("Лог")));
+    var parameterRange = new Range(new Position(5, 30), new Position(5, 36));
+    var fieldRange = new Range(new Position(1, 5), new Position(1, 11));
+    var parameter = mock(ParameterDefinition.class);
+    when(parameter.getName()).thenReturn("Сервис");
+    when(parameter.getRange()).thenReturn(parameterRange);
+    when(parameter.getAnnotations()).thenReturn(annotations);
+    var constructor = mock(ConstructorSymbol.class);
+    when(constructor.getParameters()).thenReturn(List.of(parameter));
+    var variables = List.of(
+      variable(VariableKind.PARAMETER, "Сервис", parameterRange),
+      variable(VariableKind.MODULE, "Логгер", fieldRange),
+      variable(VariableKind.LOCAL, "Локальная", fieldRange));
+    var symbolTree = mock(SymbolTree.class);
+    when(symbolTree.getConstructor()).thenReturn(Optional.of(constructor));
+    when(symbolTree.getVariables()).thenReturn(variables);
+
+    // when
+    var candidates = AutumnComponentInferencer.injectionCandidates(symbolTree);
+
+    // then
+    assertThat(candidates).containsExactly(
+      new AutumnComponentInferencer.InjectionCandidate(annotations, "Сервис", parameterRange),
+      new AutumnComponentInferencer.InjectionCandidate(List.of(), "Логгер", fieldRange));
+  }
+
+  private static VariableSymbol variable(VariableKind kind, String name, Range nameRange) {
+    var variable = mock(VariableSymbol.class);
+    lenient().when(variable.getKind()).thenReturn(kind);
+    lenient().when(variable.getName()).thenReturn(name);
+    lenient().when(variable.getAnnotations()).thenReturn(List.of());
+    lenient().when(variable.getVariableNameRange()).thenReturn(nameRange);
+    return variable;
   }
 
   @Test

@@ -22,14 +22,18 @@
 package com.github._1c_syntax.bsl.languageserver.types.oscript.autumn;
 
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
+import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.annotations.OScriptMetaAnnotationResolver;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.lsp4j.Range;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -120,6 +124,40 @@ public class AutumnComponentInferencer {
    *                   желуди), иначе одиночный желудь.
    */
   public record InjectedBean(String name, boolean collection) {
+  }
+
+  /**
+   * Объявление, которое может быть точкой внедрения: параметр конструктора класса или поле
+   * модуля. Внедряется ли в него желудь, решают аннотации — см. {@link #injectedBean}.
+   *
+   * @param annotations аннотации объявления.
+   * @param name        имя параметра или поля.
+   * @param nameRange   диапазон имени.
+   */
+  public record InjectionCandidate(List<Annotation> annotations, String name, Range nameRange) {
+  }
+
+  /**
+   * Объявления класса, которые могут быть точками внедрения: параметры конструктора и поля
+   * модуля. Параметр конструктора среди переменных дерева есть ещё раз (вид
+   * {@link VariableKind#PARAMETER}, те же аннотации) — второй раз он не попадает.
+   *
+   * @param symbolTree дерево символов класса.
+   * @return кандидаты: сначала параметры конструктора, затем поля модуля, в порядке объявления.
+   */
+  public static List<InjectionCandidate> injectionCandidates(SymbolTree symbolTree) {
+    var candidates = new ArrayList<InjectionCandidate>();
+    symbolTree.getConstructor().ifPresent(constructor ->
+      constructor.getParameters().forEach(parameter ->
+        // ParameterDefinition.getRange() — диапазон имени параметра, не всей декларации
+        candidates.add(new InjectionCandidate(parameter.getAnnotations(), parameter.getName(), parameter.getRange()))));
+    for (var variable : symbolTree.getVariables()) {
+      if (variable.getKind() == VariableKind.MODULE) {
+        candidates.add(new InjectionCandidate(
+          variable.getAnnotations(), variable.getName(), variable.getVariableNameRange()));
+      }
+    }
+    return List.copyOf(candidates);
   }
 
   private TypeSet injectedType(Annotation injection, String fallbackName, FileType fileType) {
