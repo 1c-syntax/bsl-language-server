@@ -424,3 +424,17 @@
   `diagnostics` с листом `diagnostics.metadata`.
 - **Проверка.** Тесты `references`, `types.references`, `types.registry`, `Hover*`,
   `AssignToReadOnlyPropertyDiagnosticTest`, `ArchitectureTest` (119 классов).
+
+## Раунд 30. Разбор путей от MCP-клиента
+
+- **Проблема.** `mcp/CLAUDE.md` требует разбирать значения от клиента только через
+  `McpWorkspaceFolders`, но `McpDocumentReader` разбирал путь документа сам
+  (`startsWith("file:") ? Absolute.uri : Absolute.uri(new File(…))`) — без починки windows-вида
+  `file://D:\…`, которую рабочие папки проходят. Такой URI документа падал сырой ошибкой разбора
+  вместо подсказки о регистрации рабочей папки.
+- **Сделано.** `McpWorkspaceFolders.toDocumentUri` рядом с `toWorkspaceFolderUri` (общая починка
+  и определение схемы); `McpDocumentReader` переведён на него.
+- **Проверка.** Красные `McpWorkspaceFoldersTest.documentUri*` (на заглушке) → зелёные; тесты `mcp`.
+- **Ограничение.** `ArchitectureTest.mcp_client_paths_are_normalized_by_workspace_folders`: в `mcp`
+  строковые `Absolute.uri/path` вызывает только `McpWorkspaceFolders` (на прежнем
+  `McpDocumentReader` правило нарушено).

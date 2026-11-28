@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.lsp.BSLTextDocumentService;
 import com.github._1c_syntax.bsl.languageserver.reporters.DiagnosticReporter;
+import com.github._1c_syntax.utils.Absolute;
 import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaCodeUnit;
@@ -222,6 +223,17 @@ class ArchitectureTest {
       }
     })
     .because("обработчик запроса к документу строится на BSLTextDocumentService.onDocument");
+
+  // --- MCP ----------------------------------------------------------------------------------------
+
+  @ArchTest
+  static final ArchRule mcp_client_paths_are_normalized_by_workspace_folders = noClasses()
+    .that().resideInAPackage(ROOT_PACKAGE + ".mcp..")
+    .and().doNotHaveFullyQualifiedName(ROOT_PACKAGE + ".mcp.McpWorkspaceFolders")
+    .should().callMethod(Absolute.class, "uri", String.class)
+    .orShould().callMethod(Absolute.class, "path", String.class)
+    .because("строку от MCP-клиента (путь или URI, в том числе windows-вида file://D:\\…) разбирает "
+      + "только McpWorkspaceFolders — свой разбор разъедется с регистрацией рабочих папок");
 
   // --- Code actions -------------------------------------------------------------------------------
 
