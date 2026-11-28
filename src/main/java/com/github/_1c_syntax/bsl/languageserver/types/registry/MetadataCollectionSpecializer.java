@@ -622,9 +622,7 @@ public class MetadataCollectionSpecializer {
       var mdoName = mdo.getName();
       var ownRef = typeRegistry.intern(TypeKind.PLATFORM, elementTypeRef.qualifiedName() + "." + mdoName);
       for (var generic : generics) {
-        var parameter = typeRegistry.getTypeParameters(generic).get(0);
-        var specializedName = TypeRef.specialize(generic, Map.of(parameter, mdoName)).qualifiedName();
-        typeRegistry.resolve(specializedName)
+        typeRegistry.findSpecialization(generic, mdoName)
           .ifPresent(specialized -> typeRegistry.registerMemberOverride(specialized,
             () -> ownMetadataMembers(typeRegistry.getMembers(generic, FileType.BSL), elementTypeRef, ownRef),
             FileType.BSL));

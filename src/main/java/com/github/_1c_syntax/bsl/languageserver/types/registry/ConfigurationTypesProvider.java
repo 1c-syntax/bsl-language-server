@@ -786,13 +786,7 @@ public class ConfigurationTypesProvider {
       return;
     }
     for (var generic : typeRegistry.findAllGenericsByFamilyCore(familyCore)) {
-      var parameters = typeRegistry.getTypeParameters(generic);
-      if (parameters.size() != 1) {
-        continue;
-      }
-      var bindings = Map.of(parameters.get(0), mdName);
-      typeRegistry.resolve(TypeRef.specialize(generic, bindings).qualifiedName())
-        .filter(specialized -> !specialized.equals(generic))
+      typeRegistry.findSpecialization(generic, mdName)
         .ifPresent(specialized -> typeRegistry.registerMemberSuppression(specialized, absent, FileType.BSL));
     }
   }

@@ -2012,6 +2012,24 @@ public class TypeRegistry {
   }
 
   /**
+   * Зарегистрированная специализация дженерика с единственным параметром.
+   *
+   * @param generic  дженерик
+   * @param argument значение параметра — как правило, имя объекта метаданных
+   * @return специализация; пусто, если параметров у типа не ровно один, специализация не
+   *     зарегистрирована либо подстановка не меняет имени типа
+   */
+  public Optional<TypeRef> findSpecialization(TypeRef generic, String argument) {
+    var parameters = getTypeParameters(generic);
+    if (parameters.size() != 1) {
+      return Optional.empty();
+    }
+    var bindings = Map.of(parameters.getFirst(), argument);
+    return resolve(TypeRef.specialize(generic, bindings).qualifiedName())
+      .filter(specialized -> !specialized.equals(generic));
+  }
+
+  /**
    * @return {@code true}, если в реестре зарегистрирован хотя бы один член
    *         с {@link AccessMode#READ}. Дешёвая проверка для early-exit'а в
    *         диагностиках, не имеющих смысла без read-only-данных

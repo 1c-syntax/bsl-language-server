@@ -1024,3 +1024,26 @@
 - **Проверка.** `context.symbol`, `types.inferencer`, `types.index`, `types.oscript`, `*Hover*`,
   `*MarkupContentBuilder*`, `*AutumnNavigation*` (114 классов, 867 тестов) зелёные; `javadoc`,
   `spotlessCheck` зелёные.
+
+## Раунд 68. Специализация дженерика по имени объекта — `TypeRegistry.findSpecialization`
+
+Источник — пункт 3 остаточного сканирования (раунд 64).
+
+- **Проблема.** «У дженерика ровно один параметр → подставить имя объекта → найти
+  зарегистрированную специализацию» — шесть копий: `CatalogOwnerTypesRegistrar`,
+  `RegisterTypesRegistrar` (три: достройка членов, расширение записи, `specializedByName`),
+  `ConfigurationTypesProvider.registerHierarchySuppressions`,
+  `MetadataCollectionSpecializer.registerOwnMetadata`. Расходились в мелочи: три копии
+  отбрасывали «специализацию», совпавшую с самим дженериком (подстановка не изменила имени),
+  остальные нет — и вешали бы члены, подавления и расширения на сам дженерик, то есть на все
+  объекты семейства сразу.
+- **Сделано.** `TypeRegistry.findSpecialization(generic, argument)` с проверкой всех трёх
+  условий; копии и `RegisterTypesRegistrar.specializedByName` удалены. Привязка параметра
+  (`bindings`) там, где она нужна дальше (`registerMemberExpansion`, достройка членов регистра),
+  строится после поиска. Не копия и не тронута — `registerEnumValueExpansion`: тип менеджера
+  ей передан, специализацию она не ищет.
+- **Тесты.** `TypeRegistrySpecializationTest.findSpecializationReturnsRegisteredSpecializationOfSingleParameterGeneric`
+  красный на заглушке → зелёный (найдена; не зарегистрирована; не дженерик; подстановка
+  вернула сам дженерик).
+- **Проверка.** `types.registry`, `types.inferencer`, `*Completion*`, `*Hover*`,
+  `ArchitectureTest` (160 классов, 1492 теста) зелёные; `javadoc`, `spotlessCheck` зелёные.

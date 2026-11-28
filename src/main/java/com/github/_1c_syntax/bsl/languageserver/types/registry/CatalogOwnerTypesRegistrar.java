@@ -33,7 +33,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -91,17 +90,8 @@ class CatalogOwnerTypesRegistrar {
 
   /** Регистрирует уточнённый {@code Владелец} на специализации одного дженерика семейства. */
   private void registerOwnerMembersOn(TypeRef generic, String mdName, List<String> ownerNames) {
-    var parameters = typeRegistry.getTypeParameters(generic);
-    if (parameters.size() != 1) {
-      return;
-    }
-    var bindings = Map.of(parameters.get(0), mdName);
-    var specialized = typeRegistry.resolve(TypeRef.specialize(generic, bindings).qualifiedName())
-      .orElse(null);
-    if (specialized == null || specialized.equals(generic)) {
-      return;
-    }
-    typeRegistry.registerMemberOverride(specialized, () -> ownerMembers(generic, ownerNames), FileType.BSL);
+    typeRegistry.findSpecialization(generic, mdName).ifPresent(specialized ->
+      typeRegistry.registerMemberOverride(specialized, () -> ownerMembers(generic, ownerNames), FileType.BSL));
   }
 
   /**
