@@ -22,9 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.inlayhints;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import org.eclipse.lsp4j.jsonrpc.messages.Either;
-
-import java.util.Map;
+import com.github._1c_syntax.bsl.languageserver.configuration.SupplierParameters;
 
 /**
  * Чтение вложенного флага рендеринга подсказок выведенного типа переменной
@@ -45,13 +43,9 @@ final class VariableTypeInlayHintFlags {
   }
 
   private static boolean readFlag(LanguageServerConfiguration configuration, String name, boolean defaultValue) {
-    Either<Boolean, Map<String, Object>> entry = configuration.getInlayHintOptions().getParameters().get(CONFIG_KEY);
-    if (entry != null && entry.isRight()) {
-      var value = entry.getRight().get(name);
-      if (value instanceof Boolean b) {
-        return b;
-      }
-    }
-    return defaultValue;
+    return SupplierParameters.setting(configuration.getInlayHintOptions().getParameters(), CONFIG_KEY, name)
+      .filter(Boolean.class::isInstance)
+      .map(Boolean.class::cast)
+      .orElse(defaultValue);
   }
 }

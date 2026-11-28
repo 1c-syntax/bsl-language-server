@@ -36,7 +36,6 @@ import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.TextEdit;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -81,21 +80,9 @@ public class DeprecatedTypeManagedFormDiagnostic extends AbstractVisitorDiagnost
     DocumentContext documentContext
   ) {
 
-    List<TextEdit> textEdits = new ArrayList<>();
-
-    diagnostics.forEach((Diagnostic diagnostic) -> {
-
-      TextEdit textEdit = new TextEdit(diagnostic.getRange(), info.getResourceString("changeFix"));
-      textEdits.add(textEdit);
-
-    });
-
-    return QuickFixProvider.createCodeActions(
-      textEdits,
-      info.getResourceString("quickFixMessage"),
-      documentContext.getUri(),
-      diagnostics
-    );
+    var replacement = info.getResourceString("changeFix");
+    return QuickFixProvider.fixEach(diagnostics, info.getResourceString("quickFixMessage"), documentContext.getUri(),
+      diagnostic -> List.of(new TextEdit(diagnostic.getRange(), replacement)));
   }
 
 

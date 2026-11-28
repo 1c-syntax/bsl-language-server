@@ -21,6 +21,10 @@
  */
 package com.github._1c_syntax.bsl.languageserver.cli;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.Logger;
+import ch.qos.logback.classic.spi.ILoggingEvent;
+import ch.qos.logback.core.read.ListAppender;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
@@ -31,6 +35,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import picocli.CommandLine;
@@ -81,22 +86,35 @@ class FormatCommandTest {
     assertThat(exitCode).isZero();
   }
 
-  /** Если в указанном каталоге нет BSL/OS файлов — команда возвращает код 1. */
+  /** Если в указанном каталоге нет BSL/OS файлов — команда сообщает об этом и возвращает код 1. */
   @Test
   void callReturnsOneWhenNoFilesFound() throws Exception {
     // given
     serverContext.setConfigurationRoot(tempDir);
     var noBslDir = tempDir.resolve("noBsl").toFile();
     FileUtils.copyDirectory(new File(METADATA_FIXTURE, "Languages"), noBslDir);
+    var commandLog = (Logger) LoggerFactory.getLogger(FormatCommand.class);
+    var logged = new ListAppender<ILoggingEvent>();
+    logged.start();
+    commandLog.addAppender(logged);
 
     // when
-    var exitCode = new CommandLine(formatCommand).execute(
-      "-s", noBslDir.getAbsolutePath(),
-      "-q"
-    );
+    int exitCode;
+    try {
+      exitCode = new CommandLine(formatCommand).execute(
+        "-s", noBslDir.getAbsolutePath(),
+        "-q"
+      );
+    } finally {
+      commandLog.detachAppender(logged);
+    }
 
-    // then
+    // then — код ошибки не молчаливый: в журнале названо, где файлов не нашлось.
     assertThat(exitCode).isOne();
+    assertThat(logged.list).anySatisfy(event -> {
+      assertThat(event.getLevel()).isEqualTo(Level.ERROR);
+      assertThat(event.getFormattedMessage()).contains(noBslDir.getAbsolutePath());
+    });
   }
 
   /** Несуществующий путь логируется и пропускается; при отсутствии файлов возвращается код 1. */

@@ -103,7 +103,7 @@ public class PlatformMemberPropertyAccessSemanticTokensSupplier
     // получают лишь члены стандартной библиотеки или платформы. У собственных и
     // общих реквизитов конфигурации его быть не должно — остаётся обычный Property.
     if (member.get().descriptor().standardLibrary()) {
-      helper.addRange(entries, range, SemanticTokenTypes.Property, DEFAULT_LIBRARY_MODIFIERS);
+      helper.addRange(entries, range, SemanticTokenTypes.Property, SemanticTokenModifierSets.of(true, false, false));
     } else {
       helper.addRange(entries, range, SemanticTokenTypes.Property);
     }
@@ -126,7 +126,7 @@ public class PlatformMemberPropertyAccessSemanticTokensSupplier
    * Пусто, если цепочка начинается не с идентификатора (конструктор {@code Новый ...} и т.п.).
    */
   private static Optional<String> chainBaseName(BSLParser.AccessPropertyContext accessProperty) {
-    var root = Trees.getRootParent(accessProperty, CHAIN_ROOTS);
+    var root = Trees.getAncestorByRuleIndex(accessProperty, CHAIN_ROOTS);
     TerminalNode base = null;
     if (root instanceof BSLParser.ComplexIdentifierContext complexId) {
       base = complexId.IDENTIFIER();

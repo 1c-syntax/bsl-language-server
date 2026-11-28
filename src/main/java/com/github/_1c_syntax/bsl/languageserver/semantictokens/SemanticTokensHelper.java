@@ -24,14 +24,18 @@ package com.github._1c_syntax.bsl.languageserver.semantictokens;
 import com.github._1c_syntax.bsl.parser.description.support.DescriptionElement;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.Token;
+import org.eclipse.lsp4j.ClientCapabilities;
+import org.eclipse.lsp4j.InitializeParams;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
+import org.eclipse.lsp4j.SemanticTokensCapabilities;
 import org.eclipse.lsp4j.SemanticTokensLegend;
+import org.eclipse.lsp4j.TextDocumentClientCapabilities;
 import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Вспомогательные методы для создания семантических токенов.
@@ -46,6 +50,22 @@ public class SemanticTokensHelper {
   private static final String[] NO_MODIFIERS = new String[0];
 
   private final SemanticTokensLegend legend;
+
+  /**
+   * Заявил ли клиент поддержку многострочных токенов
+   * ({@code textDocument.semanticTokens.multilineTokenSupport}).
+   *
+   * @param params параметры {@code initialize}
+   * @return {@code true}, только если клиент явно заявил поддержку
+   */
+  public static boolean supportsMultilineTokens(@Nullable InitializeParams params) {
+    return Optional.ofNullable(params)
+      .map(InitializeParams::getCapabilities)
+      .map(ClientCapabilities::getTextDocument)
+      .map(TextDocumentClientCapabilities::getSemanticTokens)
+      .map(SemanticTokensCapabilities::getMultilineTokenSupport)
+      .orElse(false);
+  }
 
   /**
    * Добавить токен с заданным типом без модификаторов.
@@ -117,43 +137,6 @@ public class SemanticTokensHelper {
     }
     var modifierMask = computeModifierMask(modifiers);
     entries.add(new SemanticTokenEntry(line, start, length, typeIdx, modifierMask));
-  }
-
-  /**
-   * Добавить токен из ANTLR токена с явно указанным типом.
-   *
-   * @param entries Список токенов для наполнения
-   * @param token   ANTLR токен
-   * @param type    Тип семантического токена (из SemanticTokenTypes)
-   */
-  public void addTokenRange(List<SemanticTokenEntry> entries, Token token, String type) {
-    addTokenRange(entries, token, type, NO_MODIFIERS);
-  }
-
-  /**
-   * Добавить токен из ANTLR токена с явно указанным типом и модификаторами.
-   *
-   * @param entries   Список токенов для наполнения
-   * @param token     ANTLR токен
-   * @param type      Тип семантического токена (из SemanticTokenTypes)
-   * @param modifiers Модификаторы токена (из SemanticTokenModifiers)
-   */
-  public void addTokenRange(List<SemanticTokenEntry> entries, @Nullable Token token, String type, String... modifiers) {
-    if (token == null) {
-      return;
-    }
-
-    // ANTLR uses 1-indexed line numbers, convert to 0-indexed for LSP Range
-    int zeroIndexedLine = token.getLine() - 1;
-    int start = token.getCharPositionInLine();
-    int length = (int) token.getText().codePoints().count();
-
-    var range = new Range(
-      new Position(zeroIndexedLine, start),
-      new Position(zeroIndexedLine, start + length)
-    );
-
-    addRange(entries, range, type, modifiers);
   }
 
   /**

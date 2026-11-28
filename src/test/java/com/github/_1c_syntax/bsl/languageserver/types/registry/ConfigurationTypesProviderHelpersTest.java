@@ -96,7 +96,7 @@ class ConfigurationTypesProviderHelpersTest {
         .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
       when(serverContext.awaitConfiguration()).thenAnswer(invocation -> serverContext.getConfiguration());
       var serverProvider = mock(ServerContextProvider.class);
-      when(serverProvider.getAllContexts()).thenReturn(java.util.Map.of(workspaceUri, serverContext));
+      when(serverProvider.getCurrentServerContext()).thenReturn(java.util.Optional.of(serverContext));
       var p = newProviderWith(serverProvider);
       p.tryRegister();
       verify(configuration).isEmpty();
@@ -126,7 +126,7 @@ class ConfigurationTypesProviderHelpersTest {
         .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
       when(serverContext.awaitConfiguration()).thenAnswer(invocation -> serverContext.getConfiguration());
       var serverProvider = mock(ServerContextProvider.class);
-      when(serverProvider.getAllContexts()).thenReturn(java.util.Map.of(workspaceUri, serverContext));
+      when(serverProvider.getCurrentServerContext()).thenReturn(java.util.Optional.of(serverContext));
 
       var registry = new TypeRegistry(List.of(),
         mock(MemberMetadataIndex.class), mock(DefinedTypesIndex.class));
@@ -168,7 +168,7 @@ class ConfigurationTypesProviderHelpersTest {
       when(serverContext.awaitConfiguration()).thenAnswer(invocation -> serverContext.getConfiguration());
       var serverProvider = mock(
         ServerContextProvider.class);
-      when(serverProvider.getAllContexts()).thenReturn(java.util.Map.of(workspaceUri, serverContext));
+      when(serverProvider.getCurrentServerContext()).thenReturn(java.util.Optional.of(serverContext));
 
       var registry = new TypeRegistry(List.of(), mock(MemberMetadataIndex.class),
         mock(DefinedTypesIndex.class));
@@ -208,8 +208,8 @@ class ConfigurationTypesProviderHelpersTest {
         .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
       when(serverContext.awaitConfiguration()).thenAnswer(invocation -> serverContext.getConfiguration());
       var serverProvider = mock(ServerContextProvider.class);
-      when(serverProvider.getAllContexts())
-        .thenReturn(java.util.Map.of(workspaceUri, serverContext));
+      when(serverProvider.getCurrentServerContext())
+        .thenReturn(java.util.Optional.of(serverContext));
 
       var registry = new TypeRegistry(List.of(),
         mock(MemberMetadataIndex.class), mock(DefinedTypesIndex.class));
@@ -252,8 +252,8 @@ class ConfigurationTypesProviderHelpersTest {
         .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
       when(serverContext.awaitConfiguration()).thenAnswer(invocation -> serverContext.getConfiguration());
       var serverProvider = mock(ServerContextProvider.class);
-      when(serverProvider.getAllContexts())
-        .thenReturn(java.util.Map.of(workspaceUri, serverContext));
+      when(serverProvider.getCurrentServerContext())
+        .thenReturn(java.util.Optional.of(serverContext));
 
       var registry = new TypeRegistry(List.of(),
         mock(MemberMetadataIndex.class), mock(DefinedTypesIndex.class));
@@ -294,7 +294,7 @@ class ConfigurationTypesProviderHelpersTest {
         .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
       when(serverContext.awaitConfiguration()).thenAnswer(invocation -> serverContext.getConfiguration());
       var serverProvider = mock(ServerContextProvider.class);
-      when(serverProvider.getAllContexts()).thenReturn(java.util.Map.of(workspaceUri, serverContext));
+      when(serverProvider.getCurrentServerContext()).thenReturn(java.util.Optional.of(serverContext));
       var p = newProviderWith(serverProvider);
       p.tryRegister();
       p.tryRegister();
@@ -379,6 +379,30 @@ class ConfigurationTypesProviderHelpersTest {
       (registry, p) -> {
         p.tryRegister();
         assertThat(registry.resolve("ПеречислениеМенеджер.ВидыКонтрагента")).isPresent();
+      });
+  }
+
+  @Test
+  void tryRegister_specializesEachFamilyGenericOnce() {
+    // given — два дженерика семейства с одним и тем же параметром
+    var catalog = (MD) Catalog.builder().name("Контрагенты").build();
+    runTryRegister(
+      "file:///test-family-once/",
+      org.mockito.Mockito::spy,
+      List.of(
+        makeGenericTypeDecl("СправочникСсылка.<Имя справочника>", "Имя справочника"),
+        makeGenericTypeDecl("СправочникОбъект.<Имя справочника>", "Имя справочника")),
+      java.util.Map.of(catalog.getMdoReference(), catalog),
+      (registry, p) -> {
+        // when
+        p.tryRegister();
+
+        // then — каждая специализация регистрируется один раз, а не по разу на дженерик семейства
+        verify(registry, times(1)).registerSpecialization(
+          org.mockito.ArgumentMatchers.eq("СправочникСсылка.Контрагенты"),
+          org.mockito.ArgumentMatchers.any(TypeRef.class),
+          org.mockito.ArgumentMatchers.anyMap(),
+          org.mockito.ArgumentMatchers.any(FileType.class));
       });
   }
 
@@ -882,8 +906,8 @@ class ConfigurationTypesProviderHelpersTest {
         .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
       when(serverContext.awaitConfiguration()).thenAnswer(invocation -> serverContext.getConfiguration());
       var serverProvider = mock(ServerContextProvider.class);
-      when(serverProvider.getAllContexts())
-        .thenReturn(java.util.Map.of(workspaceUri, serverContext));
+      when(serverProvider.getCurrentServerContext())
+        .thenReturn(java.util.Optional.of(serverContext));
       var globalScope = mock(GlobalScopeProvider.class);
       var lsConfig = mock(
         LanguageServerConfiguration.class);

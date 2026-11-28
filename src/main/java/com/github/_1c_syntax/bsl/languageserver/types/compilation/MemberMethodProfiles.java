@@ -19,23 +19,30 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.types;
+package com.github._1c_syntax.bsl.languageserver.types.compilation;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
-import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver;
 import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver.MethodContext;
+
 import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
-/** Профили документов и директив; кеш принадлежит проверке одного файла. */
-final class MemberMethodProfiles {
+/**
+ * Профили компиляции методов ({@link CompilationContextResolver#methodContext}) с запоминанием
+ * по паре «документ, директива». Экземпляр живёт не дольше одного запроса или проверки файла:
+ * кеш не сбрасывается при изменении документов.
+ */
+public final class MemberMethodProfiles {
   private final CompilationContextResolver contextResolver;
   private final Map<ProfileKey, Optional<MethodContext>> profiles = new HashMap<>();
 
-  MemberMethodProfiles(CompilationContextResolver resolver) {
+  /**
+   * @param resolver вычислитель профилей компиляции
+   */
+  public MemberMethodProfiles(CompilationContextResolver resolver) {
     contextResolver = resolver;
   }
 
@@ -52,8 +59,14 @@ final class MemberMethodProfiles {
     }
   }
 
-  /** Повторно использовать профиль документа и директивы только в пределах проверки текущего файла. */
-  Optional<MethodContext> methodContext(DocumentContext document, Optional<CompilerDirectiveKind> directive) {
+  /**
+   * Профиль метода с директивой {@code directive} в документе; вычисляется один раз на пару.
+   *
+   * @param document  документ метода
+   * @param directive директива компиляции метода
+   * @return профиль компиляции метода
+   */
+  public Optional<MethodContext> methodContext(DocumentContext document, Optional<CompilerDirectiveKind> directive) {
     return profiles.computeIfAbsent(new ProfileKey(document.getUri(), directive),
       ignored -> contextResolver.methodContext(document, directive));
   }

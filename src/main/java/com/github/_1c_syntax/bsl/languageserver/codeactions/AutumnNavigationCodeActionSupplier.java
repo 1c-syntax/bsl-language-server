@@ -25,7 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.codelenses.NavigationCommandBuil
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SymbolTree;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.autumn.AutumnBeanIndex;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.autumn.AutumnComponentInferencer;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.autumn.AutumnComponentInferencer.InjectedBean;
@@ -100,20 +99,10 @@ public class AutumnNavigationCodeActionSupplier implements CodeActionSupplier {
    * с kind=PARAMETER не учитываются).
    */
   private Optional<InjectedBean> injectedBeanAt(SymbolTree symbolTree, Position position) {
-    var fromParameter = symbolTree.getConstructor().stream()
-      .flatMap(constructor -> constructor.getParameters().stream())
-      // ParameterDefinition.getRange() — диапазон имени параметра, не всей декларации
-      .filter(parameter -> Ranges.containsPosition(parameter.getRange(), position))
+    return AutumnComponentInferencer.injectionCandidates(symbolTree).stream()
+      .filter(candidate -> Ranges.containsPosition(candidate.nameRange(), position))
       .findFirst()
-      .flatMap(parameter -> componentInferencer.injectedBean(parameter.getAnnotations(), parameter.getName()));
-    if (fromParameter.isPresent()) {
-      return fromParameter;
-    }
-    return symbolTree.getVariables().stream()
-      .filter(variable -> variable.getKind() == VariableKind.MODULE)
-      .filter(variable -> Ranges.containsPosition(variable.getVariableNameRange(), position))
-      .findFirst()
-      .flatMap(variable -> componentInferencer.injectedBean(variable.getAnnotations(), variable.getName()));
+      .flatMap(candidate -> componentInferencer.injectedBean(candidate.annotations(), candidate.name()));
   }
 
   private Optional<CodeAction> gotoProducerAction(

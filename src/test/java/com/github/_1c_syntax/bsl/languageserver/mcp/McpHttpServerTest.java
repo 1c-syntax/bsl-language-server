@@ -95,7 +95,7 @@ class McpHttpServerTest {
 
     assertThat(response.statusCode()).isEqualTo(200);
     assertThat(response.headers().firstValue("Mcp-Session-Id")).isPresent();
-    // Имя сервера берётся из AutoServerInfo (spring.application.name), см. McpServerInfoCustomizer.
+    // Имя сервера берётся из AutoServerInfo (spring.application.name), см. McpServerInfoConfigurer.
     assertThat(response.body()).contains("\"serverInfo\"").contains("BSL Language Server");
   }
 

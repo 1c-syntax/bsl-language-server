@@ -75,7 +75,7 @@ public class UnsafeSafeModeMethodCallDiagnostic extends AbstractFindMethodDiagno
     }
 
     BSLParser.MemberContext currentRootMember =
-      (BSLParser.MemberContext) Trees.getRootParent(ctx, BSLParser.RULE_member);
+      (BSLParser.MemberContext) Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_member);
     if (currentRootMember == null) {
       return false;
     }
@@ -89,7 +89,7 @@ public class UnsafeSafeModeMethodCallDiagnostic extends AbstractFindMethodDiagno
 
     ParserRuleContext rootExpressionNode = currentRootMember.getParent();
 
-    ParserRuleContext rootIfNode = Trees.getRootParent(rootExpressionNode, ROOT_LIST);
+    ParserRuleContext rootIfNode = Trees.getAncestorByRuleIndex(rootExpressionNode, ROOT_LIST);
     if (rootIfNode == null || rootIfNode.getRuleIndex() == BSLParser.RULE_codeBlock) {
       return false;
     }

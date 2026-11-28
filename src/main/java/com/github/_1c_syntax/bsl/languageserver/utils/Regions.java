@@ -54,6 +54,29 @@ public class Regions {
   private final Pattern INITIALIZE_REGION_NAME = createPattern(Keywords.INITIALIZE_REGION);
 
   /**
+   * Является ли имя области именем области программного интерфейса
+   * ({@code ПрограммныйИнтерфейс}/{@code Public}) — без учёта регистра.
+   *
+   * @param regionName имя области
+   * @return {@code true}, если имя совпадает с именем области программного интерфейса
+   */
+  public boolean isPublicRegionName(String regionName) {
+    return PUBLIC_REGION_NAME.matcher(regionName).matches();
+  }
+
+  /**
+   * Является ли имя области именем области API модуля — программного либо служебного
+   * программного интерфейса ({@code ПрограммныйИнтерфейс}/{@code Public},
+   * {@code СлужебныйПрограммныйИнтерфейс}/{@code Internal}) — без учёта регистра.
+   *
+   * @param regionName имя области
+   * @return {@code true}, если имя совпадает с именем одной из областей API
+   */
+  public boolean isApiRegionName(String regionName) {
+    return isPublicRegionName(regionName) || INTERNAL_REGION_NAME.matcher(regionName).matches();
+  }
+
+  /**
    * Метод возвращает паттерны регулярных выражений
    * удовлетворяющих стандартным наименованиям областей 1С на русском и английском языках
    *

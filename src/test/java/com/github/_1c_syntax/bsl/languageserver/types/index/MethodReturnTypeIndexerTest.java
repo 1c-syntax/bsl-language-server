@@ -435,7 +435,7 @@ class MethodReturnTypeIndexerTest {
     indexer.computeIfAbsent(sourceMethod, () -> new ComputedReturnTypes(TypeSet.EMPTY, Set.of(), true));
     var serverContext = serverContextOf(source);
     var workspace = URI.create("file:///settings-workspace");
-    when(serverContextProvider.getAllContexts()).thenReturn(Map.of(workspace, serverContext));
+    when(serverContextProvider.getCurrentServerContext()).thenReturn(java.util.Optional.of(serverContext));
     var started = new CountDownLatch(1);
     var release = new CountDownLatch(1);
     var first = new AtomicBoolean(true);

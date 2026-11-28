@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextH
 import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspaceResolver;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.TypeMemberDto;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
-import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.utils.FuzzyMatcher;
@@ -160,7 +159,7 @@ public class GlobalMemberSearchTool {
       if (member.generic()) {
         continue;
       }
-      var valueType = member.returnTypes().refs().stream().findFirst().orElse(TypeRef.UNKNOWN);
+      var valueType = member.returnType();
       if (typeRegistry.isEnumType(valueType, fileType)) {
         if (requested.contains(GlobalMemberCategory.ENUM)) {
           enumMembers.add(member);

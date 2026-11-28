@@ -28,7 +28,6 @@ import com.github._1c_syntax.bsl.languageserver.mcp.McpWorkspaceResolver;
 import com.github._1c_syntax.bsl.languageserver.mcp.dto.TypeMemberDto;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberKind;
-import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import lombok.RequiredArgsConstructor;
@@ -37,8 +36,6 @@ import org.springframework.ai.mcp.annotation.McpTool;
 import org.springframework.ai.mcp.annotation.McpToolParam;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
-
-import java.util.List;
 
 /**
  * MCP-инструмент {@code global_member_info}: по имени глобального члена 1С/BSL
@@ -110,9 +107,9 @@ public class GlobalMemberInfoTool {
         if (resolved.kind() == MemberKind.METHOD) {
           return functionResult(resolved, effectiveLanguage);
         }
-        var valueType = resolved.returnTypes().refs().stream().findFirst().orElse(TypeRef.UNKNOWN);
-        var kind = typeRegistry.isEnumType(valueType, fileType) ? "ENUM" : "PROPERTY";
-        return globalValueResult(resolved, valueType, kind, effectiveLanguage);
+        var kind = typeRegistry.isEnumType(resolved.returnType(), fileType) ? "ENUM" : "PROPERTY";
+        return new Result(resolved.displayName(effectiveLanguage), kind,
+          TypeMemberDto.from(resolved, effectiveLanguage));
       }
 
       throw new IllegalArgumentException("Global member is not found: " + name);
@@ -125,22 +122,5 @@ public class GlobalMemberInfoTool {
       "FUNCTION",
       TypeMemberDto.from(descriptor, language)
     );
-  }
-
-  private static Result globalValueResult(MemberDescriptor member, TypeRef valueType,
-                                          String kind, Language language) {
-    var canonicalName = member.displayName(language);
-    var rawDescription = member.description();
-    var description = rawDescription.isBlank() ? null : rawDescription;
-    var memberDto = new TypeMemberDto(
-      canonicalName,
-      "PROPERTY",
-      List.of(valueType.qualifiedName()),
-      description,
-      List.of(),
-      false,
-      null
-    );
-    return new Result(canonicalName, kind, memberDto);
   }
 }

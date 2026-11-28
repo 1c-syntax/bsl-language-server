@@ -1,7 +1,7 @@
 # Accessing data via CurrentRow of dynamic list (CurrentRowAccess)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Diagnostic description
+## Description
 
 Accessing properties or methods via `CurrentRow` of a dynamic list triggers a database object read per row. Use `CurrentData` instead, which works with already-fetched row data.
 

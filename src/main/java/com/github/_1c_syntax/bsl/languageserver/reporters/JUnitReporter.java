@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.SerializationFeature;
 import tools.jackson.dataformat.xml.XmlMapper;
@@ -31,7 +30,6 @@ import tools.jackson.dataformat.xml.ser.ToXmlGenerator;
 import javax.xml.namespace.QName;
 import java.nio.file.Path;
 
-@Slf4j
 @Component
 public class JUnitReporter implements DiagnosticReporter {
 
@@ -79,14 +77,11 @@ public class JUnitReporter implements DiagnosticReporter {
   public void endReport() {
     generator.writeEndObject();
     generator.close();
-    reportFile.commit();
-    LOGGER.info("JUnit report saved to {}", reportFile.path().toAbsolutePath());
+    reportFile.commit("JUnit");
   }
 
   @Override
   public void abortReport() {
-    if (reportFile != null) {
-      reportFile.close();
-    }
+    ReportFile.discard(reportFile);
   }
 }

@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.providers;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterClass;
@@ -117,6 +118,32 @@ class HoverProviderOScriptLibraryTest extends AbstractServerContextAwareTest {
     // ровно одна секция Параметры (если параметры есть).
     int titleCount = text.split("Новый PublicEntity\\(", -1).length - 1;
     assertThat(titleCount).as("заголовок не должен дублироваться, контент: %s", text).isEqualTo(1);
+  }
+
+  @Test
+  void constructorHoverOfOScriptClassUsesTheKeywordOfTheInterfaceLanguage() {
+    // given — тот же класс, язык интерфейса английский
+    var fixtureRoot = Path.of("src/test/resources/oscript-libraries/internal-classes-test").toAbsolutePath();
+    initServerContext(fixtureRoot, false);
+    index.reindex(context);
+    context.getLanguageServerConfiguration().setLanguage(Language.EN);
+
+    var content = "#Использовать internal-classes-lib\nХ = Новый PublicEntity();\n";
+    var dc = TestUtils.getDocumentContext(TestUtils.FAKE_OSCRIPT_DOCUMENT_URI, content, context);
+    int typeNameStart = content.indexOf("PublicEntity") - content.indexOf('\n') - 1;
+    var params = new HoverParams();
+    params.setPosition(new Position(1, typeNameStart + 2));
+
+    // when
+    String text;
+    try {
+      text = hoverProvider.getHover(dc, params).orElseThrow().getContents().getRight().getValue();
+    } finally {
+      context.getLanguageServerConfiguration().setLanguage(Language.RU);
+    }
+
+    // then — как у конструкторов платформенных типов: ключевое слово на языке интерфейса
+    assertThat(text).contains("New PublicEntity(").doesNotContain("Новый PublicEntity(");
   }
 
   @Test

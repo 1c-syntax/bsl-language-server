@@ -36,7 +36,6 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @DiagnosticMetadata(
@@ -79,29 +78,15 @@ public class EmptyStatementDiagnostic extends AbstractVisitorDiagnostic implemen
     DocumentContext documentContext
   ) {
 
-    List<TextEdit> textEdits = new ArrayList<>();
-
-    diagnostics.forEach((Diagnostic diagnostic) -> {
-
-      Position diagnosticRangeEnd = diagnostic.getRange().getEnd();
-      Position diagnosticRangeNewEnd = new Position(
-        diagnosticRangeEnd.getLine(),
-        diagnosticRangeEnd.getCharacter() - 1
-      );
-
-      Range range = new Range(diagnosticRangeNewEnd, diagnosticRangeEnd);
-
-      TextEdit textEdit = new TextEdit(range, "");
-      textEdits.add(textEdit);
-
-    });
-
-    return QuickFixProvider.createCodeActions(
-      textEdits,
-      info.getResourceString("quickFixMessage"),
-      documentContext.getUri(),
-      diagnostics
-    );
+    return QuickFixProvider.fixEach(diagnostics, info.getResourceString("quickFixMessage"), documentContext.getUri(),
+      (Diagnostic diagnostic) -> {
+        Position diagnosticRangeEnd = diagnostic.getRange().getEnd();
+        Position diagnosticRangeNewEnd = new Position(
+          diagnosticRangeEnd.getLine(),
+          diagnosticRangeEnd.getCharacter() - 1
+        );
+        return List.of(new TextEdit(new Range(diagnosticRangeNewEnd, diagnosticRangeEnd), ""));
+      });
 
   }
 

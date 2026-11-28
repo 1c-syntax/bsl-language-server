@@ -106,6 +106,22 @@ class MetadataSeeRefInferenceTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void seeRefWithEnglishKindResolvesLikeRussianOne() {
+    // given: «См. Catalog.Справочник1.…» — вид объекта метаданных записан по-английски.
+    var documentContext = TestUtils.getDocumentContextFromFile(
+      "./src/test/resources/types/MetadataSeeRef.bsl");
+
+    // when
+    var section = at(documentContext, "ЧастьПоАнглийски = АнглийскаяЧасть", "ЧастьПоАнглийски = ".length());
+    var attribute = at(documentContext, "РеквизитПоАнглийски = АнглийскийРеквизит",
+      "РеквизитПоАнглийски = ".length());
+
+    // then
+    assertThat(names(section)).containsExactly("СправочникТабличнаяЧасть.Справочник1.ТабличнаяЧасть1");
+    assertThat(names(attribute)).containsExactly("Число");
+  }
+
+  @Test
   void seeRefWithUnknownTailResolvesToNothing() {
     // given: у реквизита табличной части нет члена «Лишнее».
     var documentContext = TestUtils.getDocumentContextFromFile(

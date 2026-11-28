@@ -63,10 +63,22 @@ public class DescribedTypeResolver {
    */
   public TypeSet parameterTypes(ParameterDefinition parameter) {
     return parameter.getDescription()
-      .map(description -> description.types().stream()
-        .map(this::declaredType)
-        .reduce(TypeSet.EMPTY, TypeSet::union))
+      .map(description -> types(description.types()))
       .orElse(TypeSet.EMPTY);
+  }
+
+  /**
+   * Объединение типов, объявленных записями описания: у коллекционной записи — вместе с
+   * типами элементов.
+   *
+   * @param types записи описания типов (параметра, возвращаемого значения).
+   * @return типы записей в порядке объявления; нерезолвящиеся записи пропускаются,
+   *     {@link TypeSet#EMPTY} — если не резолвится ни одна.
+   */
+  public TypeSet types(List<TypeDescription> types) {
+    return types.stream()
+      .map(this::declaredType)
+      .reduce(TypeSet.EMPTY, TypeSet::union);
   }
 
   /**

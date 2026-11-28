@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.Range;
-import org.eclipse.lsp4j.SemanticTokenModifiers;
 import org.eclipse.lsp4j.util.Positions;
 
 import java.util.ArrayList;
@@ -59,8 +58,6 @@ import java.util.function.Predicate;
 @RequiredArgsConstructor
 public abstract class AbstractPlatformMemberSemanticTokensSupplier<T extends ParserRuleContext>
   implements SemanticTokensSupplier {
-
-  protected static final String[] DEFAULT_LIBRARY_MODIFIERS = {SemanticTokenModifiers.DefaultLibrary};
 
   protected final TypeService typeService;
   protected final SemanticTokensHelper helper;

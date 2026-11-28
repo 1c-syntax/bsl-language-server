@@ -175,7 +175,7 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private static boolean isCommentCorrect(BSLParser.CallParamContext commentsCtx) {
-    var codeBlockContext = (BSLParser.CodeBlockContext) Trees.getRootParent(commentsCtx, BSLParser.RULE_codeBlock);
+    var codeBlockContext = (BSLParser.CodeBlockContext) Trees.getAncestorByRuleIndex(commentsCtx, BSLParser.RULE_codeBlock);
     if (codeBlockContext == null) {
       return false;
     }
@@ -312,7 +312,7 @@ public class UsageWriteLogEventDiagnostic extends AbstractVisitorDiagnostic {
   }
 
   private static boolean isInsideExceptBlock(ParserRuleContext context) {
-    return Trees.getRootParent(context, BSLParser.RULE_exceptCodeBlock) != null;
+    return Trees.getAncestorByRuleIndex(context, BSLParser.RULE_exceptCodeBlock) != null;
   }
 
 }

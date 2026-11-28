@@ -38,6 +38,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.EntryKind;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.LibraryEntry;
+import com.github._1c_syntax.bsl.languageserver.types.registry.DescribedTypeResolver;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.parser.description.MethodDescription;
 import com.github._1c_syntax.bsl.parser.description.TypeDescription;
@@ -84,7 +85,8 @@ class AutumnCollectionIndexTest {
     // имени &ПрилепляемаяКоллекция он короткозамыкается. Пользовательских
     // алиасов в этих тестах нет.
     var metaResolver = new OScriptMetaAnnotationResolver(new AnnotationRepository());
-    collectionIndex = new AutumnCollectionIndex(libraryIndex, serverContextProvider, typeRegistry, metaResolver);
+    collectionIndex = new AutumnCollectionIndex(libraryIndex, serverContextProvider,
+      new DescribedTypeResolver(typeRegistry), metaResolver);
   }
 
   @Test
@@ -115,6 +117,20 @@ class AutumnCollectionIndexTest {
     registerClass("ПрилепляемаяКоллекцияМассив",
       constructor(collectionAnnotation("Массив")),
       getter(typeDescription("ФиксированныйМассив")));
+    init();
+
+    // when / then
+    assertThat(collectionIndex.resolve("Массив").refs()).containsExactly(fixedArray);
+  }
+
+  @Test
+  void getterReturnedTypeIsReadWithoutExplanationTail() {
+    // given: Получить() описан как «ФиксированныйМассив из Строка» — имя типа до пояснения.
+    var fixedArray = new TypeRef(TypeKind.PLATFORM, "ФиксированныйМассив");
+    when(typeRegistry.resolve("ФиксированныйМассив")).thenReturn(Optional.of(fixedArray));
+    registerClass("ПрилепляемаяКоллекцияМассив",
+      constructor(collectionAnnotation("Массив")),
+      getter(typeDescription("ФиксированныйМассив из Строка")));
     init();
 
     // when / then

@@ -29,7 +29,6 @@ import org.springframework.beans.factory.config.Scope;
 import java.net.URI;
 import java.util.Collection;
 import java.util.Map;
-import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -137,21 +136,6 @@ public class WorkspaceBeanScope implements Scope {
       });
     }
     store.remove(workspaceUri);
-  }
-
-  /**
-   * Get all instances of a bean across all workspaces.
-   *
-   * @param beanName the bean name
-   * @param type the expected type
-   * @return collection of all instances
-   */
-  public <T> Collection<T> getAllInstances(String beanName, Class<T> type) {
-    return store.values().stream()
-      .map(beans -> beans.get(beanName))
-      .filter(Objects::nonNull)
-      .map(type::cast)
-      .toList();
   }
 
   /**

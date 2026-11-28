@@ -29,7 +29,6 @@ import org.springframework.ai.mcp.annotation.McpTool;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -83,10 +82,7 @@ public class ListWorkspaceFoldersTool {
     // Снимок: getAllContexts отдаёт живое представление, а список и подсказка обходят его порознь —
     // без копии параллельная регистрация попала бы в один из них и не попала в другой.
     var contexts = Map.copyOf(serverContextProvider.getAllContexts());
-    var workspaceFolders = contexts.keySet().stream()
-      .flatMap(uri -> WorkspaceFolderDto.fromSnapshot(uri).stream())
-      .sorted(Comparator.comparing(workspaceFolder -> workspaceFolder.uri().toString()))
-      .toList();
-    return new Result(workspaceFolders, McpWorkspaceFolders.registrationHint(contexts.keySet()));
+    return new Result(WorkspaceFolderDto.listOf(contexts.keySet()),
+      McpWorkspaceFolders.registrationHint(contexts.keySet()));
   }
 }

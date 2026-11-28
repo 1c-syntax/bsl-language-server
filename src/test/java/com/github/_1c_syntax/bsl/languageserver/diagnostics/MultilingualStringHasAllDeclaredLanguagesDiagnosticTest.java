@@ -48,6 +48,15 @@ class MultilingualStringHasAllDeclaredLanguagesDiagnosticTest
   }
 
   @Test
+  void configurationWithoutDeclaredLanguagesKeepsDefault() {
+    // настройки диагностики заданы, но без declaredLanguages — действует значение по умолчанию
+    diagnosticInstance.configure(Map.of());
+
+    List<Diagnostic> diagnostics = getDiagnostics();
+    assertThat(diagnostics).hasSize(3);
+  }
+
+  @Test
   void testRuAndEn() {
     Map<String, Object> configuration = diagnosticInstance.getInfo().getDefaultConfiguration();
     configuration.put("declaredLanguages", "ru,en");

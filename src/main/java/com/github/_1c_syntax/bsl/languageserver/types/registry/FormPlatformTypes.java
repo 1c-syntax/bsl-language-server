@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.types.registry;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.mdo.Form;
 import com.github._1c_syntax.bsl.mdo.children.ObjectForm;
 import com.github._1c_syntax.bsl.mdo.storage.form.FormElementType;
@@ -35,6 +36,7 @@ import com.github._1c_syntax.bsl.types.MultiLanguageString;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -526,6 +528,38 @@ final class FormPlatformTypes {
    */
   static BilingualString neutral(String name) {
     return BilingualString.of(name, name);
+  }
+
+  /**
+   * Дочерние объекты формы (реквизиты, элементы, команды) как свойства её типа: имя — одно в
+   * обеих локалях ({@link #neutral}), описание — заголовок. Объекты без имени пропускаются,
+   * из одноимённых (без учёта регистра) остаётся первый — как и обращается к ним платформа.
+   *
+   * @param children дочерние объекты в порядке объявления.
+   * @param name     имя объекта.
+   * @param title    заголовок объекта.
+   * @param types    типы свойства для объекта.
+   * @param <T>      вид дочернего объекта.
+   * @return свойства в порядке объявления.
+   */
+  static <T> List<MemberDescriptor> namedProperties(List<T> children, Function<T, String> name,
+                                                    Function<T, MultiLanguageString> title,
+                                                    Function<T, TypeSet> types) {
+    if (children.isEmpty()) {
+      return List.of();
+    }
+    var byName = LinkedHashMap.<String, MemberDescriptor>newLinkedHashMap(children.size());
+    for (var child : children) {
+      var childName = name.apply(child);
+      if (childName.isBlank()) {
+        continue;
+      }
+      var descriptor = MemberDescriptor.property(childName, types.apply(child), "")
+        .withBilingualName(neutral(childName))
+        .withBilingualDescription(bilingual(title.apply(child)));
+      byName.putIfAbsent(childName.toLowerCase(Locale.ROOT), descriptor);
+    }
+    return List.copyOf(byName.values());
   }
 
   /**

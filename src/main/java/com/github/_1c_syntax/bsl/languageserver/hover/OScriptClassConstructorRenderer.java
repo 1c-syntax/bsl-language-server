@@ -21,9 +21,11 @@
  */
 package com.github._1c_syntax.bsl.languageserver.hover;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ConstructorSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
+import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
@@ -51,6 +53,7 @@ public class OScriptClassConstructorRenderer {
 
   private final DescriptionFormatter descriptionFormatter;
   private final OScriptLibraryIndex oScriptLibraryIndex;
+  private final LanguageServerConfiguration configuration;
 
   /**
    * Срендерить hover для класса с явным конструктором.
@@ -76,7 +79,9 @@ public class OScriptClassConstructorRenderer {
       .orElse("");
 
     sb.add("```bsl");
-    sb.add("Новый " + className + "(" + parameters + ")");
+    // Ключевое слово — на языке интерфейса, как у конструкторов платформенных типов
+    var newKeyword = Keywords.NEW.get(configuration.getLanguage().getLanguageCode());
+    sb.add(newKeyword + " " + className + "(" + parameters + ")");
     sb.add("```");
 
     var moduleSymbol = classDocument.getSymbolTree().getModule();

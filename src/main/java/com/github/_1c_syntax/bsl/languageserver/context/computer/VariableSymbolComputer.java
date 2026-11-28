@@ -260,7 +260,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
    * {@code Перем А, Б;}), поэтому поднимаемся к нему от объявления.
    */
   private static List<Annotation> moduleVarAnnotations(BSLParser.ModuleVarDeclarationContext ctx) {
-    var moduleVar = (BSLParser.ModuleVarContext) Trees.getRootParent(ctx, BSLParser.RULE_moduleVar);
+    var moduleVar = (BSLParser.ModuleVarContext) Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_moduleVar);
     if (moduleVar == null) {
       return Collections.emptyList();
     }
@@ -292,7 +292,7 @@ public class VariableSymbolComputer extends BSLParserBaseVisitor<ParseTree> impl
   }
 
   private SourceDefinedSymbol getVariableScope(BSLParser.SubVarDeclarationContext ctx) {
-    var sub = (BSLParser.SubContext) Trees.getRootParent(ctx, BSLParser.RULE_sub);
+    var sub = (BSLParser.SubContext) Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_sub);
     if (sub == null) {
       return module;
     }

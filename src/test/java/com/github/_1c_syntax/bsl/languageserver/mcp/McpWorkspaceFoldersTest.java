@@ -55,6 +55,20 @@ class McpWorkspaceFoldersTest {
   }
 
   @Test
+  void documentUriAcceptsPathOrFileUri() {
+    var expected = Absolute.uri(Absolute.path("src/test/resources/cli/Module.bsl").toUri());
+
+    assertThat(McpWorkspaceFolders.toDocumentUri("src/test/resources/cli/Module.bsl")).isEqualTo(expected);
+    assertThat(McpWorkspaceFolders.toDocumentUri(expected.toString())).isEqualTo(expected);
+  }
+
+  @Test
+  void documentUriRepairsWindowsFileUriLikeWorkspaceFolders() {
+    assertThat(McpWorkspaceFolders.toDocumentUri("file://D:\\git\\upp\\Module.bsl"))
+      .isEqualTo(Absolute.uri("file:///D:/git/upp/Module.bsl"));
+  }
+
+  @Test
   void normalizeWindowsFileUriRewritesDriveLetterAsHost() {
     assertThat(McpWorkspaceFolders.normalizeWindowsFileUri("file://D:\\git\\1C\\upp\\src\\cf"))
       .isEqualTo("file:///D:/git/1C/upp/src/cf");

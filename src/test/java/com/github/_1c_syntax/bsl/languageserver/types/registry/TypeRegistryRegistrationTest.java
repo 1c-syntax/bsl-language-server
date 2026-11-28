@@ -178,6 +178,18 @@ class TypeRegistryRegistrationTest {
   }
 
   @Test
+  void registerConfigurationTypeWithEnglishNameResolvesByBothNames() {
+    // when
+    var ref = typeRegistry.registerConfigurationType("ДокументОбъект.Заявка", "DocumentObject.Заявка");
+    var withoutEnglish = typeRegistry.registerConfigurationType("ДокументОбъект.Без", null);
+
+    // then
+    assertThat(typeRegistry.resolve("DocumentObject.Заявка")).contains(ref);
+    assertThat(typeRegistry.resolve("ДокументОбъект.Заявка")).contains(ref);
+    assertThat(typeRegistry.resolve("ДокументОбъект.Без")).contains(withoutEnglish);
+  }
+
+  @Test
   void registerFileTypeIsAdditive() {
     // given — тип зарегистрирован OS-источником
     var ref = typeRegistry.registerUserType("Y", declaration, FileType.OS);

@@ -619,6 +619,21 @@ class McpToolsTest {
   }
 
   @Test
+  void globalMemberInfoDescribesValuesLikeGlobalMemberSearch() {
+    // given — свойства и перечисления глобального контекста, найденные поиском на английском
+    var search = globalMemberSearchTool.globalMemberSearch(FileType.BSL, WORKSPACE_FOLDER, null, null, Language.EN);
+    var values = new java.util.ArrayList<TypeMemberDto>(search.properties());
+    values.addAll(search.enums());
+    assertThat(values).isNotEmpty();
+
+    // then — карточка члена та же, что в поиске: язык, метаданные, все типы значения
+    for (var value : values) {
+      var info = globalMemberInfoTool.globalMemberInfo(value.name(), FileType.BSL, WORKSPACE_FOLDER, Language.EN);
+      assertThat(info.member()).as(value.name()).isEqualTo(value);
+    }
+  }
+
+  @Test
   void globalMemberInfoThrowsForUnknownName() {
     assertThatThrownBy(() -> globalMemberInfoTool.globalMemberInfo("НетТакогоИмени", FileType.BSL, WORKSPACE_FOLDER, null))
       .isInstanceOf(IllegalArgumentException.class);

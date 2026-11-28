@@ -58,8 +58,9 @@ public class SubroutineDocumentHighlightSupplier extends AbstractASTDocumentHigh
       return Collections.emptyList();
     }
 
-    // Ищем метод по дереву символов
-    var position = params.getPosition();
+    // Метод ищется по найденному ключевому слову, а не по курсору: курсор может стоять сразу
+    // за последним токеном метода (за «КонецПроцедуры»), за концом его диапазона.
+    var position = Ranges.create(terminalNodeInfo.get().terminalNode()).getStart();
     var symbolTree = documentContext.getSymbolTree();
     for (var method : symbolTree.getMethods()) {
       var methodRange = method.getRange();

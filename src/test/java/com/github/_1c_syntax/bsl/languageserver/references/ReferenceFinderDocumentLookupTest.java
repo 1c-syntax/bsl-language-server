@@ -22,6 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.references;
 
 import com.github._1c_syntax.bsl.languageserver.context.AbstractServerContextAwareTest;
+import com.github._1c_syntax.bsl.languageserver.types.references.NewExpressionReferenceFinder;
+import com.github._1c_syntax.bsl.languageserver.types.references.PlatformMemberReferenceFinder;
 import com.github._1c_syntax.bsl.languageserver.util.TestApplicationContext;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.utils.Absolute;

@@ -41,6 +41,7 @@ import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.utils.Absolute;
 import org.apache.commons.io.FileUtils;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -277,6 +278,50 @@ class ReferenceIndexFillerTest extends AbstractServerContextAwareTest {
   }
 
   @Test
+  void notifyDescriptionHandlerInAnotherModuleResolvesToThatModuleUnderTheCursor() throws IOException {
+    // given — модуль формы передаёт обработчик из общего модуля
+    initServerContext(PATH_TO_METADATA);
+    var formFile = new File(PATH_TO_METADATA, "Documents/Документ1/Forms/ФормаДокумента/Ext/Form/Module.bsl");
+    var form = TestUtils.getDocumentContext(
+      Absolute.uri(formFile), FileUtils.readFileToString(formFile, StandardCharsets.UTF_8), context);
+    var moduleFile = new File(PATH_TO_METADATA, "CommonModules/КлиентскийОбщийМодуль/Ext/Module.bsl");
+    TestUtils.getDocumentContext(
+      Absolute.uri(moduleFile), FileUtils.readFileToString(moduleFile, StandardCharsets.UTF_8), context);
+
+    // when — курсор на строке-имени обработчика (строка 13: "ОбработчикОписаниеОповещения")
+    var reference = referenceIndex.getReference(form.getUri(), new Position(12, 12));
+
+    // then — переход ведёт в общий модуль, а не в несуществующий метод модуля формы
+    assertThat(reference).hasValueSatisfying(ref -> {
+      assertThat(ref.symbol().getName()).isEqualTo("ОбработчикОписаниеОповещения");
+      assertThat(ref.getSourceDefinedSymbol()).hasValueSatisfying(symbol ->
+        assertThat(symbol.getOwner().getModuleType()).isEqualTo(ModuleType.CommonModule));
+    });
+  }
+
+  @Test
+  void moduleBodyVariableIsNotReferencedFromMethodWithParseErrors() {
+    // given — переменная создана присваиванием в теле модуля; метод с ошибкой разбора
+    // обращается к одноимённому имени, которое из метода этой переменной не видно
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Тест()
+          Сообщить(Х);
+          А = ;
+      КонецПроцедуры
+      Х = 1;
+      """, context);
+    referenceIndexFiller.fill(documentContext);
+    var bodyVariable = documentContext.getSymbolTree()
+      .getVariableSymbol("Х", documentContext.getSymbolTree().getModule()).orElseThrow();
+
+    // when
+    var references = referenceIndex.getReferencesTo(bodyVariable);
+
+    // then — обращение из метода к переменной тела модуля не относится (как у getVariableSymbolInScope)
+    assertThat(references).noneMatch(ref -> ref.selectionRange().getStart().getLine() == 1);
+  }
+
+  @Test
   void testFindVariables() {
     DocumentContext documentContext = TestUtils.getDocumentContextFromFile(
       "./src/test/resources/references/ReferenceIndexFillerVariableTest.bsl"
@@ -468,6 +513,32 @@ class ReferenceIndexFillerTest extends AbstractServerContextAwareTest {
       .toList();
     // Должно быть 2 вызова: в assignment и в условии
     assertThat(referencesToFuncFromTest).hasSize(2);
+  }
+
+  @Test
+  void callOnCommonModuleVariableNestedInCallStatementArgumentIsIndexed() throws IOException {
+    // given — вызов через переменную-модуль стоит в аргументе вызова через ту же переменную
+    initServerContext(PATH_TO_METADATA);
+    var file = new File(PATH_TO_METADATA, "CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl");
+    var commonModuleContext = TestUtils.getDocumentContext(
+      Absolute.uri(file), FileUtils.readFileToString(file, StandardCharsets.UTF_8), context);
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Тест()
+          Модуль = ОбщегоНазначения.ОбщийМодуль("ПервыйОбщийМодуль");
+          Модуль.НеУстаревшаяПроцедура(Модуль.НеУстаревшаяФункция());
+      КонецПроцедуры
+      """, context);
+
+    // when
+    referenceIndexFiller.fill(documentContext);
+
+    // then — индексированы оба вызова: и голова оператора, и вложенный в аргумент
+    var procMethod = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяПроцедура").orElseThrow();
+    var funcMethod = commonModuleContext.getSymbolTree().getMethodSymbol("НеУстаревшаяФункция").orElseThrow();
+    assertThat(referenceIndex.getReferencesTo(procMethod))
+      .filteredOn(ref -> ref.uri().equals(documentContext.getUri())).hasSize(1);
+    assertThat(referenceIndex.getReferencesTo(funcMethod))
+      .filteredOn(ref -> ref.uri().equals(documentContext.getUri())).hasSize(1);
   }
 
   @Test

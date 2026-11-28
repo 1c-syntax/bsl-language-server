@@ -57,7 +57,7 @@ public class BSLFootprint implements LanguageFootprint {
     detectors.add(new CamelCaseDetector(CODE_MOST_LIKELY));
     detectors.add(new KeywordsDetector(CODE_MOST_LIKELY, "ВЫБРАТЬ", "РАЗРЕШЕННЫЕ", "ПЕРВЫЕ", "ГДЕ",
       "СОЕДИНЕНИЕ", "НЕ", "ОБЪЕДИНИТЬ", "ВЫБОР", "КАК", "ТОГДА", "КОГДА", "ИНАЧЕ", "ПОМЕСТИТЬ", "ИЗ", "=", "+",
-      "SELECT", "ТОР", "ПЕРВЫЕ", "WНERE", "JOIN", "NOT", "AS", "THEN", "CASE", "WНEN", "ELSE", "FROM", "INTO"));
+      "SELECT", "ALLOWED", "TOP", "WHERE", "JOIN", "NOT", "AS", "THEN", "CASE", "WHEN", "ELSE", "FROM", "INTO"));
 
     detectors.add(new EndWithDetector(CODE_MAYBE, ';'));
     detectors.add(new KeywordsDetector(CODE_MAYBE, "И", "ИЛИ", "AND", "OR"));

@@ -23,6 +23,7 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.client.LanguageClientHolder;
+import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentClosedEvent;
@@ -94,6 +95,17 @@ public class SemanticTokensProvider {
   private final Map<String, CachedTokenData> tokenCache = new ConcurrentHashMap<>();
 
   /**
+   * Сколько последних результатов документа хранится. Дельту клиент запрашивает от последнего
+   * полученного результата; второй нужен, когда ответ с последним до клиента не дошёл (запрос
+   * отменён уже после расчёта). Более старые вытесняются: иначе клиент, не пользующийся дельтой,
+   * копил бы по массиву токенов на каждый запрос, пока документ открыт.
+   */
+  private static final int RESULTS_PER_DOCUMENT = 2;
+
+  /** Выданные resultId документа, от старых к новым; не больше {@link #RESULTS_PER_DOCUMENT}. */
+  private final Map<URI, List<String>> recentResultIdsByUri = new ConcurrentHashMap<>();
+
+  /**
    * Cached semantic token data associated with a document.
    *
    * @param uri  URI of the document
@@ -158,11 +170,8 @@ public class SemanticTokensProvider {
     // Compute delta edits
     List<SemanticTokensEdit> edits = computeEdits(previousData.data(), currentData);
 
-    // Cache the new data
+    // Cache the new data; old results of the document are evicted by cacheTokenData
     cacheTokenData(resultId, documentContext.getUri(), currentData);
-
-    // Remove the old cached data
-    tokenCache.remove(previousResultId);
 
     var delta = new SemanticTokensDelta();
     delta.setResultId(resultId);
@@ -313,6 +322,20 @@ public class SemanticTokensProvider {
   }
 
   /**
+   * Обрабатывает событие изменения конфигурации.
+   * <p>
+   * Подсветка зависит от настроек (например, {@code semanticTokens.strTemplateMethods} —
+   * какие методы раскрашивают строку-шаблон), поэтому после их изменения клиенту
+   * отправляется запрос {@code workspace/semanticTokens/refresh}.
+   *
+   * @param event событие изменения конфигурации
+   */
+  @EventListener
+  public void handleConfigurationChanged(LanguageServerConfigurationChangedEvent event) {
+    refreshSemanticTokens();
+  }
+
+  /**
    * Отправить запрос на обновление семантических токенов.
    * <p>
    * Запрос отправляется только в случае поддержки клиентом возможности
@@ -336,6 +359,7 @@ public class SemanticTokensProvider {
    * @param uri URI документа, для которого нужно очистить кэш
    */
   protected void clearCache(URI uri) {
+    recentResultIdsByUri.remove(uri);
     tokenCache.entrySet().removeIf(entry -> entry.getValue().uri().equals(uri));
   }
 
@@ -351,6 +375,17 @@ public class SemanticTokensProvider {
    */
   private void cacheTokenData(String resultId, URI uri, int[] data) {
     tokenCache.put(resultId, new CachedTokenData(uri, data));
+    recentResultIdsByUri.compute(uri, (key, recent) -> {
+      var updated = new ArrayList<String>(RESULTS_PER_DOCUMENT + 1);
+      if (recent != null) {
+        updated.addAll(recent);
+      }
+      updated.add(resultId);
+      while (updated.size() > RESULTS_PER_DOCUMENT) {
+        tokenCache.remove(updated.removeFirst());
+      }
+      return List.copyOf(updated);
+    });
   }
 
   /**

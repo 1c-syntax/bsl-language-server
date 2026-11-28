@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 
 import java.io.BufferedOutputStream;
 import java.io.Closeable;
@@ -35,7 +36,7 @@ import java.nio.file.Path;
  * Файл отчёта с семантикой «всё или ничего».
  * <p>
  * Содержимое пишется в {@link #stream()} по мере формирования отчёта. Файл остаётся на диске
- * только после {@link #commit()}; если объект закрыт без фиксации, файл удаляется — недописанный
+ * только после {@link #commit(String)}; если объект закрыт без фиксации, файл удаляется — недописанный
  * отчёт не должен пережить неудачный запуск и не должен выдаваться за результат.
  * <p>
  * {@link #close()} не бросает исключений: он вызывается на пути обработки ошибки, где подменять
@@ -75,7 +76,7 @@ final class ReportFile implements Closeable {
   /**
    * Поток для записи содержимого отчёта.
    *
-   * @return поток вывода, действительный до {@link #commit()} или {@link #close()}
+   * @return поток вывода, действительный до {@link #commit(String)} или {@link #close()}
    */
   OutputStream stream() {
     return stream;
@@ -95,13 +96,35 @@ final class ReportFile implements Closeable {
    *
    * @throws UncheckedIOException если содержимое не удалось дописать
    */
-  void commit() {
+  private void commit() {
     try {
       stream.close();
     } catch (IOException e) {
       throw new UncheckedIOException("Can't write report file " + path, e);
     }
     committed = true;
+  }
+
+  /**
+   * Зафиксировать отчёт и сообщить в журнал, где он сохранён.
+   *
+   * @param reportName название формата для сообщения ({@code "JSON"}, {@code "SARIF"}).
+   * @throws UncheckedIOException если содержимое не удалось дописать
+   */
+  void commit(String reportName) {
+    commit();
+    LOGGER.info("{} report saved to {}", reportName, path.toAbsolutePath());
+  }
+
+  /**
+   * Отказаться от отчёта: закрыть файл без фиксации, если он был открыт.
+   *
+   * @param reportFile файл отчёта; {@code null} — отчёт не начинали, удалять нечего.
+   */
+  static void discard(@Nullable ReportFile reportFile) {
+    if (reportFile != null) {
+      reportFile.close();
+    }
   }
 
   /**

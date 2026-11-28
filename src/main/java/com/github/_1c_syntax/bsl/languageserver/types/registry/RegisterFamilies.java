@@ -126,8 +126,7 @@ final class RegisterFamilies {
     if (returnTypes == null) {
       return signature;
     }
-    return new SignatureDescriptor(signature.parameters(), returnTypes,
-      signature.bilingualDescription(), signature.metadata());
+    return signature.withReturnTypes(returnTypes);
   }
 
   /** @return набор с заменённым семейством; {@code null}, если ни один тип не поменялся. */

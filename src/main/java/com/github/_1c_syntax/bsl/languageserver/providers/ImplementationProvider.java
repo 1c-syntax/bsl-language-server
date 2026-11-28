@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.extends_.TypeRelations;
+import com.github._1c_syntax.bsl.languageserver.utils.NavigationLinks;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ClientCapabilities;
@@ -116,16 +117,7 @@ public class ImplementationProvider {
     DocumentContext documentContext,
     ImplementationParams params
   ) {
-    var links = findLocationLinks(documentContext, params);
-
-    if (linkSupport) {
-      return Either.forRight(links);
-    }
-
-    List<Location> locations = links.stream()
-      .map(link -> new Location(link.getTargetUri(), link.getTargetSelectionRange()))
-      .toList();
-    return Either.forLeft(locations);
+    return NavigationLinks.forClient(findLocationLinks(documentContext, params), linkSupport);
   }
 
   private List<LocationLink> findLocationLinks(DocumentContext documentContext, ImplementationParams params) {

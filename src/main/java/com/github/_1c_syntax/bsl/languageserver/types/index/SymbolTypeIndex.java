@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextConfigurationBindingChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
@@ -46,6 +47,7 @@ import com.github._1c_syntax.bsl.parser.description.CollectionTypeDescription;
 import com.github._1c_syntax.bsl.parser.description.MethodDescription;
 import com.github._1c_syntax.bsl.parser.description.ParameterDescription;
 import com.github._1c_syntax.bsl.parser.description.TypeDescription;
+import com.github._1c_syntax.bsl.types.MDOType;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.context.event.EventListener;
@@ -162,6 +164,20 @@ public class SymbolTypeIndex {
     var documentContext = event.getSource();
     clear(documentContext.getUri());
     reindexDeclared(documentContext);
+  }
+
+  /**
+   * Документ удалён из рабочей области — его записи стираются: иначе символы методов, а через них
+   * и сам документ, жили бы в индексе до конца жизни рабочей области.
+   * <p>
+   * На закрытие и освобождение вторичных данных записи не стираются: объявленные типы читаются
+   * по дереву символов, которое переживает и то и другое.
+   *
+   * @param event событие удаления документа
+   */
+  @EventListener
+  public void handleDocumentRemoved(ServerContextDocumentRemovedEvent event) {
+    clear(event.getUri());
   }
 
   // Символы документа построены заново, а методы нового дерева не равны прежним, если сменился
@@ -635,9 +651,7 @@ public class SymbolTypeIndex {
     }
     try {
       var owner = method.getOwner();
-      return method.getParameters().stream()
-        .filter(parameter -> parameter.getName().equalsIgnoreCase(parameterName))
-        .findFirst()
+      return method.getParameterDefinition(parameterName)
         .flatMap(ParameterDefinition::getDescription)
         .map(description -> resolveTypes(description.types(),
           new ResolutionContext(owner, owner.getFileType(), visited)))
@@ -990,7 +1004,11 @@ public class SymbolTypeIndex {
     if (parts.length < MIN_METADATA_SEGMENTS) {
       return TypeSet.EMPTY;
     }
-    var kind = parts[KIND_PART];
+    // Имена типов реестр складывает из русского вида; ссылка может назвать вид и по-английски
+    // («Catalog.Товары.Товары»), тогда русское имя вида берётся у самого вида метаданных.
+    var kind = MDOType.fromValue(parts[KIND_PART])
+      .map(mdoType -> mdoType.fullName().getRu())
+      .orElse(parts[KIND_PART]);
     var mdName = parts[NAME_PART];
     var childName = parts[CHILD_PART];
 
@@ -1299,10 +1317,7 @@ public class SymbolTypeIndex {
 
   @Nullable
   private static MethodSymbol findLocalFunction(DocumentContext owner, String name) {
-    return owner.getSymbolTree().getMethods().stream()
-      .filter(candidate -> candidate.isFunction() && candidate.getName().equalsIgnoreCase(name))
-      .findFirst()
-      .orElse(null);
+    return owner.getSymbolTree().getMethodSymbol(name).filter(MethodSymbol::isFunction).orElse(null);
   }
 
   /** Ленивая ссылка на возвращаемый тип функции (из кэша, на момент чтения). */

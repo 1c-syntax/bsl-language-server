@@ -49,6 +49,7 @@ public record ParameterDescriptor(
 
   public ParameterDescriptor {
     bilingualName = Objects.requireNonNullElse(bilingualName, BilingualString.EMPTY);
+    types = Objects.requireNonNullElse(types, TypeSet.EMPTY);
     bilingualDescription = Objects.requireNonNullElse(bilingualDescription, BilingualString.EMPTY);
     defaultValue = Objects.requireNonNullElse(defaultValue, "");
   }
@@ -96,6 +97,16 @@ public record ParameterDescriptor(
   public ParameterDescriptor withVariadic(boolean isVariadic) {
     return new ParameterDescriptor(bilingualName, types, optional, bilingualDescription,
       defaultValue, isVariadic);
+  }
+
+  /**
+   * Копия дескриптора с другими типами.
+   *
+   * @param newTypes типы параметра.
+   * @return дескриптор, в котором остальное — как у исходного.
+   */
+  public ParameterDescriptor withTypes(TypeSet newTypes) {
+    return new ParameterDescriptor(bilingualName, newTypes, optional, bilingualDescription, defaultValue, variadic);
   }
 
   /** Compat-аксессор: primary написание имени. */

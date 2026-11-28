@@ -29,11 +29,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
-
-import java.util.stream.Stream;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -69,12 +66,8 @@ public class EmptyCodeBlockDiagnostic extends AbstractVisitorDiagnostic {
     }
 
     if (commentAsCode) {
-      Stream<Token> comments = documentContext.getComments().stream();
       var rangeCodeBlock = Ranges.create(ctx.getStop(), ctx.getStart());
-      if (comments.anyMatch(token ->
-        Ranges.containsRange(
-          rangeCodeBlock,
-          Ranges.create(token)))) {
+      if (Ranges.containsAnyToken(rangeCodeBlock, documentContext.getComments())) {
         return super.visitCodeBlock(ctx);
       }
     }

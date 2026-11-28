@@ -32,7 +32,6 @@ import org.springframework.ai.mcp.annotation.McpToolParam;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
 
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 
@@ -128,10 +127,7 @@ public class UnregisterWorkspaceFolderTool {
     var removed = workspaceBootstrap.unregister(workspaceUri);
 
     // Снимок живого представления: см. ListWorkspaceFoldersTool.
-    var remaining = Map.copyOf(serverContextProvider.getAllContexts()).keySet().stream()
-      .flatMap(uri -> WorkspaceFolderDto.fromSnapshot(uri).stream())
-      .sorted(Comparator.comparing(workspaceFolderDto -> workspaceFolderDto.uri().toString()))
-      .toList();
+    var remaining = WorkspaceFolderDto.listOf(Map.copyOf(serverContextProvider.getAllContexts()).keySet());
     return new Result(folder, !removed, remaining);
   }
 }

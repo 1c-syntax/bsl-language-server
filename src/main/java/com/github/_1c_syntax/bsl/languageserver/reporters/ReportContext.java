@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
+import java.nio.file.Path;
 import java.time.LocalDateTime;
 
 /**
@@ -29,8 +30,10 @@ import java.time.LocalDateTime;
  * Это «шапка» отчёта: всё, что репортёру нужно для {@code beginReport}. Результаты по файлам
  * сюда не входят — они поступают по одному.
  *
- * @param date      время начала анализа
- * @param sourceDir каталог исходных файлов
+ * @param date         время начала анализа
+ * @param sourceDir    каталог исходных файлов
+ * @param workspaceDir абсолютный каталог, относительно которого заданы пути файлов в
+ *                     {@link com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo}
  */
-public record ReportContext(LocalDateTime date, String sourceDir) {
+public record ReportContext(LocalDateTime date, String sourceDir, Path workspaceDir) {
 }

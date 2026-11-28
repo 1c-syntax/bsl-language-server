@@ -38,7 +38,6 @@ import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopu
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.index.AbstractDocumentLifecycleClearableIndex;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
-import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.types.inferencer.ExpressionTypeInferencer;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.MemberLookupSession;
@@ -205,8 +204,7 @@ public class MethodReturnTypeIndexer extends AbstractDocumentLifecycleClearableI
     }
     supportThickClientFileMode = enabled;
     resetPublication();
-    var workspace = WorkspaceContextHolder.get();
-    var context = workspace == null ? null : serverContextProvider.getAllContexts().get(workspace);
+    var context = serverContextProvider.getCurrentServerContext().orElse(null);
     if (context != null && !context.isClearing() && !maintenance && !pending.isEmpty()) {
       handleServerContextPopulated(new ServerContextPopulatedEvent(context));
     }

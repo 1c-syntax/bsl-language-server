@@ -274,7 +274,7 @@ public class DuplicatedInsertionIntoCollectionDiagnostic extends AbstractVisitor
     if (breakerContext.getRuleIndex() == BSLParser.RULE_returnStatement) {
       return true;
     }
-    final var rootParent = Trees.getRootParent(breakerContext, BREAKERS_ROOTS);
+    final var rootParent = Trees.getAncestorByRuleIndex(breakerContext, BREAKERS_ROOTS);
     if (rootParent == null || blockRange == null) {
       return true; // сюда должны попасть, только если модуль не по грамматике, но иначе ругань на возможный null
     }

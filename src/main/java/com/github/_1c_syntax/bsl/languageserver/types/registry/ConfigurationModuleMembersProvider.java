@@ -26,11 +26,13 @@ import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextConfigurationBindingChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.CommentTypeResolver;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -41,16 +43,19 @@ import com.github._1c_syntax.bsl.types.MDOType;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.Nullable;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Stream;
 
 /**
@@ -99,8 +104,69 @@ public class ConfigurationModuleMembersProvider {
   private final CommentTypeResolver commentTypeResolver;
   private final DescribedTypeResolver describedTypeResolver;
 
-  /** Уже зарегистрированные источники (по URI документа), чтобы избежать дублей. */
-  private final Map<URI, TypeRef> registeredByUri = new ConcurrentHashMap<>();
+  /**
+   * Регистрация модуля по URI документа: тип и источник его членов. Источник читает
+   * <b>текущий</b> документ URI, а не тот, при котором регистрировался: файл, удалённый и
+   * созданный заново по тому же пути, — новый {@link DocumentContext}, а источник в реестре
+   * остаётся прежним (повторная регистрация задвоила бы его).
+   */
+  private final Map<URI, ModuleRegistration> registeredByUri = new ConcurrentHashMap<>();
+
+  private final class ModuleRegistration {
+    private final TypeRef ref;
+    // Пусто — документ удалён: регистрация ждёт файла, созданного заново по тому же пути
+    private final AtomicReference<@Nullable DocumentContext> document;
+
+    private ModuleRegistration(TypeRef ref, DocumentContext document) {
+      this.ref = ref;
+      this.document = new AtomicReference<>(document);
+    }
+
+    private Collection<MemberDescriptor> members() {
+      var current = document.get();
+      return current == null ? List.of() : collectModuleMembers(current);
+    }
+  }
+
+  /**
+   * Документ удалён из рабочей области: модуль перестаёт отдавать его члены и связь URI → тип
+   * снимается. Сама регистрация остаётся — файл, созданный заново по тому же пути, привязывается
+   * к ней же.
+   *
+   * @param event событие удаления документа
+   */
+  @EventListener
+  public void handleDocumentRemoved(ServerContextDocumentRemovedEvent event) {
+    var registration = registeredByUri.get(event.getUri());
+    if (registration == null) {
+      return;
+    }
+    registration.document.set(null);
+    globalScopeProvider.removeModuleType(event.getUri());
+    typeRegistry.invalidateMembers(registration.ref);
+  }
+
+  /**
+   * Привязать документ к уже зарегистрированному модулю того же типа.
+   *
+   * @return {@code true}, если регистрация была и документ привязан к ней; {@code false} —
+   *   регистрации под этим типом нет, источник нужно завести ({@link #track})
+   */
+  private boolean rebind(DocumentContext documentContext, TypeRef ref) {
+    globalScopeProvider.indexModuleType(documentContext.getUri(), ref);
+    var registration = registeredByUri.get(documentContext.getUri());
+    if (registration != null && registration.ref.equals(ref)) {
+      registration.document.set(documentContext);
+      return true;
+    }
+    return false;
+  }
+
+  private MemberSource track(DocumentContext documentContext, TypeRef ref) {
+    var registration = new ModuleRegistration(ref, documentContext);
+    registeredByUri.put(documentContext.getUri(), registration);
+    return registration::members;
+  }
 
   // Раньше ReferenceIndexFiller (@Order 200): register() наполняет moduleTypeRefByUri,
   // от которого зависит self-member проход индексатора. Без явного порядка filler мог
@@ -136,10 +202,16 @@ public class ConfigurationModuleMembersProvider {
     if (documentContext.getModuleType() != ModuleType.CommonModule) {
       return false;
     }
-    var ref = registeredByUri.get(documentContext.getUri());
-    if (ref == null) {
+    var registration = registeredByUri.get(documentContext.getUri());
+    if (registration == null) {
       return false;
     }
+    // Атомарно: удаление документа между проверкой и записью не должно вернуть его к жизни
+    var previous = registration.document.get();
+    if (previous == null || !registration.document.compareAndSet(previous, documentContext)) {
+      return false;
+    }
+    var ref = registration.ref;
     typeRegistry.refreshGlobalPropertyDeclaration(ref, documentContext.getSymbolTree().getModule());
     typeRegistry.invalidateMembers(ref);
     return true;
@@ -230,30 +302,22 @@ public class ConfigurationModuleMembersProvider {
       return;
     }
     var mdObject = mdObjectOpt.get();
-    var mdoType = mdObject.getMdoType();
-    var fullName = mdoType.fullName();
+    var fullName = mdObject.getMdoType().fullName();
     if (fullName == null) {
       return;
     }
-    var groupNameRu = fullName.getRu(); // "Справочник", "Документ", ...
-    var groupNameEn = fullName.getEn(); // "Catalog", "Document", ...
-
-    var wrapperRu = groupNameRu + MODULE_TYPE_TO_WRAPPER_RU.get(moduleType);
-    var wrapperEn = groupNameEn == null ? null : groupNameEn + MODULE_TYPE_TO_WRAPPER_EN.get(moduleType);
-    var name = mdObject.getName();
-    if (name == null || name.isBlank()) {
+    // Имя self-типа — то же, по которому его ищет резолвер обработчиков событий.
+    var qualifiedRu = selfTypeQualifiedName(moduleType, mdObject).orElse(null);
+    if (qualifiedRu == null) {
       return;
     }
+    var groupNameEn = fullName.getEn(); // "Catalog", "Document", ...
+    var qualifiedEn = groupNameEn == null
+      ? null
+      : groupNameEn + MODULE_TYPE_TO_WRAPPER_EN.get(moduleType) + "." + mdObject.getName();
+    var ref = typeRegistry.registerConfigurationType(qualifiedRu, qualifiedEn);
 
-    var qualifiedRu = wrapperRu + "." + name;
-    var ref = typeRegistry.registerConfigurationType(qualifiedRu);
-    if (wrapperEn != null && !wrapperEn.equals(wrapperRu)) {
-      typeRegistry.registerConfigurationTypeAlias(wrapperEn + "." + name, ref);
-    }
-
-    var prev = registeredByUri.put(documentContext.getUri(), ref);
-    globalScopeProvider.indexModuleType(documentContext.getUri(), ref);
-    if (prev != null && prev.equals(ref)) {
+    if (rebind(documentContext, ref)) {
       // источник уже зарегистрирован, но содержимое изменилось (rebuild) — его member-source
       // лениво читает символьное дерево, поэтому точечно сбрасываем memo членов только этого
       // типа; кэши прочих типов остаются валидными (без сдвига глобальной эпохи).
@@ -261,7 +325,7 @@ public class ConfigurationModuleMembersProvider {
       return;
     }
 
-    typeRegistry.registerOwnMemberSource(ref, () -> collectModuleMembers(documentContext), FileType.BSL);
+    typeRegistry.registerOwnMemberSource(ref, track(documentContext, ref), FileType.BSL);
     LOGGER.debug("Registered module-as-member-source for {} -> {}", documentContext.getUri(), qualifiedRu);
   }
 
@@ -279,9 +343,7 @@ public class ConfigurationModuleMembersProvider {
     }
     var ref = typeRegistry.registerConfigurationType(FormTypesProvider.moduleTypeQualifiedName(form));
 
-    var prev = registeredByUri.put(documentContext.getUri(), ref);
-    globalScopeProvider.indexModuleType(documentContext.getUri(), ref);
-    if (prev != null && prev.equals(ref)) {
+    if (rebind(documentContext, ref)) {
       // Источник уже зарегистрирован, но содержимое изменилось (rebuild): он лениво
       // читает символьное дерево, и без сброса memo в модуле формы остались бы
       // экспортные методы и переменные предыдущей редакции — как и в общем пути выше.
@@ -289,7 +351,7 @@ public class ConfigurationModuleMembersProvider {
       return;
     }
 
-    typeRegistry.registerOwnMemberSource(ref, () -> collectModuleMembers(documentContext), FileType.BSL);
+    typeRegistry.registerOwnMemberSource(ref, track(documentContext, ref), FileType.BSL);
     LOGGER.debug("Registered form module as member source for {} -> {}",
       documentContext.getUri(), ref.qualifiedName());
   }
@@ -306,8 +368,7 @@ public class ConfigurationModuleMembersProvider {
 
     var ref = typeRegistry.registerConfigurationType(name);
 
-    var prev = registeredByUri.put(documentContext.getUri(), ref);
-    globalScopeProvider.indexModuleType(documentContext.getUri(), ref);
+    var registered = rebind(documentContext, ref);
 
     // общий модуль — глобальное свойство (value-type = тип модуля,
     // sourceSymbol = ModuleSymbol для навигации/раскраски). Помечаем на каждом
@@ -315,7 +376,7 @@ public class ConfigurationModuleMembersProvider {
     typeRegistry.registerGlobalPropertyType(ref, FileType.BSL,
       documentContext.getSymbolTree().getModule());
 
-    if (prev != null && prev.equals(ref)) {
+    if (registered) {
       // содержимое изменилось (rebuild): точечно пересобрать memo членов самого модуля
       // и члена GLOBAL_CONTEXT (в него вошёл обновлённый symbol-источник модуля) — без
       // сдвига глобальной эпохи членов. Name-индекс глобальной области отдельно сбрасывать
@@ -325,7 +386,7 @@ public class ConfigurationModuleMembersProvider {
       return;
     }
 
-    typeRegistry.registerOwnMemberSource(ref, () -> collectModuleMembers(documentContext), FileType.BSL);
+    typeRegistry.registerOwnMemberSource(ref, track(documentContext, ref), FileType.BSL);
     typeRegistry.registerOwnMemberSource(ref, () -> commonModulePlatformMembers(ref), FileType.BSL);
     LOGGER.debug("Registered common module as global property {} -> {}", documentContext.getUri(), name);
   }

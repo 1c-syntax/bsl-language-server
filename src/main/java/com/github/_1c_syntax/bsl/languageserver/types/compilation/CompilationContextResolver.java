@@ -223,9 +223,7 @@ public class CompilationContextResolver {
    *     при неизвестном контексте или внутри директивы препроцессора.
    */
   public Optional<MethodContext> contextAt(DocumentContext document, Position position) {
-    var symbol = document.getSymbolTree().getSymbolAtPosition(position);
-    var method = symbol instanceof MethodSymbol enclosing ? Optional.of(enclosing)
-      : symbol.getRootParent(MethodSymbol.class).map(MethodSymbol.class::cast);
+    var method = document.getSymbolTree().getMethodSymbolAtPosition(position);
     var profile = methodContext(document, method.flatMap(MethodSymbol::getCompilerDirectiveKind));
     return contextAt(document, position, profile);
   }

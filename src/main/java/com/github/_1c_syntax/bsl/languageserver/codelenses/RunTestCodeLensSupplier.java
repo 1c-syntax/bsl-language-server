@@ -24,40 +24,26 @@ package com.github._1c_syntax.bsl.languageserver.codelenses;
 import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.codelenses.testrunner.TestRunnerAdapter;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.FileType;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
+import com.github._1c_syntax.bsl.languageserver.configuration.codelens.TestRunnerAdapterOptions;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;
 import lombok.Value;
-import lombok.extern.slf4j.Slf4j;
-import org.eclipse.lsp4j.CodeLens;
-import org.eclipse.lsp4j.Command;
 import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 
 import java.beans.ConstructorProperties;
 import java.net.URI;
-import java.nio.file.Path;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
 
 /**
  * Поставщик линз для запуска теста по конкретному тестовому методу.
  */
 @Component
-@Slf4j
 @Order(2)
 public class RunTestCodeLensSupplier
-  extends AbstractRunTestsCodeLensSupplier<RunTestCodeLensSupplier.RunTestCodeLensData> {
+  extends AbstractTestMethodCodeLensSupplier<RunTestCodeLensSupplier.RunTestCodeLensData> {
 
   private static final String COMMAND_ID = "language-1c-bsl.languageServer.runTest";
-
-  private final TestRunnerAdapter testRunnerAdapter;
-  private final Resources resources;
 
   /**
    * Конструктор поставщика линз запуска теста.
@@ -75,29 +61,7 @@ public class RunTestCodeLensSupplier
     TestRunnerAdapter testRunnerAdapter,
     Resources resources
   ) {
-    super(configuration, clientCapabilitiesHolder, testSourcesProvider);
-    this.testRunnerAdapter = testRunnerAdapter;
-    this.resources = resources;
-  }
-
-  /**
-   * {@inheritDoc}
-   */
-  @Override
-  public List<CodeLens> getCodeLenses(DocumentContext documentContext) {
-
-    if (documentContext.getFileType() == FileType.BSL) {
-      return Collections.emptyList();
-    }
-
-    var testIds = testRunnerAdapter.getTestIds(documentContext);
-    var symbolTree = documentContext.getSymbolTree();
-
-    return testIds.stream()
-      .map(symbolTree::getMethodSymbol)
-      .flatMap(Optional::stream)
-      .map(methodSymbol -> toCodeLens(methodSymbol, documentContext))
-      .toList();
+    super(configuration, clientCapabilitiesHolder, testSourcesProvider, testRunnerAdapter, resources);
   }
 
   /**
@@ -108,46 +72,24 @@ public class RunTestCodeLensSupplier
     return RunTestCodeLensData.class;
   }
 
-  /**
-   * {@inheritDoc}
-   */
   @Override
-  public CodeLens resolve(DocumentContext documentContext, CodeLens unresolved, RunTestCodeLensData data) {
-
-    var path = Path.of(documentContext.getUri());
-    var testId = data.getTestId();
-
-    var options = configuration.getCodeLensOptions().getTestRunnerAdapterOptions();
-    var executable = options.getExecutableForCurrentOS();
-    String runText = executable + " " + options.getRunTestArguments();
-    runText = runText.formatted(path, testId);
-
-    var command = new Command();
-    command.setTitle(resources.getResourceString(getClass(), "runTest"));
-    command.setTooltip(resources.getResourceString(getClass(), "tooltip"));
-    command.setCommand(COMMAND_ID);
-    command.setArguments(List.of(Map.of("text", runText)));
-
-    unresolved.setCommand(command);
-
-    return unresolved;
+  protected String commandId() {
+    return COMMAND_ID;
   }
 
-  /**
-   * Построить неразрешённую линзу запуска теста по символу тестового метода.
-   *
-   * @param method          Символ тестового метода.
-   * @param documentContext Контекст документа.
-   * @return Неразрешённая линза с данными для последующего резолва.
-   */
-  private CodeLens toCodeLens(MethodSymbol method, DocumentContext documentContext) {
-    var testId = method.getName();
-    var codeLensData = new RunTestCodeLensData(documentContext.getUri(), getId(), testId);
+  @Override
+  protected String titleKey() {
+    return "runTest";
+  }
 
-    var codeLens = new CodeLens(method.getSubNameRange());
-    codeLens.setData(codeLensData);
+  @Override
+  protected String commandArguments(TestRunnerAdapterOptions options) {
+    return options.getRunTestArguments();
+  }
 
-    return codeLens;
+  @Override
+  protected RunTestCodeLensData createData(URI uri, String id, String testId) {
+    return new RunTestCodeLensData(uri, id, testId);
   }
 
   /**
@@ -156,7 +98,7 @@ public class RunTestCodeLensSupplier
   @Value
   @EqualsAndHashCode(callSuper = true)
   @ToString(callSuper = true)
-  public static class RunTestCodeLensData extends DefaultCodeLensData {
+  public static class RunTestCodeLensData extends DefaultCodeLensData implements TestMethodData {
     /**
      * Имя метода.
      */

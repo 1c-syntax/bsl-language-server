@@ -91,6 +91,25 @@ class SubroutineDocumentHighlightSupplierTest {
   }
 
   @Test
+  void endProcedureKeywordWithCursorRightAfterItHighlightsTheProcedure() {
+    // given — курсор сразу за «КонецПроцедуры» (строка 4, позиция 14 — конец строки)
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var params = new DocumentHighlightParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    var position = new Position(4, 14);
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext);
+
+    // when
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
+
+    // then — как и курсор внутри слова: токен найден левее курсора, подсвечивается его процедура
+    assertThat(terminalNodeInfo).isPresent();
+    assertHighlightRange(highlights, 2, 0, 2, 9);      // Процедура
+    assertHighlightRange(highlights, 4, 0, 4, 14);     // КонецПроцедуры
+  }
+
+  @Test
   void testFunctionKeyword() {
     // given
     // Строка 6 (0-based): "Функция ТестФункция()"

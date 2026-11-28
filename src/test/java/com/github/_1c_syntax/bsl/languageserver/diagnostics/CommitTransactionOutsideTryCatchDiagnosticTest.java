@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -48,6 +49,23 @@ class CommitTransactionOutsideTryCatchDiagnosticTest extends AbstractDiagnosticT
       .hasRange(86, 8, 86, 34)
       .hasRange(98, 8, 98, 34)
       .hasRange(106, 0, 106, 26);
+  }
+
+  @Test
+  void methodNameMentionedInArgumentIsNotACommit() {
+    // given — имя метода фиксации встречается только в строке-аргументе другого вызова
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Тест()
+        Сообщить("ЗафиксироватьТранзакцию не выполнена");
+        А = 1;
+      КонецПроцедуры
+      """);
+
+    // when
+    var diagnostics = getDiagnostics(documentContext);
+
+    // then
+    assertThat(diagnostics).isEmpty();
   }
 
   @Test

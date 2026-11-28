@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.providers;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
@@ -72,7 +71,8 @@ public class ReferencesProvider {
 
     if (includeDeclaration(params)) {
       maybeSymbol
-        .map(ReferencesProvider::declarationLocation)
+        .map(Reference::definitionOf)
+        .map(Reference::toLocation)
         .filter(declaration -> !locations.contains(declaration))
         .ifPresent(locations::add);
     }
@@ -89,15 +89,5 @@ public class ReferencesProvider {
   private static boolean includeDeclaration(ReferenceParams params) {
     ReferenceContext context = params.getContext();
     return context != null && context.isIncludeDeclaration();
-  }
-
-  /**
-   * Построить местоположение объявления символа по его {@code selectionRange}.
-   *
-   * @param symbol Символ, объявленный в исходном коде
-   * @return Местоположение строки объявления символа
-   */
-  private static Location declarationLocation(SourceDefinedSymbol symbol) {
-    return new Location(symbol.getOwner().getUri().toString(), symbol.getSelectionRange());
   }
 }

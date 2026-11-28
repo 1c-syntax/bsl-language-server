@@ -24,13 +24,15 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.client.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.configuration.SupplierParameters;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.inlayhints.InlayHintData;
 import com.github._1c_syntax.bsl.languageserver.inlayhints.InlayHintSupplier;
-import com.github._1c_syntax.bsl.languageserver.inlayhints.infrastructure.InlayHintsConfiguration;
+import com.github._1c_syntax.bsl.languageserver.utils.LspPayloads;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.InlayHint;
 import org.eclipse.lsp4j.InlayHintParams;
@@ -74,7 +76,7 @@ public class InlayHintProvider {
     var parameters = configuration.getInlayHintOptions().getParameters();
 
     return inlayHintSuppliersById.values().stream()
-      .filter(supplier -> InlayHintsConfiguration.supplierIsEnabled(supplier.getId(), parameters))
+      .filter(supplier -> SupplierParameters.isEnabled(parameters, supplier.getId()))
       .map(supplier -> supplier.getInlayHints(documentContext, params))
       .flatMap(Collection::stream)
       .collect(Collectors.toList());
@@ -113,19 +115,8 @@ public class InlayHintProvider {
    * @return Извлечённые данные хинта либо {@code null}, если хинт пришёл без поля
    *         {@link InlayHint#getData()} — резолвить такой хинт нечем.
    */
-  @SneakyThrows
   public @Nullable InlayHintData extractData(InlayHint inlayHint) {
-    var rawData = inlayHint.getData();
-
-    if (rawData == null) {
-      return null;
-    }
-
-    if (rawData instanceof InlayHintData data) {
-      return data;
-    }
-
-    return jsonMapper.readValue(rawData.toString(), InlayHintData.class);
+    return LspPayloads.read(jsonMapper, inlayHint.getData(), InlayHintData.class);
   }
 
   /**
@@ -138,6 +129,34 @@ public class InlayHintProvider {
   @EventListener
   public void handleEvent(LanguageServerConfigurationChangedEvent event) {
     // Per-workspace конфигурация — просто инициируем refresh для клиента
+    refreshInlayHints();
+  }
+
+  /**
+   * Обработчик события {@link ServerContextPopulatedEvent}.
+   * <p>
+   * Подсказки к параметрам вызовов опираются на индекс ссылок, который наполняется только после
+   * наполнения контекста; подсказки, запрошенные раньше, обновляются запросом
+   * {@code workspace/inlayHint/refresh}.
+   *
+   * @param event Событие
+   */
+  @EventListener
+  public void handleServerContextPopulated(ServerContextPopulatedEvent event) {
+    refreshInlayHints();
+  }
+
+  /**
+   * Обработчик события {@link ConfigurationTypesRegisteredEvent}.
+   * <p>
+   * Подсказки о типах переменных опираются на реестр типов, который заполняется уже после
+   * наполнения контекста; подсказки, запрошенные раньше, обновляются запросом
+   * {@code workspace/inlayHint/refresh}.
+   *
+   * @param event Событие
+   */
+  @EventListener
+  public void handleConfigurationTypesRegistered(ConfigurationTypesRegisteredEvent event) {
     refreshInlayHints();
   }
 

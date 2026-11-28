@@ -305,10 +305,7 @@ public class ModuleReference {
 
   private static Optional<String> extractMethodNameFromModifier(BSLParser.ModifierContext modifier) {
     return Optional.ofNullable(modifier.accessCall())
-      .map(BSLParser.AccessCallContext::methodCall)
-      .map(BSLParser.MethodCallContext::methodName)
-      .map(BSLParser.MethodNameContext::IDENTIFIER)
-      .map(TerminalNode::getText);
+      .flatMap(ModuleReference::accessCallMethodName);
   }
 
   private static Optional<String> extractCommonModuleNameFromMember(

@@ -21,22 +21,30 @@
  */
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
-import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.QuickFixProvider;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfos;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticObjectProvider;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.info.DiagnosticInfo;
 import lombok.RequiredArgsConstructor;
+import org.eclipse.lsp4j.CodeAction;
+import org.eclipse.lsp4j.CodeActionContext;
+import org.eclipse.lsp4j.CodeActionKind;
+import org.eclipse.lsp4j.CodeActionParams;
+import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 /**
  * Поставщик быстрых исправлений для диагностик.
  * <p>
- * Связывает коды диагностик с классами, предоставляющими quick fix для этих диагностик.
+ * Находит по коду диагностики её {@link QuickFixProvider} и получает у него исправления — для
+ * одной диагностики или сразу для всех диагностик одного кода.
  */
 @Component
 @RequiredArgsConstructor
@@ -50,35 +58,62 @@ public class QuickFixSupplier {
   // Возможно через аннотацию.
 
   /**
-   * Получить класс провайдера быстрых исправлений для указанного кода диагностики.
+   * Быстрые исправления одной диагностики.
    *
-   * @param diagnosticCode Код диагностики
-   * @param <T> Тип кода диагностики (строка или число)
-   * @return Класс провайдера быстрых исправлений, если диагностика поддерживает quick fix
+   * @param diagnostic      Диагностика
+   * @param params          Параметры исходного запроса code action
+   * @param documentContext Контекст документа
+   * @return Исправления; пусто, если у диагностики нет быстрых исправлений
    */
-  @SuppressWarnings("unchecked")
-  public <T extends Either<String, Integer>> Optional<Class<? extends QuickFixProvider>> getQuickFixClass(
-    T diagnosticCode
+  public List<CodeAction> getQuickFixes(
+    Diagnostic diagnostic,
+    CodeActionParams params,
+    DocumentContext documentContext
   ) {
-    var diagnosticInfosByCode = diagnosticInfos.getByCode();
-    return Optional.ofNullable(
-      diagnosticInfosByCode.get(DiagnosticCode.getStringValue(diagnosticCode))
-    )
-      .map(DiagnosticInfo::getDiagnosticClass)
-      .filter(QuickFixProvider.class::isAssignableFrom)
-      .map(aClass -> (Class<? extends QuickFixProvider>) aClass);
+    return quickFixProvider(diagnostic.getCode())
+      .map(provider -> provider.getQuickFixes(List.of(diagnostic), params, documentContext))
+      .orElse(Collections.emptyList());
   }
 
   /**
-   * Получить экземпляр провайдера быстрых исправлений.
+   * Быстрые исправления сразу всех переданных диагностик одного кода.
+   * <p>
+   * Провайдеру передаётся запрос с этими диагностиками в контексте и видом {@code quickfix}.
    *
-   * @param quickFixProviderClass Класс провайдера быстрых исправлений
-   * @return Экземпляр провайдера быстрых исправлений
+   * @param diagnosticCode  Код диагностик
+   * @param diagnostics     Диагностики с кодом {@code diagnosticCode}
+   * @param params          Параметры исходного запроса code action
+   * @param documentContext Контекст документа
+   * @return Исправления; пусто, если у диагностики нет быстрых исправлений
    */
-  @SuppressWarnings("unchecked")
-  public QuickFixProvider getQuickFixInstance(Class<? extends QuickFixProvider> quickFixProviderClass) {
-    final Class<? extends BSLDiagnostic> diagnosticClass = (Class<? extends BSLDiagnostic>) quickFixProviderClass;
-    return (QuickFixProvider) diagnosticObjectProvider.get(diagnosticClass);
+  public List<CodeAction> getFixAllQuickFixes(
+    Either<String, Integer> diagnosticCode,
+    List<Diagnostic> diagnostics,
+    CodeActionParams params,
+    DocumentContext documentContext
+  ) {
+    return quickFixProvider(diagnosticCode)
+      .map(provider -> provider.getQuickFixes(diagnostics, fixAllParams(params, diagnostics), documentContext))
+      .orElse(Collections.emptyList());
+  }
+
+  private Optional<QuickFixProvider> quickFixProvider(Either<String, Integer> diagnosticCode) {
+    return Optional.ofNullable(diagnosticInfos.getByCode().get(DiagnosticCode.getStringValue(diagnosticCode)))
+      .map(DiagnosticInfo::getDiagnosticClass)
+      .filter(QuickFixProvider.class::isAssignableFrom)
+      .map(diagnosticClass -> (QuickFixProvider) diagnosticObjectProvider.get(diagnosticClass));
+  }
+
+  private static CodeActionParams fixAllParams(CodeActionParams params, List<Diagnostic> diagnostics) {
+    var fixAllContext = new CodeActionContext();
+    fixAllContext.setDiagnostics(diagnostics);
+    fixAllContext.setOnly(Collections.singletonList(CodeActionKind.QuickFix));
+
+    var fixAllParams = new CodeActionParams();
+    fixAllParams.setTextDocument(params.getTextDocument());
+    fixAllParams.setRange(params.getRange());
+    fixAllParams.setContext(fixAllContext);
+    return fixAllParams;
   }
 
 }

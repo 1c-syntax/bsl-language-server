@@ -109,6 +109,7 @@ class ReturnBodyMemberLookupReuseTest extends AbstractServerContextAwareTest {
     var members = new CountingMembers();
     var registry = mock(TypeRegistry.class);
     when(registry.getMembers(STRUCTURE, FileType.BSL)).thenReturn(members);
+    when(registry.findMember(STRUCTURE, MemberKind.PROPERTY, "Needle", FileType.BSL)).thenCallRealMethod();
     var refinement = new TableCollectionInference(registry);
     try (var scope = new MemberLookupSession().open()) {
       assertThat(refinement.infer(TypeSet.of(STRUCTURE), "Needle", null, FileType.BSL)).isNull();

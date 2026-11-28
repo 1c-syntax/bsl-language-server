@@ -35,7 +35,6 @@ import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -284,26 +283,11 @@ public class CanonicalSpellingKeywordsDiagnostic extends AbstractDiagnostic impl
     DocumentContext documentContext
   ) {
 
-    List<TextEdit> textEdits = new ArrayList<>();
-
-    diagnostics.forEach((Diagnostic diagnostic) -> {
-      Range range = diagnostic.getRange();
-      String originalText = documentContext.getText(range);
-      String canonicalText = canonicalStrings.get(originalText.toUpperCase(Locale.ENGLISH));
-
-      if (canonicalText != null) {
-        TextEdit textEdit = new TextEdit(range, canonicalText);
-        textEdits.add(textEdit);
-      }
-
-    });
-
-    return QuickFixProvider.createCodeActions(
-      textEdits,
-      info.getResourceString("quickFixMessage"),
-      documentContext.getUri(),
-      diagnostics
-    );
-
+    return QuickFixProvider.fixEach(diagnostics, info.getResourceString("quickFixMessage"), documentContext.getUri(),
+      (Diagnostic diagnostic) -> {
+        Range range = diagnostic.getRange();
+        String canonicalText = canonicalStrings.get(documentContext.getText(range).toUpperCase(Locale.ENGLISH));
+        return canonicalText == null ? List.of() : List.of(new TextEdit(range, canonicalText));
+      });
   }
 }

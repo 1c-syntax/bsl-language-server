@@ -35,7 +35,6 @@ import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.TextEdit;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
@@ -109,37 +108,17 @@ public class InvalidCharacterInFileDiagnostic extends AbstractDiagnostic impleme
     DocumentContext documentContext
   ) {
 
-    List<TextEdit> textEdits = new ArrayList<>();
-
-    diagnostics.stream()
-      .filter(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).equals(diagnosticMessageSpace))
-      .forEach((Diagnostic diagnostic) -> {
+    return QuickFixProvider.fixEach(diagnostics, info.getResourceString("quickFixMessage"), documentContext.getUri(),
+      (Diagnostic diagnostic) -> {
+        var message = DiagnosticMessage.getStringValue(diagnostic.getMessage());
         var range = diagnostic.getRange();
-        var textEdit = new TextEdit(
-          range,
-          ILLEGAL_SPACE_PATTERN.matcher(documentContext.getText(range)).replaceAll(" ")
-        );
-
-        textEdits.add(textEdit);
+        if (message.equals(diagnosticMessageSpace)) {
+          return List.of(new TextEdit(range, ILLEGAL_SPACE_PATTERN.matcher(documentContext.getText(range)).replaceAll(" ")));
+        }
+        if (message.equals(diagnosticMessageDash)) {
+          return List.of(new TextEdit(range, ILLEGAL_PATTERN.matcher(documentContext.getText(range)).replaceAll("-")));
+        }
+        return List.of();
       });
-
-    diagnostics.stream()
-      .filter(diagnostic -> DiagnosticMessage.getStringValue(diagnostic.getMessage()).equals(diagnosticMessageDash))
-      .forEach((Diagnostic diagnostic) -> {
-        var range = diagnostic.getRange();
-        var textEdit = new TextEdit(
-          range,
-          ILLEGAL_PATTERN.matcher(documentContext.getText(range)).replaceAll("-")
-        );
-
-        textEdits.add(textEdit);
-      });
-
-    return QuickFixProvider.createCodeActions(
-      textEdits,
-      info.getResourceString("quickFixMessage"),
-      documentContext.getUri(),
-      diagnostics
-    );
   }
 }

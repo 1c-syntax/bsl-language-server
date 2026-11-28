@@ -28,11 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.eclipse.lsp4j.Range;
-
-import java.util.stream.Stream;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -60,15 +56,9 @@ public class MissingCodeTryCatchExDiagnostic extends AbstractVisitorDiagnostic {
       return super.visitExceptCodeBlock(ctx);
     }
 
-    if (commentAsCode) {
-      Stream<Token> comments = documentContext.getComments().stream();
-      Range rangeTry = Ranges.create(ctx.getParent());
-      if (comments.anyMatch(token ->
-        Ranges.containsRange(
-          rangeTry,
-          Ranges.create(token)))) {
-        return super.visitExceptCodeBlock(ctx);
-      }
+    if (commentAsCode
+      && Ranges.containsAnyToken(Ranges.create(ctx.getParent()), documentContext.getComments())) {
+      return super.visitExceptCodeBlock(ctx);
     }
     diagnosticStorage.addDiagnostic(((BSLParser.TryStatementContext) ctx.getParent()).EXCEPT_KEYWORD());
 

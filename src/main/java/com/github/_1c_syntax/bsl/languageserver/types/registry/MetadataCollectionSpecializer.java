@@ -26,7 +26,6 @@ import com.github._1c_syntax.bsl.context.api.Context;
 import com.github._1c_syntax.bsl.context.api.ContextProperty;
 import com.github._1c_syntax.bsl.context.api.ContextType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
-import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.BilingualString;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
@@ -371,15 +370,11 @@ public class MetadataCollectionSpecializer {
     if (providerOpt.isEmpty()) {
       return;
     }
-    var workspaceUri = WorkspaceContextHolder.get();
-    if (workspaceUri == null) {
+    var serverContext = serverContextProvider.getCurrentServerContext();
+    if (serverContext.isEmpty()) {
       return;
     }
-    var serverContext = serverContextProvider.getAllContexts().get(workspaceUri);
-    if (serverContext == null) {
-      return;
-    }
-    var configuration = serverContext.getConfiguration();
+    var configuration = serverContext.get().getConfiguration();
     if (configuration.isEmpty()) {
       return;
     }
@@ -627,9 +622,7 @@ public class MetadataCollectionSpecializer {
       var mdoName = mdo.getName();
       var ownRef = typeRegistry.intern(TypeKind.PLATFORM, elementTypeRef.qualifiedName() + "." + mdoName);
       for (var generic : generics) {
-        var parameter = typeRegistry.getTypeParameters(generic).get(0);
-        var specializedName = TypeRef.specialize(generic, Map.of(parameter, mdoName)).qualifiedName();
-        typeRegistry.resolve(specializedName)
+        typeRegistry.findSpecialization(generic, mdoName)
           .ifPresent(specialized -> typeRegistry.registerMemberOverride(specialized,
             () -> ownMetadataMembers(typeRegistry.getMembers(generic, FileType.BSL), elementTypeRef, ownRef),
             FileType.BSL));
@@ -656,8 +649,7 @@ public class MetadataCollectionSpecializer {
         continue;
       }
       var signatures = member.signatures().stream()
-        .map(sig -> new SignatureDescriptor(sig.parameters(), sig.returnTypes().mapRefs(own),
-          sig.bilingualDescription(), sig.metadata()))
+        .map(sig -> sig.withReturnTypes(sig.returnTypes().mapRefs(own)))
         .toList();
       result.add(member.withReturnTypes(member.returnTypes().mapRefs(own)).withSignatures(signatures));
     }
@@ -974,8 +966,7 @@ public class MetadataCollectionSpecializer {
     if (!rebuiltSignatures.isEmpty()) {
       var newSignatures = new ArrayList<SignatureDescriptor>(rebuiltSignatures.size());
       for (var sig : rebuiltSignatures) {
-        newSignatures.add(new SignatureDescriptor(sig.parameters(), elementTypeSet,
-          sig.bilingualDescription(), sig.metadata()));
+        newSignatures.add(sig.withReturnTypes(elementTypeSet));
       }
       rebuiltSignatures = newSignatures;
     }

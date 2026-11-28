@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
+import com.github._1c_syntax.bsl.languageserver.utils.Positions;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import com.github._1c_syntax.bsl.types.MultiName;
 import org.antlr.v4.runtime.Token;
@@ -102,7 +103,7 @@ public final class KeywordCompletion {
   public static List<String> suggest(DocumentContext document, Position wordStart) {
     var scope = new KeywordCompletionScope();
     for (var token : document.getTokens()) {
-      if (!startsBefore(token, wordStart)) {
+      if (Positions.compareStart(token, wordStart) >= 0) {
         break;
       }
       if (isNonCodeAt(token, wordStart)) {
@@ -123,12 +124,6 @@ public final class KeywordCompletion {
       case BSLLexer.ASYNC_KEYWORD, BSLLexer.AWAIT_KEYWORD -> fileType != FileType.OS;
       default -> true;
     };
-  }
-
-  private static boolean startsBefore(Token token, Position position) {
-    var line = token.getLine() - 1;
-    return line < position.getLine()
-      || (line == position.getLine() && token.getCharPositionInLine() < position.getCharacter());
   }
 
   private static boolean isNonCodeAt(Token token, Position position) {

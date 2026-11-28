@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -32,9 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 import java.util.Optional;
@@ -81,7 +78,7 @@ public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
       .map(BSLParser.ProcDeclarationContext::subName)
       .filter(subName -> searchSubNames.matcher(subName.getText()).find())
       .filter(Predicate.not(subNameContext -> checkPassed(ctx)))
-      .flatMap(context -> methodSymbol(ctx))
+      .flatMap(context -> documentContext.getSymbolTree().getEnclosingMethodSymbol(ctx))
       .ifPresent(methodSymbol -> diagnosticStorage.addDiagnostic(methodSymbol.getSubNameRange()));
     return ctx;
   }
@@ -116,21 +113,12 @@ public class DataExchangeLoadingDiagnostic extends AbstractVisitorDiagnostic {
       .isPresent();
   }
 
-  private Optional<MethodSymbol> methodSymbol(BSLParser.ProcDeclarationContext ctx) {
-    return Optional.of(documentContext.getSymbolTree())
-      .flatMap(symbolTree -> symbolTree.getMethodSymbol(getSubContext(ctx)));
-  }
-
   private boolean foundReturnStatement(BSLParser.IfBranchContext ifBranch) {
 
     return Optional.ofNullable(ifBranch.codeBlock())
       .map(codeBlockContext -> Trees.findAllRuleNodes(codeBlockContext, BSLParser.RULE_returnStatement))
       .map(list -> !list.isEmpty())
       .orElse(false);
-  }
-
-  private static @Nullable ParserRuleContext getSubContext(BSLParser.ProcDeclarationContext ctx) {
-    return Trees.getAncestorByRuleIndex(ctx.getRuleContext(), BSLParser.RULE_sub);
   }
 
   private long calculateStatementLimit(int statementsSize) {

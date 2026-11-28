@@ -142,7 +142,7 @@ public class ExpressionTypeInferencer {
   private static final TypeRef STRING = new TypeRef(TypeKind.PRIMITIVE, "Строка");
   private static final TypeRef BOOLEAN = new TypeRef(TypeKind.PRIMITIVE, "Булево");
   private static final TypeRef DATE = new TypeRef(TypeKind.PRIMITIVE, "Дата");
-  private static final TypeRef UNDEFINED = new TypeRef(TypeKind.PRIMITIVE, "Неопределено");
+  private static final TypeRef UNDEFINED = TypeRef.UNDEFINED;
   private static final TypeRef NULL = new TypeRef(TypeKind.PRIMITIVE, "Null");
 
   private final TypeRegistry typeRegistry;
@@ -2170,8 +2170,7 @@ public class ExpressionTypeInferencer {
    * @return символ метода; пусто, если это тело модуля, а не метода.
    */
   private static Optional<MethodSymbol> scopeOfBody(SymbolTree symbolTree, BSLParser.CodeBlockContext body) {
-    BSLParser.SubContext sub = Trees.getAncestorByRuleIndex(body, BSLParser.RULE_sub);
-    return sub == null ? Optional.empty() : symbolTree.getMethodSymbol(sub);
+    return symbolTree.getEnclosingMethodSymbol(body);
   }
 
   /**
@@ -2284,7 +2283,7 @@ public class ExpressionTypeInferencer {
     // Тела сравниваются по ссылке: узлы дерева разбора равенства по содержимому не имеют.
     Map<BSLParser.CodeBlockContext, List<Position>> positionsByBody = new IdentityHashMap<>();
     for (var position : definitionPositions(variable)) {
-      var enclosingMethod = enclosingMethod(symbolTree, position);
+      var enclosingMethod = symbolTree.getMethodSymbolAtPosition(position);
       var runsBeforeAnyUse = enclosingMethod.isEmpty()
         || Methods.isOscriptClassConstructorName(enclosingMethod.get().getName());
       var body = runsBeforeAnyUse ? VariableFlowAnalyzer.bodyAt(owner, position) : null;
@@ -2294,21 +2293,6 @@ public class ExpressionTypeInferencer {
     }
     return positionsByBody.entrySet().stream()
       .anyMatch(entry -> assignedOnEveryPath(owner, entry.getKey(), entry.getValue()));
-  }
-
-  /**
-   * Метод, в теле которого стоит позиция.
-   *
-   * @param symbolTree дерево символов документа.
-   * @param position   позиция в документе.
-   * @return метод; пусто, если позиция вне методов — то есть в теле модуля.
-   */
-  private static Optional<MethodSymbol> enclosingMethod(SymbolTree symbolTree, Position position) {
-    var symbol = symbolTree.getSymbolAtPosition(position);
-    if (symbol instanceof MethodSymbol method) {
-      return Optional.of(method);
-    }
-    return symbol.getRootParent(MethodSymbol.class).map(MethodSymbol.class::cast);
   }
 
   /**

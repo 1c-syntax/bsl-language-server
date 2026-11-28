@@ -27,7 +27,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
@@ -58,23 +57,13 @@ public class WrongUseFunctionProceedWithCallDiagnostic extends AbstractFindMetho
 
   @Override
   protected boolean checkGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
-    var parentNode = (BSLParser.SubContext) Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_sub);
+    var isOutsideAroundMethod = documentContext.getSymbolTree().getEnclosingMethodSymbol(ctx)
+      .filter(methodSymbol -> methodSymbol.getAnnotations().stream()
+        .filter(annotation -> annotation.getKind() == EXTENSION_ANNOTATION_AROUND)
+        .count() != 1)
+      .isPresent();
 
-    if (parentNode == null) {
-      return false;
-    }
-
-    var isAroundAnnotationMethod = documentContext.getSymbolTree().getMethodSymbol(parentNode)
-      .stream()
-      .flatMap(methodSymbol -> methodSymbol.getAnnotations().stream())
-      .filter(annotation -> annotation.getKind() == EXTENSION_ANNOTATION_AROUND)
-      .count() == 1;
-    if (!isAroundAnnotationMethod) {
-      return MESSAGE_PATTERN.matcher(ctx.methodName().getText()).matches();
-    }
-
-    return false;
-
+    return isOutsideAroundMethod && super.checkGlobalMethodCall(ctx);
   }
 
   @Override

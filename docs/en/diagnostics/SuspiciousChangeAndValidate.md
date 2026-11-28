@@ -1,7 +1,7 @@
 # Suspicious use of &ChangeAndValidate (SuspiciousChangeAndValidate)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Diagnostic description
+## Description
 
 A method annotated with `&ChangeAndValidate` contains both `#Delete` / `#EndDelete` and `#Insert` / `#EndInsert` directives, indicating full method body replacement that hides changes from reviewers.
 

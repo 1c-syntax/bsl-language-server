@@ -58,7 +58,7 @@ import static picocli.CommandLine.Option;
   aliases = {"-w", "--websocket"},
   description = "Websocket server mode",
   usageHelpAutoWidth = true,
-  footer = "@|green Copyright(c) 2018-2026|@")
+  footer = CommandHelp.FOOTER)
 @Component
 @RequiredArgsConstructor
 public class WebsocketCommand implements Callable<Integer> {
@@ -77,14 +77,14 @@ public class WebsocketCommand implements Callable<Integer> {
 
   @Option(
     names = {"--server.port"},
-    description = "Port to listen. Default is 8025",
+    description = "Port to listen. Default is ${DEFAULT-VALUE}",
     paramLabel = "<port>",
     defaultValue = "8025")
   private int serverPort;
 
   @Option(
     names = {"--app.websocket.lsp-path"},
-    description = "Path to LSP endpoint. Default is /lsp",
+    description = "Path to LSP endpoint. Default is ${DEFAULT-VALUE}",
     paramLabel = "<path>",
     defaultValue = "/lsp")
   private String endpointPath;
@@ -96,7 +96,7 @@ public class WebsocketCommand implements Callable<Integer> {
 
   @Option(
     names = {"--mcp-path"},
-    description = "Path of the MCP Streamable HTTP endpoint. Default is /mcp",
+    description = "Path of the MCP Streamable HTTP endpoint. Default is ${DEFAULT-VALUE}",
     paramLabel = "<path>",
     defaultValue = "/mcp")
   private String mcpPath;

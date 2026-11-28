@@ -1,7 +1,7 @@
 # Deprecated HTTPConnection methods (DeprecatedHttpConnectionMethod)
 
 <!-- Блоки выше заполняются автоматически, не трогать -->
-## Diagnostic description
+## Description
 
 In platform 8.3.21, `HTTPConnection` object methods are deprecated in client context. Use their asynchronous equivalents with the `Async` suffix instead.
 

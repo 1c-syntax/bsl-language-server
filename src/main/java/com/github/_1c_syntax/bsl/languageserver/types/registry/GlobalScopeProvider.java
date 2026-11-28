@@ -733,7 +733,8 @@ public class GlobalScopeProvider {
       return new LanguageData(functions, List.copyOf(classes), variables,
         List.of(),
         Map.copyOf(keywordMeta.snippets()), Map.copyOf(keywordMeta.descriptions()));
-    } catch (IOException e) {
+    } catch (IOException | RuntimeException e) {
+      // Битый встроенный ресурс не валит старт: сервер работает без этих сведений.
       LOGGER.error("Failed to load builtin globals resource: {}", resourcePath, e);
       return new LanguageData(Collections.emptyMap(), List.of(), List.of(), List.of(), Map.of(), Map.of());
     }
@@ -776,7 +777,7 @@ public class GlobalScopeProvider {
         }
       }
       return members;
-    } catch (IOException e) {
+    } catch (IOException | RuntimeException e) {
       LOGGER.error("Failed to load builtin global members: {}", resourcePath, e);
       return List.of();
     }

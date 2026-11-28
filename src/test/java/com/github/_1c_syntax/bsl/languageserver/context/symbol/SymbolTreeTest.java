@@ -60,6 +60,70 @@ class SymbolTreeTest {
   }
 
   @Test
+  void parameterVariableIsTheChildDeclaredAtParameterStart() {
+    // given — у метода два параметра и локальная переменная с тем же именем, что у параметра
+    // другого метода.
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Первый(Знач А, Б)
+        В = 1;
+      КонецПроцедуры
+      Процедура Второй(В)
+      КонецПроцедуры
+      """);
+    var symbolTree = documentContext.getSymbolTree();
+    var first = symbolTree.getMethodSymbol("Первый").orElseThrow();
+    var second = symbolTree.getMethodSymbol("Второй").orElseThrow();
+
+    // then — переменная параметра — та, чьё имя стоит в начале параметра.
+    for (var parameter : first.getParameters()) {
+      var variable = first.getParameterVariable(parameter).orElseThrow();
+      assertThat(variable.getName()).isEqualTo(parameter.getName());
+      assertThat(variable.getSelectionRange().getStart()).isEqualTo(parameter.getRange().getStart());
+    }
+    // параметр другого метода среди детей этого не находится
+    assertThat(first.getParameterVariable(second.getParameters().getFirst())).isEmpty();
+  }
+
+  @Test
+  void parameterDefinitionIsFoundByNameIgnoringCase() {
+    // given
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Первый(Знач Альфа, Бета = 1)
+        Гамма = 1;
+      КонецПроцедуры
+      """);
+    var method = documentContext.getSymbolTree().getMethodSymbol("Первый").orElseThrow();
+    var parameters = method.getParameters();
+
+    // then — регистр имени не важен; локальная переменная параметром не является.
+    assertThat(method.getParameterDefinition("альфа")).containsSame(parameters.get(0));
+    assertThat(method.getParameterDefinition("БЕТА")).containsSame(parameters.get(1));
+    assertThat(method.getParameterDefinition("Гамма")).isEmpty();
+  }
+
+  @Test
+  void getMethodSymbolAtPositionFindsMethodThroughNestedSymbols() {
+    // given — переменная модуля, метод с областью и локальной переменной внутри.
+    var documentContext = TestUtils.getDocumentContext("""
+      Перем ПеременнаяМодуля;
+      Процедура Тест()
+        #Область Внутри
+        Локальная = 1;
+        #КонецОбласти
+      КонецПроцедуры
+      А = 1;
+      """);
+    var symbolTree = documentContext.getSymbolTree();
+    var method = symbolTree.getMethodSymbol("Тест").orElseThrow();
+
+    // then
+    assertThat(symbolTree.getMethodSymbolAtPosition(new Position(1, 12))).contains(method);
+    assertThat(symbolTree.getMethodSymbolAtPosition(new Position(3, 4))).contains(method);
+    assertThat(symbolTree.getMethodSymbolAtPosition(new Position(0, 8))).isEmpty();
+    assertThat(symbolTree.getMethodSymbolAtPosition(new Position(6, 0))).isEmpty();
+  }
+
+  @Test
   void findSymbolBySelectionRangeDisambiguatesTwoDeclarationsOnSameLine() {
     // given — два объявления переменных на одной строке в разных колонках.
     var documentContext = TestUtils.getDocumentContext("""
@@ -130,6 +194,27 @@ class SymbolTreeTest {
     assertThat(symbolTree.getVariableSymbol(subVarDeclaration))
       .map(VariableSymbol::getName)
       .contains("ЛокальнаяПеременная");
+  }
+
+  @Test
+  void enclosingMethodIsTheOneWhoseDeclarationContainsTheNode() {
+    // given — вызов в теле функции, вызов в теле модуля
+    var documentContext = TestUtils.getDocumentContext("""
+      Функция Тест()
+          Сообщить(1);
+      КонецФункции
+      Сообщить(2);
+      """);
+    var symbolTree = documentContext.getSymbolTree();
+    var calls = new ArrayList<>(Trees.findAllRuleNodes(documentContext.getAst(), BSLParser.RULE_globalMethodCall));
+    var sub = (BSLParser.SubContext) firstRuleNode(documentContext.getAst(), BSLParser.RULE_sub);
+
+    // when/then
+    assertThat(symbolTree.getEnclosingMethodSymbol((BSLParser.GlobalMethodCallContext) calls.get(0)))
+      .map(MethodSymbol::getName)
+      .contains("Тест");
+    assertThat(symbolTree.getEnclosingMethodSymbol(sub)).map(MethodSymbol::getName).contains("Тест");
+    assertThat(symbolTree.getEnclosingMethodSymbol((BSLParser.GlobalMethodCallContext) calls.get(1))).isEmpty();
   }
 
   @Test

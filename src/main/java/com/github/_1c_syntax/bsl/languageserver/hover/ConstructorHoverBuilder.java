@@ -25,7 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
-import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
@@ -33,6 +32,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
+import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -60,7 +60,7 @@ public class ConstructorHoverBuilder {
   public MarkupContent build(
     String typeName,
     TypeRef ref,
-    SignatureDescriptor chosen,
+    @Nullable SignatureDescriptor chosen,
     List<SignatureDescriptor> ctors,
     boolean disclaim,
     String classDescription,
@@ -74,7 +74,7 @@ public class ConstructorHoverBuilder {
     }
     sb.append("```bsl\n").append(tr("newKeyword")).append(' ').append(localizedTypeName).append('(');
     if (chosen != null) {
-      sb.append(chosen.parameters().stream().map(p -> parameterName(p, lang)).collect(Collectors.joining(", ")));
+      sb.append(chosen.parameters().stream().map(p -> HoverParameters.name(p, lang)).collect(Collectors.joining(", ")));
     }
     sb.append(')').append("\n```\n");
     sb.append("\n_").append(tr("constructorOf")).append("_ `").append(localizedTypeName).append('`');
@@ -83,7 +83,7 @@ public class ConstructorHoverBuilder {
     // (BSL/OS). {@code classDescription} от caller'а используется только если
     // registry не знает описание (legacy/source-defined символы).
     var bilingual = typeService.getDescription(ref, lang, fileType);
-    var classDesc = !bilingual.isBlank() ? bilingual : (classDescription != null ? classDescription : "");
+    var classDesc = bilingual.isBlank() ? classDescription : bilingual;
     if (!classDesc.isBlank()) {
       sb.append("\n\n").append(classDesc);
     }
@@ -96,15 +96,7 @@ public class ConstructorHoverBuilder {
     if (chosen != null && !chosen.parameters().isEmpty()) {
       sb.append("\n\n**").append(tr("parameters")).append("**\n");
       for (var p : chosen.parameters()) {
-        HoverParameters.appendNameAndType(sb, parameterName(p, lang), renderTypeSet(p.types(), lang), p.optional());
-        if (!p.defaultValue().isBlank()) {
-          sb.append(" _= ").append(p.defaultValue()).append('_');
-        }
-        var pDesc = p.displayDescription(lang);
-        if (pDesc != null && !pDesc.isBlank()) {
-          sb.append(" — ").append(pDesc);
-        }
-        sb.append('\n');
+        HoverParameters.appendParameter(sb, HoverParameters.name(p, lang), renderTypeSet(p.types(), lang), p, lang);
       }
     }
     // Метаданные конструктора (его собственная страница СП: версии, примеры,
@@ -122,7 +114,7 @@ public class ConstructorHoverBuilder {
       sb.append("\n\n**").append(tr("allConstructorVariants")).append("**\n");
       for (var sig : ctors) {
         sb.append("- `").append(tr("newKeyword")).append(' ').append(localizedTypeName).append('(')
-          .append(sig.parameters().stream().map(p -> parameterName(p, lang)).collect(Collectors.joining(", ")))
+          .append(sig.parameters().stream().map(p -> HoverParameters.name(p, lang)).collect(Collectors.joining(", ")))
           .append(")`");
         var sigDesc = sig.displayDescription(lang);
         if (sigDesc != null && !sigDesc.isBlank()) {
@@ -134,21 +126,11 @@ public class ConstructorHoverBuilder {
     return new MarkupContent(MarkupKind.MARKDOWN, sb.toString());
   }
 
-  private static String parameterName(ParameterDescriptor parameter, Language language) {
-    return parameter.displayName(language) + (parameter.variadic() ? "..." : "");
-  }
-
   /**
    * Форматирует {@code TypeSet} как {@code "Тип1 | Тип2"}. Пустой набор —
    * пустая строка.
    */
   private String renderTypeSet(TypeSet types, Language lang) {
-    if (types == null || types.isEmpty()) {
-      return "";
-    }
-    return types.refs().stream()
-      .map(r -> typeService.displayName(r, lang))
-      .filter(name -> name != null && !name.isEmpty())
-      .collect(Collectors.joining(" | "));
+    return HoverParameters.typesLabel(types, ref -> typeService.displayName(ref, lang));
   }
 }

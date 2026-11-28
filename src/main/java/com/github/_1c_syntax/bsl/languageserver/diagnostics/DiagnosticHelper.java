@@ -66,16 +66,6 @@ public final class DiagnosticHelper {
   }
 
   /**
-   * Проверить, является ли узел типом "Соответствие".
-   *
-   * @param tnc Узел дерева разбора
-   * @return true, если узел представляет тип Соответствие/Map
-   */
-  public static boolean isCorrespondenceType(ParseTree tnc) {
-    return "Соответствие".equalsIgnoreCase(tnc.getText()) || "Map".equalsIgnoreCase(tnc.getText());
-  }
-
-  /**
    * Проверить, является ли узел типом "WSОпределения".
    *
    * @param tnc Узел дерева разбора

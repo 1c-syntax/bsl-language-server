@@ -22,10 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.QuickFixProvider;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.CodeAction;
-import org.eclipse.lsp4j.CodeActionContext;
 import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
@@ -35,7 +33,6 @@ import org.springframework.stereotype.Component;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -54,8 +51,8 @@ public class SourceFixAllCodeActionSupplier implements CodeActionSupplier {
 
   @Override
   public List<CodeAction> getCodeActions(CodeActionParams params, DocumentContext documentContext) {
-    List<String> only = params.getContext().getOnly();
-    if (only == null || !only.contains(CodeActionKind.SourceFixAll)) {
+    // Исправление всего файла считается только по явному запросу (своего вида или родительского).
+    if (!CodeActionSupplier.isKindExplicitlyRequested(params, CodeActionKind.SourceFixAll)) {
       return Collections.emptyList();
     }
 
@@ -79,23 +76,7 @@ public class SourceFixAllCodeActionSupplier implements CodeActionSupplier {
     DocumentContext documentContext
   ) {
 
-    Optional<Class<? extends QuickFixProvider>> quickFixClass = quickFixSupplier.getQuickFixClass(diagnosticCode);
-    if (quickFixClass.isEmpty()) {
-      return Collections.emptyList();
-    }
-
-    CodeActionContext fixAllContext = new CodeActionContext();
-    fixAllContext.setDiagnostics(diagnostics);
-    fixAllContext.setOnly(Collections.singletonList(CodeActionKind.QuickFix));
-
-    CodeActionParams fixAllParams = new CodeActionParams();
-    fixAllParams.setTextDocument(params.getTextDocument());
-    fixAllParams.setRange(params.getRange());
-    fixAllParams.setContext(fixAllContext);
-
-    QuickFixProvider quickFixInstance = quickFixSupplier.getQuickFixInstance(quickFixClass.get());
-
-    List<CodeAction> codeActions = quickFixInstance.getQuickFixes(diagnostics, fixAllParams, documentContext);
+    var codeActions = quickFixSupplier.getFixAllQuickFixes(diagnosticCode, diagnostics, params, documentContext);
     codeActions.forEach(codeAction -> codeAction.setKind(CodeActionKind.SourceFixAll));
 
     return codeActions;

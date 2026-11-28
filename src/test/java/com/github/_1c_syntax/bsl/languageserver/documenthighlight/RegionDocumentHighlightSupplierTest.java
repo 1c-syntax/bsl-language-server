@@ -96,6 +96,24 @@ class RegionDocumentHighlightSupplierTest {
   }
 
   @Test
+  void regionEndWithCursorRightAfterItHighlightsTheRegion() {
+    // given — курсор сразу за «#КонецОбласти» (строка 12, позиция 13 — конец строки)
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var params = new DocumentHighlightParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    var position = new Position(12, 13);
+    params.setPosition(position);
+    var terminalNodeInfo = DocumentHighlightTestUtils.findTerminalNode(position, documentContext);
+
+    // when
+    var highlights = supplier.getDocumentHighlight(params, documentContext, terminalNodeInfo);
+
+    // then
+    assertHighlightRange(highlights, 2, 1, 2, 29);    // #Область ПрограммныйИнтерфейс
+    assertHighlightRange(highlights, 12, 1, 12, 13);  // #КонецОбласти
+  }
+
+  @Test
   void testNestedRegion() {
     // given
     // Строка 4 (0-based): "    #Область ВложеннаяОбласть"

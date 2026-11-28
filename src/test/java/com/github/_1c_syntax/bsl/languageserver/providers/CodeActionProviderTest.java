@@ -168,6 +168,32 @@ class CodeActionProviderTest {
   }
 
   @Test
+  void testOnlyMatchesKindHierarchy() {
+    // given — по LSP запрос родительского вида (source) включает вложенные (source.fixAll)
+    CodeActionParams params = new CodeActionParams();
+    TextDocumentIdentifier textDocumentIdentifier = new TextDocumentIdentifier(documentContext.getUri().toString());
+
+    CodeActionContext codeActionContext = new CodeActionContext();
+    codeActionContext.setOnly(List.of(CodeActionKind.Source));
+    codeActionContext.setDiagnostics(Collections.emptyList());
+
+    params.setRange(new Range());
+    params.setTextDocument(textDocumentIdentifier);
+    params.setContext(codeActionContext);
+
+    // when
+    List<Either<Command, CodeAction>> codeActions = codeActionProvider.getCodeActions(params, documentContext);
+
+    // then
+    assertThat(codeActions)
+      .extracting(Either::getRight)
+      .extracting(CodeAction::getKind)
+      .isNotEmpty()
+      .allMatch(kind -> kind.equals(CodeActionKind.Source) || kind.startsWith(CodeActionKind.Source + "."))
+      .contains(CodeActionKind.SourceFixAll);
+  }
+
+  @Test
   void testSourceFixAll() {
     // given
     CodeActionParams params = new CodeActionParams();

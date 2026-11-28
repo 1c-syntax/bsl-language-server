@@ -30,7 +30,6 @@ import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.rename.NewNameValidator;
 import com.github._1c_syntax.bsl.languageserver.rename.RenameWorkspaceEditBuilder;
-import com.github._1c_syntax.bsl.languageserver.rename.SymbolDefinitionReferenceFactory;
 import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ClientCapabilities;
@@ -75,7 +74,6 @@ public final class RenameProvider {
   private final Resources resources;
   private final RenameWorkspaceEditBuilder workspaceEditBuilder;
   private final NewNameValidator newNameValidator;
-  private final SymbolDefinitionReferenceFactory symbolDefinitionReferenceFactory;
   private final ClientCapabilitiesHolder clientCapabilitiesHolder;
 
   // Кэшируется на initialize. Признак поддержки клиентом
@@ -131,7 +129,7 @@ public final class RenameProvider {
         .map(referenceIndex::getReferencesTo)
         .flatMap(Collection::stream),
       sourceDefinedSymbol
-        .stream().map(symbolDefinitionReferenceFactory::referenceOf)
+        .stream().map(Reference::definitionOf)
     ).collect(Collectors.groupingBy(ref -> ref.uri().toString(), getTexEdits(params)));
 
     var oldName = sourceDefinedSymbol.map(SourceDefinedSymbol::getName).orElse(params.getNewName());

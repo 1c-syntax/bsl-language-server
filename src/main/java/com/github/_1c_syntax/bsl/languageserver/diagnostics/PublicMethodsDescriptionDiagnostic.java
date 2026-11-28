@@ -28,12 +28,10 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticP
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.Regions;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.eclipse.lsp4j.SymbolKind;
-
-import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -46,10 +44,6 @@ import java.util.regex.Pattern;
   }
 )
 public class PublicMethodsDescriptionDiagnostic extends AbstractVisitorDiagnostic {
-
-  private static final Pattern API_REGION_NAME = CaseInsensitivePattern.compile(
-    "^(?:ПрограммныйИнтерфейс|Public)$"
-  );
 
   private static final boolean DEFAULT_CHECK_ALL_REGION = false;
 
@@ -80,6 +74,6 @@ public class PublicMethodsDescriptionDiagnostic extends AbstractVisitorDiagnosti
   }
 
   private static boolean isAPIRegion(Symbol symbol) {
-    return API_REGION_NAME.matcher(symbol.getName()).matches();
+    return Regions.isPublicRegionName(symbol.getName());
   }
 }

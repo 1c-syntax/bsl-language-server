@@ -390,22 +390,22 @@ public class ServerContextProvider {
   }
 
   /**
-   * То же, что {@link #getDocumentNoLock(URI)}, но с нормализацией.
-   * Аналог {@link #getDocumentUnsafe(URI)} для контекстов, где нельзя
-   * брать per-document RWLock (см. документацию к {@link #getDocumentNoLock(URI)}).
-   */
-  public Optional<DocumentContext> getDocumentUnsafeNoLock(URI uri) {
-    var normalizedUri = Absolute.uri(uri);
-    return getDocumentNoLock(normalizedUri);
-  }
-
-  /**
    * Получить все контексты серверов с их URI.
    *
    * @return неизменяемая карта URI → контекст сервера
    */
   public Map<URI, ServerContext> getAllContexts() {
     return Collections.unmodifiableMap(contexts);
+  }
+
+  /**
+   * Контекст рабочей области, выбранной в текущем потоке ({@link WorkspaceContextHolder}).
+   *
+   * @return контекст; пусто, если рабочая область в потоке не выбрана или уже удалена
+   */
+  public Optional<ServerContext> getCurrentServerContext() {
+    var workspaceUri = WorkspaceContextHolder.get();
+    return workspaceUri == null ? Optional.empty() : Optional.ofNullable(contexts.get(workspaceUri));
   }
 
   /**

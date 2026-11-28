@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
@@ -80,8 +81,50 @@ final class CollectionReturnsSpecializer {
    *                       {@link TypeSet#EMPTY} — не уточнять {@code Выгрузить}.
    * @return уточнённые члены; пустой список, если уточнять было нечего.
    */
-  static List<MemberDescriptor> specialize(Collection<MemberDescriptor> genericMembers,
-                                           TypeRef genericRow, TypeRef row, TypeSet unloadedRow) {
+  /**
+   * Регистрирует на коллекции уточнённые под её строку члены обобщённой коллекции.
+   * Члены читаются лениво — на момент регистрации обобщённая коллекция и колонки могут быть
+   * ещё не наполнены.
+   *
+   * @param typeRegistry      реестр, в котором регистрируется уточнение.
+   * @param collection        тип этой коллекции.
+   * @param genericCollection обобщённый тип коллекции — источник объявлений.
+   * @param genericRow        обобщённый тип строки, который заменяется.
+   * @param row               строка этой коллекции.
+   * @param columns           колонки — они же колонки выгруженной таблицы значений.
+   */
+  /**
+   * Регистрирует типизированную коллекцию целиком: своя строка — типом элемента, обход и
+   * индексатор — от обобщённой коллекции, её члены — уточнёнными под строку
+   * ({@link #register}).
+   * <p>
+   * Порядок шагов обязателен: тип элемента задаётся до наследования коллекционных свойств,
+   * иначе выиграла бы унаследованная обобщённая строка, и {@code Для Каждого} терял бы колонки.
+   *
+   * @param typeRegistry      реестр, в котором регистрируется коллекция.
+   * @param collection        тип этой коллекции.
+   * @param genericCollection обобщённый тип коллекции — источник объявлений и свойств обхода.
+   * @param genericRow        обобщённый тип строки, который заменяется.
+   * @param row               строка этой коллекции.
+   * @param columns           колонки — они же колонки выгруженной таблицы значений.
+   */
+  static void registerCollection(TypeRegistry typeRegistry, TypeRef collection, TypeRef genericCollection,
+                                 TypeRef genericRow, TypeRef row, MemberSource columns) {
+    typeRegistry.registerDefaultElementTypes(collection, List.of(row));
+    typeRegistry.inheritCollectionTraits(collection, genericCollection, FileType.BSL);
+    register(typeRegistry, collection, genericCollection, genericRow, row, columns);
+  }
+
+  static void register(TypeRegistry typeRegistry, TypeRef collection, TypeRef genericCollection,
+                       TypeRef genericRow, TypeRef row, MemberSource columns) {
+    var valueTableRow = typeRegistry.resolve(VALUE_TABLE_ROW).orElse(null);
+    typeRegistry.registerMemberOverride(collection, () -> specialize(
+      typeRegistry.getMembers(genericCollection, FileType.BSL), genericRow, row,
+      unloadedRow(valueTableRow, columns)), FileType.BSL);
+  }
+
+  private static List<MemberDescriptor> specialize(Collection<MemberDescriptor> genericMembers,
+                                                   TypeRef genericRow, TypeRef row, TypeSet unloadedRow) {
     var specialized = new ArrayList<MemberDescriptor>();
     for (var member : genericMembers) {
       var refined = refine(member, genericRow, row, unloadedRow);
@@ -151,9 +194,7 @@ final class CollectionReturnsSpecializer {
     for (var parameter : signature.parameters()) {
       var replaced = replaceRow(parameter.types(), genericRow, row);
       parametersChanged |= replaced != null;
-      parameters.add(replaced == null ? parameter : new ParameterDescriptor(parameter.bilingualName(),
-        replaced, parameter.optional(), parameter.bilingualDescription(), parameter.defaultValue(),
-        parameter.variadic()));
+      parameters.add(replaced == null ? parameter : parameter.withTypes(replaced));
     }
     if (returnTypes == null && !parametersChanged) {
       return null;
@@ -196,7 +237,7 @@ final class CollectionReturnsSpecializer {
    * @param columns       источник колонок коллекции.
    * @return типы строки с полями-колонками; {@link TypeSet#EMPTY}, если уточнять не на чем.
    */
-  static TypeSet unloadedRow(@Nullable TypeRef valueTableRow, MemberSource columns) {
+  private static TypeSet unloadedRow(@Nullable TypeRef valueTableRow, MemberSource columns) {
     if (valueTableRow == null) {
       return TypeSet.EMPTY;
     }

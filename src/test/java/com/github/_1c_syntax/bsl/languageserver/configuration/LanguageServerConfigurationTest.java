@@ -34,6 +34,7 @@ import com.github._1c_syntax.utils.Absolute;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
@@ -220,6 +221,34 @@ class LanguageServerConfigurationTest {
       .containsExactly("./libs", "/opt/oscript-lib");
     assertThat(oscriptOptions.isUseEnvLibLocation()).isTrue();
     assertThat(oscriptOptions.isShowImplicitLibraryEntriesInCompletion()).isTrue();
+  }
+
+  @Test
+  void updateFromMalformedFileKeepsCurrentSettings(@TempDir Path tempDir) throws IOException {
+    // given
+    configuration.update(new File(PATH_TO_CONFIGURATION_FILE));
+    var malformedFile = tempDir.resolve(".bsl-language-server.json");
+    Files.writeString(malformedFile, "{\"language\": ");
+
+    // when
+    configuration.update(malformedFile.toFile());
+
+    // then
+    assertThat(configuration.getLanguage()).isEqualTo(Language.EN);
+  }
+
+  @Test
+  void updateFromFileWithMistypedValueKeepsCurrentSettings(@TempDir Path tempDir) throws IOException {
+    // given
+    configuration.update(new File(PATH_TO_CONFIGURATION_FILE));
+    var mistypedFile = tempDir.resolve(".bsl-language-server.json");
+    Files.writeString(mistypedFile, "{\"language\": \"ru\", \"diagnostics\": {\"computeTrigger\": \"sometimes\"}}");
+
+    // when
+    configuration.update(mistypedFile.toFile());
+
+    // then
+    assertThat(configuration.getLanguage()).isEqualTo(Language.EN);
   }
 
 }

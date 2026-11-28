@@ -42,7 +42,7 @@ import java.util.Optional;
  * подбору ссылки, живёт в реализациях {@link com.github._1c_syntax.bsl.languageserver.references.ReferenceFinder}
  * (в том числе synthetic-символы для аннотаций и keyword'ов —
  * {@link com.github._1c_syntax.bsl.languageserver.references.AnnotationReferenceFinder},
- * {@link com.github._1c_syntax.bsl.languageserver.references.KeywordReferenceFinder}),
+ * {@link com.github._1c_syntax.bsl.languageserver.types.references.KeywordReferenceFinder}),
  * всё, что относится к формированию текста подсказки — в соответствующем
  * {@code MarkupContentBuilder}.
  *

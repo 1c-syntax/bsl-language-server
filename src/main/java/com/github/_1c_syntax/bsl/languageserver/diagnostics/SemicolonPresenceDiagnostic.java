@@ -36,7 +36,6 @@ import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @DiagnosticMetadata(
@@ -73,24 +72,11 @@ public class SemicolonPresenceDiagnostic extends AbstractVisitorDiagnostic imple
     DocumentContext documentContext
   ) {
 
-    List<TextEdit> textEdits = new ArrayList<>();
-
-    diagnostics.forEach((Diagnostic diagnostic) -> {
-      Range diagnosticRange = diagnostic.getRange();
-      Position diagnosticRangeEnd = diagnosticRange.getEnd();
-
-      Range range = new Range(diagnosticRangeEnd, diagnosticRangeEnd);
-
-      TextEdit textEdit = new TextEdit(range, ";");
-      textEdits.add(textEdit);
-    });
-
-    return QuickFixProvider.createCodeActions(
-      textEdits,
-      info.getResourceString("quickFixMessage"),
-      documentContext.getUri(),
-      diagnostics
-    );
+    return QuickFixProvider.fixEach(diagnostics, info.getResourceString("quickFixMessage"), documentContext.getUri(),
+      (Diagnostic diagnostic) -> {
+        Position diagnosticRangeEnd = diagnostic.getRange().getEnd();
+        return List.of(new TextEdit(new Range(diagnosticRangeEnd, diagnosticRangeEnd), ";"));
+      });
 
   }
 }

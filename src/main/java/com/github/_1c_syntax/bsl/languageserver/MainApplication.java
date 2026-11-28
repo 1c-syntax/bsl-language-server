@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver;
 
 import com.github._1c_syntax.bsl.languageserver.cli.AnalyzeCommand;
+import com.github._1c_syntax.bsl.languageserver.cli.CommandHelp;
 import com.github._1c_syntax.bsl.languageserver.cli.FormatCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.LanguageServerStartCommand;
 import com.github._1c_syntax.bsl.languageserver.cli.McpCommand;
@@ -45,10 +46,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Locale;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static picocli.CommandLine.Command;
 
@@ -71,7 +75,7 @@ import static picocli.CommandLine.Command;
   },
   usageHelpAutoWidth = true,
   synopsisSubcommandLabel = "[COMMAND [ARGS]]",
-  footer = "@|green Copyright(c) 2018-2025|@",
+  footer = CommandHelp.FOOTER,
   header = "@|green BSL language server|@")
 @SpringBootApplication(scanBasePackageClasses = MainApplication.class)
 @Component
@@ -83,7 +87,20 @@ import static picocli.CommandLine.Command;
 @RequiredArgsConstructor
 public class MainApplication implements Callable<Integer>, ExitCodeGenerator {
 
-  private static final String DEFAULT_COMMAND = "lsp";
+  private static final String DEFAULT_COMMAND = commandName(LanguageServerStartCommand.class);
+  private static final String WEBSOCKET_COMMAND = commandName(WebsocketCommand.class);
+  private static final String MCP_COMMAND = commandName(McpCommand.class);
+
+  /** Имя и каждый алиас подкоманды → её каноническое имя; источник — аннотации {@link Command}. */
+  private static final Map<String, String> SUBCOMMAND_NAMES = Arrays
+    .stream(MainApplication.class.getAnnotation(Command.class).subcommands())
+    .map(subcommand -> subcommand.getAnnotation(Command.class))
+    .flatMap(command -> Stream.concat(Stream.of(command.name()), Arrays.stream(command.aliases()))
+      .map(alias -> Map.entry(alias, command.name())))
+    .collect(Collectors.toUnmodifiableMap(Map.Entry::getKey, Map.Entry::getValue));
+
+  /** Опции верхнего уровня, за которыми следует значение. */
+  private static final Set<String> TOP_LEVEL_OPTIONS_WITH_VALUE = Set.of("-c", "--configuration");
 
   /**
    * Опция осознанного включения отладочного режима Spring Boot.
@@ -227,9 +244,38 @@ public class MainApplication implements Callable<Integer>, ExitCodeGenerator {
     return new String[0];
   }
 
+  /**
+   * Имя подкоманды, которую выберет picocli: первый аргумент, совпавший с именем или алиасом
+   * подкоманды. Значение опции {@code -c} верхнего уровня пропускается; аргументы после
+   * подкоманды — её собственные опции и значения, команду они не выбирают.
+   *
+   * @param args аргументы командной строки
+   * @return каноническое имя подкоманды; {@link #DEFAULT_COMMAND}, если подкоманда не указана
+   */
+  static String subcommandName(String[] args) {
+    for (var i = 0; i < args.length; i++) {
+      var arg = args[i];
+      if (TOP_LEVEL_OPTIONS_WITH_VALUE.contains(arg)) {
+        i++;
+        continue;
+      }
+      var name = SUBCOMMAND_NAMES.get(arg);
+      if (name != null) {
+        return name;
+      }
+      if (!arg.startsWith("-")) {
+        break;
+      }
+    }
+    return DEFAULT_COMMAND;
+  }
+
+  private static String commandName(Class<?> commandClass) {
+    return commandClass.getAnnotation(Command.class).name();
+  }
+
   private static boolean isWebsocketMode(String[] args) {
-    var argsList = Arrays.asList(args);
-    return argsList.contains("-w") || argsList.contains("websocket");
+    return WEBSOCKET_COMMAND.equals(subcommandName(args));
   }
 
   /**
@@ -251,7 +297,7 @@ public class MainApplication implements Callable<Integer>, ExitCodeGenerator {
    * Самостоятельная команда {@code mcp} (транспорт выбирается параметром {@code --protocol}).
    */
   private static boolean isMcpSubcommand(String[] args) {
-    return Arrays.asList(args).contains("mcp");
+    return MCP_COMMAND.equals(subcommandName(args));
   }
 
   /**

@@ -45,6 +45,22 @@ class SignatureDescriptorTest {
   }
 
   @Test
+  void withReturnTypesKeepsEverythingButReturnTypes() {
+    // given
+    var parameter = new ParameterDescriptor("П", TypeSet.of(NUMBER), false, "", "");
+    var metadata = PlatformMetadata.EMPTY;
+    var signature = new SignatureDescriptor(List.of(parameter), TypeSet.of(NUMBER),
+      BilingualString.of("оп", "desc"), metadata);
+
+    // when
+    var retyped = signature.withReturnTypes(TypeSet.of(STRING));
+
+    // then
+    assertThat(retyped).isEqualTo(new SignatureDescriptor(List.of(parameter), TypeSet.of(STRING),
+      BilingualString.of("оп", "desc"), metadata));
+  }
+
+  @Test
   void canonicalConstructorNormalizesNulls() {
     // given / when
     var sig = new SignatureDescriptor(List.of(), null, (BilingualString) null);

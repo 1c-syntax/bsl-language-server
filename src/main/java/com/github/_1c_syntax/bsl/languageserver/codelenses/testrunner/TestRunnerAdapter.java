@@ -26,6 +26,7 @@ import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageSer
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
+import com.github._1c_syntax.bsl.languageserver.index.AbstractDocumentLifecycleClearableIndex;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.exec.CommandLine;
@@ -35,35 +36,38 @@ import org.apache.commons.exec.ExecuteWatchdog;
 import org.apache.commons.exec.PumpStreamHandler;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang3.SystemUtils;
-import org.springframework.cache.annotation.CacheConfig;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.net.URI;
 import java.nio.charset.Charset;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * Расчетчик списка тестов в документе.
  * Физически выполняет команды по получению идентификаторов тестов на основании конфигурации.
+ * <p>
+ * Результат кэшируется по URI документа и сбрасывается при изменении документа, его закрытии или
+ * удалении, а также при изменении конфигурации.
  */
 @Component
 @RequiredArgsConstructor
 @Slf4j
-@CacheConfig(cacheNames = "testIds")
-public class TestRunnerAdapter {
+public class TestRunnerAdapter extends AbstractDocumentLifecycleClearableIndex {
 
   private static final Pattern NEW_LINE_PATTERN = Pattern.compile("\r?\n");
 
   private final LanguageServerConfiguration configuration;
+  private final Map<URI, List<String>> testIds = new ConcurrentHashMap<>();
 
   /**
    * Обработчик события {@link LanguageServerConfigurationChangedEvent}.
@@ -73,9 +77,13 @@ public class TestRunnerAdapter {
    * @param event Событие
    */
   @EventListener
-  @CacheEvict(allEntries = true)
   public void handleEvent(LanguageServerConfigurationChangedEvent event) {
-    // No-op. Служит для сброса кеша при изменении конфигурации
+    testIds.clear();
+  }
+
+  @Override
+  public void clear(URI uri) {
+    testIds.remove(uri);
   }
 
   /**
@@ -84,8 +92,11 @@ public class TestRunnerAdapter {
    * @param documentContext Контекст документа с тестами.
    * @return Список идентификаторов тестов.
    */
-  @Cacheable
   public List<String> getTestIds(DocumentContext documentContext) {
+    return testIds.computeIfAbsent(documentContext.getUri(), uri -> computeTestIds(documentContext));
+  }
+
+  private List<String> computeTestIds(DocumentContext documentContext) {
     var options = configuration.getCodeLensOptions().getTestRunnerAdapterOptions();
 
     if (options.isGetTestsByTestRunner()) {
@@ -98,7 +109,7 @@ public class TestRunnerAdapter {
   private List<String> computeTestIdsByTestRunner(DocumentContext documentContext) {
     var options = configuration.getCodeLensOptions().getTestRunnerAdapterOptions();
 
-    var executable = SystemUtils.IS_OS_WINDOWS ? options.getExecutableWin() : options.getExecutable();
+    var executable = options.getExecutableForCurrentOS();
     var path = Path.of(documentContext.getUri()).toString();
     var arguments = options.getGetTestsArguments().formatted(path);
 

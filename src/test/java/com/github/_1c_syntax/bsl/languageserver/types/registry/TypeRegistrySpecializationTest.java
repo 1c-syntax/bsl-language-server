@@ -91,6 +91,24 @@ class TypeRegistrySpecializationTest {
     assertThat(repeated).containsExactlyElementsOf(generics);
   }
 
+  // === findSpecialization ===
+
+  @Test
+  void findSpecializationReturnsRegisteredSpecializationOfSingleParameterGeneric() {
+    // given
+    var generic = typeRegistry.resolve("СправочникСсылка.<Имя справочника>").orElseThrow();
+    var registered = typeRegistry.registerSpecialization(
+      "СправочникСсылка.Найденный", generic, Map.of("Имя справочника", "Найденный"), FileType.BSL);
+    var plain = typeRegistry.resolve("Строка").orElseThrow();
+
+    // then — пусто: специализация не зарегистрирована, тип не дженерик, подстановка вернула
+    // сам дженерик.
+    assertThat(typeRegistry.findSpecialization(generic, "Найденный")).contains(registered);
+    assertThat(typeRegistry.findSpecialization(generic, "НеЗарегистрированный")).isEmpty();
+    assertThat(typeRegistry.findSpecialization(plain, "Найденный")).isEmpty();
+    assertThat(typeRegistry.findSpecialization(generic, "<Имя справочника>")).isEmpty();
+  }
+
   // === registerSpecialization ===
 
   @Test

@@ -35,7 +35,7 @@ import org.springframework.stereotype.Component;
  * ({@code Если}, {@code Истина}, {@code Цикл}…).
  * <p>
  * {@link KeywordSymbol} приходит уже с локализованным описанием
- * (выбранным {@link com.github._1c_syntax.bsl.languageserver.references.KeywordReferenceFinder}
+ * (выбранным {@link com.github._1c_syntax.bsl.languageserver.types.references.KeywordReferenceFinder}
  * по текущей локали LS и AST-контексту). Билдер только оборачивает
  * keyword и описание в markdown-формат:
  * <pre>

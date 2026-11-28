@@ -60,6 +60,23 @@ public record Reference(
     return new Location(uri.toString(), selectionRange);
   }
 
+  /**
+   * Ссылка-определение символа на самого себя: вхождение {@link OccurrenceType#DEFINITION} в
+   * документе владельца по диапазону выделения (имени) символа.
+   *
+   * @param symbol символ, объявленный в исходном коде
+   * @return ссылка на собственное определение символа
+   */
+  public static Reference definitionOf(SourceDefinedSymbol symbol) {
+    return new Reference(
+      symbol,
+      symbol,
+      symbol.getOwner().getUri(),
+      symbol.getSelectionRange(),
+      OccurrenceType.DEFINITION
+    );
+  }
+
   public static Reference of(SourceDefinedSymbol from, Symbol symbol, Location location) {
     return of(from, symbol, location, OccurrenceType.REFERENCE);
   }

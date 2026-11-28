@@ -86,7 +86,7 @@ class ReportersAggregatorTest {
     FileInfo fileInfo = new FileInfo(sourceDir, documentContext, Collections.singletonList(diagnostic));
     AnalysisInfo analysisInfo = new AnalysisInfo(LocalDateTime.now(), Collections.singletonList(fileInfo), sourceDir);
 
-    var context = new ReportContext(analysisInfo.date(), analysisInfo.sourceDir());
+    var context = new ReportContext(analysisInfo.date(), analysisInfo.sourceDir(), Path.of("").toAbsolutePath());
     try (var session = aggregator.beginReport(context, Path.of(sourceDir))) {
       analysisInfo.fileinfos().forEach(session::accept);
       session.commit();

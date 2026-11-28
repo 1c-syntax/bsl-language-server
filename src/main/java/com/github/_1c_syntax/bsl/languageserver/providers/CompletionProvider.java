@@ -53,6 +53,7 @@ import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvid
 import com.github._1c_syntax.bsl.languageserver.types.scope.UseDirectiveScanner;
 import com.github._1c_syntax.bsl.languageserver.utils.FuzzyMatcher;
 import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
+import com.github._1c_syntax.bsl.languageserver.utils.LspPayloads;
 import com.github._1c_syntax.bsl.parser.description.MethodDescription;
 import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import com.github._1c_syntax.bsl.support.CompatibilityMode;
@@ -464,17 +465,7 @@ public final class CompletionProvider {
    */
   @Nullable
   public CompletionData extractData(CompletionItem item) {
-    var rawData = item.getData();
-    if (rawData == null) {
-      return null;
-    }
-    if (rawData instanceof CompletionData completionData) {
-      return completionData;
-    }
-    if (rawData instanceof Map<?, ?>) {
-      return jsonMapper.convertValue(rawData, CompletionData.class);
-    }
-    return jsonMapper.readValue(rawData.toString(), CompletionData.class);
+    return LspPayloads.read(jsonMapper, item.getData(), CompletionData.class);
   }
 
   private List<CompletionItem> dotCompletion(DocumentContext documentContext, Position position,
@@ -642,42 +633,13 @@ public final class CompletionProvider {
 
   @Nullable
   private static DotCompletionInfo dotCompletionInfo(DocumentContext documentContext, Position position) {
-    try {
-      var lines = documentContext.getContentList();
-      if (position.getLine() >= lines.length) {
-        return null;
-      }
-      var line = lines[position.getLine()];
-      var col = Math.min(position.getCharacter(), line.length());
-      var i = col;
-      while (i > 0 && isIdentChar(line.charAt(i - 1))) {
-        i--;
-      }
-      if (i == 0 || line.charAt(i - 1) != '.') {
-        return null;
-      }
-      return new DotCompletionInfo(line.substring(i, col));
-    } catch (Exception e) {
-      return null;
-    }
+    var lineInfo = currentLineInfo(documentContext, position);
+    return lineInfo != null && lineInfo.afterDot() ? new DotCompletionInfo(lineInfo.prefix()) : null;
   }
 
   private record DotCompletionInfo(String prefix) {
   }
 
-  /**
-   * Метод, в области видимости которого находится {@code position}.
-   *
-   * @return метод, содержащий позицию; {@code empty}, если позиция вне
-   * какого-либо метода (уровень модуля).
-   */
-  private static Optional<MethodSymbol> enclosingMethod(DocumentContext documentContext, Position position) {
-    var symbol = documentContext.getSymbolTree().getSymbolAtPosition(position);
-    if (symbol instanceof MethodSymbol method) {
-      return Optional.of(method);
-    }
-    return symbol.getRootParent(MethodSymbol.class).map(MethodSymbol.class::cast);
-  }
 
   /**
    * Переменная не должна попадать в no-dot completion, если она вне текущей
@@ -750,7 +712,7 @@ public final class CompletionProvider {
     // только на уровне модуля (курсор вне тела метода): внутри чужого метода вставка нового
     // объявления процедуры/функции была бы синтаксически некорректной (аналог «override method»
     // в других IDE, но для обработчиков платформенных событий 1С).
-    if (enclosingMethod(documentContext, position).isEmpty()) {
+    if (documentContext.getSymbolTree().getMethodSymbolAtPosition(position).isEmpty()) {
       collectEventHandlerStubs(documentContext, prefix, target, items);
     }
 
@@ -876,7 +838,7 @@ public final class CompletionProvider {
     // курсор); переменные и параметры ДРУГИХ методов документа не видны здесь и
     // не должны предлагаться (см. VariableSymbol.getScope()).
     var moduleSymbol = query.document().getSymbolTree().getModule();
-    var enclosingMethod = enclosingMethod(query.document(), query.position());
+    var enclosingMethod = query.document().getSymbolTree().getMethodSymbolAtPosition(query.position());
     // Видимая переменная перекрывает только self-свойство: переменные и методы
     // живут в разных пространствах имён, поэтому ключ дедупликации несёт вид члена.
     for (var variable : query.document().getSymbolTree().getVariables()) {
@@ -1079,7 +1041,7 @@ public final class CompletionProvider {
    * свойство, коллекция, общий модуль) → {@code Variable}.
    */
   private CompletionItemKind completionKindForGlobalProperty(MemberDescriptor member, FileType fileType) {
-    var valueType = member.returnTypes().refs().stream().findFirst().orElse(TypeRef.UNKNOWN);
+    var valueType = member.returnType();
     if (typeService.isEnumType(valueType, fileType)) {
       return CompletionItemKind.Enum;
     }
@@ -1111,24 +1073,25 @@ public final class CompletionProvider {
     return head.endsWith("новый") || head.endsWith("new");
   }
 
+  /**
+   * Строка под курсором и набираемый идентификатор перед ним. Текста у документа может не быть
+   * (документ закрыт и освобождён) — тогда исключение уходит выше и запрос отвечает «содержимое
+   * изменилось», как и прочие.
+   */
   @Nullable
   private static LineInfo currentLineInfo(DocumentContext documentContext, Position position) {
-    try {
-      var lines = documentContext.getContentList();
-      if (position.getLine() >= lines.length) {
-        return null;
-      }
-      var line = lines[position.getLine()];
-      var col = Math.min(position.getCharacter(), line.length());
-      var start = col;
-      while (start > 0 && isIdentChar(line.charAt(start - 1))) {
-        start--;
-      }
-      var prefix = line.substring(start, col);
-      return new LineInfo(line, col, prefix);
-    } catch (Exception e) {
+    var lines = documentContext.getContentList();
+    if (position.getLine() >= lines.length) {
       return null;
     }
+    var line = lines[position.getLine()];
+    var col = Math.min(position.getCharacter(), line.length());
+    var start = col;
+    while (start > 0 && isIdentChar(line.charAt(start - 1))) {
+      start--;
+    }
+    var prefix = line.substring(start, col);
+    return new LineInfo(line, col, prefix);
   }
 
   private static boolean isIdentChar(char c) {
@@ -1136,25 +1099,15 @@ public final class CompletionProvider {
   }
 
   private record LineInfo(String line, int cursor, String prefix) {
+    /** Перед набираемым идентификатором — точка: «x.|» и «x.Доб|». */
+    boolean afterDot() {
+      var start = cursor - prefix.length();
+      return start > 0 && line.charAt(start - 1) == '.';
+    }
   }
 
   private static boolean isDotCompletion(DocumentContext documentContext, Position position) {
-    try {
-      var lines = documentContext.getContentList();
-      if (position.getLine() >= lines.length) {
-        return false;
-      }
-      var line = lines[position.getLine()];
-      var col = Math.min(position.getCharacter(), line.length());
-      // dot-completion also when typing prefix after dot: e.g. "x.Доб|" → walk back through ident
-      var i = col;
-      while (i > 0 && isIdentChar(line.charAt(i - 1))) {
-        i--;
-      }
-      return i > 0 && line.charAt(i - 1) == '.';
-    } catch (Exception e) {
-      return false;
-    }
+    return dotCompletionInfo(documentContext, position) != null;
   }
 
   /**

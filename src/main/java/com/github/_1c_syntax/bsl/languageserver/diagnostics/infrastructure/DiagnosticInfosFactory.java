@@ -88,8 +88,7 @@ public class DiagnosticInfosFactory {
    * @return Map: код диагностики -> DiagnosticInfo
    */
   public Map<String, DiagnosticInfo> createDiagnosticInfosByCode(LanguageServerConfiguration configuration) {
-    return getDiagnosticClasses().stream()
-      .map(diagnosticClass -> new DiagnosticInfo(diagnosticClass, configuration, stringInterner))
+    return createDiagnosticInfos(configuration).stream()
       .collect(Collectors.toMap(info -> info.getCode().getStringValue(), Function.identity()));
   }
 
@@ -102,8 +101,7 @@ public class DiagnosticInfosFactory {
   public Map<Class<? extends BSLDiagnostic>, DiagnosticInfo> createDiagnosticInfosByClass(
     LanguageServerConfiguration configuration
   ) {
-    return getDiagnosticClasses().stream()
-      .map(diagnosticClass -> new DiagnosticInfo(diagnosticClass, configuration, stringInterner))
+    return createDiagnosticInfos(configuration).stream()
       .collect(Collectors.toMap(DiagnosticInfo::getDiagnosticClass, Function.identity()));
   }
 }

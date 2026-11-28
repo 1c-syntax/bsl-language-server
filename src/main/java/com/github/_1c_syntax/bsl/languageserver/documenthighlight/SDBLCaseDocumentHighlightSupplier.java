@@ -68,7 +68,9 @@ public class SDBLCaseDocumentHighlightSupplier extends AbstractSDBLDocumentHighl
 
     // Ищем caseExpression в AST запроса
     var ast = info.tokenizer().getAst();
-    var caseExpression = findCaseExpressionAtPosition(ast, position);
+    // По найденному токену, а не по курсору: курсор может стоять сразу за «КОНЕЦ», за концом
+    // выражения.
+    var caseExpression = findCaseExpressionAtPosition(ast, Ranges.create(info.token()).getStart());
 
     if (caseExpression == null) {
       return Collections.emptyList();

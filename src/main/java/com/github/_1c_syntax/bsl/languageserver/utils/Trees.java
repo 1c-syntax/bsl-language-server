@@ -35,9 +35,11 @@ import org.jspecify.annotations.Nullable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.BiPredicate;
 
 /**
  * Утилитный класс для работы с синтаксическими деревьями ANTLR.
@@ -123,13 +125,59 @@ public final class Trees {
   }
 
   /**
-   * Ищем предка элемента по указанному типу BSLParser
-   * Пример:
-   * ParserRuleContext parent = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_statement);
+   * Ближайший предок узла с указанным правилом; сам узел не рассматривается.
+   * Пример: {@code Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_statement)}.
+   *
+   * @param element узел, от которого идёт подъём по родителям
+   * @param type    индекс правила ({@code BSLParser.RULE_*} или {@code SDBLParser.RULE_*})
+   * @param <T>     тип контекста искомого правила
+   * @return ближайший предок с правилом {@code type}; {@code null}, если такого нет
    */
   @Nullable
   public static <T extends ParserRuleContext> T getAncestorByRuleIndex(ParserRuleContext element, int type) {
     return org.antlr.v4.runtime.tree.Trees.getAncestor(element, type);
+  }
+
+  /**
+   * Сам узел, если у него указанное правило, иначе — ближайший предок с этим правилом.
+   *
+   * @param element узел, с которого начинается поиск
+   * @param type    индекс правила ({@code BSLParser.RULE_*} или {@code SDBLParser.RULE_*})
+   * @param <T>     тип контекста искомого правила
+   * @return узел или ближайший предок с правилом {@code type}; {@code null}, если такого нет
+   */
+  @Nullable
+  public static <T extends ParserRuleContext> T getAncestorOrSelfByRuleIndex(ParserRuleContext element, int type) {
+    if (element.getRuleIndex() == type) {
+      @SuppressWarnings("unchecked")
+      var self = (T) element;
+      return self;
+    }
+    return getAncestorByRuleIndex(element, type);
+  }
+
+  /**
+   * Ближайший предок узла с одним из указанных правил; сам узел не рассматривается.
+   *
+   * @param element узел, от которого идёт подъём по родителям
+   * @param types   индексы правил ({@code BSLParser.RULE_*} или {@code SDBLParser.RULE_*})
+   * @return ближайший предок с одним из правил {@code types}; {@code null}, если такого нет
+   */
+  @Nullable
+  public static ParserRuleContext getAncestorByRuleIndex(ParserRuleContext element, Collection<Integer> types) {
+    return org.antlr.v4.runtime.tree.Trees.getAncestor(element, types);
+  }
+
+  /**
+   * Сам узел, если его правило из набора, иначе — ближайший предок с одним из правил набора.
+   *
+   * @param element узел, с которого начинается поиск
+   * @param types   индексы правил ({@code BSLParser.RULE_*} или {@code SDBLParser.RULE_*})
+   * @return узел или ближайший предок с одним из правил {@code types}; {@code null}, если такого нет
+   */
+  @Nullable
+  public static ParserRuleContext getAncestorOrSelfByRuleIndex(ParserRuleContext element, Collection<Integer> types) {
+    return types.contains(element.getRuleIndex()) ? element : getAncestorByRuleIndex(element, types);
   }
 
   /**
@@ -194,35 +242,15 @@ public final class Trees {
   }
 
   /**
-   * Рекурсивно находит самого верхнего родителя текущей ноды
+   * Корень дерева разбора, которому принадлежит узел.
+   *
+   * @param tnc узел дерева разбора
+   * @return самый верхний предок; сам узел, если родителя у него нет
    */
   public static ParserRuleContext getRootParent(ParserRuleContext tnc) {
     return org.antlr.v4.runtime.tree.Trees.getAncestor(tnc);
   }
 
-  /**
-   * Рекурсивно находит самого верхнего родителя текущей ноды нужного типа
-   *
-   * @param tnc       - нода, для которой ищем родителя
-   * @param ruleindex - BSLParser.RULE_*
-   * @return tnc - если родитель не найден, вернет null
-   */
-  @Nullable
-  public static ParserRuleContext getRootParent(ParserRuleContext tnc, int ruleindex) {
-    return org.antlr.v4.runtime.tree.Trees.getAncestor(tnc, ruleindex);
-  }
-
-  /**
-   * Рекурсивно находит самого верхнего родителя текущей ноды одного из нужных типов
-   *
-   * @param tnc     - нода, для которой ищем родителя
-   * @param indexes - Collection of BSLParser.RULE_*
-   * @return tnc - если родитель не найден, вернет null
-   */
-  @Nullable
-  public static ParserRuleContext getRootParent(ParserRuleContext tnc, Collection<Integer> indexes) {
-    return org.antlr.v4.runtime.tree.Trees.getAncestor(tnc, indexes);
-  }
 
   /**
    * Получает детей с нужными типами
@@ -323,6 +351,80 @@ public final class Trees {
     }
 
     return Optional.empty();
+  }
+
+  /**
+   * Терминальный узел, заканчивающийся ровно в позиции, — для каретки сразу за токеном.
+   * <p>
+   * {@link #findTerminalNodeContainsPosition} включает начало токена и исключает конец, поэтому
+   * для каретки на границе ищется токен на один символ левее и проверяется, что он
+   * заканчивается в исходной позиции.
+   *
+   * @param tree     дерево, в котором ищем
+   * @param position позиция сразу за искомым токеном
+   * @return терминальный узел, заканчивающийся в позиции; пусто в начале строки или если такого нет
+   */
+  public static Optional<TerminalNode> findTerminalNodeEndingAtPosition(ParserRuleContext tree, Position position) {
+    if (position.getCharacter() == 0) {
+      return Optional.empty();
+    }
+    var positionInsideToken = new Position(position.getLine(), position.getCharacter() - 1);
+    return findTerminalNodeContainsPosition(tree, positionInsideToken)
+      .filter(terminalNode -> endOf(terminalNode).equals(position));
+  }
+
+  private static Position endOf(TerminalNode terminalNode) {
+    return com.github._1c_syntax.bsl.languageserver.utils.Positions.createEnd(terminalNode);
+  }
+
+  /**
+   * Самый глубокий узел указанного типа, чей текст (от начала первого до конца последнего токена)
+   * содержит позицию. Спуск идёт только в поддеревья, содержащие позицию.
+   *
+   * @param tree     дерево, в котором ищем
+   * @param position позиция
+   * @param type     тип искомого узла
+   * @param <T>      тип искомого узла
+   * @return самый вложенный такой узел; пусто, если позицию не содержит ни один
+   */
+  public static <T extends ParserRuleContext> Optional<T> findInnermostEnclosing(
+    ParseTree tree,
+    Position position,
+    Class<T> type
+  ) {
+    T best = null;
+    if (type.isInstance(tree) && encloses((ParserRuleContext) tree, position)) {
+      best = type.cast(tree);
+    }
+    for (var i = 0; i < tree.getChildCount(); i++) {
+      var child = tree.getChild(i);
+      if (child instanceof ParserRuleContext childContext && !encloses(childContext, position)) {
+        continue;
+      }
+      var inner = findInnermostEnclosing(child, position, type);
+      if (inner.isPresent()) {
+        best = inner.get();
+      }
+    }
+    return Optional.ofNullable(best);
+  }
+
+  /**
+   * Содержит ли текст узла (от начала первого до конца последнего токена) позицию.
+   *
+   * @param ctx      узел
+   * @param position позиция
+   * @return {@code true}, если позиция внутри узла или в его начале (конец не включается, как у
+   *     {@link Ranges#containsPosition(org.eclipse.lsp4j.Range, Position)}); {@code false} для узла без токенов
+   */
+  public static boolean encloses(ParserRuleContext ctx, Position position) {
+    var start = ctx.getStart();
+    var stop = ctx.getStop();
+    if (start == null || stop == null) {
+      return false;
+    }
+    return Ranges.containsPosition(start.getLine() - 1, start.getCharPositionInLine(),
+      stop.getLine() - 1, stop.getCharPositionInLine() + stop.getText().length(), position);
   }
 
   /**
@@ -435,6 +537,45 @@ public final class Trees {
     var tokenRange = Ranges.create(token);
     var start = tokenRange.getStart();
     return Positions.isBefore(start, position) || start.equals(position);
+  }
+
+  /**
+   * Группы равных по {@link #equalNodes} узлов списка.
+   * <p>
+   * Группа — первое вхождение узла и все равные ему узлы после него, в порядке списка; узел,
+   * уже попавший в группу повтором, новой группы не начинает. Узлы без повторов в результат
+   * не попадают.
+   *
+   * @param nodes      узлы в порядке следования
+   * @param comparable какие пары (первое вхождение, кандидат) вообще сравнивать
+   * @param <T>        тип узла
+   * @return группы из двух и более узлов, первым — первое вхождение
+   */
+  public static <T extends Tree> List<List<T>> groupsOfEqualNodes(
+    List<T> nodes,
+    BiPredicate<? super T, ? super T> comparable
+  ) {
+    var groups = new ArrayList<List<T>>();
+    Set<T> duplicates = Collections.newSetFromMap(new IdentityHashMap<>());
+    for (var i = 0; i < nodes.size() - 1; i++) {
+      var first = nodes.get(i);
+      if (duplicates.contains(first)) {
+        continue;
+      }
+      var group = new ArrayList<T>();
+      group.add(first);
+      for (var j = i + 1; j < nodes.size(); j++) {
+        var candidate = nodes.get(j);
+        if (candidate != first && comparable.test(first, candidate) && equalNodes(first, candidate)) {
+          group.add(candidate);
+          duplicates.add(candidate);
+        }
+      }
+      if (group.size() > 1) {
+        groups.add(group);
+      }
+    }
+    return groups;
   }
 
   /**

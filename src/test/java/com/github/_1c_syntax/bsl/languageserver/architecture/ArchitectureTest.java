@@ -21,20 +21,31 @@
  */
 package com.github._1c_syntax.bsl.languageserver.architecture;
 
+import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
+import com.github._1c_syntax.bsl.languageserver.lsp.BSLTextDocumentService;
 import com.github._1c_syntax.bsl.languageserver.reporters.DiagnosticReporter;
+import com.github._1c_syntax.utils.Absolute;
 import com.tngtech.archunit.base.DescribedPredicate;
 import com.tngtech.archunit.core.domain.JavaClass;
+import com.tngtech.archunit.core.domain.JavaCodeUnit;
+import com.tngtech.archunit.core.domain.JavaMethod;
 import com.tngtech.archunit.core.domain.JavaModifier;
 import com.tngtech.archunit.core.importer.ImportOption;
 import com.tngtech.archunit.core.importer.Location;
 import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
+import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ArchRule;
+import com.tngtech.archunit.lang.ConditionEvents;
+import com.tngtech.archunit.lang.SimpleConditionEvent;
 import com.tngtech.archunit.library.dependencies.SliceAssignment;
 import com.tngtech.archunit.library.dependencies.SliceIdentifier;
+import org.eclipse.lsp4j.CodeActionContext;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEvent;
 
 import java.util.Set;
@@ -44,7 +55,9 @@ import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAPac
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideOutsideOfPackage;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noCodeUnits;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMembers;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noMethods;
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 import static com.tngtech.archunit.library.GeneralCodingRules.ACCESS_STANDARD_STREAMS;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
@@ -179,12 +192,110 @@ class ArchitectureTest {
     .should().resideInAPackage("..events..")
     .because("класс с суффиксом Event должен лежать в пакете events");
 
+  // --- Конфигурация -------------------------------------------------------------------------------
+
+  @ArchTest
+  static final ArchRule configuration_files_are_parsed_only_by_configuration_files = noClasses()
+    .that().resideInAPackage(ROOT_PACKAGE + ".configuration")
+    .and().doNotHaveFullyQualifiedName(ROOT_PACKAGE + ".configuration.ConfigurationFiles")
+    .should().dependOnClassesThat().resideInAPackage("tools.jackson.databind..")
+    .because("поиск и чтение файла конфигурации (порядок кандидатов, настройки маппера, политика "
+      + "ошибок разбора) сосредоточены в ConfigurationFiles");
+
+  // --- Обработка запросов LSP ---------------------------------------------------------------------
+  // Обработчик запроса к документу — одно выражение через onDocument: поиск документа, ответ по
+  // умолчанию и выполнение над его актуальным состоянием собраны там. Уведомления didChange/didClose
+  // со своей блокировкой ищут документ сами.
+
+  @ArchTest
+  static final ArchRule text_document_requests_go_through_on_document = noCodeUnits()
+    .that().areDeclaredIn(BSLTextDocumentService.class)
+    .and().doNotHaveName("onDocument")
+    .and().doNotHaveName("didChange")
+    .and().doNotHaveName("didClose")
+    .should(new ArchCondition<JavaCodeUnit>("искать документ через ServerContextProvider.getDocumentUnsafe") {
+      @Override
+      public void check(JavaCodeUnit codeUnit, ConditionEvents events) {
+        codeUnit.getMethodCallsFromSelf().stream()
+          .filter(call -> call.getTargetOwner().isEquivalentTo(ServerContextProvider.class))
+          .filter(call -> call.getName().equals("getDocumentUnsafe"))
+          .forEach(call -> events.add(SimpleConditionEvent.satisfied(codeUnit, call.getDescription())));
+      }
+    })
+    .because("обработчик запроса к документу строится на BSLTextDocumentService.onDocument");
+
+  // --- MCP ----------------------------------------------------------------------------------------
+
+  @ArchTest
+  static final ArchRule mcp_client_paths_are_normalized_by_workspace_folders = noClasses()
+    .that().resideInAPackage(ROOT_PACKAGE + ".mcp..")
+    .and().doNotHaveFullyQualifiedName(ROOT_PACKAGE + ".mcp.McpWorkspaceFolders")
+    .should().callMethod(Absolute.class, "uri", String.class)
+    .orShould().callMethod(Absolute.class, "path", String.class)
+    .because("строку от MCP-клиента (путь или URI, в том числе windows-вида file://D:\\…) разбирает "
+      + "только McpWorkspaceFolders — свой разбор разъедется с регистрацией рабочих папок");
+
+  // --- Code actions -------------------------------------------------------------------------------
+
+  @ArchTest
+  static final ArchRule code_action_kind_filter_is_read_only_by_canonical_predicate = noClasses()
+    .that().doNotHaveFullyQualifiedName(ROOT_PACKAGE + ".codeactions.CodeActionSupplier")
+    .should().callMethod(CodeActionContext.class, "getOnly")
+    .because("виды code action иерархичны (source включает source.fixAll): фильтр only проверяется "
+      + "через CodeActionSupplier.isKindRequested, а не сравнением строк");
+
+  // --- Кэши ---------------------------------------------------------------------------------------
+
+  @ArchTest
+  static final ArchRule cacheable_methods_should_not_be_keyed_by_document_context = noMethods()
+    .that().areAnnotatedWith(Cacheable.class)
+    .should(new ArchCondition<JavaMethod>("принимать DocumentContext") {
+      @Override
+      public void check(JavaMethod method, ConditionEvents events) {
+        if (method.getRawParameterTypes().stream().anyMatch(type -> type.isEquivalentTo(DocumentContext.class))) {
+          events.add(SimpleConditionEvent.satisfied(method, method.getFullName() + " принимает DocumentContext"));
+        }
+      }
+    })
+    .because("DocumentContext равен другому по одному URI, поэтому @Cacheable-кэш по нему переживает "
+      + "правку документа; кэш по документу строится на AbstractDocumentLifecycleClearableIndex");
+
   // --- Логирование --------------------------------------------------------------------------------
 
   @ArchTest
   static final ArchRule no_classes_should_use_java_util_logging = noClasses()
     .should().dependOnClassesThat().resideInAPackage("java.util.logging..")
     .because("логирование ведётся через slf4j (Lombok @Slf4j), а не через java.util.logging");
+
+  @ArchTest
+  static final ArchRule no_classes_should_use_jackson_2 = noClasses()
+    .should().dependOnClassesThat().resideInAnyPackage(
+      "com.fasterxml.jackson.databind..", "com.fasterxml.jackson.core..")
+    .because("JSON читается Jackson 3 (tools.jackson); у Jackson 3 под com.fasterxml.jackson "
+      + "остались только аннотации — второй парсер JSON с другой политикой исключений не нужен");
+
+  // --- Ядро анализа не знает о транспорте ---------------------------------------------------------
+  // Модель и анализ кода (контекст и символы, типы, ссылки, граф потока, диагностики, индексы,
+  // утилиты) пользуются словарём данных LSP4J — Position, Range, Diagnostic: это общая система
+  // координат всех подсистем. Но о том, КАК результат уходит клиенту, они не знают: ни сервисов и
+  // запуска LSP4J, ни веб/servlet-стека, ни MCP. Транспорт — в lsp/, websocket/, mcp/, cli/;
+  // поэтому один и тот же анализ обслуживает LSP по stdio и websocket, MCP и пакетный analyze.
+
+  static final String[] ANALYSIS_CORE = {
+    ROOT_PACKAGE + ".cfg..", ROOT_PACKAGE + ".context..", ROOT_PACKAGE + ".diagnostics..",
+    ROOT_PACKAGE + ".index..", ROOT_PACKAGE + ".references..", ROOT_PACKAGE + ".types..",
+    ROOT_PACKAGE + ".utils.."
+  };
+
+  @ArchTest
+  static final ArchRule analysis_core_is_transport_agnostic = noClasses()
+    .that().resideInAnyPackage(ANALYSIS_CORE)
+    .should().dependOnClassesThat().resideInAnyPackage(
+      "org.eclipse.lsp4j.services..", "org.eclipse.lsp4j.launch..", "org.eclipse.lsp4j.websocket..",
+      "org.springframework.web..", "org.springframework.boot.web..", "jakarta.servlet..",
+      "io.modelcontextprotocol..", "org.springframework.ai..")
+    .because("ядро анализа обслуживает все головы сервера (LSP stdio/websocket, MCP, CLI) и не "
+      + "зависит от транспорта, которым результат уходит клиенту");
 
   // --- Слои и зависимости -------------------------------------------------------------------------
   // ПОЛНАЯ, БЕЗ ПРОБЕЛОВ карта разрешённых зависимостей между пакетами. Каждый пакет проекта —
@@ -204,9 +315,8 @@ class ArchitectureTest {
   // зависимости): в байткоде в него никто не входит (ссылки на него — только в Javadoc @link),
   // поэтому он не нарушает полноту. websocket — лист без внутренних зависимостей.
   //
-  // Известные циклы оставлены ОСОЗНАННО (правило их допускает, но они помечены как долг):
-  //   - References↔Types: взаимные ссылки индексов. Разрывается позже.
-  // Появление НОВЫХ циклов среди уже ацикличных пакетов ловит отдельное правило ниже
+  // Разрешённых циклов нет: прежний References↔Types разорван (types зависит от references, но
+  // не наоборот). Появление циклов среди ацикличных пакетов дополнительно ловит правило ниже
   // (acyclic_domains_stay_free_of_cycles).
   //
   // Замечание про inline-константы: codeactions и diagnostics ссылаются на DiagnosticProvider.SOURCE
@@ -216,6 +326,9 @@ class ArchitectureTest {
   @ArchTest
   static final ArchRule layer_dependencies_are_respected = layeredArchitecture()
     .consideringOnlyDependenciesInAnyPackage(ROOT_PACKAGE + "..")
+    // Полнота карты — не соглашение, а проверка: класс вне всех слоёв (новый top-level пакет, не
+    // внесённый в карту) валит правило. Исключение — aop (см. ниже).
+    .ensureAllClassesAreContainedInArchitectureIgnoring(ROOT_PACKAGE + ".aop..")
     // Рёбра в пакет aop — артефакт AspectJ compile-time weaving (вплетённые вызовы аспектов в
     // байткоде, исходных import'ов нет), а не проектные зависимости. Исключаем их, оставляя aop
     // единственным неназначенным пакетом.
@@ -298,8 +411,9 @@ class ArchitectureTest {
     // Поставщики отдельных фич
     .whereLayer("CodeActions").mayOnlyAccessLayers(
       "CodeLenses", "Configuration", "Context", "Diagnostics", "DiagnosticsMetadata", "Types", "Utils")
+    // Index — кэш идентификаторов тестов по документу сбрасывается по его жизненному циклу.
     .whereLayer("CodeLenses").mayOnlyAccessLayers(
-      "Client", "Commands", "Configuration", "Context", "Databind", "Events", "Types")
+      "Client", "Commands", "Configuration", "Context", "Databind", "Events", "Index", "Types")
     .whereLayer("Commands").mayOnlyAccessLayers("Databind", "InlayHints")
     // Utils содержит общий канонический словарь ключевых слов.
     .whereLayer("Completion").mayOnlyAccessLayers("Configuration", "Context", "Types", "Utils")
@@ -321,14 +435,17 @@ class ArchitectureTest {
       "Cfg", "Configuration", "Context", "DiagnosticsMetadata", "Formatting", "Infrastructure",
       "Recognizer", "References", "Types", "Utils")
 
-    // Домены-фундамент. References↔Types — известный цикл (см. комментарий выше).
+    // Домены-фундамент.
     .whereLayer("Configuration").mayOnlyAccessLayers(
       "DiagnosticsMetadata", "Events", "Infrastructure", "Utils")
     // Events — ради добавления рабочей области: контекст узнаёт по нему, что она готовится в фоне.
     .whereLayer("Context").mayOnlyAccessLayers(
       "Client", "Configuration", "DiagnosticsMetadata", "Events", "Infrastructure", "Utils")
+    // Сведения системы типов индекс ссылок получает через собственные SPI (SelfMemberResolver,
+    // WorkspaceNames), реализованные в types; поиск ссылок средствами системы типов —
+    // ReferenceFinder'ы в types.references.
     .whereLayer("References").mayOnlyAccessLayers(
-      "Configuration", "Context", "Infrastructure", "Types", "Utils")
+      "Configuration", "Context", "Infrastructure", "Utils")
     // Client — ради индикатора хода работы: доразрешение типов возврата после наполнения
     // рабочей области идёт минутами и обязано показывать прогресс, как и само наполнение.
     .whereLayer("Types").mayOnlyAccessLayers(
@@ -356,14 +473,16 @@ class ArchitectureTest {
       + "разрешённых зависимостей, выведенным из его роли");
 
   // --- Ацикличность чистых доменов ----------------------------------------------------------------
-  // Ядро (configuration↔diagnostics↔context↔providers↔…) сейчас переплетено циклами и здесь не
-  // проверяется. Домены вне этого клубка уже ацикличны — фиксируем это, чтобы новый код не завёл
-  // цикл среди них. Пакеты ядра в срез не входят; aop тоже (его рёбра — артефакт compile-time
-  // weaving AspectJ, а не исходных зависимостей), он просто не попадает в назначенные срезы.
+  // Ацикличность всего проекта обеспечивает карта слоёв выше: разрешённых обратных рёбер в ней нет.
+  // Это правило дополнительно режет граф по top-level пакетам. Пакеты ядра (configuration, context,
+  // diagnostics, providers, фичи) в срез не входят не из-за циклов, а из-за нарезки: top-level срез
+  // diagnostics склеил бы движок с листовым словарём diagnostics.metadata, от которого зависят
+  // configuration и context, и дал бы ложный цикл. aop тоже не входит (его рёбра — артефакт
+  // compile-time weaving AspectJ, а не исходных зависимостей).
 
   static final Set<String> ACYCLIC_DOMAINS = Set.of(
     "cfg", "cli", "client", "codelenses", "commands", "databind", "events", "index", "infrastructure",
-    "jsonrpc", "mcp", "recognizer", "reporters", "utils", "websocket"
+    "jsonrpc", "mcp", "recognizer", "references", "reporters", "types", "utils", "websocket"
   );
 
   static final SliceAssignment ACYCLIC_DOMAIN_SLICES = new SliceAssignment() {

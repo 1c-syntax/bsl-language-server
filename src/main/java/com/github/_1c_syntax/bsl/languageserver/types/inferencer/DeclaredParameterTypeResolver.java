@@ -95,9 +95,7 @@ public class DeclaredParameterTypeResolver implements VariableTypeSource {
       return false;
     }
     var name = variable.getName();
-    return method.getParameters().stream()
-      .filter(parameter -> parameter.getName().equalsIgnoreCase(name))
-      .findFirst()
+    return method.getParameterDefinition(name)
       .map(parameter -> symbolTypeIndex.awaitsUnparsedModule(parameter, method.getOwner())
         || (!declaresTypes(parameter) && referencedMethodAwaitsUnparsedModule(method, name)))
       .orElse(false);
@@ -109,9 +107,7 @@ public class DeclaredParameterTypeResolver implements VariableTypeSource {
       return false;
     }
     var name = variable.getName();
-    return method.getParameters().stream()
-      .filter(parameter -> parameter.getName().equalsIgnoreCase(name))
-      .findFirst()
+    return method.getParameterDefinition(name)
       .map(parameter -> symbolTypeIndex.parameterMayReadAnotherDocument(parameter, method.getOwner())
         || referencedParameterMayReadAnotherDocument(method, name))
       .orElse(false);
@@ -125,9 +121,9 @@ public class DeclaredParameterTypeResolver implements VariableTypeSource {
         return true;
       }
       var target = localMethod(owner, link.link());
-      if (target != null && target.getParameters().stream()
-        .filter(parameter -> parameter.getName().equalsIgnoreCase(name))
-        .anyMatch(parameter -> symbolTypeIndex.parameterMayReadAnotherDocument(parameter, owner))) {
+      if (target != null && target.getParameterDefinition(name)
+        .filter(parameter -> symbolTypeIndex.parameterMayReadAnotherDocument(parameter, owner))
+        .isPresent()) {
         return true;
       }
     }
@@ -181,12 +177,9 @@ public class DeclaredParameterTypeResolver implements VariableTypeSource {
    * @return {@code true}, если описание параметра ссылается на модуль, членов которого пока нет.
    */
   private boolean parameterAwaitsUnparsedModule(MethodSymbol target, String paramName) {
-    for (var targetParam : target.getParameters()) {
-      if (targetParam.getName().equalsIgnoreCase(paramName)) {
-        return symbolTypeIndex.awaitsUnparsedModule(targetParam, target.getOwner());
-      }
-    }
-    return false;
+    return target.getParameterDefinition(paramName)
+      .map(targetParam -> symbolTypeIndex.awaitsUnparsedModule(targetParam, target.getOwner()))
+      .orElse(false);
   }
 
   /**
@@ -302,12 +295,9 @@ public class DeclaredParameterTypeResolver implements VariableTypeSource {
    *     тип у него не объявлен.
    */
   private TypeSet parameterTypes(MethodSymbol target, String paramName) {
-    for (var targetParam : target.getParameters()) {
-      if (targetParam.getName().equalsIgnoreCase(paramName)) {
-        return symbolTypeIndex.getDeclaredParameterTypes(targetParam, target.getOwner());
-      }
-    }
-    return TypeSet.EMPTY;
+    return target.getParameterDefinition(paramName)
+      .map(targetParam -> symbolTypeIndex.getDeclaredParameterTypes(targetParam, target.getOwner()))
+      .orElse(TypeSet.EMPTY);
   }
 
   /**
@@ -323,9 +313,6 @@ public class DeclaredParameterTypeResolver implements VariableTypeSource {
     if (methodName == null || methodName.contains(".")) {
       return null;
     }
-    return documentContext.getSymbolTree().getMethods().stream()
-      .filter(method -> method.getName().equalsIgnoreCase(methodName))
-      .findFirst()
-      .orElse(null);
+    return documentContext.getSymbolTree().getMethodSymbol(methodName).orElse(null);
   }
 }

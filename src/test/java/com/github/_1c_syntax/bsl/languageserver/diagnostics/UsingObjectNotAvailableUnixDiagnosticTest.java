@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -48,5 +49,21 @@ class UsingObjectNotAvailableUnixDiagnosticTest extends AbstractDiagnosticTest<U
       .hasRange(4, 11, 4, 83)
       .hasRange(20, 9, 20, 20);
 
+  }
+
+  @Test
+  void constructorWithTypeNameAsArgumentIsChecked() {
+    // given — тип назван строкой-аргументом: Новый("COMОбъект", …)
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Тест()
+        Компонента = Новый("COMОбъект", "System.Text.UTF8Encoding");
+      КонецПроцедуры
+      """);
+
+    // when
+    var diagnostics = getDiagnostics(documentContext);
+
+    // then
+    assertThat(diagnostics).hasSize(1);
   }
 }

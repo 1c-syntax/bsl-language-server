@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.mcp;
 import com.github._1c_syntax.utils.Absolute;
 import lombok.extern.slf4j.Slf4j;
 
+import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collection;
@@ -104,6 +105,21 @@ public final class McpWorkspaceFolders {
       + registeredFolders.stream().map(URI::toString).sorted().collect(Collectors.joining(", "))
       + ". Pass one of them, or call the `" + REGISTER_TOOL + "` tool to add another project directory. "
       + "The `" + LIST_TOOL + "` tool always returns the current list.";
+  }
+
+  /**
+   * Привести файл документа, присланный клиентом, к URI в том же виде, в котором документы
+   * хранятся в {@code ServerContext}.
+   * <p>
+   * Принимается и {@code file:}-URI, и путь файловой системы (абсолютный или относительный);
+   * windows-патология {@code file://D:\…} чинится так же, как у рабочих папок.
+   *
+   * @param rawPath Файл в виде URI либо пути файловой системы.
+   * @return Нормализованный URI файла.
+   */
+  public static URI toDocumentUri(String rawPath) {
+    var trimmed = normalizeWindowsFileUri(rawPath.trim());
+    return hasUriScheme(trimmed) ? Absolute.uri(trimmed) : Absolute.uri(new File(trimmed));
   }
 
   /**

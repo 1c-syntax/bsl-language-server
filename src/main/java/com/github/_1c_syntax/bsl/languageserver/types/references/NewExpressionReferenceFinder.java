@@ -19,11 +19,11 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.references;
+package com.github._1c_syntax.bsl.languageserver.types.references;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContentUnavailableException;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
+import com.github._1c_syntax.bsl.languageserver.references.ReferenceFinder;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
@@ -33,7 +33,6 @@ import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
@@ -87,18 +86,16 @@ public class NewExpressionReferenceFinder implements ReferenceFinder {
   }
 
   private Optional<Reference> findReference(DocumentContext document, URI uri, Position position) {
-    BSLParser.FileContext ast;
-    try {
-      ast = document.getAst();
-    } catch (DocumentContentUnavailableException e) {
+    var ast = document.findAst();
+    if (ast.isEmpty()) {
       return Optional.empty();
     }
-    var nex = findInnermostNewExpression(ast, position);
+    var nex = Trees.findInnermostEnclosing(ast.get(), position, BSLParser.NewExpressionContext.class);
     if (nex.isEmpty()) {
       return Optional.empty();
     }
     var typeNameCtx = nex.get().typeName();
-    if (typeNameCtx == null || !encloses(typeNameCtx, position)) {
+    if (typeNameCtx == null || !Trees.encloses(typeNameCtx, position)) {
       return Optional.empty();
     }
     return buildReference(document, uri, nex.get());
@@ -139,18 +136,11 @@ public class NewExpressionReferenceFinder implements ReferenceFinder {
     if (!(terminal.getParent() instanceof ParserRuleContext prc)) {
       return null;
     }
-    var typeName = ancestorOrSelfByRule(prc, BSLParser.RULE_typeName);
+    ParserRuleContext typeName = Trees.getAncestorOrSelfByRuleIndex(prc, BSLParser.RULE_typeName);
     if (typeName == null) {
       return null;
     }
     return Trees.getAncestorByRuleIndex(typeName, BSLParser.RULE_newExpression);
-  }
-
-  private static @Nullable ParserRuleContext ancestorOrSelfByRule(ParserRuleContext node, int ruleIndex) {
-    if (node.getRuleIndex() == ruleIndex) {
-      return node;
-    }
-    return Trees.getAncestorByRuleIndex(node, ruleIndex);
   }
 
   private static int countNewExpressionArgs(BSLParser.NewExpressionContext nex) {
@@ -172,36 +162,6 @@ public class NewExpressionReferenceFinder implements ReferenceFinder {
       n--;
     }
     return n;
-  }
-
-  private static Optional<BSLParser.NewExpressionContext> findInnermostNewExpression(
-    ParseTree node, Position position
-  ) {
-    BSLParser.NewExpressionContext best = null;
-    if (node instanceof BSLParser.NewExpressionContext nex && encloses(nex, position)) {
-      best = nex;
-    }
-    for (int i = 0; i < node.getChildCount(); i++) {
-      var child = node.getChild(i);
-      if (child instanceof ParserRuleContext prc && !encloses(prc, position)) {
-        continue;
-      }
-      var inner = findInnermostNewExpression(child, position);
-      if (inner.isPresent()) {
-        best = inner.get();
-      }
-    }
-    return Optional.ofNullable(best);
-  }
-
-  private static boolean encloses(ParserRuleContext ctx, Position position) {
-    var start = ctx.getStart();
-    var stop = ctx.getStop();
-    if (start == null || stop == null) {
-      return false;
-    }
-    return Ranges.containsPosition(start.getLine() - 1, start.getCharPositionInLine(),
-      stop.getLine() - 1, stop.getCharPositionInLine() + stop.getText().length(), position);
   }
 
   private static Range tokenRange(ParserRuleContext ctx) {

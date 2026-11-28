@@ -69,24 +69,26 @@ final class BuiltinQueryTables {
    */
   static synchronized List<ContextQueryTable> load() {
     if (cache == null) {
-      cache = List.copyOf(read());
+      cache = List.copyOf(read(RESOURCE_PATH));
     }
     return cache;
   }
 
-  private static List<ContextQueryTable> read() {
-    try (var stream = BuiltinQueryTables.class.getClassLoader().getResourceAsStream(RESOURCE_PATH)) {
-      if (stream == null) {
-        LOGGER.warn("Встроенный пак таблиц языка запросов не найден: {}", RESOURCE_PATH);
-        return List.of();
-      }
+  /**
+   * Прочитать таблицы из ресурса без кеша.
+   *
+   * @param resourcePath путь к ресурсу на classpath.
+   * @return таблицы; пусто, если ресурс не прочитался.
+   */
+  static List<ContextQueryTable> read(String resourcePath) {
+    try (var stream = BuiltinResources.open(resourcePath)) {
       List<?> raw = JsonMapper.builder().build().readValue(stream, List.class);
       return raw.stream()
         .filter(Map.class::isInstance)
         .map(rawTable -> table((Map<?, ?>) rawTable))
         .toList();
     } catch (IOException | RuntimeException e) {
-      LOGGER.warn("Не удалось прочитать встроенный пак таблиц языка запросов", e);
+      LOGGER.error("Не удалось прочитать встроенный пак таблиц языка запросов: {}", resourcePath, e);
       return List.of();
     }
   }

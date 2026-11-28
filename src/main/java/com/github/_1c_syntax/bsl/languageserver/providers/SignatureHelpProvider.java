@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContentUnavailableException;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
@@ -37,11 +36,9 @@ import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.util.SignatureSelection;
 import com.github._1c_syntax.bsl.languageserver.utils.Positions;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.ClientCapabilities;
@@ -271,22 +268,7 @@ public final class SignatureHelpProvider {
     if (paramList == null) {
       return List.of();
     }
-    var args = paramList.callParam();
-    if (args.isEmpty()) {
-      return List.of();
-    }
-    var result = new ArrayList<TypeSet>(args.size());
-    for (var arg : args) {
-      var text = arg.getText();
-      if (text == null || text.isBlank()) {
-        result.add(TypeSet.EMPTY);
-        continue;
-      }
-      var start = arg.getStart();
-      var position = Positions.create(start);
-      result.add(typeService.expressionTypesAt(documentContext, position));
-    }
-    return result;
+    return typeService.argumentTypes(documentContext, paramList.callParam());
   }
 
   private static SignatureHelp emptyHelp() {
@@ -300,45 +282,9 @@ public final class SignatureHelpProvider {
   private static Optional<BSLParser.DoCallContext> findEnclosingDoCall(
     DocumentContext documentContext, Position position
   ) {
-    BSLParser.FileContext ast;
-    try {
-      ast = documentContext.getAst();
-    } catch (DocumentContentUnavailableException e) {
-      return Optional.empty();
-    }
-
     // Идём по дереву: ищем самый глубокий doCall, у которого LPAREN < pos <= RPAREN.
-    return findInnermostDoCallEnclosing(ast, position);
-  }
-
-  private static Optional<BSLParser.DoCallContext> findInnermostDoCallEnclosing(
-    ParseTree node, Position position
-  ) {
-    BSLParser.DoCallContext best = null;
-    if (node instanceof BSLParser.DoCallContext doCall && encloses(doCall, position)) {
-      best = doCall;
-    }
-    for (int i = 0; i < node.getChildCount(); i++) {
-      var child = node.getChild(i);
-      if (child instanceof ParserRuleContext prc && !encloses(prc, position)) {
-        continue;
-      }
-      var inner = findInnermostDoCallEnclosing(child, position);
-      if (inner.isPresent()) {
-        best = inner.get();
-      }
-    }
-    return Optional.ofNullable(best);
-  }
-
-  private static boolean encloses(ParserRuleContext ctx, Position position) {
-    var start = ctx.getStart();
-    var stop = ctx.getStop();
-    if (start == null || stop == null) {
-      return false;
-    }
-    return Ranges.containsPosition(start.getLine() - 1, start.getCharPositionInLine(),
-      stop.getLine() - 1, stop.getCharPositionInLine() + stop.getText().length(), position);
+    return documentContext.findAst()
+      .flatMap(ast -> Trees.findInnermostEnclosing(ast, position, BSLParser.DoCallContext.class));
   }
 
   /**
@@ -354,24 +300,12 @@ public final class SignatureHelpProvider {
       var child = paramList.getChild(i);
       if (child instanceof TerminalNode tn) {
         var token = tn.getSymbol();
-        if (token.getType() == BSLParser.COMMA && tokenBefore(token, position)) {
+        if (token.getType() == BSLParser.COMMA && Positions.compareStart(token, position) < 0) {
           commas++;
         }
       }
     }
     return commas;
-  }
-
-  private static boolean tokenBefore(Token token, Position position) {
-    int tokLine = token.getLine() - 1;
-    int tokCol = token.getCharPositionInLine();
-    if (tokLine < position.getLine()) {
-      return true;
-    }
-    if (tokLine > position.getLine()) {
-      return false;
-    }
-    return tokCol < position.getCharacter();
   }
 
   /**
@@ -454,14 +388,8 @@ public final class SignatureHelpProvider {
     var fileType = documentContext.getFileType();
     var ref = typeService.resolve(typeName, fileType).orElse(null);
     if (ref != null) {
-      for (var member : typeService.getMembers(ref, fileType)) {
-        if (member.kind() == MemberKind.METHOD
-          && (member.matches("Constructor")
-          || member.matches("ПриСозданииОбъекта")
-          || member.matches("OnObjectCreation"))) {
-          return Optional.of(member);
-        }
-      }
+      // Конструктор OneScript-класса не входит в члены типа (OScriptModuleMembersProvider
+      // отдаёт его только как конструктор), поэтому источник один — getConstructors.
       var platformCtors = typeService.getConstructors(ref, fileType);
       if (!platformCtors.isEmpty()) {
         return Optional.of(MemberDescriptor.method(typeName, typeService.getDescription(ref, fileType), platformCtors));

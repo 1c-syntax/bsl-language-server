@@ -22,8 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.types.registry;
 
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
-import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.model.MemberSource;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -236,18 +236,9 @@ public class ConfigurationGenericExpander {
 
   @Nullable
   private CF currentConfiguration() {
-    var workspaceUri = WorkspaceContextHolder.get();
-    if (workspaceUri == null) {
-      return null;
-    }
-    var ctx = serverContextProvider.getAllContexts().get(workspaceUri);
-    if (ctx == null) {
-      return null;
-    }
-    var c = ctx.getConfiguration();
-    if (c.isEmpty()) {
-      return null;
-    }
-    return c;
+    return serverContextProvider.getCurrentServerContext()
+      .map(ServerContext::getConfiguration)
+      .filter(configuration -> !configuration.isEmpty())
+      .orElse(null);
   }
 }

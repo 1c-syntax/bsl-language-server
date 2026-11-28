@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -64,6 +65,22 @@ class UnreachableCodeDiagnosticTest extends AbstractDiagnosticTest<UnreachableCo
   void testRegion() {
     List<Diagnostic> diagnostics = getDiagnostics("UnreachableCodeRegionDiagnostic");
     assertThat(diagnostics).isEmpty();
+  }
+
+  @Test
+  void testNestedUnreachableCodeOnLastLineIsReportedOnce() {
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Тест()
+          Возврат;
+          Если А Тогда Возврат; Б = 1; КонецЕсли;
+      КонецПроцедуры
+      """);
+
+    List<Diagnostic> diagnostics = getDiagnostics(documentContext);
+
+    assertThat(diagnostics).hasSize(1);
+    assertThat(diagnostics, true)
+      .hasRange(2, 4, 43);
   }
 
   @Test

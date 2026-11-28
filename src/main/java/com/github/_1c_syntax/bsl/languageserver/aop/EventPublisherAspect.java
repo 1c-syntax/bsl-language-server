@@ -278,7 +278,7 @@ public class EventPublisherAspect {
       try {
         owner.publishEvent(event);
       } catch (RuntimeException e) {
-        LOGGER.warn("Failed to publish event {} to owning context {}: {}", event, owner, e.toString());
+        LOGGER.warn("Failed to publish event {} to owning context {}", event, owner, e);
       }
       return;
     }
@@ -286,7 +286,7 @@ public class EventPublisherAspect {
       try {
         ctx.publishEvent(event);
       } catch (RuntimeException e) {
-        LOGGER.warn("Failed to publish event {} to context {}: {}", event, ctx, e.toString());
+        LOGGER.warn("Failed to publish event {} to context {}", event, ctx, e);
       }
     }
   }

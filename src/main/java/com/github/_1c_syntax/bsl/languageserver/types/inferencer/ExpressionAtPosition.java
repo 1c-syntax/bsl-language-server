@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContentUnavailableException;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
@@ -31,7 +30,6 @@ import lombok.experimental.UtilityClass;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
-import org.jspecify.annotations.Nullable;
 
 import java.util.Optional;
 
@@ -116,13 +114,13 @@ public class ExpressionAtPosition {
     DocumentContext documentContext,
     Position position
   ) {
-    var ast = safeGetAst(documentContext);
+    var ast = documentContext.findAst().orElse(null);
     if (ast == null) {
       return Optional.empty();
     }
     return Trees.findTerminalNodeContainsPosition(ast, position)
       .map(terminal -> terminal.getParent() instanceof ParserRuleContext prc ? prc : null)
-      .map(rule -> Trees.getRootParent(rule, BSLParser.RULE_assignment))
+      .map(rule -> Trees.getAncestorByRuleIndex(rule, BSLParser.RULE_assignment))
       .filter(BSLParser.AssignmentContext.class::isInstance)
       .map(BSLParser.AssignmentContext.class::cast);
   }
@@ -137,7 +135,7 @@ public class ExpressionAtPosition {
     DocumentContext documentContext,
     Position position
   ) {
-    var ast = safeGetAst(documentContext);
+    var ast = documentContext.findAst().orElse(null);
     if (ast == null) {
       return Optional.empty();
     }
@@ -155,13 +153,13 @@ public class ExpressionAtPosition {
   /**
    * Найти узел правила {@code ruleIndex}, накрывающий терминал под курсором. Берём
    * терминал в позиции, поднимаемся к его непосредственному родителю и ищем целевое
-   * правило, считая сам родитель кандидатом (см. {@link #ancestorOrSelf}). Тип
+   * правило, считая сам родитель кандидатом (см. {@link #enclosingRule}). Тип
    * результата выводится из ожидаемого {@code Optional<T>} вызывающего метода.
    */
   private static <T extends ParserRuleContext> Optional<T> findEnclosingRule(
     DocumentContext documentContext, Position position, int ruleIndex
   ) {
-    var ast = safeGetAst(documentContext);
+    var ast = documentContext.findAst().orElse(null);
     if (ast == null) {
       return Optional.empty();
     }
@@ -172,43 +170,19 @@ public class ExpressionAtPosition {
   /**
    * Тот же поиск охватывающего правила, что и {@link #findEnclosingRule}, но от
    * уже известного терминала: вместо спуска по AST от корня к позиции
-   * поднимаемся вверх от {@code terminal} ({@link #ancestorOrSelf}). Спуск по
-   * позиции на больших модулях — доминирующая стоимость, а терминал зачастую
-   * уже есть у вызывающего.
+   * поднимаемся вверх от {@code terminal}. Спуск по позиции на больших модулях —
+   * доминирующая стоимость, а терминал зачастую уже есть у вызывающего.
+   * <p>
+   * Родитель терминала сам считается кандидатом: в грамматике ресивер-идентификатор
+   * стоит прямым ребёнком целевого правила (например,
+   * {@code (callStatement Идентификатор (incompleteAccess .))} для висячей точки
+   * {@code Идентификатор.}), и поиск строго среди предков дал бы {@code null}.
    */
   private static <T extends ParserRuleContext> Optional<T> enclosingRule(TerminalNode terminal, int ruleIndex) {
     if (!(terminal.getParent() instanceof ParserRuleContext prc)) {
       return Optional.empty();
     }
-    return Optional.ofNullable(ExpressionAtPosition.<T>ancestorOrSelf(prc, ruleIndex));
-  }
-
-  /**
-   * Найти ближайший узел правила {@code ruleIndex}, считая сам {@code node}
-   * кандидатом (inclusive). {@link Trees#getAncestorByRuleIndex} ищет строго среди
-   * предков и пропускает сам узел — но в текущей грамматике ресивер-идентификатор
-   * стоит прямым ребёнком целевого правила (например,
-   * {@code (callStatement Идентификатор (incompleteAccess .))} для висячей точки
-   * {@code Идентификатор.}), поэтому без проверки самого узла lookup даёт null.
-   */
-  @Nullable
-  private static <T extends ParserRuleContext> T ancestorOrSelf(ParserRuleContext node, int ruleIndex) {
-    if (node.getRuleIndex() == ruleIndex) {
-      @SuppressWarnings("unchecked")
-      var self = (T) node;
-      return self;
-    }
-    return Trees.getAncestorByRuleIndex(node, ruleIndex);
-  }
-
-  private static BSLParser.@Nullable FileContext safeGetAst(DocumentContext documentContext) {
-    try {
-      return documentContext.getAst();
-    } catch (DocumentContentUnavailableException e) {
-      // tokenizer ещё не инициализирован (документ не открыт/не прочитан) —
-      // вывод типов корректно ничего не возвращает.
-      return null;
-    }
+    return Optional.ofNullable(Trees.<T>getAncestorOrSelfByRuleIndex(prc, ruleIndex));
   }
 
   /**
@@ -218,7 +192,7 @@ public class ExpressionAtPosition {
     DocumentContext documentContext,
     Position position
   ) {
-    var ast = safeGetAst(documentContext);
+    var ast = documentContext.findAst().orElse(null);
     if (ast == null) {
       return Optional.empty();
     }

@@ -30,7 +30,6 @@ import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.utils.Positions;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import lombok.RequiredArgsConstructor;
-import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.LinkedEditingRangeParams;
 import org.eclipse.lsp4j.LinkedEditingRanges;
 import org.eclipse.lsp4j.Position;
@@ -159,25 +158,14 @@ public class LinkedEditingRangeProvider {
   }
 
   /**
-   * Найти позицию внутри идентификатора, заканчивающегося ровно в позиции курсора.
-   * <p>
-   * Используется тот же приём, что и в {@code SelectionRangeProvider}: поскольку поиск токена по
-   * позиции содержит начало токена и исключает конец, для каретки на границе берётся позиция на один
-   * символ левее и проверяется, что найденный токен заканчивается ровно в исходной позиции.
+   * Позиция начала идентификатора, заканчивающегося ровно в позиции курсора.
    *
    * @param documentContext Контекст документа
    * @param position        Позиция курсора (предполагается конец идентификатора)
    * @return Позиция начала идентификатора, заканчивающегося в позиции курсора, либо пустое значение
    */
-  private Optional<Position> identifierEndingAtPosition(DocumentContext documentContext, Position position) {
-    if (position.getCharacter() == 0) {
-      return Optional.empty();
-    }
-
-    ParserRuleContext ast = documentContext.getAst();
-    var positionInsideToken = new Position(position.getLine(), position.getCharacter() - 1);
-    return Trees.findTerminalNodeContainsPosition(ast, positionInsideToken)
-      .filter(terminalNode -> Positions.createEnd(terminalNode).equals(position))
+  private static Optional<Position> identifierEndingAtPosition(DocumentContext documentContext, Position position) {
+    return Trees.findTerminalNodeEndingAtPosition(documentContext.getAst(), position)
       .map(Positions::create);
   }
 

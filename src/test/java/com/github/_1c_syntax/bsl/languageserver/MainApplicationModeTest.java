@@ -65,6 +65,30 @@ class MainApplicationModeTest {
   }
 
   @Test
+  void modeIsTakenFromSubcommandNotFromAnyArgument() {
+    // `-w` у analyze — каталог рабочей области, а не алиас команды websocket.
+    assertThat(MainApplication.getWebApplicationType(new String[]{"analyze", "-w", ".", "-s", "src"}))
+      .isEqualTo(WebApplicationType.NONE);
+    assertThat(MainApplication.getWebApplicationType(new String[]{"-a", "-w", "."}))
+      .isEqualTo(WebApplicationType.NONE);
+    // Значение опции, совпавшее с именем команды, команду не выбирает.
+    assertThat(MainApplication.getActiveProfiles(new String[]{"analyze", "-s", "mcp"})).isEmpty();
+    assertThat(MainApplication.getActiveProfiles(new String[]{"-c", "mcp", "lsp"})).isEmpty();
+  }
+
+  @Test
+  void websocketAliasesSelectServletMode() {
+    assertThat(MainApplication.getWebApplicationType(new String[]{"--websocket"}))
+      .isEqualTo(WebApplicationType.SERVLET);
+    assertThat(MainApplication.getWebApplicationType(new String[]{"-w"}))
+      .isEqualTo(WebApplicationType.SERVLET);
+    assertThat(MainApplication.getWebApplicationType(new String[]{"-c", "conf.json", "websocket"}))
+      .isEqualTo(WebApplicationType.SERVLET);
+    assertThat(MainApplication.getActiveProfiles(new String[]{"--websocket", "--mcp"}))
+      .containsExactly("mcp", "websocket-mcp");
+  }
+
+  @Test
   void debugFlagsStrippedWithoutOptIn() {
     System.clearProperty("debug");
     System.clearProperty("trace");

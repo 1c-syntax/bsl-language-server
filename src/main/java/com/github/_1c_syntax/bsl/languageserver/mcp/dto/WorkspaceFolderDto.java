@@ -25,6 +25,9 @@ import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextH
 import lombok.extern.slf4j.Slf4j;
 
 import java.net.URI;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -47,6 +50,20 @@ public record WorkspaceFolderDto(URI uri, String name) {
       // Имя после forUri всегда есть: незарегистрированная папка отсекается там же.
       return new WorkspaceFolderDto(workspaceUri, Objects.requireNonNull(WorkspaceContextHolder.getName()));
     }
+  }
+
+  /**
+   * Описать папки снимка набора папок — в одном порядке для всех инструментов, по URI.
+   *
+   * @param snapshot URI рабочих папок из снимка.
+   * @return Описания папок, отсортированные по URI; папки, снятые с регистрации после снимка,
+   *   пропускаются ({@link #fromSnapshot}).
+   */
+  public static List<WorkspaceFolderDto> listOf(Collection<URI> snapshot) {
+    return snapshot.stream()
+      .flatMap(uri -> fromSnapshot(uri).stream())
+      .sorted(Comparator.comparing(folder -> folder.uri().toString()))
+      .toList();
   }
 
   /**

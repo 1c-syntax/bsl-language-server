@@ -140,16 +140,11 @@ public class RegisterTypesRegistrar {
     if (generic == null) {
       return;
     }
-    var parameters = typeRegistry.getTypeParameters(generic);
-    if (parameters.size() != 1) {
-      return;
-    }
-    var typeBindings = Map.of(parameters.get(0), regName);
-    var specializedName = TypeRef.specialize(generic, typeBindings).qualifiedName();
-    var specialized = typeRegistry.resolve(specializedName).orElse(null);
+    var specialized = typeRegistry.findSpecialization(generic, regName).orElse(null);
     if (specialized == null) {
       return;
     }
+    var typeBindings = Map.of(typeRegistry.getTypeParameters(generic).getFirst(), regName);
     var expansions = new LinkedHashMap<String, List<String>>();
     putAttributeNames(expansions, "Имя измерения", children.dimensions());
     putAttributeNames(expansions, "Имя ресурса", children.resources());
@@ -180,23 +175,16 @@ public class RegisterTypesRegistrar {
     if (genericSet == null || genericRecord == null) {
       return;
     }
-    var setRef = specializedByName(genericSet, regName);
-    var recordRef = specializedByName(genericRecord, regName);
+    var setRef = typeRegistry.findSpecialization(genericSet, regName).orElse(null);
+    var recordRef = typeRegistry.findSpecialization(genericRecord, regName).orElse(null);
     if (setRef == null || recordRef == null) {
       return;
     }
-    // Тип элемента — до наследования коллекционных свойств: иначе выиграла бы
-    // унаследованная обобщённая запись и обход потерял бы колонки.
-    typeRegistry.registerDefaultElementTypes(setRef, List.of(recordRef));
-    typeRegistry.inheritCollectionTraits(setRef, genericSet, FileType.BSL);
-
-    var valueTableRow = typeRegistry.resolve(CollectionReturnsSpecializer.VALUE_TABLE_ROW).orElse(null);
     MemberSource columns = () -> typeRegistry.getMembers(recordRef, FileType.BSL).stream()
       .filter(member -> member.kind() == MemberKind.PROPERTY && !member.generic())
       .toList();
-    typeRegistry.registerMemberOverride(setRef, () -> CollectionReturnsSpecializer.specialize(
-      typeRegistry.getMembers(genericSet, FileType.BSL), genericRecord, recordRef,
-      CollectionReturnsSpecializer.unloadedRow(valueTableRow, columns)), FileType.BSL);
+    CollectionReturnsSpecializer.registerCollection(typeRegistry, setRef, genericSet, genericRecord, recordRef,
+      columns);
   }
 
   /**
@@ -272,16 +260,11 @@ public class RegisterTypesRegistrar {
   /** Регистрирует достроенные члены на специализации одного generic'а семейства. */
   private void registerFixupsOn(TypeRef generic, String familyCore, String mdName,
                                 Map<String, List<String>> substitutions) {
-    var parameters = typeRegistry.getTypeParameters(generic);
-    if (parameters.size() != 1) {
+    var specialized = typeRegistry.findSpecialization(generic, mdName).orElse(null);
+    if (specialized == null) {
       return;
     }
-    var bindings = Map.of(parameters.get(0), mdName);
-    var specialized = typeRegistry.resolve(TypeRef.specialize(generic, bindings).qualifiedName())
-      .orElse(null);
-    if (specialized == null || specialized.equals(generic)) {
-      return;
-    }
+    var bindings = Map.of(typeRegistry.getTypeParameters(generic).getFirst(), mdName);
     typeRegistry.registerMemberOverride(specialized,
       () -> fixedUpRegisterMembers(generic, familyCore, bindings, mdName, substitutions), FileType.BSL);
   }
@@ -322,11 +305,5 @@ public class RegisterTypesRegistrar {
       .filter(generic -> typeRegistry.getTypeParameters(generic).size() == 1)
       .findFirst()
       .orElse(null);
-  }
-
-  /** Специализация generic'а по имени MD-объекта; {@code null} — не зарегистрирована. */
-  private @Nullable TypeRef specializedByName(TypeRef generic, String mdName) {
-    var bindings = Map.of(typeRegistry.getTypeParameters(generic).get(0), mdName);
-    return typeRegistry.resolve(TypeRef.specialize(generic, bindings).qualifiedName()).orElse(null);
   }
 }

@@ -331,8 +331,7 @@ public record MemberDescriptor(
           rebuilt.add(params.get(j));
         }
       }
-      rebuilt.add(new ParameterDescriptor(p.bilingualName(), specializedTypes, p.optional(),
-        p.bilingualDescription(), p.defaultValue(), p.variadic()));
+      rebuilt.add(p.withTypes(specializedTypes));
     }
     return rebuilt == null ? params : List.copyOf(rebuilt);
   }

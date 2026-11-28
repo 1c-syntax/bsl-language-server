@@ -49,7 +49,11 @@ public class RegionDocumentHighlightSupplier implements DocumentHighlightSupplie
     DocumentContext documentContext,
     Optional<TerminalNodeInfo> terminalNodeInfo
   ) {
-    var position = params.getPosition();
+    // По найденному токену, а не по курсору: курсор может стоять сразу за «#КонецОбласти»,
+    // за концом её диапазона.
+    var position = terminalNodeInfo
+      .map(info -> Ranges.create(info.terminalNode()).getStart())
+      .orElse(params.getPosition());
     var symbolTree = documentContext.getSymbolTree();
     
     // Получаем все регионы из дерева символов

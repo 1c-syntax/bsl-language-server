@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.configuration.watcher;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.ConfigurationFiles;
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.GlobalLanguageServerConfigurationChangedEvent;
@@ -66,7 +67,6 @@ import static java.nio.file.StandardWatchEventKinds.ENTRY_MODIFY;
 @RequiredArgsConstructor
 public class ConfigurationFileSystemWatcher {
 
-  private static final String CONFIG_FILE_NAME = ".bsl-language-server.json";
 
   private final GlobalLanguageServerConfiguration globalConfiguration;
   private final ConfigurationFileChangeListener listener;
@@ -299,6 +299,6 @@ public class ConfigurationFileSystemWatcher {
       return absolutePathname.equals(absoluteConfigurationFile);
     }
     // If no config file set, check for default config file name
-    return CONFIG_FILE_NAME.equals(pathname.getName());
+    return ConfigurationFiles.DEFAULT_FILE_NAME.equals(pathname.getName());
   }
 }

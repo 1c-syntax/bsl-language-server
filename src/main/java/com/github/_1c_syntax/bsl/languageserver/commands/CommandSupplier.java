@@ -21,9 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.commands;
 
+import com.github._1c_syntax.bsl.languageserver.databind.SupplierIds;
 import org.eclipse.lsp4j.Command;
 
-import java.beans.Introspector;
 import java.util.List;
 import java.util.Optional;
 
@@ -49,13 +49,7 @@ public interface CommandSupplier<T extends CommandArguments> {
    * @return Идентификатор сапплаера.
    */
   default String getId() {
-    String simpleName = getClass().getSimpleName();
-    if (simpleName.endsWith(COMMAND_SUPPLIER_SUFFIX)) {
-      simpleName = simpleName.substring(0, simpleName.length() - COMMAND_SUPPLIER_SUFFIX.length());
-      simpleName = Introspector.decapitalize(simpleName);
-    }
-
-    return simpleName;
+    return SupplierIds.of(getClass(), COMMAND_SUPPLIER_SUFFIX);
   }
 
   /**

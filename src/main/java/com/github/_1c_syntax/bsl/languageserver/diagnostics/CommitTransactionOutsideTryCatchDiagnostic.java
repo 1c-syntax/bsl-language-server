@@ -32,6 +32,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.jspecify.annotations.Nullable;
 
+import java.util.Optional;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
@@ -62,10 +63,14 @@ public class CommitTransactionOutsideTryCatchDiagnostic extends AbstractVisitorD
       return false;
     }
 
-    return ctx.getChildCount() > 0
-      && ctx.getChild(0).getChildCount() > 0
-      && ctx.getChild(0).getChild(0) instanceof BSLParser.GlobalMethodCallContext
-      && END_TRANSACTION_PATTERN.matcher(ctx.getText()).find();
+    // Имя вызываемого метода, а не текст всего оператора: иначе фиксацией считался бы любой вызов,
+    // где «ЗафиксироватьТранзакцию» встречается, например, в строке-аргументе.
+    return Optional.of(ctx)
+      .map(BSLParser.StatementContext::callStatement)
+      .map(BSLParser.CallStatementContext::globalMethodCall)
+      .map(BSLParser.GlobalMethodCallContext::methodName)
+      .map(methodName -> END_TRANSACTION_PATTERN.matcher(methodName.getText()).matches())
+      .orElse(false);
   }
 
   @Override

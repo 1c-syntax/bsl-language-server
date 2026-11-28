@@ -49,6 +49,7 @@ import com.github._1c_syntax.bsl.languageserver.types.registry.ConfigurationModu
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbol;
+import com.github._1c_syntax.bsl.languageserver.utils.Positions;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BinaryOperationNode;
@@ -224,6 +225,25 @@ public class TypeService implements SelfMemberClassifier {
    */
   public TypeSet expressionTypesAt(DocumentContext documentContext, Position position) {
     return expressionTypesAt(documentContext, position, null);
+  }
+
+  /**
+   * Типы фактических аргументов вызова — по одному на аргумент, в порядке вызова.
+   * Пропущенный аргумент ({@code Метод(1, , 3)}) и аргумент, тип которого не выводится, —
+   * {@link TypeSet#EMPTY}: выбор сигнатуры относится к ним нейтрально.
+   *
+   * @param documentContext документ с вызовом.
+   * @param args            аргументы вызова.
+   * @return типы аргументов; размер равен числу аргументов.
+   */
+  public List<TypeSet> argumentTypes(DocumentContext documentContext, List<? extends BSLParser.CallParamContext> args) {
+    var result = new ArrayList<TypeSet>(args.size());
+    for (var arg : args) {
+      result.add(arg.getText().isBlank()
+        ? TypeSet.EMPTY
+        : expressionTypesAt(documentContext, Positions.create(arg.getStart())));
+    }
+    return result;
   }
 
   /**

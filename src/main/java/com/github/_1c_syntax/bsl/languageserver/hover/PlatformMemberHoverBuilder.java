@@ -119,7 +119,7 @@ public class PlatformMemberHoverBuilder {
       sb.append(descriptor.displayName(lang)).append('(');
       if (chosen != null) {
         sb.append(chosen.parameters().stream()
-          .map(p -> p.displayName(lang))
+          .map(p -> HoverParameters.name(p, lang))
           .collect(Collectors.joining(", ")));
       }
       sb.append(')');
@@ -195,15 +195,7 @@ public class PlatformMemberHoverBuilder {
     if (chosen != null && !chosen.parameters().isEmpty()) {
       sb.append("\n\n**").append(tr("parameters")).append("**\n");
       for (var p : chosen.parameters()) {
-        HoverParameters.appendNameAndType(sb, p.displayName(lang), renderTypeSet(p.types(), lang), p.optional());
-        if (!p.defaultValue().isBlank()) {
-          sb.append(" _= ").append(p.defaultValue()).append('_');
-        }
-        var pDesc = p.displayDescription(lang);
-        if (pDesc != null && !pDesc.isBlank()) {
-          sb.append(" — ").append(pDesc);
-        }
-        sb.append('\n');
+        HoverParameters.appendParameter(sb, HoverParameters.name(p, lang), renderTypeSet(p.types(), lang), p, lang);
       }
     }
     // Описание возвращаемого значения отдельно не печатается: оно уже входит
@@ -221,7 +213,7 @@ public class PlatformMemberHoverBuilder {
           sb.append("**");
         }
         sb.append('`').append(descriptor.displayName(lang)).append('(')
-          .append(sig.parameters().stream().map(p -> p.displayName(lang)).collect(Collectors.joining(", ")))
+          .append(sig.parameters().stream().map(p -> HoverParameters.name(p, lang)).collect(Collectors.joining(", ")))
           .append(")`");
         // Полный union типов сигнатуры (sig.returnTypes); fallback на
         // descriptor.returnTypes если у сигнатуры пусто (legacy кейс).
@@ -313,13 +305,7 @@ public class PlatformMemberHoverBuilder {
    * union-свойств в одиночном блоке кода hover'а.
    */
   private String renderTypeSet(TypeSet types, Language lang) {
-    if (types == null || types.isEmpty()) {
-      return "";
-    }
-    return types.refs().stream()
-      .map(r -> typeRegistry.displayName(r, lang))
-      .filter(name -> name != null && !name.isEmpty())
-      .collect(Collectors.joining(" | "));
+    return HoverParameters.typesLabel(types, ref -> typeRegistry.displayName(ref, lang));
   }
 
   @Nullable

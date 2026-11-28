@@ -19,12 +19,12 @@
  * You should have received a copy of the GNU Lesser General Public
  * License along with BSL Language Server.
  */
-package com.github._1c_syntax.bsl.languageserver.references;
+package com.github._1c_syntax.bsl.languageserver.types.references;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContentUnavailableException;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.KeywordSymbol;
+import com.github._1c_syntax.bsl.languageserver.references.ReferenceFinder;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
@@ -56,7 +56,7 @@ import java.util.Optional;
  * {@link com.github._1c_syntax.bsl.languageserver.providers.HoverProvider}-flow
  * и попадает в {@link com.github._1c_syntax.bsl.languageserver.hover.KeywordSymbolMarkupContentBuilder}.
  * <p>
- * Аналогично паттерну {@link AnnotationReferenceFinder}: оба создают
+ * Аналогично паттерну {@link com.github._1c_syntax.bsl.languageserver.references.AnnotationReferenceFinder}: оба создают
  * synthetic-символы on-the-fly без регистрации в symbol-tree.
  */
 @Component
@@ -74,13 +74,8 @@ public class KeywordReferenceFinder implements ReferenceFinder {
     if (documentContext == null) {
       return Optional.empty();
     }
-    BSLParser.FileContext ast;
-    try {
-      ast = documentContext.getAst();
-    } catch (DocumentContentUnavailableException e) {
-      return Optional.empty();
-    }
-    return Trees.findTerminalNodeContainsPosition(ast, position)
+    return documentContext.findAst()
+      .flatMap(ast -> Trees.findTerminalNodeContainsPosition(ast, position))
       .flatMap(terminal -> findReference(uri, terminal));
   }
 

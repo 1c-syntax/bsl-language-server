@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.codeactions;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
+import org.jspecify.annotations.Nullable;
 
 import java.util.List;
 
@@ -42,4 +43,39 @@ public interface CodeActionSupplier {
    * @return Список доступных code actions
    */
   List<CodeAction> getCodeActions(CodeActionParams params, DocumentContext documentContext);
+
+  /**
+   * Запрошен ли вид действия фильтром {@code only} контекста запроса.
+   * <p>
+   * Виды иерархичны: запрос вида {@code source} включает {@code source.fixAll}. Без фильтра
+   * (он отсутствует или пуст) запрошены все виды; действие без вида проходит только тогда.
+   *
+   * @param params Параметры запроса code action
+   * @param kind   Вид действия
+   * @return {@code true}, если действие этого вида нужно вернуть клиенту
+   */
+  static boolean isKindRequested(CodeActionParams params, @Nullable String kind) {
+    var only = params.getContext().getOnly();
+    return only == null || only.isEmpty() || matchesAny(only, kind);
+  }
+
+  /**
+   * Запрошен ли вид действия явно: фильтр {@code only} задан и включает этот вид — сам или
+   * через родительский.
+   *
+   * @param params Параметры запроса code action
+   * @param kind   Вид действия
+   * @return {@code true}, если клиент явно попросил действия этого вида
+   */
+  static boolean isKindExplicitlyRequested(CodeActionParams params, String kind) {
+    var only = params.getContext().getOnly();
+    return only != null && matchesAny(only, kind);
+  }
+
+  private static boolean matchesAny(List<String> only, @Nullable String kind) {
+    if (kind == null) {
+      return false;
+    }
+    return only.stream().anyMatch(requested -> kind.equals(requested) || kind.startsWith(requested + "."));
+  }
 }

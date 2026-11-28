@@ -246,6 +246,22 @@ public class DocumentContext implements Comparable<DocumentContext> {
   }
 
   /**
+   * Дерево разбора документа, если у документа есть текст.
+   * <p>
+   * Для мест, которым без дерева разбора просто нечего сказать (поиск под курсором, уточнения
+   * вывода типов): отсутствие текста для них — не ошибка, а пустой ответ.
+   *
+   * @return дерево разбора; пусто, если текста у документа нет.
+   */
+  public Optional<BSLParser.FileContext> findAst() {
+    try {
+      return Optional.of(getAst());
+    } catch (DocumentContentUnavailableException e) {
+      return Optional.empty();
+    }
+  }
+
+  /**
    * Токены документа.
    *
    * @return токены документа.

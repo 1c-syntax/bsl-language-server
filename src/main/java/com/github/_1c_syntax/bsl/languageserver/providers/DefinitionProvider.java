@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitialized
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.types.symbol.PlatformMemberSymbol;
+import com.github._1c_syntax.bsl.languageserver.utils.NavigationLinks;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.DefinitionCapabilities;
@@ -95,16 +96,7 @@ public class DefinitionProvider {
     DocumentContext documentContext,
     DefinitionParams params
   ) {
-    var links = findLocationLinks(documentContext, params);
-
-    if (linkSupport) {
-      return Either.forRight(links);
-    }
-
-    List<Location> locations = links.stream()
-      .map(link -> new Location(link.getTargetUri(), link.getTargetSelectionRange()))
-      .toList();
-    return Either.forLeft(locations);
+    return NavigationLinks.forClient(findLocationLinks(documentContext, params), linkSupport);
   }
 
   private List<LocationLink> findLocationLinks(DocumentContext documentContext, DefinitionParams params) {

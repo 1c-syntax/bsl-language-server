@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.junit.jupiter.api.Test;
 
@@ -31,6 +32,24 @@ import static com.github._1c_syntax.bsl.languageserver.util.Assertions.assertTha
 class IncorrectUseOfStrTemplateDiagnosticTest extends AbstractDiagnosticTest<IncorrectUseOfStrTemplateDiagnostic> {
   IncorrectUseOfStrTemplateDiagnosticTest() {
     super(IncorrectUseOfStrTemplateDiagnostic.class);
+  }
+
+  @Test
+  void overwrittenConstantTemplateIsNotChecked() {
+    // given — константа шаблона перезаписана значением, которое статически неизвестно
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Тест()
+        Шаблон = "123";
+        Шаблон = ПолучитьШаблон();
+        Н = СтрШаблон(Шаблон, Наименование);
+      КонецПроцедуры
+      """);
+
+    // when
+    var diagnostics = getDiagnostics(documentContext);
+
+    // then — проверять нечего: шаблон берётся из последнего присваивания, а не из старой константы
+    assertThat(diagnostics).isEmpty();
   }
 
   @Test

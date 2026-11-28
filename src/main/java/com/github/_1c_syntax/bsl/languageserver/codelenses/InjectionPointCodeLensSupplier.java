@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.codelenses;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.autumn.AutumnBeanIndex;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.autumn.AutumnComponentInferencer;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.autumn.AutumnNavigation;
@@ -40,7 +39,6 @@ import org.springframework.stereotype.Component;
 
 import java.beans.ConstructorProperties;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -84,26 +82,10 @@ public class InjectionPointCodeLensSupplier
    */
   @Override
   public List<CodeLens> getCodeLenses(DocumentContext documentContext) {
-    var symbolTree = documentContext.getSymbolTree();
-    var codeLenses = new ArrayList<CodeLens>();
-
-    symbolTree.getConstructor().ifPresent(constructor ->
-      constructor.getParameters().forEach(parameter ->
-        toCodeLens(documentContext, parameter.getAnnotations(), parameter.getName(), parameter.getRange(), true)
-          .ifPresent(codeLenses::add)));
-
-    for (var variable : symbolTree.getVariables()) {
-      // Только поля модуля: параметры конструктора уже обработаны выше (они дублируются в
-      // переменных с kind=PARAMETER и теми же аннотациями), локальные переменные — не точки внедрения.
-      if (variable.getKind() != VariableKind.MODULE) {
-        continue;
-      }
-      toCodeLens(documentContext, variable.getAnnotations(), variable.getName(), variable.getVariableNameRange(),
-        false)
-        .ifPresent(codeLenses::add);
-    }
-
-    return codeLenses;
+    return AutumnComponentInferencer.injectionCandidates(documentContext.getSymbolTree()).stream()
+      .flatMap(candidate -> toCodeLens(documentContext, candidate.annotations(), candidate.name(),
+        candidate.nameRange(), candidate.constructorParameter()).stream())
+      .toList();
   }
 
   /**

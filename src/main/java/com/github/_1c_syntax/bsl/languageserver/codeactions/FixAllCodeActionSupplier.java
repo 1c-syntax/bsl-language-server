@@ -22,10 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.codeactions;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
-import com.github._1c_syntax.bsl.languageserver.diagnostics.QuickFixProvider;
 import org.eclipse.lsp4j.CodeAction;
-import org.eclipse.lsp4j.CodeActionContext;
-import org.eclipse.lsp4j.CodeActionKind;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
@@ -33,7 +30,6 @@ import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -70,12 +66,6 @@ public class FixAllCodeActionSupplier extends AbstractQuickFixSupplier {
     DocumentContext documentContext
   ) {
 
-    Optional<Class<? extends QuickFixProvider>> quickFixClass = quickFixSupplier.getQuickFixClass(diagnosticCode);
-
-    if (quickFixClass.isEmpty()) {
-      return Collections.emptyList();
-    }
-
     List<Diagnostic> suitableDiagnostics = documentContext.getComputedDiagnostics().stream()
       .filter(diagnostic -> diagnosticCode.equals(diagnostic.getCode()))
       .collect(Collectors.toList());
@@ -86,23 +76,6 @@ public class FixAllCodeActionSupplier extends AbstractQuickFixSupplier {
       return Collections.emptyList();
     }
 
-    CodeActionContext fixAllContext = new CodeActionContext();
-    fixAllContext.setDiagnostics(suitableDiagnostics);
-    fixAllContext.setOnly(Collections.singletonList(CodeActionKind.QuickFix));
-
-    CodeActionParams fixAllParams = new CodeActionParams();
-    fixAllParams.setTextDocument(params.getTextDocument());
-    fixAllParams.setRange(params.getRange());
-    fixAllParams.setContext(fixAllContext);
-
-    Class<? extends QuickFixProvider> quickFixProviderClass = quickFixClass.get();
-    QuickFixProvider quickFixInstance = quickFixSupplier.getQuickFixInstance(quickFixProviderClass);
-
-    return quickFixInstance.getQuickFixes(
-      suitableDiagnostics,
-      fixAllParams,
-      documentContext
-    );
-
+    return quickFixSupplier.getFixAllQuickFixes(diagnosticCode, suitableDiagnostics, params, documentContext);
   }
 }

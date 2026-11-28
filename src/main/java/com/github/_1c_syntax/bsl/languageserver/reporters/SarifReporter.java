@@ -40,13 +40,11 @@ import com.contrastsecurity.sarif.ToolComponent;
 import tools.jackson.core.JsonGenerator;
 import tools.jackson.databind.SerializationFeature;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfos;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.info.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.utils.Absolute;
-import lombok.extern.slf4j.Slf4j;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
 import org.eclipse.lsp4j.Range;
@@ -74,7 +72,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
  * @see <a href="https://docs.oasis-open.org/sarif/sarif/v2.1.0/sarif-v2.1.0.html">SARIF specification</a>.
  */
 @Component
-@Slf4j
 public class SarifReporter extends AbstractDiagnosticReporter {
 
   private static final Map<DiagnosticSeverity, Result.Level> severityToResultLevel = Map.of(
@@ -95,16 +92,16 @@ public class SarifReporter extends AbstractDiagnosticReporter {
   private final LanguageServerConfiguration configuration;
 
   private ReportFile reportFile;
+  private Path workspaceDir;
   private JsonGenerator generator;
   private SequenceWriter writer;
 
   public SarifReporter(
-    ServerContextProvider serverContextProvider,
     DiagnosticInfos diagnosticInfos,
     ServerInfo serverInfo,
     LanguageServerConfiguration configuration
   ) {
-    super(serverContextProvider, diagnosticInfos);
+    super(diagnosticInfos);
     this.serverInfo = serverInfo;
     this.configuration = configuration;
   }
@@ -125,6 +122,7 @@ public class SarifReporter extends AbstractDiagnosticReporter {
       .enable(SerializationFeature.INDENT_OUTPUT)
       .build();
 
+    workspaceDir = context.workspaceDir();
     reportFile = ReportFile.create(outputDir, "bsl-ls.sarif");
     generator = mapper.createGenerator(reportFile.stream());
 
@@ -154,7 +152,7 @@ public class SarifReporter extends AbstractDiagnosticReporter {
   @Override
   public void accept(FileInfo fileInfo) {
     // uri вычисляется один раз на файл, а не на каждую диагностику
-    var uri = Absolute.uri(fileInfo.getPath().toUri()).toString();
+    var uri = Absolute.uri(workspaceDir.resolve(fileInfo.getPath()).toUri()).toString();
 
     var results = fileInfo.getDiagnostics().stream()
       .map(diagnostic -> createResult(uri, diagnostic))
@@ -170,15 +168,12 @@ public class SarifReporter extends AbstractDiagnosticReporter {
     generator.writeEndArray();
     generator.writeEndObject();
     generator.close();
-    reportFile.commit();
-    LOGGER.info("SARIF report saved to {}", reportFile.path().toAbsolutePath());
+    reportFile.commit("SARIF");
   }
 
   @Override
   public void abortReport() {
-    if (reportFile != null) {
-      reportFile.close();
-    }
+    ReportFile.discard(reportFile);
   }
 
   private static Invocation createInvocation(LanguageServerConfiguration configuration) {

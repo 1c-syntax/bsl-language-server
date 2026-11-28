@@ -25,9 +25,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticM
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.MultilingualStringAnalyser;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.jspecify.annotations.Nullable;
 
@@ -52,23 +52,13 @@ import java.util.regex.Pattern;
 
 public class IncorrectUseOfStrTemplateDiagnostic extends AbstractFindMethodDiagnostic {
 
-  private static final Pattern messagePattern = CaseInsensitivePattern.compile(
-    "(стршаблон|strtemplate)"
-  );
-
-  // https://regex101.com/r/9segNm/3
-  private static final Pattern paramsPattern = Pattern.compile("(?<!%)%(?:(10|[1-9])(?!\\d)|\\((10|[1-9])\\))");
   // https://regex101.com/r/s4y7Nz/2
   private static final Pattern wrongNumbersPattern = Pattern.compile(
     "(?<!%)%(?:(1[1-9]\\d*|[2-9]\\d+|0|10\\d+)(?!\\d)|\\((1[1-9]\\d*|[2-9]\\d+|0|10\\d+)\\))");
   private static final Pattern TWO_PERCENT_PATTERN = Pattern.compile("%%");
 
-  private static final Pattern nstrPattern = CaseInsensitivePattern.compile(
-    "(нстр|nstr)"
-  );
-
   public IncorrectUseOfStrTemplateDiagnostic() {
-    super(messagePattern);
+    super(MultilingualStringAnalyser.TEMPLATE_METHOD_NAME_PATTERN);
   }
 
   private static boolean paramsAreDifferent(BSLParser.GlobalMethodCallContext ctx) {
@@ -98,7 +88,7 @@ public class IncorrectUseOfStrTemplateDiagnostic extends AbstractFindMethodDiagn
   private static boolean compareTemplateAndParams(String templateString, int usedParamsCount) {
     boolean haveParams = usedParamsCount > 0;
 
-    var matcher = paramsPattern.matcher(templateString);
+    var matcher = MultilingualStringAnalyser.STR_TEMPLATE_PLACEHOLDER_PATTERN.matcher(templateString);
     boolean matches = matcher.find();
 
     return (matches && !haveParams)
@@ -170,7 +160,7 @@ public class IncorrectUseOfStrTemplateDiagnostic extends AbstractFindMethodDiagn
     }
     final var varName = identifier.getText();
 
-    var prevStatement = (BSLParser.StatementContext) Objects.requireNonNull(Trees.getRootParent(complexIdentifier,
+    var prevStatement = (BSLParser.StatementContext) Objects.requireNonNull(Trees.getAncestorByRuleIndex(complexIdentifier,
       BSLParser.RULE_statement));
     while (true) {
       prevStatement = (BSLParser.StatementContext) getPreviousNode(Objects.requireNonNull(prevStatement), 
@@ -179,12 +169,14 @@ public class IncorrectUseOfStrTemplateDiagnostic extends AbstractFindMethodDiagn
       if (prevStatement == null) {
         break;
       }
-      final var constValueContext = Optional.ofNullable(prevStatement.assignment())
-        .filter(assignment -> isAssignmentForVar(varName, assignment))
-        .map(BSLParser.AssignmentContext::expression)
-        .flatMap(expression -> getConstValue(Optional.of(expression), false));
-      if (constValueContext.isPresent()) {
-        return constValueContext;
+      final var assignment = Optional.ofNullable(prevStatement.assignment())
+        .filter(candidate -> isAssignmentForVar(varName, candidate));
+      if (assignment.isPresent()) {
+        // Значение — из ближайшего присваивания: если там не константа, шаблон статически
+        // неизвестен, и более раннюю, уже перезаписанную константу брать нельзя.
+        return assignment
+          .map(BSLParser.AssignmentContext::expression)
+          .flatMap(expression -> getConstValue(Optional.of(expression), false));
       }
     }
     return Optional.empty();
@@ -225,7 +217,7 @@ public class IncorrectUseOfStrTemplateDiagnostic extends AbstractFindMethodDiagn
       .map(List::getFirst)
       .map(BSLParser.MemberContext::complexIdentifier)
       .map(BSLParser.ComplexIdentifierContext::globalMethodCall)
-      .filter(globalMethodCallContext -> nstrPattern.matcher(globalMethodCallContext.methodName().getText()).matches())
+      .filter(MultilingualStringAnalyser::isNStrCall)
       .map(BSLParser.GlobalMethodCallContext::doCall)
       .map(BSLParser.DoCallContext::callParamList)
       .filter(callParamListContext -> !callParamListContext.callParam().isEmpty())

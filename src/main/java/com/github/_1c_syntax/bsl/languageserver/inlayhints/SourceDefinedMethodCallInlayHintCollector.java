@@ -28,6 +28,7 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefiniti
 import com.github._1c_syntax.bsl.languageserver.hover.DescriptionFormatter;
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.utils.Positions;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.apache.commons.lang3.Strings;
@@ -38,7 +39,6 @@ import org.eclipse.lsp4j.InlayHintParams;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
-import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.SymbolKind;
 import org.springframework.stereotype.Component;
 
@@ -175,8 +175,7 @@ public class SourceDefinedMethodCallInlayHintCollector {
   }
 
   private static void setPosition(InlayHint inlayHint, BSLParser.CallParamContext callParam) {
-    var position = new Position(callParam.getStart().getLine() - 1, callParam.getStart().getCharPositionInLine());
-    inlayHint.setPosition(position);
+    inlayHint.setPosition(Positions.create(callParam));
   }
 
   private void setTooltip(InlayHint inlayHint, ParameterDefinition parameter) {

@@ -21,11 +21,9 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfos;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import tools.jackson.core.JsonGenerator;
 import tools.jackson.databind.SequenceWriter;
@@ -34,7 +32,6 @@ import tools.jackson.databind.json.JsonMapper;
 
 import java.nio.file.Path;
 
-@Slf4j
 @Component
 public class GenericIssueReporter extends AbstractDiagnosticReporter {
 
@@ -42,8 +39,8 @@ public class GenericIssueReporter extends AbstractDiagnosticReporter {
   private JsonGenerator generator;
   private SequenceWriter writer;
 
-  public GenericIssueReporter(ServerContextProvider serverContextProvider, DiagnosticInfos diagnosticInfos) {
-    super(serverContextProvider, diagnosticInfos);
+  public GenericIssueReporter(DiagnosticInfos diagnosticInfos) {
+    super(diagnosticInfos);
   }
 
   @Override
@@ -85,14 +82,11 @@ public class GenericIssueReporter extends AbstractDiagnosticReporter {
     writer.close();
     generator.writeEndObject();
     generator.close();
-    reportFile.commit();
-    LOGGER.info("Generic issue report saved to {}", reportFile.path().toAbsolutePath());
+    reportFile.commit("Generic issue");
   }
 
   @Override
   public void abortReport() {
-    if (reportFile != null) {
-      reportFile.close();
-    }
+    ReportFile.discard(reportFile);
   }
 }

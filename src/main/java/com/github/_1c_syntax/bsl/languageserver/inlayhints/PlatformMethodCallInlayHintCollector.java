@@ -157,7 +157,7 @@ public class PlatformMethodCallInlayHintCollector {
     if (member == null || member.signatures().isEmpty()) {
       return;
     }
-    var argTypes = inferArgTypes(documentContext, args);
+    var argTypes = typeService.argumentTypes(documentContext, args);
     var signature = pickSignatureByTypes(member.signatures(), args.size(), argTypes);
     if (signature == null) {
       return;
@@ -165,27 +165,6 @@ public class PlatformMethodCallInlayHintCollector {
     renderer.appendHints(sink, member, signature, args);
   }
 
-  /**
-   * Тип каждого фактического аргумента вызова. Для аргумента, чьё значение
-   * не удалось проинферить — {@link TypeSet#EMPTY}; pick'ер сигнатуры
-   * относится к таким нейтрально.
-   */
-  private List<TypeSet> inferArgTypes(
-    DocumentContext documentContext,
-    List<? extends BSLParser.CallParamContext> args
-  ) {
-    var result = new ArrayList<TypeSet>(args.size());
-    for (var arg : args) {
-      if (arg.getText().isBlank()) {
-        result.add(TypeSet.EMPTY);
-        continue;
-      }
-      var start = arg.getStart();
-      var position = Positions.create(start);
-      result.add(typeService.expressionTypesAt(documentContext, position));
-    }
-    return result;
-  }
 
   /**
    * Inlay-хинты для конструктора {@code Новый Тип(...)}. Имя типа резолвится
@@ -220,7 +199,7 @@ public class PlatformMethodCallInlayHintCollector {
     if (constructors.isEmpty()) {
       return;
     }
-    var argTypes = inferArgTypes(documentContext, args);
+    var argTypes = typeService.argumentTypes(documentContext, args);
     var signature = pickSignatureByTypes(constructors, args.size(), argTypes);
     if (signature == null) {
       return;

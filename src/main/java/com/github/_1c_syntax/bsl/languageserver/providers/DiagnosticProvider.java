@@ -148,14 +148,7 @@ public final class DiagnosticProvider {
   public void handleConfigurationChangedEvent(LanguageServerConfigurationChangedEvent event) {
     // LSC локальна для workspace, в момент публикации события WorkspaceContextHolder
     // указывает на нужный — берём только его serverContext.
-    var workspaceUri = com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceContextHolder.get();
-    if (workspaceUri == null) {
-      return;
-    }
-    var serverContext = serverContextProvider.getAllContexts().get(workspaceUri);
-    if (serverContext != null) {
-      refreshDiagnostics(serverContext);
-    }
+    serverContextProvider.getCurrentServerContext().ifPresent(this::refreshDiagnostics);
   }
 
   /**

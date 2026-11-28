@@ -340,6 +340,22 @@ class DocumentContextTest {
   }
 
   @Test
+  void findAstIsPresentOnlyWhileDocumentHasContent() {
+    // given
+    var documentContext = getDocumentContext();
+    var ast = documentContext.getAst();
+
+    // then
+    assertThat(documentContext.findAst()).containsSame(ast);
+
+    // when
+    documentContext.clearSecondaryData();
+
+    // then
+    assertThat(documentContext.findAst()).isEmpty();
+  }
+
+  @Test
   void testMethodCompute() {
 
     var documentContext = getDocumentContext();

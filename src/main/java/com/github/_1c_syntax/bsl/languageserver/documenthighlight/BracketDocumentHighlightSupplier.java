@@ -28,7 +28,6 @@ import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentHighlightKind;
 import org.eclipse.lsp4j.DocumentHighlightParams;
-import org.jspecify.annotations.Nullable;
 import java.util.Optional;
 import org.springframework.stereotype.Component;
 
@@ -75,80 +74,18 @@ public class BracketDocumentHighlightSupplier implements DocumentHighlightSuppli
   private List<DocumentHighlight> highlightMatchingBracket(Token token, DocumentContext documentContext) {
     List<DocumentHighlight> highlights = new ArrayList<>();
     var tokenType = token.getType();
-    var allTokens = documentContext.getTokens();
+    var roundBracket = tokenType == BSLParser.LPAREN || tokenType == BSLParser.RPAREN;
+    var openType = roundBracket ? BSLParser.LPAREN : BSLParser.LBRACK;
+    var closeType = roundBracket ? BSLParser.RPAREN : BSLParser.RBRACK;
 
-    int openType, closeType;
-    boolean isOpening;
-
-    // Определяем тип скобок
-    if (tokenType == BSLParser.LPAREN) {
-      openType = BSLParser.LPAREN;
-      closeType = BSLParser.RPAREN;
-      isOpening = true;
-    } else if (tokenType == BSLParser.RPAREN) {
-      openType = BSLParser.LPAREN;
-      closeType = BSLParser.RPAREN;
-      isOpening = false;
-    } else if (tokenType == BSLParser.LBRACK) {
-      openType = BSLParser.LBRACK;
-      closeType = BSLParser.RBRACK;
-      isOpening = true;
-    } else if (tokenType == BSLParser.RBRACK) {
-      openType = BSLParser.LBRACK;
-      closeType = BSLParser.RBRACK;
-      isOpening = false;
-    } else {
-      return highlights;
-    }
-
-    // Добавляем текущую скобку
+    // Текущая скобка подсвечивается и без пары
     highlights.add(new DocumentHighlight(Ranges.create(token), DocumentHighlightKind.Text));
 
-    // Ищем парную скобку
-    var matchingToken = findMatchingBracket(token, allTokens, openType, closeType, isOpening);
+    var matchingToken = MatchingBrackets.find(documentContext.getTokens(), token.getTokenIndex(), openType, closeType);
     if (matchingToken != null) {
       highlights.add(new DocumentHighlight(Ranges.create(matchingToken), DocumentHighlightKind.Text));
     }
 
     return highlights;
-  }
-
-  private @Nullable Token findMatchingBracket(Token token, List<Token> allTokens, int openType, int closeType, boolean isOpening) {
-    int tokenIndex = token.getTokenIndex();
-    int depth = 1;
-
-    if (isOpening) {
-      // Ищем закрывающую скобку вперед
-      for (int i = tokenIndex + 1; i < allTokens.size(); i++) {
-        var currentToken = allTokens.get(i);
-        var currentType = currentToken.getType();
-
-        if (currentType == openType) {
-          depth++;
-        } else if (currentType == closeType) {
-          depth--;
-          if (depth == 0) {
-            return currentToken;
-          }
-        }
-      }
-    } else {
-      // Ищем открывающую скобку назад
-      for (int i = tokenIndex - 1; i >= 0; i--) {
-        var currentToken = allTokens.get(i);
-        var currentType = currentToken.getType();
-
-        if (currentType == closeType) {
-          depth++;
-        } else if (currentType == openType) {
-          depth--;
-          if (depth == 0) {
-            return currentToken;
-          }
-        }
-      }
-    }
-
-    return null;
   }
 }

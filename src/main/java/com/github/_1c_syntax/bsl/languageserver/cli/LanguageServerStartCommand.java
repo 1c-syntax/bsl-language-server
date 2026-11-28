@@ -57,7 +57,7 @@ import static picocli.CommandLine.Option;
   aliases = {"--lsp"},
   description = "LSP server mode (default)",
   usageHelpAutoWidth = true,
-  footer = "@|green Copyright(c) 2018-2026|@")
+  footer = CommandHelp.FOOTER)
 @Component
 @RequiredArgsConstructor
 public class LanguageServerStartCommand implements Callable<Integer> {
@@ -81,7 +81,7 @@ public class LanguageServerStartCommand implements Callable<Integer> {
 
   @Option(
     names = {"--mcp-path"},
-    description = "Path of the MCP Streamable HTTP endpoint. Default is /mcp",
+    description = "Path of the MCP Streamable HTTP endpoint. Default is ${DEFAULT-VALUE}",
     paramLabel = "<path>",
     defaultValue = "/mcp")
   private String mcpPath;

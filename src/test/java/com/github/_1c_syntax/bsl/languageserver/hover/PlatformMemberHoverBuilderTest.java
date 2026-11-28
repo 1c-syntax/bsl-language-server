@@ -254,6 +254,23 @@ class PlatformMemberHoverBuilderTest {
   }
 
   @Test
+  void variadicParameterIsMarkedLikeInConstructorHover() {
+    // given — СтрШаблон(Шаблон, Значения...): последний параметр принимает любое число аргументов
+    var template = new ParameterDescriptor(
+      BilingualString.of("Шаблон"), TypeSet.of(STRING), false, BilingualString.EMPTY, "");
+    var values = new ParameterDescriptor(
+      BilingualString.of("Значения"), TypeSet.EMPTY, true, BilingualString.EMPTY, "", true);
+    var signature = new SignatureDescriptor(List.of(template, values), TypeSet.of(STRING), "");
+    var descriptor = MemberDescriptor.method("СтрШаблон", "", List.of(signature));
+
+    // when
+    var value = builder.build(null, descriptor, 3).getValue();
+
+    // then — как у ConstructorHoverBuilder: «Имя...»
+    assertThat(value).contains("СтрШаблон(Шаблон, Значения...)");
+  }
+
+  @Test
   void methodWithMultipleSignaturesListsAllCallVariants() {
     // given
     var sig1 = new SignatureDescriptor(

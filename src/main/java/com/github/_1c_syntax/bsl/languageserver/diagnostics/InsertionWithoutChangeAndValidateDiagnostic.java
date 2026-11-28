@@ -22,7 +22,6 @@
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.AnnotationKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
@@ -30,12 +29,11 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.Positions;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import org.antlr.v4.runtime.Token;
-import org.eclipse.lsp4j.Position;
 
 import java.util.HashSet;
-import java.util.Optional;
 
 /**
  * Директива {@code #Вставка} / {@code #КонецВставки} используется внутри метода
@@ -70,8 +68,8 @@ public class InsertionWithoutChangeAndValidateDiagnostic extends AbstractDiagnos
     var reportedMethods = new HashSet<MethodSymbol>();
 
     for (var directive : insertionDirectives) {
-      var directivePosition = new Position(directive.getLine() - 1, directive.getCharPositionInLine());
-      var method = enclosingMethod(symbolTree.getSymbolAtPosition(directivePosition));
+      var directivePosition = Positions.create(directive);
+      var method = symbolTree.getMethodSymbolAtPosition(directivePosition);
 
       // Вставка на уровне модуля (вне методов) аннотации не требует.
       if (method.isEmpty()) {
@@ -94,25 +92,6 @@ public class InsertionWithoutChangeAndValidateDiagnostic extends AbstractDiagnos
     }
   }
 
-  /**
-   * Ближайший метод, содержащий символ.
-   * <p>
-   * {@code getSymbolAtPosition} возвращает самый вложенный символ, поэтому внутри тела метода
-   * это может быть область или переменная — поднимаемся по родителям до метода.
-   *
-   * @param symbol символ, содержащий позицию директивы.
-   * @return метод, внутри которого стоит директива, либо {@link Optional#empty()} вне методов.
-   */
-  private static Optional<MethodSymbol> enclosingMethod(SourceDefinedSymbol symbol) {
-    var current = Optional.of(symbol);
-    while (current.isPresent()) {
-      if (current.get() instanceof MethodSymbol method) {
-        return Optional.of(method);
-      }
-      current = current.get().getParent();
-    }
-    return Optional.empty();
-  }
 
   private static boolean isInsertionDirective(Token token) {
     return token.getType() == BSLLexer.PREPROC_INSERT

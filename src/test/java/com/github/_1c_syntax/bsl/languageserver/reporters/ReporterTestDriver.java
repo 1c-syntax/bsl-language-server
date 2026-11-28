@@ -46,7 +46,8 @@ class ReporterTestDriver {
    * @param outputDir    каталог для сохранения отчёта
    */
   static void report(DiagnosticReporter reporter, AnalysisInfo analysisInfo, Path outputDir) {
-    reporter.beginReport(new ReportContext(analysisInfo.date(), analysisInfo.sourceDir()), outputDir);
+    var context = new ReportContext(analysisInfo.date(), analysisInfo.sourceDir(), Path.of("").toAbsolutePath());
+    reporter.beginReport(context, outputDir);
     var writeExecutor = new ExecutorConfiguration().reportWriteExecutor();
     try (var session = new ReportSession(List.of(reporter), writeExecutor)) {
       analysisInfo.fileinfos().forEach(session::accept);

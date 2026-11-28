@@ -84,11 +84,12 @@ final class PreprocessorDeadCode {
                                     BSLParser.PreprocessorContext node, PreprocessorReachability reachability) {
     if (!nodes.isEmpty()) {
       var previous = nodes.pop();
+      // Строки ANTLR нумеруются с единицы, LSP — с нуля.
       preprocessorRanges.add(
         Ranges.create(
-          previous.getStop().getLine(),
+          previous.getStop().getLine() - 1,
           previous.getStop().getCharPositionInLine() + previous.getStop().getText().length() + 1,
-          node.getStart().getLine(),
+          node.getStart().getLine() - 1,
           node.getStart().getCharPositionInLine() - 1));
       if (reachability.isUnreachable(compilationContextResolver.possibleContexts(documentContext, previous)
         .orElse(ExecutionContext.forFileType(documentContext.getFileType())))) {

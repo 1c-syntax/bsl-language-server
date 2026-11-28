@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.reporters;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.AnalysisInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.reporters.databind.AnalysisInfoJsonMapper;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import tools.jackson.core.JsonGenerator;
 import tools.jackson.databind.SequenceWriter;
@@ -32,7 +31,6 @@ import tools.jackson.databind.SequenceWriter;
 import java.nio.file.Path;
 import java.time.format.DateTimeFormatter;
 
-@Slf4j
 @Component
 public class JsonReporter implements DiagnosticReporter {
 
@@ -40,6 +38,7 @@ public class JsonReporter implements DiagnosticReporter {
   private JsonGenerator generator;
   private SequenceWriter writer;
   private String sourceDir;
+  private Path workspaceDir;
 
   @Override
   public String key() {
@@ -54,6 +53,7 @@ public class JsonReporter implements DiagnosticReporter {
   @Override
   public void beginReport(ReportContext context, Path outputDir) {
     sourceDir = context.sourceDir();
+    workspaceDir = context.workspaceDir();
 
     var mapper = new AnalysisInfoJsonMapper();
 
@@ -70,7 +70,14 @@ public class JsonReporter implements DiagnosticReporter {
 
   @Override
   public void accept(FileInfo fileInfo) {
-    writer.write(fileInfo);
+    // Путь файла относителен каталогу проекта; в отчёт он пишется URI, и разрешать его надо от
+    // этого каталога, а не от рабочего каталога процесса.
+    writer.write(new FileInfo(
+      workspaceDir.resolve(fileInfo.getPath()),
+      fileInfo.getMdoRef(),
+      fileInfo.getDiagnostics(),
+      fileInfo.getMetrics()
+    ));
   }
 
   @Override
@@ -80,14 +87,11 @@ public class JsonReporter implements DiagnosticReporter {
     generator.writeString(sourceDir);
     generator.writeEndObject();
     generator.close();
-    reportFile.commit();
-    LOGGER.info("JSON report saved to {}", reportFile.path().toAbsolutePath());
+    reportFile.commit("JSON");
   }
 
   @Override
   public void abortReport() {
-    if (reportFile != null) {
-      reportFile.close();
-    }
+    ReportFile.discard(reportFile);
   }
 }

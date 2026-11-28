@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.types.compilation.CompilationContextResolver;
+import com.github._1c_syntax.bsl.languageserver.utils.Positions;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
@@ -138,8 +139,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
     for (var range : deadCode) {
       var alreadyDetected = false;
       for (Range detectedRange : errorRanges) {
-        var pos = new Position(range.getStart().getLine(), range.getStart().getCharacter());
-        if (Ranges.containsPosition(detectedRange, pos)) {
+        if (Ranges.containsPosition(detectedRange, range.getStart())) {
           alreadyDetected = true;
           break;
         }
@@ -188,7 +188,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
   private void findAndAddDiagnostic(ParserRuleContext ctx) {
 
     // если это вложенный в ранее обработанный блок, то исключим из проверки
-    var pos = new Position(ctx.getStart().getLine(), ctx.getStart().getCharPositionInLine());
+    var pos = Positions.create(ctx.getStart());
     for (Range range : errorRanges) {
       if (Ranges.containsPosition(range, pos)) {
         return;
@@ -254,10 +254,7 @@ public class UnreachableCodeDiagnostic extends AbstractVisitorDiagnostic {
       // пройдем по всем стейтам (с конца идем) и ищем первый, находящийся в том же блоке
       // препроцессора, что и стейт прерывания
       for (ParserRuleContext statement : statements) {
-        var posStatement = new Position(
-          statement.getStart().getLine(),
-          statement.getStart().getCharPositionInLine());
-        if (Ranges.containsPosition(preprocRange, posStatement)) {
+        if (Ranges.containsPosition(preprocRange, Positions.create(statement.getStart()))) {
           endCurrentBlockNode = statement;
           break;
         }

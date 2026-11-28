@@ -55,17 +55,12 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
-import tools.jackson.databind.json.JsonMapper;
 
 import java.io.File;
-import java.io.IOException;
 import java.net.URI;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-
-import static tools.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS;
 
 /**
  * Per-workspace конфигурация BSL Language Server.
@@ -154,16 +149,16 @@ public class LanguageServerConfiguration {
   private File configurationFile;
 
   @JsonIgnore
-  @Value("${app.configuration.path:.bsl-language-server.json}")
+  @Value("${app.configuration.path:" + ConfigurationFiles.DEFAULT_FILE_NAME + "}")
   @Getter(AccessLevel.NONE)
   @Setter(value = AccessLevel.NONE)
-  private String defaultConfigFileName = ".bsl-language-server.json";
+  private String defaultConfigFileName = ConfigurationFiles.DEFAULT_FILE_NAME;
 
   @JsonIgnore
-  @Value("${app.globalConfiguration.path:${user.home}/.bsl-language-server.json}")
+  @Value("${app.globalConfiguration.path:${user.home}/" + ConfigurationFiles.DEFAULT_FILE_NAME + "}")
   @Getter(AccessLevel.NONE)
   @Setter(value = AccessLevel.NONE)
-  private String globalConfigPath = System.getProperty("user.home") + "/.bsl-language-server.json";
+  private String globalConfigPath = System.getProperty("user.home") + "/" + ConfigurationFiles.DEFAULT_FILE_NAME;
 
   /**
    * Снимок состояния, сделанный в {@link #init()} ПОСЛЕ применения Spring-инициализации и
@@ -216,30 +211,11 @@ public class LanguageServerConfiguration {
     // to avoid firing LanguageServerConfigurationChangedEvent via AOP.
     // This prevents circular dependency: LSC -> event -> DiagnosticInfos -> LSC (in creation).
 
-    // 1. Прямой путь к конфигурации (из application.properties)
-    var configFile = new File(defaultConfigFileName);
-    if (configFile.isFile()) {
-      loadConfigurationFile(configFile);
-      this.configurationFile = configFile;
-      captureInitialSnapshot();
-      return;
-    }
-
-    // 2. Конфиг в workspace
-    var workspaceConfig = workspaceRoot.resolve(defaultConfigFileName).toFile();
-    if (workspaceConfig.isFile()) {
-      loadConfigurationFile(workspaceConfig);
-      this.configurationFile = workspaceConfig;
-      captureInitialSnapshot();
-      return;
-    }
-
-    // 3. Глобальная конфигурация
-    var globalConfig = new File(globalConfigPath);
-    if (globalConfig.isFile()) {
-      loadConfigurationFile(globalConfig);
-      this.configurationFile = globalConfig;
-    }
+    ConfigurationFiles.locate(defaultConfigFileName, workspaceRoot, globalConfigPath)
+      .ifPresent(configFile -> {
+        loadConfigurationFile(configFile);
+        this.configurationFile = configFile;
+      });
     captureInitialSnapshot();
   }
 
@@ -316,19 +292,8 @@ public class LanguageServerConfiguration {
   }
 
   private void loadConfigurationFile(File configurationFile) {
-    var mapper = JsonMapper.builder()
-      .enable(ACCEPT_CASE_INSENSITIVE_ENUMS)
-      .build();
-
-    LanguageServerConfiguration configuration;
-    try (var inputStream = Files.newInputStream(configurationFile.toPath())) {
-      configuration = mapper.readValue(inputStream, LanguageServerConfiguration.class);
-    } catch (IOException e) {
-      LOGGER.error("Can't deserialize configuration file", e);
-      return;
-    }
-
-    copyPropertiesFrom(configuration);
+    ConfigurationFiles.read(configurationFile, LanguageServerConfiguration.class)
+      .ifPresent(this::copyPropertiesFrom);
   }
 
   @SneakyThrows

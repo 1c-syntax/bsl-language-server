@@ -1522,6 +1522,22 @@ public class TypeRegistry {
   }
 
   /**
+   * Зарегистрировать конфигурационный тип вместе с его английским написанием.
+   *
+   * @param qualifiedRu имя типа по-русски — каноническое.
+   * @param qualifiedEn имя по-английски; {@code null}, пустое или совпадающее с русским —
+   *     алиас не заводится.
+   * @return ссылка на тип, как у {@link #registerConfigurationType(String)}.
+   */
+  public TypeRef registerConfigurationType(String qualifiedRu, @Nullable String qualifiedEn) {
+    var ref = registerConfigurationType(qualifiedRu);
+    if (qualifiedEn != null && !qualifiedEn.isBlank() && !qualifiedEn.equals(qualifiedRu)) {
+      addAlias(qualifiedEn, ref);
+    }
+    return ref;
+  }
+
+  /**
    * Зарегистрировать дополнительный алиас (английский вариант, синоним) для
    * уже зарегистрированного конфигурационного типа.
    */
@@ -2009,6 +2025,24 @@ public class TypeRegistry {
    */
   public List<String> getTypeParameters(TypeRef ref) {
     return typeParameters.getOrDefault(ref, List.of());
+  }
+
+  /**
+   * Зарегистрированная специализация дженерика с единственным параметром.
+   *
+   * @param generic  дженерик
+   * @param argument значение параметра — как правило, имя объекта метаданных
+   * @return специализация; пусто, если параметров у типа не ровно один, специализация не
+   *     зарегистрирована либо подстановка не меняет имени типа
+   */
+  public Optional<TypeRef> findSpecialization(TypeRef generic, String argument) {
+    var parameters = getTypeParameters(generic);
+    if (parameters.size() != 1) {
+      return Optional.empty();
+    }
+    var bindings = Map.of(parameters.getFirst(), argument);
+    return resolve(TypeRef.specialize(generic, bindings).qualifiedName())
+      .filter(specialized -> !specialized.equals(generic));
   }
 
   /**

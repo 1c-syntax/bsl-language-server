@@ -248,7 +248,7 @@ public class SpecialContextVisitor extends BSLParserBaseVisitor<Void> {
 
   private BSLParser.@Nullable ExpressionContext findAssignedExpression(String varName, ParserRuleContext callContext) {
     // Находим statement, содержащий вызов СтрШаблон
-    var currentStatement = Trees.getRootParent(callContext, BSLParser.RULE_statement);
+    var currentStatement = Trees.getAncestorByRuleIndex(callContext, BSLParser.RULE_statement);
     if (currentStatement == null) {
       return null;
     }

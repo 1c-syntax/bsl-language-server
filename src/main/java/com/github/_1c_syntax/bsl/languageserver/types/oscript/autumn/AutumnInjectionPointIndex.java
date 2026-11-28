@@ -24,22 +24,19 @@ package com.github._1c_syntax.bsl.languageserver.types.oscript.autumn;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.Annotation;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.variable.VariableKind;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.annotations.OScriptMetaAnnotationResolver;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.autumn.AutumnBeanIndex.BeanDefinition;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.LibraryEntry;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.UriScopedNameIndex;
 import org.eclipse.lsp4j.Range;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Predicate;
 
 /**
@@ -65,10 +62,8 @@ public class AutumnInjectionPointIndex extends AbstractAutumnLibraryIndex {
   private final AutumnComponentInferencer componentInferencer;
   private final AutumnBeanIndex beanIndex;
 
-  /** Имя желудя (lowercase) → точки внедрения, ссылающиеся на него. */
-  private final Map<String, Set<InjectionPoint>> pointsByName = new ConcurrentHashMap<>();
-  /** URI .os-файла → имена, под которыми он зарегистрировал точки (для точечного удаления). */
-  private final Map<URI, Set<String>> namesByUri = new ConcurrentHashMap<>();
+  /** Имя желудя → точки внедрения, ссылающиеся на него, с точечным удалением вклада .os-файла. */
+  private final UriScopedNameIndex<InjectionPoint> pointsByName = new UriScopedNameIndex<>(InjectionPoint::uri);
 
   public AutumnInjectionPointIndex(OScriptLibraryIndex libraryIndex,
                                    ServerContextProvider serverContextProvider,
@@ -137,8 +132,8 @@ public class AutumnInjectionPointIndex extends AbstractAutumnLibraryIndex {
     ensureBuilt();
     var result = new LinkedHashSet<InjectionPoint>();
     for (var beanName : beanNames) {
-      var points = pointsByName.get(beanName.toLowerCase(Locale.ROOT));
-      if (points == null || points.isEmpty()) {
+      var points = pointsByName.get(beanName);
+      if (points.isEmpty()) {
         continue;
       }
       var singletonResolvesToProducer = beanIndex.resolveDefinitions(beanName).stream().anyMatch(selectsProducer);
@@ -154,47 +149,23 @@ public class AutumnInjectionPointIndex extends AbstractAutumnLibraryIndex {
   @Override
   protected void clearIndex() {
     pointsByName.clear();
-    namesByUri.clear();
   }
 
   @Override
   protected void indexClass(DocumentContext document, List<LibraryEntry> classEntries, URI uri) {
-    var symbolTree = document.getSymbolTree();
-
-    symbolTree.getConstructor().ifPresent(constructor ->
-      constructor.getParameters().forEach(parameter ->
-        indexInjection(uri, parameter.getAnnotations(), parameter.getName(), parameter.getRange())));
-
-    for (var variable : symbolTree.getVariables()) {
-      // Только поля модуля: параметры конструктора уже проиндексированы выше (они дублируются в
-      // переменных с kind=PARAMETER и теми же аннотациями) — иначе точка считалась бы дважды.
-      if (variable.getKind() != VariableKind.MODULE) {
-        continue;
-      }
-      indexInjection(uri, variable.getAnnotations(), variable.getName(), variable.getVariableNameRange());
+    for (var candidate : AutumnComponentInferencer.injectionCandidates(document.getSymbolTree())) {
+      indexInjection(uri, candidate.annotations(), candidate.name(), candidate.nameRange());
     }
   }
 
   @Override
   protected void removeByUri(URI uri) {
-    var names = namesByUri.remove(uri);
-    if (names == null) {
-      return;
-    }
-    for (var name : names) {
-      pointsByName.computeIfPresent(name, (key, points) -> {
-        points.removeIf(point -> uri.equals(point.uri()));
-        return points.isEmpty() ? null : points;
-      });
-    }
+    pointsByName.removeByUri(uri);
   }
 
   private void indexInjection(URI uri, List<Annotation> annotations, String memberName, Range range) {
     componentInferencer.injectedBean(annotations, memberName).ifPresent(bean -> {
-      var key = bean.name().toLowerCase(Locale.ROOT);
-      pointsByName.computeIfAbsent(key, k -> ConcurrentHashMap.newKeySet())
-        .add(new InjectionPoint(uri, range, bean.collection()));
-      namesByUri.computeIfAbsent(uri, u -> ConcurrentHashMap.newKeySet()).add(key);
+      pointsByName.add(bean.name(), new InjectionPoint(uri, range, bean.collection()));
     });
   }
 }

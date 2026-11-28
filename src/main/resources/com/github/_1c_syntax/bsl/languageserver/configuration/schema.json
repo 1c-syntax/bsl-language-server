@@ -23,9 +23,6 @@
                 "$ref": "#/definitions/parameter"
             },
             "properties": {
-                "MemberAccessUnavailable": {
-                    "$ref": "parameters-schema.json#/definitions/MemberAccessUnavailable"
-                },
                 "AllFunctionPathMustHaveReturn": {
                     "$ref": "parameters-schema.json#/definitions/AllFunctionPathMustHaveReturn"
                 },
@@ -128,6 +125,9 @@
                 "CreateQueryInCycle": {
                     "$ref": "parameters-schema.json#/definitions/CreateQueryInCycle"
                 },
+                "CurrentRowAccess": {
+                    "$ref": "parameters-schema.json#/definitions/CurrentRowAccess"
+                },
                 "CyclomaticComplexity": {
                     "$ref": "parameters-schema.json#/definitions/CyclomaticComplexity"
                 },
@@ -148,6 +148,9 @@
                 },
                 "DeprecatedFind": {
                     "$ref": "parameters-schema.json#/definitions/DeprecatedFind"
+                },
+                "DeprecatedHttpConnectionMethod": {
+                    "$ref": "parameters-schema.json#/definitions/DeprecatedHttpConnectionMethod"
                 },
                 "DeprecatedMessage": {
                     "$ref": "parameters-schema.json#/definitions/DeprecatedMessage"
@@ -263,6 +266,9 @@
                 "IncorrectUseOfStrTemplate": {
                     "$ref": "parameters-schema.json#/definitions/IncorrectUseOfStrTemplate"
                 },
+                "InsertionWithoutChangeAndValidate": {
+                    "$ref": "parameters-schema.json#/definitions/InsertionWithoutChangeAndValidate"
+                },
                 "InternetAccess": {
                     "$ref": "parameters-schema.json#/definitions/InternetAccess"
                 },
@@ -295,6 +301,9 @@
                 },
                 "MagicNumber": {
                     "$ref": "parameters-schema.json#/definitions/MagicNumber"
+                },
+                "MemberAccessUnavailable": {
+                    "$ref": "parameters-schema.json#/definitions/MemberAccessUnavailable"
                 },
                 "MetadataObjectNameLength": {
                     "$ref": "parameters-schema.json#/definitions/MetadataObjectNameLength"
@@ -457,6 +466,9 @@
                 },
                 "StyleElementConstructors": {
                     "$ref": "parameters-schema.json#/definitions/StyleElementConstructors"
+                },
+                "SuspiciousChangeAndValidate": {
+                    "$ref": "parameters-schema.json#/definitions/SuspiciousChangeAndValidate"
                 },
                 "TempFilesDir": {
                     "$ref": "parameters-schema.json#/definitions/TempFilesDir"
@@ -649,6 +661,33 @@
                     ],
                     "title": "Show injection points count and navigation above Autumn bean producers (OneScript).",
                     "$id": "#/definitions/codeLensParameters/beanUsages"
+                },
+                "runTest": {
+                    "default": true,
+                    "type": [
+                        "boolean",
+                        "object"
+                    ],
+                    "title": "Show \"Run test\" lens above test methods (OneScript, requires codeLens.testRunner).",
+                    "$id": "#/definitions/codeLensParameters/runTest"
+                },
+                "runAllTests": {
+                    "default": true,
+                    "type": [
+                        "boolean",
+                        "object"
+                    ],
+                    "title": "Show \"Run all tests\" lens above the first method of a test file (OneScript, requires codeLens.testRunner).",
+                    "$id": "#/definitions/codeLensParameters/runAllTests"
+                },
+                "debugTest": {
+                    "default": true,
+                    "type": [
+                        "boolean",
+                        "object"
+                    ],
+                    "title": "Show \"Debug test\" lens above test methods (OneScript, shown only when codeLens.testRunner.debugTestArguments is set).",
+                    "$id": "#/definitions/codeLensParameters/debugTest"
                 }
             }
         },
@@ -824,7 +863,7 @@
                             "$id": "#/properties/codeLens/testRunner/resultPattern",
                             "type": "string",
                             "title": "Regular expression to parse test runner output for method names.",
-                            "default": "^[^<]*Имя\\sтеста\\s<([^>]+)>.*"
+                            "default": "^[^<]*\u0418\u043c\u044f\\s\u0442\u0435\u0441\u0442\u0430\\s<([^>]+)>.*"
                         },
                         "runTestArguments": {
                             "$id": "#/properties/codeLens/testRunner/runTestArguments",
@@ -1240,7 +1279,6 @@
             "$id": "#/properties/traceLog",
             "type": "string",
             "title": "Path to file to log all inbound and outbound requests between BSL Language Server and Language Client from used IDE.\nCan be absolute or relative (to the project root). If set *significantly slows down* communication speed between server and client.",
-            "default": "",
             "examples": [
                 ".trace.log"
             ]

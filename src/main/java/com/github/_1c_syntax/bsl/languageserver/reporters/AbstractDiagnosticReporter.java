@@ -21,8 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.reporters;
 
-import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
-import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfos;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.info.DiagnosticInfo;
 import lombok.RequiredArgsConstructor;
@@ -30,13 +28,11 @@ import lombok.RequiredArgsConstructor;
 import java.util.Map;
 
 /**
- * Базовый класс для reporters, которым нужен доступ к per-workspace данным.
+ * Базовый класс для reporters, которым нужна метаинформация о диагностиках.
  */
 @RequiredArgsConstructor
 public abstract class AbstractDiagnosticReporter implements DiagnosticReporter {
 
-  /** Провайдер per-workspace {@link ServerContext}. */
-  protected final ServerContextProvider serverContextProvider;
   /** Реестр метаинформации о диагностиках. */
   protected final DiagnosticInfos diagnosticInfos;
 

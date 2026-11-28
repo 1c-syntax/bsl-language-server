@@ -74,7 +74,7 @@ import static picocli.CommandLine.Option;
   aliases = {"-f", "--format"},
   description = "Format files in source directory",
   usageHelpAutoWidth = true,
-  footer = "@|green Copyright(c) 2018-2025|@")
+  footer = CommandHelp.FOOTER)
 @Component
 @RequiredArgsConstructor
 public class FormatCommand implements Callable<Integer> {
@@ -124,6 +124,7 @@ public class FormatCommand implements Callable<Integer> {
     try (var ctx = WorkspaceContextHolder.forUri(srcDir.toUri())) {
       List<File> files = findFilesForFormatting(filePaths);
       if (files.isEmpty()) {
+        LOGGER.error("No BSL/OS files to format in `{}`", srcDirOption);
         return 1;
       }
 

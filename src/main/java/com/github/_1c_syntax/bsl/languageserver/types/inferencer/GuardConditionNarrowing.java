@@ -22,6 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.index.AbstractDocumentLifecycleClearableIndex;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
@@ -29,7 +31,6 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymb
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceResolver;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
 import com.github._1c_syntax.bsl.languageserver.types.index.ReceiverSitesIndex;
-import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
@@ -50,6 +51,7 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.util.Positions;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.jspecify.annotations.Nullable;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -96,7 +98,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @RequiredArgsConstructor
 public class GuardConditionNarrowing extends AbstractDocumentLifecycleClearableIndex {
 
-  private static final TypeRef UNDEFINED = new TypeRef(TypeKind.PRIMITIVE, "Неопределено");
+  private static final TypeRef UNDEFINED = TypeRef.UNDEFINED;
 
   private static final String TYPE_OF_RU = "ТИПЗНЧ";
   private static final String TYPE_OF_EN = "TYPEOF";
@@ -336,6 +338,30 @@ public class GuardConditionNarrowing extends AbstractDocumentLifecycleClearableI
   @Override
   public void clear(URI uri) {
     compiledByUri.remove(uri);
+  }
+
+  /**
+   * Полный сброс после регистрации конфигурационных типов: имя типа в проверке
+   * {@code ТипЗнч(Х) = Тип("…")} разрешается при компиляции условия, и условие, разобранное до
+   * регистрации, осталось бы без утверждения до следующей правки документа — так же сбрасывает
+   * свой кеш {@code InferredExpressionTypeIndex}.
+   *
+   * @param event событие регистрации конфигурационных типов.
+   */
+  @EventListener
+  public void handleConfigurationTypesRegistered(ConfigurationTypesRegisteredEvent event) {
+    compiledByUri.clear();
+  }
+
+  /**
+   * Полный сброс после наполнения рабочей области: переменные в условии разрешаются через индекс
+   * ссылок, полный только после наполнения.
+   *
+   * @param event событие наполнения рабочей области.
+   */
+  @EventListener
+  public void handleServerContextPopulated(ServerContextPopulatedEvent event) {
+    compiledByUri.clear();
   }
 
   /** Разбор условия без кэш-обвязки. */

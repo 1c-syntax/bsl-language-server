@@ -4,78 +4,6 @@
     "type": "object",
     "title": "BSL Language Server Configuration File. Diagnostic parameters definition part",
     "definitions": {
-        "MemberAccessUnavailable": {
-            "description": "Member access unavailable in the current context",
-            "default": true,
-            "type": [
-                "boolean",
-                "object"
-            ],
-            "title": "Member access unavailable in the current context",
-            "properties": {
-                "checkExternalConnection": {
-                    "description": "Check external connection (on/off/auto)",
-                    "default": "auto",
-                    "type": "string",
-                    "title": "Check external connection (on/off/auto)"
-                },
-                "checkMobileStandaloneServer": {
-                    "description": "Check mobile standalone server (on/off/auto)",
-                    "default": "auto",
-                    "type": "string",
-                    "title": "Check mobile standalone server (on/off/auto)"
-                },
-                "checkServer": {
-                    "description": "Check server (on/off/auto)",
-                    "default": "auto",
-                    "type": "string",
-                    "title": "Check server (on/off/auto)"
-                },
-                "checkMobileApplicationClient": {
-                    "description": "Check mobile application (client) (on/off/auto)",
-                    "default": "auto",
-                    "type": "string",
-                    "title": "Check mobile application (client) (on/off/auto)"
-                },
-                "checkThickClientManagedApplication": {
-                    "description": "Check thick client (managed application) (on/off/auto)",
-                    "default": "auto",
-                    "type": "string",
-                    "title": "Check thick client (managed application) (on/off/auto)"
-                },
-                "checkThinClient": {
-                    "description": "Check thin client (on/off/auto)",
-                    "default": "auto",
-                    "type": "string",
-                    "title": "Check thin client (on/off/auto)"
-                },
-                "checkMobileClient": {
-                    "description": "Check mobile client (on/off/auto)",
-                    "default": "auto",
-                    "type": "string",
-                    "title": "Check mobile client (on/off/auto)"
-                },
-                "checkWebClient": {
-                    "description": "Check web client (on/off/auto)",
-                    "default": "auto",
-                    "type": "string",
-                    "title": "Check web client (on/off/auto)"
-                },
-                "checkThickClientOrdinaryApplication": {
-                    "description": "Check thick client (ordinary application) (on/off/auto)",
-                    "default": "auto",
-                    "type": "string",
-                    "title": "Check thick client (ordinary application) (on/off/auto)"
-                },
-                "checkMobileApplicationServer": {
-                    "description": "Check mobile application (server) (on/off/auto)",
-                    "default": "auto",
-                    "type": "string",
-                    "title": "Check mobile application (server) (on/off/auto)"
-                }
-            },
-            "$id": "#/definitions/MemberAccessUnavailable"
-        },
         "AllFunctionPathMustHaveReturn": {
             "description": "All execution paths of a function must have a Return statement",
             "default": true,
@@ -496,6 +424,16 @@
             "title": "Execution query on cycle",
             "$id": "#/definitions/CreateQueryInCycle"
         },
+        "CurrentRowAccess": {
+            "description": "Accessing data via CurrentRow of dynamic list",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Accessing data via CurrentRow of dynamic list",
+            "$id": "#/definitions/CurrentRowAccess"
+        },
         "CyclomaticComplexity": {
             "description": "Cyclomatic complexity",
             "default": true,
@@ -587,6 +525,16 @@
             ],
             "title": "Using of the deprecated method \"Find\"",
             "$id": "#/definitions/DeprecatedFind"
+        },
+        "DeprecatedHttpConnectionMethod": {
+            "description": "Deprecated HTTPConnection methods",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Deprecated HTTPConnection methods",
+            "$id": "#/definitions/DeprecatedHttpConnectionMethod"
         },
         "DeprecatedMessage": {
             "description": "Restriction on the use of deprecated \"Message\" method",
@@ -1102,6 +1050,16 @@
             "title": "Incorrect use of \"StrTemplate\"",
             "$id": "#/definitions/IncorrectUseOfStrTemplate"
         },
+        "InsertionWithoutChangeAndValidate": {
+            "description": "Using #Insert without &ChangeAndValidate",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Using #Insert without &ChangeAndValidate",
+            "$id": "#/definitions/InsertionWithoutChangeAndValidate"
+        },
         "InternetAccess": {
             "description": "Referring to Internet resources",
             "default": false,
@@ -1267,6 +1225,78 @@
                 }
             },
             "$id": "#/definitions/MagicNumber"
+        },
+        "MemberAccessUnavailable": {
+            "description": "Member access unavailable in the current context",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Member access unavailable in the current context",
+            "properties": {
+                "checkExternalConnection": {
+                    "description": "Check external connection (on/off/auto)",
+                    "default": "auto",
+                    "type": "string",
+                    "title": "Check external connection (on/off/auto)"
+                },
+                "checkMobileStandaloneServer": {
+                    "description": "Check mobile standalone server (on/off/auto)",
+                    "default": "auto",
+                    "type": "string",
+                    "title": "Check mobile standalone server (on/off/auto)"
+                },
+                "checkServer": {
+                    "description": "Check server (on/off/auto)",
+                    "default": "auto",
+                    "type": "string",
+                    "title": "Check server (on/off/auto)"
+                },
+                "checkMobileApplicationClient": {
+                    "description": "Check mobile application (client) (on/off/auto)",
+                    "default": "auto",
+                    "type": "string",
+                    "title": "Check mobile application (client) (on/off/auto)"
+                },
+                "checkThickClientManagedApplication": {
+                    "description": "Check thick client (managed application) (on/off/auto)",
+                    "default": "auto",
+                    "type": "string",
+                    "title": "Check thick client (managed application) (on/off/auto)"
+                },
+                "checkThinClient": {
+                    "description": "Check thin client (on/off/auto)",
+                    "default": "auto",
+                    "type": "string",
+                    "title": "Check thin client (on/off/auto)"
+                },
+                "checkMobileClient": {
+                    "description": "Check mobile client (on/off/auto)",
+                    "default": "auto",
+                    "type": "string",
+                    "title": "Check mobile client (on/off/auto)"
+                },
+                "checkWebClient": {
+                    "description": "Check web client (on/off/auto)",
+                    "default": "auto",
+                    "type": "string",
+                    "title": "Check web client (on/off/auto)"
+                },
+                "checkThickClientOrdinaryApplication": {
+                    "description": "Check thick client (ordinary application) (on/off/auto)",
+                    "default": "auto",
+                    "type": "string",
+                    "title": "Check thick client (ordinary application) (on/off/auto)"
+                },
+                "checkMobileApplicationServer": {
+                    "description": "Check mobile application (server) (on/off/auto)",
+                    "default": "auto",
+                    "type": "string",
+                    "title": "Check mobile application (server) (on/off/auto)"
+                }
+            },
+            "$id": "#/definitions/MemberAccessUnavailable"
         },
         "MetadataObjectNameLength": {
             "description": "Metadata object names must not exceed the allowed length",
@@ -2023,6 +2053,16 @@
             ],
             "title": "Style element constructor",
             "$id": "#/definitions/StyleElementConstructors"
+        },
+        "SuspiciousChangeAndValidate": {
+            "description": "Suspicious use of &ChangeAndValidate",
+            "default": true,
+            "type": [
+                "boolean",
+                "object"
+            ],
+            "title": "Suspicious use of &ChangeAndValidate",
+            "$id": "#/definitions/SuspiciousChangeAndValidate"
         },
         "TempFilesDir": {
             "description": "TempFilesDir() method call",

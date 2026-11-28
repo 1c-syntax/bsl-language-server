@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
+import com.github._1c_syntax.bsl.languageserver.utils.Positions;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
@@ -56,7 +57,7 @@ final class CodeBlockLookup {
     }
     for (var i = firstCandidate(subs, position); i < subs.getChildCount(); i++) {
       var child = subs.getChild(i);
-      if (startsAfter(startOf(child), position)) {
+      if (Positions.compareStart(startOf(child), position) > 0) {
         break;
       }
       if (child instanceof BSLParser.SubContext sub && contains(sub, position)) {
@@ -78,11 +79,6 @@ final class CodeBlockLookup {
       }
     }
     return low;
-  }
-
-  private static boolean startsAfter(Token start, Position position) {
-    return start.getLine() - 1 > position.getLine()
-      || (start.getLine() - 1 == position.getLine() && start.getCharPositionInLine() > position.getCharacter());
   }
 
   private static BSLParser.@Nullable CodeBlockContext bodyOf(BSLParser.SubContext sub) {

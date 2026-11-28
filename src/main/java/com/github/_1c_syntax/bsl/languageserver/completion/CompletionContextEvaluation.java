@@ -177,8 +177,7 @@ final class CompletionContextEvaluation {
   private @Nullable Integer rankSharedReceiverUnion(String name, MemberDescriptor member,
                                                     CompletionMethodHint hint) {
     var contribution = new CompletionMethodHint();
-    var available = false;
-    var unavailable = false;
+    var fold = new CompletionPriority.Fold();
     for (var owner : sharedReceiverUnion) {
       var candidates = typeContext.alternatives(owner, member.kind(), name);
       if (candidates.size() != 1) {
@@ -188,11 +187,10 @@ final class CompletionContextEvaluation {
       if (rank == null) {
         return null;
       }
-      available |= rank != UNAVAILABLE;
-      unavailable |= rank != AVAILABLE;
+      fold.add(rank);
     }
     hint.merge(contribution);
-    return combine(available, unavailable);
+    return fold.result();
   }
 
   private void checkSharedReceiver() {
@@ -233,14 +231,11 @@ final class CompletionContextEvaluation {
       }
       return AVAILABLE;
     }
-    var available = false;
-    var unavailable = false;
+    var fold = new CompletionPriority.Fold();
     for (var owner : receiver.refs()) {
-      var rank = rankReceiver(name, member, hint, context, receiver, owner);
-      available |= rank != UNAVAILABLE;
-      unavailable |= rank != AVAILABLE;
+      fold.add(rankReceiver(name, member, hint, context, receiver, owner));
     }
-    return combine(available, unavailable);
+    return fold.result();
   }
 
   private int rankReceiver(String name, MemberDescriptor member, @Nullable CompletionMethodHint hint,
@@ -283,13 +278,10 @@ final class CompletionContextEvaluation {
     if (scope.isEmpty()) {
       return AVAILABLE;
     }
-    var available = false;
-    var unavailable = false;
+    var fold = new CompletionPriority.Fold();
     for (var context : scope.orElseThrow().contexts()) {
-      var value = rank.applyAsInt(context);
-      available |= value != UNAVAILABLE;
-      unavailable |= value != AVAILABLE;
+      fold.add(rank.applyAsInt(context));
     }
-    return combine(available, unavailable);
+    return fold.result();
   }
 }

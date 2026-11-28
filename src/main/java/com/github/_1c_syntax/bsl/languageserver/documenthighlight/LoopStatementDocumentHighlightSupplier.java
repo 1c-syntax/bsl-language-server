@@ -22,12 +22,12 @@
 package com.github._1c_syntax.bsl.languageserver.documenthighlight;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.DocumentHighlight;
 import org.eclipse.lsp4j.DocumentHighlightParams;
 import java.util.Optional;
-import org.jspecify.annotations.Nullable;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -59,7 +59,7 @@ public class LoopStatementDocumentHighlightSupplier extends AbstractASTDocumentH
     var parent = (ParserRuleContext) terminalNodeInfo.get().terminalNode().getParent();
 
     // Находим ближайший цикл - сначала проверяем сам parent, потом его предков
-    var loopStatement = findNearestLoopStatement(parent);
+    var loopStatement = Trees.getAncestorOrSelfByRuleIndex(parent, LOOP_STATEMENTS);
     if (loopStatement == null) {
       return Collections.emptyList();
     }
@@ -85,26 +85,9 @@ public class LoopStatementDocumentHighlightSupplier extends AbstractASTDocumentH
       || tokenType == BSLParser.CONTINUE_KEYWORD;
   }
 
-  /**
-   * Находит ближайший Statement контекст цикла.
-   * Сначала проверяет сам parent, затем поднимается по иерархии предков.
-   * Это необходимо для корректной обработки вложенных циклов.
-   */
-  @Nullable
-  private ParserRuleContext findNearestLoopStatement(ParserRuleContext context) {
-    var current = context;
-    while (current != null) {
-      var ruleIndex = current.getRuleIndex();
-      if (ruleIndex == BSLParser.RULE_whileStatement
-          || ruleIndex == BSLParser.RULE_forStatement
-          || ruleIndex == BSLParser.RULE_forEachStatement) {
-        return current;
-      }
-      var parent = current.getParent();
-      current = parent instanceof ParserRuleContext ? (ParserRuleContext) parent : null;
-    }
-    return null;
-  }
+  /** Операторы циклов — ближайший из них (сам узел или предок) и есть цикл ключевого слова. */
+  private static final List<Integer> LOOP_STATEMENTS = List.of(
+    BSLParser.RULE_whileStatement, BSLParser.RULE_forStatement, BSLParser.RULE_forEachStatement);
 
   private List<DocumentHighlight> highlightWhileStatement(ParserRuleContext whileStatement) {
     List<DocumentHighlight> highlights = new ArrayList<>();

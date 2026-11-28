@@ -32,6 +32,7 @@ import org.antlr.v4.runtime.ParserRuleContext;
 import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
+import org.eclipse.lsp4j.util.Positions;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -274,6 +275,17 @@ public class SymbolTree {
   }
 
   /**
+   * Метод, внутри объявления которого стоит узел дерева разбора, — в теле, в заголовке или
+   * сам узел объявления.
+   *
+   * @param node узел дерева разбора документа.
+   * @return метод, содержащий узел; пусто для кода уровня модуля.
+   */
+  public Optional<MethodSymbol> getEnclosingMethodSymbol(ParserRuleContext node) {
+    return SymbolDeclarationRanges.enclosingMethod(node).flatMap(this::getMethodSymbol);
+  }
+
+  /**
    * Поиск MethodSymbol в дереве по указанному имени (без учета регистра).
    *
    * @param methodName Имя метода
@@ -362,6 +374,20 @@ public class SymbolTree {
    */
   public SourceDefinedSymbol getSymbolAtPosition(Position position) {
     return findSymbolAtPosition(module, position);
+  }
+
+  /**
+   * Метод, в котором стоит позиция: в его теле или на его объявлении.
+   *
+   * @param position Позиция в документе.
+   * @return Метод, содержащий позицию; пусто, если позиция вне методов (в теле модуля).
+   */
+  public Optional<MethodSymbol> getMethodSymbolAtPosition(Position position) {
+    var symbol = getSymbolAtPosition(position);
+    if (symbol instanceof MethodSymbol method) {
+      return Optional.of(method);
+    }
+    return symbol.getRootParent(MethodSymbol.class).map(MethodSymbol.class::cast);
   }
 
   /**
@@ -487,8 +513,7 @@ public class SymbolTree {
   }
 
   private static boolean before(Position left, Position right) {
-    return left.getLine() < right.getLine()
-      || (left.getLine() == right.getLine() && left.getCharacter() < right.getCharacter());
+    return Positions.isBefore(left, right);
   }
 
   private List<SourceDefinedSymbol> createChildrenFlat() {

@@ -26,18 +26,15 @@ import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.annotations.OScriptMetaAnnotationResolver;
-import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex.LibraryEntry;
+import com.github._1c_syntax.bsl.languageserver.types.registry.DescribedTypeResolver;
 import com.github._1c_syntax.bsl.languageserver.types.registry.TypeRegistry;
 import com.github._1c_syntax.bsl.parser.description.MethodDescription;
-import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
-import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -64,7 +61,7 @@ import java.util.concurrent.ConcurrentHashMap;
 @WorkspaceScope
 public class AutumnCollectionIndex extends AbstractAutumnLibraryIndex {
 
-  private final TypeRegistry typeRegistry;
+  private final DescribedTypeResolver describedTypeResolver;
 
   /** Имя коллекции (lowercase) → типы её {@code Получить()}. */
   private final Map<String, TypeSet> typesByName = new ConcurrentHashMap<>();
@@ -73,10 +70,10 @@ public class AutumnCollectionIndex extends AbstractAutumnLibraryIndex {
 
   public AutumnCollectionIndex(OScriptLibraryIndex libraryIndex,
                                ServerContextProvider serverContextProvider,
-                               TypeRegistry typeRegistry,
+                               DescribedTypeResolver describedTypeResolver,
                                OScriptMetaAnnotationResolver metaAnnotationResolver) {
     super(libraryIndex, serverContextProvider, metaAnnotationResolver);
-    this.typeRegistry = typeRegistry;
+    this.describedTypeResolver = describedTypeResolver;
   }
 
   /**
@@ -138,19 +135,8 @@ public class AutumnCollectionIndex extends AbstractAutumnLibraryIndex {
       .findFirst()
       .flatMap(MethodSymbol::getDescription)
       .map(MethodDescription::getReturnedValue)
-      .map(this::resolveTypes)
+      .map(describedTypeResolver::types)
       .filter(types -> !types.isEmpty());
-  }
-
-  private TypeSet resolveTypes(List<TypeDescription> typeDescriptions) {
-    if (typeDescriptions.isEmpty()) {
-      return TypeSet.EMPTY;
-    }
-    var refs = new LinkedHashSet<TypeRef>();
-    for (var td : typeDescriptions) {
-      typeRegistry.resolve(td.name()).ifPresent(refs::add);
-    }
-    return refs.isEmpty() ? TypeSet.EMPTY : TypeSet.of(new ArrayList<>(refs));
   }
 
   private void register(URI uri, String collectionName, TypeSet types) {

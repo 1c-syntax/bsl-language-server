@@ -21,8 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.context;
 
+import java.util.Locale;
+
 /**
  * Тип файла исходного кода.
+ * <p>
+ * Имя константы — расширение файла этого типа: тип документа определяется по расширению.
  */
 public enum FileType {
   /**
@@ -32,5 +36,14 @@ public enum FileType {
   /**
    * Файл OScript (OneScript).
    */
-  OS
+  OS;
+
+  /**
+   * Расширение файлов этого типа, без точки и в нижнем регистре.
+   *
+   * @return расширение, например {@code bsl}
+   */
+  public String getExtension() {
+    return name().toLowerCase(Locale.ROOT);
+  }
 }

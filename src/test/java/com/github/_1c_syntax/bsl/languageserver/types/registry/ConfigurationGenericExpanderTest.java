@@ -48,7 +48,7 @@ class ConfigurationGenericExpanderTest {
     var expander = new ConfigurationGenericExpander(registry, serverProvider);
     WorkspaceContextHolder.clear();
     expander.registerCommonLibraryExpansions();
-    Mockito.verify(serverProvider, Mockito.never()).getAllContexts();
+    Mockito.verify(serverProvider).getCurrentServerContext();
   }
 
   @Test
@@ -58,12 +58,12 @@ class ConfigurationGenericExpanderTest {
     WorkspaceContextHolder.set(workspaceUri);
     try {
       var serverProvider = Mockito.mock(ServerContextProvider.class);
-      Mockito.when(serverProvider.getAllContexts()).thenReturn(java.util.Map.of());
+      Mockito.when(serverProvider.getCurrentServerContext()).thenReturn(java.util.Optional.empty());
       var registry = new TypeRegistry(List.of(),
         mock(MemberMetadataIndex.class), mock(DefinedTypesIndex.class));
       var expander = new ConfigurationGenericExpander(registry, serverProvider);
       expander.registerCommonLibraryExpansions();
-      Mockito.verify(serverProvider).getAllContexts();
+      Mockito.verify(serverProvider).getCurrentServerContext();
     } finally {
       WorkspaceContextHolder.clear();
       WorkspaceContextHolder.unregisterWorkspace(workspaceUri);
@@ -82,7 +82,7 @@ class ConfigurationGenericExpanderTest {
       Mockito.when(serverContext.getConfiguration())
         .thenReturn(Solution.builder().mergedConfiguration(configuration).build());
       var serverProvider = Mockito.mock(ServerContextProvider.class);
-      Mockito.when(serverProvider.getAllContexts()).thenReturn(java.util.Map.of(workspaceUri, serverContext));
+      Mockito.when(serverProvider.getCurrentServerContext()).thenReturn(java.util.Optional.of(serverContext));
       var registry = new TypeRegistry(List.of(),
         mock(MemberMetadataIndex.class), mock(DefinedTypesIndex.class));
       var expander = new ConfigurationGenericExpander(registry, serverProvider);

@@ -34,12 +34,10 @@ import org.springframework.stereotype.Component;
 import java.net.URI;
 import java.util.Collection;
 import java.util.LinkedHashSet;
-import java.util.Locale;
-import java.util.Map;
 import java.util.Set;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
 import com.github._1c_syntax.bsl.languageserver.types.oscript.AbstractOScriptLazyIndex;
-import java.util.concurrent.ConcurrentHashMap;
+import com.github._1c_syntax.bsl.languageserver.types.oscript.UriScopedNameIndex;
 
 /**
  * Двунаправленный индекс прямых отношений библиотеки extends. Для запросов —
@@ -64,14 +62,10 @@ public class TypeRelationIndex extends AbstractOScriptLazyIndex {
 
   private final OScriptExtends oScriptExtends;
 
-  /** Имя родителя (lowercase) → URI документов, объявивших его в {@code &Расширяет}. */
-  private final Map<String, Set<URI>> childUrisByParentName = new ConcurrentHashMap<>();
-  /** URI → имя родителя, заявленное документом (для точечного удаления вклада). */
-  private final Map<URI, String> parentNameByUri = new ConcurrentHashMap<>();
-  /** Имя интерфейса (lowercase) → URI документов, объявивших его в {@code &Реализует}. */
-  private final Map<String, Set<URI>> implementorUrisByInterfaceName = new ConcurrentHashMap<>();
-  /** URI → имена интерфейсов, заявленные документом (для точечного удаления вклада). */
-  private final Map<URI, Set<String>> interfaceNamesByUri = new ConcurrentHashMap<>();
+  /** Имя родителя → URI документов, объявивших его в {@code &Расширяет}. */
+  private final UriScopedNameIndex<URI> childUrisByParentName = new UriScopedNameIndex<>(uri -> uri);
+  /** Имя интерфейса → URI документов, объявивших его в {@code &Реализует}. */
+  private final UriScopedNameIndex<URI> implementorUrisByInterfaceName = new UriScopedNameIndex<>(uri -> uri);
 
   public TypeRelationIndex(OScriptExtends oScriptExtends,
                            OScriptMetaAnnotationResolver metaAnnotationResolver) {
@@ -135,9 +129,7 @@ public class TypeRelationIndex extends AbstractOScriptLazyIndex {
 
   private void rebuild(ServerContext serverContext) {
     childUrisByParentName.clear();
-    parentNameByUri.clear();
     implementorUrisByInterfaceName.clear();
-    interfaceNamesByUri.clear();
     for (var document : serverContext.getDocuments().values()) {
       if (document.getFileType() == FileType.OS) {
         indexDocument(document);
@@ -148,51 +140,23 @@ public class TypeRelationIndex extends AbstractOScriptLazyIndex {
   @Override
   protected void indexDocument(DocumentContext document) {
     var uri = document.getUri();
-    oScriptExtends.parentClassName(document).ifPresent((String parentName) -> {
-      var key = parentName.toLowerCase(Locale.ROOT);
-      parentNameByUri.put(uri, key);
-      childUrisByParentName.computeIfAbsent(key, k -> ConcurrentHashMap.newKeySet()).add(uri);
-    });
-    var interfaceNames = oScriptExtends.implementedInterfaceNames(document);
-    if (!interfaceNames.isEmpty()) {
-      var keys = ConcurrentHashMap.<String>newKeySet();
-      for (var interfaceName : interfaceNames) {
-        var key = interfaceName.toLowerCase(Locale.ROOT);
-        keys.add(key);
-        implementorUrisByInterfaceName.computeIfAbsent(key, k -> ConcurrentHashMap.newKeySet()).add(uri);
-      }
-      interfaceNamesByUri.put(uri, keys);
+    oScriptExtends.parentClassName(document)
+      .ifPresent(parentName -> childUrisByParentName.add(parentName, uri));
+    for (var interfaceName : oScriptExtends.implementedInterfaceNames(document)) {
+      implementorUrisByInterfaceName.add(interfaceName, uri);
     }
   }
 
   @Override
   protected void removeByUri(URI uri) {
-    var parentName = parentNameByUri.remove(uri);
-    if (parentName != null) {
-      removeUri(childUrisByParentName, parentName, uri);
-    }
-    var interfaceNames = interfaceNamesByUri.remove(uri);
-    if (interfaceNames != null) {
-      for (var interfaceName : interfaceNames) {
-        removeUri(implementorUrisByInterfaceName, interfaceName, uri);
-      }
-    }
+    childUrisByParentName.removeByUri(uri);
+    implementorUrisByInterfaceName.removeByUri(uri);
   }
 
-  private static void removeUri(Map<String, Set<URI>> urisByName, String name, URI uri) {
-    urisByName.computeIfPresent(name, (String key, Set<URI> uris) -> {
-      uris.remove(uri);
-      return uris.isEmpty() ? null : uris;
-    });
-  }
-
-  private static Set<URI> collect(Map<String, Set<URI>> urisByName, Collection<String> names) {
+  private static Set<URI> collect(UriScopedNameIndex<URI> urisByName, Collection<String> names) {
     var result = new LinkedHashSet<URI>();
     for (var name : names) {
-      var uris = urisByName.get(name.toLowerCase(Locale.ROOT));
-      if (uris != null) {
-        result.addAll(uris);
-      }
+      result.addAll(urisByName.get(name));
     }
     return result;
   }

@@ -33,13 +33,12 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.bsl.languageserver.utils.Positions;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.CodeAction;
 import org.eclipse.lsp4j.CodeActionParams;
 import org.eclipse.lsp4j.Diagnostic;
-import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.TextEdit;
 
@@ -131,30 +130,13 @@ public class EventHandlerInvalidSignatureDiagnostic extends AbstractDiagnostic i
   public List<CodeAction> getQuickFixes(List<Diagnostic> diagnostics,
                                         CodeActionParams params,
                                         DocumentContext documentContext) {
-    var textEdits = new ArrayList<TextEdit>();
-    var fixedDiagnostics = new ArrayList<Diagnostic>();
-    diagnostics.forEach(diagnostic ->
-      findMethodAt(documentContext, diagnostic.getRange().getStart())
+    return QuickFixProvider.fixEach(diagnostics, info.getResourceString("quickFixMessage"), documentContext.getUri(),
+      diagnostic -> documentContext.getSymbolTree().getMethodSymbolAtPosition(diagnostic.getRange().getStart())
         .flatMap(method -> eventContractsIndex.getContract(documentContext, method.getName())
           .filter(contract -> !contract.signatures().isEmpty())
           .flatMap(contract -> buildSignatureFix(documentContext, method, contract)))
-        .ifPresent((TextEdit edit) -> {
-          textEdits.add(edit);
-          fixedDiagnostics.add(diagnostic);
-        })
-    );
-    if (textEdits.isEmpty()) {
-      return List.of();
-    }
-    return QuickFixProvider.createCodeActions(
-      textEdits, info.getResourceString("quickFixMessage"),
-      documentContext.getUri(), fixedDiagnostics);
-  }
-
-  private static Optional<MethodSymbol> findMethodAt(DocumentContext documentContext, Position position) {
-    return documentContext.getSymbolTree().getMethods().stream()
-      .filter(m -> Ranges.containsPosition(m.getSubNameRange(), position))
-      .findFirst();
+        .map(List::of)
+        .orElse(List.of()));
   }
 
   /**
@@ -214,10 +196,7 @@ public class EventHandlerInvalidSignatureDiagnostic extends AbstractDiagnostic i
     }
     var lparen = headerTokens.get(lparenIndex);
     var rparen = headerTokens.get(rparenIndex);
-    var start = new Position(lparen.getLine() - 1,
-      lparen.getCharPositionInLine() + lparen.getText().length());
-    var end = new Position(rparen.getLine() - 1, rparen.getCharPositionInLine());
-    return Optional.of(new Range(start, end));
+    return Optional.of(new Range(Positions.createEnd(lparen), Positions.create(rparen)));
   }
 
   /** Токены в пределах одной строки заголовка метода — от имени до конца метода. */
@@ -227,16 +206,8 @@ public class EventHandlerInvalidSignatureDiagnostic extends AbstractDiagnostic i
     var subNameEnd = method.getSubNameRange().getEnd();
     var methodEnd = method.getRange().getEnd();
     return all.stream()
-      .filter(t -> isAfterPosition(t, subNameEnd) && t.getLine() - 1 <= methodEnd.getLine())
+      .filter(t -> Positions.compareStart(t, subNameEnd) >= 0 && t.getLine() - 1 <= methodEnd.getLine())
       .toList();
-  }
-
-  private static boolean isAfterPosition(Token token, Position position) {
-    var line = token.getLine() - 1;
-    if (line > position.getLine()) {
-      return true;
-    }
-    return line == position.getLine() && token.getCharPositionInLine() >= position.getCharacter();
   }
 
   private static int indexOf(List<Token> tokens, int tokenType) {

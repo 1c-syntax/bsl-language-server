@@ -51,9 +51,7 @@ public class AnnotationParamSymbolMarkupContentBuilder implements MarkupContentB
 
     var markupBuilder = new StringJoiner("\n");
     var methodSymbol = (MethodSymbol) maybeMethodSymbol.get();
-    var maybeParameterDefinition = methodSymbol.getParameters().stream()
-      .filter(parameter -> parameter.getName().equalsIgnoreCase(symbol.getName()))
-      .findFirst();
+    var maybeParameterDefinition = methodSymbol.getParameterDefinition(symbol.getName());
 
     if (maybeParameterDefinition.isEmpty()) {
       return new MarkupContent(MarkupKind.MARKDOWN, "");

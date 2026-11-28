@@ -71,6 +71,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -247,7 +248,7 @@ public class ConfigurationTypesProvider {
     // WorkspaceAddedEvent, событие публикуется под workspace-контекстом, а исполнитель
     // асинхронных обработчиков переносит его в свой поток.
     var workspaceUri = WorkspaceContextHolder.get();
-    var serverContext = serverContextProvider.getAllContexts().get(workspaceUri);
+    var serverContext = serverContextProvider.getCurrentServerContext().orElse(null);
     if (serverContext == null) {
       return null;
     }
@@ -372,10 +373,7 @@ public class ConfigurationTypesProvider {
     var managerNames = managerNamesFor(fullName, groupRu, groupEn, name);
     var managerRu = managerNames.ru();
     var managerEn = managerNames.en();
-    var ref = typeRegistry.registerConfigurationType(managerRu);
-    if (managerEn != null && !managerEn.equals(managerRu)) {
-      typeRegistry.registerConfigurationTypeAlias(managerEn, ref);
-    }
+    var ref = typeRegistry.registerConfigurationType(managerRu, managerEn);
     typeRegistry.registerDisplayName(ref,
       BilingualString.of(managerRu, managerEn == null ? managerRu : managerEn));
 
@@ -473,10 +471,7 @@ public class ConfigurationTypesProvider {
       var members = entry.getValue();
       var collectionRu = mdoType.fullGroupName().getRu();
       var collectionEn = mdoType.fullGroupName().getEn();
-      var ref = typeRegistry.registerConfigurationType(collectionRu);
-      if (!collectionEn.equals(collectionRu)) {
-        typeRegistry.registerConfigurationTypeAlias(collectionEn, ref);
-      }
+      var ref = typeRegistry.registerConfigurationType(collectionRu, collectionEn);
       typeRegistry.registerDisplayName(ref, BilingualString.of(collectionRu, collectionEn));
       typeRegistry.registerMemberSource(ref, () -> members, FileType.BSL);
 
@@ -538,7 +533,7 @@ public class ConfigurationTypesProvider {
 
     var objectRu = fullRu + "Объект." + name;
     var objectEn = fullEn.isBlank() ? "" : (fullEn + "Object." + name);
-    var objectRef = registerWithAlias(objectRu, objectEn);
+    var objectRef = typeRegistry.registerConfigurationType(objectRu, objectEn);
 
     // Объектный тип есть у всех обрабатываемых здесь MDOType (в т.ч. object-only
     // отчёта/обработки): его реквизиты — члены этого типа.
@@ -583,7 +578,7 @@ public class ConfigurationTypesProvider {
 
     var refRu = fullRu + "Ссылка." + name;
     var refEn = fullEn.isBlank() ? "" : fullEn + "Ref." + name;
-    var refRef = registerWithAlias(refRu, refEn);
+    var refRef = typeRegistry.registerConfigurationType(refRu, refEn);
 
     // Singular alias `Справочник.X` / `Catalog.X` ведёт на ссылочный тип:
     // соответствует семантике стандартных описаний 1С (`См. Справочник.X.Реквизит`
@@ -672,12 +667,12 @@ public class ConfigurationTypesProvider {
       var rowRu = fullRu + "ТабличнаяЧастьСтрока." + name + "." + tsName;
       var rowEn = fullEn.isBlank() ? ""
         : fullEn + "TabularSectionRow." + name + "." + tsName;
-      var rowRef = registerWithAlias(rowRu, rowEn);
+      var rowRef = typeRegistry.registerConfigurationType(rowRu, rowEn);
 
       var collRu = fullRu + "ТабличнаяЧасть." + name + "." + tsName;
       var collEn = fullEn.isBlank() ? ""
         : fullEn + "TabularSection." + name + "." + tsName;
-      var collRef = registerWithAlias(collRu, collEn);
+      var collRef = typeRegistry.registerConfigurationType(collRu, collEn);
 
       var tsAttributes = ts.getAttributes();
       // Аналогично основным реквизитам: лямбда вызывает attributeMembers
@@ -726,13 +721,7 @@ public class ConfigurationTypesProvider {
     }
     typeRegistry.registerExtension(rowRef, genericRow, FileType.BSL);
     typeRegistry.registerExtension(collRef, genericColl, FileType.BSL);
-    typeRegistry.registerDefaultElementTypes(collRef, List.of(rowRef));
-    typeRegistry.inheritCollectionTraits(collRef, genericColl, FileType.BSL);
-
-    var valueTableRow = typeRegistry.resolve(CollectionReturnsSpecializer.VALUE_TABLE_ROW).orElse(null);
-    typeRegistry.registerMemberOverride(collRef, () -> CollectionReturnsSpecializer.specialize(
-      typeRegistry.getMembers(genericColl, FileType.BSL), genericRow, rowRef,
-      CollectionReturnsSpecializer.unloadedRow(valueTableRow, columns)), FileType.BSL);
+    CollectionReturnsSpecializer.registerCollection(typeRegistry, collRef, genericColl, genericRow, rowRef, columns);
   }
 
   /**
@@ -762,12 +751,18 @@ public class ConfigurationTypesProvider {
    * будущем.
    */
   private void registerFamilySpecializations(String familyCore, String mdName) {
+    // Экспандер сам обходит все дженерики семейства с покрытыми параметрами — поэтому зовётся
+    // по разу на имя параметра, а не на дженерик: иначе каждая специализация получала бы
+    // по копии источника членов на каждый дженерик семейства.
+    var parameterNames = new LinkedHashSet<String>();
     for (var generic : typeRegistry.findAllGenericsByFamilyCore(familyCore)) {
       var parameters = typeRegistry.getTypeParameters(generic);
       if (parameters.size() == 1) {
-        genericExpander.registerFamilySpecializations(familyCore,
-          Map.of(parameters.get(0), mdName));
+        parameterNames.add(parameters.getFirst());
       }
+    }
+    for (var parameterName : parameterNames) {
+      genericExpander.registerFamilySpecializations(familyCore, Map.of(parameterName, mdName));
     }
   }
 
@@ -786,13 +781,7 @@ public class ConfigurationTypesProvider {
       return;
     }
     for (var generic : typeRegistry.findAllGenericsByFamilyCore(familyCore)) {
-      var parameters = typeRegistry.getTypeParameters(generic);
-      if (parameters.size() != 1) {
-        continue;
-      }
-      var bindings = Map.of(parameters.get(0), mdName);
-      typeRegistry.resolve(TypeRef.specialize(generic, bindings).qualifiedName())
-        .filter(specialized -> !specialized.equals(generic))
+      typeRegistry.findSpecialization(generic, mdName)
         .ifPresent(specialized -> typeRegistry.registerMemberSuppression(specialized, absent, FileType.BSL));
     }
   }
@@ -948,14 +937,6 @@ public class ConfigurationTypesProvider {
       .flatMap(m -> ContextNames.placeholders(m.bilingualName().primary()).stream().findFirst())
       .map(Placeholder::name)
       .orElse("");
-  }
-
-  private TypeRef registerWithAlias(String qualifiedRu, String qualifiedEn) {
-    var ref = typeRegistry.registerConfigurationType(qualifiedRu);
-    if (!qualifiedEn.isBlank() && !qualifiedEn.equals(qualifiedRu)) {
-      typeRegistry.registerConfigurationTypeAlias(qualifiedEn, ref);
-    }
-    return ref;
   }
 
 }

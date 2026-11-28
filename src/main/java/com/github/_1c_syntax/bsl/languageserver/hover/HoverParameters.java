@@ -21,7 +21,14 @@
  */
 package com.github._1c_syntax.bsl.languageserver.hover;
 
+import com.github._1c_syntax.bsl.languageserver.configuration.Language;
+import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
+import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
 import lombok.experimental.UtilityClass;
+
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Общие хелперы отрисовки параметров в hover-карточках платформенных членов
@@ -29,6 +36,60 @@ import lombok.experimental.UtilityClass;
  */
 @UtilityClass
 class HoverParameters {
+
+  /**
+   * Имя параметра в карточке: отображаемое имя на языке, у вариативного параметра — с
+   * многоточием ({@code Значения...}), потому что он принимает любое число аргументов.
+   *
+   * @param parameter параметр.
+   * @param language  язык имени.
+   * @return имя для сигнатуры и списка параметров.
+   */
+  String name(ParameterDescriptor parameter, Language language) {
+    return parameter.displayName(language) + (parameter.variadic() ? "..." : "");
+  }
+
+  /**
+   * Дописать в {@code sb} строку параметра целиком: имя и тип ({@link #appendNameAndType}),
+   * значение по умолчанию ({@code _= Значение_}) и описание ({@code — Описание}), если они есть,
+   * и перевод строки.
+   *
+   * @param displayName имя параметра.
+   * @param typesLabel  готовая markdown-метка типов (может быть пустой).
+   * @param parameter   параметр.
+   * @param language    язык описания.
+   */
+  void appendParameter(
+    StringBuilder sb,
+    String displayName,
+    String typesLabel,
+    ParameterDescriptor parameter,
+    Language language
+  ) {
+    appendNameAndType(sb, displayName, typesLabel, parameter.optional());
+    if (!parameter.defaultValue().isBlank()) {
+      sb.append(" _= ").append(parameter.defaultValue()).append('_');
+    }
+    var description = parameter.displayDescription(language);
+    if (description != null && !description.isBlank()) {
+      sb.append(" — ").append(description);
+    }
+    sb.append('\n');
+  }
+
+  /**
+   * Метка набора типов: отображаемые имена через {@code " | "}, пустые имена пропускаются.
+   *
+   * @param types       набор типов.
+   * @param displayName отображаемое имя типа.
+   * @return метка; пустая строка для пустого набора.
+   */
+  String typesLabel(TypeSet types, Function<TypeRef, String> displayName) {
+    return types.refs().stream()
+      .map(displayName)
+      .filter(name -> name != null && !name.isEmpty())
+      .collect(Collectors.joining(" | "));
+  }
 
   /**
    * Дописать в {@code sb} markdown-пункт параметра вида

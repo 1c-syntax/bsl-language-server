@@ -31,12 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.mdclasses.Configuration;
 import com.github._1c_syntax.bsl.mdo.support.UseMode;
 import com.github._1c_syntax.bsl.parser.BSLParser;
-import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
-
-import java.util.HashMap;
-import java.util.Locale;
-import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -50,48 +45,11 @@ import java.util.regex.Pattern;
 )
 public class UsingModalWindowsDiagnostic extends AbstractVisitorDiagnostic {
 
-  private final Pattern modalityMethods = CaseInsensitivePattern.compile(
-    "(ВОПРОС|DOQUERYBOX|ОТКРЫТЬФОРМУМОДАЛЬНО|OPENFORMMODAL|ОТКРЫТЬЗНАЧЕНИЕ|OPENVALUE|" +
-      "ПРЕДУПРЕЖДЕНИЕ|DOMESSAGEBOX|ВВЕСТИДАТУ|INPUTDATE|ВВЕСТИЗНАЧЕНИЕ|INPUTVALUE|" +
-      "ВВЕСТИСТРОКУ|INPUTSTRING|ВВЕСТИЧИСЛО|INPUTNUMBER|УСТАНОВИТЬВНЕШНЮЮКОМПОНЕНТУ|INSTALLADDIN|" +
-      "УСТАНОВИТЬРАСШИРЕНИЕРАБОТЫСФАЙЛАМИ|INSTALLFILESYSTEMEXTENSION|" +
-      "УСТАНОВИТЬРАСШИРЕНИЕРАБОТЫСКРИПТОГРАФИЕЙ|INSTALLCRYPTOEXTENSION|ПОМЕСТИТЬФАЙЛ|PUTFILE)"
-  );
-
-  private final HashMap<String, String> pairMethods = new HashMap<>();
-
   @DiagnosticParameter(
     type = Boolean.class,
     defaultValue = "false"
   )
   private boolean forceModalityMode;
-
-  public UsingModalWindowsDiagnostic() {
-    pairMethods.put("ВОПРОС", "ПоказатьВопрос");
-    pairMethods.put("DOQUERYBOX", "ShowQueryBox");
-    pairMethods.put("ОТКРЫТЬФОРМУМОДАЛЬНО", "ОткрытьФорму");
-    pairMethods.put("OPENFORMMODAL", "OpenForm");
-    pairMethods.put("ОТКРЫТЬЗНАЧЕНИЕ", "ПоказатьЗначение");
-    pairMethods.put("OPENVALUE", "ShowValue");
-    pairMethods.put("ПРЕДУПРЕЖДЕНИЕ", "ПоказатьПредупреждение");
-    pairMethods.put("DOMESSAGEBOX", "ShowMessageBox");
-    pairMethods.put("ВВЕСТИДАТУ", "ПоказатьВводДаты");
-    pairMethods.put("INPUTDATE", "ShowInputDate");
-    pairMethods.put("ВВЕСТИЗНАЧЕНИЕ", "ПоказатьВводЗначения");
-    pairMethods.put("INPUTVALUE", "ShowInputValue");
-    pairMethods.put("ВВЕСТИСТРОКУ", "ПоказатьВводСтроки");
-    pairMethods.put("INPUTSTRING", "ShowInputString");
-    pairMethods.put("ВВЕСТИЧИСЛО", "ПоказатьВводЧисла");
-    pairMethods.put("INPUTNUMBER", "ShowInputNumber");
-    pairMethods.put("УСТАНОВИТЬВНЕШНЮЮКОМПОНЕНТУ", "НачатьУстановкуВнешнейКомпоненты");
-    pairMethods.put("INSTALLADDIN", "BeginInstallAddIn");
-    pairMethods.put("УСТАНОВИТЬРАСШИРЕНИЕРАБОТЫСФАЙЛАМИ", "НачатьУстановкуРасширенияРаботыСФайлами");
-    pairMethods.put("INSTALLFILESYSTEMEXTENSION", "BeginInstallFileSystemExtension");
-    pairMethods.put("УСТАНОВИТЬРАСШИРЕНИЕРАБОТЫСКРИПТОГРАФИЕЙ", "НачатьУстановкуРасширенияРаботыСКриптографией");
-    pairMethods.put("INSTALLCRYPTOEXTENSION", "BeginInstallCryptoExtension");
-    pairMethods.put("ПОМЕСТИТЬФАЙЛ", "НачатьПомещениеФайла");
-    pairMethods.put("PUTFILE", "BeginPutFile");
-  }
 
   @Override
   public ParseTree visitFile(BSLParser.FileContext ctx) {
@@ -109,10 +67,10 @@ public class UsingModalWindowsDiagnostic extends AbstractVisitorDiagnostic {
   @Override
   public ParseTree visitGlobalMethodCall(BSLParser.GlobalMethodCallContext ctx) {
     String methodName = ctx.methodName().getText();
-    if (modalityMethods.matcher(methodName).matches()) {
-      diagnosticStorage.addDiagnostic(ctx,
-        info.getMessage(methodName, pairMethods.get(methodName.toUpperCase(Locale.ENGLISH))));
-    }
+    SynchronousMethod.byName(methodName)
+      .filter(SynchronousMethod::isModal)
+      .ifPresent(method -> diagnosticStorage.addDiagnostic(ctx,
+        info.getMessage(methodName, SynchronousMethod.analogOf(methodName))));
     return super.visitGlobalMethodCall(ctx);
   }
 }

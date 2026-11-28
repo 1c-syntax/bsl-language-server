@@ -21,6 +21,7 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
+import com.github._1c_syntax.bsl.languageserver.context.Modules;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCompatibilityMode;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
@@ -29,11 +30,8 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.types.ModuleType;
-import com.github._1c_syntax.utils.CaseInsensitivePattern;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.TerminalNode;
-
-import java.util.regex.Pattern;
 
 @DiagnosticMetadata(
   type = DiagnosticType.ERROR,
@@ -52,10 +50,6 @@ import java.util.regex.Pattern;
 )
 public class ThisObjectAssignDiagnostic extends AbstractVisitorDiagnostic {
 
-  private static final Pattern thisObjectPattern = CaseInsensitivePattern.compile(
-    "(этотобъект|thisobject)"
-  );
-
   @Override
   public ParseTree visitLValue(BSLParser.LValueContext ctx) {
 
@@ -66,7 +60,7 @@ public class ThisObjectAssignDiagnostic extends AbstractVisitorDiagnostic {
       return ctx;
     }
 
-    if (!thisObjectPattern.matcher(identifier.getText()).matches()) {
+    if (!Modules.isThisObject(identifier)) {
       return ctx;
     }
 

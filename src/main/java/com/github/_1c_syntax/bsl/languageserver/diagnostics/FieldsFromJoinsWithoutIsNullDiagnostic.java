@@ -122,7 +122,7 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
   }
 
   private void checkQuery(String joinedTableName, SDBLParser.JoinPartContext joinPartCtx) {
-    Optional.ofNullable(Trees.getRootParent(joinPartCtx, SDBLParser.RULE_query))
+    Optional.ofNullable(Trees.getAncestorByRuleIndex(joinPartCtx, SDBLParser.RULE_query))
       .map(SDBLParser.QueryContext.class::cast)
       .filter(ctx -> !haveExprNotIsNullInsideWhere(ctx.where))
       .ifPresent((SDBLParser.QueryContext queryCtx) -> {
@@ -159,7 +159,7 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
   }
 
   private static boolean haveExprNotWithParens(SDBLParser.PredicateContext ctx) {
-    final var rootCtx = Trees.getRootParent(ctx, RULES_OF_PARENT_FOR_SEARCH_CONDITION);
+    final var rootCtx = Trees.getAncestorByRuleIndex(ctx, RULES_OF_PARENT_FOR_SEARCH_CONDITION);
     if (rootCtx == null || rootCtx.getRuleIndex() == SDBLParser.RULE_query) {
       return false;
     }
@@ -193,7 +193,7 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
 
   private static boolean haveIsNullInsideExprForColumn(ParserRuleContext ctx, Collection<Integer> statements,
                                                        Integer rootForStatement, boolean checkIsNullOperator) {
-    var selectStatement = Trees.getRootParent(ctx, statements);
+    var selectStatement = Trees.getAncestorByRuleIndex(ctx, statements);
     if (selectStatement == null || selectStatement.getChildCount() == 0
       || rootForStatement == selectStatement.getRuleIndex()) {
       return false;
@@ -228,7 +228,7 @@ public class FieldsFromJoinsWithoutIsNullDiagnostic extends AbstractSDBLVisitorD
   }
 
   private void checkAllJoins(String tableName, SDBLParser.JoinPartContext currentJoinPart) {
-    Optional.ofNullable(Trees.getRootParent(currentJoinPart, SDBLParser.RULE_dataSource))
+    Optional.ofNullable(Trees.getAncestorByRuleIndex(currentJoinPart, SDBLParser.RULE_dataSource))
       .filter(SDBLParser.DataSourceContext.class::isInstance)
       .stream().flatMap(ctx -> ((SDBLParser.DataSourceContext) ctx).joinPart().stream())
       .filter(joinPartContext -> joinPartContext != currentJoinPart)

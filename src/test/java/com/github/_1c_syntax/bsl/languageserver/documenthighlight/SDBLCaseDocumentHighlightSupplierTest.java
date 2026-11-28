@@ -83,6 +83,23 @@ class SDBLCaseDocumentHighlightSupplierTest {
     assertHighlightRange(highlights, 7, 8, 7, 13);    // ВЫБОР
   }
   @Test
+  void endKeywordWithCursorRightAfterItHighlightsTheCase() {
+    // given — курсор сразу за «КОНЕЦ» (строка 11, позиция 13), за концом выражения ВЫБОР
+    var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
+    var params = new DocumentHighlightParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(11, 13));
+
+    // when
+    var highlights = supplier.getDocumentHighlight(params, documentContext, Optional.empty());
+
+    // then
+    assertThat(highlights).hasSize(7);
+    assertHighlightRange(highlights, 7, 8, 7, 13);    // ВЫБОР
+    assertHighlightRange(highlights, 11, 8, 11, 13);  // КОНЕЦ
+  }
+
+  @Test
   void testWhenKeyword() {
     // given
     var documentContext = TestUtils.getDocumentContextFromFile(PATH_TO_FILE);
@@ -179,6 +196,36 @@ class SDBLCaseDocumentHighlightSupplierTest {
       .extracting(DocumentHighlight::getRange)
       .doesNotContain(new Range(new Position(6, 8), new Position(6, 13)));
   }
+  @Test
+  void caseNestedInOperandHighlightsItselfNotTheEnclosingCase() {
+    // given — вложенный ВЫБОР стоит операндом внешнего: «ВЫБОР <выражение> КОГДА …»
+    var text = """
+      Процедура Тест()
+        Текст = "ВЫБРАТЬ
+        |  ВЫБОР ВЫБОР КОГДА Т.Код = 1 ТОГДА 1 ИНАЧЕ 2 КОНЕЦ
+        |    КОГДА 1 ТОГДА ""а""
+        |  КОНЕЦ КАК Поле
+        |ИЗ
+        |  Справочник.Товары КАК Т";
+      КонецПроцедуры
+      """;
+    var documentContext = TestUtils.getDocumentContext(text);
+    var innerCaseLine = 2;
+    var line = text.lines().toList().get(innerCaseLine);
+    var innerCaseChar = line.indexOf("ВЫБОР", line.indexOf("ВЫБОР") + 1) + 1;
+    var params = new DocumentHighlightParams();
+    params.setTextDocument(new TextDocumentIdentifier(documentContext.getUri().toString()));
+    params.setPosition(new Position(innerCaseLine, innerCaseChar));
+
+    // when
+    var highlights = supplier.getDocumentHighlight(params, documentContext, Optional.empty());
+
+    // then — все ключевые слова внутреннего ВЫБОР на одной строке, внешнего — нет
+    assertThat(highlights)
+      .isNotEmpty()
+      .allSatisfy(highlight -> assertThat(highlight.getRange().getStart().getLine()).isEqualTo(innerCaseLine));
+  }
+
   private void assertHighlightRange(List<DocumentHighlight> highlights,
                                      int startLine, int startChar,
                                      int endLine, int endChar) {

@@ -25,7 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.diagnostics.BSLDiagnostic;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.info.DiagnosticInfo;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
-import com.github._1c_syntax.utils.StringInterner;
 import jakarta.annotation.PostConstruct;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -45,7 +44,6 @@ public class DiagnosticInfos {
 
   private final DiagnosticInfosFactory diagnosticInfosFactory;
   private final LanguageServerConfiguration configuration;
-  private final StringInterner stringInterner;
 
   @Getter
   private Map<String, DiagnosticInfo> byCode;
@@ -55,10 +53,8 @@ public class DiagnosticInfos {
 
   @PostConstruct
   public void init() {
-    var diagnosticClasses = diagnosticInfosFactory.getDiagnosticClasses();
-    var infos = diagnosticClasses.stream()
-      .map(diagnosticClass -> new DiagnosticInfo(diagnosticClass, configuration, stringInterner))
-      .toList();
+    // Обе карты — над одними и теми же экземплярами: refresh() обходит только byCode.
+    var infos = diagnosticInfosFactory.createDiagnosticInfos(configuration);
 
     byCode = infos.stream()
       .collect(Collectors.toMap(info -> info.getCode().getStringValue(), Function.identity()));

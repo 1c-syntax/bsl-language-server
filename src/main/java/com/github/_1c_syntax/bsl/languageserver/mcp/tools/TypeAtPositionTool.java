@@ -97,8 +97,8 @@ public class TypeAtPositionTool {
         .toList();
 
       var members = typeSet.refs().stream()
-        .flatMap(typeRef -> typeService.getMembers(typeRef, documentContext.getFileType()).stream())
-        .filter(member -> !member.generic())
+        // Члены, применимые к языку карточки, — как у type_info
+        .flatMap(typeRef -> typeService.getMembers(typeRef, documentContext.getFileType(), Language.RU).stream())
         .map(member -> TypeMemberDto.from(member, Language.RU))
         .distinct()
         .sorted(BY_NAME)

@@ -107,4 +107,24 @@ class CognitiveComplexityInlayHintSupplierTest {
     assertThat(supplier.getInlayHints(documentContext, params)).isEmpty();
   }
 
+  @Test
+  void testCleanupOnDocumentRemoved() {
+    // given
+    var documentContext = TestUtils.getDocumentContextFromFile(FILE_PATH);
+    var methodName = documentContext.getSymbolTree().getMethods().get(0).getName();
+    var params = new InlayHintParams(
+      TestUtils.getTextDocumentIdentifier(documentContext.getUri()),
+      Ranges.create()
+    );
+
+    supplier.toggleHints(documentContext.getUri(), methodName);
+    assertThat(supplier.getInlayHints(documentContext, params)).isNotEmpty();
+
+    // when — document removed from workspace
+    documentContext.getServerContext().removeDocument(documentContext.getUri());
+
+    // then — hints cleared
+    assertThat(supplier.getInlayHints(documentContext, params)).isEmpty();
+  }
+
 }

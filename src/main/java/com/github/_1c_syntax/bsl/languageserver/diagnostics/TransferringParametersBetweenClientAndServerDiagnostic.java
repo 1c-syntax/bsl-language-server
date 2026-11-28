@@ -23,7 +23,6 @@ package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
@@ -39,7 +38,6 @@ import com.github._1c_syntax.bsl.parser.BSLParser;
 import lombok.RequiredArgsConstructor;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
-import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -179,20 +177,9 @@ public class TransferringParametersBetweenClientAndServerDiagnostic extends Abst
   }
 
   private boolean isAssignedParam(MethodSymbol method, ParameterDefinition parameterDefinition) {
-    return getVariableByParameter(method, parameterDefinition)
+    return method.getParameterVariable(parameterDefinition).stream()
       .noneMatch(variableSymbol -> referenceIndex.getReferencesTo(variableSymbol).stream()
         .anyMatch(ref -> ref.occurrenceType() == OccurrenceType.DEFINITION));
-  }
-
-  private static Stream<VariableSymbol> getVariableByParameter(MethodSymbol method,
-                                                               ParameterDefinition parameterDefinition) {
-    return method.getChildren().stream()
-      // в будущем могут появиться и другие символы, подчиненные методам
-      .filter(sourceDefinedSymbol -> sourceDefinedSymbol.getSymbolKind() == SymbolKind.Variable)
-      .filter(variable -> parameterDefinition.getRange().getStart().equals(variable.getSelectionRange().getStart()))
-      .filter(VariableSymbol.class::isInstance)
-      .map(VariableSymbol.class::cast)
-      .findFirst().stream();
   }
 
   private List<Reference> getRefsFromClientCalls(MethodSymbol method) {
