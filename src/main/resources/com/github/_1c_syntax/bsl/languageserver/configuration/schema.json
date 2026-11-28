@@ -1240,7 +1240,6 @@
             "$id": "#/properties/traceLog",
             "type": "string",
             "title": "Path to file to log all inbound and outbound requests between BSL Language Server and Language Client from used IDE.\nCan be absolute or relative (to the project root). If set *significantly slows down* communication speed between server and client.",
-            "default": "",
             "examples": [
                 ".trace.log"
             ]
