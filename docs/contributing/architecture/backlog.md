@@ -55,9 +55,10 @@
 - **Разделители путей в отчётах**: `GenericIssueReporter`, `TSLintReporter`, `JUnitTestSuites`
   пишут разделители ОС, `CodeQualityReporter` — `/`. Смена — изменение формата вывода на Windows,
   требует решения.
-- **Поля `serverPort`/`endpointPath`/`--mcp-path` у команд не читаются** (гипотеза): значения
-  берёт Spring из сырых аргументов, поля нужны picocli для справки и приёма опций. Дефолты
-  `8025`/`/lsp` в описаниях опций дублируют `application.properties`.
+- ~~**Поля `serverPort`/`endpointPath`/`--mcp-path` у команд не читаются**~~ — проверено и
+  закрыто (раунд 99): опции названы ключами свойств Spring, значения Spring берёт из аргументов,
+  поля нужны picocli для справки; дубль значения в тексте описания убран (`${DEFAULT-VALUE}`),
+  совпадение `defaultValue` с `application.properties` закреплено `CommandOptionDefaultsTest`.
 
 - **Параметр диагностики в абстрактном предке не настраивается общим путём** (проверено):
   `DiagnosticHelper.configureDiagnostic` ищет поле через `getClass().getDeclaredField`, а

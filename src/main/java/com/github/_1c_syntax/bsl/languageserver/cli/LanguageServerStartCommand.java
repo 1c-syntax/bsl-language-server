@@ -81,7 +81,7 @@ public class LanguageServerStartCommand implements Callable<Integer> {
 
   @Option(
     names = {"--mcp-path"},
-    description = "Path of the MCP Streamable HTTP endpoint. Default is /mcp",
+    description = "Path of the MCP Streamable HTTP endpoint. Default is ${DEFAULT-VALUE}",
     paramLabel = "<path>",
     defaultValue = "/mcp")
   private String mcpPath;
