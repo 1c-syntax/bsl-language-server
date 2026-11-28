@@ -650,9 +650,7 @@ public class SymbolTypeIndex {
     }
     try {
       var owner = method.getOwner();
-      return method.getParameters().stream()
-        .filter(parameter -> parameter.getName().equalsIgnoreCase(parameterName))
-        .findFirst()
+      return method.getParameterDefinition(parameterName)
         .flatMap(ParameterDefinition::getDescription)
         .map(description -> resolveTypes(description.types(),
           new ResolutionContext(owner, owner.getFileType(), visited)))

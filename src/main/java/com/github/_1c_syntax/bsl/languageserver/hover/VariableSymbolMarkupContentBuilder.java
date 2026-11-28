@@ -413,9 +413,7 @@ public class VariableSymbolMarkupContentBuilder implements MarkupContentBuilder 
       || !(symbol.getScope() instanceof MethodSymbol method)) {
       return Map.of();
     }
-    return method.getParameters().stream()
-      .filter(parameter -> parameter.getName().equalsIgnoreCase(symbol.getName()))
-      .findFirst()
+    return method.getParameterDefinition(symbol.getName())
       .flatMap(ParameterDefinition::getDescription)
       .map(description -> docFieldsFromTypes(description.types()))
       .orElseGet(Map::of);

@@ -86,4 +86,16 @@ public interface MethodSymbol extends SourceDefinedSymbol, Exportable, Describab
       .filter(variable -> parameterStart.equals(variable.getSelectionRange().getStart()))
       .findFirst();
   }
+
+  /**
+   * Параметр метода по имени, без учёта регистра.
+   *
+   * @param name имя параметра
+   * @return первый параметр с таким именем; пусто, если такого параметра у метода нет
+   */
+  default Optional<ParameterDefinition> getParameterDefinition(String name) {
+    return getParameters().stream()
+      .filter(parameter -> parameter.getName().equalsIgnoreCase(name))
+      .findFirst();
+  }
 }

@@ -85,6 +85,23 @@ class SymbolTreeTest {
   }
 
   @Test
+  void parameterDefinitionIsFoundByNameIgnoringCase() {
+    // given
+    var documentContext = TestUtils.getDocumentContext("""
+      Процедура Первый(Знач Альфа, Бета = 1)
+        Гамма = 1;
+      КонецПроцедуры
+      """);
+    var method = documentContext.getSymbolTree().getMethodSymbol("Первый").orElseThrow();
+    var parameters = method.getParameters();
+
+    // then — регистр имени не важен; локальная переменная параметром не является.
+    assertThat(method.getParameterDefinition("альфа")).containsSame(parameters.get(0));
+    assertThat(method.getParameterDefinition("БЕТА")).containsSame(parameters.get(1));
+    assertThat(method.getParameterDefinition("Гамма")).isEmpty();
+  }
+
+  @Test
   void getMethodSymbolAtPositionFindsMethodThroughNestedSymbols() {
     // given — переменная модуля, метод с областью и локальной переменной внутри.
     var documentContext = TestUtils.getDocumentContext("""

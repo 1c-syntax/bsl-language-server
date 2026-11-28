@@ -200,6 +200,7 @@ class DeclaredParameterTypeResolverTest {
     when(prototype.getName()).thenReturn("Прототип");
     when(otherParameter.getName()).thenReturn("Данные");
     when(prototype.getParameters()).thenReturn(List.of(otherParameter));
+    when(prototype.getParameterDefinition(any())).thenCallRealMethod();
     when(documentContext.getSymbolTree()).thenReturn(tree);
     when(tree.getMethodSymbol("Прототип")).thenReturn(Optional.of(prototype));
     when(symbolTypeIndex.parameterMayReadAnotherDocument(otherParameter, documentContext))
@@ -214,6 +215,7 @@ class DeclaredParameterTypeResolverTest {
     when(variable.getScope()).thenReturn(method);
     when(parameter.getName()).thenReturn(name);
     when(method.getParameters()).thenReturn(List.of(parameter));
+    when(method.getParameterDefinition(any())).thenCallRealMethod();
     when(method.getOwner()).thenReturn(documentContext);
     when(method.getName()).thenReturn("ПриЗаписи");
   }

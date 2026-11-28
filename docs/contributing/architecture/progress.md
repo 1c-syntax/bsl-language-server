@@ -1003,3 +1003,24 @@
 - **Проверка.** Поведение не меняется, новых тестов нет; `types.inferencer`, `types.registry`,
   `*Completion*`, `mcp`, `*EventHandler*`, `ArchitectureTest` (1630 тестов) и `*Hover*`
   зелёные; `javadoc`, `spotlessCheck` зелёные.
+
+## Раунд 67. Параметр метода по имени — `MethodSymbol.getParameterDefinition`
+
+Источник — пункт 5 остаточного сканирования (раунд 64).
+
+- **Проблема.** «Параметр метода с таким именем без учёта регистра» — восемь копий фильтра по
+  `getParameters()`: пять в `DeclaredParameterTypeResolver` (два цикла и три потока, один из них
+  через `anyMatch`), `SymbolTypeIndex.describedParameterTypes`,
+  `VariableSymbolMarkupContentBuilder.docFieldIndex`, `AnnotationParamSymbolMarkupContentBuilder`.
+  Обратный запрос («переменная параметра») уже был каноническим — `getParameterVariable`.
+- **Сделано.** `MethodSymbol.getParameterDefinition(String)` рядом с `getParameterVariable`;
+  копии удалены. Оставлены поиски, которым нужен ещё и **номер** параметра
+  (`DeclaredParameterTypeResolver.typesOf` — для контракта события по позиции,
+  `EventContractFormatter`), и сопоставление параметров **аннотации**
+  (`OScriptMetaAnnotationResolver`) — это другой список.
+- **Тесты.** `SymbolTreeTest.parameterDefinitionIsFoundByNameIgnoringCase` красный на заглушке →
+  зелёный. Мок `MethodSymbol` в `DeclaredParameterTypeResolverTest` вызывает реальный метод по
+  умолчанию (`thenCallRealMethod`) — иначе мок отвечает пустым.
+- **Проверка.** `context.symbol`, `types.inferencer`, `types.index`, `types.oscript`, `*Hover*`,
+  `*MarkupContentBuilder*`, `*AutumnNavigation*` (114 классов, 867 тестов) зелёные; `javadoc`,
+  `spotlessCheck` зелёные.
