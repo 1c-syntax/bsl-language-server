@@ -38,15 +38,17 @@ import java.util.stream.Collectors;
 class HoverParameters {
 
   /**
-   * Дописать в {@code sb} markdown-пункт параметра вида
-   * {@code - `Имя`: Тип} с пометкой необязательности «?».
-   * Знак приклеивается к типу ({@code `Имя`: Тип?}), а при отсутствии типа —
-   * к имени ({@code `Имя?`}).
+   * Имя параметра в карточке: отображаемое имя на языке, у вариативного параметра — с
+   * многоточием ({@code Значения...}), потому что он принимает любое число аргументов.
    *
-   * @param displayName имя параметра.
-   * @param typesLabel  готовая markdown-метка типов (может быть пустой).
-   * @param optional    необязательный ли параметр.
+   * @param parameter параметр.
+   * @param language  язык имени.
+   * @return имя для сигнатуры и списка параметров.
    */
+  String name(ParameterDescriptor parameter, Language language) {
+    return parameter.displayName(language) + (parameter.variadic() ? "..." : "");
+  }
+
   /**
    * Дописать в {@code sb} строку параметра целиком: имя и тип ({@link #appendNameAndType}),
    * значение по умолчанию ({@code _= Значение_}) и описание ({@code — Описание}), если они есть,
@@ -89,6 +91,16 @@ class HoverParameters {
       .collect(Collectors.joining(" | "));
   }
 
+  /**
+   * Дописать в {@code sb} markdown-пункт параметра вида
+   * {@code - `Имя`: Тип} с пометкой необязательности «?».
+   * Знак приклеивается к типу ({@code `Имя`: Тип?}), а при отсутствии типа —
+   * к имени ({@code `Имя?`}).
+   *
+   * @param displayName имя параметра.
+   * @param typesLabel  готовая markdown-метка типов (может быть пустой).
+   * @param optional    необязательный ли параметр.
+   */
   void appendNameAndType(StringBuilder sb, String displayName, String typesLabel, boolean optional) {
     var optionalMark = optional ? "?" : "";
     sb.append("- `").append(displayName);

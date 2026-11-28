@@ -25,7 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.types.TypeService;
-import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
@@ -74,7 +73,7 @@ public class ConstructorHoverBuilder {
     }
     sb.append("```bsl\n").append(tr("newKeyword")).append(' ').append(localizedTypeName).append('(');
     if (chosen != null) {
-      sb.append(chosen.parameters().stream().map(p -> parameterName(p, lang)).collect(Collectors.joining(", ")));
+      sb.append(chosen.parameters().stream().map(p -> HoverParameters.name(p, lang)).collect(Collectors.joining(", ")));
     }
     sb.append(')').append("\n```\n");
     sb.append("\n_").append(tr("constructorOf")).append("_ `").append(localizedTypeName).append('`');
@@ -96,7 +95,7 @@ public class ConstructorHoverBuilder {
     if (chosen != null && !chosen.parameters().isEmpty()) {
       sb.append("\n\n**").append(tr("parameters")).append("**\n");
       for (var p : chosen.parameters()) {
-        HoverParameters.appendParameter(sb, parameterName(p, lang), renderTypeSet(p.types(), lang), p, lang);
+        HoverParameters.appendParameter(sb, HoverParameters.name(p, lang), renderTypeSet(p.types(), lang), p, lang);
       }
     }
     // Метаданные конструктора (его собственная страница СП: версии, примеры,
@@ -114,7 +113,7 @@ public class ConstructorHoverBuilder {
       sb.append("\n\n**").append(tr("allConstructorVariants")).append("**\n");
       for (var sig : ctors) {
         sb.append("- `").append(tr("newKeyword")).append(' ').append(localizedTypeName).append('(')
-          .append(sig.parameters().stream().map(p -> parameterName(p, lang)).collect(Collectors.joining(", ")))
+          .append(sig.parameters().stream().map(p -> HoverParameters.name(p, lang)).collect(Collectors.joining(", ")))
           .append(")`");
         var sigDesc = sig.displayDescription(lang);
         if (sigDesc != null && !sigDesc.isBlank()) {
@@ -124,10 +123,6 @@ public class ConstructorHoverBuilder {
       }
     }
     return new MarkupContent(MarkupKind.MARKDOWN, sb.toString());
-  }
-
-  private static String parameterName(ParameterDescriptor parameter, Language language) {
-    return parameter.displayName(language) + (parameter.variadic() ? "..." : "");
   }
 
   /**
