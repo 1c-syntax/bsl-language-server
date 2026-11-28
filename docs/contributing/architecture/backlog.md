@@ -70,12 +70,17 @@
   провайдере отдельно (code lens, inlay hints, semantic tokens, diagnostics) — после раундов
   22–23 набор событий выровнен, но механизм остаётся четырьмя копиями; кандидат на общий
   компонент обновления клиента (существенное изменение — оценить отдельно).
-- **Пустые ответы LSP-обработчиков непоследовательны**: при неизвестном документе часть
-  списковых запросов отвечает `null` (`codeAction`, `documentSymbol`, `foldingRange`,
-  `documentLink`, `formatting`…), часть — пустым списком; `definition` — `Either.forRight`,
-  `implementation` — `Either.forLeft`. Унификация меняет видимое клиенту поведение — решение
-  мейнтейнера. Порядок аргументов провайдеров `(params, doc)` vs `(doc, params)` различается.
-- **Нормализация URI в MCP** — несколько способов; имя workspace выводится в двух местах.
+- **Ответ на запрос к неизвестному документу — решение мейнтейнера** (проверено): часть списковых
+  запросов отвечает `null` (`codeAction`, `documentSymbol`, `foldingRange`, `documentLink`,
+  `formatting`…), часть — пустым списком; `definition` — `Either.forRight`, `implementation` —
+  `Either.forLeft`. Оба варианта допустимы спецификацией, но правила нет. Предложение по LSP 3.17:
+  `null` везде, где тип результата допускает `null`; пустое значение — только там, где не
+  допускает (`documentColor`, `colorPresentation`, `textDocument/diagnostic` — так уже сделано).
+  Правило живёт в одном месте — ответе `ifMissing` у `onDocument` (раунд 16). Меняет видимое
+  клиенту поведение. Отдельно: порядок аргументов провайдеров `(params, doc)` vs `(doc, params)`.
+- **Имя рабочей области** выводится в двух местах (`AnalyzeCommand` — из `Path`,
+  `ServerContextProvider` — из URI); для каталогов результат одинаков, выигрыш от слияния мал
+  (нормализация URI от MCP-клиента сведена в `McpWorkspaceFolders`, раунд 30).
 - **Язык сообщений интерфейса — решение мейнтейнера** (проверено): ключ `language` читается и в
   глобальную, и в workspace-конфигурацию. Сообщения хода работы (`ServerContext.getMessage`,
   `MethodReturnTypeIndexer`) берут глобальный язык, уведомление Sentry (`SentryAspect`) — язык
