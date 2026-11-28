@@ -1899,3 +1899,19 @@
 - **Не сведено.** `ReferenceIndex.getSourceDefinedSymbol` повторяет то же правило, но по имени
   области из ключа индекса, а не по узлу дерева, — узла там нет; совпадает с каноническим для
   методов без ошибок.
+
+## Раунд 117. Линзы точек внедрения «ОСени» — канонический список кандидатов
+
+Источник — сканирование после раунда 112 (`codelenses/`).
+
+- **Дублирование.** `InjectionPointCodeLensSupplier` сам собирал точки внедрения: параметры
+  конструктора и поля модуля, с теми же диапазонами имён, — копия
+  `AutumnComponentInferencer.injectionCandidates`, которым уже пользуются индекс точек внедрения и
+  действия навигации. Отличалась копия одним: линзе нужен признак «параметр конструктора», которого
+  в кандидате не было.
+- **Сделано.** В `InjectionCandidate` добавлен признак `constructorParameter`; линзы строятся по
+  каноническому списку, копия обхода удалена.
+- **Тесты.** `CanonicalImplementationsTest` (случай `injectionCandidates`) красный → зелёный;
+  `AutumnComponentInferencerTest` закрепляет признак у параметра и у поля.
+- **Проверка.** `types.oscript`, `codelenses`, `*CodeLens*`, `*Autumn*`, `CanonicalImplementationsTest`,
+  `ArchitectureTest` (48 классов, 356 тестов), `javadoc`, `spotlessCheck` зелёные.

@@ -117,6 +117,9 @@ class CanonicalImplementationsTest {
       new Case("WorkspaceFolderDto.listOf(snapshot)",
         Pattern.compile("fromSnapshot\\(\\w+\\)\\.stream\\(\\)"),
         Set.of("mcp/dto/WorkspaceFolderDto.java")),
+      new Case("AutumnComponentInferencer.injectionCandidates",
+        Pattern.compile("getConstructor\\(\\)\\.ifPresent\\(\\w+ ->\\s*\\w+\\.getParameters\\(\\)"),
+        Set.of("types/oscript/autumn/AutumnComponentInferencer.java")),
       new Case("SynchronousMethod",
         Pattern.compile("(?iu)НачатьПомещениеФайла"),
         Set.of("diagnostics/SynchronousMethod.java"))

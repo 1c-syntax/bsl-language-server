@@ -108,8 +108,8 @@ class AutumnComponentInferencerTest {
 
     // then
     assertThat(candidates).containsExactly(
-      new AutumnComponentInferencer.InjectionCandidate(annotations, "Сервис", parameterRange),
-      new AutumnComponentInferencer.InjectionCandidate(List.of(), "Логгер", fieldRange));
+      new AutumnComponentInferencer.InjectionCandidate(annotations, "Сервис", parameterRange, true),
+      new AutumnComponentInferencer.InjectionCandidate(List.of(), "Логгер", fieldRange, false));
   }
 
   private static VariableSymbol variable(VariableKind kind, String name, Range nameRange) {

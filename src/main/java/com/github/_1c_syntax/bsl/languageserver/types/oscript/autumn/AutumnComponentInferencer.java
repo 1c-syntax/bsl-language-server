@@ -133,8 +133,10 @@ public class AutumnComponentInferencer {
    * @param annotations аннотации объявления.
    * @param name        имя параметра или поля.
    * @param nameRange   диапазон имени.
+   * @param constructorParameter {@code true} — параметр конструктора, {@code false} — поле модуля.
    */
-  public record InjectionCandidate(List<Annotation> annotations, String name, Range nameRange) {
+  public record InjectionCandidate(List<Annotation> annotations, String name, Range nameRange,
+                                   boolean constructorParameter) {
   }
 
   /**
@@ -150,11 +152,12 @@ public class AutumnComponentInferencer {
     symbolTree.getConstructor().ifPresent(constructor ->
       constructor.getParameters().forEach(parameter ->
         // ParameterDefinition.getRange() — диапазон имени параметра, не всей декларации
-        candidates.add(new InjectionCandidate(parameter.getAnnotations(), parameter.getName(), parameter.getRange()))));
+        candidates.add(new InjectionCandidate(
+          parameter.getAnnotations(), parameter.getName(), parameter.getRange(), true))));
     for (var variable : symbolTree.getVariables()) {
       if (variable.getKind() == VariableKind.MODULE) {
         candidates.add(new InjectionCandidate(
-          variable.getAnnotations(), variable.getName(), variable.getVariableNameRange()));
+          variable.getAnnotations(), variable.getName(), variable.getVariableNameRange(), false));
       }
     }
     return List.copyOf(candidates);
