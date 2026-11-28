@@ -313,3 +313,15 @@
   (при поддержке клиентом).
 - **Проверка.** Красный `SemanticTokensRefreshTest.semanticTokensRefreshOnLanguageServerConfigurationChange`
   → зелёный; тесты `semantictokens`, `ArchitectureTest`.
+
+## Раунд 23. Обновление inlay hints по готовности индексов
+
+- **Проблема.** Подсказки о типах переменных (`VariableTypeInlayHintSupplier` → `TypeService`) и
+  о параметрах вызовов (индекс ссылок) считаются по данным, которые появляются после открытия
+  документа: индекс ссылок — по `ServerContextPopulatedEvent`, типы конфигурации — по
+  `ConfigurationTypesRegisteredEvent`. Семантические токены и диагностики на эти события
+  обновляются, inlay hints — нет: подсказки, запрошенные до готовности, оставались неполными
+  до правки файла.
+- **Сделано.** `InlayHintProvider` отправляет `workspace/inlayHint/refresh` на оба события.
+- **Проверка.** Красный `InlayHintRefreshTest` (на пустых обработчиках) → зелёный; тесты
+  `inlayhints`, `lsp`, `ArchitectureTest`.

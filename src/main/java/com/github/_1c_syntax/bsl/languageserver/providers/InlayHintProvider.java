@@ -27,6 +27,8 @@ import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConf
 import com.github._1c_syntax.bsl.languageserver.configuration.SupplierParameters;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.inlayhints.InlayHintData;
 import com.github._1c_syntax.bsl.languageserver.inlayhints.InlayHintSupplier;
 import lombok.RequiredArgsConstructor;
@@ -138,6 +140,34 @@ public class InlayHintProvider {
   @EventListener
   public void handleEvent(LanguageServerConfigurationChangedEvent event) {
     // Per-workspace конфигурация — просто инициируем refresh для клиента
+    refreshInlayHints();
+  }
+
+  /**
+   * Обработчик события {@link ServerContextPopulatedEvent}.
+   * <p>
+   * Подсказки к параметрам вызовов опираются на индекс ссылок, который наполняется только после
+   * наполнения контекста; подсказки, запрошенные раньше, обновляются запросом
+   * {@code workspace/inlayHint/refresh}.
+   *
+   * @param event Событие
+   */
+  @EventListener
+  public void handleServerContextPopulated(ServerContextPopulatedEvent event) {
+    refreshInlayHints();
+  }
+
+  /**
+   * Обработчик события {@link ConfigurationTypesRegisteredEvent}.
+   * <p>
+   * Подсказки о типах переменных опираются на реестр типов, который заполняется уже после
+   * наполнения контекста; подсказки, запрошенные раньше, обновляются запросом
+   * {@code workspace/inlayHint/refresh}.
+   *
+   * @param event Событие
+   */
+  @EventListener
+  public void handleConfigurationTypesRegistered(ConfigurationTypesRegisteredEvent event) {
     refreshInlayHints();
   }
 
