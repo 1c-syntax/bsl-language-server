@@ -1602,3 +1602,15 @@
   ловит `Exception`; сторож `McpRootsChangeConsumerTest.rootWhosePathCannotBeCanonicalizedIsSkippedWithoutLosingTheOthers`
   (цикл символических ссылок; только Linux/macOS).
 - **Проверка.** `mcp` (18 классов, 190 тестов) зелёные; `javadoc`, `spotlessCheck` зелёные.
+
+## Раунд 101. `CommitTransactionOutsideTryCatch` — по имени метода, а не по тексту оператора
+
+Источник — углублённое сканирование `diagnostics/`.
+
+- **Дефект (ложное срабатывание).** Фиксацией транзакции считался любой вызов глобального метода,
+  в тексте которого встречается `ЗафиксироватьТранзакцию` (`find()` по `ctx.getText()`): например,
+  `Сообщить("ЗафиксироватьТранзакцию не выполнена")`. Парная `BeginTransactionBeforeTryCatch`
+  сравнивает имя вызываемого метода целиком (`matches()`).
+- **Сделано.** Тот же разбор, что у парной диагностики: имя метода из `callStatement → globalMethodCall`.
+- **Тесты.** `CommitTransactionOutsideTryCatchDiagnosticTest.methodNameMentionedInArgumentIsNotACommit`
+  красный → зелёный; прежние 8 срабатываний на основной фикстуре сохранились.
