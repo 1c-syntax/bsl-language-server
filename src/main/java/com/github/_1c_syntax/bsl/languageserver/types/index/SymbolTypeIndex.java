@@ -25,6 +25,7 @@ import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextConfigurationBindingChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.ParameterDefinition;
@@ -162,6 +163,20 @@ public class SymbolTypeIndex {
     var documentContext = event.getSource();
     clear(documentContext.getUri());
     reindexDeclared(documentContext);
+  }
+
+  /**
+   * Документ удалён из рабочей области — его записи стираются: иначе символы методов, а через них
+   * и сам документ, жили бы в индексе до конца жизни рабочей области.
+   * <p>
+   * На закрытие и освобождение вторичных данных записи не стираются: объявленные типы читаются
+   * по дереву символов, которое переживает и то и другое.
+   *
+   * @param event событие удаления документа
+   */
+  @EventListener
+  public void handleDocumentRemoved(ServerContextDocumentRemovedEvent event) {
+    clear(event.getUri());
   }
 
   // Символы документа построены заново, а методы нового дерева не равны прежним, если сменился

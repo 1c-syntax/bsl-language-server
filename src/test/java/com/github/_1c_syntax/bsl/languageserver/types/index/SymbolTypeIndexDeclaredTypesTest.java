@@ -24,6 +24,7 @@ package com.github._1c_syntax.bsl.languageserver.types.index;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.DocumentContextContentChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextDocumentRemovedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeKind;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeRef;
@@ -97,6 +98,23 @@ class SymbolTypeIndexDeclaredTypesTest {
     index.putReturnTypes(method, inferred);
     assertThat(index.getReturnTypes(method).refs()).containsAll(inferred.refs());
     index.clear(documentContext.getUri());
+    assertThat(index.getReturnTypes(method)).isEqualTo(TypeSet.EMPTY);
+  }
+
+  @Test
+  void removedDocumentLeavesNoRecords() {
+    // given: у документа есть и объявленный, и выведенный типы.
+    knownToRegistry(true);
+    index.handleEvent(new DocumentContextContentChangedEvent(documentContext));
+    var method = documentContext.getSymbolTree().getMethods().get(0);
+    index.putReturnTypes(method, TypeSet.of(new TypeRef(TypeKind.PRIMITIVE, "Строка")));
+
+    // when: документ удалён из рабочей области.
+    index.handleDocumentRemoved(new ServerContextDocumentRemovedEvent(
+      mock(ServerContext.class), documentContext.getUri()));
+
+    // then: записей по нему не осталось.
+    assertThat(index.getDeclaredReturnTypes(method)).isEqualTo(TypeSet.EMPTY);
     assertThat(index.getReturnTypes(method)).isEqualTo(TypeSet.EMPTY);
   }
 
