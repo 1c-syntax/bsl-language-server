@@ -47,6 +47,7 @@ import com.github._1c_syntax.bsl.parser.description.CollectionTypeDescription;
 import com.github._1c_syntax.bsl.parser.description.MethodDescription;
 import com.github._1c_syntax.bsl.parser.description.ParameterDescription;
 import com.github._1c_syntax.bsl.parser.description.TypeDescription;
+import com.github._1c_syntax.bsl.types.MDOType;
 import lombok.RequiredArgsConstructor;
 import org.jspecify.annotations.Nullable;
 import org.springframework.context.event.EventListener;
@@ -1003,7 +1004,11 @@ public class SymbolTypeIndex {
     if (parts.length < MIN_METADATA_SEGMENTS) {
       return TypeSet.EMPTY;
     }
-    var kind = parts[KIND_PART];
+    // Имена типов реестр складывает из русского вида; ссылка может назвать вид и по-английски
+    // («Catalog.Товары.Товары»), тогда русское имя вида берётся у самого вида метаданных.
+    var kind = MDOType.fromValue(parts[KIND_PART])
+      .map(mdoType -> mdoType.fullName().getRu())
+      .orElse(parts[KIND_PART]);
     var mdName = parts[NAME_PART];
     var childName = parts[CHILD_PART];
 
