@@ -1338,3 +1338,21 @@
   зелёный.
 - **Проверка.** Все `types`, `*Hover*`, `*Completion*`, `*SignatureHelp*` (343 класса, 2972 теста)
   зелёные; `javadoc`, `spotlessCheck` зелёные.
+
+## Раунд 87. Подсветка парного ключевого слова при курсоре сразу за ним
+
+Источник — сканирование `documenthighlight/` после раунда 76 (пункт 5).
+
+- **Дефект.** `DocumentHighlightProvider` находит токен и при курсоре сразу за ним (повтор на
+  символ левее), но поставщики подсветки метода и области искали свою конструкцию по исходной
+  позиции курсора. За `КонецПроцедуры` / `#КонецОбласти` курсор стоит уже за концом диапазона
+  (конец исключён) — и подсветки не было, хотя у `Процедура`/`#Область` в той же позиции
+  (сразу за словом) она есть.
+- **Сделано.** `SubroutineDocumentHighlightSupplier` и `RegionDocumentHighlightSupplier` ищут
+  конструкцию по началу найденного токена; у области, если токена не дали, — по курсору, как
+  раньше.
+- **Тесты.** `SubroutineDocumentHighlightSupplierTest.endProcedureKeywordWithCursorRightAfterItHighlightsTheProcedure`,
+  `RegionDocumentHighlightSupplierTest.regionEndWithCursorRightAfterItHighlightsTheRegion` — красные
+  (пусто) → зелёные.
+- **Проверка.** `documenthighlight`, `*DocumentHighlight*` (13 классов, 77 тестов) зелёные;
+  `javadoc`, `spotlessCheck` зелёные.
