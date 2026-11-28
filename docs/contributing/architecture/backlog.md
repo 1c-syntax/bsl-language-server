@@ -11,8 +11,6 @@
   «старый» он только для `format` — нужно решить, какой ключ каноничен для обеих команд.
 - **Отчёт JSON: поле `covlocData`** (`context/MetricStorage.java`, `@Deprecated`). Входит в формат
   отчёта, который читают внешние инструменты; удаление — изменение контракта.
-- **Цикл `references` ↔ `types`** (известный долг из `ArchitectureTest`). Разрыв требует переноса
-  резолва конструкторов/членов платформы между подсистемами — существенное изменение архитектуры.
 - **Значение `-c` различается между подкомандами**: `analyze` применяет файл к глобальной и
   workspace-конфигурации, `lsp`/`websocket`/`mcp` — только к глобальной, у `format` ключа нет
   (гипотеза). Унификация меняет поведение CLI.
@@ -23,7 +21,10 @@
     `AbstractDiagnosticReporter` больше не даёт доступа к `ServerContextProvider` (раунд 26);
   - `configuration/CLAUDE.md`: порядок поиска файла конфигурации теперь живёт в
     `ConfigurationFiles` (раунд 1) — стоит сослаться на него; включение supplier'а проверяет не
-    `XxxConfiguration.supplierIsEnabled(...)`, а `SupplierParameters.isEnabled` (раунд 15).
+    `XxxConfiguration.supplierIsEnabled(...)`, а `SupplierParameters.isEnabled` (раунд 15);
+  - `references/CLAUDE.md` и `types/CLAUDE.md`: finder'ы `Keyword`/`NewExpression`/`PlatformMember`
+    живут в `types.references`, индексатор спрашивает систему типов через `WorkspaceNames`
+    (раунд 29, ADR-0003).
 
 ## Высокий приоритет (дефекты или вероятные дефекты)
 
