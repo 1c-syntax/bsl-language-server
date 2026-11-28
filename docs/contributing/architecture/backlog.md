@@ -45,7 +45,15 @@
 - **«Самый вложенный узел типа T, содержащий позицию»** и `encloses` — копии в
   `NewExpressionReferenceFinder` и `SignatureHelpProvider`.
 - **Терминал, заканчивающийся на курсоре** — `LinkedEditingRangeProvider`/`SelectionRangeProvider`.
-- **`safeGetAst`** — 4 приватные копии и 3 inline (две политики перехвата).
+- **`safeGetAst` с перехватом любого `RuntimeException`** (`FormExpressionInference`,
+  `PropertyMethodInference`) — после раунда 25 остались две копии второй политики; сузить до
+  `findAst()` можно только решением владельцев `types/` (сейчас скрываются и настоящие ошибки).
+- **Рассмотрено и отклонено**: объединение `isIdentChar`/сканирования префикса идентификатора
+  (`TypeService`, `CompletionProvider`) и `getVariableName` (диагностика и `utils`) — трёхстрочные
+  фрагменты с разными результатами, общий хелпер дал бы лишь формальное единообразие; снятие
+  кэширования `isVsCodeLikeClient` в двух code lens-классах — снимок на `initialize` осознанный и
+  покрыт тестами, выигрыш ~25 строк.
+- **`format` без найденных файлов** завершается с кодом 1 без сообщения.
 - **Таблицы «тип токена → `Keywords.MultiName`»** — 3 копии (completion, formatter, diagnostic).
 - **Мелкие пары копий**: `getVariableName`, `record ProfileKey`, `isIdentChar`, `stringField`, `key`.
 - **Реестры supplier'ов code lens / inlay hint / command** — конфигурации, `getId()` по суффиксу,
