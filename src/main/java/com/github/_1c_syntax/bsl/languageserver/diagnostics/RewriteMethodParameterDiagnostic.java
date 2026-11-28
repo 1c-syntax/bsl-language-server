@@ -31,6 +31,7 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.references.ReferenceIndex;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Reference;
+import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
@@ -41,11 +42,10 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.eclipse.lsp4j.DiagnosticRelatedInformation;
-import org.eclipse.lsp4j.Position;
-import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.SymbolKind;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -103,26 +103,8 @@ public class RewriteMethodParameterDiagnostic extends AbstractDiagnostic {
   private List<Reference> getSortedReferencesByLocation(VariableSymbol variable) {
     final var references = referenceIndex.getReferencesTo(variable);
     return references.stream()
-      .sorted((o1, o2) -> compare(o1.selectionRange(), o2.selectionRange()))
+      .sorted(Comparator.comparing(reference -> reference.selectionRange().getStart(), Ranges::compare))
       .collect(Collectors.toList());
-  }
-
-  private static int compare(Range o1, Range o2) {
-    return compare(o1.getStart(), o2.getStart());
-  }
-
-  public static int compare(Position pos1, Position pos2) {
-    // 1,1 10,10
-    if (pos1.getLine() < pos2.getLine()) {
-      return -1;
-    }
-    // 10,10 1,1
-    if (pos1.getLine() > pos2.getLine()) {
-      return 1;
-    }
-    // 1,4 1,9
-    return Integer.compare(pos1.getCharacter(), pos2.getCharacter());
-    // 1,9 1,4
   }
 
   private Optional<Reference> isOverwrited(List<Reference> references) {

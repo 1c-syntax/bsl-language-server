@@ -29,6 +29,7 @@ import com.github._1c_syntax.bsl.languageserver.cfg.ControlFlowGraph;
 import com.github._1c_syntax.bsl.languageserver.cfg.ForLoopVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.ForeachLoopVertex;
 import com.github._1c_syntax.bsl.languageserver.cfg.WhileLoopVertex;
+import com.github._1c_syntax.bsl.languageserver.utils.Positions;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.utils.Lazy;
@@ -377,8 +378,7 @@ final class FlowLayout {
   private static boolean containsCall(Slot slot) {
     var calls = Trees.findAllRuleNodes(slot.statement(), BSLParser.RULE_globalMethodCall, BSLParser.RULE_methodCall);
     for (var call : calls) {
-      var start = call.getStart();
-      if (slot.covers(new Position(start.getLine() - 1, start.getCharPositionInLine()))) {
+      if (slot.covers(Positions.create(call))) {
         return true;
       }
     }

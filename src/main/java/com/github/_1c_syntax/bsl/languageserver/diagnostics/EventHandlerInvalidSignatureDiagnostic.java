@@ -33,6 +33,7 @@ import com.github._1c_syntax.bsl.languageserver.types.model.MemberDescriptor;
 import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
+import com.github._1c_syntax.bsl.languageserver.utils.Positions;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import org.antlr.v4.runtime.Token;
@@ -214,10 +215,7 @@ public class EventHandlerInvalidSignatureDiagnostic extends AbstractDiagnostic i
     }
     var lparen = headerTokens.get(lparenIndex);
     var rparen = headerTokens.get(rparenIndex);
-    var start = new Position(lparen.getLine() - 1,
-      lparen.getCharPositionInLine() + lparen.getText().length());
-    var end = new Position(rparen.getLine() - 1, rparen.getCharPositionInLine());
-    return Optional.of(new Range(start, end));
+    return Optional.of(new Range(Positions.createEnd(lparen), Positions.create(rparen)));
   }
 
   /** Токены в пределах одной строки заголовка метода — от имени до конца метода. */

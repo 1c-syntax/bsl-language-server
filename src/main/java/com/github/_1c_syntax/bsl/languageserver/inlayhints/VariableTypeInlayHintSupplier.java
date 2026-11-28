@@ -38,7 +38,6 @@ import org.eclipse.lsp4j.InlayHintParams;
 import org.eclipse.lsp4j.Location;
 import org.eclipse.lsp4j.MarkupContent;
 import org.eclipse.lsp4j.MarkupKind;
-import org.eclipse.lsp4j.Position;
 import org.eclipse.lsp4j.Range;
 import org.springframework.stereotype.Component;
 
@@ -251,9 +250,7 @@ public class VariableTypeInlayHintSupplier implements InlayHintSupplier<Variable
    */
   private Optional<InferredType> inferType(DocumentContext documentContext,
                                            BSLParser.ExpressionContext expression) {
-    var start = expression.getStart();
-    var position = new Position(start.getLine() - 1, start.getCharPositionInLine());
-    var types = typeService.expressionTypesAt(documentContext, position);
+    var types = typeService.expressionTypesAt(documentContext, Positions.create(expression));
     // `Тип, Неопределено` — самый частый union: так выглядит всё, чего может не оказаться
     // (ключ структуры, поиск по имени, необязательный параметр). Значимый тип там один,
     // и подсказка по нему осмысленна — `Неопределено` уходит в `?`.

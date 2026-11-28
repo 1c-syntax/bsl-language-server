@@ -79,3 +79,17 @@
   границы веток препроцессора переведены в 0-based.
 - **Проверка.** Красный тест `UnreachableCodeDiagnosticTest.testNestedUnreachableCodeOnLastLineIsReportedOnce`
   → зелёный; исходная фикстура (18 диапазонов, включая ветки препроцессора) не изменилась.
+
+## Раунд 6. Канонические `Positions`/`Ranges` вместо ручных копий
+
+- **Сделано.** Ручная сборка LSP-позиции из токена (`getLine() - 1`, `getCharPositionInLine()`)
+  заменена на `Positions.create/createEnd` в `FlowLayout`, `VariableTypeInlayHintSupplier`,
+  `SourceDefinedMethodCallInlayHintCollector`, `InsertionWithoutChangeAndValidateDiagnostic`,
+  `EventHandlerInvalidSignatureDiagnostic`. Удалён `RewriteMethodParameterDiagnostic.compare` —
+  дословная копия `Ranges.compare(Position, Position)`.
+- **Не тронуто.** Остальные `getLine() - 1` — арифметика над номерами строк (длины, отступы,
+  индексы массивов строк), а не построение позиции; копии с иной семантикой (`encloses` без
+  особого случая EOF) перечислены в backlog.
+- **Проверка.** Тесты затронутых диагностик и `inlayhints`; поведение не менялось.
+- **Ограничение.** Машинного запрета нет: ArchUnit не различает арифметику номеров строк и
+  построение позиции.

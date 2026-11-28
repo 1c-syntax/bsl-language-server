@@ -30,9 +30,9 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticS
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
+import com.github._1c_syntax.bsl.languageserver.utils.Positions;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import org.antlr.v4.runtime.Token;
-import org.eclipse.lsp4j.Position;
 
 import java.util.HashSet;
 import java.util.Optional;
@@ -70,7 +70,7 @@ public class InsertionWithoutChangeAndValidateDiagnostic extends AbstractDiagnos
     var reportedMethods = new HashSet<MethodSymbol>();
 
     for (var directive : insertionDirectives) {
-      var directivePosition = new Position(directive.getLine() - 1, directive.getCharPositionInLine());
+      var directivePosition = Positions.create(directive);
       var method = enclosingMethod(symbolTree.getSymbolAtPosition(directivePosition));
 
       // Вставка на уровне модуля (вне методов) аннотации не требует.
