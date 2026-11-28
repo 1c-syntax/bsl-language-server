@@ -101,9 +101,10 @@
   стеком на горячем пути в пяти местах, DEBUG — в шестом и в соседних компонентах).
 - **Замеры времени мимо `MeasuresAspect`** — `ServerContext.millisSince`,
   `ConfigurationTypesProvider`, `MethodReturnTypeIndexer`; два разных часа для одной операции.
-- **Конфигурация:** пути файла конфигурации (`.bsl-language-server.json`,
-  `${user.home}/…`) повторены 7+ раз (`application.properties`, inline-дефолты `@Value` в трёх
-  классах, инициализаторы полей); два выключателя одной возможности
+- **Конфигурация:** имя файла сведено к `ConfigurationFiles.DEFAULT_FILE_NAME` (раунд 58);
+  наблюдатель за файлами при незаданном файле узнаёт новый файл по имени по умолчанию, а не по
+  `app.configuration.path` (переопределённый путь, файл создан после старта — не подхватится);
+  два выключателя одной возможности
   (`app.platform-context.enabled` и `v8platform.enabled`); `--mcp-path` у двух команд читается
   только для журнала, действует значение из сырых аргументов; `TestRunnerAdapter` повторяет
   `TestRunnerAdapterOptions.getExecutableForCurrentOS()`, тайм-аут 10 с и кодировка `cp866`
