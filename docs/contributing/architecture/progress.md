@@ -786,3 +786,18 @@
 - **Проверка.** Красный `ConfigurationModuleMembersProviderTest.removedAndRecreatedModuleServesMembersOfTheCurrentDocument`
   (после удаления оставались методы удалённого файла) → зелёный; тесты `types.*`, completion,
   hover, `ReferenceIndex*` (2950) зелёные; `javadoc`, `spotlessCheck` зелёные.
+
+## Раунд 54. Охраняющие условия, скомпилированные до регистрации типов (дефект)
+
+- **Проблема.** `GuardConditionNarrowing` запоминает скомпилированные условия по документу, а имя
+  типа в `ТипЗнч(Х) = Тип("…")` разрешает через реестр при компиляции. Сбрасывался кеш только по
+  жизненному циклу документа. Условие, разобранное до регистрации конфигурационных типов,
+  оставалось без утверждения, и сужение не работало до правки файла — хотя
+  `InferredExpressionTypeIndex` по тому же событию сбрасывается (и пересчитывал бы сужение,
+  получая из этого кеша прежнее пустое условие).
+- **Сделано.** Полный сброс кеша по `ConfigurationTypesRegisteredEvent` и
+  `ServerContextPopulatedEvent` (переменные условия разрешаются через индекс ссылок) — так же, как
+  у `InferredExpressionTypeIndex`.
+- **Проверка.** Красный `GuardConditionNarrowingCacheTest` (на заглушке условие бралось из
+  запомненного) → зелёный; тесты `types.inferencer` и `GuardNarrowing*` зелёные; `javadoc`,
+  `spotlessCheck` зелёные.

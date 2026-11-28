@@ -22,6 +22,8 @@
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationTypesRegisteredEvent;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.index.AbstractDocumentLifecycleClearableIndex;
 import com.github._1c_syntax.bsl.languageserver.infrastructure.WorkspaceScope;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
@@ -50,6 +52,7 @@ import org.eclipse.lsp4j.Range;
 import org.eclipse.lsp4j.util.Positions;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.jspecify.annotations.Nullable;
+import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 
 import java.net.URI;
@@ -336,6 +339,30 @@ public class GuardConditionNarrowing extends AbstractDocumentLifecycleClearableI
   @Override
   public void clear(URI uri) {
     compiledByUri.remove(uri);
+  }
+
+  /**
+   * Полный сброс после регистрации конфигурационных типов: имя типа в проверке
+   * {@code ТипЗнч(Х) = Тип("…")} разрешается при компиляции условия, и условие, разобранное до
+   * регистрации, осталось бы без утверждения до следующей правки документа — так же сбрасывает
+   * свой кеш {@code InferredExpressionTypeIndex}.
+   *
+   * @param event событие регистрации конфигурационных типов.
+   */
+  @EventListener
+  public void handleConfigurationTypesRegistered(ConfigurationTypesRegisteredEvent event) {
+    compiledByUri.clear();
+  }
+
+  /**
+   * Полный сброс после наполнения рабочей области: переменные в условии разрешаются через индекс
+   * ссылок, полный только после наполнения.
+   *
+   * @param event событие наполнения рабочей области.
+   */
+  @EventListener
+  public void handleServerContextPopulated(ServerContextPopulatedEvent event) {
+    compiledByUri.clear();
   }
 
   /** Разбор условия без кэш-обвязки. */
