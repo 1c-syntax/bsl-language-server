@@ -21,7 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContentUnavailableException;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.languageserver.utils.expressiontree.BslExpression;
@@ -31,7 +30,6 @@ import lombok.experimental.UtilityClass;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.eclipse.lsp4j.Position;
-import org.jspecify.annotations.Nullable;
 
 import java.util.Optional;
 
@@ -116,7 +114,7 @@ public class ExpressionAtPosition {
     DocumentContext documentContext,
     Position position
   ) {
-    var ast = safeGetAst(documentContext);
+    var ast = documentContext.findAst().orElse(null);
     if (ast == null) {
       return Optional.empty();
     }
@@ -137,7 +135,7 @@ public class ExpressionAtPosition {
     DocumentContext documentContext,
     Position position
   ) {
-    var ast = safeGetAst(documentContext);
+    var ast = documentContext.findAst().orElse(null);
     if (ast == null) {
       return Optional.empty();
     }
@@ -161,7 +159,7 @@ public class ExpressionAtPosition {
   private static <T extends ParserRuleContext> Optional<T> findEnclosingRule(
     DocumentContext documentContext, Position position, int ruleIndex
   ) {
-    var ast = safeGetAst(documentContext);
+    var ast = documentContext.findAst().orElse(null);
     if (ast == null) {
       return Optional.empty();
     }
@@ -187,16 +185,6 @@ public class ExpressionAtPosition {
     return Optional.ofNullable(Trees.<T>getAncestorOrSelfByRuleIndex(prc, ruleIndex));
   }
 
-  private static BSLParser.@Nullable FileContext safeGetAst(DocumentContext documentContext) {
-    try {
-      return documentContext.getAst();
-    } catch (DocumentContentUnavailableException e) {
-      // tokenizer ещё не инициализирован (документ не открыт/не прочитан) —
-      // вывод типов корректно ничего не возвращает.
-      return null;
-    }
-  }
-
   /**
    * Удобный shortcut: построить {@link BslExpression} для выражения по позиции.
    */
@@ -204,7 +192,7 @@ public class ExpressionAtPosition {
     DocumentContext documentContext,
     Position position
   ) {
-    var ast = safeGetAst(documentContext);
+    var ast = documentContext.findAst().orElse(null);
     if (ast == null) {
       return Optional.empty();
     }

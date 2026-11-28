@@ -336,3 +336,16 @@
   `SymbolTree.getMethodSymbolAtPosition` (раунд 9): позиция — начало диагностики на
   объявлении метода, методы не вкладываются, результат тот же.
 - **Проверка.** Тесты обеих диагностик, включая их quick fix'ы.
+
+## Раунд 25. Дерево разбора «если текст есть»
+
+- **Проблема.** «Получить AST, а без текста документа — пустой ответ» было написано пятью
+  копиями: два приватных `safeGetAst` (`OpenDataObjectInference`, `ExpressionAtPosition`) и три
+  inline `try/catch (DocumentContentUnavailableException)` (`KeywordReferenceFinder`,
+  `NewExpressionReferenceFinder`, `SignatureHelpProvider`).
+- **Сделано.** `DocumentContext.findAst(): Optional<FileContext>`; пять мест переведены, копии
+  удалены. Два `safeGetAst` в `FormExpressionInference`/`PropertyMethodInference` оставлены: они
+  намеренно глотают любой `RuntimeException` (с обоснованием в комментарии) — это другая
+  политика, сужение её меняет поведение.
+- **Проверка.** Красный `DocumentContextTest.findAstIsPresentOnlyWhileDocumentHasContent` (на
+  заглушке) → зелёный; тесты `references`, `types.inferencer`, `SignatureHelp*`.

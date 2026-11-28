@@ -21,8 +21,6 @@
  */
 package com.github._1c_syntax.bsl.languageserver.types.inferencer;
 
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContentUnavailableException;
-import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.index.ReceiverSitesIndex;
@@ -337,7 +335,7 @@ public class OpenDataObjectInference {
    */
   public Map<Position, BSLParser.CallStatementContext> mutatorsOf(VariableSymbol variable) {
     var owner = variable.getOwner();
-    var ast = safeGetAst(owner);
+    var ast = owner.findAst().orElse(null);
     if (ast == null) {
       return Map.of();
     }
@@ -641,17 +639,5 @@ public class OpenDataObjectInference {
     }
     var text = nameCtx.getText();
     return russian.equalsIgnoreCase(text) || english.equalsIgnoreCase(text);
-  }
-
-  /**
-   * Дерево разбора документа; {@code null}, если оно ещё не построено. Обращение к
-   * недостроенному дереву падает, а состав полей — уточнение, без которого можно обойтись.
-   */
-  private static BSLParser.@Nullable FileContext safeGetAst(DocumentContext owner) {
-    try {
-      return owner.getAst();
-    } catch (DocumentContentUnavailableException e) {
-      return null;
-    }
   }
 }

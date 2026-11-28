@@ -47,8 +47,7 @@
 - **Терминал, заканчивающийся на курсоре** — `LinkedEditingRangeProvider`/`SelectionRangeProvider`.
 - **`safeGetAst`** — 4 приватные копии и 3 inline (две политики перехвата).
 - **Таблицы «тип токена → `Keywords.MultiName`»** — 3 копии (completion, formatter, diagnostic).
-- **Мелкие пары копий**: `findMethodAt` (две диагностики
-  EventHandler*), `getVariableName`, `record ProfileKey`, `isIdentChar`, `stringField`, `key`.
+- **Мелкие пары копий**: `getVariableName`, `record ProfileKey`, `isIdentChar`, `stringField`, `key`.
 - **Реестры supplier'ов code lens / inlay hint / command** — конфигурации, `getId()` по суффиксу,
   `extractData`, разбор data в resolve написаны трижды-четырежды.
 - **Отбор включённых supplier'ов** — у code lens prototype-бин с сортировкой по `@Order`, у
