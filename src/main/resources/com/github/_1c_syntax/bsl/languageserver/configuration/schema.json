@@ -23,9 +23,6 @@
                 "$ref": "#/definitions/parameter"
             },
             "properties": {
-                "MemberAccessUnavailable": {
-                    "$ref": "parameters-schema.json#/definitions/MemberAccessUnavailable"
-                },
                 "AllFunctionPathMustHaveReturn": {
                     "$ref": "parameters-schema.json#/definitions/AllFunctionPathMustHaveReturn"
                 },
@@ -128,6 +125,9 @@
                 "CreateQueryInCycle": {
                     "$ref": "parameters-schema.json#/definitions/CreateQueryInCycle"
                 },
+                "CurrentRowAccess": {
+                    "$ref": "parameters-schema.json#/definitions/CurrentRowAccess"
+                },
                 "CyclomaticComplexity": {
                     "$ref": "parameters-schema.json#/definitions/CyclomaticComplexity"
                 },
@@ -148,6 +148,9 @@
                 },
                 "DeprecatedFind": {
                     "$ref": "parameters-schema.json#/definitions/DeprecatedFind"
+                },
+                "DeprecatedHttpConnectionMethod": {
+                    "$ref": "parameters-schema.json#/definitions/DeprecatedHttpConnectionMethod"
                 },
                 "DeprecatedMessage": {
                     "$ref": "parameters-schema.json#/definitions/DeprecatedMessage"
@@ -263,6 +266,9 @@
                 "IncorrectUseOfStrTemplate": {
                     "$ref": "parameters-schema.json#/definitions/IncorrectUseOfStrTemplate"
                 },
+                "InsertionWithoutChangeAndValidate": {
+                    "$ref": "parameters-schema.json#/definitions/InsertionWithoutChangeAndValidate"
+                },
                 "InternetAccess": {
                     "$ref": "parameters-schema.json#/definitions/InternetAccess"
                 },
@@ -295,6 +301,9 @@
                 },
                 "MagicNumber": {
                     "$ref": "parameters-schema.json#/definitions/MagicNumber"
+                },
+                "MemberAccessUnavailable": {
+                    "$ref": "parameters-schema.json#/definitions/MemberAccessUnavailable"
                 },
                 "MetadataObjectNameLength": {
                     "$ref": "parameters-schema.json#/definitions/MetadataObjectNameLength"
@@ -457,6 +466,9 @@
                 },
                 "StyleElementConstructors": {
                     "$ref": "parameters-schema.json#/definitions/StyleElementConstructors"
+                },
+                "SuspiciousChangeAndValidate": {
+                    "$ref": "parameters-schema.json#/definitions/SuspiciousChangeAndValidate"
                 },
                 "TempFilesDir": {
                     "$ref": "parameters-schema.json#/definitions/TempFilesDir"
@@ -824,7 +836,7 @@
                             "$id": "#/properties/codeLens/testRunner/resultPattern",
                             "type": "string",
                             "title": "Regular expression to parse test runner output for method names.",
-                            "default": "^[^<]*Имя\\sтеста\\s<([^>]+)>.*"
+                            "default": "^[^<]*\u0418\u043c\u044f\\s\u0442\u0435\u0441\u0442\u0430\\s<([^>]+)>.*"
                         },
                         "runTestArguments": {
                             "$id": "#/properties/codeLens/testRunner/runTestArguments",

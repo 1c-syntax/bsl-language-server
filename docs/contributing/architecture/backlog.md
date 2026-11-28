@@ -66,8 +66,8 @@
   `GlobalLanguageServerConfiguration.reset()` дублирует дефолты вручную.
 - **Константы**: расширения `bsl`/`os` и glob'ы — `BSLFiles` и дважды в `BSLLanguageServer`;
   footer'ы CLI с разными годами; дефолты `server.port`/`/lsp` в полях websocket-команды.
-- **Дефолты опций** — в полях `*Options`, в `schema.json` и в двух локалях документации, без
-  автоматической сверки (кандидат на контрактный тест).
+- **Дефолты опций в документации** (`ConfigurationFile.md`, обе локали) не сверяются
+  автоматически; код ↔ схема сверяет `ConfigurationSchemaDefaultsTest` (раунд 17).
 
 ## Мёртвый код (гипотезы, перепроверить вызывающих)
 
