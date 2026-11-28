@@ -56,7 +56,7 @@ import java.util.Optional;
  * {@link com.github._1c_syntax.bsl.languageserver.providers.HoverProvider}-flow
  * и попадает в {@link com.github._1c_syntax.bsl.languageserver.hover.KeywordSymbolMarkupContentBuilder}.
  * <p>
- * Аналогично паттерну {@link AnnotationReferenceFinder}: оба создают
+ * Аналогично паттерну {@link com.github._1c_syntax.bsl.languageserver.references.AnnotationReferenceFinder}: оба создают
  * synthetic-символы on-the-fly без регистрации в symbol-tree.
  */
 @Component

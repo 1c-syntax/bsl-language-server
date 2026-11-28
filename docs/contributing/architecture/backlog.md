@@ -27,6 +27,9 @@
     (раунд 29, ADR-0003).
   - `diagnostics/CLAUDE.md`: в таблицу базовых классов — `AbstractComplexityDiagnostic`
     (раунд 39).
+  - корневой `CLAUDE.md`: «`./gradlew check` — test + jacoco + spotless + javadoc» неверно —
+    `check` задачу `javadoc` не запускает (её гоняет отдельный workflow `javadoc.yml`); проверять
+    javadoc нужно явно (`./gradlew javadoc`). Найдено в раунде 43.
 
 ## Высокий приоритет (дефекты или вероятные дефекты)
 
