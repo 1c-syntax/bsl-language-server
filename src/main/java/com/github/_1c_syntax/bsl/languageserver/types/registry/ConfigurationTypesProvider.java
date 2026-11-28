@@ -373,10 +373,7 @@ public class ConfigurationTypesProvider {
     var managerNames = managerNamesFor(fullName, groupRu, groupEn, name);
     var managerRu = managerNames.ru();
     var managerEn = managerNames.en();
-    var ref = typeRegistry.registerConfigurationType(managerRu);
-    if (managerEn != null && !managerEn.equals(managerRu)) {
-      typeRegistry.registerConfigurationTypeAlias(managerEn, ref);
-    }
+    var ref = typeRegistry.registerConfigurationType(managerRu, managerEn);
     typeRegistry.registerDisplayName(ref,
       BilingualString.of(managerRu, managerEn == null ? managerRu : managerEn));
 
@@ -474,10 +471,7 @@ public class ConfigurationTypesProvider {
       var members = entry.getValue();
       var collectionRu = mdoType.fullGroupName().getRu();
       var collectionEn = mdoType.fullGroupName().getEn();
-      var ref = typeRegistry.registerConfigurationType(collectionRu);
-      if (!collectionEn.equals(collectionRu)) {
-        typeRegistry.registerConfigurationTypeAlias(collectionEn, ref);
-      }
+      var ref = typeRegistry.registerConfigurationType(collectionRu, collectionEn);
       typeRegistry.registerDisplayName(ref, BilingualString.of(collectionRu, collectionEn));
       typeRegistry.registerMemberSource(ref, () -> members, FileType.BSL);
 
@@ -539,7 +533,7 @@ public class ConfigurationTypesProvider {
 
     var objectRu = fullRu + "Объект." + name;
     var objectEn = fullEn.isBlank() ? "" : (fullEn + "Object." + name);
-    var objectRef = registerWithAlias(objectRu, objectEn);
+    var objectRef = typeRegistry.registerConfigurationType(objectRu, objectEn);
 
     // Объектный тип есть у всех обрабатываемых здесь MDOType (в т.ч. object-only
     // отчёта/обработки): его реквизиты — члены этого типа.
@@ -584,7 +578,7 @@ public class ConfigurationTypesProvider {
 
     var refRu = fullRu + "Ссылка." + name;
     var refEn = fullEn.isBlank() ? "" : fullEn + "Ref." + name;
-    var refRef = registerWithAlias(refRu, refEn);
+    var refRef = typeRegistry.registerConfigurationType(refRu, refEn);
 
     // Singular alias `Справочник.X` / `Catalog.X` ведёт на ссылочный тип:
     // соответствует семантике стандартных описаний 1С (`См. Справочник.X.Реквизит`
@@ -673,12 +667,12 @@ public class ConfigurationTypesProvider {
       var rowRu = fullRu + "ТабличнаяЧастьСтрока." + name + "." + tsName;
       var rowEn = fullEn.isBlank() ? ""
         : fullEn + "TabularSectionRow." + name + "." + tsName;
-      var rowRef = registerWithAlias(rowRu, rowEn);
+      var rowRef = typeRegistry.registerConfigurationType(rowRu, rowEn);
 
       var collRu = fullRu + "ТабличнаяЧасть." + name + "." + tsName;
       var collEn = fullEn.isBlank() ? ""
         : fullEn + "TabularSection." + name + "." + tsName;
-      var collRef = registerWithAlias(collRu, collEn);
+      var collRef = typeRegistry.registerConfigurationType(collRu, collEn);
 
       var tsAttributes = ts.getAttributes();
       // Аналогично основным реквизитам: лямбда вызывает attributeMembers
@@ -943,14 +937,6 @@ public class ConfigurationTypesProvider {
       .flatMap(m -> ContextNames.placeholders(m.bilingualName().primary()).stream().findFirst())
       .map(Placeholder::name)
       .orElse("");
-  }
-
-  private TypeRef registerWithAlias(String qualifiedRu, String qualifiedEn) {
-    var ref = typeRegistry.registerConfigurationType(qualifiedRu);
-    if (!qualifiedEn.isBlank() && !qualifiedEn.equals(qualifiedRu)) {
-      typeRegistry.registerConfigurationTypeAlias(qualifiedEn, ref);
-    }
-    return ref;
   }
 
 }

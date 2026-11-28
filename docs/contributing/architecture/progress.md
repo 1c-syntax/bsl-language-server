@@ -1303,3 +1303,22 @@
   красный на заглушке → зелёный.
 - **Проверка.** Все `types`, `*Hover*`, `*Completion*` (339 классов, 2912 тестов) зелёные;
   `javadoc`, `spotlessCheck` зелёные.
+
+## Раунд 85. Конфигурационный тип с английским именем — `TypeRegistry.registerConfigurationType(ru, en)`
+
+Источник — пункт 3 углублённого сканирования `types/`.
+
+- **Проблема.** «Завести тип по русскому имени и, если английское есть и отличается, — алиас»
+  было записано восемь раз (`FormTypeFactory`, `ConfigurationTypesProvider` ×6 с приватным
+  `registerWithAlias`, `ConfigurationModuleMembersProvider`, `XdtoTypesProvider`) с разными
+  проверками: где-то на `null`, где-то на пустоту, где-то ни на что.
+- **Сделано.** Перегрузка `registerConfigurationType(ru, en)` с одной проверкой (`null`, пустое,
+  совпадающее — без алиаса); приватный `registerWithAlias` удалён. Отображаемое имя по-прежнему
+  задаёт вызывающий — у разных видов типов оно своё (у XDTO и форм — полные имена, у
+  объектных типов — от специализации), различие осознанное. Подозрение сканирования на `XdtoTypesProvider`
+  (нет проверки пустого английского имени) не подтвердилось: префиксы языков разные, имя никогда
+  не пустое и не совпадает.
+- **Тесты.** `TypeRegistryRegistrationTest.registerConfigurationTypeWithEnglishNameResolvesByBothNames`
+  красный на заглушке → зелёный.
+- **Проверка.** Все `types`, `*Hover*`, `*Completion*`, `*EventHandler*` (347 классов, 2955 тестов)
+  зелёные; `javadoc`, `spotlessCheck` зелёные.

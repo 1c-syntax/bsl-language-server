@@ -305,14 +305,11 @@ public class ConfigurationModuleMembersProvider {
     if (qualifiedRu == null) {
       return;
     }
-    var ref = typeRegistry.registerConfigurationType(qualifiedRu);
     var groupNameEn = fullName.getEn(); // "Catalog", "Document", ...
-    if (groupNameEn != null) {
-      var qualifiedEn = groupNameEn + MODULE_TYPE_TO_WRAPPER_EN.get(moduleType) + "." + mdObject.getName();
-      if (!qualifiedEn.equals(qualifiedRu)) {
-        typeRegistry.registerConfigurationTypeAlias(qualifiedEn, ref);
-      }
-    }
+    var qualifiedEn = groupNameEn == null
+      ? null
+      : groupNameEn + MODULE_TYPE_TO_WRAPPER_EN.get(moduleType) + "." + mdObject.getName();
+    var ref = typeRegistry.registerConfigurationType(qualifiedRu, qualifiedEn);
 
     if (rebind(documentContext, ref)) {
       // источник уже зарегистрирован, но содержимое изменилось (rebuild) — его member-source

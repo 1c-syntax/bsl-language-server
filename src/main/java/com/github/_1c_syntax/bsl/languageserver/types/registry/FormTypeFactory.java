@@ -47,10 +47,7 @@ class FormTypeFactory {
    * @return тип из реестра.
    */
   TypeRef registerWithAlias(String qualifiedRu, String qualifiedEn) {
-    var ref = typeRegistry.registerConfigurationType(qualifiedRu);
-    if (!qualifiedEn.isBlank() && !qualifiedEn.equals(qualifiedRu)) {
-      typeRegistry.registerConfigurationTypeAlias(qualifiedEn, ref);
-    }
+    var ref = typeRegistry.registerConfigurationType(qualifiedRu, qualifiedEn);
     typeRegistry.registerDisplayName(ref, BilingualString.of(qualifiedRu, qualifiedEn));
     return ref;
   }

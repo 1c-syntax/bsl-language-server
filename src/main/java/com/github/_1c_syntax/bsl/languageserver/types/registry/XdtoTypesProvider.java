@@ -244,8 +244,7 @@ public class XdtoTypesProvider {
   private TypeRef registerObjectType(String packageName, String typeName) {
     var qualifiedRu = PACKAGE_PREFIX_RU + packageName + "." + typeName;
     var qualifiedEn = PACKAGE_PREFIX_EN + packageName + "." + typeName;
-    var ref = typeRegistry.registerConfigurationType(qualifiedRu);
-    typeRegistry.registerConfigurationTypeAlias(qualifiedEn, ref);
+    var ref = typeRegistry.registerConfigurationType(qualifiedRu, qualifiedEn);
     typeRegistry.registerDisplayName(ref, BilingualString.of(qualifiedRu, qualifiedEn));
     typeRegistry.resolve(XDTO_DATA_OBJECT)
       .ifPresent(dataObject -> typeRegistry.registerExtension(ref, dataObject, FileType.BSL));

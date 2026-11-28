@@ -1522,6 +1522,22 @@ public class TypeRegistry {
   }
 
   /**
+   * Зарегистрировать конфигурационный тип вместе с его английским написанием.
+   *
+   * @param qualifiedRu имя типа по-русски — каноническое.
+   * @param qualifiedEn имя по-английски; {@code null}, пустое или совпадающее с русским —
+   *     алиас не заводится.
+   * @return ссылка на тип, как у {@link #registerConfigurationType(String)}.
+   */
+  public TypeRef registerConfigurationType(String qualifiedRu, @Nullable String qualifiedEn) {
+    var ref = registerConfigurationType(qualifiedRu);
+    if (qualifiedEn != null && !qualifiedEn.isBlank() && !qualifiedEn.equals(qualifiedRu)) {
+      addAlias(qualifiedEn, ref);
+    }
+    return ref;
+  }
+
+  /**
    * Зарегистрировать дополнительный алиас (английский вариант, синоним) для
    * уже зарегистрированного конфигурационного типа.
    */
