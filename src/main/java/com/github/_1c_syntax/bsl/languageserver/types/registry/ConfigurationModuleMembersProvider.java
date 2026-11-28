@@ -296,25 +296,22 @@ public class ConfigurationModuleMembersProvider {
       return;
     }
     var mdObject = mdObjectOpt.get();
-    var mdoType = mdObject.getMdoType();
-    var fullName = mdoType.fullName();
+    var fullName = mdObject.getMdoType().fullName();
     if (fullName == null) {
       return;
     }
-    var groupNameRu = fullName.getRu(); // "Справочник", "Документ", ...
-    var groupNameEn = fullName.getEn(); // "Catalog", "Document", ...
-
-    var wrapperRu = groupNameRu + MODULE_TYPE_TO_WRAPPER_RU.get(moduleType);
-    var wrapperEn = groupNameEn == null ? null : groupNameEn + MODULE_TYPE_TO_WRAPPER_EN.get(moduleType);
-    var name = mdObject.getName();
-    if (name == null || name.isBlank()) {
+    // Имя self-типа — то же, по которому его ищет резолвер обработчиков событий.
+    var qualifiedRu = selfTypeQualifiedName(moduleType, mdObject).orElse(null);
+    if (qualifiedRu == null) {
       return;
     }
-
-    var qualifiedRu = wrapperRu + "." + name;
     var ref = typeRegistry.registerConfigurationType(qualifiedRu);
-    if (wrapperEn != null && !wrapperEn.equals(wrapperRu)) {
-      typeRegistry.registerConfigurationTypeAlias(wrapperEn + "." + name, ref);
+    var groupNameEn = fullName.getEn(); // "Catalog", "Document", ...
+    if (groupNameEn != null) {
+      var qualifiedEn = groupNameEn + MODULE_TYPE_TO_WRAPPER_EN.get(moduleType) + "." + mdObject.getName();
+      if (!qualifiedEn.equals(qualifiedRu)) {
+        typeRegistry.registerConfigurationTypeAlias(qualifiedEn, ref);
+      }
     }
 
     if (rebind(documentContext, ref)) {

@@ -167,9 +167,7 @@
   6. Пересборка сигнатур и параметров с новыми типами — нет `SignatureDescriptor.withReturnTypes`/
      `ParameterDescriptor.withTypes`; обход `MdoMemberFactory.property` девятиаргументным
      конструктором.
-  7. Мелкие обходы канонического: `TableCollectionInference.resolveMember` ≈ `TypeRegistry.findMember`,
-     `SymbolTypeIndex.findLocalFunction` ≈ `getMethodSymbol(name).filter(isFunction)`,
-     `ConfigurationModuleMembersProvider.register` строит self-тип мимо `selfTypeQualifiedName`.
+  7. ~~Мелкие обходы канонического~~ — закрыто, раунд 82.
   8. ~~`completion/`: свёртка `CompletionPriority`~~ — закрыто, раунд 80; ~~рецепт сборки
      `DiagnosticInfo`~~ — закрыто, раунд 81. **Ожидает решения:**
      `DiagnosticInfosFactory.createDiagnosticInfosByCode`/`ByClass` в коде не вызываются, но

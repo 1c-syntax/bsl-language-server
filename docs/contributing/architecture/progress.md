@@ -1263,3 +1263,19 @@
 - **Проверка.** Поведение не меняется, новых тестов нет; `diagnostics.infrastructure`,
   `BSLLSBindingTest`, `*DiagnosticInfo*`, `*DiagnosticProvider*` и др. (10 классов, 51 тест)
   зелёные; `javadoc`, `spotlessCheck` зелёные.
+
+## Раунд 82. Обходы канонических помощников в `types/`
+
+Источник — пункт 7 углублённого сканирования `types/`.
+
+- `TableCollectionInference.resolveMember` повторял `TypeRegistry.findMember` (тот же поиск через
+  `MemberLookupSession`) по каждому типу получателя — теперь зовёт его. Модульный тест
+  `ReturnBodyMemberLookupReuseTest` мокал реестр и стаб `getMembers` — мок теперь вызывает
+  настоящий `findMember` (`thenCallRealMethod`), счётчик просмотров проверяет то же.
+- `SymbolTypeIndex.findLocalFunction` — линейный проход методов вместо
+  `SymbolTree.getMethodSymbol(name).filter(isFunction)`.
+- `ConfigurationModuleMembersProvider.register` собирал русское имя self-типа модуля сам, мимо
+  `selfTypeQualifiedName`, по которому self-тип ищет резолвер обработчиков (раунд 66), — теперь
+  имя одно; английский алиас по-прежнему строится рядом.
+- **Проверка.** Все `types`, `*EventHandler*`, `*Hover*`, `*Completion*` (347 классов) зелёные
+  после правки мока; `javadoc`, `spotlessCheck` зелёные.

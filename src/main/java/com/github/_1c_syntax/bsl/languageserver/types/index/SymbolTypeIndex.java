@@ -1317,10 +1317,7 @@ public class SymbolTypeIndex {
 
   @Nullable
   private static MethodSymbol findLocalFunction(DocumentContext owner, String name) {
-    return owner.getSymbolTree().getMethods().stream()
-      .filter(candidate -> candidate.isFunction() && candidate.getName().equalsIgnoreCase(name))
-      .findFirst()
-      .orElse(null);
+    return owner.getSymbolTree().getMethodSymbol(name).filter(MethodSymbol::isFunction).orElse(null);
   }
 
   /** Ленивая ссылка на возвращаемый тип функции (из кэша, на момент чтения). */
