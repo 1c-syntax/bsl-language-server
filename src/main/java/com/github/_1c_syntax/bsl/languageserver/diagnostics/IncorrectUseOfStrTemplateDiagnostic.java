@@ -169,12 +169,14 @@ public class IncorrectUseOfStrTemplateDiagnostic extends AbstractFindMethodDiagn
       if (prevStatement == null) {
         break;
       }
-      final var constValueContext = Optional.ofNullable(prevStatement.assignment())
-        .filter(assignment -> isAssignmentForVar(varName, assignment))
-        .map(BSLParser.AssignmentContext::expression)
-        .flatMap(expression -> getConstValue(Optional.of(expression), false));
-      if (constValueContext.isPresent()) {
-        return constValueContext;
+      final var assignment = Optional.ofNullable(prevStatement.assignment())
+        .filter(candidate -> isAssignmentForVar(varName, candidate));
+      if (assignment.isPresent()) {
+        // Значение — из ближайшего присваивания: если там не константа, шаблон статически
+        // неизвестен, и более раннюю, уже перезаписанную константу брать нельзя.
+        return assignment
+          .map(BSLParser.AssignmentContext::expression)
+          .flatMap(expression -> getConstValue(Optional.of(expression), false));
       }
     }
     return Optional.empty();
