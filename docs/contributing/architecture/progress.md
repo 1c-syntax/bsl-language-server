@@ -1427,3 +1427,20 @@
 - **Тесты.** `FormPlatformTypesNamedPropertiesTest` красный на заглушке → зелёный.
 - **Проверка.** Все `types`, `*Hover*`, `*Completion*`, `*Form*` (370 классов, 3016 тестов) зелёные;
   `javadoc`, `spotlessCheck` зелёные.
+
+## Раунд 92. Сигнатура с другими типами возврата — `SignatureDescriptor.withReturnTypes`
+
+Источник — пункт 6 углублённого сканирования `types/` (вторая половина; первая — раунд 86).
+
+- **Сделано.** `withReturnTypes` рядом с `withMetadata`; три пересборки сигнатуры
+  четырёхаргументным конструктором ради одного поля (`MetadataCollectionSpecializer` ×2,
+  `RegisterFamilies`) сведены к нему. `CollectionReturnsSpecializer.refine` меняет и параметры, и
+  возврат — оставлен конструктором; сигнатура конструктора `.os`-класса собирается заново из
+  строкового описания — тоже.
+- **Отклонено:** замена девятиаргументных `new MemberDescriptor(…)` в `MetadataCollectionSpecializer`
+  на `MdoMemberFactory.property` — фабрика строит описание из пустой строки, а не из
+  `BilingualString.EMPTY`; поведение не доказуемо то же, а выигрыш — два вызова.
+- **Тесты.** `SignatureDescriptorTest.withReturnTypesKeepsEverythingButReturnTypes` красный на
+  заглушке → зелёный.
+- **Проверка.** Все `types`, `*Hover*`, `*Completion*`, `*SignatureHelp*` (344 класса, 2974 теста)
+  зелёные; `javadoc`, `spotlessCheck` зелёные.

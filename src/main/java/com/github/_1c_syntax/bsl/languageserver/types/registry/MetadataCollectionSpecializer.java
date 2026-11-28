@@ -649,8 +649,7 @@ public class MetadataCollectionSpecializer {
         continue;
       }
       var signatures = member.signatures().stream()
-        .map(sig -> new SignatureDescriptor(sig.parameters(), sig.returnTypes().mapRefs(own),
-          sig.bilingualDescription(), sig.metadata()))
+        .map(sig -> sig.withReturnTypes(sig.returnTypes().mapRefs(own)))
         .toList();
       result.add(member.withReturnTypes(member.returnTypes().mapRefs(own)).withSignatures(signatures));
     }
@@ -967,8 +966,7 @@ public class MetadataCollectionSpecializer {
     if (!rebuiltSignatures.isEmpty()) {
       var newSignatures = new ArrayList<SignatureDescriptor>(rebuiltSignatures.size());
       for (var sig : rebuiltSignatures) {
-        newSignatures.add(new SignatureDescriptor(sig.parameters(), elementTypeSet,
-          sig.bilingualDescription(), sig.metadata()));
+        newSignatures.add(sig.withReturnTypes(elementTypeSet));
       }
       rebuiltSignatures = newSignatures;
     }

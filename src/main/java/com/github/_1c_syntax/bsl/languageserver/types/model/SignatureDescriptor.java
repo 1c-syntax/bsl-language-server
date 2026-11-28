@@ -101,6 +101,16 @@ public record SignatureDescriptor(
     return new SignatureDescriptor(parameters, TypeSet.EMPTY, BilingualString.EMPTY);
   }
 
+  /**
+   * Копия сигнатуры с другими типами возврата.
+   *
+   * @param newReturnTypes типы возвращаемого значения.
+   * @return сигнатура, в которой остальное — как у исходной.
+   */
+  public SignatureDescriptor withReturnTypes(TypeSet newReturnTypes) {
+    return new SignatureDescriptor(parameters, newReturnTypes, bilingualDescription, metadata);
+  }
+
   /** Копия сигнатуры с заменёнными платформенными метаданными. */
   public SignatureDescriptor withMetadata(PlatformMetadata newMetadata) {
     if (metadata.equals(newMetadata)) {
