@@ -70,7 +70,7 @@ public class WrongUseFunctionProceedWithCallDiagnostic extends AbstractFindMetho
       .filter(annotation -> annotation.getKind() == EXTENSION_ANNOTATION_AROUND)
       .count() == 1;
     if (!isAroundAnnotationMethod) {
-      return MESSAGE_PATTERN.matcher(ctx.methodName().getText()).matches();
+      return super.checkGlobalMethodCall(ctx);
     }
 
     return false;

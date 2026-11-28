@@ -136,9 +136,7 @@ public class ScheduledJobHandlerDiagnostic extends AbstractMetadataDiagnostic {
 
     documentContext.getServerContext().getDocument(mdCommonModule.getMdoRef(), ModuleType.CommonModule)
       .ifPresent((DocumentContext commonModuleContext) -> {
-        var method = commonModuleContext.getSymbolTree().getMethods().stream()
-          .filter(methodSymbol -> methodSymbol.getName().equalsIgnoreCase(methodName))
-          .findFirst();
+        var method = commonModuleContext.getSymbolTree().getMethodSymbol(methodName);
         if (method.isEmpty()) {
           addDiagnostic(DIAGNOSTIC_MESSAGE, scheduleJob, fullName);
           return;

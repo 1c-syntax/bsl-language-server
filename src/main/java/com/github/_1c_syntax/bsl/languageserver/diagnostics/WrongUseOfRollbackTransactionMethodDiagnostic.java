@@ -57,7 +57,7 @@ public class WrongUseOfRollbackTransactionMethodDiagnostic extends AbstractFindM
     var parentNode = Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_exceptCodeBlock);
 
     if (parentNode == null) {
-      return MESSAGE_PATTERN.matcher(ctx.methodName().getText()).matches();
+      return super.checkGlobalMethodCall(ctx);
     }
 
     var methodsList = Trees.findAllRuleNodes(parentNode, BSLParser.RULE_globalMethodCall).stream()
@@ -65,7 +65,7 @@ public class WrongUseOfRollbackTransactionMethodDiagnostic extends AbstractFindM
       .map(e -> e.methodName().getText())
       .toList();
 
-    if (MESSAGE_PATTERN.matcher(ctx.methodName().getText()).matches()) {
+    if (super.checkGlobalMethodCall(ctx)) {
       return methodsList.indexOf(ctx.methodName().getText()) != 0;
     }
 

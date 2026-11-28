@@ -70,7 +70,7 @@ public class FormDataToValueDiagnostic extends AbstractFindMethodDiagnostic {
         || compilerDirective == CompilerDirectiveKind.AT_CLIENT_AT_SERVER_NO_CONTEXT)
       .isEmpty();
     if (isContextMethod) {
-      return MESSAGE_PATTERN.matcher(ctx.methodName().getText()).matches();
+      return super.checkGlobalMethodCall(ctx);
     }
 
     return false;

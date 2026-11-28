@@ -111,9 +111,7 @@ public class MissingEventSubscriptionHandlerDiagnostic extends AbstractDiagnosti
     documentContext.getServerContext()
       .getDocument(commonModule.getMdoRef(), ModuleType.CommonModule)
       .ifPresent((DocumentContext commonModuleContext) -> {
-        var method = commonModuleContext.getSymbolTree().getMethods().stream()
-          .filter(methodSymbol -> methodSymbol.getName().equalsIgnoreCase(methodName))
-          .findFirst();
+        var method = commonModuleContext.getSymbolTree().getMethodSymbol(methodName);
         if (method.isEmpty()) {
           addDiagnostic("missingMethod", eventSubs, commonModule.getName() + "." + methodName);
           return;

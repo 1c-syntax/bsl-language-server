@@ -478,3 +478,19 @@
 - **Сделано.** Ветка удалена — у конструктора один источник.
 - **Проверка.** Характеризующий `SignatureHelpProviderOScriptLibraryTest.signatureForLibraryClassConstructor`
   и прочие тесты signature help (78) зелёные.
+
+## Раунд 34. Диагностики на готовых канонических функциях
+
+Источник — сканирование дублей в `diagnostics/` (пункты, где канон уже есть и открыт).
+
+- **Сделано.**
+  - `FormDataToValue`, `WrongUseOfRollbackTransactionMethod` (два места),
+    `WrongUseFunctionProceedWithCall` повторяли тело `AbstractFindMethodDiagnostic.checkGlobalMethodCall`
+    своим `MESSAGE_PATTERN` (тем же, что отдан в `super`) — теперь `super.checkGlobalMethodCall`,
+    как у `SetPrivilegedMode`/`DisableSafeMode`.
+  - `IncorrectUseOfStrTemplate` объявлял заново три шаблона `MultilingualStringAnalyser`
+    (имя `СтрШаблон`, имя `НСтр`, плейсхолдеры) — использует открытые оригиналы и `isNStrCall`.
+  - `ScheduledJobHandler`, `MissingEventSubscriptionHandler` искали метод общего модуля линейным
+    `equalsIgnoreCase` — теперь `SymbolTree.getMethodSymbol(String)` (тот же результат: без учёта
+    регистра, первый объявленный).
+- **Проверка.** Поведение не меняется; тесты шести диагностик (13) зелёные.
