@@ -180,15 +180,11 @@ public class RegisterTypesRegistrar {
     if (setRef == null || recordRef == null) {
       return;
     }
-    // Тип элемента — до наследования коллекционных свойств: иначе выиграла бы
-    // унаследованная обобщённая запись и обход потерял бы колонки.
-    typeRegistry.registerDefaultElementTypes(setRef, List.of(recordRef));
-    typeRegistry.inheritCollectionTraits(setRef, genericSet, FileType.BSL);
-
     MemberSource columns = () -> typeRegistry.getMembers(recordRef, FileType.BSL).stream()
       .filter(member -> member.kind() == MemberKind.PROPERTY && !member.generic())
       .toList();
-    CollectionReturnsSpecializer.register(typeRegistry, setRef, genericSet, genericRecord, recordRef, columns);
+    CollectionReturnsSpecializer.registerCollection(typeRegistry, setRef, genericSet, genericRecord, recordRef,
+      columns);
   }
 
   /**

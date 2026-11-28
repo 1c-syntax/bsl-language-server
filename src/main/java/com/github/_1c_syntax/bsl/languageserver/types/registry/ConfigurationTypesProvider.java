@@ -727,10 +727,7 @@ public class ConfigurationTypesProvider {
     }
     typeRegistry.registerExtension(rowRef, genericRow, FileType.BSL);
     typeRegistry.registerExtension(collRef, genericColl, FileType.BSL);
-    typeRegistry.registerDefaultElementTypes(collRef, List.of(rowRef));
-    typeRegistry.inheritCollectionTraits(collRef, genericColl, FileType.BSL);
-
-    CollectionReturnsSpecializer.register(typeRegistry, collRef, genericColl, genericRow, rowRef, columns);
+    CollectionReturnsSpecializer.registerCollection(typeRegistry, collRef, genericColl, genericRow, rowRef, columns);
   }
 
   /**

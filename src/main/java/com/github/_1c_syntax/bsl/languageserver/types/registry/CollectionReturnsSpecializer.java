@@ -93,6 +93,28 @@ final class CollectionReturnsSpecializer {
    * @param row               строка этой коллекции.
    * @param columns           колонки — они же колонки выгруженной таблицы значений.
    */
+  /**
+   * Регистрирует типизированную коллекцию целиком: своя строка — типом элемента, обход и
+   * индексатор — от обобщённой коллекции, её члены — уточнёнными под строку
+   * ({@link #register}).
+   * <p>
+   * Порядок шагов обязателен: тип элемента задаётся до наследования коллекционных свойств,
+   * иначе выиграла бы унаследованная обобщённая строка, и {@code Для Каждого} терял бы колонки.
+   *
+   * @param typeRegistry      реестр, в котором регистрируется коллекция.
+   * @param collection        тип этой коллекции.
+   * @param genericCollection обобщённый тип коллекции — источник объявлений и свойств обхода.
+   * @param genericRow        обобщённый тип строки, который заменяется.
+   * @param row               строка этой коллекции.
+   * @param columns           колонки — они же колонки выгруженной таблицы значений.
+   */
+  static void registerCollection(TypeRegistry typeRegistry, TypeRef collection, TypeRef genericCollection,
+                                 TypeRef genericRow, TypeRef row, MemberSource columns) {
+    typeRegistry.registerDefaultElementTypes(collection, List.of(row));
+    typeRegistry.inheritCollectionTraits(collection, genericCollection, FileType.BSL);
+    register(typeRegistry, collection, genericCollection, genericRow, row, columns);
+  }
+
   static void register(TypeRegistry typeRegistry, TypeRef collection, TypeRef genericCollection,
                        TypeRef genericRow, TypeRef row, MemberSource columns) {
     var valueTableRow = typeRegistry.resolve(VALUE_TABLE_ROW).orElse(null);

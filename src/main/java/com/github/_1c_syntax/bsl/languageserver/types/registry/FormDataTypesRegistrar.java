@@ -317,11 +317,6 @@ class FormDataTypesRegistrar {
     var itemRef = registerFormDataMirror(itemTypeRu, itemTypeEn, suffix, "", itemBase);
     var collectionRef = registerFormDataMirror(
       dataKind.baseTypeRu(), dataKind.baseTypeEn(), suffix, "", collectionBase);
-    // Порядок важен: явный тип элемента должен быть задан до наследования, иначе
-    // выиграет обобщённая строка базового типа (см. registerTabularSectionData).
-    typeRegistry.registerDefaultElementTypes(collectionRef, List.of(itemRef));
-    typeRegistry.inheritCollectionTraits(collectionRef, collectionBase, FileType.BSL);
-
     // Колонки — это те же реквизиты формы, только вложенные: у них есть и свои типы,
     // и заголовки, и собственные колонки, если колонка сама таблица.
     var columnTypes = prepareAttributeTypes(columns, kind, suffix);
@@ -330,7 +325,8 @@ class FormDataTypesRegistrar {
     // Тем же помощником, что и у табличной части: типы элементов задают только обход
     // коллекции, а `НайтиПоИдентификатору`, `Добавить`, `Получить`, `НайтиСтроки` и
     // `Выгрузить` объявлены платформой через обобщённую строку и без замены отдают её.
-    specializeCollectionReturns(collectionRef, collectionBase, itemBase, itemRef, columnMembers);
+    CollectionReturnsSpecializer.registerCollection(typeRegistry, collectionRef, collectionBase, itemBase, itemRef,
+      columnMembers);
     rowByCollection.put(collectionRef, itemRef);
     return collectionRef;
   }
@@ -455,14 +451,13 @@ class FormDataTypesRegistrar {
     var collectionRef = registerFormDataMirror(
       FormPlatformTypes.FORM_DATA_COLLECTION_RU, FormPlatformTypes.FORM_DATA_COLLECTION_EN,
       suffix, "", collectionBase);
-    typeRegistry.registerDefaultElementTypes(collectionRef, List.of(itemRef));
-    typeRegistry.inheritCollectionTraits(collectionRef, collectionBase, FileType.BSL);
     MemberSource allColumns = () -> {
       var columns = new ArrayList<>(mirrorColumns.getMembers());
       columns.addAll(extraMembers.getMembers());
       return columns;
     };
-    specializeCollectionReturns(collectionRef, collectionBase, itemBase, itemRef, allColumns);
+    CollectionReturnsSpecializer.registerCollection(typeRegistry, collectionRef, collectionBase, itemBase, itemRef,
+      allColumns);
     rowByCollection.put(collectionRef, itemRef);
     columnsByCollection.put(collectionRef, allColumns);
     return collectionRef;
@@ -523,8 +518,10 @@ class FormDataTypesRegistrar {
       typeRegistry.displayName(recordSetRef, Language.EN), itemBase);
     MemberSource columns = () -> recordColumns(recordSetRef, itemBase);
     typeRegistry.registerMemberSource(itemRef, columns, FileType.BSL);
+    // Свойства обхода набору данных наследует вызывающий — у всех видов данных формы, —
+    // поэтому здесь только тип элемента (до наследования) и уточнение членов.
     typeRegistry.registerDefaultElementTypes(dataRef, List.of(itemRef));
-    specializeCollectionReturns(dataRef, baseRef, itemBase, itemRef, columns);
+    CollectionReturnsSpecializer.register(typeRegistry, dataRef, baseRef, itemBase, itemRef, columns);
     rowByCollection.put(dataRef, itemRef);
   }
 
@@ -572,12 +569,6 @@ class FormDataTypesRegistrar {
     var collectionRef = registerFormDataMirror(
       FormPlatformTypes.FORM_DATA_COLLECTION_RU, FormPlatformTypes.FORM_DATA_COLLECTION_EN,
       suffix, "", collectionBase);
-    // Явные типы элементов должны быть заданы до наследования от базового типа:
-    // иначе выиграет унаследованный обобщённый ДанныеФормыЭлементКоллекции и
-    // `Для Каждого Строка Из Объект.Товары` потеряет колонки.
-    typeRegistry.registerDefaultElementTypes(collectionRef, List.of(itemRef));
-    typeRegistry.inheritCollectionTraits(collectionRef, collectionBase, FileType.BSL);
-
     // Колонки — только у строки: у самой ДанныеФормыКоллекция их нет, обращение
     // `Объект.Товары.Цена` на форме не работает. (Тип табличной части объекта
     // показывает колонки и на коллекции — там это осознанное послабление, здесь оно
@@ -588,30 +579,11 @@ class FormDataTypesRegistrar {
     // Типы возврата уточняются тем же помощником, что и у табличной части объекта:
     // задача одна — заменить обобщённую строку на строку этой коллекции и доопределить
     // «массив чего» у `НайтиСтроки` и «таблицу с какими колонками» у `Выгрузить`.
-    specializeCollectionReturns(collectionRef, collectionBase, itemBase, itemRef, columns);
+    CollectionReturnsSpecializer.registerCollection(typeRegistry, collectionRef, collectionBase, itemBase, itemRef,
+      columns);
     tabularSectionData.put(tabularSectionRef, collectionRef);
     rowByCollection.put(collectionRef, itemRef);
     columnsByCollection.put(collectionRef, columns);
-  }
-
-  /**
-   * Уточняет типы возврата у членов коллекции данных формы под её строку.
-   * <p>
-   * Нужно всякой коллекции данных формы, откуда бы её колонки ни пришли: и зеркалу
-   * табличной части, и реквизиту-таблице (дереву) значений. Явные типы элементов
-   * ({@code registerDefaultElementTypes}) закрывают только обход коллекции — обращение
-   * же {@code Товары.НайтиПоИдентификатору(Ид).Цена} идёт через объявление члена, а там
-   * платформа называет обобщённую строку.
-   *
-   * @param collectionRef  тип этой коллекции.
-   * @param collectionBase базовый платформенный тип коллекции — источник объявлений.
-   * @param itemBase       обобщённый тип строки, который надо заменить.
-   * @param itemRef        строка этой коллекции.
-   * @param columns        колонки — они же колонки выгруженной таблицы значений.
-   */
-  private void specializeCollectionReturns(TypeRef collectionRef, TypeRef collectionBase,
-                                           TypeRef itemBase, TypeRef itemRef, MemberSource columns) {
-    CollectionReturnsSpecializer.register(typeRegistry, collectionRef, collectionBase, itemBase, itemRef, columns);
   }
 
   /**

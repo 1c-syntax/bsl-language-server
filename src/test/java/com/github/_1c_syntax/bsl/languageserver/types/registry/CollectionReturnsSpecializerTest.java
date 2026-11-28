@@ -57,4 +57,26 @@ class CollectionReturnsSpecializerTest {
       .findFirst();
     assertThat(add).map(MemberDescriptor::returnType).contains(row);
   }
+
+  @Test
+  void registeredTypedCollectionIteratesOverItsOwnRow() {
+    // given
+    var genericCollection = typeRegistry.resolve("Табличная часть").orElseThrow();
+    var genericRow = typeRegistry.resolve("Строка табличной части").orElseThrow();
+    var collection = typeRegistry.registerConfigurationType("ТипизированнаяКоллекция.Товары");
+    var row = typeRegistry.registerConfigurationType("ТипизированнаяСтрока.Товары");
+
+    // when
+    CollectionReturnsSpecializer.registerCollection(typeRegistry, collection, genericCollection, genericRow, row,
+      List::of);
+
+    // then — элемент — своя строка, а не унаследованная обобщённая; обход и методы — от обобщённой.
+    assertThat(typeRegistry.getDefaultElementTypes(collection).refs()).containsExactly(row);
+    assertThat(typeRegistry.supportsForEach(collection, FileType.BSL))
+      .isEqualTo(typeRegistry.supportsForEach(genericCollection, FileType.BSL));
+    var add = typeRegistry.getMembers(collection, FileType.BSL).stream()
+      .filter(member -> "Добавить".equals(member.name()))
+      .findFirst();
+    assertThat(add).map(MemberDescriptor::returnType).contains(row);
+  }
 }
