@@ -95,13 +95,13 @@ public class GlobalLanguageServerConfiguration {
   @Nullable
   private File configurationFile;
 
-  @Value("${app.configuration.path:.bsl-language-server.json}")
+  @Value("${app.configuration.path:" + ConfigurationFiles.DEFAULT_FILE_NAME + "}")
   @Getter(AccessLevel.NONE)
   @Setter(AccessLevel.NONE)
   @JsonIgnore
   private String configurationFilePath;
 
-  @Value("${app.globalConfiguration.path:${user.home}/.bsl-language-server.json}")
+  @Value("${app.globalConfiguration.path:${user.home}/" + ConfigurationFiles.DEFAULT_FILE_NAME + "}")
   @Getter(AccessLevel.NONE)
   @Setter(AccessLevel.NONE)
   @JsonIgnore

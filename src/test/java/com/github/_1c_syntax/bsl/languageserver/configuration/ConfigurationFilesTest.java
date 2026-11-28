@@ -37,6 +37,37 @@ class ConfigurationFilesTest {
   @TempDir
   Path tempDir;
 
+  /**
+   * Имя файла конфигурации по умолчанию задано в одном месте — {@link ConfigurationFiles#DEFAULT_FILE_NAME};
+   * остальной код ссылается на константу, а не повторяет строку.
+   */
+  @Test
+  void defaultFileNameLiteralLivesOnlyInConfigurationFiles() throws IOException {
+    var sources = Path.of("src/main/java");
+    var owner = sources.resolve("com/github/_1c_syntax/bsl/languageserver/configuration/ConfigurationFiles.java");
+    var literal = "\"" + ConfigurationFiles.DEFAULT_FILE_NAME + "\"";
+    var embedded = "/" + ConfigurationFiles.DEFAULT_FILE_NAME + "}\"";
+
+    try (var files = Files.walk(sources)) {
+      var offenders = files
+        .filter(file -> file.toString().endsWith(".java"))
+        .filter(file -> !file.equals(owner))
+        .filter(file -> {
+          try {
+            var content = Files.readString(file);
+            return content.contains(literal) || content.contains(embedded)
+              || content.contains(":" + ConfigurationFiles.DEFAULT_FILE_NAME + "}");
+          } catch (IOException e) {
+            throw new IllegalStateException(e);
+          }
+        })
+        .map(Path::toString)
+        .toList();
+
+      assertThat(offenders).as("файлы, повторяющие имя файла конфигурации строкой").isEmpty();
+    }
+  }
+
   @Test
   void locatePrefersExplicitPathOverGlobal() throws IOException {
     // given

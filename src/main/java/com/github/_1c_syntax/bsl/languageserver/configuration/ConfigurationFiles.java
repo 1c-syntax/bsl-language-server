@@ -45,6 +45,13 @@ import static tools.jackson.databind.MapperFeature.ACCEPT_CASE_INSENSITIVE_ENUMS
 @UtilityClass
 public class ConfigurationFiles {
 
+  /**
+   * Имя файла конфигурации по умолчанию — и в корне рабочей области, и в домашнем каталоге
+   * пользователя. Значение по умолчанию свойств {@code app.configuration.path} и
+   * {@code app.globalConfiguration.path}.
+   */
+  public static final String DEFAULT_FILE_NAME = ".bsl-language-server.json";
+
   private static final JsonMapper MAPPER = JsonMapper.builder()
     .enable(ACCEPT_CASE_INSENSITIVE_ENUMS)
     .build();

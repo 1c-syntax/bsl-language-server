@@ -149,16 +149,16 @@ public class LanguageServerConfiguration {
   private File configurationFile;
 
   @JsonIgnore
-  @Value("${app.configuration.path:.bsl-language-server.json}")
+  @Value("${app.configuration.path:" + ConfigurationFiles.DEFAULT_FILE_NAME + "}")
   @Getter(AccessLevel.NONE)
   @Setter(value = AccessLevel.NONE)
-  private String defaultConfigFileName = ".bsl-language-server.json";
+  private String defaultConfigFileName = ConfigurationFiles.DEFAULT_FILE_NAME;
 
   @JsonIgnore
-  @Value("${app.globalConfiguration.path:${user.home}/.bsl-language-server.json}")
+  @Value("${app.globalConfiguration.path:${user.home}/" + ConfigurationFiles.DEFAULT_FILE_NAME + "}")
   @Getter(AccessLevel.NONE)
   @Setter(value = AccessLevel.NONE)
-  private String globalConfigPath = System.getProperty("user.home") + "/.bsl-language-server.json";
+  private String globalConfigPath = System.getProperty("user.home") + "/" + ConfigurationFiles.DEFAULT_FILE_NAME;
 
   /**
    * Снимок состояния, сделанный в {@link #init()} ПОСЛЕ применения Spring-инициализации и

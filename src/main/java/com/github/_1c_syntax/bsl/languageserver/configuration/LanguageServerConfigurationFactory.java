@@ -46,10 +46,10 @@ import java.nio.file.Path;
 @RequiredArgsConstructor
 public class LanguageServerConfigurationFactory {
 
-  @Value("${app.configuration.path:.bsl-language-server.json}")
+  @Value("${app.configuration.path:" + ConfigurationFiles.DEFAULT_FILE_NAME + "}")
   private String defaultConfigFileName;
 
-  @Value("${app.globalConfiguration.path:${user.home}/.bsl-language-server.json}")
+  @Value("${app.globalConfiguration.path:${user.home}/" + ConfigurationFiles.DEFAULT_FILE_NAME + "}")
   private String globalConfigPath;
 
   private final ObjectProvider<LanguageServerConfiguration> configurationProvider;

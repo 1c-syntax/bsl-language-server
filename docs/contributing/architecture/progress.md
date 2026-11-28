@@ -842,3 +842,20 @@
 - **Проверка.** Красный `BSLTextDocumentServiceTest.completionAfterCloseFailsAsContentModified`
   (пустой список) → зелёный; тесты completion и `BSLTextDocumentServiceTest` (419) зелёные;
   `javadoc`, `spotlessCheck` зелёные.
+
+## Раунд 58. Имя файла конфигурации — одна константа
+
+- **Проблема.** `.bsl-language-server.json` было записано строкой в пяти местах Java-кода: дефолты
+  `@Value` у `GlobalLanguageServerConfiguration`, `LanguageServerConfiguration` и
+  `LanguageServerConfigurationFactory`, инициализаторы полей `LanguageServerConfiguration`,
+  константа `ConfigurationFileSystemWatcher`. Смена имени требовала бы правки каждого, а
+  наблюдатель за файлами разошёлся бы с поиском файла молча.
+- **Сделано.** `ConfigurationFiles.DEFAULT_FILE_NAME` (владелец поиска и чтения файла); все места
+  ссылаются на неё (в `@Value` — конкатенацией констант). `application.properties` остаётся
+  внешним источником Spring-свойств.
+- **Ограничение.** `ConfigurationFilesTest.defaultFileNameLiteralLivesOnlyInConfigurationFiles`:
+  скан `src/main/java` — имя файла строкой встречается только в `ConfigurationFiles` (на прежнем
+  коде красный по четырём файлам).
+- **Найдено попутно (backlog).** Наблюдатель при незаданном файле узнаёт новый файл конфигурации
+  по имени по умолчанию, а не по `app.configuration.path`: при переопределённом пути созданный
+  позже файл не подхватится без перезапуска.
