@@ -1100,3 +1100,19 @@
   красный на заглушке → зелёный.
 - **Проверка.** `types.oscript`, `*Autumn*`, `codeactions` (35 классов, 270 тестов) зелёные;
   `javadoc`, `spotlessCheck` зелёные.
+
+## Раунд 72. Фиксация и отказ от файла отчёта — в `ReportFile`
+
+Источник — бэклог, пункт 3 сканирования после раунда 69.
+
+- **Проблема.** Шесть файловых репортёров повторяли окончание жизненного цикла: `endReport` —
+  `commit()` и строка журнала «… report saved to …», `abortReport` — «закрыть, если файл
+  открыт». Общий базовый класс не подходит: часть репортёров наследует
+  `AbstractDiagnosticReporter`, часть — нет.
+- **Сделано.** `ReportFile.commit(reportName)` фиксирует и пишет строку журнала (тот же текст),
+  `ReportFile.discard(reportFile)` отказывается от начатого отчёта; безымянный `commit()` стал
+  приватным. У репортёров ушли собственные логгеры — журналировать им больше нечего.
+- **Тесты.** `ReportFileTest.commitWithReportNameAnnouncesWhereReportIsSaved` и
+  `discardDeletesOpenedReportAndToleratesUnstartedOne` красные на заглушках → зелёные.
+- **Проверка.** `reporters` (включая побайтовый `ReporterOutputFormatTest`), `AnalyzeCommandTest`
+  (16 классов, 57 тестов) зелёные; `javadoc`, `spotlessCheck` зелёные.

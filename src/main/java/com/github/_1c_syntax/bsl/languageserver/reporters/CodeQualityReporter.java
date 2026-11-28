@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.reporters;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.infrastructure.DiagnosticInfos;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticCode;
 import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import tools.jackson.core.util.DefaultIndenter;
 import tools.jackson.core.util.DefaultPrettyPrinter;
@@ -34,7 +33,6 @@ import tools.jackson.databind.json.JsonMapper;
 
 import java.nio.file.Path;
 
-@Slf4j
 @Component
 public class CodeQualityReporter extends AbstractDiagnosticReporter {
 
@@ -84,14 +82,11 @@ public class CodeQualityReporter extends AbstractDiagnosticReporter {
   @Override
   public void endReport() {
     writer.close();
-    reportFile.commit();
-    LOGGER.info("CodeQuality report saved to {}", reportFile.path().toAbsolutePath());
+    reportFile.commit("CodeQuality");
   }
 
   @Override
   public void abortReport() {
-    if (reportFile != null) {
-      reportFile.close();
-    }
+    ReportFile.discard(reportFile);
   }
 }

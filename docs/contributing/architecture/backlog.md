@@ -161,9 +161,7 @@
      выведенные типы `.os` — только с тестами на каждое расхождение.
   2. Мультикарта «имя → множество» с обратным индексом по URI — три копии
      (`AutumnBeanIndex`, `AutumnInjectionPointIndex`, `TypeRelationIndex`).
-  3. Жизненный цикл файла отчёта — шесть одинаковых `abortReport` и окончаний `endReport`
-     (`commit` + «report saved to»). Общий базовый класс не годится: часть репортёров наследует
-     `AbstractDiagnosticReporter`; место — `ReportFile`.
+  3. ~~Жизненный цикл файла отчёта~~ — закрыто, раунд 72.
   4. ~~Перечень точек внедрения «ОСени»~~ — закрыто, раунд 71.
   5. Аннотации конструктора `.os`-класса — три способа (`OScriptIterable`, `OScriptExtends`,
      `OScriptMetaAnnotationResolver`); ручные копии `OScriptMetaAnnotationResolver.find`.
