@@ -665,19 +665,6 @@ public final class CompletionProvider {
   private record DotCompletionInfo(String prefix) {
   }
 
-  /**
-   * Метод, в области видимости которого находится {@code position}.
-   *
-   * @return метод, содержащий позицию; {@code empty}, если позиция вне
-   * какого-либо метода (уровень модуля).
-   */
-  private static Optional<MethodSymbol> enclosingMethod(DocumentContext documentContext, Position position) {
-    var symbol = documentContext.getSymbolTree().getSymbolAtPosition(position);
-    if (symbol instanceof MethodSymbol method) {
-      return Optional.of(method);
-    }
-    return symbol.getRootParent(MethodSymbol.class).map(MethodSymbol.class::cast);
-  }
 
   /**
    * Переменная не должна попадать в no-dot completion, если она вне текущей
@@ -750,7 +737,7 @@ public final class CompletionProvider {
     // только на уровне модуля (курсор вне тела метода): внутри чужого метода вставка нового
     // объявления процедуры/функции была бы синтаксически некорректной (аналог «override method»
     // в других IDE, но для обработчиков платформенных событий 1С).
-    if (enclosingMethod(documentContext, position).isEmpty()) {
+    if (documentContext.getSymbolTree().getMethodSymbolAtPosition(position).isEmpty()) {
       collectEventHandlerStubs(documentContext, prefix, target, items);
     }
 
@@ -876,7 +863,7 @@ public final class CompletionProvider {
     // курсор); переменные и параметры ДРУГИХ методов документа не видны здесь и
     // не должны предлагаться (см. VariableSymbol.getScope()).
     var moduleSymbol = query.document().getSymbolTree().getModule();
-    var enclosingMethod = enclosingMethod(query.document(), query.position());
+    var enclosingMethod = query.document().getSymbolTree().getMethodSymbolAtPosition(query.position());
     // Видимая переменная перекрывает только self-свойство: переменные и методы
     // живут в разных пространствах имён, поэтому ключ дедупликации несёт вид члена.
     for (var variable : query.document().getSymbolTree().getVariables()) {

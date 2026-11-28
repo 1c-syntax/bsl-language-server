@@ -30,9 +30,9 @@
   требует решения.
 - **`UnreachableCodeDiagnostic`: позиция с 1-based строкой** сравнивается с 0-based диапазонами
   (гипотеза, `diagnostics/UnreachableCodeDiagnostic.java` ~:191).
-- **`MainApplication` разбирает аргументы вручную параллельно picocli** (гипотеза): `--websocket`
-  не распознаётся как websocket-режим, токен `mcp` в любом месте включает MCP-профили; поля
-  `serverPort`/`endpointPath`/`--mcp-path` у команд не читаются.
+- **Поля `serverPort`/`endpointPath`/`--mcp-path` у команд не читаются** (гипотеза): значения
+  берёт Spring из сырых аргументов, поля нужны picocli для справки и приёма опций. Дефолты
+  `8025`/`/lsp` в описаниях опций дублируют `application.properties`.
 
 ## Дублирование реализаций (канонизация)
 

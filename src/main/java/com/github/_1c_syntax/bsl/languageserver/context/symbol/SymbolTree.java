@@ -365,6 +365,20 @@ public class SymbolTree {
   }
 
   /**
+   * Метод, в котором стоит позиция: в его теле или на его объявлении.
+   *
+   * @param position Позиция в документе.
+   * @return Метод, содержащий позицию; пусто, если позиция вне методов (в теле модуля).
+   */
+  public Optional<MethodSymbol> getMethodSymbolAtPosition(Position position) {
+    var symbol = getSymbolAtPosition(position);
+    if (symbol instanceof MethodSymbol method) {
+      return Optional.of(method);
+    }
+    return symbol.getRootParent(MethodSymbol.class).map(MethodSymbol.class::cast);
+  }
+
+  /**
    * Символ, чьё имя ({@code selectionRange}) накрывает позицию — то есть позиция
    * стоит на объявлении символа. Двоичный поиск по строке через
    * {@link #getSymbolsBySelectionLine()}; при нескольких объявлениях на строке

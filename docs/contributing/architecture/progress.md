@@ -122,3 +122,16 @@
   нет.
 - **Проверка.** Красные `MainApplicationModeTest.modeIsTakenFromSubcommandNotFromAnyArgument` и
   `websocketAliasesSelectServletMode` → зелёные; `MainApplicationTest`, `ArchitectureTest`.
+
+## Раунд 9. «Метод в позиции» — одна реализация в `SymbolTree`
+
+- **Проблема.** Поиск метода, в котором стоит позиция, был написан пять раз:
+  `ExpressionTypeInferencer`, `CompletionProvider`, `CompilationContextMemo`,
+  `CompilationContextResolver` (inline), `InsertionWithoutChangeAndValidateDiagnostic` (свой цикл
+  по родителям — тот же результат: методы BSL не вкладываются).
+- **Сделано.** `SymbolTree.getMethodSymbolAtPosition(Position)` — рядом с
+  `getSymbolAtPosition`, которым он пользуется; все пять мест переведены, приватные копии и
+  ставшая сквозной обёртка `CompletionProvider.enclosingMethod` удалены.
+- **Проверка.** Красный `SymbolTreeTest.getMethodSymbolAtPositionFindsMethodThroughNestedSymbols`
+  (на заглушке) → зелёный; тесты `context.symbol`, `types.compilation`, `CompletionProvider*`,
+  `InsertionWithoutChangeAndValidateDiagnosticTest`.

@@ -60,6 +60,28 @@ class SymbolTreeTest {
   }
 
   @Test
+  void getMethodSymbolAtPositionFindsMethodThroughNestedSymbols() {
+    // given — переменная модуля, метод с областью и локальной переменной внутри.
+    var documentContext = TestUtils.getDocumentContext("""
+      Перем ПеременнаяМодуля;
+      Процедура Тест()
+        #Область Внутри
+        Локальная = 1;
+        #КонецОбласти
+      КонецПроцедуры
+      А = 1;
+      """);
+    var symbolTree = documentContext.getSymbolTree();
+    var method = symbolTree.getMethodSymbol("Тест").orElseThrow();
+
+    // then
+    assertThat(symbolTree.getMethodSymbolAtPosition(new Position(1, 12))).contains(method);
+    assertThat(symbolTree.getMethodSymbolAtPosition(new Position(3, 4))).contains(method);
+    assertThat(symbolTree.getMethodSymbolAtPosition(new Position(0, 8))).isEmpty();
+    assertThat(symbolTree.getMethodSymbolAtPosition(new Position(6, 0))).isEmpty();
+  }
+
+  @Test
   void findSymbolBySelectionRangeDisambiguatesTwoDeclarationsOnSameLine() {
     // given — два объявления переменных на одной строке в разных колонках.
     var documentContext = TestUtils.getDocumentContext("""

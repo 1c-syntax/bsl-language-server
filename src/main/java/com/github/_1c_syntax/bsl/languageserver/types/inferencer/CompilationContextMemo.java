@@ -44,9 +44,7 @@ final class CompilationContextMemo {
 
   Optional<MethodContext> contextAt(DocumentContext document, Position position,
                                      CompilationContextResolver resolver) {
-    var symbol = document.getSymbolTree().getSymbolAtPosition(position);
-    var method = symbol instanceof MethodSymbol enclosing ? Optional.of(enclosing)
-      : symbol.getRootParent(MethodSymbol.class).map(MethodSymbol.class::cast);
+    var method = document.getSymbolTree().getMethodSymbolAtPosition(position);
     var profile = methodContext(document, method.flatMap(MethodSymbol::getCompilerDirectiveKind), resolver);
     return resolver.contextAt(document, position, profile);
   }

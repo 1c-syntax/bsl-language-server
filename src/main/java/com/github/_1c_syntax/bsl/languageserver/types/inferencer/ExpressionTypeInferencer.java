@@ -2284,7 +2284,7 @@ public class ExpressionTypeInferencer {
     // Тела сравниваются по ссылке: узлы дерева разбора равенства по содержимому не имеют.
     Map<BSLParser.CodeBlockContext, List<Position>> positionsByBody = new IdentityHashMap<>();
     for (var position : definitionPositions(variable)) {
-      var enclosingMethod = enclosingMethod(symbolTree, position);
+      var enclosingMethod = symbolTree.getMethodSymbolAtPosition(position);
       var runsBeforeAnyUse = enclosingMethod.isEmpty()
         || Methods.isOscriptClassConstructorName(enclosingMethod.get().getName());
       var body = runsBeforeAnyUse ? VariableFlowAnalyzer.bodyAt(owner, position) : null;
@@ -2294,21 +2294,6 @@ public class ExpressionTypeInferencer {
     }
     return positionsByBody.entrySet().stream()
       .anyMatch(entry -> assignedOnEveryPath(owner, entry.getKey(), entry.getValue()));
-  }
-
-  /**
-   * Метод, в теле которого стоит позиция.
-   *
-   * @param symbolTree дерево символов документа.
-   * @param position   позиция в документе.
-   * @return метод; пусто, если позиция вне методов — то есть в теле модуля.
-   */
-  private static Optional<MethodSymbol> enclosingMethod(SymbolTree symbolTree, Position position) {
-    var symbol = symbolTree.getSymbolAtPosition(position);
-    if (symbol instanceof MethodSymbol method) {
-      return Optional.of(method);
-    }
-    return symbol.getRootParent(MethodSymbol.class).map(MethodSymbol.class::cast);
   }
 
   /**
