@@ -71,6 +71,7 @@ import org.springframework.stereotype.Component;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -759,12 +760,18 @@ public class ConfigurationTypesProvider {
    * будущем.
    */
   private void registerFamilySpecializations(String familyCore, String mdName) {
+    // Экспандер сам обходит все дженерики семейства с покрытыми параметрами — поэтому зовётся
+    // по разу на имя параметра, а не на дженерик: иначе каждая специализация получала бы
+    // по копии источника членов на каждый дженерик семейства.
+    var parameterNames = new LinkedHashSet<String>();
     for (var generic : typeRegistry.findAllGenericsByFamilyCore(familyCore)) {
       var parameters = typeRegistry.getTypeParameters(generic);
       if (parameters.size() == 1) {
-        genericExpander.registerFamilySpecializations(familyCore,
-          Map.of(parameters.get(0), mdName));
+        parameterNames.add(parameters.getFirst());
       }
+    }
+    for (var parameterName : parameterNames) {
+      genericExpander.registerFamilySpecializations(familyCore, Map.of(parameterName, mdName));
     }
   }
 

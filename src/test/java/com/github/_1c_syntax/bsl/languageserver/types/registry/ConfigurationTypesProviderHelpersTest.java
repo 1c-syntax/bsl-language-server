@@ -383,6 +383,30 @@ class ConfigurationTypesProviderHelpersTest {
   }
 
   @Test
+  void tryRegister_specializesEachFamilyGenericOnce() {
+    // given — два дженерика семейства с одним и тем же параметром
+    var catalog = (MD) Catalog.builder().name("Контрагенты").build();
+    runTryRegister(
+      "file:///test-family-once/",
+      org.mockito.Mockito::spy,
+      List.of(
+        makeGenericTypeDecl("СправочникСсылка.<Имя справочника>", "Имя справочника"),
+        makeGenericTypeDecl("СправочникОбъект.<Имя справочника>", "Имя справочника")),
+      java.util.Map.of(catalog.getMdoReference(), catalog),
+      (registry, p) -> {
+        // when
+        p.tryRegister();
+
+        // then — каждая специализация регистрируется один раз, а не по разу на дженерик семейства
+        verify(registry, times(1)).registerSpecialization(
+          org.mockito.ArgumentMatchers.eq("СправочникСсылка.Контрагенты"),
+          org.mockito.ArgumentMatchers.any(TypeRef.class),
+          org.mockito.ArgumentMatchers.anyMap(),
+          org.mockito.ArgumentMatchers.any(FileType.class));
+      });
+  }
+
+  @Test
   void tryRegister_withDocumentJournalAndGenericTemplate_runs() {
     var column = DocumentJournalColumn.builder()
       .name("Контрагент").build();
