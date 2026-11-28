@@ -328,3 +328,11 @@
 - **Дополнительно.** То же для code lens: линзы по индексам (`BeanUsagesCodeLensSupplier`)
   обновляются по `ServerContextPopulatedEvent` (красный
   `CodeLensProviderTest.testCodeLensRefreshesWhenServerContextIsPopulated` → зелёный).
+
+## Раунд 24. `findMethodAt` в диагностиках обработчиков событий
+
+- **Сделано.** Две дословные копии `findMethodAt` (`EventHandlerInvalidSignatureDiagnostic`,
+  `EventHandlerOutsideEventRegionDiagnostic`) заменены каноническим
+  `SymbolTree.getMethodSymbolAtPosition` (раунд 9): позиция — начало диагностики на
+  объявлении метода, методы не вкладываются, результат тот же.
+- **Проверка.** Тесты обеих диагностик, включая их quick fix'ы.

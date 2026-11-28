@@ -32,7 +32,6 @@ import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticT
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
 import com.github._1c_syntax.bsl.languageserver.types.registry.FormHandlerRoleIndex;
 import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.types.ModuleType;
 import org.eclipse.lsp4j.CodeAction;
 import org.jspecify.annotations.Nullable;
@@ -137,7 +136,7 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
     var methods = new ArrayList<MethodSymbol>();
     var fixedDiagnostics = new ArrayList<Diagnostic>();
     for (var diagnostic : diagnostics) {
-      var method = findMethodAt(documentContext, diagnostic.getRange().getStart());
+      var method = documentContext.getSymbolTree().getMethodSymbolAtPosition(diagnostic.getRange().getStart());
       if (method.isEmpty()) {
         continue;
       }
@@ -193,12 +192,6 @@ public class EventHandlerOutsideEventRegionDiagnostic extends AbstractDiagnostic
     return QuickFixProvider.createCodeActions(
       textEdits, info.getResourceString("quickFixMessage"),
       documentContext.getUri(), fixedDiagnostics);
-  }
-
-  private static Optional<MethodSymbol> findMethodAt(DocumentContext documentContext, Position position) {
-    return documentContext.getSymbolTree().getMethods().stream()
-      .filter(m -> Ranges.containsPosition(m.getSubNameRange(), position))
-      .findFirst();
   }
 
   /**

@@ -34,7 +34,6 @@ import com.github._1c_syntax.bsl.languageserver.types.model.ParameterDescriptor;
 import com.github._1c_syntax.bsl.languageserver.configuration.Language;
 import com.github._1c_syntax.bsl.languageserver.types.model.SignatureDescriptor;
 import com.github._1c_syntax.bsl.languageserver.utils.Positions;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.bsl.parser.BSLLexer;
 import org.antlr.v4.runtime.Token;
 import org.eclipse.lsp4j.CodeAction;
@@ -135,7 +134,7 @@ public class EventHandlerInvalidSignatureDiagnostic extends AbstractDiagnostic i
     var textEdits = new ArrayList<TextEdit>();
     var fixedDiagnostics = new ArrayList<Diagnostic>();
     diagnostics.forEach(diagnostic ->
-      findMethodAt(documentContext, diagnostic.getRange().getStart())
+      documentContext.getSymbolTree().getMethodSymbolAtPosition(diagnostic.getRange().getStart())
         .flatMap(method -> eventContractsIndex.getContract(documentContext, method.getName())
           .filter(contract -> !contract.signatures().isEmpty())
           .flatMap(contract -> buildSignatureFix(documentContext, method, contract)))
@@ -150,12 +149,6 @@ public class EventHandlerInvalidSignatureDiagnostic extends AbstractDiagnostic i
     return QuickFixProvider.createCodeActions(
       textEdits, info.getResourceString("quickFixMessage"),
       documentContext.getUri(), fixedDiagnostics);
-  }
-
-  private static Optional<MethodSymbol> findMethodAt(DocumentContext documentContext, Position position) {
-    return documentContext.getSymbolTree().getMethods().stream()
-      .filter(m -> Ranges.containsPosition(m.getSubNameRange(), position))
-      .findFirst();
   }
 
   /**
