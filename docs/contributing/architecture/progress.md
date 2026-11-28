@@ -325,3 +325,6 @@
 - **Сделано.** `InlayHintProvider` отправляет `workspace/inlayHint/refresh` на оба события.
 - **Проверка.** Красный `InlayHintRefreshTest` (на пустых обработчиках) → зелёный; тесты
   `inlayhints`, `lsp`, `ArchitectureTest`.
+- **Дополнительно.** То же для code lens: линзы по индексам (`BeanUsagesCodeLensSupplier`)
+  обновляются по `ServerContextPopulatedEvent` (красный
+  `CodeLensProviderTest.testCodeLensRefreshesWhenServerContextIsPopulated` → зелёный).

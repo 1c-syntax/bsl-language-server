@@ -25,6 +25,8 @@ import com.github._1c_syntax.bsl.languageserver.client.ClientCapabilitiesHolder;
 import com.github._1c_syntax.bsl.languageserver.client.LanguageClientHolder;
 import com.github._1c_syntax.bsl.languageserver.configuration.LanguageServerConfiguration;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
+import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.google.gson.Gson;
 import org.eclipse.lsp4j.ClientCapabilities;
@@ -92,6 +94,21 @@ class CodeLensProviderTest {
 
     // when
     applicationEventPublisher.publishEvent(new LanguageServerConfigurationChangedEvent(configuration));
+
+    // then
+    verify(languageClient).refreshCodeLenses();
+  }
+
+  @Test
+  void testCodeLensRefreshesWhenServerContextIsPopulated() {
+    // given — линзы по индексам (число использований бина) готовы только после наполнения контекста
+    var languageClient = mock(LanguageClient.class);
+    clientHolder.connect(languageClient);
+
+    prepareCodeLensRefreshSupport(true);
+
+    // when
+    codeLensProvider.handleServerContextPopulated(new ServerContextPopulatedEvent(mock(ServerContext.class)));
 
     // then
     verify(languageClient).refreshCodeLenses();

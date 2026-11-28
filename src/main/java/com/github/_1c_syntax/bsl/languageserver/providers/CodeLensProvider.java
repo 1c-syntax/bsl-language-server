@@ -27,6 +27,7 @@ import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensData;
 import com.github._1c_syntax.bsl.languageserver.codelenses.CodeLensSupplier;
 import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageServerConfigurationChangedEvent;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
+import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
@@ -170,6 +171,20 @@ public class CodeLensProvider {
    */
   @EventListener
   public void handleEvent(LanguageServerConfigurationChangedEvent event) {
+    refreshCodeLenses();
+  }
+
+  /**
+   * Обработчик события {@link ServerContextPopulatedEvent}.
+   * <p>
+   * Часть линз (например, число использований бина) считается по индексам, которые наполняются
+   * только после наполнения контекста; линзы, запрошенные раньше, обновляются запросом
+   * {@code workspace/codeLens/refresh}.
+   *
+   * @param event Событие
+   */
+  @EventListener
+  public void handleServerContextPopulated(ServerContextPopulatedEvent event) {
     refreshCodeLenses();
   }
 
