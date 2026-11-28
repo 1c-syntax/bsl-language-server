@@ -267,6 +267,13 @@ class ArchitectureTest {
     .should().dependOnClassesThat().resideInAPackage("java.util.logging..")
     .because("логирование ведётся через slf4j (Lombok @Slf4j), а не через java.util.logging");
 
+  @ArchTest
+  static final ArchRule no_classes_should_use_jackson_2 = noClasses()
+    .should().dependOnClassesThat().resideInAnyPackage(
+      "com.fasterxml.jackson.databind..", "com.fasterxml.jackson.core..")
+    .because("JSON читается Jackson 3 (tools.jackson); у Jackson 3 под com.fasterxml.jackson "
+      + "остались только аннотации — второй парсер JSON с другой политикой исключений не нужен");
+
   // --- Слои и зависимости -------------------------------------------------------------------------
   // ПОЛНАЯ, БЕЗ ПРОБЕЛОВ карта разрешённых зависимостей между пакетами. Каждый пакет проекта —
   // отдельный слой, и для КАЖДОГО задан положительный whitelist «от чего он вправе зависеть»

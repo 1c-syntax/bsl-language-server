@@ -877,3 +877,17 @@
   без квадратичного прохода.
 - **Проверка.** Красный `ReferenceIndexFillerWorkspacesTest` (отметки B стирались) → зелёный;
   тесты `references`, `ServerContextProvider*`, `MultiWorkspace*` (197) зелёные.
+
+## Раунд 60. Второй парсер JSON (Jackson 2) — удалён
+
+- **Проблема.** Проект читает JSON Jackson 3 (`tools.jackson`), но `KeywordMetadataLoader`
+  импортировал `com.fasterxml.jackson.databind`/`core` — Jackson 2, приходящий транзитивно. Две
+  библиотеки для одной задачи с разной политикой исключений: у Jackson 2 ошибка разбора — это
+  `IOException`, у Jackson 3 — непроверяемое `JacksonException`.
+- **Сделано.** Загрузчик переведён на Jackson 3; поведение «битый ресурс → пустые метаданные»
+  сохранено перехватом `IOException | JacksonException` (как у `ConfigurationFiles`, раунд 1).
+- **Проверка.** Характеризующий `KeywordMetadataLoaderTest.malformedResourceReturnsEmpty` зелёный и
+  до, и после перехода.
+- **Ограничение.** `ArchitectureTest.no_classes_should_use_jackson_2` — запрет зависимостей от
+  `com.fasterxml.jackson.databind..`/`core..` (аннотации `com.fasterxml.jackson.annotation` у
+  Jackson 3 свои и разрешены); на прежнем коде красный ровно по этому загрузчику.

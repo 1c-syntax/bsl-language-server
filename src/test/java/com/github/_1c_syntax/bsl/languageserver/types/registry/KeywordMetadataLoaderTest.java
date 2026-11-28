@@ -40,6 +40,14 @@ class KeywordMetadataLoaderTest {
   }
 
   @Test
+  void malformedResourceReturnsEmpty() {
+    // given — ресурс есть, но JSON в нём битый
+    var result = KeywordMetadataLoader.load("keyword-fallback/keywords-malformed.json");
+
+    assertThat(result).isSameAs(KeywordMetadata.EMPTY);
+  }
+
+  @Test
   void keywordsFieldNotAListIgnored() {
 
     // given — поле "keywords" в JSON — строка, а не массив.
