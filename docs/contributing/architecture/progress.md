@@ -411,3 +411,16 @@
   отчётов, цикл `references` ↔ `types`, пустые ответы LSP, политика ошибок `update`, правки
   `CLAUDE.md`), крупные изменения (общий компонент обновления клиента), а также рассмотренные и
   отклонённые варианты с обоснованием.
+
+## Раунд 29. Разрыв цикла `references` ↔ `types`
+
+- **Сделано.** См. ADR-0003: три finder'а на системе типов перенесены в `types.references`;
+  `ReferenceIndexFiller` спрашивает про глобальные имена, self-типы модулей и библиотеки OneScript
+  через SPI `references.WorkspaceNames` (реализация `types.registry.WorkspaceNamesImpl`).
+  Пакет `references` больше ничего не импортирует из `types`.
+- **Ограничение.** В карте слоёв `References` больше не может зависеть от `Types`; `references` и
+  `types` вошли в правило ацикличности срезов. Попутно исправлен устаревший комментарий: ядро
+  исключено из этого правила не из-за циклов (их нет), а из-за того, что top-level срез склеил бы
+  `diagnostics` с листом `diagnostics.metadata`.
+- **Проверка.** Тесты `references`, `types.references`, `types.registry`, `Hover*`,
+  `AssignToReadOnlyPropertyDiagnosticTest`, `ArchitectureTest` (119 классов).

@@ -273,9 +273,8 @@ class ArchitectureTest {
   // зависимости): в байткоде в него никто не входит (ссылки на него — только в Javadoc @link),
   // поэтому он не нарушает полноту. websocket — лист без внутренних зависимостей.
   //
-  // Известные циклы оставлены ОСОЗНАННО (правило их допускает, но они помечены как долг):
-  //   - References↔Types: взаимные ссылки индексов. Разрывается позже.
-  // Появление НОВЫХ циклов среди уже ацикличных пакетов ловит отдельное правило ниже
+  // Разрешённых циклов нет: прежний References↔Types разорван (types зависит от references, но
+  // не наоборот). Появление циклов среди ацикличных пакетов дополнительно ловит правило ниже
   // (acyclic_domains_stay_free_of_cycles).
   //
   // Замечание про inline-константы: codeactions и diagnostics ссылаются на DiagnosticProvider.SOURCE
@@ -391,14 +390,17 @@ class ArchitectureTest {
       "Cfg", "Configuration", "Context", "DiagnosticsMetadata", "Formatting", "Infrastructure",
       "Recognizer", "References", "Types", "Utils")
 
-    // Домены-фундамент. References↔Types — известный цикл (см. комментарий выше).
+    // Домены-фундамент.
     .whereLayer("Configuration").mayOnlyAccessLayers(
       "DiagnosticsMetadata", "Events", "Infrastructure", "Utils")
     // Events — ради добавления рабочей области: контекст узнаёт по нему, что она готовится в фоне.
     .whereLayer("Context").mayOnlyAccessLayers(
       "Client", "Configuration", "DiagnosticsMetadata", "Events", "Infrastructure", "Utils")
+    // Сведения системы типов индекс ссылок получает через собственные SPI (SelfMemberResolver,
+    // WorkspaceNames), реализованные в types; поиск ссылок средствами системы типов —
+    // ReferenceFinder'ы в types.references.
     .whereLayer("References").mayOnlyAccessLayers(
-      "Configuration", "Context", "Infrastructure", "Types", "Utils")
+      "Configuration", "Context", "Infrastructure", "Utils")
     // Client — ради индикатора хода работы: доразрешение типов возврата после наполнения
     // рабочей области идёт минутами и обязано показывать прогресс, как и само наполнение.
     .whereLayer("Types").mayOnlyAccessLayers(
@@ -426,14 +428,16 @@ class ArchitectureTest {
       + "разрешённых зависимостей, выведенным из его роли");
 
   // --- Ацикличность чистых доменов ----------------------------------------------------------------
-  // Ядро (configuration↔diagnostics↔context↔providers↔…) сейчас переплетено циклами и здесь не
-  // проверяется. Домены вне этого клубка уже ацикличны — фиксируем это, чтобы новый код не завёл
-  // цикл среди них. Пакеты ядра в срез не входят; aop тоже (его рёбра — артефакт compile-time
-  // weaving AspectJ, а не исходных зависимостей), он просто не попадает в назначенные срезы.
+  // Ацикличность всего проекта обеспечивает карта слоёв выше: разрешённых обратных рёбер в ней нет.
+  // Это правило дополнительно режет граф по top-level пакетам. Пакеты ядра (configuration, context,
+  // diagnostics, providers, фичи) в срез не входят не из-за циклов, а из-за нарезки: top-level срез
+  // diagnostics склеил бы движок с листовым словарём diagnostics.metadata, от которого зависят
+  // configuration и context, и дал бы ложный цикл. aop тоже не входит (его рёбра — артефакт
+  // compile-time weaving AspectJ, а не исходных зависимостей).
 
   static final Set<String> ACYCLIC_DOMAINS = Set.of(
     "cfg", "cli", "client", "codelenses", "commands", "databind", "events", "index", "infrastructure",
-    "jsonrpc", "mcp", "recognizer", "reporters", "utils", "websocket"
+    "jsonrpc", "mcp", "recognizer", "references", "reporters", "types", "utils", "websocket"
   );
 
   static final SliceAssignment ACYCLIC_DOMAIN_SLICES = new SliceAssignment() {

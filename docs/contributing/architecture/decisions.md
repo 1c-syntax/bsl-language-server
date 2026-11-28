@@ -45,3 +45,21 @@
   фабрика делегирует в `ConfigurationFiles`. Правило
   `configuration_files_are_parsed_only_by_configuration_files` запрещает классам пакета
   `configuration` зависеть от `tools.jackson.databind` в обход `ConfigurationFiles`.
+
+## ADR-0003. Разрыв цикла `references` ↔ `types`
+
+- **Контекст.** Карта слоёв допускала единственный цикл: `types` зависит от `references`
+  (индекс ссылок, `ReferenceResolver`, модель `Reference`), а `references` — от `types` в двух
+  местах: три `ReferenceFinder` (`Keyword`, `NewExpression`, `PlatformMember`), вся работа которых —
+  резолв средствами системы типов, и `ReferenceIndexFiller`, спрашивающий у
+  `GlobalScopeProvider`/`OScriptLibraryIndex` про глобальные имена и библиотеки OneScript.
+- **Варианты.** (а) Оставить цикл. (б) Перенести индексатор в `types` — ломает
+  ответственность пакета индекса ссылок. (в) Finder'ы, построенные на системе типов, — в `types`
+  (они реализуют SPI `ReferenceFinder`, от которого `types` и так зависит); вопросы индексатора к
+  системе типов — через узкий SPI в `references` с реализацией в `types`, как уже сделано для
+  `SelfMemberResolver` (и `DiagnosticComputer` между `context` и `diagnostics`).
+- **Решение.** (в): `types.references.{Keyword,NewExpression,PlatformMember}ReferenceFinder`,
+  `references.WorkspaceNames` + `types.registry.WorkspaceNamesImpl`. Порядок finder'ов
+  (`@Order`) и поведение не менялись.
+- **Последствия.** `References` убран из числа зависимых от `Types` в карте слоёв; `references` и
+  `types` добавлены в правило ацикличности срезов. Разрешённых циклов в карте не осталось.

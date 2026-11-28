@@ -36,8 +36,6 @@ import com.github._1c_syntax.bsl.languageserver.context.symbol.VariableSymbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.OccurrenceType;
 import com.github._1c_syntax.bsl.languageserver.references.model.Symbol;
 import com.github._1c_syntax.bsl.languageserver.references.model.SymbolOccurrence;
-import com.github._1c_syntax.bsl.languageserver.types.oscript.OScriptLibraryIndex;
-import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvider;
 import com.github._1c_syntax.bsl.languageserver.context.MdoRefBuilder;
 import com.github._1c_syntax.bsl.languageserver.utils.AttachedHandlers;
 import com.github._1c_syntax.bsl.languageserver.utils.Methods;
@@ -97,8 +95,7 @@ public class ReferenceIndexFiller {
 
   private final ReferenceIndex index;
   private final LanguageServerConfiguration configuration;
-  private final OScriptLibraryIndex oScriptLibraryIndex;
-  private final GlobalScopeProvider globalScopeProvider;
+  private final WorkspaceNames workspaceNames;
   private final SelfMemberResolver selfMemberResolver;
 
   /**
@@ -181,7 +178,7 @@ public class ReferenceIndexFiller {
     var serverContext = event.getSource();
     for (var documentContext : serverContext.getDocuments().values()) {
       var uri = documentContext.getUri();
-      if (!filled.contains(uri) || globalScopeProvider.moduleTypeRefByUri(uri).isEmpty()) {
+      if (!filled.contains(uri) || !workspaceNames.hasModuleType(uri)) {
         continue;
       }
       var lock = serverContext.getDocumentLock(uri);
@@ -214,7 +211,7 @@ public class ReferenceIndexFiller {
     new VariableSymbolReferenceIndexFinder(documentContext, sink).visitFile(documentContextAst);
     // Неквалифицированные self-члены (реквизиты/платформенные методы self-типа модуля)
     // индексируются только если у модуля вообще есть self-тип — иначе проход впустую.
-    if (globalScopeProvider.moduleTypeRefByUri(documentContext.getUri()).isPresent()) {
+    if (workspaceNames.hasModuleType(documentContext.getUri())) {
       new SelfMemberReferenceIndexFinder(documentContext, sink).visitFile(documentContextAst);
     }
     index.replaceReferences(documentContext.getUri(), batch);
@@ -428,7 +425,7 @@ public class ReferenceIndexFiller {
         return;
       }
       var name = typeName.IDENTIFIER().getText();
-      var libUri = oScriptLibraryIndex.findClassUri(name);
+      var libUri = workspaceNames.libraryClassUri(name);
       if (libUri.isEmpty()) {
         return;
       }
@@ -476,7 +473,7 @@ public class ReferenceIndexFiller {
       if (identifier == null) {
         return;
       }
-      var libUri = oScriptLibraryIndex.findModuleUri(identifier.getText());
+      var libUri = workspaceNames.libraryModuleUri(identifier.getText());
       if (libUri.isEmpty()) {
         return;
       }
@@ -501,7 +498,7 @@ public class ReferenceIndexFiller {
     /**
      * Возвращает фактический {@link ModuleType} документа библиотечного .os-файла.
      * Один .os может быть зарегистрирован одновременно и как класс, и как модуль
-     * (см. {@link OScriptLibraryIndex}); чтобы ссылка корректно резолвилась через
+     * (см. {@link WorkspaceNames}); чтобы ссылка корректно резолвилась через
      * {@code ServerContext.getDocument(mdoRef, moduleType)}, используем тип
      * фактически загруженного {@link DocumentContext}, а не «теоретический»
      * тип из роли регистрации.
@@ -748,7 +745,7 @@ public class ReferenceIndexFiller {
       if (typeName == null || typeName.IDENTIFIER() == null) {
         return null;
       }
-      return oScriptLibraryIndex.findClassUri(typeName.IDENTIFIER().getText())
+      return workspaceNames.libraryClassUri(typeName.IDENTIFIER().getText())
         .map(java.net.URI::toString)
         .orElse(null);
     }
@@ -1031,7 +1028,7 @@ public class ReferenceIndexFiller {
         // MethodSymbolReferenceIndexFinder / PlatformGlobalMethodSemanticTokensSupplier.
         if (!name.isBlank()
           && symbolTree.getMethodSymbol(name).isEmpty()
-          && globalScopeProvider.globalFunction(name, documentContext.getFileType()).isEmpty()
+          && !workspaceNames.isGlobalFunction(name, documentContext.getFileType())
           && selfMemberResolver.resolveSelfMember(documentContext, SymbolKind.Method, name).isPresent()) {
           sink.addSelfMemberUsage(uri, mdoRef, moduleType, SymbolKind.Method, name, Ranges.create(methodNameCtx));
         }
@@ -1067,7 +1064,7 @@ public class ReferenceIndexFiller {
       // не создаёт (SelfMemberClassifier), поэтому getVariableSymbolInScope для реквизита пуст.
       if (!name.isBlank()
         && symbolTree.getVariableSymbolInScope(scopeNode, name).isEmpty()
-        && globalScopeProvider.globalProperty(name, documentContext.getFileType()).isEmpty()
+        && !workspaceNames.isGlobalProperty(name, documentContext.getFileType())
         && selfMemberResolver.resolveSelfMember(documentContext, SymbolKind.Property, name).isPresent()) {
         sink.addSelfMemberUsage(uri, mdoRef, moduleType, SymbolKind.Property, name, Ranges.create(identifier));
       }
