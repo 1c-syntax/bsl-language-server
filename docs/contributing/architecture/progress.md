@@ -1691,3 +1691,27 @@
   подтверждения»). Пункт 7 (`Timeouts`, `HardcodeSecret`) отклонён: у `Новый("Тип", Параметры)`
   аргументы конструктора лежат массивом во втором аргументе, позиционная проверка к ним
   неприменима — пропуск этой формы верен.
+
+## Раунд 107. «Метод, содержащий узел» — запрос дерева символов
+
+Источник — сканирование `diagnostics/` после раунда 97 (пункт 4).
+
+- **Дублирование.** Идиома «предок `RULE_sub` → `getMethodSymbol(sub)`» с ручными приведением и
+  проверкой на `null` — в шести местах: `DataExchangeLoading`, `FormDataToValue`,
+  `FunctionReturnsSamePrimitive`, `WrongUseFunctionProceedWithCall`, `ContextualReturnCache`,
+  `ExpressionTypeInferencer.scopeOfBody`. Внутри `context/symbol` для того же уже был
+  `SymbolDeclarationRanges.enclosingMethod` (им пользовался `variableInScope`).
+- **Сделано.** `SymbolTree.getEnclosingMethodSymbol(node)` — поверх `enclosingMethod`, который
+  теперь учитывает и сам узел объявления (`getAncestorOrSelfByRuleIndex`). Шесть мест переведены,
+  частные помощники `DataExchangeLoading` (`methodSymbol`, `getSubContext`) удалены.
+- **Поведение.** У `FormDataToValue` и `WrongUseFunctionProceedWithCall` «нашёлся узел метода, но не
+  его символ» прежде означало «проверять», теперь — «не проверять». Состояние практически
+  недостижимо: символ метода ищется по тому же диапазону имени (`SymbolDeclarationRanges.methodName`,
+  включая узлы с ошибками), по которому его заводит вычислитель.
+- **Тесты.** `SymbolTreeTest.enclosingMethodIsTheOneWhoseDeclarationContainsTheNode` красный →
+  зелёный (он же поймал, что предок без «самого узла» не находит метод по его же объявлению);
+  `CanonicalImplementationsTest` (случай `getEnclosingMethodSymbol`: на прежнем коде шесть
+  срабатываний вне владельцев).
+- **Проверка.** `context.symbol`, четыре диагностики, `types.inferencer`, `references`,
+  `CanonicalImplementationsTest`, `ArchitectureTest` (86 классов, 572 теста), `javadoc`,
+  `spotlessCheck` зелёные.

@@ -21,15 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.annotations.CompilerDirectiveKind;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticScope;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
-import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParser.GlobalMethodCallContext;
 import com.github._1c_syntax.utils.CaseInsensitivePattern;
 
@@ -57,23 +54,15 @@ public class FormDataToValueDiagnostic extends AbstractFindMethodDiagnostic {
 
   @Override
   protected boolean checkGlobalMethodCall(GlobalMethodCallContext ctx) {
-    var parentNode = (BSLParser.SubContext) Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_sub);
-
-    if (parentNode == null) {
-      return false;
-    }
-
     var isContextMethod = documentContext.getSymbolTree()
-      .getMethodSymbol(parentNode)
-      .flatMap(MethodSymbol::getCompilerDirectiveKind)
-      .filter(compilerDirective -> compilerDirective == CompilerDirectiveKind.AT_SERVER_NO_CONTEXT
-        || compilerDirective == CompilerDirectiveKind.AT_CLIENT_AT_SERVER_NO_CONTEXT)
-      .isEmpty();
-    if (isContextMethod) {
-      return super.checkGlobalMethodCall(ctx);
-    }
+      .getEnclosingMethodSymbol(ctx)
+      .filter(method -> method.getCompilerDirectiveKind()
+        .filter(compilerDirective -> compilerDirective == CompilerDirectiveKind.AT_SERVER_NO_CONTEXT
+          || compilerDirective == CompilerDirectiveKind.AT_CLIENT_AT_SERVER_NO_CONTEXT)
+        .isEmpty())
+      .isPresent();
 
-    return false;
+    return isContextMethod && super.checkGlobalMethodCall(ctx);
   }
 
 }

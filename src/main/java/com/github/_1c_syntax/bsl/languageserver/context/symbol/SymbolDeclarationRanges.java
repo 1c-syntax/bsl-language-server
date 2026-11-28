@@ -70,7 +70,7 @@ final class SymbolDeclarationRanges {
   }
 
   static Optional<ParserRuleContext> enclosingMethod(ParserRuleContext node) {
-    var sub = Trees.getAncestorByRuleIndex(node, BSLParser.RULE_sub);
+    var sub = Trees.getAncestorOrSelfByRuleIndex(node, BSLParser.RULE_sub);
     return sub instanceof BSLParser.SubContext method ? Optional.of(method) : Optional.empty();
   }
 }

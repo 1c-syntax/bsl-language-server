@@ -173,8 +173,7 @@
   2. Каркас quick fix — около 15 копий; часть заявляет в `CodeAction.diagnostics` замечания,
      которые не исправляет.
   3. ~~Таблица синхронных и асинхронных методов~~ — закрыто, раунд 106 (`SynchronousMethod`).
-  4. «Объемлющий метод» — четыре копии (`DataExchangeLoading`, `FormDataToValue`,
-     `FunctionReturnsSamePrimitive`, `WrongUseFunctionProceedWithCall`).
+  4. ~~«Объемлющий метод»~~ — закрыто, раунд 107 (`SymbolTree.getEnclosingMethodSymbol`).
   5. Классификация глобального значения «перечисление или свойство» — четыре копии с двумя
      правилами (`CompletionProvider`, `GlobalScopeSemanticTokensSupplier`, `GlobalMemberSearchTool`,
      `GlobalMemberInfoTool`); там же ручной обход цепочки в `GlobalScopeSemanticTokensSupplier`.

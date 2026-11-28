@@ -102,6 +102,10 @@ class CanonicalImplementationsTest {
         Pattern.compile(
           "registerDefaultElementTypes\\([^;]*;\\s*\\w+\\.inheritCollectionTraits\\([^;]*;[^}]*CollectionReturnsSpecializer\\.register\\("),
         Set.of("types/registry/CollectionReturnsSpecializer.java")),
+      new Case("SymbolTree.getEnclosingMethodSymbol(node)",
+        Pattern.compile("getAncestor(OrSelf)?ByRuleIndex\\([^;]*RULE_sub\\)"),
+        // Сама реализация; вычислитель переменных строит дерево и спросить его ещё не может
+        Set.of("context/symbol/SymbolDeclarationRanges.java", "context/computer/VariableSymbolComputer.java")),
       new Case("SynchronousMethod",
         Pattern.compile("(?iu)НачатьПомещениеФайла"),
         Set.of("diagnostics/SynchronousMethod.java"))

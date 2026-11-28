@@ -197,6 +197,27 @@ class SymbolTreeTest {
   }
 
   @Test
+  void enclosingMethodIsTheOneWhoseDeclarationContainsTheNode() {
+    // given — вызов в теле функции, вызов в теле модуля
+    var documentContext = TestUtils.getDocumentContext("""
+      Функция Тест()
+          Сообщить(1);
+      КонецФункции
+      Сообщить(2);
+      """);
+    var symbolTree = documentContext.getSymbolTree();
+    var calls = new ArrayList<>(Trees.findAllRuleNodes(documentContext.getAst(), BSLParser.RULE_globalMethodCall));
+    var sub = (BSLParser.SubContext) firstRuleNode(documentContext.getAst(), BSLParser.RULE_sub);
+
+    // when/then
+    assertThat(symbolTree.getEnclosingMethodSymbol((BSLParser.GlobalMethodCallContext) calls.get(0)))
+      .map(MethodSymbol::getName)
+      .contains("Тест");
+    assertThat(symbolTree.getEnclosingMethodSymbol(sub)).map(MethodSymbol::getName).contains("Тест");
+    assertThat(symbolTree.getEnclosingMethodSymbol((BSLParser.GlobalMethodCallContext) calls.get(1))).isEmpty();
+  }
+
+  @Test
   void containsPositionAnswersLikeRangeOfEverySymbol() {
     // given — переменная в колонке за пределами short (её символ хранит диапазон в int),
     // область, переменные модуля, метод с параметром и локальной переменной.

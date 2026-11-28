@@ -275,6 +275,17 @@ public class SymbolTree {
   }
 
   /**
+   * Метод, внутри объявления которого стоит узел дерева разбора, — в теле, в заголовке или
+   * сам узел объявления.
+   *
+   * @param node узел дерева разбора документа.
+   * @return метод, содержащий узел; пусто для кода уровня модуля.
+   */
+  public Optional<MethodSymbol> getEnclosingMethodSymbol(ParserRuleContext node) {
+    return SymbolDeclarationRanges.enclosingMethod(node).flatMap(this::getMethodSymbol);
+  }
+
+  /**
    * Поиск MethodSymbol в дереве по указанному имени (без учета регистра).
    *
    * @param methodName Имя метода

@@ -138,9 +138,7 @@ public class FunctionReturnsSamePrimitiveDiagnostic extends AbstractVisitorDiagn
   }
 
   private Range getSubNameRange(ParserRuleContext ctx) {
-    return Optional.ofNullable(Trees.getAncestorByRuleIndex(ctx, BSLParser.RULE_sub))
-      .map(BSLParser.SubContext.class::cast)
-      .flatMap(context -> documentContext.getSymbolTree().getMethodSymbol(context))
+    return documentContext.getSymbolTree().getEnclosingMethodSymbol(ctx)
       .map(MethodSymbol::getSubNameRange)
       .orElse(Ranges.create(ctx.getStart()));
   }

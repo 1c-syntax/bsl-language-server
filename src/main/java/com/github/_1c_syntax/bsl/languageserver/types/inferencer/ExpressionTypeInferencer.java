@@ -2170,8 +2170,7 @@ public class ExpressionTypeInferencer {
    * @return символ метода; пусто, если это тело модуля, а не метода.
    */
   private static Optional<MethodSymbol> scopeOfBody(SymbolTree symbolTree, BSLParser.CodeBlockContext body) {
-    BSLParser.SubContext sub = Trees.getAncestorByRuleIndex(body, BSLParser.RULE_sub);
-    return sub == null ? Optional.empty() : symbolTree.getMethodSymbol(sub);
+    return symbolTree.getEnclosingMethodSymbol(body);
   }
 
   /**

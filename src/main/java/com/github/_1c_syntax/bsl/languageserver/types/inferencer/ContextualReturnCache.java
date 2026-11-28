@@ -25,7 +25,6 @@ import com.github._1c_syntax.bsl.languageserver.types.index.MethodReturnTypeInde
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.SourceDefinedSymbol;
 import com.github._1c_syntax.bsl.languageserver.types.model.TypeSet;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import org.jspecify.annotations.Nullable;
 
@@ -220,8 +219,7 @@ final class ContextualReturnCache {
   }
 
   private static Optional<MethodSymbol> methodOf(BSLParser.CodeBlockContext body, InferenceContext context) {
-    BSLParser.SubContext sub = Trees.getAncestorByRuleIndex(body, BSLParser.RULE_sub);
-    return sub == null ? Optional.empty() : context.documentContext.getSymbolTreeNoLock().getMethodSymbol(sub);
+    return context.documentContext.getSymbolTreeNoLock().getEnclosingMethodSymbol(body);
   }
 
   @Nullable Result get(Guard guard) {
