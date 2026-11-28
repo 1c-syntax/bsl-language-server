@@ -30,9 +30,7 @@ import org.eclipse.lsp4j.Command;
 import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -60,12 +58,9 @@ public final class CodeActionProvider {
     DocumentContext documentContext
   ) {
 
-    List<String> only = Optional.ofNullable(params.getContext().getOnly())
-      .orElse(Collections.emptyList());
-
     return codeActionSuppliers.stream()
       .flatMap(codeActionSupplier -> codeActionSupplier.getCodeActions(params, documentContext).stream())
-      .filter(codeAction -> only.isEmpty() || only.contains(codeAction.getKind()))
+      .filter(codeAction -> CodeActionSupplier.isKindRequested(params, codeAction.getKind()))
       .map(Either::<Command, CodeAction>forRight)
       .collect(Collectors.toList());
   }

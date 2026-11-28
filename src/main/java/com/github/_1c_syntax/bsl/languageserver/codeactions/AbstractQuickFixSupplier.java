@@ -50,8 +50,7 @@ public abstract class AbstractQuickFixSupplier implements CodeActionSupplier {
 
   @Override
   public List<CodeAction> getCodeActions(CodeActionParams params, DocumentContext documentContext) {
-    List<String> only = params.getContext().getOnly();
-    if (only != null && !only.isEmpty() && !only.contains(CodeActionKind.QuickFix)) {
+    if (!CodeActionSupplier.isKindRequested(params, CodeActionKind.QuickFix)) {
       return Collections.emptyList();
     }
 

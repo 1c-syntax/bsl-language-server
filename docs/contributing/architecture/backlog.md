@@ -41,8 +41,6 @@
 - **Ручное построение `Position` из токена** вместо `Positions.create` — 6 мест, 2 обёртки.
 - **«Самый вложенный узел типа T, содержащий позицию»** и `encloses` — копии в
   `NewExpressionReferenceFinder` и `SignatureHelpProvider`.
-- **Ручные циклы поиска предка** в `MagicNumberDiagnostic`/`MagicDateDiagnostic`; две копии
-  «ancestor-or-self» (`ExpressionAtPosition`, `NewExpressionReferenceFinder`).
 - **Терминал, заканчивающийся на курсоре** — `LinkedEditingRangeProvider`/`SelectionRangeProvider`.
 - **`safeGetAst`** — 4 приватные копии и 3 inline (две политики перехвата).
 - **Таблицы «тип токена → `Keywords.MultiName`»** — 3 копии (completion, formatter, diagnostic).

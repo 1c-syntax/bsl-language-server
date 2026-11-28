@@ -158,3 +158,18 @@
   считается кандидатом, перенесено к единственному месту, где оно нужно.
 - **Проверка.** Красный `TreesTest.ancestorOrSelfConsidersNodeItselfThenAncestors` (на
   заглушке) → зелёный; тесты `references`, `types.inferencer`, `MagicNumber`/`MagicDate`.
+
+## Раунд 12. Фильтр видов code action по LSP
+
+- **Проблема.** Фильтр `only` проверялся в трёх местах тремя способами, и везде — точным
+  сравнением строк. По LSP виды иерархичны: запрос `source` (меню «Source Action…») обязан
+  включать `source.fixAll`, `refactor` — `refactor.rewrite` и т.п. Исправление всего файла по
+  запросу `source` не возвращалось вовсе.
+- **Сделано.** `CodeActionSupplier.isKindRequested` / `isKindExplicitlyRequested` — единственное
+  место, где читается `only`; на них переведены `CodeActionProvider`, `AbstractQuickFixSupplier`,
+  `SourceFixAllCodeActionSupplier`.
+- **Проверка.** Красный `CodeActionProviderTest.testOnlyMatchesKindHierarchy` → зелёный; тесты
+  code actions.
+- **Ограничение.** `ArchitectureTest.code_action_kind_filter_is_read_only_by_canonical_predicate`:
+  `CodeActionContext.getOnly()` вызывает только `CodeActionSupplier` (на промежуточном варианте,
+  где провайдер читал `only` сам, правило падало).

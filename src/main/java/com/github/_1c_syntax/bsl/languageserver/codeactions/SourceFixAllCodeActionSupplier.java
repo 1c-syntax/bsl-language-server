@@ -54,8 +54,8 @@ public class SourceFixAllCodeActionSupplier implements CodeActionSupplier {
 
   @Override
   public List<CodeAction> getCodeActions(CodeActionParams params, DocumentContext documentContext) {
-    List<String> only = params.getContext().getOnly();
-    if (only == null || !only.contains(CodeActionKind.SourceFixAll)) {
+    // Исправление всего файла считается только по явному запросу (своего вида или родительского).
+    if (!CodeActionSupplier.isKindExplicitlyRequested(params, CodeActionKind.SourceFixAll)) {
       return Collections.emptyList();
     }
 

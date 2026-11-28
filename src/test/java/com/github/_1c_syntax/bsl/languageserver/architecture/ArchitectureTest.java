@@ -39,6 +39,7 @@ import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
 import com.tngtech.archunit.library.dependencies.SliceAssignment;
 import com.tngtech.archunit.library.dependencies.SliceIdentifier;
+import org.eclipse.lsp4j.CodeActionContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.ApplicationEvent;
@@ -195,6 +196,15 @@ class ArchitectureTest {
     .should().dependOnClassesThat().resideInAPackage("tools.jackson.databind..")
     .because("поиск и чтение файла конфигурации (порядок кандидатов, настройки маппера, политика "
       + "ошибок разбора) сосредоточены в ConfigurationFiles");
+
+  // --- Code actions -------------------------------------------------------------------------------
+
+  @ArchTest
+  static final ArchRule code_action_kind_filter_is_read_only_by_canonical_predicate = noClasses()
+    .that().doNotHaveFullyQualifiedName(ROOT_PACKAGE + ".codeactions.CodeActionSupplier")
+    .should().callMethod(CodeActionContext.class, "getOnly")
+    .because("виды code action иерархичны (source включает source.fixAll): фильтр only проверяется "
+      + "через CodeActionSupplier.isKindRequested, а не сравнением строк");
 
   // --- Кэши ---------------------------------------------------------------------------------------
 
