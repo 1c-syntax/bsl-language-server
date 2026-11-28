@@ -801,3 +801,15 @@
 - **Проверка.** Красный `GuardConditionNarrowingCacheTest` (на заглушке условие бралось из
   запомненного) → зелёный; тесты `types.inferencer` и `GuardNarrowing*` зелёные; `javadoc`,
   `spotlessCheck` зелёные.
+
+## Раунд 55. Мёртвые настройки журнала и копия выбора исполняемого файла
+
+- **Сделано.**
+  - Из `application.properties` удалены уровни журнала для hibernate, hikari, Spring Data/JPA и
+    `LocalVariableTableParameterNameDiscoverer`: таких библиотек нет в `runtimeClasspath`
+    (проверено `gradlew dependencies`), а класса нет в нынешнем Spring — строки ни на что не
+    влияли.
+  - `TestRunnerAdapter` выбирал исполняемый файл раннера сам (`SystemUtils.IS_OS_WINDOWS ? …`) —
+    теперь `TestRunnerAdapterOptions.getExecutableForCurrentOS()`, как у линз.
+- **Проверка.** Поведение не меняется; тесты `codelenses`, `MainApplication*`,
+  `BSLLanguageServerTest` зелёные.

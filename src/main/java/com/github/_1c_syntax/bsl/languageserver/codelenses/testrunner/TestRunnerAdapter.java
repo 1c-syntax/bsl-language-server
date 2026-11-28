@@ -109,7 +109,7 @@ public class TestRunnerAdapter extends AbstractDocumentLifecycleClearableIndex {
   private List<String> computeTestIdsByTestRunner(DocumentContext documentContext) {
     var options = configuration.getCodeLensOptions().getTestRunnerAdapterOptions();
 
-    var executable = SystemUtils.IS_OS_WINDOWS ? options.getExecutableWin() : options.getExecutable();
+    var executable = options.getExecutableForCurrentOS();
     var path = Path.of(documentContext.getUri()).toString();
     var arguments = options.getGetTestsArguments().formatted(path);
 
