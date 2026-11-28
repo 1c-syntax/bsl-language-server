@@ -26,7 +26,10 @@ import io.modelcontextprotocol.spec.McpSchema.Root;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
+import org.junit.jupiter.api.io.TempDir;
 
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import static org.mockito.Mockito.mock;
@@ -58,6 +61,23 @@ class McpRootsChangeConsumerTest {
 
     // Пустой список — это «корней больше нет», а не «нечего делать»: синхронизация обязана состояться.
     verify(bootstrap).syncRoots(List.of());
+  }
+
+  @Test
+  @EnabledOnOs({OS.LINUX, OS.MAC}) // символические ссылки на Windows требуют привилегий
+  void rootWhosePathCannotBeCanonicalizedIsSkippedWithoutLosingTheOthers(@TempDir Path temp) throws Exception {
+    // given — цикл символических ссылок: канонизация пути (Absolute.path) бросает необъявленный
+    // IOException («Too many levels of symbolic links»)
+    Files.createSymbolicLink(temp.resolve("a"), temp.resolve("b"));
+    Files.createSymbolicLink(temp.resolve("b"), temp.resolve("a"));
+    var valid = root("src/test/resources/cli");
+    var broken = new Root(temp.resolve("a").resolve("x").toUri().toString(), "broken");
+
+    // when
+    consumer.accept(null, List.of(broken, valid));
+
+    // then — битый корень пропущен, остальные дошли до синхронизации
+    verify(bootstrap).syncRoots(List.of(Absolute.path("src/test/resources/cli")));
   }
 
   @Test

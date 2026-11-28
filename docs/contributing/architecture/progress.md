@@ -1583,3 +1583,22 @@
   У `--mcp-path` значение по умолчанию — эндпоинт Spring AI, ключа в свойствах нет, сверять не с чем.
 - **Проверка.** `cli`, `*MainApplication*` (11 классов, 61 тест) зелёные; `javadoc`,
   `spotlessCheck` зелёные.
+
+## Раунд 100. Карточка глобального свойства в MCP — через `TypeMemberDto.from`
+
+Источник — углублённое сканирование `semantictokens/`, `hover/`, `mcp/`, `configuration/`.
+
+- **Дефект.** `global_member_info` собирал карточку глобального свойства и перечисления вручную:
+  описание — всегда русское (`description()` вместо `displayDescription(language)`), метаданные
+  синтакс-помощника обнулялись (хотя описание инструмента их обещает), из объединения типов значения
+  оставался первый. Функции шли через `TypeMemberDto.from` — как и тот же член в
+  `global_member_search`.
+- **Сделано.** Карточка свойства — `TypeMemberDto.from(member, language)`; ручная сборка удалена.
+- **Тесты.** Новый `GlobalMemberInfoToolTest` (свойство с переводом, метаданными и двумя типами)
+  красный → зелёный; `McpToolsTest.globalMemberInfoDescribesValuesLikeGlobalMemberSearch` сверяет
+  оба инструмента на реальных членах глобального контекста.
+- **Проверено, не дефект:** «необъявленный `IOException` из `Absolute.path` прерывает синхронизацию
+  MCP roots» — битый путь отсекает раньше `McpWorkspaceFolders.toWorkspaceFolderUri`, который сам
+  ловит `Exception`; сторож `McpRootsChangeConsumerTest.rootWhosePathCannotBeCanonicalizedIsSkippedWithoutLosingTheOthers`
+  (цикл символических ссылок; только Linux/macOS).
+- **Проверка.** `mcp` (18 классов, 190 тестов) зелёные; `javadoc`, `spotlessCheck` зелёные.
