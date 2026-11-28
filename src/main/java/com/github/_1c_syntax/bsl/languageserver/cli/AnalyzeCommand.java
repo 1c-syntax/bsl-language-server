@@ -202,7 +202,7 @@ public class AnalyzeCommand implements Callable<Integer> {
       // активному репортеру они действительно нужны (см. ReportersAggregator).
       var metricCalculationRequired = aggregator.isMetricCalculationRequired();
 
-      var context = new ReportContext(LocalDateTime.now(), srcDir.toString());
+      var context = new ReportContext(LocalDateTime.now(), srcDir.toString(), workspaceDir);
 
       // Результаты передаются репортёрам по одному сразу после разбора файла и больше нигде не
       // удерживаются: пик памяти не зависит от размера конфигурации (см. issue #4412).

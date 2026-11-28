@@ -93,7 +93,8 @@ class ReporterOutputFormatTest extends AbstractServerContextAwareTest {
   private void runReport(DiagnosticReporter reporter) {
     var analysisInfo = analysisInfo();
 
-    reporter.beginReport(new ReportContext(analysisInfo.date(), analysisInfo.sourceDir()), outputDir);
+    var context = new ReportContext(analysisInfo.date(), analysisInfo.sourceDir(), Path.of("").toAbsolutePath());
+    reporter.beginReport(context, outputDir);
     analysisInfo.fileinfos().forEach(reporter::accept);
     reporter.endReport();
   }

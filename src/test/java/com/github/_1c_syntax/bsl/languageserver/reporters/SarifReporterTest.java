@@ -34,6 +34,7 @@ import com.github._1c_syntax.bsl.languageserver.reporters.data.FileInfo;
 import com.github._1c_syntax.bsl.languageserver.util.CleanupContextBeforeClassAndAfterEachTestMethod;
 import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
+import com.github._1c_syntax.utils.Absolute;
 import org.apache.commons.io.FileUtils;
 import org.eclipse.lsp4j.Diagnostic;
 import org.eclipse.lsp4j.DiagnosticSeverity;
@@ -41,6 +42,7 @@ import org.eclipse.lsp4j.jsonrpc.messages.Either;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import tools.jackson.databind.json.JsonMapper;
@@ -89,6 +91,28 @@ class SarifReporterTest extends AbstractServerContextAwareTest {
   void tearDown() {
     System.gc();
     FileUtils.deleteQuietly(file);
+  }
+
+  @Test
+  void fileUriIsResolvedAgainstWorkspaceDir(@TempDir Path workspaceDir, @TempDir Path outputDir) {
+    // given
+    var diagnostic = new Diagnostic(Ranges.create(0, 1, 2, 3), "message", DiagnosticSeverity.Error, "test-source", "test");
+    var relativePath = Path.of("src", "Module.bsl");
+    var fileInfo = new FileInfo(relativePath, "", List.of(diagnostic), null);
+    var context = new ReportContext(LocalDateTime.now(), workspaceDir.toString(), workspaceDir);
+
+    // when
+    reporter.beginReport(context, outputDir);
+    reporter.accept(fileInfo);
+    reporter.endReport();
+
+    // then
+    var report = new JsonMapper().readValue(outputDir.resolve("bsl-ls.sarif").toFile(), SarifSchema210.class);
+    var expectedUri = Absolute.uri(workspaceDir.resolve(relativePath).toUri());
+    assertThat(report.getRuns().getFirst().getResults())
+      .singleElement()
+      .extracting(result -> result.getAnalysisTarget().getUri())
+      .isEqualTo(expectedUri.toString());
   }
 
   @Test
