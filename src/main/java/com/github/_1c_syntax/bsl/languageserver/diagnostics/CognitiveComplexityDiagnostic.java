@@ -21,24 +21,12 @@
  */
 package com.github._1c_syntax.bsl.languageserver.diagnostics;
 
-import com.github._1c_syntax.bsl.languageserver.context.computer.ComplexitySecondaryLocation;
-import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
+import com.github._1c_syntax.bsl.languageserver.context.computer.ComplexityData;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticMetadata;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticParameter;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticSeverity;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticTag;
 import com.github._1c_syntax.bsl.languageserver.diagnostics.metadata.DiagnosticType;
-import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.RelatedInformation;
-import com.github._1c_syntax.bsl.parser.BSLParser;
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.tree.ParseTree;
-import org.eclipse.lsp4j.DiagnosticRelatedInformation;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @DiagnosticMetadata(
   type = DiagnosticType.CODE_SMELL,
@@ -49,7 +37,7 @@ import java.util.stream.Collectors;
   },
   extraMinForComplexity = 1
 )
-public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
+public class CognitiveComplexityDiagnostic extends AbstractComplexityDiagnostic {
 
   private static final int COMPLEXITY_THRESHOLD = 15;
   private static final boolean CHECK_MODULE_BODY = true;
@@ -66,101 +54,23 @@ public class CognitiveComplexityDiagnostic extends AbstractVisitorDiagnostic {
   )
   private boolean checkModuleBody = CHECK_MODULE_BODY;
 
-  private boolean fileCodeBlockChecked;
-
-  private List<DiagnosticRelatedInformation> makeRelations(MethodSymbol methodSymbol, Integer methodComplexity) {
-    List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
-
-    relatedInformation.add(RelatedInformation.create(
-      documentContext.getUri(),
-      methodSymbol.getSubNameRange(),
-      info.getMessage(methodSymbol.getName(), methodComplexity, complexityThreshold)
-    ));
-
-    List<ComplexitySecondaryLocation> secondaryLocations =
-      documentContext.getCognitiveComplexityData().methodsComplexitySecondaryLocations().get(methodSymbol);
-
-    secondaryLocations.stream()
-      .map((ComplexitySecondaryLocation secondaryLocation) ->
-        RelatedInformation.create(
-          documentContext.getUri(),
-          secondaryLocation.range(),
-          secondaryLocation.message()
-        )
-      )
-      .collect(Collectors.toCollection(() -> relatedInformation));
-
-    return relatedInformation;
+  @Override
+  protected ComplexityData complexityData() {
+    return documentContext.getCognitiveComplexityData();
   }
 
   @Override
-  public ParseTree visitSub(BSLParser.SubContext ctx) {
-    Optional<MethodSymbol> optionalMethodSymbol = documentContext.getSymbolTree().getMethodSymbol(ctx);
-    optionalMethodSymbol.ifPresent((MethodSymbol methodSymbol) -> {
-      Integer methodComplexity = documentContext.getCognitiveComplexityData().methodsComplexity().get(methodSymbol);
-
-      if (methodComplexity > complexityThreshold) {
-        diagnosticStorage.addDiagnostic(
-          methodSymbol.getSubNameRange(),
-          info.getMessage(methodSymbol.getName(), methodComplexity, complexityThreshold),
-          makeRelations(methodSymbol, methodComplexity)
-        );
-      }
-    });
-    return ctx;
+  protected int complexityThreshold() {
+    return complexityThreshold;
   }
 
   @Override
-  public ParseTree visitFileCodeBlockBeforeSub(BSLParser.FileCodeBlockBeforeSubContext ctx) {
-    checkFileCodeBlock(ctx);
-    fileCodeBlockChecked = ctx.getChildCount() > 0;
-    return ctx;
+  protected boolean checkModuleBody() {
+    return checkModuleBody;
   }
 
   @Override
-  public ParseTree visitFileCodeBlock(BSLParser.FileCodeBlockContext ctx) {
-    if (!fileCodeBlockChecked) {
-      checkFileCodeBlock(ctx);
-    }
-    return ctx;
+  protected boolean relateMethodName() {
+    return true;
   }
-
-  private void checkFileCodeBlock(ParserRuleContext ctx) {
-    if (!checkModuleBody) {
-      return;
-    }
-
-    Integer fileCodeBlockComplexity = documentContext.getCognitiveComplexityData().fileCodeBlockComplexity();
-
-    if (fileCodeBlockComplexity > complexityThreshold) {
-
-      List<DiagnosticRelatedInformation> relatedInformation = new ArrayList<>();
-
-      relatedInformation.add(RelatedInformation.create(
-        documentContext.getUri(),
-        Ranges.create(ctx.getStart()),
-        info.getMessage("body", fileCodeBlockComplexity, complexityThreshold)
-      ));
-
-      List<ComplexitySecondaryLocation> secondaryLocations =
-        documentContext.getCognitiveComplexityData().fileBlockComplexitySecondaryLocations();
-
-      secondaryLocations.stream()
-        .map((ComplexitySecondaryLocation secondaryLocation) ->
-          RelatedInformation.create(
-            documentContext.getUri(),
-            secondaryLocation.range(),
-            secondaryLocation.message()
-          )
-        )
-        .collect(Collectors.toCollection(() -> relatedInformation));
-
-      diagnosticStorage.addDiagnostic(
-        ctx.getStart(),
-        info.getMessage("body", fileCodeBlockComplexity, complexityThreshold),
-        relatedInformation
-      );
-    }
-  }
-
 }

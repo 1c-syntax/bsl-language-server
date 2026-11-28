@@ -25,6 +25,8 @@
   - `references/CLAUDE.md` и `types/CLAUDE.md`: finder'ы `Keyword`/`NewExpression`/`PlatformMember`
     живут в `types.references`, индексатор спрашивает систему типов через `WorkspaceNames`
     (раунд 29, ADR-0003).
+  - `diagnostics/CLAUDE.md`: в таблицу базовых классов — `AbstractComplexityDiagnostic`
+    (раунд 39).
 
 ## Высокий приоритет (дефекты или вероятные дефекты)
 
@@ -36,6 +38,12 @@
 - **Поля `serverPort`/`endpointPath`/`--mcp-path` у команд не читаются** (гипотеза): значения
   берёт Spring из сырых аргументов, поля нужны picocli для справки и приёма опций. Дефолты
   `8025`/`/lsp` в описаниях опций дублируют `application.properties`.
+
+- **Параметр диагностики в абстрактном предке не настраивается общим путём** (проверено):
+  `DiagnosticHelper.configureDiagnostic` ищет поле через `getClass().getDeclaredField`, а
+  `DiagnosticParameterInfo` собирает параметры и у предка. Живого дефекта нет (единственный такой
+  предок, `AbstractMultilingualStringDiagnostic`, переопределяет `configure`); исправление —
+  поиск поля по иерархии классов, когда появится второй случай.
 
 ## Дублирование реализаций (канонизация)
 
