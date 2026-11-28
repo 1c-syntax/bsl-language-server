@@ -24,8 +24,8 @@ package com.github._1c_syntax.bsl.languageserver.providers;
 import com.github._1c_syntax.bsl.languageserver.commands.CommandArguments;
 import com.github._1c_syntax.bsl.languageserver.commands.CommandSupplier;
 import com.github._1c_syntax.bsl.languageserver.configuration.Resources;
+import com.github._1c_syntax.bsl.languageserver.utils.LspPayloads;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import org.eclipse.lsp4j.ExecuteCommandParams;
 import org.eclipse.lsp4j.jsonrpc.ResponseErrorException;
 import org.eclipse.lsp4j.jsonrpc.messages.ResponseError;
@@ -36,6 +36,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -104,7 +105,6 @@ public class CommandProvider {
    * @throws ResponseErrorException Выбрасывает исключение с кодом {@link ResponseErrorCode#InvalidParams},
    * если параметры входящего запроса не содержат данных для вычисления аргументов команды.
    */
-  @SneakyThrows
   public CommandArguments extractArguments(ExecuteCommandParams executeCommandParams) {
     var rawArguments = executeCommandParams.getArguments();
 
@@ -113,13 +113,7 @@ public class CommandProvider {
       throw new ResponseErrorException(new ResponseError(ResponseErrorCode.InvalidParams, message, null));
     }
 
-    var rawArgument = rawArguments.getFirst();
-
-    if (rawArgument instanceof CommandArguments arguments) {
-      return arguments;
-    }
-
-    return jsonMapper.readValue(rawArgument.toString(), CommandArguments.class);
+    return Objects.requireNonNull(LspPayloads.read(jsonMapper, rawArguments.getFirst(), CommandArguments.class));
   }
 
 }

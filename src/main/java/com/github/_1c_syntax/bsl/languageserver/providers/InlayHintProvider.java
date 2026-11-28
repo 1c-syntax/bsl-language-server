@@ -31,8 +31,8 @@ import com.github._1c_syntax.bsl.languageserver.context.events.ConfigurationType
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.inlayhints.InlayHintData;
 import com.github._1c_syntax.bsl.languageserver.inlayhints.InlayHintSupplier;
+import com.github._1c_syntax.bsl.languageserver.utils.LspPayloads;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.InlayHint;
 import org.eclipse.lsp4j.InlayHintParams;
@@ -115,19 +115,8 @@ public class InlayHintProvider {
    * @return Извлечённые данные хинта либо {@code null}, если хинт пришёл без поля
    *         {@link InlayHint#getData()} — резолвить такой хинт нечем.
    */
-  @SneakyThrows
   public @Nullable InlayHintData extractData(InlayHint inlayHint) {
-    var rawData = inlayHint.getData();
-
-    if (rawData == null) {
-      return null;
-    }
-
-    if (rawData instanceof InlayHintData data) {
-      return data;
-    }
-
-    return jsonMapper.readValue(rawData.toString(), InlayHintData.class);
+    return LspPayloads.read(jsonMapper, inlayHint.getData(), InlayHintData.class);
   }
 
   /**

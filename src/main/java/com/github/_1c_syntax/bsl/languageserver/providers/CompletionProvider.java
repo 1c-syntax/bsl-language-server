@@ -53,6 +53,7 @@ import com.github._1c_syntax.bsl.languageserver.types.registry.GlobalScopeProvid
 import com.github._1c_syntax.bsl.languageserver.types.scope.UseDirectiveScanner;
 import com.github._1c_syntax.bsl.languageserver.utils.FuzzyMatcher;
 import com.github._1c_syntax.bsl.languageserver.utils.Keywords;
+import com.github._1c_syntax.bsl.languageserver.utils.LspPayloads;
 import com.github._1c_syntax.bsl.parser.description.MethodDescription;
 import com.github._1c_syntax.bsl.parser.description.TypeDescription;
 import com.github._1c_syntax.bsl.support.CompatibilityMode;
@@ -464,17 +465,7 @@ public final class CompletionProvider {
    */
   @Nullable
   public CompletionData extractData(CompletionItem item) {
-    var rawData = item.getData();
-    if (rawData == null) {
-      return null;
-    }
-    if (rawData instanceof CompletionData completionData) {
-      return completionData;
-    }
-    if (rawData instanceof Map<?, ?>) {
-      return jsonMapper.convertValue(rawData, CompletionData.class);
-    }
-    return jsonMapper.readValue(rawData.toString(), CompletionData.class);
+    return LspPayloads.read(jsonMapper, item.getData(), CompletionData.class);
   }
 
   private List<CompletionItem> dotCompletion(DocumentContext documentContext, Position position,

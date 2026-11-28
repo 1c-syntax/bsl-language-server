@@ -29,8 +29,8 @@ import com.github._1c_syntax.bsl.languageserver.configuration.events.LanguageSer
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.events.ServerContextPopulatedEvent;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
+import com.github._1c_syntax.bsl.languageserver.utils.LspPayloads;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import org.eclipse.lsp4j.ClientCapabilities;
 import org.eclipse.lsp4j.CodeLens;
 import org.eclipse.lsp4j.CodeLensCapabilities;
@@ -198,19 +198,8 @@ public class CodeLensProvider {
    * @return Извлеченные данные линзы либо {@code null}, если линза пришла без поля
    *         {@link CodeLens#getData()} — резолвить такую линзу нечем.
    */
-  @SneakyThrows
   public @Nullable CodeLensData extractData(CodeLens codeLens) {
-    var rawCodeLensData = codeLens.getData();
-
-    if (rawCodeLensData == null) {
-      return null;
-    }
-
-    if (rawCodeLensData instanceof CodeLensData data) {
-      return data;
-    }
-
-    return jsonMapper.readValue(rawCodeLensData.toString(), CodeLensData.class);
+    return LspPayloads.read(jsonMapper, codeLens.getData(), CodeLensData.class);
   }
 
   /**

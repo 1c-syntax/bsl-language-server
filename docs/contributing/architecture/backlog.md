@@ -57,8 +57,9 @@
 - **Таблицы «тип токена → `Keywords.MultiName`»** — 3 копии (completion, formatter, diagnostic).
 - **Мелкие пары копий**: `record ProfileKey` (`MemberMethodProfiles`, `CompletionMethodTargets`),
   `stringField` (два загрузчика JSON в `types/registry`), `key` (нижний регистр с `Locale.ROOT`).
-- **Реестры supplier'ов code lens / inlay hint / command** — конфигурации, `getId()` по суффиксу,
-  `extractData`, разбор data в resolve написаны трижды-четырежды.
+- **Реестры supplier'ов code lens / inlay hint / command** — конфигурации (карта по id +
+  регистрация подтипов Jackson) и `extractData` написаны трижды-четырежды (`getId()` уже общий,
+  раунд 27).
 - **Отбор включённых supplier'ов** — у code lens prototype-бин с сортировкой по `@Order`, у
   inlay hint — фильтр в провайдере без сортировки (толкование параметров уже общее, раунд 15).
 - **Чтение возможностей клиента** — четыре способа (кэш в holder'е, чтение на каждый вызов,

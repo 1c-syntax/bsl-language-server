@@ -374,3 +374,14 @@
   живут помощники JSON-разбора данных поставщиков); `getId()` в трёх интерфейсах делегирует ему.
 - **Проверка.** Красный `SupplierIdsTest` (на заглушке) → зелёный; тесты `codelenses`,
   `inlayhints`, `commands` и их провайдеров.
+
+## Раунд 28. Разбор полезной нагрузки LSP-объектов
+
+- **Проблема.** Разбор `data`/аргументов (уже объект своего класса, либо JSON после
+  передачи клиенту) был написан четырьмя копиями: `CodeLensProvider`, `InlayHintProvider`,
+  `CompletionProvider`, `CommandProvider`. Нагрузку-`Map` разбирала только копия автодополнения;
+  остальные превратили бы её в `toString()` — не JSON.
+- **Сделано.** `utils.LspPayloads.read(mapper, payload, type)`; четыре места переведены.
+  Попутно ушли лишние `@SneakyThrows` (исключения Jackson 3 непроверяемые).
+- **Проверка.** Красный `LspPayloadsTest` (на заглушке) → зелёный; тесты провайдеров, `lsp`,
+  `codelenses`, `inlayhints`, `commands`, `ArchitectureTest`.
