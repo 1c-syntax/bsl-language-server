@@ -82,6 +82,38 @@ class ConfigurationModuleMembersProviderTest extends AbstractServerContextAwareT
   }
 
   @Test
+  void removedAndRecreatedModuleServesMembersOfTheCurrentDocument() {
+    // given — общий модуль разобран, его члены собраны
+    initServerContext(PATH_TO_METADATA);
+    context.getConfiguration();
+    var moduleDoc = TestUtils.getDocumentContextFromFile(
+      "src/test/resources/metadata/designer/CommonModules/ПервыйОбщийМодуль/Ext/Module.bsl", context);
+    var uri = moduleDoc.getUri();
+    var moduleType = globalScopeProvider.globalMember("ПервыйОбщийМодуль", FileType.BSL)
+      .flatMap(member -> member.returnTypes().refs().stream().findFirst())
+      .orElseThrow();
+    assertThat(typeRegistry.getMembers(moduleType, FileType.BSL))
+      .extracting(MemberDescriptor::name).contains("НеУстаревшаяПроцедура");
+
+    // when — файл удалён из рабочей области
+    context.removeDocument(uri);
+
+    // then — методы удалённого файла членами модуля больше не являются
+    assertThat(typeRegistry.getMembers(moduleType, FileType.BSL))
+      .extracting(MemberDescriptor::name).doesNotContain("НеУстаревшаяПроцедура");
+
+    // when — файл создан заново по тому же пути с другим текстом
+    var recreated = context.addDocument(uri);
+    context.rebuildDocument(recreated, "Процедура НоваяПроцедура() Экспорт\nКонецПроцедуры\n", 1);
+
+    // then — члены берутся из нового документа, а не из удалённого
+    assertThat(typeRegistry.getMembers(moduleType, FileType.BSL))
+      .extracting(MemberDescriptor::name)
+      .contains("НоваяПроцедура")
+      .doesNotContain("НеУстаревшаяПроцедура");
+  }
+
+  @Test
   void commonModuleRereadWithSameTextKeepsGlobalMembersAndUsesCurrentTree() {
     // given — общий модуль разобран, члены глобального контекста собраны
     initServerContext(PATH_TO_METADATA);
