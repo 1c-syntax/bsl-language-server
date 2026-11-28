@@ -1248,3 +1248,18 @@
   (три «всё доступно» совпадают с ответом заглушки) → зелёные.
 - **Проверка.** `completion`, `*Completion*` (32 класса, 372 теста) зелёные; `javadoc`,
   `spotlessCheck` зелёные.
+
+## Раунд 81. Сборка `DiagnosticInfo` — одним рецептом фабрики
+
+Источник — тот же пункт 8.
+
+- **Проблема.** «Классы диагностик → `new DiagnosticInfo(класс, конфигурация, интернер)`» — четыре
+  копии: три метода `DiagnosticInfosFactory` и `DiagnosticInfos.init`.
+- **Сделано.** `init` и обе карты фабрики строятся из `createDiagnosticInfos`; `DiagnosticInfos`
+  больше не держит интернер. Обе карты `DiagnosticInfos` по-прежнему над одним списком
+  экземпляров — `refresh()` обходит только `byCode` (отмечено комментарием).
+- **Не сделано (решение):** удаление не вызываемых в коде `createDiagnosticInfosByCode`/`ByClass` —
+  фабрика публична через `BSLLSBinding`, это внешний контракт.
+- **Проверка.** Поведение не меняется, новых тестов нет; `diagnostics.infrastructure`,
+  `BSLLSBindingTest`, `*DiagnosticInfo*`, `*DiagnosticProvider*` и др. (10 классов, 51 тест)
+  зелёные; `javadoc`, `spotlessCheck` зелёные.

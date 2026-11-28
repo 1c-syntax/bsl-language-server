@@ -170,8 +170,11 @@
   7. Мелкие обходы канонического: `TableCollectionInference.resolveMember` ≈ `TypeRegistry.findMember`,
      `SymbolTypeIndex.findLocalFunction` ≈ `getMethodSymbol(name).filter(isFunction)`,
      `ConfigurationModuleMembersProvider.register` строит self-тип мимо `selfTypeQualifiedName`.
-  8. ~~`completion/`: свёртка `CompletionPriority`~~ — закрыто, раунд 80; `diagnostics/infrastructure`: рецепт сборки `DiagnosticInfo` четырежды, два
-     метода фабрики без вызовов (у `DiagnosticInfos.init` общий список экземпляров — намеренно).
+  8. ~~`completion/`: свёртка `CompletionPriority`~~ — закрыто, раунд 80; ~~рецепт сборки
+     `DiagnosticInfo`~~ — закрыто, раунд 81. **Ожидает решения:**
+     `DiagnosticInfosFactory.createDiagnosticInfosByCode`/`ByClass` в коде не вызываются, но
+     фабрика публична и отдаётся наружу через `BSLLSBinding.getDiagnosticInfosFactory()` —
+     удаление ломает внешних потребителей (интеграции), если они есть.
   **Ожидает решения:** `OpenDataObjectInference.applyTypeDescriptionTypes` резолвит имена из
   строки `ОписаниеТипов("…")` через `resolve`, а не `resolveSet` — `ОпределяемыйТип.X` в такой
   строке выпадает. Нужен ответ, принимает ли платформа имя определяемого типа в этом конструкторе.
