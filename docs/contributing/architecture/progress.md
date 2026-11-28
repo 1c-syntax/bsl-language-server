@@ -535,3 +535,23 @@
 - **Проверка.** Красные `AbstractFindMethodDiagnosticTest` и `RangesTest.containsAnyToken*`
   (на заглушках) → зелёные; тесты четырёх диагностик зелёные (18 тестов вместе с контрактом
   `DiagnosticTestLayoutTest`).
+
+## Раунд 38. Настройка диагностики без параметров (дефект)
+
+- **Проблема (найдено при разборе общего базового класса для диагностик сложности).**
+  `DiagnosticBeanPostProcessor` передаёт в `configure` карту из файла конфигурации как есть.
+  `AbstractMultilingualStringDiagnostic.configure` читал `declaredLanguages` через `get` без
+  значения по умолчанию: настройки вида `"MultilingualStringHasAllDeclaredLanguages": {}` (или с
+  опечаткой в ключе) роняли диагностику NPE в `MultilingualStringAnalyser`.
+  `MultilingualStringUsingWithTemplate` — так же.
+- **Сделано.** `getOrDefault` с текущим значением — как в `UsingServiceTagDiagnostic`.
+- **Проверка.** Красный `MultilingualStringHasAllDeclaredLanguagesDiagnosticTest.configurationWithoutDeclaredLanguagesKeepsDefault`
+  (NPE) → зелёный.
+- **Ограничение.** `DiagnosticConfigurationContractTest`: каждая диагностика принимает
+  `configure(Map.of())` и после неё работает. На прежнем коде красный ровно по двум
+  диагностикам многоязычных строк, по остальным — зелёный.
+- **Попутно.** Общий `DiagnosticHelper.configureDiagnostic` ищет поле параметра через
+  `getClass().getDeclaredField`, то есть только в самом классе: параметр, объявленный в
+  абстрактном предке, через него не настраивается (`DiagnosticParameterInfo` при этом видит и
+  поля предка). Сейчас такой параметр один, и его класс переопределяет `configure`, — живого
+  дефекта нет; записано в backlog, учтено при выносе базового класса диагностик сложности.
