@@ -24,7 +24,6 @@ package com.github._1c_syntax.bsl.languageserver.context.computer;
 import com.github._1c_syntax.bsl.languageserver.context.DocumentContext;
 import com.github._1c_syntax.bsl.languageserver.context.symbol.MethodSymbol;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
-import com.github._1c_syntax.bsl.languageserver.utils.Trees;
 import com.github._1c_syntax.bsl.parser.BSLParser;
 import com.github._1c_syntax.bsl.parser.BSLParserBaseListener;
 import com.github._1c_syntax.utils.StringInterner;
@@ -32,10 +31,8 @@ import jakarta.annotation.PostConstruct;
 import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
-import org.antlr.v4.runtime.CommonToken;
 import org.antlr.v4.runtime.Token;
 import org.antlr.v4.runtime.tree.ParseTreeWalker;
-import org.antlr.v4.runtime.tree.Tree;
 import org.eclipse.lsp4j.Range;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Scope;
@@ -227,61 +224,10 @@ public class CyclomaticComplexityComputer
   @Override
   public void enterExpression(BSLParser.ExpressionContext ctx) {
 
-    int emptyTokenType = -1;
-    flattenExpression(ctx).stream()
-      .filter((Token token) -> token.getType() != emptyTokenType)
+    BoolOperationSequence.of(ctx, expression -> { }).stream()
+      .filter((Token token) -> token.getType() != BoolOperationSequence.SPLITTER_TYPE)
       .forEach(this::complexityIncrement);
     super.enterExpression(ctx);
-  }
-
-  private static List<Token> flattenExpression(BSLParser.ExpressionContext ctx) {
-
-    List<Token> result = new ArrayList<>();
-
-    final List<Tree> children = Trees.getChildren(ctx);
-    for (Tree tree : children) {
-      if (tree instanceof BSLParser.MemberContext memberContext) {
-        flattenMember(result, memberContext);
-      } else if (tree instanceof BSLParser.OperationContext operationContext) {
-        flattenOperation(result, operationContext);
-      } else {
-        // no-op
-      }
-    }
-
-    return result;
-  }
-
-  private static void flattenMember(List<Token> result, BSLParser.MemberContext member) {
-    final BSLParser.ExpressionContext expression = member.expression();
-
-    if (expression == null) {
-      return;
-    }
-
-    final List<Token> nestedTokens = flattenExpression(expression);
-    if (nestedTokens.isEmpty()) {
-      return;
-    }
-
-    final BSLParser.UnaryModifierContext unaryModifier = member.unaryModifier();
-
-    if (unaryModifier != null && unaryModifier.NOT_KEYWORD() != null) {
-      final var splitter = new CommonToken(-1);
-      result.add(splitter);
-      result.addAll(nestedTokens);
-      result.add(splitter);
-    } else {
-      result.addAll(nestedTokens);
-    }
-  }
-
-  private static void flattenOperation(List<Token> result, BSLParser.OperationContext operation) {
-    final BSLParser.BoolOperationContext boolOperation = operation.boolOperation();
-
-    if (boolOperation != null) {
-      result.add(boolOperation.getStart());
-    }
   }
 
   private void resetMethodComplexityCounters() {

@@ -56,8 +56,6 @@
   `LocationLink → Location`.
 - **`BSLTextDocumentService`**: 40 копий «найти документ → дефолт → `withFreshDocumentContext`»,
   непоследовательные пустые ответы (`null` vs `emptyList()`), порядок аргументов провайдеров.
-- **Code actions**: копия построения fix-all параметров (`FixAll`/`SourceFixAll`), двухшаговый
-  API `QuickFixSupplier` (`getQuickFixClass` → `getQuickFixInstance` у всех вызывающих).
 - **Нормализация URI в MCP** — несколько способов; имя workspace выводится в двух местах.
 - **Источник `language`** — глобальная и workspace-настройка с тремя правилами разрешения;
   `GlobalLanguageServerConfiguration.reset()` дублирует дефолты вручную.
