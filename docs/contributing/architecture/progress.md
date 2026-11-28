@@ -1857,3 +1857,22 @@
 - **Проверка.** `references`, `*Definition*`, `*Hover*`, `*Rename*`, `*CallHierarchy*`,
   `ArchitectureTest`, `CanonicalImplementationsTest` (72 класса, 428 тестов), `javadoc`,
   `spotlessCheck` зелёные.
+
+## Раунд 115. Обработчик `ОписаниеОповещения` из другого модуля — переход по строке-имени
+
+Источник — сканирование после раунда 112 (`references/`).
+
+- **Дефект.** `ReferenceIndexFiller.addCallbackMethodCall` для обработчика из другого модуля
+  регистрировал верные ключи (`checkCall` — по модулям целевого объекта), а затем ещё одно
+  вхождение на тот же диапазон: чужой mdoRef с видом *текущего* модуля. Такой ключ не разрешается
+  ни во что, а поиск по позиции (`LocationRepository.findByPosition`) не ждёт пересекающихся
+  вхождений и отдавал именно его — переход к определению и hover на строке-имени обработчика в
+  модуле формы ничего не находили. «Найти ссылки» от метода работало, поэтому прежний тест
+  (`getReferencesTo`) дефекта не видел.
+- **Сделано.** Для обработчика чужого модуля — только ключи `checkCall`; вхождение с видом
+  текущего модуля — только когда обработчик в этом же модуле.
+- **Тесты.** `ReferenceIndexFillerTest.notifyDescriptionHandlerInAnotherModuleResolvesToThatModuleUnderTheCursor`
+  красный → зелёный.
+- **Проверка.** `references`, `*Definition*`, `*Hover*`, `*Rename*`, `*CallHierarchy*`,
+  `*UnusedLocalMethod*`, `ArchitectureTest` (72 класса, 423 теста), `javadoc`, `spotlessCheck`
+  зелёные.

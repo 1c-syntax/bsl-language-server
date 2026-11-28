@@ -571,8 +571,12 @@ public class ReferenceIndexFiller {
         return;
       }
       Methods.getMethodName(methodName).ifPresent((Token methodNameToken) -> {
+        // Обработчик чужого модуля — его модули и перечисляет checkCall. Вхождение с видом
+        // текущего модуля под чужим mdoRef не разрешается ни во что, а перекрывает настоящее:
+        // поиск по позиции не ждёт пересекающихся вхождений.
         if (!mdoRef.equals(documentContext.getMdoRef())) {
           checkCall(mdoRef, methodNameToken);
+          return;
         }
 
         addMethodCall(

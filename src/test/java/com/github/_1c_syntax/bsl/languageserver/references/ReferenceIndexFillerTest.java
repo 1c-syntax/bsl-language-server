@@ -41,6 +41,7 @@ import com.github._1c_syntax.bsl.languageserver.util.TestUtils;
 import com.github._1c_syntax.bsl.languageserver.utils.Ranges;
 import com.github._1c_syntax.utils.Absolute;
 import org.apache.commons.io.FileUtils;
+import com.github._1c_syntax.bsl.types.ModuleType;
 import org.eclipse.lsp4j.Position;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -274,6 +275,28 @@ class ReferenceIndexFillerTest extends AbstractServerContextAwareTest {
     assertThat(method).isPresent();
     references = referenceIndex.getReferencesTo(method.get());
     assertThat(references).hasSize(1);
+  }
+
+  @Test
+  void notifyDescriptionHandlerInAnotherModuleResolvesToThatModuleUnderTheCursor() throws IOException {
+    // given — модуль формы передаёт обработчик из общего модуля
+    initServerContext(PATH_TO_METADATA);
+    var formFile = new File(PATH_TO_METADATA, "Documents/Документ1/Forms/ФормаДокумента/Ext/Form/Module.bsl");
+    var form = TestUtils.getDocumentContext(
+      Absolute.uri(formFile), FileUtils.readFileToString(formFile, StandardCharsets.UTF_8), context);
+    var moduleFile = new File(PATH_TO_METADATA, "CommonModules/КлиентскийОбщийМодуль/Ext/Module.bsl");
+    TestUtils.getDocumentContext(
+      Absolute.uri(moduleFile), FileUtils.readFileToString(moduleFile, StandardCharsets.UTF_8), context);
+
+    // when — курсор на строке-имени обработчика (строка 13: "ОбработчикОписаниеОповещения")
+    var reference = referenceIndex.getReference(form.getUri(), new Position(12, 12));
+
+    // then — переход ведёт в общий модуль, а не в несуществующий метод модуля формы
+    assertThat(reference).hasValueSatisfying(ref -> {
+      assertThat(ref.symbol().getName()).isEqualTo("ОбработчикОписаниеОповещения");
+      assertThat(ref.getSourceDefinedSymbol()).hasValueSatisfying(symbol ->
+        assertThat(symbol.getOwner().getModuleType()).isEqualTo(ModuleType.CommonModule));
+    });
   }
 
   @Test
