@@ -44,7 +44,6 @@
 - **Терминал, заканчивающийся на курсоре** — `LinkedEditingRangeProvider`/`SelectionRangeProvider`.
 - **`safeGetAst`** — 4 приватные копии и 3 inline (две политики перехвата).
 - **Таблицы «тип токена → `Keywords.MultiName`»** — 3 копии (completion, formatter, diagnostic).
-- **Сплющивание выражений в `Cognitive/CyclomaticComplexityComputer`** — ~45 строк копии.
 - **Мелкие пары копий**: `readFlag` (inlay hint flags), `findMethodAt` (две диагностики
   EventHandler*), `getVariableName`, `record ProfileKey`, `isIdentChar`, `stringField`, `key`.
 - **Реестры supplier'ов code lens / inlay hint / command** — конфигурации, `getId()` по суффиксу,
