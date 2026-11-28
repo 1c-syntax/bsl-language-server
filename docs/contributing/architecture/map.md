@@ -94,6 +94,11 @@ infrastructure -> client
   JSON-схема), `DiagnosticDocsLayoutTest` и `DiagnosticResourcesParityTest` (документация и
   ресурсы диагностик в обеих локалях), `DiagnosticTestLayoutTest` (у каждой диагностики свой тест),
   `DiagnosticConfigurationContractTest` (настройка без параметров не ломает диагностику).
+- `ArchitectureTest.analysis_core_is_transport_agnostic`: ядро анализа (`cfg`, `context`,
+  `diagnostics`, `index`, `references`, `types`, `utils`) говорит на словаре данных LSP4J, но не
+  зависит от транспорта — сервисов и запуска LSP4J, веб/servlet-стека Spring, MCP.
+- `PackageDocumentationTest`: у каждого пакета с классами есть `package-info.java` с описанием
+  ответственности.
 - `CanonicalImplementationsTest`: сведённые к каноническому помощнику рецепты не появляются вне
   владельца (`TypeRef.UNDEFINED`, `MemberDescriptor.returnType()`,
   `MethodSymbol.getParameterDefinition`, `TypeRegistry.findSpecialization`,

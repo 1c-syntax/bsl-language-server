@@ -274,6 +274,29 @@ class ArchitectureTest {
     .because("JSON читается Jackson 3 (tools.jackson); у Jackson 3 под com.fasterxml.jackson "
       + "остались только аннотации — второй парсер JSON с другой политикой исключений не нужен");
 
+  // --- Ядро анализа не знает о транспорте ---------------------------------------------------------
+  // Модель и анализ кода (контекст и символы, типы, ссылки, граф потока, диагностики, индексы,
+  // утилиты) пользуются словарём данных LSP4J — Position, Range, Diagnostic: это общая система
+  // координат всех подсистем. Но о том, КАК результат уходит клиенту, они не знают: ни сервисов и
+  // запуска LSP4J, ни веб/servlet-стека, ни MCP. Транспорт — в lsp/, websocket/, mcp/, cli/;
+  // поэтому один и тот же анализ обслуживает LSP по stdio и websocket, MCP и пакетный analyze.
+
+  static final String[] ANALYSIS_CORE = {
+    ROOT_PACKAGE + ".cfg..", ROOT_PACKAGE + ".context..", ROOT_PACKAGE + ".diagnostics..",
+    ROOT_PACKAGE + ".index..", ROOT_PACKAGE + ".references..", ROOT_PACKAGE + ".types..",
+    ROOT_PACKAGE + ".utils.."
+  };
+
+  @ArchTest
+  static final ArchRule analysis_core_is_transport_agnostic = noClasses()
+    .that().resideInAnyPackage(ANALYSIS_CORE)
+    .should().dependOnClassesThat().resideInAnyPackage(
+      "org.eclipse.lsp4j.services..", "org.eclipse.lsp4j.launch..", "org.eclipse.lsp4j.websocket..",
+      "org.springframework.web..", "org.springframework.boot.web..", "jakarta.servlet..",
+      "io.modelcontextprotocol..", "org.springframework.ai..")
+    .because("ядро анализа обслуживает все головы сервера (LSP stdio/websocket, MCP, CLI) и не "
+      + "зависит от транспорта, которым результат уходит клиенту");
+
   // --- Слои и зависимости -------------------------------------------------------------------------
   // ПОЛНАЯ, БЕЗ ПРОБЕЛОВ карта разрешённых зависимостей между пакетами. Каждый пакет проекта —
   // отдельный слой, и для КАЖДОГО задан положительный whitelist «от чего он вправе зависеть»
