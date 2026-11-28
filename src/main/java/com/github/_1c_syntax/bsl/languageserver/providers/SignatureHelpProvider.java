@@ -446,14 +446,8 @@ public final class SignatureHelpProvider {
     var fileType = documentContext.getFileType();
     var ref = typeService.resolve(typeName, fileType).orElse(null);
     if (ref != null) {
-      for (var member : typeService.getMembers(ref, fileType)) {
-        if (member.kind() == MemberKind.METHOD
-          && (member.matches("Constructor")
-          || member.matches("ПриСозданииОбъекта")
-          || member.matches("OnObjectCreation"))) {
-          return Optional.of(member);
-        }
-      }
+      // Конструктор OneScript-класса не входит в члены типа (OScriptModuleMembersProvider
+      // отдаёт его только как конструктор), поэтому источник один — getConstructors.
       var platformCtors = typeService.getConstructors(ref, fileType);
       if (!platformCtors.isEmpty()) {
         return Optional.of(MemberDescriptor.method(typeName, typeService.getDescription(ref, fileType), platformCtors));

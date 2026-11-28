@@ -466,3 +466,15 @@
   `Trees.getAncestorOrSelfByRuleIndex`.
 - **Проверка.** Поведение не меняется (переход на уже покрытые тестами функции); тесты
   `documentlink`, `documenthighlight`, `ArchitectureTest` — 109 тестов зелёные.
+
+## Раунд 33. Мёртвая ветка поиска конструктора в signature help
+
+- **Проблема.** `SignatureHelpProvider.resolveConstructor` искал конструктор среди членов типа по
+  именам `Constructor`/`ПриСозданииОбъекта`/`OnObjectCreation` (последнее — не то имя: канон в
+  `Methods.isOscriptClassConstructorName` — `OnObjectCreate`). Ветка недостижима:
+  `OScriptModuleMembersProvider.collectMembers` исключает конструктор из членов, а платформенные
+  ресурсы методов с такими именами не объявляют. Конструктор всегда приходил из
+  `TypeService.getConstructors`.
+- **Сделано.** Ветка удалена — у конструктора один источник.
+- **Проверка.** Характеризующий `SignatureHelpProviderOScriptLibraryTest.signatureForLibraryClassConstructor`
+  и прочие тесты signature help (78) зелёные.
