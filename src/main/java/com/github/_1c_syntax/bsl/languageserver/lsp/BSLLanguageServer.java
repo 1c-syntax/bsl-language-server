@@ -22,6 +22,7 @@
 package com.github._1c_syntax.bsl.languageserver.lsp;
 
 import com.github._1c_syntax.bsl.languageserver.configuration.GlobalLanguageServerConfiguration;
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContext;
 import com.github._1c_syntax.bsl.languageserver.context.ServerContextProvider;
 import com.github._1c_syntax.bsl.languageserver.events.LanguageServerInitializedEvent;
@@ -107,6 +108,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -130,7 +133,9 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
    * Относительны корню workspace folder (используются как с глобальным glob,
    * так и в составе {@link RelativePattern}).
    */
-  private static final List<String> WATCHED_FILE_PATTERNS = List.of("**/*.bsl", "**/*.os");
+  private static final List<String> WATCHED_FILE_PATTERNS = Arrays.stream(FileType.values())
+    .map(fileType -> "**/*." + fileType.getExtension())
+    .toList();
 
   private final BSLTextDocumentService textDocumentService;
   private final BSLWorkspaceService workspaceService;
@@ -680,11 +685,10 @@ public class BSLLanguageServer implements LanguageServer, ProtocolExtension {
     var folderPattern = new FileOperationPattern("**/*");
     folderPattern.setMatches(FileOperationPatternKind.Folder);
 
-    return List.of(
-      new FileOperationFilter(new FileOperationPattern("**/*.bsl")),
-      new FileOperationFilter(new FileOperationPattern("**/*.os")),
-      new FileOperationFilter(folderPattern)
-    );
+    var filters = new ArrayList<FileOperationFilter>();
+    WATCHED_FILE_PATTERNS.forEach(pattern -> filters.add(new FileOperationFilter(new FileOperationPattern(pattern))));
+    filters.add(new FileOperationFilter(folderPattern));
+    return filters;
   }
 
 }

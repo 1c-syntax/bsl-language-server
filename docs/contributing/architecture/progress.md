@@ -292,3 +292,13 @@
 - **Сделано.** Подвал `Copyright(c) …` был записан в семи `@Command` (в четырёх — 2018-2025,
   в трёх — 2018-2026). Теперь одна константа `cli.CommandHelp.FOOTER`.
 - **Проверка.** Тесты `cli`, `MainApplication*`, `ArchitectureTest`.
+
+## Раунд 21. Расширения файлов исходников
+
+- **Сделано.** Расширения `bsl`/`os` были записаны в `BSLFiles` и дважды glob'ами в
+  `BSLLanguageServer` (наблюдение за файлами и фильтры файловых операций). Источник —
+  `FileType` (тип документа и так определяется по расширению через имя константы):
+  добавлен `FileType.getExtension()`, оба списка glob'ов в `BSLLanguageServer` выводятся из него.
+  `BSLFiles` (пакет `utils` не может зависеть от `context`) оставлен со своим списком, совпадение
+  закреплено тестом `BSLFilesTest.listBslFilesFindsExactlyFileTypeExtensions`.
+- **Проверка.** Тесты `lsp`, `BSLFilesTest`, `DocumentContextTest`.

@@ -21,15 +21,18 @@
  */
 package com.github._1c_syntax.bsl.languageserver.utils;
 
+import com.github._1c_syntax.bsl.languageserver.context.FileType;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.io.TempDir;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -41,6 +44,26 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 class BSLFilesTest {
 
   private static final String SRC_MODULE_BSL = "src/Module.bsl";
+
+  /**
+   * Находятся файлы ровно тех типов, которые знает сервер ({@link FileType}): {@code utils} не
+   * может зависеть от {@code context}, поэтому совпадение расширений закреплено здесь.
+   */
+  @Test
+  void listBslFilesFindsExactlyFileTypeExtensions(@TempDir Path projectRoot) throws IOException {
+    // given
+    var expected = new ArrayList<File>();
+    for (var fileType : FileType.values()) {
+      expected.add(createBslFile(projectRoot, "src/Module." + fileType.getExtension()).toFile());
+    }
+    createBslFile(projectRoot, "src/Readme.txt");
+
+    // when
+    var found = BSLFiles.listBslFiles(projectRoot, null);
+
+    // then
+    assertThat(found).containsExactlyInAnyOrderElementsOf(expected);
+  }
 
   /** Без excludePaths возвращаются все .bsl/.os файлы внутри корня. */
   @Test
