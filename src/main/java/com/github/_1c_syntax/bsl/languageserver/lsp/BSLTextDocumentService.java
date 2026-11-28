@@ -154,6 +154,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -213,30 +214,15 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   @Override
   public CompletableFuture<@Nullable Hover> hover(HoverParams params) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(null);
-    }
-    var documentContext = maybeDocument.get();
-
-    return withFreshDocumentContextNullable(
-      documentContext,
-      () -> hoverProvider.getHover(documentContext, params).orElse(null)
-    );
+    return onDocument(params.getTextDocument().getUri(), null,
+      documentContext -> hoverProvider.getHover(documentContext, params).orElse(null));
   }
 
   @Override
   public CompletableFuture<Either<List<CompletionItem>, CompletionList>> completion(CompletionParams params) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(Either.forRight(new CompletionList(false, Collections.emptyList())));
-    }
-    var documentContext = maybeDocument.get();
-
-    return withFreshDocumentContext(
-      documentContext,
-      () -> Either.forRight(completionProvider.getCompletion(documentContext, params))
-    );
+    return onDocument(params.getTextDocument().getUri(),
+      Either.forRight(new CompletionList(false, Collections.emptyList())),
+      documentContext -> Either.forRight(completionProvider.getCompletion(documentContext, params)));
   }
 
   @Override
@@ -246,154 +232,72 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       // item без data — резолвить нечем, возвращаем как есть.
       return CompletableFuture.completedFuture(unresolved);
     }
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(data.getUri().toString());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(unresolved);
-    }
-    var documentContext = maybeDocument.get();
-
     // resolveCompletionItem обращается к workspace-scoped typeService/globalScopeProvider,
     // поэтому резолв должен выполняться в workspace-контексте документа.
-    return withFreshDocumentContext(
-      documentContext,
-      () -> completionProvider.resolveCompletionItem(unresolved, data)
-    );
+    return onDocument(data.getUri().toString(), unresolved,
+      documentContext -> completionProvider.resolveCompletionItem(unresolved, data));
   }
 
   @Override
   public CompletableFuture<SignatureHelp> signatureHelp(SignatureHelpParams params) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
-    if (maybeDocument.isEmpty()) {
-      var empty = new SignatureHelp();
-      empty.setSignatures(Collections.emptyList());
-      return CompletableFuture.completedFuture(empty);
-    }
-    var documentContext = maybeDocument.get();
-
-    return withFreshDocumentContext(
-      documentContext,
-      () -> signatureHelpProvider.getSignatureHelp(documentContext, params)
-    );
+    return onDocument(params.getTextDocument().getUri(), new SignatureHelp(Collections.emptyList(), null, null),
+      documentContext -> signatureHelpProvider.getSignatureHelp(documentContext, params));
   }
 
   @Override
   public CompletableFuture<@Nullable List<? extends DocumentHighlight>> documentHighlight(DocumentHighlightParams params) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(Collections.emptyList());
-    }
-    var documentContext = maybeDocument.get();
-
-    return withFreshDocumentContext(
-      documentContext,
-      () -> documentHighlightProvider.getDocumentHighlight(documentContext, params)
-    );
+    return onDocument(params.getTextDocument().getUri(), Collections.emptyList(),
+      documentContext -> documentHighlightProvider.getDocumentHighlight(documentContext, params));
   }
 
   @Override
   public CompletableFuture<@Nullable LinkedEditingRanges> linkedEditingRange(LinkedEditingRangeParams params) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(null);
-    }
-    var documentContext = maybeDocument.get();
-
-    return withFreshDocumentContextNullable(
-      documentContext,
-      () -> linkedEditingRangeProvider.getLinkedEditingRanges(documentContext, params)
-    );
+    return onDocument(params.getTextDocument().getUri(), null,
+      documentContext -> linkedEditingRangeProvider.getLinkedEditingRanges(documentContext, params));
   }
 
   @Override
   public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> definition(
     DefinitionParams params
   ) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(Either.forRight(Collections.emptyList()));
-    }
-    var documentContext = maybeDocument.get();
-
-    return withFreshDocumentContext(
-      documentContext,
-      () -> definitionProvider.getDefinition(documentContext, params)
-    );
+    return onDocument(params.getTextDocument().getUri(), Either.forRight(Collections.emptyList()),
+      documentContext -> definitionProvider.getDefinition(documentContext, params));
   }
 
   @Override
   public CompletableFuture<Either<List<? extends Location>, List<? extends LocationLink>>> implementation(
     ImplementationParams params
   ) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(Either.forLeft(Collections.emptyList()));
-    }
-    var documentContext = maybeDocument.get();
-
-    return withFreshDocumentContext(
-      documentContext,
-      () -> implementationProvider.getImplementations(documentContext, params)
-    );
+    return onDocument(params.getTextDocument().getUri(), Either.forLeft(Collections.emptyList()),
+      documentContext -> implementationProvider.getImplementations(documentContext, params));
   }
 
   @Override
   public CompletableFuture<List<? extends Location>> references(ReferenceParams params) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(Collections.emptyList());
-    }
-    var documentContext = maybeDocument.get();
-
-    return withFreshDocumentContext(
-      documentContext,
-      () -> referencesProvider.getReferences(documentContext, params)
-    );
+    return onDocument(params.getTextDocument().getUri(), Collections.emptyList(),
+      documentContext -> referencesProvider.getReferences(documentContext, params));
   }
 
   @Override
   public CompletableFuture<List<Either<SymbolInformation, DocumentSymbol>>> documentSymbol(
     DocumentSymbolParams params
   ) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(null);
-    }
-    var documentContext = maybeDocument.get();
-
-    return withFreshDocumentContext(
-      documentContext,
-      () -> documentSymbolProvider.getDocumentSymbols(documentContext).stream()
+    return onDocument(params.getTextDocument().getUri(), null,
+      documentContext -> documentSymbolProvider.getDocumentSymbols(documentContext).stream()
         .map(Either::<SymbolInformation, DocumentSymbol>forRight)
-        .toList()
-    );
+        .toList());
   }
 
   @Override
   public CompletableFuture<List<Either<Command, CodeAction>>> codeAction(CodeActionParams params) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(null);
-    }
-    var documentContext = maybeDocument.get();
-
-    return withFreshDocumentContext(
-      documentContext,
-      () -> codeActionProvider.getCodeActions(params, documentContext)
-    );
+    return onDocument(params.getTextDocument().getUri(), null,
+      documentContext -> codeActionProvider.getCodeActions(params, documentContext));
   }
 
   @Override
   public CompletableFuture<List<? extends CodeLens>> codeLens(CodeLensParams params) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(Collections.emptyList());
-    }
-    var documentContext = maybeDocument.get();
-
-    return withFreshDocumentContext(
-      documentContext,
-      () -> codeLensProvider.getCodeLens(documentContext)
-    );
+    return onDocument(params.getTextDocument().getUri(), Collections.emptyList(),
+      documentContext -> codeLensProvider.getCodeLens(documentContext));
   }
 
   @Override
@@ -403,287 +307,128 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       // Линза без данных — резолвить нечем, возвращаем как есть.
       return CompletableFuture.completedFuture(unresolved);
     }
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(data.getUri().toString());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(unresolved);
-    }
-    var documentContext = maybeDocument.get();
-    return withFreshDocumentContext(
-      documentContext,
-      () -> codeLensProvider.resolveCodeLens(documentContext, unresolved, data)
-    );
+    return onDocument(data.getUri().toString(), unresolved,
+      documentContext -> codeLensProvider.resolveCodeLens(documentContext, unresolved, data));
   }
 
   @Override
   public CompletableFuture<List<? extends TextEdit>> formatting(DocumentFormattingParams params) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(null);
-    }
-    var documentContext = maybeDocument.get();
-
-    return withFreshDocumentContext(
-      documentContext,
-      () -> formatProvider.getFormatting(params, documentContext)
-    );
+    return onDocument(params.getTextDocument().getUri(), null,
+      documentContext -> formatProvider.getFormatting(params, documentContext));
   }
 
   @Override
   public CompletableFuture<List<? extends TextEdit>> rangeFormatting(DocumentRangeFormattingParams params) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(null);
-    }
-    var documentContext = maybeDocument.get();
-
-    return withFreshDocumentContext(
-      documentContext,
-      () -> formatProvider.getRangeFormatting(params, documentContext)
-    );
+    return onDocument(params.getTextDocument().getUri(), null,
+      documentContext -> formatProvider.getRangeFormatting(params, documentContext));
   }
 
   @Override
   public CompletableFuture<List<? extends TextEdit>> rangesFormatting(DocumentRangesFormattingParams params) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(null);
-    }
-    var documentContext = maybeDocument.get();
-
-    return withFreshDocumentContext(
-      documentContext,
-      () -> formatProvider.getRangesFormatting(params, documentContext)
-    );
+    return onDocument(params.getTextDocument().getUri(), null,
+      documentContext -> formatProvider.getRangesFormatting(params, documentContext));
   }
 
   @Override
   public CompletableFuture<List<? extends TextEdit>> onTypeFormatting(DocumentOnTypeFormattingParams params) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(Collections.emptyList());
-    }
-    var documentContext = maybeDocument.get();
-
-    return withFreshDocumentContext(
-      documentContext,
-      () -> formatProvider.getOnTypeFormatting(params, documentContext)
-    );
+    return onDocument(params.getTextDocument().getUri(), Collections.emptyList(),
+      documentContext -> formatProvider.getOnTypeFormatting(params, documentContext));
   }
 
   @Override
   public CompletableFuture<List<FoldingRange>> foldingRange(FoldingRangeRequestParams params) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(null);
-    }
-    var documentContext = maybeDocument.get();
-
-    return withFreshDocumentContext(
-      documentContext,
-      () -> foldingRangeProvider.getFoldingRange(documentContext)
-    );
+    return onDocument(params.getTextDocument().getUri(), null,
+      documentContext -> foldingRangeProvider.getFoldingRange(documentContext));
   }
 
   @Override
   public CompletableFuture<@Nullable List<CallHierarchyItem>> prepareCallHierarchy(CallHierarchyPrepareParams params) {
     // При возврате пустого списка VSCode падает. По протоколу разрешен возврат null.
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(null);
-    }
-    var documentContext = maybeDocument.get();
-
-    return withFreshDocumentContextNullable(
-      documentContext,
-      () -> {
-        List<CallHierarchyItem> callHierarchyItems = callHierarchyProvider.prepareCallHierarchy(documentContext, params);
-        if (callHierarchyItems.isEmpty()) {
-          return null;
-        }
-        return callHierarchyItems;
-      }
-    );
+    return onDocument(params.getTextDocument().getUri(), null, documentContext -> {
+      List<CallHierarchyItem> callHierarchyItems = callHierarchyProvider.prepareCallHierarchy(documentContext, params);
+      return callHierarchyItems.isEmpty() ? null : callHierarchyItems;
+    });
   }
 
   @Override
   public CompletableFuture<SemanticTokens> semanticTokensFull(SemanticTokensParams params) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(null);
-    }
-    var documentContext = maybeDocument.get();
-
-    return withFreshDocumentContext(
-      documentContext,
-      () -> semanticTokensProvider.getSemanticTokensFull(documentContext, params)
-    );
+    return onDocument(params.getTextDocument().getUri(), null,
+      documentContext -> semanticTokensProvider.getSemanticTokensFull(documentContext, params));
   }
 
   @Override
   public CompletableFuture<Either<SemanticTokens, SemanticTokensDelta>> semanticTokensFullDelta(
     SemanticTokensDeltaParams params
   ) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(null);
-    }
-    var documentContext = maybeDocument.get();
-
-    return withFreshDocumentContext(
-      documentContext,
-      () -> semanticTokensProvider.getSemanticTokensFullDelta(documentContext, params)
-    );
+    return onDocument(params.getTextDocument().getUri(), null,
+      documentContext -> semanticTokensProvider.getSemanticTokensFullDelta(documentContext, params));
   }
 
   @Override
   public CompletableFuture<SemanticTokens> semanticTokensRange(SemanticTokensRangeParams params) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(null);
-    }
-    var documentContext = maybeDocument.get();
-
-    return withFreshDocumentContext(
-      documentContext,
-      () -> semanticTokensProvider.getSemanticTokensRange(documentContext, params)
-    );
+    return onDocument(params.getTextDocument().getUri(), null,
+      documentContext -> semanticTokensProvider.getSemanticTokensRange(documentContext, params));
   }
 
   @Override
   public CompletableFuture<List<CallHierarchyIncomingCall>> callHierarchyIncomingCalls(
     CallHierarchyIncomingCallsParams params
   ) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getItem().getUri());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(Collections.emptyList());
-    }
-    var documentContext = maybeDocument.get();
-
-    return withFreshDocumentContext(
-      documentContext,
-      () -> callHierarchyProvider.incomingCalls(documentContext, params)
-    );
+    return onDocument(params.getItem().getUri(), Collections.emptyList(),
+      documentContext -> callHierarchyProvider.incomingCalls(documentContext, params));
   }
 
   @Override
   public CompletableFuture<List<CallHierarchyOutgoingCall>> callHierarchyOutgoingCalls(
     CallHierarchyOutgoingCallsParams params
   ) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getItem().getUri());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(Collections.emptyList());
-    }
-    var documentContext = maybeDocument.get();
-
-    return withFreshDocumentContext(
-      documentContext,
-      () -> callHierarchyProvider.outgoingCalls(documentContext, params)
-    );
+    return onDocument(params.getItem().getUri(), Collections.emptyList(),
+      documentContext -> callHierarchyProvider.outgoingCalls(documentContext, params));
   }
 
   @Override
   public CompletableFuture<@Nullable List<TypeHierarchyItem>> prepareTypeHierarchy(TypeHierarchyPrepareParams params) {
     // При возврате пустого списка VSCode падает. По протоколу разрешен возврат null.
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(null);
-    }
-    var documentContext = maybeDocument.get();
-
-    return withFreshDocumentContextNullable(
-      documentContext,
-      () -> {
-        List<TypeHierarchyItem> typeHierarchyItems = typeHierarchyProvider.prepareTypeHierarchy(documentContext, params);
-        if (typeHierarchyItems.isEmpty()) {
-          return null;
-        }
-        return typeHierarchyItems;
-      }
-    );
+    return onDocument(params.getTextDocument().getUri(), null, documentContext -> {
+      List<TypeHierarchyItem> typeHierarchyItems = typeHierarchyProvider.prepareTypeHierarchy(documentContext, params);
+      return typeHierarchyItems.isEmpty() ? null : typeHierarchyItems;
+    });
   }
 
   @Override
   public CompletableFuture<List<TypeHierarchyItem>> typeHierarchySupertypes(TypeHierarchySupertypesParams params) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getItem().getUri());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(Collections.emptyList());
-    }
-    var documentContext = maybeDocument.get();
-
-    return withFreshDocumentContext(
-      documentContext,
-      () -> typeHierarchyProvider.supertypes(documentContext, params)
-    );
+    return onDocument(params.getItem().getUri(), Collections.emptyList(),
+      documentContext -> typeHierarchyProvider.supertypes(documentContext, params));
   }
 
   @Override
   public CompletableFuture<List<TypeHierarchyItem>> typeHierarchySubtypes(TypeHierarchySubtypesParams params) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getItem().getUri());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(Collections.emptyList());
-    }
-    var documentContext = maybeDocument.get();
-
-    return withFreshDocumentContext(
-      documentContext,
-      () -> typeHierarchyProvider.subtypes(documentContext, params)
-    );
+    return onDocument(params.getItem().getUri(), Collections.emptyList(),
+      documentContext -> typeHierarchyProvider.subtypes(documentContext, params));
   }
 
   @Override
   public CompletableFuture<List<@Nullable SelectionRange>> selectionRange(SelectionRangeParams params) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(Collections.emptyList());
-    }
-    var documentContext = maybeDocument.get();
-
-    return withFreshDocumentContext(
-      documentContext,
-      () -> selectionRangeProvider.getSelectionRange(documentContext, params)
-    );
+    return onDocument(params.getTextDocument().getUri(), Collections.emptyList(),
+      documentContext -> selectionRangeProvider.getSelectionRange(documentContext, params));
   }
 
   @Override
   public CompletableFuture<List<ColorInformation>> documentColor(DocumentColorParams params) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(Collections.emptyList());
-    }
-    var documentContext = maybeDocument.get();
-
-    return withFreshDocumentContext(
-      documentContext,
-      () -> colorProvider.getDocumentColor(documentContext)
-    );
+    return onDocument(params.getTextDocument().getUri(), Collections.emptyList(),
+      documentContext -> colorProvider.getDocumentColor(documentContext));
   }
 
   @Override
   public CompletableFuture<List<ColorPresentation>> colorPresentation(ColorPresentationParams params) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(Collections.emptyList());
-    }
-    var documentContext = maybeDocument.get();
-
-    return withFreshDocumentContext(
-      documentContext,
-      () -> colorProvider.getColorPresentation(documentContext, params)
-    );
+    return onDocument(params.getTextDocument().getUri(), Collections.emptyList(),
+      documentContext -> colorProvider.getColorPresentation(documentContext, params));
   }
 
   @Override
   public CompletableFuture<List<InlayHint>> inlayHint(InlayHintParams params) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(Collections.emptyList());
-    }
-    var documentContext = maybeDocument.get();
-
-    return withFreshDocumentContext(
-      documentContext,
-      () -> inlayHintProvider.getInlayHint(documentContext, params)
-    );
+    return onDocument(params.getTextDocument().getUri(), Collections.emptyList(),
+      documentContext -> inlayHintProvider.getInlayHint(documentContext, params));
   }
 
   @Override
@@ -693,16 +438,8 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
       // Хинт без данных — резолвить нечем, возвращаем как есть.
       return CompletableFuture.completedFuture(unresolved);
     }
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(data.getUri().toString());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(unresolved);
-    }
-    var documentContext = maybeDocument.get();
-
-    return withFreshDocumentContext(
-      documentContext,
-      () -> inlayHintProvider.resolveInlayHint(documentContext, unresolved, data)
-    );
+    return onDocument(data.getUri().toString(), unresolved,
+      documentContext -> inlayHintProvider.resolveInlayHint(documentContext, unresolved, data));
   }
 
   @Override
@@ -875,13 +612,7 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   @Override
   public void didSave(DidSaveTextDocumentParams params) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
-    if (maybeDocument.isEmpty()) {
-      return;
-    }
-    var documentContext = maybeDocument.get();
-
-    withFreshDocumentContextNullable(documentContext, () -> {
+    onDocument(params.getTextDocument().getUri(), null, documentContext -> {
       if (configuration.getDiagnosticsOptions().getComputeTrigger() != ComputeTrigger.NEVER) {
         validate(documentContext);
       }
@@ -891,84 +622,42 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
 
   @Override
   public CompletableFuture<List<DocumentLink>> documentLink(DocumentLinkParams params) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(null);
-    }
-    var documentContext = maybeDocument.get();
-
-    return withFreshDocumentContext(
-      documentContext,
-      () -> documentLinkProvider.getDocumentLinks(documentContext)
-    );
+    return onDocument(params.getTextDocument().getUri(), null,
+      documentContext -> documentLinkProvider.getDocumentLinks(documentContext));
   }
 
   @Override
   public CompletableFuture<Diagnostics> diagnostics(DiagnosticParams params) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(Diagnostics.EMPTY);
-    }
-    var documentContext = maybeDocument.get();
+    return onDocument(params.getTextDocument().getUri(), Diagnostics.EMPTY, documentContext -> {
+      var diagnostics = documentContext.getDiagnostics();
 
-    return withFreshDocumentContext(
-      documentContext,
-      () -> {
-        var diagnostics = documentContext.getDiagnostics();
-
-        var range = params.getRange();
-        if (range != null) {
-          diagnostics = diagnostics.stream()
-            .filter(diagnostic -> Ranges.containsRange(range, diagnostic.getRange()))
-            .toList();
-        }
-        return new Diagnostics(diagnostics, documentContext.getVersion());
+      var range = params.getRange();
+      if (range != null) {
+        diagnostics = diagnostics.stream()
+          .filter(diagnostic -> Ranges.containsRange(range, diagnostic.getRange()))
+          .toList();
       }
-    );
+      return new Diagnostics(diagnostics, documentContext.getVersion());
+    });
   }
 
   @Override
   public CompletableFuture<DocumentDiagnosticReport> diagnostic(DocumentDiagnosticParams params) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(
-        new DocumentDiagnosticReport(new RelatedFullDocumentDiagnosticReport(Collections.emptyList()))
-      );
-    }
-    var documentContext = maybeDocument.get();
-
-    return withFreshDocumentContext(
-      documentContext,
-      () -> diagnosticProvider.getDiagnostic(documentContext)
-    );
+    return onDocument(params.getTextDocument().getUri(),
+      new DocumentDiagnosticReport(new RelatedFullDocumentDiagnosticReport(Collections.emptyList())),
+      documentContext -> diagnosticProvider.getDiagnostic(documentContext));
   }
 
   @Override
   public CompletableFuture<Either3<Range, PrepareRenameResult, PrepareRenameDefaultBehavior>> prepareRename(PrepareRenameParams params) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(null);
-    }
-    var documentContext = maybeDocument.get();
-
-    return withFreshDocumentContext(
-      documentContext,
-      () -> renameProvider.getPrepareRename(documentContext, params)
-    );
+    return onDocument(params.getTextDocument().getUri(), null,
+      documentContext -> renameProvider.getPrepareRename(documentContext, params));
   }
 
   @Override
   public CompletableFuture<WorkspaceEdit> rename(RenameParams params) {
-    var maybeDocument = serverContextProvider.getDocumentUnsafe(params.getTextDocument().getUri());
-    if (maybeDocument.isEmpty()) {
-      return CompletableFuture.completedFuture(null);
-    }
-    var documentContext = maybeDocument.get();
-
-    return withFreshDocumentContext(
-      documentContext,
-      () -> renameProvider.getRename(documentContext, params)
-    );
+    return onDocument(params.getTextDocument().getUri(), null,
+      documentContext -> renameProvider.getRename(documentContext, params));
   }
 
   public void reset() {
@@ -1121,21 +810,34 @@ public class BSLTextDocumentService implements TextDocumentService, ProtocolExte
     }
   }
 
-  private <T> CompletableFuture<@Nullable T> withFreshDocumentContextNullable(
-    DocumentContext documentContext,
-    Supplier<@Nullable T> supplier
+  /**
+   * Обработать запрос к документу: найти его по URI, дождаться применения его правок и выполнить
+   * обработку (см. {@link #withFreshDocumentContext}).
+   *
+   * @param uri       URI документа из параметров запроса
+   * @param ifMissing ответ, если документ серверу неизвестен
+   * @param request   обработка запроса над найденным документом
+   * @param <T>       тип ответа
+   * @return ответ на запрос
+   */
+  private <T extends @Nullable Object> CompletableFuture<T> onDocument(
+    String uri,
+    T ifMissing,
+    Function<DocumentContext, T> request
   ) {
-    return withFreshDocumentContextInternal(documentContext, supplier);
+    var maybeDocument = serverContextProvider.getDocumentUnsafe(uri);
+    if (maybeDocument.isEmpty()) {
+      return CompletableFuture.completedFuture(ifMissing);
+    }
+    var documentContext = maybeDocument.get();
+    return withFreshDocumentContext(documentContext, () -> request.apply(documentContext));
   }
 
-  private <T> CompletableFuture<T> withFreshDocumentContext(
-    DocumentContext documentContext,
-    Supplier<T> supplier
-  ) {
-    return withFreshDocumentContextInternal(documentContext, supplier);
-  }
-
-  private <T> CompletableFuture<T> withFreshDocumentContextInternal(
+  /**
+   * Выполнить обработку над актуальным состоянием документа: после применения его отложенных
+   * правок, под блокировкой чтения документа и в контексте его рабочей области.
+   */
+  private <T extends @Nullable Object> CompletableFuture<T> withFreshDocumentContext(
     DocumentContext documentContext,
     Supplier<T> supplier
   ) {
